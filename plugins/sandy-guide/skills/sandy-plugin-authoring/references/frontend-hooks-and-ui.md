@@ -188,7 +188,7 @@ composer.insert("Please summarize this.", { at: "end", block: true });
 
 Composer customizations:
 
-- Register with `app.composer.customize({ id, scopes?, actions?, experimental_popups?, plusMenu?,
+- Register with `app.composer.customize({ id, scopes?, actions?, experimental_popups?, experimental_menus?, plusMenu?,
 sendMenu?, banners?, richText? })`. Omitted `scopes` means all thread,
   queued-message, and new-thread composers.
 - `actions` and `banners` are plugin React components. `useComposer()` inside
@@ -208,6 +208,13 @@ sendMenu?, banners?, richText? })`. Omitted `scopes` means all thread,
   name from plugin CSS. Decorations are paint-only and never mutate the draft.
 - A `messageAction`'s `run` receives `context.composer`: the composer of the
   message's thread, or null.
+- Composer menus register `[{ id, trigger, label, items(query) }]` through `experimental_menus`.
+  `trigger` is `/`, `#`, `!` or `~`; `/` adds a group to the command menu, the others open
+  their own menu, also on a bare trigger. `items` returns rows `{ id, label, description?, icon?,
+  items?, run? }` synchronously. A row with `items` is a submenu (Enter, click or right arrow
+  opens it; left arrow, Backspace on an empty query or Escape goes back; the host filters nested
+  rows by label). A row with `run({ composer })` runs after the host removes the trigger text.
+  Menu ids are unique within one customization.
 - Composer popups register `[{ id, label, component }]` through `experimental_popups`.
   Popup ids must be unique across the plugin's composer customizations.
   Open by popup id with `composer.experimental_openPopup(id)`, from a

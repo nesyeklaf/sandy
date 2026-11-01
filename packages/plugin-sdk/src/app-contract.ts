@@ -3066,6 +3066,10 @@ export interface ExperimentalComposerPopupContribution extends ExperimentalCompo
   popup: ExperimentalComposerPopupRegistration;
 }
 
+export interface ExperimentalComposerMenuContribution extends ExperimentalComposerContribution {
+  menu: ExperimentalComposerMenuRegistration;
+}
+
 /**
  * Highlight rules to paint over the draft: sandy's built-in highlights, other
  * plugins' `richText.effects` and `useComposer().setTextEffect` effects, in
@@ -3254,6 +3258,13 @@ export interface ExperimentalComposerContributions {
   readonly plusMenuItems: readonly ExperimentalComposerPlusMenuContribution[];
   /** Render each with `MenuEntry` and `kind: "send"`. */
   readonly sendMenuItems: readonly ExperimentalComposerSendMenuContribution[];
+  /** Typeahead menus other plugins registered; add their rows to the menu of their trigger and run a chosen leaf with `runMenuItem`. */
+  readonly menus: readonly ExperimentalComposerMenuContribution[];
+  /** Run a leaf row of `contribution` with that plugin's composer API. Errors are contained and shown as a toast. */
+  runMenuItem(
+    contribution: ExperimentalComposerMenuContribution,
+    item: ExperimentalComposerMenuItem,
+  ): void;
   /** Other plugins' inline actions, for the composer's action row. */
   readonly Actions: ComponentType;
   readonly Popup: ComponentType<ExperimentalComposerPopupProps>;
@@ -4179,6 +4190,45 @@ export interface ComposerCustomization {
   richText?: ComposerRichTextSpec;
   /** Host-managed popups sharing the mention menu's above/below placement, with a responsive drawer on compact screens. Open by popup id, unique within this plugin. */
   experimental_popups?: readonly ExperimentalComposerPopupRegistration[];
+  /** Typeahead menus opened by a trigger character, rendered by the same menu as `/` and `@`. */
+  experimental_menus?: readonly ExperimentalComposerMenuRegistration[];
+}
+
+/** A trigger character that opens a plugin menu. `/` adds a group to the command menu; the others open their own menu, including on a bare trigger. */
+export type ExperimentalComposerMenuTrigger = "/" | "#" | "!" | "~";
+
+/**
+ * A typeahead menu in the composer. The host owns matching of nested rows,
+ * keyboard navigation, placement and dismissal; the plugin supplies the rows.
+ */
+export interface ExperimentalComposerMenuRegistration {
+  /** Unique within this customization; letters, digits, `-`, `_`. */
+  id: string;
+  trigger: ExperimentalComposerMenuTrigger;
+  /** Heading of the menu's group. */
+  label: string;
+  /**
+   * The top-level rows for the text typed after the trigger. Called on every
+   * keystroke, so keep it cheap and synchronous; return all rows for an empty
+   * query. The host filters nested rows by label.
+   */
+  items(query: string): readonly ExperimentalComposerMenuItem[];
+}
+
+/**
+ * One row of a plugin menu. A row with `items` is a submenu: Enter, click or
+ * the right arrow opens it, and Backspace on an empty query, the left arrow or
+ * Escape goes back. A row without `items` runs `run`, after the host removes the
+ * trigger text from the draft.
+ */
+export interface ExperimentalComposerMenuItem {
+  /** Unique among its siblings. */
+  id: string;
+  label: string;
+  description?: string;
+  icon?: SandyIconName;
+  items?: readonly ExperimentalComposerMenuItem[];
+  run?(context: { composer: PluginComposerApi }): void | Promise<void>;
 }
 
 /** Content for one composer's popup. The host owns placement, dismissal and focus restoration; the component owns its content and keyboard navigation. */

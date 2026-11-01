@@ -398,6 +398,20 @@ export function resolveComposerPopups(
   );
 }
 
+export function resolveComposerMenus(
+  customizations: readonly PluginComposerCustomizationSlot[],
+  scopeKind: PluginComposerScope["kind"],
+) {
+  return customizations.flatMap((customization) =>
+    composerCustomizationApplies(customization, scopeKind)
+      ? (customization.experimental_menus ?? []).map((menu) => ({
+          ...resolvedComposerContribution(customization, menu.id),
+          menu,
+        }))
+      : [],
+  );
+}
+
 export type ResolvedComposerPopup = ReturnType<
   typeof resolveComposerPopups
 >[number];
