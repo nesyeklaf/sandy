@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import {
   experimental_PluginIcon as PluginIcon,
   experimental_PromptMentionIcon as PromptMentionIcon,
@@ -421,7 +421,7 @@ function MentionResults({
       {groups.map((group, groupIndex) => {
         const startIndex = startIndexes[groupIndex]!;
         return (
-          <div key={group.key}>
+          <div key={group.key} data-group-key={group.key}>
             <MenuSectionHeader
               label={group.label}
               refreshing={groupIndex === 0 && refreshing}
@@ -529,7 +529,7 @@ function CommandResults({
       {groups.map((group, groupIndex) => {
         const startIndex = startIndexes[groupIndex]!;
         return (
-          <div key={group.key}>
+          <div key={group.key} data-group-key={group.key}>
             <MenuSectionHeader
               label={group.label}
               refreshing={groupIndex === 0 && refreshing}
@@ -588,6 +588,68 @@ function typeaheadResultsLength(state: TypeaheadMenuState): number {
     : 0;
 }
 
+function GroupRail({
+  groups,
+  activeKey,
+  scrollRef,
+}: {
+  groups: readonly { key: string; label: string }[];
+  activeKey: string | undefined;
+  scrollRef: RefObject<HTMLDivElement | null>;
+}) {
+  const jump = (key: string) => {
+    const container = scrollRef.current;
+    const target = container?.querySelector<HTMLElement>(
+      `[data-group-key="${CSS.escape(key)}"]`,
+    );
+    if (!container || !target) return;
+    container.scrollTop +=
+      target.getBoundingClientRect().top -
+      container.getBoundingClientRect().top;
+  };
+  return (
+    <div
+      role="tablist"
+      aria-orientation="vertical"
+      className="hidden w-24 shrink-0 flex-col gap-px overflow-y-auto border-r border-border p-1 @sm/mention-menu:flex"
+    >
+      {groups.map((group) => (
+        <button
+          key={group.key}
+          type="button"
+          role="tab"
+          aria-selected={group.key === activeKey}
+          title={group.label}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            jump(group.key);
+          }}
+          className={cn(
+            "truncate rounded px-2 py-1 text-left text-xs",
+            group.key === activeKey
+              ? "bg-state-active text-foreground"
+              : "text-muted-foreground hover:bg-state-hover",
+          )}
+        >
+          {group.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function activeGroupKey(
+  groups: readonly { key: string; suggestions: readonly unknown[] }[],
+  selectedIndex: number,
+): string | undefined {
+  let start = 0;
+  for (const group of groups) {
+    if (selectedIndex < start + group.suggestions.length) return group.key;
+    start += group.suggestions.length;
+  }
+  return groups[0]?.key;
+}
+
 export function MentionMenu({
   state,
   selectedIndex,
@@ -595,6 +657,11 @@ export function MentionMenu({
   onDismiss,
 }: MentionMenuProps) {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const railGroups =
+    state.state.kind === "results" && state.state.groups.length > 1
+      ? state.state.groups
+      : null;
 
   const innerState = state.state;
   const resultsLength = typeaheadResultsLength(state);
@@ -612,54 +679,66 @@ export function MentionMenu({
 
   return (
     <div className="@container/mention-menu flex max-h-(--promptbox-typeahead-max-height) flex-col overflow-hidden rounded-md border border-border bg-popover text-popover-foreground">
-      <div className="max-h-48 min-h-0 overflow-y-auto">
-        {innerState.kind === "hint" ? (
-          <MenuStatusRow
-            onDismiss={onDismiss}
-            className="text-muted-foreground"
-          >
-            Type to search mentions
-          </MenuStatusRow>
-        ) : innerState.kind === "loading" ? (
-          <MenuStatusRow
-            onDismiss={onDismiss}
-            className="text-muted-foreground"
-          >
-            <Icon name="Spinner" className="size-3.5 animate-spin" />
-            <span>
+      <div className="flex min-h-0">
+        {railGroups ? (
+          <GroupRail
+            groups={railGroups}
+            activeKey={activeGroupKey(railGroups, selectedIndex)}
+            scrollRef={scrollRef}
+          />
+        ) : null}
+        <div
+          ref={scrollRef}
+          className="max-h-48 min-h-0 min-w-0 flex-1 overflow-y-auto"
+        >
+          {innerState.kind === "hint" ? (
+            <MenuStatusRow
+              onDismiss={onDismiss}
+              className="text-muted-foreground"
+            >
+              Type to search mentions
+            </MenuStatusRow>
+          ) : innerState.kind === "loading" ? (
+            <MenuStatusRow
+              onDismiss={onDismiss}
+              className="text-muted-foreground"
+            >
+              <Icon name="Spinner" className="size-3.5 animate-spin" />
+              <span>
+                {state.trigger === "command"
+                  ? "Searching commands…"
+                  : "Searching mentions…"}
+              </span>
+            </MenuStatusRow>
+          ) : innerState.kind === "error" ? (
+            <MenuStatusRow onDismiss={onDismiss} className="text-destructive">
               {state.trigger === "command"
-                ? "Searching commands…"
-                : "Searching mentions…"}
-            </span>
-          </MenuStatusRow>
-        ) : innerState.kind === "error" ? (
-          <MenuStatusRow onDismiss={onDismiss} className="text-destructive">
-            {state.trigger === "command"
-              ? "Failed to load commands"
-              : "Failed to load suggestions"}
-          </MenuStatusRow>
-        ) : state.trigger === "command" ? (
-          state.state.kind === "results" ? (
-            <CommandResults
+                ? "Failed to load commands"
+                : "Failed to load suggestions"}
+            </MenuStatusRow>
+          ) : state.trigger === "command" ? (
+            state.state.kind === "results" ? (
+              <CommandResults
+                groups={state.state.groups}
+                refreshing={state.state.refreshing}
+                trigger={state.char}
+                selectedIndex={selectedIndex}
+                onApply={onApply}
+                itemRefs={itemRefs}
+                onDismiss={onDismiss}
+              />
+            ) : null
+          ) : state.state.kind === "results" ? (
+            <MentionResults
               groups={state.state.groups}
               refreshing={state.state.refreshing}
-              trigger={state.char}
               selectedIndex={selectedIndex}
               onApply={onApply}
               itemRefs={itemRefs}
               onDismiss={onDismiss}
             />
-          ) : null
-        ) : state.state.kind === "results" ? (
-          <MentionResults
-            groups={state.state.groups}
-            refreshing={state.state.refreshing}
-            selectedIndex={selectedIndex}
-            onApply={onApply}
-            itemRefs={itemRefs}
-            onDismiss={onDismiss}
-          />
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );
