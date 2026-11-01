@@ -67,7 +67,7 @@ describe(`keep-warm and the historian's fork on one cache clock, on pi ${VERSION
 		};
 		try {
 			await s.runtime.session.bindExtensions({ uiContext: ui as never });
-			for (let index = 0; index < 6; index++) log.turn(`seed ${index}`, 8_000);
+			for (let index = 0; index < 6; index++) log.talk(`seed ${index}`, 8_000);
 			s.expectPrompt(START + 900_000);
 			await s.runtime.session.prompt("Continue the work.");
 			await s.waitFor(() => server.requests.some(isFork));
@@ -96,7 +96,7 @@ describe(`keep-warm and the historian's fork on one cache clock, on pi ${VERSION
 	it("forks the next summary from a prefix a ping kept warm past the main request's lifetime", async () => {
 		const manager = piSdk.SessionManager.inMemory();
 		const log = sessionLog(manager);
-		for (let index = 0; index < 6; index++) log.turn(`seed ${index}`, 8_000);
+		for (let index = 0; index < 6; index++) log.talk(`seed ${index}`, 8_000);
 		const server = await new FakeAnthropic().start();
 		const s = await waitingSession({
 			shared: { manager, server, signalFile: join(mkdtempSync(join(tmpdir(), "context-clock-")), "signal.json") },
@@ -142,7 +142,7 @@ describe(`keep-warm and the historian's fork on one cache clock, on pi ${VERSION
 	it("holds the fork while a ping already reads the prefix, then forks from the ping's read", async () => {
 		const manager = piSdk.SessionManager.inMemory();
 		const log = sessionLog(manager);
-		for (let index = 0; index < 6; index++) log.turn(`seed ${index}`, 8_000);
+		for (let index = 0; index < 6; index++) log.talk(`seed ${index}`, 8_000);
 		const server = await new FakeAnthropic().start();
 		const s = await waitingSession({
 			shared: { manager, server, signalFile: join(mkdtempSync(join(tmpdir(), "context-clock-")), "signal.json") },

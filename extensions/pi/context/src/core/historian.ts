@@ -38,6 +38,7 @@ Every thread still open at the end of this stretch, including open threads from 
 Rules:
 - End every bullet with the ids of the entries it comes from, like (#1a2b3c4d). Cite only ids that appear in the transcript or in the existing summary.
 - An entry may be shown in part ("characters 0-8000 of 20000"); record what you see and leave the rest to the next stretch.
+- A long tool output is shown as its head and tail around an omission mark; record what they show, the entry keeps the rest.
 - Answer in the sections above as text. Do not call tools.
 - Keep exact identifiers, paths, numbers and error messages.
 - Record user instructions and constraints exactly as stated.
@@ -56,6 +57,8 @@ export interface EvidenceSpan {
 	readonly text: string;
 	/** How the whole entry reads, to tell at commit time whether it was edited meanwhile. */
 	readonly digest: string;
+	/** The span is a long tool output's head and tail: `text` holds the start and the end of the whole entry, not all of it. */
+	readonly clipped?: true;
 }
 
 /** What the next summary covers once the historian's answer is accepted. */
@@ -95,7 +98,7 @@ export interface HistorianWork {
 }
 
 export interface EvidenceBudget {
-	/** Less than this is not worth a call. */
+	/** A stretch covering less history than this is not worth a call. */
 	readonly minTokens: number;
 	readonly maxTokens: number;
 	/** The newest history this many estimated tokens stays raw or masked after the next cut; it is summarized later. */
@@ -133,16 +136,60 @@ function renderSlice(entry: LogEntry, from: number, maxChars: number): { text: s
 }
 
 const CHARS_PER_TOKEN = 4;
+/**
+ * Characters of a tool output the historian is shown, head and tail: the summary records what a call found, and the
+ * whole output stays readable by its entry id. User and assistant text is shown whole.
+ */
+export const TOOL_OUTPUT_CHARS = 2_000;
+const TOOL_OUTPUT_HEAD = 1_400;
 
-/** Spans of `entries` from `offset` into the first, up to `maxTokens`; the entry the spans end inside is `unfinished`. */
+/**
+ * A tool output longer than {@link TOOL_OUTPUT_CHARS} as its head and tail around an omission mark, with the length of
+ * the whole rendering; undefined for a shorter one. Reads the rendering in chunks and holds only head and tail.
+ */
+function clippedOutput(entry: LogEntry): { text: string; total: number } | undefined {
+	let head = "";
+	let tail = "";
+	let total = 0;
+	for (const chunk of renderChunks(entry, 8_192)) {
+		total = chunk.offset + chunk.text.length;
+		const room = TOOL_OUTPUT_HEAD - head.length;
+		head += chunk.text.slice(0, Math.max(0, room));
+		tail = (tail + chunk.text.slice(Math.max(0, room))).slice(-(TOOL_OUTPUT_CHARS - TOOL_OUTPUT_HEAD));
+	}
+	if (total <= TOOL_OUTPUT_CHARS) return undefined;
+	// Neither cut splits a surrogate pair.
+	if (isHigh(head.charCodeAt(head.length - 1))) head = head.slice(0, -1);
+	if (isLow(tail.charCodeAt(0))) tail = tail.slice(1);
+	return { text: `${head}\n…[${total - head.length - tail.length} characters omitted; #${entry.id} holds them]…\n${tail}`, total };
+}
+
+const isHigh = (code: number) => code >= 0xd800 && code <= 0xdbff;
+const isLow = (code: number) => code >= 0xdc00 && code <= 0xdfff;
+
+/**
+ * Spans of `entries` from `offset` into the first, up to `maxTokens` shown; the entry the spans end inside is
+ * `unfinished`. `covered` counts the history the spans account for, a clipped output at its whole length.
+ */
 function takeSpans(entries: readonly LogEntry[], offset: number, maxTokens: number) {
 	const spans: EvidenceSpan[] = [];
 	let left = maxTokens;
 	let tokens = 0;
+	let covered = 0;
 	let unfinished: EvidenceSpan | undefined;
 	let next = 0;
 	for (; next < entries.length && left > 0; next++) {
 		const entry = entries[next] as LogEntry;
+		const clipped = entry.kind === "tool" && offset === 0 ? clippedOutput(entry) : undefined;
+		if (clipped) {
+			// Head and tail always go whole: a stretch overshoots by at most one clipped output, and never stalls on one.
+			const cost = Math.ceil(clipped.text.length / CHARS_PER_TOKEN);
+			spans.push({ entryId: entry.id, from: 0, to: clipped.total, total: clipped.total, text: clipped.text, digest: entryDigest(entry), clipped: true });
+			left -= cost;
+			tokens += cost;
+			covered += Math.ceil(clipped.total / CHARS_PER_TOKEN);
+			continue;
+		}
 		const slice = renderSlice(entry, offset, left * CHARS_PER_TOKEN);
 		if (slice.text === "" && offset >= slice.total) {
 			// An edit shortened the entry below what was summarized: it is complete.
@@ -154,6 +201,7 @@ function takeSpans(entries: readonly LogEntry[], offset: number, maxTokens: numb
 		const cost = Math.ceil(slice.text.length / CHARS_PER_TOKEN);
 		left -= cost;
 		tokens += cost;
+		covered += cost;
 		offset = 0;
 		if (slice.to < slice.total) {
 			unfinished = span;
@@ -166,7 +214,7 @@ function takeSpans(entries: readonly LogEntry[], offset: number, maxTokens: numb
 		complete.length > 0
 			? { fromId: complete[0]?.entryId as string, throughId: complete.at(-1)?.entryId as string, digest: digestOf(...complete.map((span) => span.digest)) }
 			: undefined;
-	return { spans, tokens, unfinished, stretch, next };
+	return { spans, tokens, covered, unfinished, stretch, next };
 }
 
 /** A stretch behind the coverage still to summarize: its entries as they read now, and where in the first to start. */
@@ -218,8 +266,9 @@ function nextGap(history: EffectiveHistory, entries: readonly LogEntry[], compet
  * The next stretch worth summarizing, or undefined when too little has accumulated. A stretch behind the coverage that
  * the summary does not account for comes first, however small. Otherwise only history the next cut archives is
  * eligible: the newest `reserveTokens` stay raw or masked and are summarized later. The stretch starts where the
- * summary stopped, inside an entry when the summary holds only a part of it, and takes up to `maxTokens`. An entry that
- * does not fit is shown in explicit spans, never clipped: the part not shown stays to be summarized.
+ * summary stopped, inside an entry when the summary holds only a part of it, and takes up to `maxTokens`. A long tool
+ * output is shown as its head and tail (see {@link TOOL_OUTPUT_CHARS}) and counts complete. Any other entry that does not
+ * fit is shown in explicit spans, never clipped: the part not shown stays to be summarized.
  */
 export function selectEvidence(history: EffectiveHistory, budget: EvidenceBudget, readAt?: string): HistorianWork | undefined {
 	const entries = summarizable(history, budget.competing);
@@ -262,7 +311,8 @@ export function selectEvidence(history: EffectiveHistory, budget: EvidenceBudget
 	if (partial && entries[index]?.id === partial.entryId) offset = partial.offset;
 
 	const taken = takeSpans(entries.slice(index, Math.max(index, eligible)), offset, budget.maxTokens);
-	if (taken.spans.length === 0 || taken.tokens < budget.minTokens) return undefined;
+	// Worth a call by what it lets the summary cover, not by what the historian reads of it.
+	if (taken.spans.length === 0 || taken.covered < budget.minTokens) return undefined;
 	const { unfinished } = taken;
 	return work(taken.spans, taken.tokens, {
 		throughId: taken.stretch?.throughId ?? covered,
@@ -437,7 +487,8 @@ export function historianPrompt(work: HistorianWork): string {
 		"",
 		"<transcript>",
 		...work.spans.map(
-			(span) => `<entry id="${span.entryId}" characters="${span.from}-${span.to}" of="${span.total}">\n${span.text}\n</entry>`,
+			(span) =>
+				`<entry id="${span.entryId}" characters="${span.from}-${span.to}" of="${span.total}"${span.clipped ? ' shown="head and tail"' : ""}>\n${span.text}\n</entry>`,
 		),
 		"</transcript>",
 		"",

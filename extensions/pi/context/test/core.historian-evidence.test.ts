@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { resolveConfig } from "../src/core/config.ts";
-import { evidenceBudget, selectEvidence } from "../src/core/historian.ts";
+import { evidenceBudget, historianPrompt, selectEvidence } from "../src/core/historian.ts";
 import { harness, promptEntries, storedSummaries } from "./support/historian.ts";
 import { sessionLog } from "./support/session-log.ts";
 
@@ -19,12 +19,20 @@ const config = resolveConfig({
 const budget = evidenceBudget(config, false);
 
 /** A tool result of many filler lines with the fact as the line at the given position. */
-function bigResult(log: ReturnType<typeof sessionLog>, label: string, lines: number, at: number, fact: string) {
+function bigOutput(log: ReturnType<typeof sessionLog>, label: string, lines: number, at: number, fact: string) {
 	const user = log.user("Please read " + label + ".");
 	log.call("c-" + label, "read", { path: label });
 	const body = Array.from({ length: lines }, (_, i) => (i === at ? fact : "filler line " + i + " of " + label + " with ordinary words"));
 	const result = log.result("c-" + label, "read", body.join("\n"));
 	log.answer("Read " + label + ".");
+	return { user, result };
+}
+
+/** An answer of many filler lines with the fact as the line at the given position: text the historian sees whole. */
+function bigResult(log: ReturnType<typeof sessionLog>, label: string, lines: number, at: number, fact: string) {
+	const user = log.user("Please write out " + label + ".");
+	const body = Array.from({ length: lines }, (_, i) => (i === at ? fact : "filler line " + i + " of " + label + " with ordinary words"));
+	const result = log.answer(body.join("\n"));
 	return { user, result };
 }
 
@@ -69,6 +77,34 @@ describe("selecting the evidence for the historian", () => {
 	});
 });
 
+describe("the historian over a long tool output", () => {
+	it("shows its head and tail, counts it covered and points to the entry for the rest", () => {
+		const log = sessionLog();
+		const { result } = bigOutput(log, "big", 1_500, 700, "FACT middle-code = jade-heron-63");
+		for (const label of ["a", "b", "c", "d"]) log.turn(label, 2_000);
+		const work = selectEvidence(log.tape().history(), budget);
+		assert.ok(work);
+		const span = work.spans.find((one) => one.entryId === result);
+		assert.ok(span?.clipped, "the output is clipped");
+		assert.equal(span.from, 0);
+		assert.equal(span.to, span.total, "a clipped output counts as shown to its end");
+		assert.ok(span.text.length < 2_200, "head and tail stay near 2,000 characters: " + span.text.length);
+		assert.ok(span.text.includes("filler line 0 of big") && span.text.includes("filler line 1499 of big"), "head and tail are shown");
+		assert.ok(!span.text.includes("jade-heron-63"), "the middle is left out");
+		assert.ok(span.text.includes("characters omitted; #" + result + " holds them"), "the omission names the entry to read");
+		assert.ok(work.coverage.partial?.entryId !== result, "a clipped output is never partial");
+		assert.ok(historianPrompt(work).includes('shown="head and tail"'));
+	});
+
+	it("leaves short outputs and the rest of the session unclipped", () => {
+		const log = sessionLog();
+		for (const label of ["a", "b", "c", "d", "e", "f"]) log.turn(label, 1_500);
+		const work = selectEvidence(log.tape().history(), budget);
+		assert.ok(work);
+		assert.ok(work.spans.every((span) => !span.clipped));
+	});
+});
+
 describe("the historian over a long result", () => {
 	it("lets a fact from the middle of the result reach the request and the summary", async () => {
 		const log = sessionLog();
@@ -83,7 +119,7 @@ describe("the historian over a long result", () => {
 			prompts.some((prompt) => prompt.includes("FACT middle-code = jade-heron-63")),
 			"the middle line is in a request to the historian's model",
 		);
-		assert.ok(!prompts.some((prompt) => prompt.includes("characters omitted")), "no request clips an entry");
+		assert.ok(!prompts.some((prompt) => prompt.includes("characters omitted; #" + result)), "no request clips the answer");
 		const facts = storedSummaries(log).at(-1)?.sections.facts ?? [];
 		assert.ok(facts.some((fact) => fact.includes("jade-heron-63") && fact.includes("#" + result)), facts.join("\n"));
 	});

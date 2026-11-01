@@ -18,7 +18,7 @@ type Log = ReturnType<typeof sessionLog>;
 
 /** The entries of a historian prompt: id, the characters shown, and the text. */
 export function promptEntries(prompt: string): { id: string; from: number; to: number; of: number; text: string }[] {
-	const found = [...prompt.matchAll(/<entry id="([^"]+)" characters="(\d+)-(\d+)" of="(\d+)">\n([\s\S]*?)\n<\/entry>/g)];
+	const found = [...prompt.matchAll(/<entry id="([^"]+)" characters="(\d+)-(\d+)" of="(\d+)"(?: shown="head and tail")?>\n([\s\S]*?)\n<\/entry>/g)];
 	return found.map(([, id, from, to, of, text]) => ({
 		id: id as string,
 		from: Number(from),

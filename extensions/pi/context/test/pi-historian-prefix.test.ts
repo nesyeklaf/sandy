@@ -52,10 +52,10 @@ const config = resolveConfig({
 	historian: { chunkMinTokens: 100, chunkMaxTokens: 1_500, maxOutputTokens: 1_000 },
 });
 
-/** A real piece of work: a session whose second result is larger than one stretch, so it is shown in spans. */
+/** A real piece of work: a session whose answers are larger than one stretch, so they are shown in spans. */
 function work(): HistorianWork {
 	const log = sessionLog();
-	for (const label of ["a", "b", "c", "d"]) log.turn(label, 8_000);
+	for (const label of ["a", "b", "c", "d"]) log.talk(label, 8_000);
 	const selected = selectEvidence(log.tape().history(), evidenceBudget(config, false));
 	assert.ok(selected, "the fixture has no work");
 	return selected;
@@ -699,7 +699,7 @@ describe(`receipts and ledger lines of the fork and the isolated route, on pi ${
 	/** The historian's runner over a real session, asking pi's routes: the fork, then the historian model. */
 	function runner(options: { readonly isolated?: HistorianHost["isolated"]; readonly config?: typeof config } = {}) {
 		const log = sessionLog();
-		for (const label of ["a", "b", "c", "d"]) log.turn(label, 8_000);
+		for (const label of ["a", "b", "c", "d"]) log.talk(label, 8_000);
 		const host = rig.host(options.isolated ? { isolated: options.isolated } : {});
 		const run = harness(log, options.config ?? config, { routes: () => rig.requests.routes(host), now: () => clock });
 		const starts = () => attemptRecords(log).filter((record) => record.type === "start") as Extract<AttemptEntry, { type: "start" }>[];

@@ -62,6 +62,12 @@ export function sessionLog(manager: Manager = piSdk.SessionManager.inMemory()) {
 			const answer = log.answer("Module " + label + " is fine.");
 			return { user, call, result, answer };
 		},
+		/** One turn without tools: a prompt and a long answer, text the historian sees whole and not clipped. */
+		talk: (label: string, answerChars = 2_000) => {
+			const user = log.user("Please explain module-" + label + ".");
+			const answer = log.answer("FACT " + label + " holds.\n" + "y".repeat(answerChars));
+			return { user, answer };
+		},
 		replace: (targetId: string, text: string) =>
 			manager.appendContextEdit(targetId, { content: [{ type: "text", text }] }),
 		omit: (targetId: string) => manager.appendContextEdit(targetId, null),
