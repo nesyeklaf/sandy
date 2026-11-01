@@ -4,4 +4,4 @@ Hard fork, files only (no history). Source: abdoutelb/bb-plugin-files-editor, ta
 License: LICENSE kept.
 
 Changes: manifest key `bb` -> `sandy`, SDK `@sandy-sdk/plugin-sdk` from this repo (`file:`), names renamed with scripts/rename-sandy.mjs. No upstream merges.
-Open: typecheck fails against the current SDK (removed slots such as experimental_threadHeaderAction, threadPanelAction); the bundle builds and loads.
+Open: Adapted to the current SDK: the panel is an `experimental_tab` (availability `action`), opened through `experimental_panel.openTab`. Typecheck and tests pass.

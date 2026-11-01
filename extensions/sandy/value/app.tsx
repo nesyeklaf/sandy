@@ -9,8 +9,8 @@ import {
   useRpc,
   experimental_useProviders,
   type ExperimentalBadge,
-  type PluginThreadHeaderActionProps,
 } from "@sandy-sdk/plugin-sdk/app";
+import { registerHeaderAction, type LegacyHeaderActionProps } from "./legacy-header";
 
 import { ContextMeter } from "@/components/context-meter";
 import { ThreadTokenCount, type ThreadTokens } from "@/components/thread-token-count";
@@ -155,7 +155,7 @@ function isForThread(payload: unknown, threadId: string): boolean {
   return Array.isArray(ids) && ids.includes(threadId);
 }
 
-function ThreadTokensAction({ threadId, isCompactViewport }: PluginThreadHeaderActionProps) {
+function ThreadTokensAction({ threadId, isCompactViewport }: LegacyHeaderActionProps) {
   const rpc = useRpc<typeof rpcContract>();
   const navigate = useSandyNavigate();
   const [usage, setUsage] = useState<ThreadTokens | null>(null);
@@ -290,7 +290,7 @@ export default definePluginApp((app) => {
     experimental_useBadge: useContextLevelsBadge,
   });
 
-  app.slots.experimental_threadHeaderAction({
+  registerHeaderAction(app.slots, {
     id: "thread-tokens",
     title: "Tokens used",
     component: ThreadTokensAction,

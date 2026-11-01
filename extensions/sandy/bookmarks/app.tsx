@@ -15,11 +15,12 @@ import {
   type PluginMessageActionContext,
   type PluginRpcClient,
   type PluginSidebarProject,
-  type PluginThreadHeaderActionProps,
-  type PluginThreadPanelProps,
+  type ExperimentalThreadActionTabProps,
+  type ExperimentalPanelController,
 } from "@sandy-sdk/plugin-sdk/app";
 import { toast } from "sonner";
 import { markerStyles } from "./markers";
+import { registerHeaderAction, type LegacyHeaderActionProps, type LegacyNavigate } from "./legacy-header";
 import { openMessage, threadPath } from "./navigation";
 import { excerptText, formatSavedAt } from "./presentation";
 import { createRpcClient } from "./rpc";
@@ -60,12 +61,12 @@ async function toggleBookmark({
   threadId,
   message,
   selectedText,
-  openPanel,
+  experimental_panel,
 }: PluginMessageActionContext) {
   const showPanel = {
     label: "Show",
     onClick: () => {
-      openPanel({ actionId: PANEL_ACTION_ID });
+      openBookmarksPanel(experimental_panel);
     },
   };
   const input = {
@@ -435,7 +436,14 @@ function BookmarksPanel({ threadId }: { threadId: string | null }) {
   );
 }
 
-function ThreadBookmarksPanel({ threadId }: PluginThreadPanelProps) {
+/** Opens the Bookmarks tab in the side panel of the surface that is in focus. */
+function openBookmarksPanel(panel: ExperimentalPanelController): boolean {
+  return panel.openTab({
+    tab: { id: PANEL_ACTION_ID, context: { kind: "thread" }, availability: "action" },
+  });
+}
+
+function ThreadBookmarksPanel({ threadId }: ExperimentalThreadActionTabProps) {
   return <BookmarksPanel threadId={threadId} />;
 }
 
@@ -481,8 +489,8 @@ function BookmarksOverlay() {
 
 // Only a component inside a thread view can open that thread's side panel;
 // the app overlay cannot, so the header button also finishes panel jumps.
-function HeaderButton({ threadId }: PluginThreadHeaderActionProps) {
-  const navigate = useSandyNavigate();
+function HeaderButton({ threadId }: LegacyHeaderActionProps) {
+  const navigate = useSandyNavigate() as LegacyNavigate;
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
 
@@ -531,10 +539,13 @@ export default definePluginApp((app) => {
     run: toggleBookmark,
   });
 
-  app.slots.threadPanelAction({
+  app.slots.experimental_tab({
     id: PANEL_ACTION_ID,
     title: "Bookmarks",
+    icon: "Bookmark",
     layout: "flush",
+    context: { kind: "thread" },
+    availability: "action",
     component: ThreadBookmarksPanel,
   });
 
@@ -545,7 +556,7 @@ export default definePluginApp((app) => {
     component: NewThreadBookmarksPanel,
   });
 
-  app.slots.experimental_threadHeaderAction({
+  registerHeaderAction(app.slots, {
     id: "bookmarks",
     title: "Bookmarks",
     component: HeaderButton,
@@ -560,8 +571,8 @@ export default definePluginApp((app) => {
     id: "show-bookmarks",
     title: "Bookmarks: Show saved messages",
     isAvailable: ({ threadId }) => threadId !== null,
-    run: ({ openPanel }) => {
-      openPanel({ actionId: PANEL_ACTION_ID });
+    run: ({ experimental_panel }) => {
+      openBookmarksPanel(experimental_panel);
     },
   });
 });

@@ -6,8 +6,8 @@ import { useState } from "react";
 import {
   definePluginApp,
   useRpc,
-  type PluginThreadHeaderActionProps,
 } from "@sandy-sdk/plugin-sdk/app";
+import { registerHeaderAction, type LegacyHeaderActionProps } from "./legacy-header";
 import { toast } from "sonner";
 import type { rpcContract } from "./server";
 import { ModelPicker } from "@/components/ModelPicker";
@@ -27,7 +27,7 @@ const ACTION_LABEL = "Re-generate thread name";
  * The header button. The header row is 48px of chrome with 28px controls, so
  * this stays one icon-sized button on every viewport.
  */
-function RenameAction({ threadId }: PluginThreadHeaderActionProps) {
+function RenameAction({ threadId }: LegacyHeaderActionProps) {
   const rpc = useRpc<typeof rpcContract>();
   const [pending, setPending] = useState(false);
 
@@ -83,7 +83,7 @@ function RenameAction({ threadId }: PluginThreadHeaderActionProps) {
 }
 
 export default definePluginApp((app) => {
-  app.slots.experimental_threadHeaderAction({
+  registerHeaderAction(app.slots, {
     id: "rename",
     title: "Thread name",
     component: RenameAction,

@@ -5,7 +5,8 @@ import {
   useSandyNavigate,
   useRpc,
   type PluginNavPanelProps,
-  type PluginThreadPanelProps,
+  type ExperimentalThreadActionTabProps,
+  type ExperimentalPanelController,
 } from "@sandy-sdk/plugin-sdk/app";
 import { toast } from "sonner";
 // Statically imported so the explorer's folder/file glyphs paint on the first
@@ -110,7 +111,7 @@ function FilesPage({ subPath }: PluginNavPanelProps) {
  * The same explorer beside a thread, pinned to that thread's workspace — the
  * files the agent in this conversation is actually editing.
  */
-function ThreadFilesPanel({ threadId }: PluginThreadPanelProps) {
+function ThreadFilesPanel({ threadId }: ExperimentalThreadActionTabProps) {
   const [filePath, setFilePath] = useState<string | null>(null);
   const scope = useMemo<ScopeRef>(
     () => ({ kind: "thread", id: threadId }),
@@ -202,6 +203,14 @@ function PreviewSection() {
   );
 }
 
+/** Opens the Files tab, titled "Files", in the side panel of the surface in focus. */
+function openFilesPanel(panel: ExperimentalPanelController): boolean {
+  return panel.openTab({
+    tab: { id: "files", context: { kind: "thread" }, availability: "action" },
+    title: "Files",
+  });
+}
+
 export default definePluginApp((app) => {
   app.slots.settingsSection({
     id: "preview",
@@ -219,14 +228,16 @@ export default definePluginApp((app) => {
     component: FilesPage,
   });
 
-  app.slots.threadPanelAction({
+  app.slots.experimental_tab({
     id: "files",
     title: "Project files",
     icon: "Code",
     layout: "flush",
+    context: { kind: "thread" },
+    availability: "action",
     component: ThreadFilesPanel,
-    run: ({ openPanel }) => {
-      openPanel({ title: "Files" });
+    run: ({ experimental_panel }) => {
+      openFilesPanel(experimental_panel);
     },
   });
 
@@ -235,8 +246,8 @@ export default definePluginApp((app) => {
     title: "Files: browse this thread's project",
     // The palette opens anywhere, but this action needs a thread side panel.
     isAvailable: ({ threadId }) => threadId !== null,
-    run: ({ openPanel }) => {
-      if (!openPanel({ actionId: "files", title: "Files" })) {
+    run: ({ experimental_panel }) => {
+      if (!openFilesPanel(experimental_panel)) {
         toast.error("Open a thread to browse its project files.");
       }
     },

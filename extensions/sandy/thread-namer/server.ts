@@ -79,6 +79,10 @@ const PERMISSION_MODE_PREFERENCE: readonly PermissionMode[] = [
 
 const reasoningLevelSchema = z.enum(REASONING_LEVELS);
 
+function isReasoningLevel(value: string | null | undefined): value is ReasoningLevel {
+  return reasoningLevelSchema.safeParse(value).success;
+}
+
 const agentSelectionSchema: z.ZodType<AgentSelection, AgentSelection> = z.object(
   {
     providerId: z.string().min(1),
@@ -419,7 +423,12 @@ async function resolveTarget(
     providerId: thread.providerId,
     ...(execution === null
       ? {}
-      : { model: execution.model, reasoningLevel: execution.reasoningLevel }),
+      : {
+          model: execution.model,
+          ...(isReasoningLevel(execution.reasoningLevel)
+            ? { reasoningLevel: execution.reasoningLevel }
+            : {}),
+        }),
   };
 }
 
@@ -679,10 +688,10 @@ async function providerChoices(
       displayName: string;
       description: string;
       supportedReasoningEfforts: readonly {
-        reasoningEffort: ReasoningLevel;
+        reasoningEffort: string;
         description: string;
       }[];
-      defaultReasoningEffort: ReasoningLevel;
+      defaultReasoningEffort: string;
     },
     extra: boolean,
   ): ModelChoice => ({
@@ -693,11 +702,15 @@ async function providerChoices(
     // Descriptions are one-liners in the picker, and the whole catalogue has
     // to fit the 256KB kv row.
     description: entry.description.slice(0, 160),
-    reasoning: entry.supportedReasoningEfforts.map((effort) => ({
-      level: effort.reasoningEffort,
-      description: effort.description.slice(0, 120),
-    })),
-    defaultReasoningLevel: entry.defaultReasoningEffort,
+    // Efforts this plugin has no label for are left out of the picker.
+    reasoning: entry.supportedReasoningEfforts.flatMap((effort) =>
+      isReasoningLevel(effort.reasoningEffort)
+        ? [{ level: effort.reasoningEffort, description: effort.description.slice(0, 120) }]
+        : [],
+    ),
+    defaultReasoningLevel: isReasoningLevel(entry.defaultReasoningEffort)
+      ? entry.defaultReasoningEffort
+      : "medium",
     extra,
   });
   const choices = options.models.map((entry) => toChoice(entry, false));

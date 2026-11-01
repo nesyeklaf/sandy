@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent } from "@testing-library/react";
+import { fireEvent, waitFor } from "@testing-library/react";
 import {
   loadPluginApp,
   renderSlot,
   type CapturedPluginApp,
 } from "@sandy-sdk/plugin-sdk/testing/app";
-import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
+import type { ComponentType } from "react";
+import type { ExperimentalPanelController, ExperimentalThreadActionTabProps, PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { markerStyles } from "./markers";
 import { openMessage, threadPath } from "./navigation";
 import { excerptText, formatSavedAt, plainExcerpt } from "./presentation";
@@ -41,9 +42,9 @@ function sidebarThread(overrides: Partial<PluginSidebarThread>): PluginSidebarTh
 }
 
 function panel(app: CapturedPluginApp) {
-  const action = app.threadPanelActions[0];
+  const action = app.tabs[0];
   if (action === undefined) throw new Error("Expected the Bookmarks panel");
-  return action;
+  return action as unknown as { id: string; component: ComponentType<ExperimentalThreadActionTabProps> };
 }
 
 afterEach(() => {
@@ -55,7 +56,7 @@ describe("registrations", () => {
   it("adds a message action, the panel in both surfaces, a header button, and a command", async () => {
     const app = await loadPluginApp(() => import("./app"));
     expect(app.messageActions.map((action) => action.title)).toEqual(["Bookmark"]);
-    expect(app.threadPanelActions.map((action) => action.id)).toEqual(["bookmarks"]);
+    expect(app.tabs.map((action) => action.id)).toEqual(["bookmarks"]);
     expect(app.newThreadPanelActions.map((action) => action.id)).toEqual(["bookmarks"]);
     expect(app.threadHeaderActions).toHaveLength(1);
     expect(app.appOverlays).toHaveLength(1);
@@ -84,8 +85,10 @@ describe("bookmark action", () => {
         role: "assistant" as const,
         text: "Full answer",
         sourceSeqEnd: 10,
+        experimental_messageSeq: 10,
       },
-      openPanel: () => true,
+      composer: null,
+      experimental_panel: { openTab: () => true } as unknown as ExperimentalPanelController,
     };
 
     await action.run(context);
@@ -122,7 +125,7 @@ describe("bookmarks panel", () => {
     const app = await loadPluginApp(() => import("./app"));
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_two", params: null },
+      { threadId: "thr_two", environment: null, params: null },
       {
         rpc: {
           list: () => ({
@@ -155,7 +158,7 @@ describe("bookmarks panel", () => {
     const app = await loadPluginApp(() => import("./app"));
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_one", params: null },
+      { threadId: "thr_one", environment: null, params: null },
       {
         rpc: {
           list: () => ({
@@ -171,6 +174,7 @@ describe("bookmarks panel", () => {
 
     await slot.findByText("Elsewhere");
     fireEvent.click(slot.getByRole("button", { name: "This thread" }));
+    await waitFor(() => expect(slot.queryByText("Elsewhere")).toBeNull());
     const excerpts = slot.container.querySelectorAll("li .line-clamp-3");
     expect(Array.from(excerpts, (element) => element.textContent)).toEqual([
       "First",
@@ -184,7 +188,7 @@ describe("bookmarks panel", () => {
     const app = await loadPluginApp(() => import("./app"));
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_one", params: null },
+      { threadId: "thr_one", environment: null, params: null },
       {
         rpc: { list: () => ({ bookmarks: [bookmark()] }) },
         sidebarThreads: { threads: [sidebarThread({})] },
@@ -205,7 +209,7 @@ describe("bookmarks panel", () => {
     const app = await loadPluginApp(() => import("./app"));
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_one", params: null },
+      { threadId: "thr_one", environment: null, params: null },
       { rpc: { list: () => ({ bookmarks: [bookmark()] }) } },
     );
 
@@ -221,7 +225,7 @@ describe("bookmarks panel", () => {
     let bookmarks = [bookmark()];
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_one", params: null },
+      { threadId: "thr_one", environment: null, params: null },
       {
         rpc: {
           list: () => ({ bookmarks }),
@@ -245,7 +249,7 @@ describe("bookmarks panel", () => {
     const app = await loadPluginApp(() => import("./app"));
     const slot = renderSlot(
       panel(app),
-      { threadId: "thr_one", params: null },
+      { threadId: "thr_one", environment: null, params: null },
       { rpc: { list: () => ({ bookmarks: [] }) } },
     );
 
