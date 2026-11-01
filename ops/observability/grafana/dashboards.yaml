@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: sandy
+    folder: sandy
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /otel-lgtm/sandy-dashboards
+      foldersFromFilesStructure: false
