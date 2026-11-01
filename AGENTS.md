@@ -19,6 +19,7 @@
 
 - The server owns product policy: defaults, instructions, manager behavior, tool lists, and thread behavior. The host daemon owns host-local primitives, provider translation, runtime/session management, and workspace execution.
 - Return raw host-local data from the daemon; assemble product behavior on the server. Move responsibility across this boundary only when the change requires it.
+- Deploy only with `scripts/fork/deploy.sh` or `scripts/fork/remote.sh deploy` under `systemd-run --user` (see FORK.md, Deploy). A script started with `nohup` or `setsid` from a Sandy thread stays in the server unit's cgroup and dies with the `systemctl stop` it issues.
 - Increment `HOST_DAEMON_PROTOCOL_VERSION` for changes to server/daemon wire fields, including their types, requiredness, defaults, or meaning, unless compatibility with the previously shipped daemon is deliberately preserved and tested. This covers session payloads, WebSocket messages, and host RPC commands/results. Shared TypeScript builds do not verify compatibility with enrolled machines; the version bump triggers their update.
 
 ## CLI And Plugin API

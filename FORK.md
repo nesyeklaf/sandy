@@ -34,6 +34,8 @@ The version number carries on from BB 0.48.1 at the fork point. Tell builds apar
 scripts/fork/deploy.sh AI ~/sandy-fork-dist/<sha>/sandy-app-<version>.tgz
 ```
 
+Never deploy with a hand-written script, `nohup` or `setsid`, least of all from a thread that runs on the server being deployed. `systemctl stop` kills every process in the server unit's cgroup, `setsid` does not leave it, so the script dies with the unit before it installs anything. Only a transient unit (`systemd-run --user --unit=…`, which `deploy.sh` and `remote.sh` use) sits outside that cgroup.
+
 `deploy.sh` copies the tarball and `remote.sh` to the host, compares checksums, and starts `remote.sh deploy` as a transient systemd user unit. The unit keeps running when the ssh session drops, which it does when the restarted server is the one carrying the session. `remote.sh deploy`:
 
 1. finds the single `sandy-host-daemon-*.service` user unit (or `SANDY_UNIT`) and its `SANDY_DATA_DIR`,
