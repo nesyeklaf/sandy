@@ -315,7 +315,7 @@ overridden.
 
 Nightly builds set `SANDY_DESKTOP_RELEASE_CHANNEL=nightly` at build time. The value
 is baked into the Electron main/preload bundles and selects the nightly product
-identity and yellow icon. Omit the variable (or set it to
+identity and violet icon. Omit the variable (or set it to
 `latest`) for stable and local builds.
 
 ## About panel
@@ -385,7 +385,7 @@ Use the View menu to toggle DevTools. To open them automatically on launch, set
 SANDY_DESKTOP_OPEN_DEVTOOLS=1 apps/desktop/release/mac-arm64/sandy.app/Contents/MacOS/sandy
 ```
 
-Unpackaged runs use `assets/icon-dev.png` for the Dock and window icon. Set
+Unpackaged runs use `assets/icon-dev.png` (the blue mark) for the Dock and window icon. Set
 `SANDY_DESKTOP_DEV_ICON=1` to use it in a packaged build too; `pnpm
 desktop:worktree` sets it. The bundle's own icon in Finder is unchanged.
 

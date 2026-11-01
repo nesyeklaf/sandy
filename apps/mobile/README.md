@@ -122,19 +122,16 @@ pnpm mobile:apk:dev
 adb install -r apps/mobile/build-output/sandy-dev.apk
 ```
 
-The APK is `apps/mobile/build-output/sandy-dev.apk`. It has an orange sandy launcher
-icon, favicon, and splash logo, the name **sandy dev**, and package `app.sandy.mobile.dev`, so it
+The APK is `apps/mobile/build-output/sandy-dev.apk`. It has a blue sandy launcher
+icon, favicon, and splash logo (the normal mark is amber), the name **sandy dev**, and package `app.sandy.mobile.dev`, so it
 installs alongside the regular app with separate saved servers and data. It
 embeds the Release JS bundle and runs without Metro, EAS, or production
 signing credentials. Pair it with the development server through Add server or
 a pairing code. It does not claim production HTTPS app links; Android themed icons use the system tint.
-Dev launcher assets tint the existing shaded mobile artwork using the orange
-palette and tinting method from `apps/app/scripts/generate-pwa-icons.mjs`,
-preserving the original dimensions, alpha, and launcher padding. The transparent
-splash asset stores the original light logo's shading in orange RGB and uses
-the dark logo's silhouette alpha. This keeps transparency at the edges rather
-than throughout the shaded mark, avoiding darkening during native image
-generation. Both light and dark splash screens use the orange logo.
+All launcher, splash and favicon assets are rendered from the one mark in
+`apps/app/scripts/brand-marks.mjs` by `scripts/generate-brand-assets.mjs`; the
+dev variants use its blue palette, and the adaptive icon keeps the mark inside
+the launcher's safe zone.
 
 Use `pnpm mobile:apk:dev -- x86_64` for an Intel emulator. The default is
 `arm64-v8a` for a physical phone. Install Android SDK/build tools and JDK 17
