@@ -74,6 +74,8 @@ describe("palette hover preview", () => {
       "solarized",
       "gruvbox",
       "catppuccin",
+      "sandy",
+      "sand",
       "mine",
       "plugin:pack:ocean",
     ]);

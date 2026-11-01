@@ -990,6 +990,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         surfaceIds: [
           "storage",
           "sandy-sdk",
+          "theme-kit",
           "thread-plugin-metadata",
           "desktop-browsers",
           "ai-services",
@@ -1558,6 +1559,24 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Workflows",
           "Worktree",
         ],
+      },
+      {
+        id: "theme-kit",
+        tagline: "Generate a theme from three colors",
+        title: "Theme kit",
+        summary:
+          "Use sandy's theme generator from plugin server code. With this, a plugin can:",
+        bullets: [
+          "Generate a full light and dark theme from canvas, ink and accent colors",
+          "Write it to the custom theme directory, refusing to replace an existing one",
+          "Check any theme CSS for contrast, missing tokens and eye comfort",
+        ],
+        apiSymbols: [
+          "PluginSandySdk.theme.experimental_create",
+          "PluginSandySdk.theme.experimental_check",
+        ],
+        firstParty: [],
+        experimental: true,
       },
       {
         id: "thread-plugin-metadata",

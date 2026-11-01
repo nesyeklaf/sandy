@@ -216,6 +216,9 @@ import {
   type SystemVoiceTranscriptionResponse,
   type TerminalListResponse,
   type ThemeCatalogResponse,
+  type CreateThemeRequest,
+  type CreateThemeResponse,
+  createThemeRequestSchema,
   type TerminalSession,
   type TerminalInputRequest,
   type TerminalListQuery,
@@ -1994,6 +1997,20 @@ export const publicApiRoutes = {
       method: "get",
       request: noRequest(),
       response: jsonResponse<ThemeCatalogResponse>(),
+    }),
+    /**
+     * Generate a custom theme from three anchor colors per mode and write it to
+     * `<theme dir>/<name>/theme.css`. Refuses an existing name (409) unless
+     * `overwrite` is set. The response carries the CSS and the check findings;
+     * warnings never block the write, bad kit input is a 400.
+     */
+    createTheme: defineRoute({
+      path: "/settings/themes",
+      method: "post",
+      request: jsonRequest<EmptyInput, CreateThemeRequest>(
+        createThemeRequestSchema,
+      ),
+      response: jsonResponse<CreateThemeResponse>(),
     }),
     /**
      * Resolve a built-in, custom, or plugin theme exactly as activating it

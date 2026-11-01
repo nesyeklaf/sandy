@@ -1,5 +1,11 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
 import {
   CUSTOM_THEME_CSS_MAX_LENGTH,
   customThemeNameSchema,
@@ -81,4 +87,19 @@ export function resolveAppTheme(
     };
   }
   return { themeId, customCss, faviconColor, resolvedCodeTheme };
+}
+
+export function customThemeExists(themeRoot: string, name: string): boolean {
+  return existsSync(resolveCustomThemeCssPath(themeRoot, name));
+}
+
+export function writeCustomThemeCss(
+  themeRoot: string,
+  name: string,
+  css: string,
+): string {
+  const path = resolveCustomThemeCssPath(themeRoot, name);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, css, "utf8");
+  return path;
 }
