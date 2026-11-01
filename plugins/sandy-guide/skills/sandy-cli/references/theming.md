@@ -11,6 +11,7 @@ that handles both modes.
 ## Contents
 
 - [Where themes live](#where-themes-live)
+- [Generate a theme](#generate-a-theme)
 - [Model](#model)
 - [Stylesheet structure](#stylesheet-structure)
 - [What to set (quick start)](#what-to-set-quick-start)
@@ -27,6 +28,28 @@ The folder name is the theme id. Run `sandy theme dir` to print the exact direct
 rather than guessing it. Always put custom app-theme CSS here — not in a stray
 `.css` file elsewhere in a repo. To edit a theme, change its `theme.css` in place
 and re-run `sandy theme set <name>` (or just re-select it) to re-apply.
+
+## Generate a theme
+
+Prefer the generator over hand-writing every token:
+
+```sh
+sandy theme new my-theme \
+  --light-canvas "oklch(0.93 0.025 85)" --light-ink "oklch(0.3 0.03 65)" --light-accent "oklch(0.46 0.1 40)" \
+  --dark-canvas "oklch(0.26 0.004 260)" --dark-ink "oklch(0.86 0.005 260)" --dark-accent "oklch(0.76 0.09 40)" \
+  --set
+sandy theme check my-theme
+```
+
+Colors are `oklch(L C H)` or `#rrggbb`. The kit writes both blocks, the text tiers, accent
+tints (mixed in oklab, so a grey canvas does not drift violet), status and diff colors
+(chroma at most 0.085 unless `--status-chroma` says otherwise), and the ANSI palette.
+`sandy theme check` also works on a hand-written file and reports: text contrast
+below 4.5:1, missing required tokens, saturated status colors, a near-black dark or
+near-white light canvas, and oklch mixing of a colored value into grey.
+Eye-comfort rules of thumb: a mid-tone graphite dark canvas (L about 0.26) with ink at
+L about 0.86 glares less than black and white; keep one accent hue and pastel
+chroma (0.09 to 0.12) in dark mode.
 
 ## Model
 

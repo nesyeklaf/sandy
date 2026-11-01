@@ -232,6 +232,8 @@ Use `--selected-model <model-id>` to discover its reasoning choices and include 
 - `sandy theme`
 - `sandy theme list`
 - `sandy theme set`
+- `sandy theme new`
+- `sandy theme check`
 - `sandy theme dir`
 - `sandy theme favicon`
 - `sandy theme favicon set`
