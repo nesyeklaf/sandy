@@ -1122,22 +1122,26 @@ Docs: `backend-sdk.md`.
 
 ## `sandy.sdk.threads.experimental_updateEnvironmentDirectory`
 
-`PUT /threads/:id/environment-directory` with `{ path }` moves an idle thread
-to another absolute directory on the host it runs on, inside its own project.
-It stops the thread's loaded runtime, reuses the project's environment for the
-path or provisions an unmanaged one, points the thread at it and appends an
-`environment_directory_update` event. It answers `{ changed, path }`, and
-rejects a starting or active thread, an archived or deleted thread, a path that
+`PUT /threads/:id/environment-directory` with `{ path, projectId? }` moves an
+idle thread to another absolute directory on the host it runs on. It stops the
+thread's loaded runtime, reuses the target project's environment for the path
+or provisions an unmanaged one, points the thread at it and appends an
+`environment_directory_update` event. With `projectId` the thread also changes
+project: its prompt history follows, its attachments are copied into the
+target project, and the old environment stays with the old project. Plugin
+state keyed by project or environment id (workflows, automations) is not
+rewritten. It answers `{ changed, path, projectId }`, and rejects a starting or
+active thread, an archived or deleted thread, an unknown project, a path that
 is not absolute or is a filesystem root, and a worktree owned by another
-project. It cannot change a thread's project. Core callers: the agent tool
-`update_environment_directory` and `sandy thread move-directory`; all three
+project. Core callers: the agent tool `update_environment_directory` (same
+project only) and `sandy thread move-directory`; all three
 run `updateThreadEnvironmentDirectory` in
 `apps/server/src/services/threads/thread-environment-directory.ts`.
 
 Docs: `backend-sdk.md`, `sandy guide thread-lifecycle`.
 Before stabilization, decide whether a running thread may move after its turn
-ends, whether a move across projects belongs here or in a separate
-operation, and whether the app needs a thread menu action as a third caller.
+ends, whether plugin state keyed by project id needs a move hook, and whether
+the app needs a thread menu action as a third caller.
 
 ## `sandy.sdk.threads.experimental_regenerateTitle`
 

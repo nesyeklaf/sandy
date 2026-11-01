@@ -91,6 +91,22 @@ export function acquireProjectAttachmentOwnership(
   );
 }
 
+export function listThreadAttachmentPaths(
+  db: DbQueryConnection,
+  threadId: string,
+): string[] {
+  return db
+    .select({ storedPath: projectAttachments.storedPath })
+    .from(projectAttachmentThreads)
+    .innerJoin(
+      projectAttachments,
+      eq(projectAttachments.id, projectAttachmentThreads.attachmentId),
+    )
+    .where(eq(projectAttachmentThreads.threadId, threadId))
+    .all()
+    .map((row) => row.storedPath);
+}
+
 export function copyProjectAttachmentOwnership(
   db: DbQueryConnection,
   sourceThreadId: string,

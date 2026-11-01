@@ -342,6 +342,7 @@ export interface ThreadActionArgs {
 
 export interface ThreadEnvironmentDirectoryArgs extends ThreadActionArgs {
   path: string;
+  projectId?: string;
 }
 
 export interface ThreadStatusArgs extends ThreadActionArgs {
@@ -1406,7 +1407,12 @@ export function createThreadsArea(args: CreateSdkAreaArgs): ThreadsArea {
       return transport.readJson(
         transport.api.v1.threads[":id"]["environment-directory"].$put({
           param: { id: input.threadId },
-          json: { path: input.path },
+          json: {
+            path: input.path,
+            ...(input.projectId === undefined
+              ? {}
+              : { projectId: input.projectId }),
+          },
         }),
       );
     },

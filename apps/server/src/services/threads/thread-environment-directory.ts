@@ -6,8 +6,11 @@ import {
   type EnvironmentRow,
   createEventId,
   findProjectEnvironmentByHostPath,
+  acquireProjectAttachmentOwnership,
   getEnvironment,
+  getProject,
   getThread,
+  listThreadAttachmentPaths,
   updateThread,
 } from "@sandy/db";
 import {
@@ -28,6 +31,7 @@ import { appendThreadEventInTransaction } from "./thread-events.js";
 import { buildEnvironmentProvisionCommand } from "./thread-create-helpers.js";
 import { findHostDataDir } from "../lib/entity-lookup.js";
 import { suppliedWorkspacePathRefusal } from "./workspace-path-claims.js";
+import { copyProjectAttachments } from "../projects/attachments.js";
 
 export const UPDATE_ENVIRONMENT_DIRECTORY_TOOL_NAME =
   "update_environment_directory";
@@ -169,6 +173,7 @@ function attachReadyEnvironment(
     scope: ThreadEventScope;
     targetEnvironment: ReadyEnvironment;
     thread: Thread;
+    targetProjectId: string;
   },
 ): AttachEnvironmentResult {
   const result = deps.db.transaction(
@@ -190,12 +195,16 @@ function attachReadyEnvironment(
         return { kind: "attached", changed: false };
       }
 
-      if (latestThread.environmentId !== args.currentEnvironment.id) {
+      if (
+        latestThread.environmentId !== args.currentEnvironment.id ||
+        latestThread.projectId !== args.thread.projectId
+      ) {
         return { kind: "environment_changed" };
       }
 
       updateThread(tx, deps.hub, latestThread.id, {
         environmentId: args.targetEnvironment.id,
+        projectId: args.targetProjectId,
       });
       appendThreadEventInTransaction(tx, {
         threadId: latestThread.id,
@@ -206,8 +215,13 @@ function attachReadyEnvironment(
           operation: ENVIRONMENT_DIRECTORY_UPDATE_OPERATION,
           operationId: createEventId(),
           status: "completed",
-          message: `Updated environment directory to ${args.targetEnvironment.path}`,
+          message:
+            args.targetProjectId === args.thread.projectId
+              ? `Updated environment directory to ${args.targetEnvironment.path}`
+              : `Moved to project ${args.targetProjectId} and updated environment directory to ${args.targetEnvironment.path}`,
           metadata: {
+            previousProjectId: args.thread.projectId,
+            nextProjectId: args.targetProjectId,
             createdEnvironment: args.createdEnvironment,
             previousEnvironmentId: args.currentEnvironment.id,
             previousPath: args.currentEnvironment.path,
@@ -238,11 +252,11 @@ async function provisionUnmanagedEnvironmentForPath(
   args: {
     currentEnvironment: EnvironmentRow;
     path: string;
-    thread: Thread;
+    projectId: string;
   },
 ): Promise<ReadyEnvironment | { failure: string }> {
   const environment = createEnvironment(deps.db, deps.hub, {
-    projectId: args.thread.projectId,
+    projectId: args.projectId,
     hostId: args.currentEnvironment.hostId,
     providerOwnsPath: false,
     status: "provisioning",
@@ -286,6 +300,7 @@ export async function updateThreadEnvironmentDirectory(
   args: {
     currentEnvironment: EnvironmentRow;
     path: string;
+    projectId?: string;
     requireIdleThread?: boolean;
     scope: ThreadEventScope;
     thread: Thread;
@@ -317,7 +332,17 @@ export async function updateThreadEnvironmentDirectory(
     return failed(error instanceof Error ? error.message : String(error));
   }
 
+  const targetProjectId = args.projectId ?? args.thread.projectId;
+  const projectChanged = targetProjectId !== args.thread.projectId;
+  if (projectChanged) {
+    const targetProject = getProject(deps.db, targetProjectId);
+    if (!targetProject) {
+      return failed("Target project does not exist.");
+    }
+  }
+
   if (
+    !projectChanged &&
     getEnvironment(deps.db, args.currentEnvironment.id)?.path === normalizedPath
   ) {
     return { kind: "unchanged", path: normalizedPath };
@@ -325,7 +350,7 @@ export async function updateThreadEnvironmentDirectory(
 
   const existingEnvironment = findProjectEnvironmentByHostPath(
     deps.db,
-    args.thread.projectId,
+    targetProjectId,
     args.currentEnvironment.hostId,
     normalizedPath,
   );
@@ -344,7 +369,7 @@ export async function updateThreadEnvironmentDirectory(
       dataDir,
       hostId: args.currentEnvironment.hostId,
       path: normalizedPath,
-      projectId: args.thread.projectId,
+      projectId: targetProjectId,
     });
     if (refusal !== null) {
       return failed(`${refusal}. Use a different directory.`);
@@ -354,7 +379,7 @@ export async function updateThreadEnvironmentDirectory(
       {
         currentEnvironment: args.currentEnvironment,
         path: normalizedPath,
-        thread: args.thread,
+        projectId: targetProjectId,
       },
     );
 
@@ -363,6 +388,25 @@ export async function updateThreadEnvironmentDirectory(
     }
     targetEnvironment = provisionedEnvironment;
     createdEnvironment = true;
+  }
+
+  const attachmentPaths = projectChanged
+    ? listThreadAttachmentPaths(deps.db, args.thread.id)
+    : [];
+  const copiedAttachmentPaths: string[] = [];
+  for (const attachmentPath of attachmentPaths) {
+    try {
+      await copyProjectAttachments(
+        deps.db,
+        deps.config.dataDir,
+        args.thread.projectId,
+        targetProjectId,
+        [attachmentPath],
+      );
+      copiedAttachmentPaths.push(attachmentPath);
+    } catch {
+      continue;
+    }
   }
 
   let attachResult: AttachEnvironmentResult;
@@ -382,6 +426,7 @@ export async function updateThreadEnvironmentDirectory(
       createdEnvironment,
       scope: args.scope,
       targetEnvironment,
+      targetProjectId,
       thread: args.thread,
     });
   } catch (error) {
@@ -390,6 +435,14 @@ export async function updateThreadEnvironmentDirectory(
 
   switch (attachResult.kind) {
     case "attached":
+      if (attachResult.changed && copiedAttachmentPaths.length > 0) {
+        acquireProjectAttachmentOwnership(
+          deps.db,
+          args.thread.id,
+          copiedAttachmentPaths,
+          "best-effort",
+        );
+      }
       return {
         kind: attachResult.changed ? "updated" : "unchanged",
         path: targetEnvironment.path,

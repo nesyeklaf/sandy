@@ -37,6 +37,7 @@ import { regenerateThreadTitle } from "../../services/threads/title-generation.j
 import {
   requireConnectedHostSession,
   requireEnvironment,
+  requirePublicProject,
   requirePublicThread,
 } from "../../services/lib/entity-lookup.js";
 import { parseSafeRelativeRoutePath } from "../relative-route-path.js";
@@ -408,6 +409,9 @@ export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
     if (requestFailure !== null) {
       throw new ApiError(400, "invalid_request", requestFailure);
     }
+    if (payload.projectId !== undefined) {
+      requirePublicProject(deps.db, payload.projectId);
+    }
     const currentEnvironment = requireEnvironment(
       deps.db,
       thread.environmentId,
@@ -432,6 +436,9 @@ export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
     const outcome = await updateThreadEnvironmentDirectory(deps, {
       currentEnvironment,
       path: payload.path,
+      ...(payload.projectId === undefined
+        ? {}
+        : { projectId: payload.projectId }),
       requireIdleThread: true,
       scope: threadScope(),
       thread: stoppedThread,
@@ -442,6 +449,7 @@ export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
     return context.json({
       changed: outcome.kind === "updated",
       path: outcome.path,
+      projectId: payload.projectId ?? thread.projectId,
     });
   });
 
