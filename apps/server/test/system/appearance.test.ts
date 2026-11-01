@@ -22,6 +22,7 @@ function appearanceForPalette(
   };
 }
 import {
+  createThemeResponseSchema,
   themeCatalogResponseSchema,
   systemConfigResponseSchema,
 } from "@sandy/server-contract";
@@ -371,7 +372,7 @@ describe("theme kit", () => {
     await withTestHarness(async (harness) => {
       const response = await create(harness, { name: "terra", kit });
       expect(response.status).toBe(200);
-      const body = await readJson<{ path: string; css: string; issues: unknown[] }>(response);
+      const body = createThemeResponseSchema.parse(await readJson(response));
       expect(body.issues).toEqual([]);
       expect(await readFile(body.path, "utf8")).toBe(body.css);
       const catalog = themeCatalogResponseSchema.parse(

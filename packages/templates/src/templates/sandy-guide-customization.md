@@ -24,7 +24,7 @@ sandy theme list Built-in and custom themes; shows the active one
 sandy theme dir Print the custom-theme directory (where to author)
 sandy theme set <id> [--favicon-color <color>]
 Activate a theme (built-ins: default, nord,
-dracula, solarized, gruvbox, catppuccin),
+dracula, solarized, gruvbox, catppuccin, sandy, sand),
 preserving the favicon color unless the flag
 supplies the complete selection
 sandy theme show [id] [--css] Print the active palette, or resolve <id> without
