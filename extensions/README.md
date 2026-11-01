@@ -6,6 +6,7 @@ Sandy plugins and pi extensions that live in the repo but not in the pnpm worksp
 sandy/sandy-sidebar-delegate  fork of bb-sidebar 0.3.7 that lists delegate children and workflows-plus workers under their parent (see UPSTREAM.md)
 sandy/codex-voice    voice input through the ChatGPT login (Codex), sent with curl because chatgpt.com challenges Node's HTTP clients
 sandy/genui           inline ```ui and ```app blocks in chat (fork of ComicBit/bb-plugin-genui 0.3.1)
+sandy/bookmarks, compact-composer, files-editor, receipts, thread-namer, value   plugins forked from the BB ecosystem (see each UPSTREAM.md)
 sandy/permissions     permission modes and command blocklist (pairs with pi/permissions)
 sandy/personas        persona and skill picker in the composer
 sandy/pi-lifecycle    pi process state per session; pi-extension.ts is the pi side of it
