@@ -32,6 +32,8 @@ import { applyCondensed, condenseSelection, fitToBudget, parseSummaryDelta, type
 export interface SummarizeRequest {
 	readonly system: string;
 	readonly prompt: string;
+	/** The prompt with the entries a request already holds named instead of shown, for a fork that continues it. */
+	readonly referencing?: (above: (probes: { readonly head: string; readonly tail: string }) => boolean) => string;
 	readonly maxTokens: number;
 	readonly signal: AbortSignal;
 }
@@ -425,6 +427,7 @@ export class HistorianLifecycle {
 			const result = await this.#ask(worker, flight, "summarize", {
 				system: HISTORIAN_SYSTEM_PROMPT,
 				prompt: historianPrompt(work),
+				referencing: (above) => historianPrompt(work, above),
 				maxTokens: this.#config.historian.maxOutputTokens,
 			});
 			if (signal.aborted) return false;

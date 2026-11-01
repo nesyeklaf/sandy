@@ -30,9 +30,18 @@ const config = resolveConfig({
 function summaryRequest() {
 	const log = sessionLog();
 	for (const label of ["a", "b", "c", "d"]) log.turn(label, 8_000);
-	const selected = selectEvidence(log.tape().history(), evidenceBudget(config, false));
+	const history = log.tape().history();
+	const selected = selectEvidence(history, evidenceBudget(config, false));
 	assert.ok(selected, "the fixture has no work");
-	return { system: HISTORIAN_SYSTEM_PROMPT, prompt: historianPrompt(selected), maxTokens: config.historian.maxOutputTokens, signal: new AbortController().signal };
+	return {
+		system: HISTORIAN_SYSTEM_PROMPT,
+		prompt: historianPrompt(selected),
+		referencing: (above: Parameters<typeof historianPrompt>[1] & {}) => historianPrompt(selected, above),
+		maxTokens: config.historian.maxOutputTokens,
+		signal: new AbortController().signal,
+		/** The text of the first entry the summary covers whose text is long enough to be named. */
+		long: history.entries.find((entry) => selected.spans.some((span) => span.entryId === entry.id && span.probes))?.text,
+	};
 }
 
 /** A ChatGPT login token as the Codex client reads it: a JWT whose claims name the account. */
@@ -88,11 +97,11 @@ const FORMATS: Format[] = [
 
 const tools = [{ name: "read", description: "Read a file.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } }];
 
-function mainContext(): Context {
+function mainContext(held?: string): Context {
 	return {
 		systemPrompt: "You are the main agent. RULE: answer briefly.",
 		tools: tools as never,
-		messages: [{ role: "user", content: [{ type: "text", text: "FACT alpha ".repeat(400) + "Summarize that." }], timestamp: 1 }],
+		messages: [{ role: "user", content: [{ type: "text", text: (held ? held + "\n\n" : "") + "FACT alpha ".repeat(400) + "Summarize that." }], timestamp: 1 }],
 	} as Context;
 }
 
@@ -138,9 +147,9 @@ for (const format of FORMATS) {
 			streamSimple(model, context, { ...options, apiKey: format.key }).result();
 		const host = (): HistorianHost => ({ send, main, isolated: [{ route: "primary", model: historian }], cacheTtlMs: 300_000, sessionId: "session-1" });
 
-		async function mainTurn(): Promise<AssistantMessage> {
+		async function mainTurn(held?: string): Promise<AssistantMessage> {
 			let payload: unknown;
-			const answer = await streamSimple(main, mainContext(), {
+			const answer = await streamSimple(main, mainContext(held), {
 				apiKey: format.key,
 				reasoning: format.reasons ? "low" : undefined,
 				sessionId: "session-1",
@@ -182,6 +191,20 @@ for (const format of FORMATS) {
 			assert.equal(records[0]?.rejection, undefined);
 			assert.equal(records[0]?.cacheRead, fork.cacheRead);
 			assert.equal(result.model, `${main.provider}/${main.id}`);
+		});
+
+		it("names an entry the captured request holds instead of sending it again", async () => {
+			const request = summaryRequest();
+			assert.ok(request.long, "the fixture has no long entry");
+			await mainTurn(request.long);
+			await requests.complete(request, host());
+			assert.equal(records[0]?.historianVia, "fork", records[0]?.rejection);
+			const fork = mainServer.requests[1] as FakeOpenAIRequest;
+			const turn = JSON.stringify((fork.body[format.listKey] as unknown[]).at(-1));
+			assert.match(turn, /shown=\\"above\\"/, "the fork's turn names no entry");
+			// Unreferenced, a long tool output is shown as its 2,000-character head and tail; named, as 300 characters.
+			assert.ok(turn.length < JSON.stringify(forkTurn(request)).length - 1_500, "the fork's turn sent the held entry again");
+			assert.ok(!historianServer.requests.length, "the historian model was asked");
 		});
 
 		it("counts a fork the cache did not serve as a miss and stops forking for the session", async () => {

@@ -123,6 +123,8 @@ describe(`keep-warm and the historian's fork on one cache clock, on pi ${VERSION
 			s.expectPrompt(START + 900_000);
 			await s.runtime.session.prompt("Continue the work.");
 			await s.waitFor(() => s.pings().length === 1);
+			// The ping's request reached the server before its end record is written.
+			await s.waitFor(() => s.warmRecords().some((record) => record.type === "end"));
 			assert.deepEqual(s.warmRecords().find((record) => record.type === "end")?.outcome, "warmed");
 			// Past the main request's lifetime, inside the one the ping's read started.
 			s.clock(START + TTL_MS + 20_000);
