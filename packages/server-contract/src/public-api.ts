@@ -238,6 +238,8 @@ import {
   type ThreadConversationOutlineQuery,
   type ThreadConversationOutlineResponse,
   type ThreadOpenRequest,
+  type ThreadEnvironmentDirectoryRequest,
+  type ThreadEnvironmentDirectoryResponse,
   type ThreadOpenResponse,
   type ThreadPaneActionRequest,
   type ThreadPaneActionResponse,
@@ -361,6 +363,7 @@ import {
   threadGetQuerySchema,
   threadCountQuerySchema,
   threadListQuerySchema,
+  threadEnvironmentDirectoryRequestSchema,
   threadOpenRequestSchema,
   threadPaneActionRequestSchema,
   threadSearchQuerySchema,
@@ -1584,6 +1587,14 @@ export const publicApiRoutes = {
       method: "post",
       request: noRequest<PathId>(),
       response: jsonResponse<{ ok: true }>(),
+    }),
+    updateEnvironmentDirectory: defineRoute({
+      path: "/threads/:id/environment-directory",
+      method: "put",
+      request: jsonRequest<PathId, ThreadEnvironmentDirectoryRequest>(
+        threadEnvironmentDirectoryRequestSchema,
+      ),
+      response: jsonResponse<ThreadEnvironmentDirectoryResponse>(),
     }),
     open: defineRoute({
       path: "/threads/:id/open",

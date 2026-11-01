@@ -27,7 +27,8 @@ signatures (see "Looking up the exact API" in distribution.md).
   `restoreEnvironment` `getPluginMetadata` `updatePluginMetadata`
   `experimental_listPluginMetadata` `experimental_listAncestors`
   `experimental_listDescendants` `experimental_listCascade`
-  `experimental_regenerateTitle`; sub-areas `events` (`list` `wait`),
+  `experimental_regenerateTitle` `experimental_updateEnvironmentDirectory`;
+  sub-areas `events` (`list` `wait`),
   `interactions` (`get` `list` `cancel` `resolve` `respond`), `queue`
   (`list`), `queuedMessages` (`create` `list` `update` `delete` `send`
   `reorder` `setGroupBoundary` `experimental_holdForEdit`

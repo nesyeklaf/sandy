@@ -866,6 +866,21 @@ export const threadOpenResponseSchema = z.object({
 });
 export type ThreadOpenResponse = z.infer<typeof threadOpenResponseSchema>;
 
+export const threadEnvironmentDirectoryRequestSchema = z
+  .object({ path: z.string().trim().min(1) })
+  .strict();
+export type ThreadEnvironmentDirectoryRequest = z.infer<
+  typeof threadEnvironmentDirectoryRequestSchema
+>;
+
+export const threadEnvironmentDirectoryResponseSchema = z.object({
+  changed: z.boolean(),
+  path: z.string(),
+});
+export type ThreadEnvironmentDirectoryResponse = z.infer<
+  typeof threadEnvironmentDirectoryResponseSchema
+>;
+
 export type ThreadPaneAction = z.infer<typeof threadPaneActionSchema>;
 
 export const threadPaneActionRequestSchema = z

@@ -24,7 +24,7 @@ import {
   type PublicApiSchema,
 } from "@sandy/server-contract";
 import type { Hono } from "hono";
-import { type ThreadQueuedMessage } from "@sandy/domain";
+import { threadScope, type ThreadQueuedMessage } from "@sandy/domain";
 import type { AppDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import {
@@ -36,6 +36,7 @@ import { retryFailedTurn } from "../../services/threads/turn-retry.js";
 import { regenerateThreadTitle } from "../../services/threads/title-generation.js";
 import {
   requireConnectedHostSession,
+  requireEnvironment,
   requirePublicThread,
 } from "../../services/lib/entity-lookup.js";
 import { parseSafeRelativeRoutePath } from "../relative-route-path.js";
@@ -65,6 +66,10 @@ import {
   prepareTurnSubmitCommandPayload,
 } from "../../services/threads/thread-commands.js";
 import { getLastProviderThreadId } from "../../services/threads/thread-events.js";
+import {
+  directoryRequestFailure,
+  updateThreadEnvironmentDirectory,
+} from "../../services/threads/thread-environment-directory.js";
 import { stopThreadForCurrentState } from "../../services/threads/thread-lifecycle.js";
 import {
   buildThreadStatusChangeMetadata,
@@ -203,7 +208,7 @@ function assertPinnedThreadOrderResult(
 }
 
 export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
-  const { post, patch, del } = typedRoutes<PublicApiSchema>(app, {
+  const { post, put, patch, del } = typedRoutes<PublicApiSchema>(app, {
     onValidationError: (msg) => new ApiError(400, "invalid_request", msg),
   });
   const routes = publicApiRoutes.threads;
@@ -381,6 +386,63 @@ export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
     });
     await stopThreadForCurrentState(deps, thread, environment);
     return context.json({ ok: true });
+  });
+
+  put(routes.updateEnvironmentDirectory, async (context, payload) => {
+    const thread = requirePublicThread(deps.db, context.req.param("id"));
+    if (thread.environmentId === null) {
+      throw new ApiError(
+        409,
+        "invalid_request",
+        "Thread has no environment to move",
+      );
+    }
+    if (thread.status === "starting" || thread.status === "active") {
+      throw new ApiError(
+        409,
+        "invalid_request",
+        "Stop the thread before moving it to another directory",
+      );
+    }
+    const requestFailure = directoryRequestFailure(payload.path, thread);
+    if (requestFailure !== null) {
+      throw new ApiError(400, "invalid_request", requestFailure);
+    }
+    const currentEnvironment = requireEnvironment(
+      deps.db,
+      thread.environmentId,
+    );
+    await stopThreadForCurrentState(
+      deps,
+      thread,
+      { id: currentEnvironment.id, hostId: currentEnvironment.hostId },
+      { requireStopped: true },
+    );
+    const stoppedThread = requirePublicThread(deps.db, thread.id);
+    if (
+      stoppedThread.status === "starting" ||
+      stoppedThread.status === "active"
+    ) {
+      throw new ApiError(
+        409,
+        "invalid_request",
+        "A turn started while the directory was being changed",
+      );
+    }
+    const outcome = await updateThreadEnvironmentDirectory(deps, {
+      currentEnvironment,
+      path: payload.path,
+      requireIdleThread: true,
+      scope: threadScope(),
+      thread: stoppedThread,
+    });
+    if (outcome.kind === "failed") {
+      throw new ApiError(409, "invalid_request", outcome.message);
+    }
+    return context.json({
+      changed: outcome.kind === "updated",
+      path: outcome.path,
+    });
   });
 
   post(routes.compact, async (context) => {

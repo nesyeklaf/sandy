@@ -36,6 +36,7 @@ import type {
   ThreadListResponse,
   ThreadMessageResponse,
   ThreadRunningResponse,
+  ThreadEnvironmentDirectoryResponse,
   ThreadOpenResponse,
   ThreadPaneAction,
   ThreadPaneActionResponse,
@@ -201,6 +202,8 @@ export type ThreadTimelineResult = ThreadTimelineResponse;
 export type ThreadTimelineReadResult = ThreadTimelineReadResponse;
 export type ThreadArchiveResult = ThreadArchiveAllResponse;
 export type ThreadOpenResult = ThreadOpenResponse;
+export type ThreadEnvironmentDirectoryResult =
+  ThreadEnvironmentDirectoryResponse;
 export type ThreadPaneActionResult = ThreadPaneActionResponse;
 export type ThreadDeleteResult = { ok: true };
 export type ThreadSendResult = SendMessageResponse;
@@ -335,6 +338,10 @@ export interface ThreadRetryArgs {
 export interface ThreadActionArgs {
   signal?: AbortSignal;
   threadId: string;
+}
+
+export interface ThreadEnvironmentDirectoryArgs extends ThreadActionArgs {
+  path: string;
 }
 
 export interface ThreadStatusArgs extends ThreadActionArgs {
@@ -681,6 +688,18 @@ export interface ThreadsArea {
   experimental_regenerateTitle(
     args: ThreadActionArgs,
   ): Promise<ThreadMutationResult>;
+  /**
+   * Move an idle thread to another absolute directory on the host it runs
+   * on, within its own project. Reuses the project's environment for that
+   * path or creates an unmanaged one, stops the thread's loaded runtime so
+   * the next turn starts in the new directory, and records an
+   * environment-directory-update event. Rejects when the thread is starting
+   * or active, archived, or the path is unusable. `changed` is false when the
+   * thread already uses the path. Experimental: see docs/api_to_audit.md.
+   */
+  experimental_updateEnvironmentDirectory(
+    args: ThreadEnvironmentDirectoryArgs,
+  ): Promise<ThreadEnvironmentDirectoryResult>;
   updatePluginMetadata(
     args: ThreadPluginMetadataUpdateArgs,
   ): Promise<ThreadPluginMetadataResult>;
@@ -1380,6 +1399,14 @@ export function createThreadsArea(args: CreateSdkAreaArgs): ThreadsArea {
       return transport.readJson(
         transport.api.v1.threads[":id"].title.regenerate.$post({
           param: { id: input.threadId },
+        }),
+      );
+    },
+    async experimental_updateEnvironmentDirectory(input) {
+      return transport.readJson(
+        transport.api.v1.threads[":id"]["environment-directory"].$put({
+          param: { id: input.threadId },
+          json: { path: input.path },
         }),
       );
     },
