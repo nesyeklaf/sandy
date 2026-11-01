@@ -233,7 +233,9 @@ Requires SDK 0.6.98.
 `app.slots.experimental_messageMetadata({ id, placement?, component })` mounts
 React metadata beside realized user and assistant conversation messages,
 including windowing overscan and embedded ThreadChat timelines. `placement`
-accepts "above" or "actionRow"; omission defaults to "above". "above" renders
+accepts "above", "actionRow" or "below"; omission defaults to "above". "below"
+renders under the message in its column width, for cards that belong to it.
+"above" renders
 over the message, aligned to its side. "actionRow" renders in the message's
 action row and shows and hides with the actions: on hover or focus where the
 device can hover, and always where it cannot. It sits before the actions on

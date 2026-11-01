@@ -349,6 +349,23 @@ export interface CollectedSidebarNavigationRegistration extends ExperimentalSide
   placement: ExperimentalSidebarNavigationPlacement;
 }
 
+function requireMessageActionSurfaces(
+  kind: string,
+  value: unknown,
+): ("actionBar" | "selection")[] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every((entry) => entry === "actionBar" || entry === "selection")
+  ) {
+    throw new Error(
+      kind +
+        ': "surfaces" must be a non-empty list of "actionBar" or "selection"',
+    );
+  }
+  return [...value];
+}
+
 function requireOptionalOrder(
   kind: string,
   order: number | undefined,
@@ -1259,6 +1276,14 @@ export function collectPluginAppRegistrations(
                 icon: requireNonEmptyString(kind, "icon", registration.icon),
               }
             : {}),
+          ...(registration.surfaces !== undefined
+            ? {
+                surfaces: requireMessageActionSurfaces(
+                  kind,
+                  registration.surfaces,
+                ),
+              }
+            : {}),
           run: registration.run,
         });
       },
@@ -1267,9 +1292,13 @@ export function collectPluginAppRegistrations(
         const id = requireSlotId(kind, registration?.id);
         requireUniqueId(kind, seenIds.messageMetadata, id);
         const placement = registration.placement ?? "above";
-        if (placement !== "above" && placement !== "actionRow") {
+        if (
+          placement !== "above" &&
+          placement !== "actionRow" &&
+          placement !== "below"
+        ) {
           throw new Error(
-            `${kind}: "placement" must be "above" or "actionRow"`,
+            `${kind}: "placement" must be "above", "actionRow" or "below"`,
           );
         }
         collected.messageMetadata.push({

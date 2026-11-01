@@ -212,7 +212,9 @@ message, Original }` — render fenced code blocks of chosen languages in
   per-message action bar (user and assistant messages) and an entry in the
   assistant-message text-selection menu. Slot actions are limited to the main
   timeline; embedded `ThreadChat` suppresses them on both surfaces. Host-rendered chrome, no plugin
-  component — registration: `{ id, title, icon?, run }`. Activating it calls
+  component — registration: `{ id, title, icon?, surfaces?, run }`; `surfaces` is
+  `["actionBar", "selection"]` by default, and `["selection"]` makes a selection-only
+  action that stays out of the action bar. Activating it calls
   `run(context)` with `{ threadId, message, selectedText?, experimental_panel, composer }`:
   `message` is a narrow stable reference
   `{ id, threadId, role: "user" | "assistant", text, sourceSeqEnd, experimental_messageSeq }` (never

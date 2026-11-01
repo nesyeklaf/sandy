@@ -54,7 +54,15 @@ export const MessageMetadata = memo(function MessageMetadata({
       className={
         placement === "actionRow"
           ? ACTION_ROW_METADATA_CLASS
-          : cn(
+          : placement === "below"
+            ? cn(
+                "flex w-full flex-col gap-1.5 text-sm",
+                role === "user"
+                  ? BUBBLE_ALIGN_INSET_CLASS
+                  : PROSE_COLUMN_INSET_CLASS,
+                "has-[>*>*]:mt-1",
+              )
+            : cn(
               "flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground",
               role === "user"
                 ? cn("justify-end", BUBBLE_ALIGN_INSET_CLASS)
@@ -64,6 +72,7 @@ export const MessageMetadata = memo(function MessageMetadata({
       }
       aria-label="Message metadata"
       data-message-action-metadata={placement === "actionRow" ? "" : undefined}
+      data-message-metadata-below={placement === "below" ? id : undefined}
     >
       {contributions.map((slot) =>
         slot.pluginId === "core" ? (
