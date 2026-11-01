@@ -76,8 +76,8 @@ const FORMATS: Format[] = [
 	{
 		name: "Codex",
 		wire: "responses",
-		main: () => getModel("openai-codex", "gpt-5.5") as Model<Api>,
-		historian: () => pricey(getModel("openai-codex", "gpt-5.5") as Model<Api>),
+		main: () => getModel("openai-codex", "gpt-5.6-luna") as Model<Api>,
+		historian: () => pricey(getModel("openai-codex", "gpt-5.6-luna") as Model<Api>),
 		key: CODEX_KEY,
 		listKey: "input",
 		reasons: true,
