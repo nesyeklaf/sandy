@@ -312,6 +312,9 @@ Read the installed SDK declarations for the exact current signatures.
 - `PluginComposerScope`
 - `ComposerCustomization`
 - `ExperimentalComposerPopupRegistration`
+- `ExperimentalComposerMenuRegistration`
+- `ExperimentalComposerMenuItem`
+- `ExperimentalComposerMenuTrigger`
 - `ComposerPlusMenuItem`
 - `ComposerSendMenuItem`
 - `ComposerSubmitOptions`
@@ -346,6 +349,7 @@ Read the installed SDK declarations for the exact current signatures.
 - `ExperimentalComposerPlusMenuContribution`
 - `ExperimentalComposerSendMenuContribution`
 - `ExperimentalComposerPopupContribution`
+- `ExperimentalComposerMenuContribution`
 - `ExperimentalComposerDecorationSource`
 - `ExperimentalComposerEditorState`
 - `ExperimentalComposerEditor`

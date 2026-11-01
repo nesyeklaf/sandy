@@ -66,6 +66,23 @@ reload and crash recovery, scope suppression, and compact Safari
 keyboard/drawer behavior. Verify multiple popups in one customization and
 popup-id uniqueness across customizations.
 
+## Composer menus
+
+`ComposerCustomization.experimental_menus` registers `{ id, trigger, label, items(query) }`
+typeahead menus. Rows may nest (`items`) to form submenus; leaf rows run
+`run({ composer })` after the trigger text is removed from the draft. Trigger `/`
+adds a group to the command menu; `#`, `!` and `~` extend the mention triggers and
+open on a bare trigger. The composer plugin renders them through the same menu
+as `/` and `@` (`mentions/plugin-menu.ts`), and
+`ExperimentalComposerContributions.menus`/`runMenuItem` let other composers do the same.
+
+Docs: `frontend-hooks-and-ui.md`.
+
+Before stabilization, verify keyboard navigation (right arrow, left arrow,
+Backspace, Escape) and drawer behavior on compact Safari, menu items that
+change between keystrokes, several plugins on one trigger, and whether
+`items` should become asynchronous.
+
 ## `app.slots.experimental_composer`, `experimental_useComposerRenderer`, `experimental_ComposerRoot`, `experimental_useComposerContributions`, the composer search hooks, the prompt mention pill functions and the composer host components (`@sandy-sdk/plugin-sdk/app`)
 
 `experimental_composer({ id, title, description?, component })` draws sandy's

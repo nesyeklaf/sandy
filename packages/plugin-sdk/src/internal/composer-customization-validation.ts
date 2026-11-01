@@ -237,6 +237,32 @@ function parseMenuItem(entryKind: string, value: unknown): ComposerMenuItem {
   };
 }
 
+type ComposerMenu = NonNullable<
+  ComposerCustomization["experimental_menus"]
+>[number];
+
+const MENU_TRIGGERS: readonly string[] = ["/", "#", "!", "~"];
+
+function parseMenu(entryKind: string, value: unknown): ComposerMenu {
+  const entry = value as Record<string, unknown> | null;
+  const trigger = entry?.trigger;
+  if (typeof trigger !== "string" || !MENU_TRIGGERS.includes(trigger)) {
+    throw new Error(
+      `${entryKind}: "trigger" must be one of ${MENU_TRIGGERS.join(" ")}`,
+    );
+  }
+  return {
+    id: requireSlotId(entryKind, entry?.id),
+    trigger: trigger as ComposerMenu["trigger"],
+    label: requireNonEmptyString(entryKind, "label", entry?.label),
+    items: requireFunction<ComposerMenu["items"]>(
+      entryKind,
+      "items",
+      entry?.items,
+    ),
+  };
+}
+
 function parseRegions(
   kind: string,
   registration: Record<string, unknown>,
@@ -250,6 +276,7 @@ function parseRegions(
   | "sendMenu"
   | "richText"
   | "experimental_popups"
+  | "experimental_menus"
 > {
   const actions = parseContributionArray<
     NonNullable<ComposerCustomization["actions"]>[number]
@@ -305,6 +332,14 @@ function parseRegions(
       };
     },
     seenPopupIds,
+  );
+
+  const menus = parseContributionArray<ComposerMenu>(
+    `${kind}.experimental_menus`,
+    registration.experimental_menus,
+    onRejected,
+    parseMenu,
+    new Set<string>(),
   );
 
   let richText: ComposerCustomization["richText"];
@@ -364,6 +399,7 @@ function parseRegions(
     ...(sendMenu !== undefined ? { sendMenu } : {}),
     ...(richText !== undefined ? { richText } : {}),
     ...(popups !== undefined ? { experimental_popups: popups } : {}),
+    ...(menus !== undefined ? { experimental_menus: menus } : {}),
   };
 }
 

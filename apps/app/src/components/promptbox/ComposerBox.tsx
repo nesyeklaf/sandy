@@ -57,6 +57,7 @@ import {
 } from "@/components/plugin/plugin-composer-host";
 import {
   useResolvedComposerEditor,
+  useResolvedComposerMenus,
   useResolvedComposerPlusMenuItems,
   useResolvedComposerPopups,
   useResolvedComposerSendMenuItems,
@@ -105,6 +106,10 @@ import { toUserAttachmentImageSrc } from "@/lib/user-attachment-images";
 import { useOptionalPaneContext } from "@/views/thread-detail/PaneContext";
 import { ComposerPlaceholder } from "./ComposerPlaceholder";
 import { PluginComposerPopup } from "@/components/plugin/PluginComposerPopup";
+import {
+  createComposerMenuComposers,
+  runComposerMenuItem,
+} from "@/components/plugin/PluginComposerMenus";
 import {
   ComposerContributionsContext,
   ComposerMenuEntry,
@@ -417,6 +422,8 @@ function useComposerRendererHostApi({
   const pluginScopeKind = suppress ? null : view.scope.kind;
   const resolvedEditor = useResolvedComposerEditor(pluginScopeKind);
   const popups = useResolvedComposerPopups(pluginScopeKind);
+  const menus = useResolvedComposerMenus(pluginScopeKind);
+  const [menuComposers] = useState(createComposerMenuComposers);
   const plusMenuItems = useResolvedComposerPlusMenuItems(view.scope.kind);
   const sendMenuItems = useResolvedComposerSendMenuItems(pluginScopeKind);
   const draftAttachments = attachments?.items ?? EMPTY_ATTACHMENTS;
@@ -617,12 +624,17 @@ function useComposerRendererHostApi({
     onFocusCommand,
     reportMenuLayout: reportTypeaheadLayout,
     runsPluginCommands: host !== null && !suppress,
+    menus,
+    menuComposers,
     isFocusedPane,
   };
   const contributions: ExperimentalComposerContributions = {
     popups,
     plusMenuItems,
     sendMenuItems,
+    menus,
+    runMenuItem: (contribution, item) =>
+      runComposerMenuItem(menuComposers, contribution, item),
     Actions: suppress ? NoComposerPluginActions : ComposerPluginActions,
     Popup: PluginComposerPopup,
     MenuEntry: ComposerMenuEntry,
