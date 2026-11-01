@@ -301,6 +301,12 @@ function migrateMachine(machinesOld, machinesNew, host) {
     move(dbOld + suffix, join(dir, `sandy.db${suffix}`));
   move(runtimeFile, join(dir, "sandy-app-runtime.json"));
   move(join(dir, "bin", "bb"), join(dir, "bin", "sandy"));
+  // the cached plugin build toolchain: without the renamed marker it is re-downloaded onto a non-empty dir and fails
+  for (const entry of existsSync(join(dir, "plugins")) ? readdirSync(join(dir, "plugins")) : []) {
+    if (entry.startsWith("toolchain-")) {
+      move(join(dir, "plugins", entry, ".bb-toolchain.json"), join(dir, "plugins", entry, ".sandy-toolchain.json"));
+    }
+  }
   for (const base of [
     join(dir, "plugins"),
     join(dir, "plugins", "snapshots"),
