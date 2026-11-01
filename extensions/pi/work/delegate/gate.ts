@@ -61,12 +61,29 @@ export function sandyCommand(env: Record<string, string | undefined>, platform: 
   return { file: cli || "sandy", leadingArgs: [] };
 }
 
-const runSandyCli: RunSandy = (args) =>
+// On Windows with Node 24 the sandy CLI (0.48.1) prints a plugin command's complete answer, then aborts in its
+// process.exit with "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c" (exit
+// 0xC0000409; nodejs/node#56645). That process did its work: its answer counts when it is complete JSON (the
+// policy and ack commands answer JSON on stdout, their failures go to stderr). Anything else stays a failure.
+const LIBUV_TEARDOWN_ABORT = "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)";
+
+function isJson(text: string): boolean {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const runSandyCli: RunSandy = (args) =>
   new Promise((resolve, reject) => {
     const { file, leadingArgs } = sandyCommand(process.env, process.platform, process.execPath);
-    execFile(file, [...leadingArgs, ...args], { timeout: 15_000, windowsHide: true }, (error, stdout, stderr) =>
-      error ? reject(new Error(String(stderr || error.message).trim())) : resolve(String(stdout)),
-    );
+    execFile(file, [...leadingArgs, ...args], { timeout: 15_000, windowsHide: true }, (error, stdout, stderr) => {
+      const out = String(stdout);
+      if (!error || (String(stderr).includes(LIBUV_TEARDOWN_ABORT) && isJson(out))) resolve(out);
+      else reject(new Error(String(stderr || error.message).trim()));
+    });
   });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
