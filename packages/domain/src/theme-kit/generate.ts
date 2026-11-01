@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   contrastRatio,
   formatHex,
@@ -7,18 +8,33 @@ import {
   type Oklch,
 } from "./color.js";
 
-export interface ThemeKitModeInput {
-  canvas: string;
-  ink: string;
-  accent: string;
-}
+const themeKitFontSchema = z
+  .string()
+  .min(1)
+  .max(256)
+  .regex(/^[^;{}\\\n]+$/, "Font stacks cannot contain ; { } or newlines");
+const themeKitColorSchema = z.string().min(1).max(64);
+const themeKitModeInputSchema = z.object({
+  canvas: themeKitColorSchema,
+  ink: themeKitColorSchema,
+  accent: themeKitColorSchema,
+});
 
-export interface ThemeKitInput {
-  light: ThemeKitModeInput;
-  dark: ThemeKitModeInput;
-  statusChroma?: number;
-  fonts?: { sans?: string; mono?: string; terminal?: string };
-}
+export const themeKitInputSchema = z.object({
+  light: themeKitModeInputSchema,
+  dark: themeKitModeInputSchema,
+  statusChroma: z.number().min(0).max(0.16).optional(),
+  fonts: z
+    .object({
+      sans: themeKitFontSchema.optional(),
+      mono: themeKitFontSchema.optional(),
+      terminal: themeKitFontSchema.optional(),
+    })
+    .optional(),
+});
+
+export type ThemeKitModeInput = z.infer<typeof themeKitModeInputSchema>;
+export type ThemeKitInput = z.infer<typeof themeKitInputSchema>;
 
 export const THEME_KIT_DEFAULT_STATUS_CHROMA = 0.085;
 export const THEME_KIT_MAX_STATUS_CHROMA = 0.16;
