@@ -7,7 +7,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { type Api, type AssistantMessage, type Context, calculateCost, type Model, type SimpleStreamOptions, type ToolResultMessage } from "@earendil-works/pi-ai";
-import { compareShapes, requestShape, stableStringify } from "../core/continuity.ts";
+import { compareShapes, messageKey, requestShape, stableStringify } from "../core/continuity.ts";
 import { estimateTokens } from "../core/tokens.ts";
 import { refusedTransport, summarizeWith } from "../historian/model.ts";
 import type { HistorianRoute, SummarizeRequest, SummarizeResult } from "../historian/run.ts";
@@ -18,6 +18,8 @@ import {
 	FORK_APIS,
 	FORK_HIT_SHARE,
 	isRecord,
+	messagesOf,
+	outputLimitField,
 	parseBody,
 	type ProviderSend,
 	replayOptions,
@@ -123,68 +125,69 @@ export function forkTurn(request: Pick<SummarizeRequest, "system" | "prompt">): 
 function withoutCacheMarkers(value: unknown): unknown {
 	if (Array.isArray(value)) return value.map(withoutCacheMarkers);
 	if (!isRecord(value)) return value;
-	return Object.fromEntries(Object.entries(value).flatMap(([key, item]) => (key === "cache_control" ? [] : [[key, withoutCacheMarkers(item)]])));
-}
-
-/** The IDs of the blocks of one type in a wire message, in order: tool calls by `id`, results by `tool_use_id`. */
-function blockIds(message: unknown, type: "tool_use" | "tool_result"): string[] | undefined {
-	if (!isRecord(message) || !Array.isArray(message.content)) return undefined;
-	return message.content.flatMap((block) => (isRecord(block) && block.type === type ? [String(type === "tool_use" ? block.id : block.tool_use_id)] : []));
+	return Object.fromEntries(Object.entries(value).flatMap(([key, item]) => (key === "cache_control" || key === "cachePoint" ? [] : [[key, withoutCacheMarkers(item)]])));
 }
 
 /**
- * The main model's exchange as pi-ai serialized it for the main model: its answer, then, when that called tools, the
- * one user message with every result in call order. The effort markers pi-ai inserts around messages are left out,
- * since the capture already ends with the one that held for the answer; cache markers are left out too. Unset when
- * the payload does not have that shape.
+ * An item pi-ai puts between messages to set the effort or declare a tool (a system or developer message, a Responses
+ * `configuration_update`): the capture already ends with the settings that held for the main model's answer.
  */
-export function exchangeOf(payload: unknown): unknown[] | undefined {
-	const messages = isRecord(payload) && Array.isArray(payload.messages) ? payload.messages : undefined;
-	const exchange = messages?.filter((message) => !isRecord(message) || message.role !== "system").map(withoutCacheMarkers);
-	const [reply, results, ...rest] = exchange ?? [];
-	if (!isRecord(reply) || reply.role !== "assistant" || rest.length > 0) return undefined;
-	const calls = blockIds(reply, "tool_use") ?? [];
-	if (calls.length === 0) return results === undefined ? [reply] : undefined;
-	const answered = blockIds(results, "tool_result");
-	if (!isRecord(results) || results.role !== "user" || !answered || stableStringify(answered) !== stableStringify(calls)) return undefined;
-	return [reply, results];
+function isSetting(item: unknown): boolean {
+	return isRecord(item) && (item.role === "system" || item.role === "developer" || item.type === "configuration_update");
+}
+
+/**
+ * What the fork adds to the captured message list, as pi-ai serialized it for the main model in the main model's own
+ * format: its answer and the results of the tools it called, then the summary turn. Settings items and cache markers
+ * are left out. Unset when the payload has no message list, or holds less than an answer and a turn.
+ */
+export function forkItems(payload: unknown): unknown[] | undefined {
+	const items = messagesOf(payload)
+		?.filter((item) => !isSetting(item))
+		.map(withoutCacheMarkers);
+	return items && items.length >= 2 ? items : undefined;
 }
 
 /**
  * The fork's output limit: the summary's, plus a fixed thinking budget the capture asks for, since thinking settings
- * stay as they are (a change would drop the cached messages) and Anthropic counts thinking toward the limit.
+ * stay as they are (a change would drop the cached messages) and Anthropic counts thinking toward the limit. An
+ * OpenAI-style reasoning request has no budget, yet its reasoning counts toward the limit too: it gets the summary's
+ * room twice.
  */
-export function forkOutputLimit(capture: Pick<Capture, "thinkingBudget">, outputTokens: number): number {
-	return (capture.thinkingBudget ?? 0) + outputTokens;
+export function forkOutputLimit(capture: Pick<Capture, "thinkingBudget" | "reasons">, outputTokens: number): number {
+	return (capture.thinkingBudget ?? 0) + (capture.reasons ? 2 : 1) * outputTokens;
 }
 
 /**
- * The captured request, then the main model's exchange, then one user turn, at the output limit it was priced at;
- * nothing else changes, cache markers included. The output limit is not part of the cached prefix.
+ * The captured request, then `items` (see {@link forkItems}), at the output limit it was priced at in the field the
+ * capture sets it in, none for a format without one; nothing else changes, cache markers included. The output limit
+ * is not part of the cached prefix.
  */
-export function forkPayload(capture: Capture, exchange: readonly unknown[], turn: string, maxTokens: number): Record<string, unknown> {
+export function forkPayload(capture: Capture, items: readonly unknown[], maxTokens: number): Record<string, unknown> {
 	const payload = JSON.parse(capture.json) as Record<string, unknown>;
-	const messages = payload.messages as unknown[];
-	return { ...payload, max_tokens: maxTokens, messages: [...messages, ...exchange, { role: "user", content: [{ type: "text", text: turn }] }] };
+	const key = messageKey(payload) ?? "messages";
+	const captured = Array.isArray(payload[key]) ? (payload[key] as unknown[]) : [];
+	return { ...payload, ...(capture.outputLimit ? { [capture.outputLimit]: maxTokens } : {}), [key]: [...captured, ...items] };
 }
 
 /**
  * Whether `outgoing` is the fork and nothing else: the captured head (system prompt, tools in order, model, thinking
- * and every other setting), every captured message unchanged, then the main model's exchange exactly as pi-ai
- * serialized it, then exactly one user turn with the evidence. Only cache markers and the stream and output limit
- * fields are ignored in the captured part, as the cache continuity check of the ledger does; the output limit must be
- * the one the fork was priced at.
+ * and every other setting), every captured message unchanged, then exactly the items pi-ai serialized for the main
+ * model's exchange and the summary turn, the last holding the evidence. Only cache markers and the stream and output
+ * limit fields are ignored in the captured part, as the cache continuity check of the ledger does; the output limit
+ * must be the one the fork was priced at, in the capture's field, and absent where the capture has none.
  */
-export function checkFork(capture: Capture, outgoing: unknown, exchange: readonly unknown[], turn: string, maxTokens: number): ForkRejection | undefined {
-	if (!isRecord(outgoing) || outgoing.max_tokens !== maxTokens) return "output-limit";
+export function checkFork(capture: Capture, outgoing: unknown, items: readonly unknown[], turn: string, maxTokens: number): ForkRejection | undefined {
+	if (!isRecord(outgoing)) return "unreadable";
+	if (capture.outputLimit ? outgoing[capture.outputLimit] !== maxTokens : outputLimitField(outgoing) !== undefined) return "output-limit";
 	const shape = requestShape(outgoing);
 	if (!shape || shape.head !== capture.shape.head) return "head";
 	const continuity = compareShapes(capture.shape, shape);
 	if (continuity.kind !== "continued") return continuity.kind === "broken" && continuity.at === "head" ? "head" : "prefix";
-	const added = ((outgoing as { messages?: unknown[] }).messages ?? []).slice(capture.shape.items.length);
-	if (exchange.length === 0 || stableStringify(added.slice(0, exchange.length)) !== stableStringify(exchange)) return "reply";
-	if (added.length !== exchange.length + 1) return "turn";
-	return stableStringify(added.at(-1)) === stableStringify({ role: "user", content: [{ type: "text", text: turn }] }) ? undefined : "turn";
+	const added = (messagesOf(outgoing) ?? []).slice(capture.shape.items.length);
+	if (items.length < 2 || stableStringify(added.slice(0, items.length - 1)) !== stableStringify(items.slice(0, -1))) return "reply";
+	if (added.length !== items.length || stableStringify(added.at(-1)) !== stableStringify(items.at(-1))) return "turn";
+	return stableStringify(items.at(-1)).includes(JSON.stringify(turn).slice(1, -1)) ? undefined : "turn";
 }
 
 /** What the isolated route shows the historian model: its instructions and the evidence. */
@@ -432,10 +435,12 @@ export class HistorianRequests {
 	}
 
 	/**
-	 * Sends the fork through pi-ai's request for the main model, made of the main model's exchange alone so pi-ai
-	 * serializes it as it does for the main session (signed thinking, tool IDs): the payload hook puts that exchange
-	 * between the captured request and the evidence turn at the priced output limit, and the fetch pi-ai hands the body
-	 * to checks the bytes about to leave against the capture and the exchange. A refusal declines before anything is sent; `sending` stores the attempt record
+	 * Sends the fork through pi-ai's request for the main model, made of the main model's exchange and the evidence turn
+	 * alone, so pi-ai serializes them in the main model's own format as it does for the main session (signed thinking or
+	 * encrypted reasoning, tool IDs): the payload hook puts those items after the captured request at the priced output
+	 * limit, and the fetch pi-ai hands the body to checks the bytes about to leave against the capture and the items. No
+	 * format is known by name: the payload's message list and output limit fields are. A refusal declines before
+	 * anything is sent; `sending` stores the attempt record
 	 * right before the one HTTP request leaves. No retries: pi-ai's provider retries are off (`maxRetries` 0) and a
 	 * second fetch, which pi-ai makes only to resend, fails the attempt instead.
 	 */
@@ -450,8 +455,8 @@ export class HistorianRequests {
 		const { capture, maxTokens } = plan;
 		const captured = JSON.parse(capture.json) as Record<string, unknown>;
 		let refused: ForkRejection | undefined;
-		/** The exchange as pi-ai serialized it for this request; the guard refuses a fork without it. */
-		let exchange: unknown[] = [];
+		/** The exchange and the turn as pi-ai serialized them for this request; the guard refuses a fork without them. */
+		let items: unknown[] = [];
 		/** Why the record before sending could not be stored: the run ended or another process took the work. */
 		let unrecorded: unknown;
 		let sends = 0;
@@ -462,7 +467,7 @@ export class HistorianRequests {
 			const body = parseBody(init?.body);
 			// The SDK moves `betas` from the payload into a header; the body is compared with the capture without them.
 			refused = body
-				? checkFork(capture, "betas" in body || !("betas" in captured) ? body : { ...body, betas: captured.betas }, exchange, turn, maxTokens)
+				? checkFork(capture, "betas" in body || !("betas" in captured) ? body : { ...body, betas: captured.betas }, items, turn, maxTokens)
 				: "unreadable";
 			if (refused) throw new ForkDeclined(refused);
 			try {
@@ -488,7 +493,8 @@ export class HistorianRequests {
 		try {
 			response = await host.send(
 				main,
-				{ messages: [...plan.exchange] },
+				// pi-ai serializes the exchange and the turn in the main model's format; the payload hook puts them after the capture.
+				{ messages: [...plan.exchange, { role: "user", content: turn, timestamp: 0 }] },
 				{
 					signal: request.signal,
 					maxRetries: 0,
@@ -498,8 +504,8 @@ export class HistorianRequests {
 					...replayOptions(capture),
 					...(host.sessionId ? { sessionId: host.sessionId } : {}),
 					onPayload: (built) => {
-						exchange = exchangeOf(built) ?? [];
-						return forkPayload(capture, exchange, turn, maxTokens);
+						items = forkItems(built) ?? [];
+						return forkPayload(capture, items, maxTokens);
 					},
 				},
 			);

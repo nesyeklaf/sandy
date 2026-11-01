@@ -5,8 +5,9 @@
  * reads the prefix (theirs, or pi's own warmer), and a fork waits for the one out instead of reading beside it.
  * Provider wire formats of the capture stay in this module.
  */
+import * as zlib from "node:zlib";
 import type { Api, AssistantMessage, Context, Model, SimpleStreamOptions, ToolResultMessage } from "@earendil-works/pi-ai";
-import { requestShape, type RequestShape } from "../core/continuity.ts";
+import { messageKey, requestShape, type RequestShape } from "../core/continuity.ts";
 
 /** Captures the pool keeps: the newest main request, and the one before it. */
 export const CAPTURE_LIMIT = 2;
@@ -24,10 +25,39 @@ export const FORK_HIT_SHARE = 0.95;
  */
 export const REFRESH_LEASE_MS = 120_000;
 
-/** Provider APIs whose request the fork knows how to extend. */
-export const FORK_APIS: ReadonlySet<string> = new Set(["anthropic-messages"]);
+/**
+ * Provider APIs a fork or a ping can be sent on: those whose pi-ai adapter sends through the `fetch` it is handed, so
+ * the bytes about to leave can be checked against the capture. The format itself is read from the payload (its message
+ * list and output limit fields); Google's and Bedrock's adapters send through their SDKs and refuse a custom fetch.
+ */
+export const FORK_APIS: ReadonlySet<string> = new Set([
+	"anthropic-messages",
+	"openai-responses",
+	"openai-codex-responses",
+	"azure-openai-responses",
+	"openai-completions",
+	"mistral-conversations",
+	"pi-messages",
+]);
 /** Output limit fields of the request formats pi-ai sends; pi's cache warmer sets them to one token. */
 const OUTPUT_LIMITS = ["max_tokens", "max_output_tokens", "max_completion_tokens"] as const;
+export type OutputLimitField = (typeof OUTPUT_LIMITS)[number];
+/**
+ * Items of a message list, in the Responses formats, that carry no work for the provider: messages, client tool calls
+ * and their results, encrypted reasoning, and the tool declarations and effort settings pi-ai puts between them. A
+ * tool search item counts only when pi-ai ran it on the client.
+ */
+const CLIENT_ITEMS: ReadonlySet<string> = new Set([
+	"message",
+	"function_call",
+	"function_call_output",
+	"custom_tool_call",
+	"custom_tool_call_output",
+	"reasoning",
+	"additional_tools",
+	"configuration_update",
+]);
+const CLIENT_SEARCH_ITEMS: ReadonlySet<string> = new Set(["tool_search_call", "tool_search_output"]);
 /** Request fields that hand the provider work of its own to run: MCP servers, a code execution container. */
 const SERVER_FIELDS = ["mcp_servers", "container"] as const;
 /**
@@ -35,7 +65,25 @@ const SERVER_FIELDS = ["mcp_servers", "container"] as const;
  * changes pi-ai declares inline. Any other block (a provider's own tool call or result, or a type this module does not
  * know) may stand for work the provider runs, so a capture holding one is not forked.
  */
-const CLIENT_BLOCKS: ReadonlySet<string> = new Set(["text", "image", "document", "thinking", "redacted_thinking", "tool_use", "tool_result", "tool_addition", "tool_removal"]);
+const CLIENT_BLOCKS: ReadonlySet<string> = new Set([
+	// Anthropic
+	"text",
+	"image",
+	"document",
+	"thinking",
+	"redacted_thinking",
+	"tool_use",
+	"tool_result",
+	"tool_addition",
+	"tool_removal",
+	// OpenAI Responses, Chat Completions, Mistral
+	"input_text",
+	"input_image",
+	"input_file",
+	"output_text",
+	"refusal",
+	"image_url",
+]);
 
 /** A model as the route needs it: what the provider is asked, where, and at what price per million tokens. */
 export interface RouteModel {
@@ -65,6 +113,10 @@ export interface Capture {
 	readonly serverSide: boolean;
 	/** The fixed thinking budget it asks for, which the fork keeps and must leave room for; unset without one. */
 	readonly thinkingBudget?: number;
+	/** The field its format sets the output limit in; unset for a format without one, whose fork and ping set none. */
+	readonly outputLimit?: OutputLimitField;
+	/** It asks an OpenAI-style model to reason, which counts toward the output limit without a budget of its own. */
+	readonly reasons?: true;
 	/** Request start, epoch ms. */
 	readonly at: number;
 	/**
@@ -152,6 +204,7 @@ export class CapturePool {
 		let bytes = Buffer.byteLength(json, "utf8");
 		if (bytes > CAPTURE_BYTES) return "oversized";
 		const thinkingBudget = fixedThinkingBudget(payload);
+		const outputLimit = outputLimitField(payload);
 		const capture: Capture = {
 			route: routeOf(model),
 			api: model.api,
@@ -160,6 +213,8 @@ export class CapturePool {
 			shape,
 			serverSide: isServerSide(payload),
 			...(thinkingBudget !== undefined ? { thinkingBudget } : {}),
+			...(outputLimit ? { outputLimit } : {}),
+			...(reasonsUnbudgeted(payload) ? { reasons: true as const } : {}),
 			at,
 			touchedAt: at,
 			...(headers ? { headers: { ...headers } } : {}),
@@ -330,9 +385,30 @@ export function isWarming(payload: unknown): boolean {
 	return isRecord(payload) && OUTPUT_LIMITS.some((field) => payload[field] === 1);
 }
 
-/** A plain client tool: untyped or typed `custom`. A provider's own tool (web search, code execution) carries its type. */
+/**
+ * A plain client tool: untyped, typed `custom` (Anthropic, OpenAI grammar tools) or `function` (OpenAI, Mistral). A
+ * provider's own tool (web search, code execution) carries its own type.
+ */
 function isClientTool(tool: unknown): boolean {
-	return isRecord(tool) && (tool.type === undefined || tool.type === "custom");
+	return isRecord(tool) && (tool.type === undefined || tool.type === "custom" || tool.type === "function");
+}
+
+/** The output limit field a request carries, as a number; undefined for a format without one (Codex). */
+export function outputLimitField(payload: unknown): OutputLimitField | undefined {
+	return isRecord(payload) ? OUTPUT_LIMITS.find((field) => typeof payload[field] === "number") : undefined;
+}
+
+/** The message list of a request, in whatever field its format keeps it; undefined without one. */
+export function messagesOf(payload: unknown): unknown[] | undefined {
+	const key = messageKey(payload);
+	return key && isRecord(payload) ? (payload[key] as unknown[]) : undefined;
+}
+
+/** A message list item that has the provider run nothing: a typed item of {@link CLIENT_ITEMS}, every block a client one. */
+function isClientItem(item: unknown): boolean {
+	if (!isRecord(item)) return false;
+	if (typeof item.type === "string" && !CLIENT_ITEMS.has(item.type) && !(CLIENT_SEARCH_ITEMS.has(item.type) && item.execution === "client")) return false;
+	return !Array.isArray(item.content) || item.content.every(isClientBlock);
 }
 
 /**
@@ -356,8 +432,14 @@ export function isServerSide(payload: unknown): boolean {
 	if (SERVER_FIELDS.some((field) => payload[field] !== undefined)) return true;
 	const tools = payload.tools;
 	if (Array.isArray(tools) && !tools.every(isClientTool)) return true;
-	const messages = Array.isArray(payload.messages) ? payload.messages : [];
-	return messages.some((message) => isRecord(message) && Array.isArray(message.content) && !message.content.every(isClientBlock));
+	return !(messagesOf(payload) ?? []).every(isClientItem);
+}
+
+/** An OpenAI-style reasoning setting (Responses' `reasoning.effort`, Chat Completions' `reasoning_effort`) other than none. */
+export function reasonsUnbudgeted(payload: unknown): boolean {
+	if (!isRecord(payload)) return false;
+	const effort = isRecord(payload.reasoning) ? payload.reasoning.effort : payload.reasoning_effort;
+	return typeof effort === "string" && effort !== "none";
 }
 
 /** The thinking budget of a request with fixed-budget thinking (Anthropic's `enabled`); adaptive thinking has none. */
@@ -369,11 +451,32 @@ export function fixedThinkingBudget(payload: unknown): number | undefined {
 /** The one call that sends a request of this engine's own to the provider, a fork or a ping: pi's `ctx.modelRegistry.streamSimple`. */
 export type ProviderSend = (model: Model<Api>, context: Context, options: SimpleStreamOptions) => Promise<AssistantMessage>;
 
+/** The first bytes of a zstd frame. */
+const ZSTD_MAGIC = [0x28, 0xb5, 0x2f, 0xfd];
+/** Node's zstd, where this Node has it (22.15 and later); pi-ai compresses only when it is there. */
+const zstdDecompressSync = (zlib as { zstdDecompressSync?: (input: Uint8Array) => Uint8Array }).zstdDecompressSync;
+
+/**
+ * The text of a request body as pi-ai hands it to fetch: a string, or bytes, which the Codex adapter compresses with
+ * zstd when Node can. Undefined for any other body.
+ */
+function bodyText(body: unknown): string | undefined {
+	if (typeof body === "string") return body;
+	const bytes = body instanceof Uint8Array ? body : body instanceof ArrayBuffer ? new Uint8Array(body) : undefined;
+	if (!bytes) return undefined;
+	if (ZSTD_MAGIC.every((byte, index) => bytes[index] === byte)) {
+		if (typeof zstdDecompressSync !== "function") return undefined;
+		return Buffer.from(zstdDecompressSync(bytes)).toString("utf8");
+	}
+	return Buffer.from(bytes).toString("utf8");
+}
+
 /** A request body as pi-ai hands it to fetch, parsed; undefined for one that is no JSON object. */
 export function parseBody(body: unknown): Record<string, unknown> | undefined {
-	if (typeof body !== "string") return undefined;
 	try {
-		const parsed: unknown = JSON.parse(body);
+		const text = bodyText(body);
+		if (text === undefined) return undefined;
+		const parsed: unknown = JSON.parse(text);
 		return isRecord(parsed) ? parsed : undefined;
 	} catch {
 		return undefined;

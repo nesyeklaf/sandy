@@ -15,7 +15,7 @@ import { compareShapes, requestShape } from "../core/continuity.ts";
 import { kindOf } from "../core/records.ts";
 import { type CacheTier, cacheTtlMs, keepWarmDue, type KeepWarmState, keepWarmPlanned } from "../core/policy.ts";
 import type { UsageFigures } from "../core/attempts.ts";
-import { type Capture, type CapturePool, FORK_APIS, FORK_HIT_SHARE, isWarming, parseBody, type ProviderSend, REFRESH_LEASE_MS, replayOptions, routeOf } from "./captures.ts";
+import { type Capture, type CapturePool, FORK_HIT_SHARE, isWarming, parseBody, type ProviderSend, REFRESH_LEASE_MS, replayOptions, routeOf } from "./captures.ts";
 import { SessionClaim } from "./claim.ts";
 import { customRecords, type SessionFileTail } from "./session-attempts.ts";
 
@@ -65,6 +65,13 @@ export function readKeepWarmSignal(file: string): number | undefined {
 }
 
 
+/**
+ * APIs a one-token ping is sent on: Anthropic's, where a cache read is cheap, the lifetime short and one output token
+ * allowed. The fork goes on more ({@link FORK_APIS}); OpenAI's Responses API refuses an output limit under 16 tokens
+ * and keeps its cache on its own terms, so pi's own warmer, if any, is left to it.
+ */
+export const PING_APIS: ReadonlySet<string> = new Set(["anthropic-messages"]);
+
 /** Why a capture is not replayed as a one-token request. */
 export type ReplayRefusal = "thinking-budget" | "server-side" | "api" | "unanswered";
 
@@ -77,7 +84,8 @@ export type ReplayRefusal = "thinking-budget" | "server-side" | "api" | "unanswe
 export function replayRefusal(capture: Capture): ReplayRefusal | undefined {
 	if (capture.thinkingBudget !== undefined) return "thinking-budget";
 	if (capture.serverSide) return "server-side";
-	if (!FORK_APIS.has(capture.api)) return "api";
+	// A request without an output limit field cannot be asked for one token: a ping would buy a whole answer.
+	if (!PING_APIS.has(capture.api) || !capture.outputLimit) return "api";
 	if (capture.promptTokens === undefined) return "unanswered";
 	return undefined;
 }
@@ -165,7 +173,7 @@ export async function warmOnce(capture: Capture, signal: AbortSignal, host: Warm
 		const outgoing = body && ("betas" in body || !("betas" in captured) ? body : { ...body, betas: captured.betas });
 		const shape = outgoing && requestShape(outgoing);
 		if (!outgoing || !shape) declined = "unreadable";
-		else if (outgoing.max_tokens !== 1) declined = "output-limit";
+		else if (!capture.outputLimit || outgoing[capture.outputLimit] !== 1) declined = "output-limit";
 		else if (shape.head !== capture.shape.head) declined = "head";
 		else if (shape.items.length !== capture.shape.items.length || compareShapes(capture.shape, shape).kind !== "continued") declined = "prefix";
 		if (declined) throw new Error("keep-warm: refused to send (" + declined + ")");
@@ -190,7 +198,7 @@ export async function warmOnce(capture: Capture, signal: AbortSignal, host: Warm
 				fetch: guard,
 				...replayOptions(capture),
 				...(host.sessionId ? { sessionId: host.sessionId } : {}),
-				onPayload: () => ({ ...captured, max_tokens: 1 }),
+				onPayload: () => ({ ...captured, ...(capture.outputLimit ? { [capture.outputLimit]: 1 } : {}) }),
 			},
 		);
 	} catch {
