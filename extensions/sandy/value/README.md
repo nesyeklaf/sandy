@@ -94,27 +94,27 @@ outside service.
 
 _As of October 21, 2026_
 
-- **[Burn](https://getbb.app/marketplace/burn)** (`burn`): shows what each thread costs in dollars, per prompt and
+- **Burn** (`burn`): shows what each thread costs in dollars, per prompt and
   across threads, with budgets. Value counts tokens rather than dollars,
   and adds turn time, context size, and usage limits.
-- **[Usage Meter](https://getbb.app/marketplace/usage-meter)** (`usage-meter`): shows Claude subscription limits as two
+- **Usage Meter** (`usage-meter`): shows Claude subscription limits as two
   rings in the sidebar footer and reads Claude Code transcripts to explain
   where they went. Value reads sandy's usage events, so it covers any
   provider that reports usage to sandy, and breaks usage down by thread and by
   hour.
-- **[Receipts](https://getbb.app/marketplace/receipts)** (`receipts`): breaks token use and estimated cost down by
+- **Receipts** (`receipts`): breaks token use and estimated cost down by
   model, project, and day. Value breaks it down by thread and by hour,
   with no cost estimates.
-- **[Provider usage](https://getbb.app/marketplace/provider-usage)** (`provider-usage`), bundled with sandy, **[Usage Bar](https://getbb.app/marketplace/usage-bar)**
-  (`usage-bar`), and **[Usage Limits](https://getbb.app/marketplace/usage-limits)** (`usage-limits`): show each provider's
-  quota windows and when they reset. **[Usage Pace](https://getbb.app/marketplace/usage-pace)** (`usage-pace`) adds
+- **Provider usage** (`provider-usage`), bundled with sandy, **Usage Bar**
+  (`usage-bar`), and **Usage Limits** (`usage-limits`): show each provider's
+  quota windows and when they reset. **Usage Pace** (`usage-pace`) adds
   whether your current rate lasts until each reset. Value reads the same
   limits, estimates how many tokens each holds, and draws where each is
   headed on its token chart.
-- **[Auto Compact](https://getbb.app/marketplace/auto-compact)** (`auto-compact`): compacts a thread on its own once its
+- **Auto Compact** (`auto-compact`): compacts a thread on its own once its
   context reaches a share of the window. Value warns at a token count you
   set and leaves compacting to you.
-- **[Context Meter](https://getbb.app/marketplace/context-meter)** (`context-meter`) and **[Context Katamari](https://getbb.app/marketplace/context-katamari)**
+- **Context Meter** (`context-meter`) and **Context Katamari**
   (`context-katamari`): show how full one thread's context is. **[Context
   Health](https://getbb.app/marketplace/context-health)** (`context-health`) shows what makes it up. Value shows each
   thread's context size beside its token use over time, across all threads.

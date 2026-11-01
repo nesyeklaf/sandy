@@ -11,7 +11,7 @@ import { brotliDecompressSync, gunzipSync, inflateSync } from "node:zlib";
 import { isPublicAddress } from "./address";
 
 /** Names this plugin to every service, as their usage policies require. */
-export const USER_AGENT = "sandy-plugin-genui/0.1 (Generative UI plugin for sandy; https://getbb.app)";
+export const USER_AGENT = "sandy-plugin-genui/0.1 (Generative UI plugin for sandy; https://github.com/nesyeklaf/sandy)";
 
 const MAX_REDIRECTS = 5;
 /** A connection that goes quiet this long is dropped, whatever the overall deadline. */
