@@ -1,0 +1,125 @@
+{
+	"suite": "b7532c295030fd43",
+	"snapshots": [
+		{
+			"id": "s01",
+			"file": "s01.json",
+			"digest": "12a62e2ec9259cdc"
+		},
+		{
+			"id": "s02",
+			"file": "s02.json",
+			"digest": "c0bb5aeec2626aba"
+		},
+		{
+			"id": "s03",
+			"file": "s03.json",
+			"digest": "3efb1091baba7e2d"
+		},
+		{
+			"id": "s04",
+			"file": "s04.json",
+			"digest": "d277dc52a0e62cc4"
+		},
+		{
+			"id": "s05",
+			"file": "s05.json",
+			"digest": "099cd7e466ec5ddd"
+		},
+		{
+			"id": "s06",
+			"file": "s06.json",
+			"digest": "42adb4316373bbf7"
+		},
+		{
+			"id": "s07",
+			"file": "s07.json",
+			"digest": "b78d43690bca5572"
+		},
+		{
+			"id": "s08",
+			"file": "s08.json",
+			"digest": "b408a35e215dac99"
+		},
+		{
+			"id": "s09",
+			"file": "s09.json",
+			"digest": "10dfa6a4cc5610b0"
+		},
+		{
+			"id": "s10",
+			"file": "s10.json",
+			"digest": "8f42cdb5b6f3409d"
+		},
+		{
+			"id": "s11",
+			"file": "s11.json",
+			"digest": "ceab880f48345f6c"
+		},
+		{
+			"id": "s12",
+			"file": "s12.json",
+			"digest": "c0faec9e404cb845"
+		},
+		{
+			"id": "s13",
+			"file": "s13.json",
+			"digest": "e1726cf3a2f58d04"
+		},
+		{
+			"id": "s14",
+			"file": "s14.json",
+			"digest": "70c8c0c6fbef3ac9"
+		},
+		{
+			"id": "s15",
+			"file": "s15.json",
+			"digest": "969b67808836589c"
+		},
+		{
+			"id": "s16",
+			"file": "s16.json",
+			"digest": "739168a357e2e024"
+		},
+		{
+			"id": "s17",
+			"file": "s17.json",
+			"digest": "068ce87f1f58743c"
+		},
+		{
+			"id": "s18",
+			"file": "s18.json",
+			"digest": "2c22d91b75e67a29"
+		},
+		{
+			"id": "s19",
+			"file": "s19.json",
+			"digest": "a706488e3cdc0673"
+		},
+		{
+			"id": "s20",
+			"file": "s20.json",
+			"digest": "dce1c3ad0baf8ab5"
+		},
+		{
+			"id": "s21",
+			"file": "s21.json",
+			"digest": "b7e73b5f9295ccd6"
+		},
+		{
+			"id": "s22",
+			"file": "s22.json",
+			"digest": "75c3e2945c521cb5"
+		},
+		{
+			"id": "s23",
+			"file": "s23.json",
+			"digest": "fa484cfef23b0f5d"
+		},
+		{
+			"id": "s24",
+			"file": "s24.json",
+			"digest": "d010c87e58c16871"
+		}
+	]
+}

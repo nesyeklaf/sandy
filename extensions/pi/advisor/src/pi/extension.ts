@@ -10,8 +10,11 @@ import { textOf, type CompleteFn, type Msg, type Reply } from "../core/types.ts"
 
 const CONFIG_FILES = (cwd: string): string[] => [join(homedir(), ".pi", "agent", "advisor.json"), join(cwd, ".pi", "advisor.json")];
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
-/** pi/context listens here and cuts its context before the next prompt. Same string as CUT_REQUEST_CHANNEL in pi/context; the packages share no code. */
-const CUT_REQUEST_CHANNEL = "sandy-context.cut-request";
+/**
+ * pi/context listens here and cuts its context before the next prompt. Same string as CUT_REQUEST_CHANNEL in
+ * pi/context; the packages share no code, so test/channel.test.ts holds the two together.
+ */
+export const CUT_REQUEST_CHANNEL = "context.cut-request";
 const WATCH_ENTRY = "advisor-watch";
 
 export default function advisorExtension(pi: ExtensionAPI): void {
@@ -83,7 +86,7 @@ export default function advisorExtension(pi: ExtensionAPI): void {
 			entries: () => entries(lastCtx ?? ctx, answerBeingChecked),
 		});
 		if (enabled) void advisor.ctx.warm?.();
-		// SANDY starts pi per message: the open tasks seen last come from the session log, so a task closed meanwhile still counts.
+		// A reload or restart starts a fresh pi process: the open tasks seen last come from the session log, so a task closed meanwhile still counts.
 		const last = ctx.sessionManager
 			.getBranch()
 			.filter((e) => e.type === "custom" && (e as { customType?: string }).customType === WATCH_ENTRY)

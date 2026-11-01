@@ -3,7 +3,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { type ContextExtensionOptions, createContextExtension } from "../../src/pi/extension.ts";
 import { capturedTools, type ToolDefinition } from "../support/captured.ts";
 
-const options = (globalThis as { __sandyContextTest?: ContextExtensionOptions }).__sandyContextTest ?? {};
+const options = (globalThis as { __contextTest?: ContextExtensionOptions }).__contextTest ?? {};
 const extension = createContextExtension(options);
 
 /** The extension as pi loads it, with its tool definitions captured for nested calls. */

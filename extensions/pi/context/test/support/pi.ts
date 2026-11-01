@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // pi reads its config directory from PI_CODING_AGENT_DIR, default ~/.pi/agent. Point it at a
 // fresh directory before pi loads, so no test reads or writes the user's settings or logins.
-process.env.PI_CODING_AGENT_DIR = mkdtempSync(join(tmpdir(), "sandy-pi-agent-"));
+process.env.PI_CODING_AGENT_DIR = mkdtempSync(join(tmpdir(), "context-pi-agent-"));
 
 /**
  * The workspace's pinned pi. Its own dependencies (pi-ai, typebox) are loaded from that
@@ -50,7 +50,12 @@ export interface FauxContext {
 	readonly messages: readonly { readonly role: string; readonly content?: unknown }[];
 }
 
-type FauxFactory = (context: FauxContext) => unknown;
+type FauxFactory = (
+	context: FauxContext,
+	options: Record<string, unknown> | undefined,
+	state: unknown,
+	model: { id: string; provider: string },
+) => unknown;
 
 export interface FauxRegistration {
 	readonly api: string;
@@ -65,7 +70,7 @@ export interface PiAiCompat {
 		models: { id: string; reasoning?: boolean; contextWindow?: number; maxTokens?: number }[];
 		tokensPerSecond?: number;
 	}): FauxRegistration;
-	fauxAssistantMessage(content: unknown, options?: { stopReason?: string }): unknown;
+	fauxAssistantMessage(content: unknown, options?: { stopReason?: string; errorMessage?: string }): unknown;
 	fauxText(text: string): unknown;
 	fauxToolCall(name: string, args: Record<string, unknown>, options?: { id?: string }): unknown;
 }

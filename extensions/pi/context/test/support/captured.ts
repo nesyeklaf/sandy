@@ -8,7 +8,7 @@ export type ToolDefinition = Parameters<ExtensionAPI["registerTool"]>[0];
  * runner load this module as separate instances.
  */
 export function capturedTools(): Map<string, ToolDefinition> {
-	const shared = globalThis as { __sandyContextTools?: Map<string, ToolDefinition> };
-	shared.__sandyContextTools ??= new Map();
-	return shared.__sandyContextTools;
+	const shared = globalThis as { __contextTools?: Map<string, ToolDefinition> };
+	shared.__contextTools ??= new Map();
+	return shared.__contextTools;
 }

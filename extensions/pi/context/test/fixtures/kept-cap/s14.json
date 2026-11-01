@@ -1,0 +1,418 @@
+{
+	"id": "s14",
+	"shape": "overshoot",
+	"keptIndex": 12,
+	"laterReads": [],
+	"entries": [
+		{
+			"id": "e001",
+			"kind": "user",
+			"timestamp": 1791968445000,
+			"text": "Look at src/module-100.ts and report what it does (task 100).",
+			"toolCalls": [],
+			"tokens": 48
+		},
+		{
+			"id": "e002",
+			"kind": "assistant",
+			"timestamp": 1791968490000,
+			"text": "Reading src/module-100.ts.",
+			"toolCalls": [
+				{
+					"id": "c2",
+					"name": "read",
+					"args": {
+						"path": "src/module-100.ts"
+					}
+				}
+			],
+			"tokens": 34
+		},
+		{
+			"id": "e003",
+			"kind": "tool",
+			"timestamp": 1791968535000,
+			"text": "contents of src/module-100.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 993
+		},
+		{
+			"id": "e004",
+			"kind": "assistant",
+			"timestamp": 1791968580000,
+			"text": "src/module-100.ts does the thing for task 100.",
+			"toolCalls": [],
+			"tokens": 62
+		},
+		{
+			"id": "e005",
+			"kind": "user",
+			"timestamp": 1791968625000,
+			"text": "Look at src/module-101.ts and report what it does (task 101).",
+			"toolCalls": [],
+			"tokens": 43
+		},
+		{
+			"id": "e006",
+			"kind": "assistant",
+			"timestamp": 1791968670000,
+			"text": "Reading src/module-101.ts.",
+			"toolCalls": [
+				{
+					"id": "c6",
+					"name": "read",
+					"args": {
+						"path": "src/module-101.ts"
+					}
+				}
+			],
+			"tokens": 33
+		},
+		{
+			"id": "e007",
+			"kind": "tool",
+			"timestamp": 1791968715000,
+			"text": "contents of src/module-101.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 1511
+		},
+		{
+			"id": "e008",
+			"kind": "assistant",
+			"timestamp": 1791968760000,
+			"text": "src/module-101.ts does the thing for task 101.",
+			"toolCalls": [],
+			"tokens": 148
+		},
+		{
+			"id": "e009",
+			"kind": "user",
+			"timestamp": 1791968805000,
+			"text": "Look at src/module-102.ts and report what it does (task 102).",
+			"toolCalls": [],
+			"tokens": 31
+		},
+		{
+			"id": "e010",
+			"kind": "assistant",
+			"timestamp": 1791968850000,
+			"text": "Reading src/module-102.ts.",
+			"toolCalls": [
+				{
+					"id": "c10",
+					"name": "read",
+					"args": {
+						"path": "src/module-102.ts"
+					}
+				}
+			],
+			"tokens": 31
+		},
+		{
+			"id": "e011",
+			"kind": "tool",
+			"timestamp": 1791968895000,
+			"text": "contents of src/module-102.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 2232
+		},
+		{
+			"id": "e012",
+			"kind": "assistant",
+			"timestamp": 1791968940000,
+			"text": "src/module-102.ts does the thing for task 102.",
+			"toolCalls": [],
+			"tokens": 161
+		},
+		{
+			"id": "e013",
+			"kind": "user",
+			"timestamp": 1791968985000,
+			"text": "Look at src/module-0.ts and report what it does (task 0).",
+			"toolCalls": [],
+			"tokens": 27
+		},
+		{
+			"id": "e014",
+			"kind": "assistant",
+			"timestamp": 1791969030000,
+			"text": "Reading src/module-0.ts.",
+			"toolCalls": [
+				{
+					"id": "c14",
+					"name": "read",
+					"args": {
+						"path": "src/module-0.ts"
+					}
+				}
+			],
+			"tokens": 23
+		},
+		{
+			"id": "e015",
+			"kind": "tool",
+			"timestamp": 1791969075000,
+			"text": "contents of src/module-0.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 6666
+		},
+		{
+			"id": "e016",
+			"kind": "assistant",
+			"timestamp": 1791969120000,
+			"text": "src/module-0.ts does the thing for task 0.",
+			"toolCalls": [],
+			"tokens": 103
+		},
+		{
+			"id": "e017",
+			"kind": "user",
+			"timestamp": 1791969165000,
+			"text": "Look at src/module-1.ts and report what it does (task 1).",
+			"toolCalls": [],
+			"tokens": 56
+		},
+		{
+			"id": "e018",
+			"kind": "assistant",
+			"timestamp": 1791969210000,
+			"text": "Reading src/module-1.ts.",
+			"toolCalls": [
+				{
+					"id": "c18",
+					"name": "read",
+					"args": {
+						"path": "src/module-1.ts"
+					}
+				}
+			],
+			"tokens": 39
+		},
+		{
+			"id": "e019",
+			"kind": "tool",
+			"timestamp": 1791969255000,
+			"text": "contents of src/module-1.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 2257
+		},
+		{
+			"id": "e020",
+			"kind": "assistant",
+			"timestamp": 1791969300000,
+			"text": "src/module-1.ts does the thing for task 1.",
+			"toolCalls": [],
+			"tokens": 69
+		},
+		{
+			"id": "e021",
+			"kind": "user",
+			"timestamp": 1791969345000,
+			"text": "Look at src/module-2.ts and report what it does (task 2).",
+			"toolCalls": [],
+			"tokens": 26
+		},
+		{
+			"id": "e022",
+			"kind": "assistant",
+			"timestamp": 1791969390000,
+			"text": "Reading src/module-2.ts.",
+			"toolCalls": [
+				{
+					"id": "c22",
+					"name": "read",
+					"args": {
+						"path": "src/module-2.ts"
+					}
+				}
+			],
+			"tokens": 26
+		},
+		{
+			"id": "e023",
+			"kind": "tool",
+			"timestamp": 1791969435000,
+			"text": "contents of src/module-2.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 2276
+		},
+		{
+			"id": "e024",
+			"kind": "assistant",
+			"timestamp": 1791969480000,
+			"text": "src/module-2.ts does the thing for task 2.",
+			"toolCalls": [],
+			"tokens": 92
+		},
+		{
+			"id": "e025",
+			"kind": "user",
+			"timestamp": 1791969525000,
+			"text": "Look at src/module-3.ts and report what it does (task 3).",
+			"toolCalls": [],
+			"tokens": 57
+		},
+		{
+			"id": "e026",
+			"kind": "assistant",
+			"timestamp": 1791969570000,
+			"text": "Reading src/module-3.ts.",
+			"toolCalls": [
+				{
+					"id": "c26",
+					"name": "read",
+					"args": {
+						"path": "src/module-3.ts"
+					}
+				}
+			],
+			"tokens": 30
+		},
+		{
+			"id": "e027",
+			"kind": "tool",
+			"timestamp": 1791969615000,
+			"text": "contents of src/module-3.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 1841
+		},
+		{
+			"id": "e028",
+			"kind": "assistant",
+			"timestamp": 1791969660000,
+			"text": "src/module-3.ts does the thing for task 3.",
+			"toolCalls": [],
+			"tokens": 149
+		},
+		{
+			"id": "e029",
+			"kind": "user",
+			"timestamp": 1791969705000,
+			"text": "Look at src/module-4.ts and report what it does (task 4).",
+			"toolCalls": [],
+			"tokens": 42
+		},
+		{
+			"id": "e030",
+			"kind": "assistant",
+			"timestamp": 1791969750000,
+			"text": "Reading src/module-4.ts.",
+			"toolCalls": [
+				{
+					"id": "c30",
+					"name": "read",
+					"args": {
+						"path": "src/module-4.ts"
+					}
+				}
+			],
+			"tokens": 24
+		},
+		{
+			"id": "e031",
+			"kind": "tool",
+			"timestamp": 1791969795000,
+			"text": "contents of src/module-4.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 1249
+		},
+		{
+			"id": "e032",
+			"kind": "assistant",
+			"timestamp": 1791969840000,
+			"text": "src/module-4.ts does the thing for task 4.",
+			"toolCalls": [],
+			"tokens": 54
+		},
+		{
+			"id": "e033",
+			"kind": "user",
+			"timestamp": 1791969885000,
+			"text": "Look at src/module-5.ts and report what it does (task 5).",
+			"toolCalls": [],
+			"tokens": 43
+		},
+		{
+			"id": "e034",
+			"kind": "assistant",
+			"timestamp": 1791969930000,
+			"text": "Reading src/module-5.ts.",
+			"toolCalls": [
+				{
+					"id": "c34",
+					"name": "read",
+					"args": {
+						"path": "src/module-5.ts"
+					}
+				}
+			],
+			"tokens": 39
+		},
+		{
+			"id": "e035",
+			"kind": "tool",
+			"timestamp": 1791969975000,
+			"text": "contents of src/module-5.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 1864
+		},
+		{
+			"id": "e036",
+			"kind": "assistant",
+			"timestamp": 1791970020000,
+			"text": "src/module-5.ts does the thing for task 5.",
+			"toolCalls": [],
+			"tokens": 81
+		},
+		{
+			"id": "e037",
+			"kind": "user",
+			"timestamp": 1791970065000,
+			"text": "Look at src/module-6.ts and report what it does (task 6).",
+			"toolCalls": [],
+			"tokens": 27
+		},
+		{
+			"id": "e038",
+			"kind": "assistant",
+			"timestamp": 1791970110000,
+			"text": "Reading src/module-6.ts.",
+			"toolCalls": [
+				{
+					"id": "c38",
+					"name": "read",
+					"args": {
+						"path": "src/module-6.ts"
+					}
+				}
+			],
+			"tokens": 18
+		},
+		{
+			"id": "e039",
+			"kind": "tool",
+			"timestamp": 1791970155000,
+			"text": "contents of src/module-6.ts",
+			"toolCalls": [],
+			"toolName": "read",
+			"tokens": 1526
+		},
+		{
+			"id": "e040",
+			"kind": "assistant",
+			"timestamp": 1791970200000,
+			"text": "src/module-6.ts does the thing for task 6.",
+			"toolCalls": [],
+			"tokens": 43
+		}
+	]
+}
