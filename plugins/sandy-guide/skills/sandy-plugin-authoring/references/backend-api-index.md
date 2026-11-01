@@ -188,6 +188,7 @@ Read the installed declarations for exact current signatures.
 - `ExperimentalComposerPendingUpload`
 - `ExperimentalComposerPlusMenuContribution`
 - `ExperimentalComposerPopupContribution`
+- `ExperimentalComposerMenuContribution`
 - `ExperimentalComposerPopupProps`
 - `ExperimentalComposerPromptAction`
 - `ExperimentalComposerProps`

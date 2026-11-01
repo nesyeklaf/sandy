@@ -7,6 +7,7 @@ import {
   type ExperimentalComposerCommandSuggestion,
   type ExperimentalComposerCommandSuggestionGroup,
   type ExperimentalComposerCommandTrigger,
+  type ExperimentalComposerMenuItem,
   type ExperimentalComposerThreadRelation,
 } from "@sandy-sdk/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
@@ -18,6 +19,8 @@ import {
   typeaheadSuggestionKey,
   type MenuMentionGroup,
   type MenuMentionSuggestion,
+  type PluginMenuGroup,
+  type PluginMenuSuggestion,
   type TypeaheadMenuState,
   type TypeaheadSuggestion,
 } from "./typeahead-suggestions";
@@ -30,7 +33,7 @@ interface MentionMenuProps {
 }
 
 interface MentionResultsProps {
-  groups: readonly MenuMentionGroup[];
+  groups: readonly (MenuMentionGroup | PluginMenuGroup)[];
   refreshing: boolean;
   selectedIndex: number;
   onApply: (item: TypeaheadSuggestion) => void;
@@ -39,7 +42,10 @@ interface MentionResultsProps {
 }
 
 interface CommandResultsProps {
-  groups: readonly ExperimentalComposerCommandSuggestionGroup[];
+  groups: readonly (
+    | ExperimentalComposerCommandSuggestionGroup
+    | PluginMenuGroup
+  )[];
   refreshing: boolean;
   trigger: ExperimentalComposerCommandTrigger;
   selectedIndex: number;
@@ -158,6 +164,61 @@ function getCommandIcon(
     <PromptMentionIcon
       mention={commandMentionTarget(item, trigger)}
       className={ROW_ICON_CLASS}
+    />
+  );
+}
+
+function isSubmenu(item: ExperimentalComposerMenuItem): boolean {
+  return item.items !== undefined;
+}
+
+function PluginMenuRow({
+  item,
+  index,
+  selectedIndex,
+  onApply,
+  itemRefs,
+}: {
+  item: PluginMenuSuggestion;
+  index: number;
+  selectedIndex: number;
+  onApply: () => void;
+  itemRefs: React.MutableRefObject<Array<HTMLButtonElement | null>>;
+}) {
+  const row = item.item;
+  return (
+    <SuggestionRow
+      index={index}
+      selectedIndex={selectedIndex}
+      icon={
+        row.icon === undefined ? (
+          <PluginIcon
+            pluginId={item.contribution.pluginId}
+            icon={null}
+            className={ROW_ICON_CLASS}
+          />
+        ) : (
+          <Icon name={row.icon} className={ROW_ICON_CLASS} aria-hidden />
+        )
+      }
+      primary={row.label}
+      trailing={
+        row.description === undefined ? null : (
+          <MutedTrailing>{row.description}</MutedTrailing>
+        )
+      }
+      badge={
+        isSubmenu(row) ? (
+          <Icon
+            name="ChevronRight"
+            className="size-3.5 text-muted-foreground"
+            aria-hidden
+          />
+        ) : undefined
+      }
+      title={row.description ?? row.label}
+      onApply={onApply}
+      itemRefs={itemRefs}
     />
   );
 }
@@ -369,6 +430,19 @@ function MentionResults({
             <div className="flex flex-col gap-px px-1">
               {group.suggestions.map((item, itemIndex) => {
                 const index = startIndex + itemIndex;
+                if (item.kind === "menu") {
+                  return (
+                    <PluginMenuRow
+                      key={item.key}
+                      item={item}
+                      index={index}
+                      selectedIndex={selectedIndex}
+                      onApply={() => onApply(item)}
+                      itemRefs={itemRefs}
+                    />
+                  );
+                }
+
                 let primary = item.mention.label;
                 let secondaryContext: string | null = null;
                 let secondaryContextKind: SecondaryContextKind | null = null;
@@ -462,30 +536,41 @@ function CommandResults({
               onDismiss={groupIndex === 0 ? onDismiss : undefined}
             />
             <div className="flex flex-col gap-px px-1">
-              {group.suggestions.map((item, itemIndex) => (
-                <SuggestionRow
-                  key={typeaheadSuggestionKey(item)}
-                  index={startIndex + itemIndex}
-                  selectedIndex={selectedIndex}
-                  icon={getCommandIcon(item, trigger)}
-                  primary={item.name}
-                  trailing={
-                    <>
-                      {item.description !== null ? (
-                        <MutedTrailing>{item.description}</MutedTrailing>
-                      ) : null}
-                      {item.argumentHint !== null ? (
-                        <span className="shrink-0 text-subtle-foreground">
-                          {item.argumentHint}
-                        </span>
-                      ) : null}
-                    </>
-                  }
-                  title={item.description ?? item.name}
-                  onApply={() => onApply(item)}
-                  itemRefs={itemRefs}
-                />
-              ))}
+              {group.suggestions.map((item, itemIndex) =>
+                item.kind === "menu" ? (
+                  <PluginMenuRow
+                    key={item.key}
+                    item={item}
+                    index={startIndex + itemIndex}
+                    selectedIndex={selectedIndex}
+                    onApply={() => onApply(item)}
+                    itemRefs={itemRefs}
+                  />
+                ) : (
+                  <SuggestionRow
+                    key={typeaheadSuggestionKey(item)}
+                    index={startIndex + itemIndex}
+                    selectedIndex={selectedIndex}
+                    icon={getCommandIcon(item, trigger)}
+                    primary={item.name}
+                    trailing={
+                      <>
+                        {item.description !== null ? (
+                          <MutedTrailing>{item.description}</MutedTrailing>
+                        ) : null}
+                        {item.argumentHint !== null ? (
+                          <span className="shrink-0 text-subtle-foreground">
+                            {item.argumentHint}
+                          </span>
+                        ) : null}
+                      </>
+                    }
+                    title={item.description ?? item.name}
+                    onApply={() => onApply(item)}
+                    itemRefs={itemRefs}
+                  />
+                ),
+              )}
             </div>
           </div>
         );
