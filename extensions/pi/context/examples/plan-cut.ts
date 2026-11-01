@@ -11,7 +11,7 @@ import {
 	effectiveWatermark,
 	estimateTokens,
 	type LogEntry,
-	planCut,
+	foldCut,
 	resolveConfig,
 } from "../src/core/index.ts";
 
@@ -51,7 +51,7 @@ const promptTokens = entries.reduce((sum, entry) => sum + entry.tokens, 0);
 const watermark = effectiveWatermark(config, 200_000);
 console.log(`prompt ${promptTokens} tokens, watermark ${watermark}: cut due = ${boundaryCut(promptTokens, cutThresholds(config, 200_000), false)}`);
 
-const plan = planCut({
+const plan = foldCut({
 	entries,
 	minKeptIndex: 0,
 	visibleFromIndex: 0,

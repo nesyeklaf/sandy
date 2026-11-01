@@ -1,111 +1,103 @@
-import { randomUUID } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { Api, AssistantMessage, Model, ToolResultMessage } from "@earendil-works/pi-ai";
+import * as piHost from "@earendil-works/pi-coding-agent";
 import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
-import { type ContextConfig, type ContextConfigInput, carriedTokens, resolveConfig } from "../core/config.ts";
+import { type ContextConfigInput, isConfigErrors } from "../core/config.ts";
 import { requestShape } from "../core/continuity.ts";
-import { type CutPlan, planCut } from "../core/cut.ts";
-import {
-	CUT_REQUEST_CHANNEL,
-	KEEP_WARM_KIND,
-	NOTEBOOK_KIND,
-	REMINDER_KIND,
-	SIGNALS_CHANNEL,
-	SUMMARY_KIND,
-	TASK_DONE_KIND,
-} from "../core/kinds.ts";
-import { GUIDANCE_SECTION, guidanceFor, notebookReminder, withSection } from "../core/guidance.ts";
-import { selectChunk } from "../core/historian.ts";
+import { ATTEMPT_KIND, CUT_REQUEST_CHANNEL, NOTEBOOK_KIND, RETRIEVAL_KIND, SIGNALS_CHANNEL, SUMMARY_KIND } from "../core/kinds.ts";
+import { GUIDANCE_SECTION, guidanceFor, withSection } from "../core/guidance.ts";
+import { commitSummary, evidenceBudget, selectEvidence } from "../core/historian.ts";
 import { type Answer, answerUsage, isRefused, Ledger, promptTokens, RequestTracker } from "../core/ledger.ts";
-import {
-	boundaryCut,
-	type CacheTier,
-	cacheTtlMs,
-	type CutThresholds,
-	cutAccepted,
-	cutThresholds,
-	projectedTokens,
-	keepWarmDue,
-	notebookReminderDue,
-	promptCut,
-} from "../core/policy.ts";
+import { type CacheTier, cacheTtlMs } from "../core/policy.ts";
 import { textOf } from "../core/messages.ts";
-import { archivedReads, ContextSignals, type ContextSignalsEvent } from "../core/signals.ts";
+import { ContextSignals, type ContextSignalsEvent } from "../core/signals.ts";
+import { accountingEvents, formatCostReport, reduceAccounting } from "../core/accounting.ts";
+import { formatCapShadowReport, reduceCapShadow } from "../core/kept-cap.ts";
+import { formatRetrievalReport, reduceRetrieval, retrievalEvents } from "../core/retrieval.ts";
+import { mergeEntries, type RawEntry } from "../core/session-entries.ts";
 import { estimateTokens } from "../core/tokens.ts";
 import {
-	answerSearch,
 	checkNotebook,
-	newestFirstPages,
-	newestFirstPagesFrom,
 	notebookView,
-	readHistory,
-	SCAN_PAGE,
 	TOOLS,
 } from "../core/tools.ts";
-import { firstAnswer, historianFallbackModel, historianModel, summarizeWith } from "../historian/model.ts";
-import { Historian, type HistorianBranch, type SummarizeRequest, type SummarizeResult } from "../historian/run.ts";
+import { isModelError, refusedTransport, type ResolvedPolicy, resolveHistorianModels } from "../historian/model.ts";
+import {
+	type HistorianBranch,
+	HistorianLifecycle,
+	type SummarizeRequest,
+	type SummarizeResult,
+} from "../historian/run.ts";
 import { historyReadParameters, historySearchParameters, notebookParameters } from "../tools/schemas.ts";
-import { type BranchState, readBranch } from "./branch.ts";
-import { cacheCosts, KEEP_WARM_PING, readKeepWarmSignal, withoutPings } from "./keep-warm.ts";
+import { type SessionProjector, SessionTape } from "./session.ts";
+import { CutController } from "./cuts.ts";
+import { CapturePool } from "./captures.ts";
+import { HistorianRequests, type IsolatedModel } from "./historian.ts";
+import { configFailure, keptCapEvidence, keptCapGate, loadConfig } from "./config.ts";
+import { migrateHostFiles } from "./migrate.ts";
+import { checkHost, detectCapabilities, gatedApi } from "./host.ts";
+import { CompetitorWarnings, observeOwners, type WarningEvidence } from "./coexist.ts";
+import { decodeContextRecord } from "../core/records.ts";
+import { type KEEP_WARM_FILE, KeepWarm, withoutPings } from "./keep-warm.ts";
+import { SessionClaim } from "./claim.ts";
+import { SessionFileTail, SessionReceipts } from "./session-attempts.ts";
 
 /** The historian's model call in pi, which may use the session's context. */
 export type Summarizer = (request: SummarizeRequest, ctx: ExtensionContext) => Promise<SummarizeResult>;
 
 export interface ContextExtensionOptions {
 	readonly config?: ContextConfigInput;
-	/** JSON config file; defaults to `<agent dir>/sandy-context.json`. False skips it. */
+	/** JSON config file; defaults to `<agent dir>/context.json`. False skips it. */
 	readonly configFile?: string | false;
-	/** JSONL file with one record per provider request; defaults to `<agent dir>/sandy-context/ledger.jsonl`. False disables it. */
+	/** JSONL file with one record per provider request; defaults to `<agent dir>/context/ledger.jsonl`. False disables it. */
 	readonly ledgerFile?: string | false;
 	/** Clock for cache lifetime decisions. */
 	readonly now?: () => number;
 	/**
 	 * Keep-warm pings. The signal file, `{ "until": <epoch ms> }`, says until when the session expects another prompt.
-	 * It defaults to `pi-keep-warm.json` in the SANDY thread's storage (`SANDY_THREAD_STORAGE`), where a SANDY plugin on
-	 * another machine can write it, else to `<agent dir>/sandy-context/keep-warm/<session id>.json`. False turns pings off.
+	 * It defaults to {@link KEEP_WARM_FILE} in the Sandy thread's storage (`SANDY_THREAD_STORAGE`, see `signalFile`), where a Sandy plugin on
+	 * another machine can write it, else to `<agent dir>/context/keep-warm/<session id>.json`. False turns pings off.
 	 */
 	readonly keepWarm?: { readonly file?: string; readonly intervalMs?: number } | false;
 	readonly summarize?: Summarizer;
+	/**
+	 * The probe record that lets `keptCap.mode` "on" start; defaults to `context-kept-cap-probe.json` in the agent
+	 * directory. False names none. Read only in mode "on".
+	 */
+	readonly keptCapProbeFile?: string | false;
 }
 
 function textResult<T>(text: string, details: T) {
 	return { content: [{ type: "text" as const, text }], details };
 }
 
-function readConfigFile(path: string | false | undefined): ContextConfigInput | undefined {
-	if (path === false) return undefined;
-	const file = path ?? join(getAgentDir(), "sandy-context.json");
-	if (!existsSync(file)) return undefined;
-	return JSON.parse(readFileSync(file, "utf8")) as ContextConfigInput;
+/**
+ * The historian's isolated routes: the configured models, else the session's own model, then the fallback. A model
+ * whose client resends unseen is not asked.
+ */
+function historianModels(policy: ResolvedPolicy<Model<Api>>, ctx: ExtensionContext): IsolatedModel[] {
+	const candidates = [
+		{ route: "primary", model: policy.primary ?? ctx.model },
+		{ route: "fallback", model: policy.fallback },
+	];
+	return candidates.flatMap(({ route, model }, index) => {
+		if (model === undefined || candidates.findIndex((other) => other.model === model) !== index) return [];
+		if (refusedTransport(model)) return [];
+		return [{ route, model }];
+	});
 }
 
-function defaultSummarizer(config: ContextConfig): Summarizer {
-	const configured = historianModel(config);
-	const fallbackRef = historianFallbackModel(config);
-	return async (request, ctx) => {
-		const model = (configured && ctx.modelRegistry.find(configured.provider, configured.id)) ?? ctx.model;
-		const fallback = fallbackRef && ctx.modelRegistry.find(fallbackRef.provider, fallbackRef.id);
-		const models = [model, fallback].filter(
-			(candidate, index, all): candidate is NonNullable<typeof candidate> =>
-				candidate !== undefined && all.findIndex((other) => other === candidate) === index,
-		);
-		return firstAnswer(
-			models.map(
-				(candidate) => () =>
-					summarizeWith(
-						// streamSimple, not complete: only it maps the reasoning option, and without it the
-						// provider's default thinking spends the output limit.
-						(context, options) =>
-							ctx.modelRegistry
-								.streamSimple(candidate, context, { ...options, sessionId: randomUUID() })
-								.result(),
-						candidate,
-						request,
-					),
-			),
-			request.signal,
-		);
-	};
+/**
+ * Why the session has no historian: no historian model is set and the session's model is one the historian refuses,
+ * or undefined when it has one.
+ */
+function historianUnavailable(policy: ResolvedPolicy<Model<Api>>, ctx: ExtensionContext): string | undefined {
+	if (policy.primary !== undefined || policy.fallback !== undefined || ctx.model === undefined) return undefined;
+	const refused = refusedTransport(ctx.model);
+	return refused
+		? `the session model ${ctx.model.provider}/${ctx.model.id} ${refused}. Set historian.model to a model on another API; until then no summaries are made`
+		: undefined;
 }
 
 /**
@@ -117,125 +109,159 @@ function defaultSummarizer(config: ContextConfig): Summarizer {
  * model change, pi's own compaction) or at the planned watermark.
  */
 export function createContextExtension(options: ContextExtensionOptions = {}): (pi: ExtensionAPI) => void {
-	return function sandyContext(pi: ExtensionAPI): void {
-		const config = resolveConfig(readConfigFile(options.configFile), options.config);
+	return function contextExtension(host: ExtensionAPI): void {
+		// A host or a config that cannot work stops here, before anything is registered.
+		const hostCheck = checkHost(detectCapabilities(host, piHost));
+		if (!hostCheck.supported) throw new Error(hostCheck.message);
+		// The host files named before the rename move once, before the config is read from its new name. Only a config
+		// conflict stops the load; a ledger directory left under its old name is a warning. A start given its own config
+		// file, or none, leaves the host's config file alone.
+		const migration = migrateHostFiles(getAgentDir(), undefined, { config: options.configFile === undefined });
+		if (migration.status === "conflict") throw new Error(migration.message);
+		let migrationNotices: { text: string; level: "info" | "warning" }[] = [];
+		if (migration.status === "moved") {
+			migrationNotices.push({ text: `context: moved the files named before the rename: ${migration.moved.join(", ")}`, level: "info" });
+		}
+		if (migration.warning !== undefined) migrationNotices.push({ text: migration.warning, level: "warning" });
+		const loaded = loadConfig(options.configFile, options.config);
+		if (isConfigErrors(loaded)) throw configFailure(loaded);
+		const config = loaded;
+		const gate = keptCapGate(config, options.keptCapProbeFile);
+		if (gate) throw configFailure(gate);
+		/**
+		 * Why the cap may not shape a cut for this session's model, none when the probe record on disk covers it. The
+		 * record is read again at every cut that would use the cap: the startup gate sees no model, and a record that
+		 * was overwritten or a model that was switched since must not keep the cap on. Other modes never read it.
+		 */
+		const capEvidence = (ctx: ExtensionContext): string | undefined => {
+			if (config.keptCap.mode !== "on") return undefined;
+			if (!ctx.model) return "the session has no model yet";
+			const { verdict, where } = keptCapEvidence(config, options.keptCapProbeFile, `${ctx.model.provider}/${ctx.model.id}`);
+			return verdict.ok ? undefined : `${verdict.kind}: ${verdict.reason} (${where})`;
+		};
 		const now = options.now ?? Date.now;
-		const summarize = options.summarize ?? defaultSummarizer(config);
+		/** Tells the user: in the UI when there is one, else on stderr (print and json mode). */
+		const tell = (ctx: ExtensionContext, text: string, level: "info" | "warning" | "error"): void => {
+			if (ctx.hasUI) ctx.ui.notify(text, level);
+			else console.error(text);
+		};
+		let policy: ResolvedPolicy<Model<Api>> = { primary: undefined, fallback: undefined };
+
+		// Models can only be looked up once pi has a registry, at session start. Until that check passes, the hooks,
+		// tools and the command registered below do nothing.
+		let ready = false;
+		let startupError = "";
+		const pi = gatedApi(host, () => ready, () => startupError);
+		host.on("session_start", (_event, ctx) => {
+			ready = false;
+			for (const { text, level } of migrationNotices) tell(ctx, text, level);
+			migrationNotices = [];
+			if (options.summarize === undefined && config.historian.enabled) {
+				const resolved = resolveHistorianModels(config, ctx.modelRegistry);
+				if (isModelError(resolved)) {
+					startupError = `pi-context: ${resolved.modelError}. Fix or remove it in the settings file.`;
+					ctx.shutdown();
+					throw new Error(startupError);
+				}
+				policy = resolved;
+			}
+			ready = true;
+		});
+		// A host without a shutdown handler (print and json mode) goes on after a failed start: refuse its prompts.
+		host.on("input", (_event, ctx) => {
+			if (ready || startupError === "") return { action: "continue" as const };
+			tell(ctx, `${startupError} The prompt was not sent.`, "error");
+			return { action: "handled" as const };
+		});
 
 		let ledger = new Ledger();
 		let ledgerFile: string | undefined;
 		let sessionId = "";
 		let requests = new RequestTracker();
-		/** Reason for the cache break the next request will show. */
-		let pendingCut: string | undefined;
-		/** Where the pending cut happened: between two requests of a run, before a prompt, or for pi's own compaction. */
-		let pendingPosition: "run" | "prompt" | "pi" | undefined;
+		/** The main requests a summary may fork from and a ping replays, with the one cache clock of their prefix. */
+		const captures = new CapturePool();
+		/** The historian's model requests. */
+		const historianRequests = new HistorianRequests({
+			captures,
+			fork: config.historian.fork,
+			now,
+			record: (record) => writeLedger({ t: new Date(now()).toISOString(), session: sessionId, class: "historian-route", ...record }),
+		});
 		/** Tool output, delegation and after-cut signals for the ledger. */
 		let signals = new ContextSignals();
-		/** Files the latest cut archived, computed once per cut. */
-		let archived: { from: number; paths: Set<string> } | undefined;
+		/** The historian's receipts in the session file, as every process on it wrote them. */
+		let fileReceipts: { readonly file: string; readonly receipts: SessionReceipts } | undefined;
+		/** The receipts of a session without a file: this process's own records. */
+		const memoryReceipts = new SessionReceipts(undefined);
+		/** The claim on the historian's work in the session file. */
+		const historianClaim = new SessionClaim("historian");
+		/** The session file's entries, for the reports. */
+		let fileEntries: { readonly file: string; readonly tail: SessionFileTail<RawEntry> } | undefined;
+		/** The tape of the session's manager, which takes new entries in from the tail instead of reading the branch again. */
+		let followed: { manager: ExtensionContext["sessionManager"]; tape: SessionTape } | undefined;
 		/** Size problems reported to the user in this session, by kind; the ledger keeps every one. */
 		let sizeReported = new Set<string>();
-		/** The latest size problem, for `/sandy-context`. */
+		/** Why the historian is unavailable, as the user was told in this session. */
+		let unavailableReported = new Set<string>();
+		/** Other compacting extensions the user was told about in this session. */
+		let competitors = new CompetitorWarnings();
+		/** The latest size problem, for `/context`. */
 		let lastSizeProblem: string | undefined;
-		/** Reason for the compaction the input handler is waiting for. */
-		let promptReason: "watermark" | "cold" | "model" | "task" | undefined;
-		/** A task finished since the last cut chance; the next one cuts if the context is large enough. */
-		let taskDone = false;
-		pi.events.on(CUT_REQUEST_CHANNEL, (data) => {
-			taskDone = true;
-			// Kept in the log: under SANDY the next prompt is handled by a new process.
-			pi.appendEntry(TASK_DONE_KIND, data ?? {});
-		});
-		/** Whether a finished task asks for a cut at this chance; the request is used up either way. */
-		const taskCut = (tokens: number | undefined): boolean => {
-			const due = taskDone && tokens !== undefined && tokens >= config.taskCutMinTokens;
-			taskDone = false;
-			return due;
-		};
 		/** Whether the agent can write its notebook in the current run; reminders are pointless otherwise. */
 		let notebookAvailable = true;
-		const historian = new Historian<string>(config);
-		/** The newest context, for the keep-warm timer, and the timer itself. */
-		let idleContext: ExtensionContext | undefined;
-		let keepWarmTimer: ReturnType<typeof setInterval> | undefined;
+		/** Each session start and branch change begins a generation; the historian's worker belongs to one generation. */
+		let generation = 0;
+		/** The context the historian's worker was last scheduled with, to tell the owner about a pause. */
+		let historianContext: ExtensionContext | undefined;
+		const historian = new HistorianLifecycle(config, {
+			now,
+			onPause: (pause) => {
+				const text = `Historian paused after ${pause.attempts} failed attempts${pause.lastDetail ? ` (last: ${pause.lastDetail})` : ""}. No more summaries are requested until you run /context retry-historian.`;
+				if (historianContext) tell(historianContext, text, "warning");
+				else console.error(text);
+			},
+		});
 		const tier = (): CacheTier => (process.env.PI_CACHE_RETENTION === "long" ? "long" : "short");
 
-		const branchOf = (ctx: ExtensionContext): BranchState => readBranch(ctx.sessionManager.getBranch());
-		const thresholdsFor = (ctx: ExtensionContext): CutThresholds => cutThresholds(config, ctx.model?.contextWindow);
-		const planFrom = (state: BranchState, reason: string): CutPlan | undefined =>
-			planCut({
-				entries: state.entries,
-				minKeptIndex: state.minKeptIndex,
-				visibleFromIndex: state.visibleFromIndex,
-				summary: state.summary,
-				notebook: state.notebook,
-				config,
-				reason,
-			});
-
+		// The host check refuses a pi without buildSessionProjection, so the extension never runs without it.
+		const project = piHost.buildSessionProjection as SessionProjector;
+		const tapeOf = (ctx: ExtensionContext): SessionTape => {
+			if (followed?.manager !== ctx.sessionManager) {
+				followed = { manager: ctx.sessionManager, tape: SessionTape.follow(ctx.sessionManager, project, config) };
+			} else followed.tape.refresh();
+			return followed.tape;
+		};
+		const cuts = new CutController({
+			config,
+			pi,
+			project,
+			now,
+			tier,
+			ledger: (record) => writeLedger({ ...record, session: sessionId }),
+			report: reportSize,
+			notebookAvailable: () => notebookAvailable,
+			competing: () => competitors.active,
+			capEvidence,
+		});
+		const keepWarm = new KeepWarm({ config, pi, captures, now, settings: options.keepWarm, tier, softTokens: (ctx) => cuts.thresholds(ctx).soft });
+		pi.events.on(CUT_REQUEST_CHANNEL, (data) => {
+			if (!ready) return;
+			cuts.requestTask(data);
+		});
 		/**
 		 * Tells the user about a cut that misses its limit, once per session and kind. Without a UI (print mode) the
-		 * text goes to stderr; the latest one is shown by `/sandy-context`.
+		 * text goes to stderr; the latest one is shown by `/context`.
 		 */
 		function reportSize(ctx: ExtensionContext, kind: string, text: string): void {
 			lastSizeProblem = `${new Date(now()).toISOString()}: ${text}`;
 			if (sizeReported.has(kind)) return;
 			sizeReported.add(kind);
-			if (ctx.hasUI) ctx.ui.notify(text, "warning");
-			else console.error(text);
+			tell(ctx, text, "warning");
 		}
 
-		const SIZE_ADVICE = "raise watermarkTokens, or lower keepRecentTokens, maskedTokens, pinnedUserTokens or summaryTokens";
-
-		/**
-		 * The cut for `reason`, when `cutAccepted` takes it: it brings the prompt below `limit`, or the prompt has
-		 * reached `hard` and the cut frees a quarter of it. Any other cut is refused, logged and reported: cutting again
-		 * and again would not help.
-		 */
-		function shrinkingPlan(
-			ctx: ExtensionContext,
-			state: BranchState,
-			reason: string,
-			tokens: number | undefined,
-			limit: number | undefined,
-			hard: number,
-		): CutPlan | undefined {
-			const plan = planFrom(state, reason);
-			if (!plan || tokens === undefined || limit === undefined) return plan;
-			const kept = state.entries.findIndex((entry) => entry.id === plan.firstKeptEntryId);
-			if (kept < 0) return plan;
-			const archivedTokens = state.entries
-				.slice(state.visibleFromIndex, kept)
-				.reduce((sum, entry) => sum + entry.tokens, 0);
-			const size = {
-				contextTokens: tokens,
-				visibleTokens: state.visibleTokens,
-				archivedTokens,
-				blockTokens: plan.details.blockTokens,
-				limit,
-			};
-			if (cutAccepted(size, hard)) return plan;
-			const projected = Math.round(projectedTokens(size));
-			writeLedger({
-				t: new Date(now()).toISOString(),
-				session: sessionId,
-				class: "cut-refused",
-				reason,
-				tokens,
-				limit,
-				projected,
-				hard,
-			});
-			const count = (value: number) => `~${Math.round(value).toLocaleString("en-US")}`;
-			reportSize(
-				ctx,
-				"refused",
-				tokens < hard
-					? `sandy-context: a ${reason} cut would leave ${count(projected)} tokens, not below ${count(limit)}, so it waits until the prompt reaches ${count(hard)}. To cut at the watermark, ${SIZE_ADVICE}.`
-					: `sandy-context: at ${count(tokens)} tokens a ${reason} cut would free too little (to ${count(projected)}). The prompt keeps growing; ${SIZE_ADVICE}.`,
-			);
-			return undefined;
+		/** Tells the user, once per reason, what shows another extension also compacts this session. */
+		function warnCompetitors(ctx: ExtensionContext, evidence: readonly WarningEvidence[]): void {
+			for (const text of competitors.fresh(evidence)) tell(ctx, text, "warning");
 		}
 
 		function writeLedger(record: Record<string, unknown>): void {
@@ -248,23 +274,59 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			}
 		}
 
+		/** The historian's receipts of every pi process on the session file; this process's alone for a session without a file. */
+		function receiptsOf(file: string | undefined): SessionReceipts {
+			if (file === undefined) return memoryReceipts;
+			if (fileReceipts?.file !== file) fileReceipts = { file, receipts: new SessionReceipts(file) };
+			return fileReceipts.receipts;
+		}
+
 		/** The session's branch for the background historian, which summarizes what the next cut will archive. */
 		function historianBranch(ctx: ExtensionContext): HistorianBranch {
+			historianContext = ctx;
+			const file = ctx.sessionManager.getSessionFile();
+			const claim = historianClaim.claimFor(file);
+			// Every receipt of the session, see session-attempts.ts: the file's, then this process's the file lacks.
+			const receipts = () => receiptsOf(file).read(ctx.sessionManager.getEntries());
 			return {
-				summarize: (request) => summarize(request, ctx),
+				attempts: {
+					read: () => receipts().unfinished,
+					stored: (key) => receipts().stored.has(key),
+					append: (entry) => pi.appendEntry(ATTEMPT_KIND, entry),
+				},
+				...(claim ? { claim } : {}),
+				routes: () => {
+					const injected = options.summarize;
+					if (injected) return [{ route: "primary", model: "injected", call: (request: SummarizeRequest) => injected(request, ctx) }];
+					const unavailable = historianUnavailable(policy, ctx);
+					if (unavailable !== undefined && !unavailableReported.has(unavailable)) {
+						unavailableReported.add(unavailable);
+						tell(ctx, `Historian unavailable: ${unavailable}.`, "warning");
+					}
+					return historianRequests.routes({
+						// streamSimple, not complete: only it maps the reasoning option, and without it the provider's
+						// default thinking spends the output limit.
+						send: (model, context, requestOptions) => ctx.modelRegistry.streamSimple(model, context, requestOptions).result(),
+						main: ctx.model,
+						isolated: historianModels(policy, ctx),
+						cacheTtlMs: ctx.model ? cacheTtlMs(config, ctx.model, tier()) : 0,
+						sessionId,
+					});
+				},
 				next: async () => {
-					const state = branchOf(ctx);
-					// History archived by someone else's compaction stays searchable only; our own cuts are summarized later.
-					const floor = state.summary ? 0 : state.historianFloorIndex;
-					const chunk = selectChunk(state.entries, state.summary, config, floor);
-					return chunk && { summary: state.summary, chunk };
+					// The history leaves out what someone else's compaction archived; our own cuts are summarized later.
+					const tape = tapeOf(ctx);
+					const history = tape.history();
+					return selectEvidence(history, evidenceBudget(config, competitors.active), tape.state.leafId);
 				},
-				latest: async (anchor) => {
-					const current = branchOf(ctx);
-					return { summary: current.summary, holds: current.entries.some((entry) => entry.id === anchor) };
-				},
-				write: async (summary) => {
-					pi.appendEntry(SUMMARY_KIND, summary);
+				write: (work, summary) => {
+					// The branch as it reads now decides: a summary of something that changed since is not stored.
+					const committed = commitSummary(
+						{ work, history: tapeOf(ctx).history(), competing: competitors.active },
+						summary,
+					);
+					if (committed.status === "stored") pi.appendEntry(SUMMARY_KIND, summary);
+					return committed;
 				},
 			};
 		}
@@ -276,18 +338,10 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		function scheduleHistorian(ctx: ExtensionContext): void {
 			const tokens = ctx.getContextUsage()?.tokens ?? 0;
 			if (tokens < config.historian.startTokens) {
-				const state = branchOf(ctx);
-				if (!state.summary && state.cuts === 0) return;
+				const tape = tapeOf(ctx);
+				if (!tape.history().summary && tape.state.cuts === 0) return;
 			}
-			historian.schedule(sessionId, historianBranch(ctx));
-		}
-
-		function archivedPaths(ctx: ExtensionContext): Set<string> {
-			const state = branchOf(ctx);
-			if (archived?.from !== state.visibleFromIndex) {
-				archived = { from: state.visibleFromIndex, paths: archivedReads(state.entries, state.visibleFromIndex) };
-			}
-			return archived.paths;
+			historian.start(historianBranch(ctx), generation);
 		}
 
 		function signalLine(signal: ReturnType<ContextSignals["snapshot"]>): string {
@@ -298,122 +352,94 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			return `Tools this run: ~${signal.runToolTokens.toLocaleString("en-US")} output tokens, ${signal.delegations} delegations; ${sinceCut}`;
 		}
 
-				function statusLines(ctx: ExtensionContext): string[] {
-			const state = branchOf(ctx);
+		function statusLines(ctx: ExtensionContext): string[] {
+			const thresholds = cuts.thresholds(ctx);
+			const tape = tapeOf(ctx);
+			const { summary } = tape.history();
+			const log = tape.archive().entries;
 			const tokens = ctx.getContextUsage()?.tokens;
-			const summaryItems = state.summary
-				? Object.values(state.summary.sections).reduce((sum, items) => sum + items.length, 0)
-				: 0;
-			const notebookBytes = Buffer.byteLength(state.notebook ?? "", "utf8");
+			const summaryItems = summary ? Object.values(summary.sections).reduce((sum, items) => sum + items.length, 0) : 0;
+			const notebookBytes = Buffer.byteLength(tape.state.notebook ?? "", "utf8");
+			const unavailable = options.summarize ? undefined : historianUnavailable(policy, ctx);
 			return [
-				`Prompt: ${tokens == null ? "unknown until the next response" : `~${tokens.toLocaleString("en-US")}`} tokens; cut before the next prompt from ${thresholdsFor(ctx).soft.toLocaleString("en-US")}, mid-run from ${thresholdsFor(ctx).hard.toLocaleString("en-US")}, or on a cold cache above ${config.coldCutMinTokens.toLocaleString("en-US")}`,
-				`Cuts on this branch: ${state.cuts}; summary ${state.summary ? `through #${state.summary.coveredThroughId}, ${summaryItems} items` : "not started"}; notebook ${notebookBytes} bytes`,
-				`Historian: ${historian.stats.runs} runs, ${historian.stats.condensed} condensations, ${historian.stats.failures} failures${historian.stats.lastError ? ` (last: ${historian.stats.lastError})` : ""}${historian.running > 0 ? ", running" : ""}`,
+				`Prompt: ${tokens == null ? "unknown until the next response" : `~${tokens.toLocaleString("en-US")}`} tokens; cut before the next prompt from ${thresholds.soft.toLocaleString("en-US")}, mid-run from ${thresholds.hard.toLocaleString("en-US")}, or on a cold cache above ${config.coldCutMinTokens.toLocaleString("en-US")}`,
+				`Cuts on this branch: ${tape.state.cuts}; summary ${summary ? `through #${summary.coveredThroughId}, ${summaryItems} items` : "not started"}; notebook ${notebookBytes} bytes`,
+				unavailable !== undefined
+					? `Historian unavailable: ${unavailable}.`
+					: `Historian: ${historian.stats.runs} runs, ${historian.stats.condensed} condensations, ${historian.stats.failures} failures${historian.stats.lastError ? ` (last: ${historian.stats.lastError})` : ""}${historian.running > 0 ? ", running" : ""}${historian.stats.paused ? `; paused after ${historian.stats.paused.attempts} failed attempts, /context retry-historian tries again` : ""}`,
 				signalLine(signals.snapshot()),
 				`Cut size: ${lastSizeProblem ?? "no refused or oversized cut in this session"}`,
-				`Log: ${state.entries.length.toLocaleString("en-US")} entries, ${state.visibleFromIndex.toLocaleString("en-US")} archived and searchable`,
+				`Log: ${log.length.toLocaleString("en-US")} entries, ${log.filter((entry) => entry.status !== "visible").length.toLocaleString("en-US")} archived or edited and searchable`,
 				...ledger.report(),
+				...reportLines(ctx),
 			];
 		}
 
+		/**
+		 * What the session paid and how it found its history again, from its log: the lines `npm run measure` prints too.
+		 * pi loaded the file once; another process on the same session appends requests this one never sees, so the report
+		 * reads the file again and adds what this process holds that the file lacks.
+		 */
+		function reportLines(ctx: ExtensionContext): string[] {
+			const entries = mergeEntries([sessionFileEntries(ctx), ctx.sessionManager.getEntries() as unknown as RawEntry[]]);
+			const events = retrievalEvents(entries);
+			const evidence = config.keptCap.mode === "on" ? capEvidence(ctx) : undefined;
+			return [
+				...formatCostReport(reduceAccounting(accountingEvents(entries))),
+				...formatRetrievalReport(reduceRetrieval(events)),
+				...formatCapShadowReport(reduceCapShadow(events)),
+				...(config.keptCap.mode === "on"
+					? [evidence === undefined ? "Kept cap evidence: the probe record covers this session's model; cuts keep from the capped start" : `Kept cap evidence: none for this session's model, cuts keep the baseline start (${evidence})`]
+					: []),
+			];
+		}
+
+		/** The session file's entries as they are on disk now; none for a session pi keeps in memory or a file not written yet. */
+		function sessionFileEntries(ctx: ExtensionContext): readonly RawEntry[] {
+			const file = ctx.sessionManager.getSessionFile();
+			if (!file) return [];
+			if (fileEntries?.file !== file) {
+				fileEntries = { file, tail: new SessionFileTail(file, (entry) => (typeof entry.type === "string" ? (entry as RawEntry) : undefined)) };
+			}
+			return fileEntries.tail.read();
+		}
+
 		pi.on("session_start", (_event, ctx) => {
-			void historian.stop();
-			historian.start();
+			generation++;
 			ledger = new Ledger();
 			requests = new RequestTracker();
-			pendingCut = undefined;
-			pendingPosition = undefined;
-			archived = undefined;
+			historianRequests.reset();
+			followed = undefined;
 			signals = new ContextSignals();
-			const start = branchOf(ctx);
-			if (start.cuts > 0) signals.resume(start.entries, start.minKeptIndex, start.visibleFromIndex);
-			promptReason = undefined;
+			const start = tapeOf(ctx);
+			const history = start.history();
+			if (start.state.cuts > 0) signals.resume(history.entries, history.minKeptIndex, history.visibleFromIndex);
 			sizeReported = new Set();
+			unavailableReported = new Set();
+			competitors = new CompetitorWarnings();
+			warnCompetitors(ctx, observeOwners(pi.getCommands(), undefined, undefined));
 			lastSizeProblem = undefined;
-			taskDone = readBranch(ctx.sessionManager.getBranch()).taskCutPending;
+			cuts.start(ctx);
 			sessionId = ctx.sessionManager.getSessionId();
 			ledgerFile =
 				options.ledgerFile === false
 					? undefined
-					: (options.ledgerFile ?? join(getAgentDir(), "sandy-context", "ledger.jsonl"));
+					: (options.ledgerFile ?? join(getAgentDir(), "context", "ledger.jsonl"));
 			scheduleHistorian(ctx);
-			idleContext = ctx;
-			startKeepWarm();
+			keepWarm.start(ctx, sessionId);
 		});
 
-		function startKeepWarm(): void {
-			clearInterval(keepWarmTimer);
-			if (options.keepWarm === false) return;
-			const settings = options.keepWarm ?? {};
-			const threadStorage = process.env.SANDY_THREAD_STORAGE;
-			const file =
-				settings.file ??
-				(threadStorage
-					? join(threadStorage, "pi-keep-warm.json")
-					: join(getAgentDir(), "sandy-context", "keep-warm", `${sessionId}.json`));
-			keepWarmTimer = setInterval(() => {
-				try {
-					keepWarm(file);
-				} catch {
-					// The session was replaced or disposed without a shutdown event; its context is stale.
-					clearInterval(keepWarmTimer);
-					idleContext = undefined;
-				}
-			}, settings.intervalMs ?? 30_000);
-			// A waiting session must not keep a finished process (pi -p) alive.
-			keepWarmTimer.unref?.();
-		}
-
-		/** One timer tick: ping when a prompt is expected after the cache expires and keeping it warm is cheaper. */
-		function keepWarm(file: string): void {
-			const ctx = idleContext;
-			if (!ctx?.isIdle()) return;
-			const until = readKeepWarmSignal(file);
-			if (until === undefined) return;
-			// The next prompt cuts anyway; a warm cache would be thrown away.
-			const tokens = ctx.getContextUsage()?.tokens ?? undefined;
-			if (tokens !== undefined && tokens >= thresholdsFor(ctx).soft) return;
-			const state = branchOf(ctx);
-			const costs = cacheCosts(ctx.model, tier());
-			const due = keepWarmDue({
-				now: now(),
-				lastCacheTouch: state.lastCacheTouch,
-				ttlMs: cacheTtlMs(config, ctx.model, tier()),
-				until,
-				contextTokens: tokens,
-				minTokens: config.coldCutMinTokens,
-				carriedTokens: carriedTokens(config),
-				cacheReadCost: costs.read,
-				cacheWriteCost: costs.write,
-			});
-			if (!due) return;
-			writeLedger({ t: new Date(now()).toISOString(), session: sessionId, class: "keep-warm", until });
-			pi.sendMessage({ customType: KEEP_WARM_KIND, content: KEEP_WARM_PING, display: false }, { triggerTurn: true });
-		}
-
 		function settleRequest(message: Answer, ctx: ExtensionContext): void {
-			const reason = pendingCut;
-			const position = pendingPosition;
+			const { reason, position } = cuts.pending();
 			const judged = requests.settle(isRefused(message), reason);
 			if (!judged) return;
 			const planned = judged.requestClass === "planned";
-			// A planned cut stays pending until a request carrying it is accepted.
-			if (judged.requestClass !== "rejected") {
-				pendingCut = undefined;
-				pendingPosition = undefined;
-			}
 			const usage = answerUsage(message);
 			const signal = signals.request();
 			if (planned) signals.cut();
 			const prompt = promptTokens(usage);
-			const soft = thresholdsFor(ctx).soft;
-			if (planned && prompt >= soft) {
-				reportSize(
-					ctx,
-					"oversized",
-					`sandy-context: after a ${reason ?? "planned"} cut the prompt is ~${prompt.toLocaleString("en-US")} tokens, at or above the watermark ${soft.toLocaleString("en-US")}. Watermark cuts are refused until the hard threshold; ${SIZE_ADVICE}.`,
-				);
-			}
+			// A planned cut stays pending until a request carrying it is accepted; that request reconciles it.
+			if (judged.requestClass !== "rejected") cuts.settled(ctx, planned ? prompt : undefined);
 			ledger.record(judged.requestClass, reason);
 			writeLedger({
 				t: new Date(now()).toISOString(),
@@ -429,23 +455,28 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			});
 		}
 
+		// An old session holds keep-warm ping turns (a custom message and its answers): they stay out of the model's view.
 		pi.on("context", (event) => {
 			const messages = withoutPings(event.messages);
 			return messages.length === event.messages.length ? undefined : { messages };
 		});
 
-		pi.on("session_shutdown", () => {
-			clearInterval(keepWarmTimer);
-			idleContext = undefined;
-			return historian.stop();
+		pi.on("session_shutdown", async (event) => {
+			keepWarm.shutdown();
+			await historian.shutdown(event.reason);
 		});
 
-		pi.on("session_tree", () => {
-			pendingCut ??= "branch";
+		pi.on("session_tree", (_event, ctx) => {
+			cuts.tree(ctx);
+			// The call in flight is for the branch we left; the new branch gets its own.
+			void historian.shutdown("branch");
+			generation++;
+			scheduleHistorian(ctx);
 		});
 
 		pi.on("agent_start", () => {
 			signals.startRun();
+			keepWarm.agentStart();
 		});
 
 		// Every tool result, also those of calls made inside another tool; only top-level results reach the prompt.
@@ -457,24 +488,68 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 					input: event.input,
 					outputTokens: event.parentToolCallId ? 0 : estimateTokens(textOf(content)),
 				},
-				(path) => archivedPaths(ctx).has(path),
+				(path) => tapeOf(ctx).archivedReads().has(path),
 			);
+			recordNestedRetrieval(event);
+			return undefined;
+		});
+
+		/**
+		 * The transcript keeps the calls the model made and only a bounded record of those made inside another tool, so a
+		 * nested search or read is stored here, ids and paths only, and survives a restart.
+		 */
+		function recordNestedRetrieval(event: { toolCallId: string; parentToolCallId?: string; toolName: string; input: unknown; details?: unknown; isError?: boolean }): void {
+			if (!event.parentToolCallId) return;
+			const input = (typeof event.input === "object" && event.input !== null ? event.input : {}) as Record<string, unknown>;
+			const base = { call: event.toolCallId, parent: event.parentToolCallId, tool: event.toolName };
+			if (event.toolName === TOOLS.historySearch.name) {
+				const hits = (event.details as { hits?: unknown } | undefined)?.hits;
+				pi.appendEntry(RETRIEVAL_KIND, { ...base, ids: Array.isArray(hits) ? hits.filter((id): id is string => typeof id === "string") : [] });
+			} else if (event.toolName === TOOLS.historyRead.name && typeof input.id === "string") {
+				// The id the archive resolved, not the prefix the model typed: a read counts for the entry it showed.
+				const resolved = (event.details as { id?: unknown } | undefined)?.id;
+				const id = typeof resolved === "string" ? resolved : input.id.replace(/^#/, "");
+				pi.appendEntry(RETRIEVAL_KIND, { ...base, ids: [id], ...(event.isError ? { failed: true } : {}) });
+			} else if (event.toolName === "read" && typeof input.path === "string") {
+				pi.appendEntry(RETRIEVAL_KIND, { ...base, path: input.path, ...(event.isError ? { failed: true } : {}) });
+			}
+		}
+
+		// pi's warming decision, and its warms, pass through the keep-warm controller.
+		pi.on("cache_warming_decision", (event, ctx) => keepWarm.decide(event.action, ctx));
+
+		// The headers every handler of the request left: the handlers fill this object in place, and the capture of the
+		// request keeps what they left, for the ping and the fork to send again.
+		pi.on("before_provider_headers", (event) => {
+			captures.headersFor(event.headers as Record<string, string | undefined>);
+			return undefined;
+		});
+
+		pi.on("after_provider_response", (event) => {
+			keepWarm.response(event.status);
 			return undefined;
 		});
 
 		// Cache continuity on the payload the provider receives, judged once the provider answered.
 		pi.on("before_provider_request", (event, ctx) => {
+			keepWarm.request(event.payload);
 			const shape = requestShape(event.payload);
 			if (!shape) return undefined;
 			requests.begin(shape, ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined);
+			if (ctx.model) captures.record(event.payload, ctx.model, now());
 			return undefined;
 		});
 
 		pi.on("message_end", (event, ctx) => {
 			const message = event.message as Answer & { role?: string };
+			// A tool result completes the exchange a historian fork continues.
+			if (message.role === "toolResult") captures.result(event.message as ToolResultMessage);
 			if (message.role !== "assistant") return undefined;
 			settleRequest(message, ctx);
 			if (message.usage) ledger.addUsage(answerUsage(message));
+			if (ctx.model && message.usage && !isRefused(message)) {
+				captures.confirm(ctx.model, promptTokens(message.usage), event.message as AssistantMessage);
+			}
 			return undefined;
 		});
 
@@ -493,143 +568,34 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			return undefined;
 		});
 
-		// Planned cut between two requests of a run: at the hard threshold, at the soft one when no user prompt will come
-		// to cut at (no UI, or the next prompt is already queued), or after a finished task. Before that, a notebook reminder.
+		// The cut owner decides at every boundary; the drafts of handlers that ran before us are passed through.
 		pi.on("turn_end", (event, ctx) => {
-			scheduleHistorian(ctx);
+			// Without a UI the run ends with a turn that calls no tool and the process exits right after, which would
+			// cancel a call paid for just now; the next start summarizes the stretch.
+			if (ctx.hasUI || event.toolResults.length > 0 || ctx.hasPendingMessages()) scheduleHistorian(ctx);
 			if (event.outcome !== "completed" || event.entries.some((entry) => entry.type === "compaction")) return undefined;
 			const tokens = ctx.getContextUsage()?.tokens ?? estimateTokens(JSON.stringify(event.context.llmMessages));
-			const thresholds = thresholdsFor(ctx);
+			const thresholds = cuts.thresholds(ctx);
 			const published: ContextSignalsEvent = { sessionId, contextTokens: tokens, ...thresholds, ...signals.snapshot() };
 			pi.events.emit(SIGNALS_CHANNEL, published);
-			const deferToPrompt = ctx.hasUI && !ctx.hasPendingMessages();
-			const task = taskCut(tokens);
-			const reason = boundaryCut(tokens, thresholds, deferToPrompt) ? "watermark" : task ? "task" : undefined;
-			if (!reason) {
-				if (!notebookAvailable) return undefined;
-				const state = branchOf(ctx);
-				const due = notebookReminderDue({
-					contextTokens: tokens,
-					watermark: thresholds.soft,
-					at: config.notebookReminderAt,
-					notebookCurrent: state.notebookCurrent,
-					reminded: state.reminded,
-				});
-				if (!due) return undefined;
-				return {
-					entries: [
-						...event.entries,
-						{
-							type: "custom_message" as const,
-							customType: REMINDER_KIND,
-							content: notebookReminder(
-								Math.max(0, (tokens >= thresholds.soft ? thresholds.hard : thresholds.soft) - tokens),
-								(state.notebook ?? "") === "",
-							),
-							display: false,
-						},
-					],
-				};
-			}
-			const plan = shrinkingPlan(
-				ctx,
-				branchOf(ctx),
-				reason,
-				tokens,
-				reason === "watermark" ? thresholds.soft : tokens,
-				thresholds.hard,
-			);
-			if (!plan) return undefined;
-			pendingCut = reason;
-			pendingPosition = "run";
-			return {
-				entries: [
-					...event.entries,
-					{
-						type: "compaction" as const,
-						summary: plan.text,
-						firstKeptEntryId: plan.firstKeptEntryId,
-						details: { sandyContext: plan.details },
-					},
-				],
-			};
+			return cuts.finishTurn(event, ctx, tokens, thresholds);
 		});
 
-		// Before a new prompt: use a cache that is lost anyway (expired, or another model), or a finished task, for a cut.
-		pi.on("input", async (event, ctx) => {
-			if (event.streamingBehavior !== undefined || !ctx.isIdle()) return { action: "continue" as const };
-			const state = branchOf(ctx);
-			if (state.endsWithCompaction) return { action: "continue" as const };
-			const tokens = ctx.getContextUsage()?.tokens ?? undefined;
-			const { soft, hard } = thresholdsFor(ctx);
-			const prompt = promptCut({
-				contextTokens: tokens,
-				now: now(),
-				lastCacheTouch: state.lastCacheTouch,
-				ttlMs: cacheTtlMs(config, ctx.model, tier()),
-				modelKey: ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined,
-				lastModelKey: state.lastModelKey,
-				minTokens: config.coldCutMinTokens,
-				soft,
-			});
-			const task = taskCut(tokens);
-			const reason = prompt ?? (task ? "task" : undefined);
-			if (!reason || !shrinkingPlan(ctx, state, reason, tokens, reason === "watermark" ? soft : tokens, hard)) {
-				return { action: "continue" as const };
-			}
-			promptReason = reason;
-			await new Promise<void>((resolve) => {
-				ctx.compact({
-					onComplete: () => resolve(),
-					onError: () => {
-						promptReason = undefined;
-						resolve();
-					},
-				});
-			});
-			return { action: "continue" as const };
-		});
+		pi.on("input", (event, ctx) => cuts.input(event, ctx));
 
-		// Every compaction pi starts on its own (threshold, overflow, /compact) becomes our cut, instantly.
-		pi.on("session_before_compact", (event) => {
-			const position = event.reason === "manual" && promptReason ? "prompt" : "pi";
-			const reason = event.reason === "manual" ? (promptReason ?? "manual") : event.reason;
-			const plan = planFrom(readBranch(event.branchEntries), reason);
-			if (!plan) return undefined;
-			promptReason = undefined;
-			taskDone = false;
-			pendingCut = reason;
-			pendingPosition = position;
-			return {
-				compaction: {
-					summary: plan.text,
-					firstKeptEntryId: plan.firstKeptEntryId,
-					tokensBefore: event.preparation.tokensBefore,
-					details: { sandyContext: plan.details },
-				},
-			};
-		});
+		pi.on("session_before_compact", (event, ctx) => cuts.beforeCompact(event, ctx));
 
-		pi.on("session_compact_failed", () => {
-			pendingCut = undefined;
-			pendingPosition = undefined;
-			promptReason = undefined;
-		});
+		pi.on("session_compact", (event, ctx) =>
+			warnCompetitors(ctx, observeOwners([], cuts.takeProposal(), { ours: decodeContextRecord(event.compactionEntry).kind === "cut" })),
+		);
+
+		pi.on("session_compact_failed", () => cuts.compactFailed());
 
 		pi.registerTool({
 			...TOOLS.historySearch,
 			parameters: historySearchParameters,
-			async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-				const { entries, visibleFromIndex } = branchOf(ctx);
-				const archived = new Set(entries.slice(0, visibleFromIndex).map((entry) => entry.id));
-				const pages = () => newestFirstPages(entries, SCAN_PAGE, params.cursor);
-				const from = (id: string) => newestFirstPagesFrom(entries, id);
-				const reply = await answerSearch(
-					pages,
-					from,
-					params,
-					visibleFromIndex > 0 ? (id) => archived.has(id) : undefined,
-				);
+			async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+				const reply = await tapeOf(ctx).archive().search(params, signal);
 				return textResult(reply.text, { hits: reply.hits });
 			},
 		});
@@ -637,8 +603,8 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		pi.registerTool({
 			...TOOLS.historyRead,
 			parameters: historyReadParameters,
-			async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-				const read = readHistory(branchOf(ctx).entries, params);
+			async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+				const read = await tapeOf(ctx).archive().read(params, signal);
 				return textResult(read.text, { id: read.id });
 			},
 		});
@@ -647,7 +613,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			...TOOLS.notebook,
 			parameters: notebookParameters,
 			async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-				if (params.text === undefined) return textResult(notebookView(branchOf(ctx).notebook ?? ""), undefined);
+				if (params.text === undefined) return textResult(notebookView(tapeOf(ctx).state.notebook ?? ""), undefined);
 				const check = checkNotebook(params.text, config.notebookMaxBytes);
 				if (!check.ok) throw new Error(check.message);
 				pi.appendEntry(NOTEBOOK_KIND, { text: params.text });
@@ -655,9 +621,16 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			},
 		});
 
-		pi.registerCommand("sandy-context", {
-			description: "Show context management status: prompt size, cuts, summary and cache continuity",
-			handler: async (_args, ctx) => {
+		pi.registerCommand("context", {
+			description: "Show context management status: prompt size, cuts, summary and cache continuity; \"retry-historian\" tries a paused summary again",
+			handler: async (args, ctx) => {
+				if (args.trim() === "retry-historian") {
+					const branch = historianBranch(ctx);
+					const waiting = historian.retry(branch);
+					if (waiting) historian.start(branch, generation);
+					ctx.ui.notify(waiting ? "Historian: trying the summary again." : "Historian: no failed summary attempt is waiting.", "info");
+					return;
+				}
 				ctx.ui.notify(statusLines(ctx).join("\n"), "info");
 			},
 		});

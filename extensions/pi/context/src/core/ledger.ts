@@ -1,5 +1,5 @@
 import { type Continuity, compareShapes, hashValue, type RequestShape } from "./continuity.ts";
-import { cutReason } from "./cut.ts";
+import { cutReason } from "./records.ts";
 import { textOf } from "./messages.ts";
 import { RecentMap } from "./recent.ts";
 
@@ -166,12 +166,17 @@ export interface CutHead {
  * that holds a cut's opening tag. A compaction Pi's own summarizer wrote carries no tag, so a break it causes is not
  * planned.
  */
+const SUMMARY_OPENING = "<summary>\n";
+
 export function cutHead(messages: readonly unknown[]): CutHead | undefined {
 	const first = messages.find((message) => (message as { role?: unknown }).role !== "system") as
 		| { role?: unknown; content?: unknown }
 		| undefined;
 	if (first?.role !== "user") return undefined;
-	const reason = cutReason(textOf(first.content));
+	// Pi hands the model a compaction's summary after its own preface, opening `<summary>`; the cut's tag opens the summary.
+	const text = textOf(first.content);
+	const opening = text.indexOf(SUMMARY_OPENING);
+	const reason = opening < 0 ? undefined : cutReason(text.slice(opening + SUMMARY_OPENING.length));
 	return reason === undefined ? undefined : { hash: hashValue(first), reason };
 }
 

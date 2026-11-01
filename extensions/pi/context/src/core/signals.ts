@@ -87,8 +87,9 @@ export class ContextSignals {
 	}
 
 	/**
-	 * Pick up the after-cut counters of a branch cut before this process started (SANDY starts pi for every message). Only
-	 * the calls in the log count; calls made inside another tool left no entry.
+	 * Pick up the after-cut counters of a branch cut before this process started: SANDY keeps a pi process loaded for
+	 * hours, but a reload or restart starts a fresh one in the middle of a branch. Only the calls in the log count;
+	 * calls made inside another tool left no entry.
 	 */
 	resume(entries: readonly LogEntry[], minKeptIndex: number, visibleFromIndex: number): void {
 		this.cut();

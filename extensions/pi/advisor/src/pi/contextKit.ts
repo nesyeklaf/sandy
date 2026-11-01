@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { buildSessionProjection } from "@earendil-works/pi-coding-agent";
 
 /**
  * The pieces of pi/context the advisor reuses: its log search and read, its tool schemas and the extension that gives
@@ -10,12 +11,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 export interface ContextKit {
 	// The kit crosses a package boundary, so its members are loosely typed on purpose.
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	answerSearch: (pages: any, from: any, p: any, archived: any) => Promise<{ text: string }>;
-	newestFirstPages: (entries: any, size: number, cursor?: string) => any;
-	newestFirstPagesFrom: (entries: any, id: string) => any;
-	readHistory: (entries: any, p: any) => { text: string };
-	readBranch: (branch: readonly unknown[]) => { entries: any };
-	SCAN_PAGE: number;
+	/** Every entry and compaction of a branch as it was written: pi/context's archive, with its own search and read. */
+	archiveOf: (branch: readonly unknown[]) => {
+		entries: readonly unknown[];
+		search: (p: any, signal?: AbortSignal) => Promise<{ text: string }>;
+		read: (p: any, signal?: AbortSignal) => Promise<{ text: string }>;
+	};
 	historySearchParameters: unknown;
 	historyReadParameters: unknown;
 	createContextExtension: (o?: { configFile?: false }) => (pi: any) => void;
@@ -31,8 +32,9 @@ export async function loadContext(dir = contextDir()): Promise<ContextKit | unde
 	if (!existsSync(join(src, "core", "index.ts"))) return undefined;
 	try {
 		const imp = (p: string): Promise<any> => import(pathToFileURL(join(src, p)).href);
-		const [core, ext, branch, schemas] = await Promise.all([imp("core/index.ts"), imp("pi/extension.ts"), imp("pi/branch.ts"), imp("tools/schemas.ts")]);
-		return { ...core, readBranch: branch.readBranch, createContextExtension: ext.createContextExtension, historySearchParameters: schemas.historySearchParameters, historyReadParameters: schemas.historyReadParameters };
+		const [core, ext, session, schemas] = await Promise.all([imp("core/index.ts"), imp("pi/extension.ts"), imp("pi/session.ts"), imp("tools/schemas.ts")]);
+		const archiveOf = (branch: readonly unknown[]) => session.SessionTape.read(branch, buildSessionProjection).archive();
+		return { ...core, archiveOf, createContextExtension: ext.createContextExtension, historySearchParameters: schemas.historySearchParameters, historyReadParameters: schemas.historyReadParameters };
 	} catch {
 		return undefined;
 	}
