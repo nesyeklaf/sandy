@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { withVcsProcessPriority } from "@bb/process-utils";
+import { withVcsProcessPriority } from "@sandy/process-utils";
 import { operationEnvironment } from "./operation-environment.js";
 import {
   runEnvironmentHook,
@@ -16,8 +16,8 @@ import {
   type HostDaemonOnlineRpcCommandType,
   type HostDaemonOnlineRpcResult,
   type HostDaemonSettledCommandType,
-} from "@bb/host-daemon-contract";
-import type { AgentRuntimeBridgeLaunch } from "@bb/agent-runtime";
+} from "@sandy/host-daemon-contract";
+import type { AgentRuntimeBridgeLaunch } from "@sandy/agent-runtime";
 import {
   ExpectedCommandDispatchError,
   resolveRuntimeBridgeLaunch,
@@ -76,7 +76,7 @@ import { requireResolvedWorkspaceForCommand } from "./workspace-resolution.js";
 import { userExecutableProcessOptions } from "./user-executable-env.js";
 import type { ServerMoveService } from "./server-move/service.js";
 import { readWorkspaceAgentContext } from "./command-handlers/workspace-agent-context.js";
-import { WorkspaceError } from "bb-environment-provider-host/workspace-git";
+import { WorkspaceError } from "sandy-environment-provider-host/workspace-git";
 
 const THREAD_STOP_ACTIVE_TURN_WAIT_MS = 5_000;
 

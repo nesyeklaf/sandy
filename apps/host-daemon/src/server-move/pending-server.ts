@@ -1,11 +1,11 @@
 import {
   hostToolchain,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import {
   serverHealthResponseSchema,
   type ServerMoveHealth,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { z } from "zod";
 import type { FetchFn } from "../server-client.js";
 import { CommandDispatchError } from "../command-dispatch-support.js";
@@ -23,7 +23,7 @@ const pendingVerificationSchema = z.object({
 });
 
 export interface PendingServerLaunchRequest {
-  bbServerEntry: string;
+  sandyServerEntry: string;
   dataDir: string;
   serverPort: number;
   hostDaemonPort: number | null;
@@ -65,7 +65,7 @@ export function createPendingServerEnv(
     PATH: hostToolchain.environment(sanitized).PATH,
     ...(hostDaemonPort === null
       ? {}
-      : { BB_HOST_DAEMON_PORT: String(hostDaemonPort) }),
+      : { SANDY_HOST_DAEMON_PORT: String(hostDaemonPort) }),
   };
 }
 
@@ -76,7 +76,7 @@ export function createDefaultPendingServerLauncher(
     spawnDetached({
       command: process.execPath,
       args: [
-        request.bbServerEntry,
+        request.sandyServerEntry,
         "--data-dir",
         request.dataDir,
         "--server-port",

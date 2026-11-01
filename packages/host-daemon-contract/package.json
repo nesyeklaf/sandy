@@ -1,5 +1,5 @@
 {
-  "name": "@bb/host-daemon-contract",
+  "name": "@sandy/host-daemon-contract",
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
@@ -37,15 +37,15 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
-    "@bb/hono-typed-routes": "workspace:*",
-    "@bb/provider-bridge-protocol": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/hono-typed-routes": "workspace:*",
+    "@sandy/provider-bridge-protocol": "workspace:*",
     "hono": "^4.7.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/test-helpers": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2"

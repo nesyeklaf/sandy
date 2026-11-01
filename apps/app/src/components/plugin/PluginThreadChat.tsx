@@ -3,15 +3,15 @@ import { useNavigate } from "react-router-dom";
 import type {
   ThreadChatMessageAction,
   ThreadChatProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   formatEnvironmentDisplay,
   type EnvironmentDisplayHostContext,
-} from "@bb/core-ui";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { cn } from "@bb/shared-ui/lib/utils";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
-import { isThreadForkable } from "@bb/client-core";
+} from "@sandy/core-ui";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
+import { isThreadForkable } from "@sandy/client-core";
 import {
   useThreadTimelineController,
   type ThreadTimelineConsumerMessageAction,
@@ -38,8 +38,8 @@ import { useSystemEnvironmentProviders } from "@/hooks/queries/environment-provi
 import { useSystemMachineProviders } from "@/hooks/queries/machine-provider-queries";
 import {
   formatWorkspaceCheckoutDisplay,
-} from "@bb/shared-ui/lib/workspace-checkout-display";
-import { BbHttpError } from "@/lib/sdk";
+} from "@sandy/shared-ui/lib/workspace-checkout-display";
+import { SandyHttpError } from "@/lib/sdk";
 import { ThreadChatLoadingBody } from "@/components/thread/timeline/ThreadChatLoading";
 import {
   getProjectComposeRoutePath,
@@ -275,7 +275,7 @@ function PluginThreadChatBody({
     : undefined;
 
   const isThreadMissing =
-    threadQuery.error instanceof BbHttpError &&
+    threadQuery.error instanceof SandyHttpError &&
     threadQuery.error.status === 404;
   if (isThreadMissing) {
     return (

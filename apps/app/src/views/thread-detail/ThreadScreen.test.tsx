@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PendingInteraction } from "@bb/domain";
+import type { PendingInteraction } from "@sandy/domain";
 import type { UseThreadTimelineControllerResult } from "@/components/thread/timeline";
 import { getPromptDraftAccessor } from "@/hooks/usePromptDraftStorage";
 import { makeThreadResponse } from "@/test/fixtures/thread-responses";

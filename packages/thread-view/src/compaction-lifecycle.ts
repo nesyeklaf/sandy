@@ -1,5 +1,5 @@
-import type { ThreadEvent } from "@bb/domain";
-import { requireThreadEventScopeTurnId } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
+import { requireThreadEventScopeTurnId } from "@sandy/domain";
 import type { EventMeta } from "./event-decode.js";
 import { getEventTurnId } from "./event-decode.js";
 

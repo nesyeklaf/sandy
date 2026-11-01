@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initRepo, makeTempDir } from "@bb/test-helpers";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { initRepo, makeTempDir } from "@sandy/test-helpers";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 import type { GitReadFreshness } from "../contract.js";
 import { WorkspaceReads } from "./workspace-reads.js";
 
@@ -20,7 +20,7 @@ let logPath = "";
 
 async function installGitShim(): Promise<void> {
   const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
-  const shimDir = await makeTempDir("bb-git-shim-");
+  const shimDir = await makeTempDir("sandy-git-shim-");
   logPath = path.join(shimDir, "calls.log");
   await fs.writeFile(
     path.join(shimDir, "git"),
@@ -47,7 +47,7 @@ async function takeCalls(): Promise<string[]> {
 }
 
 async function initPullRequestRepo(): Promise<string> {
-  const repo = await initRepo(await makeTempDir("bb-git-budget-"));
+  const repo = await initRepo(await makeTempDir("sandy-git-budget-"));
   await fs.writeFile(path.join(repo, "app.ts"), "export const a = 1;\n");
   await runGit(["add", "app.ts"], { cwd: repo });
   await runGit(["commit", "-q", "-m", "base"], { cwd: repo });

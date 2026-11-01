@@ -5,8 +5,8 @@ import {
   listStoredEventRows,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { parseStoredEvent } from "../../src/services/threads/thread-data.js";
 
 function setup() {

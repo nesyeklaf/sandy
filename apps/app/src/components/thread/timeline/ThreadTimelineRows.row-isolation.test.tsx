@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import type { ExperimentalMessageMetadataProps } from "@get-bb/plugin-sdk";
+import type { ExperimentalMessageMetadataProps } from "@sandy-sdk/plugin-sdk";
 import { createElement, useState, type ComponentProps } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";

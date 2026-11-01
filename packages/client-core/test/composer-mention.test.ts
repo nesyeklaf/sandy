@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PromptMentionResource } from "@bb/domain";
+import type { PromptMentionResource } from "@sandy/domain";
 import { orderMentionCandidates } from "../src/prompt/mentions/mention-candidates.js";
 import { composerMentionGroupsFromOrdered } from "../src/prompt/mentions/composer-suggestions.js";
 import type { PromptMentionSuggestion } from "../src/prompt/mentions/types.js";
@@ -79,7 +79,7 @@ describe("composer mention suggestion conversion", () => {
       path: "thread:thr_1",
       replacement: "thread:thr_1",
       projectId: "prj_1",
-      projectName: "bb",
+      projectName: "sandy",
       threadId: "thr_1",
       title: "Fix the composer",
       relation: "child",

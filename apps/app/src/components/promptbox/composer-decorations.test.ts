@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ComposerView } from "@get-bb/plugin-sdk";
-import type { PromptTextMention } from "@bb/domain";
+import type { ComposerView } from "@sandy-sdk/plugin-sdk";
+import type { PromptTextMention } from "@sandy/domain";
 import {
   ULTRACODE_HIGHLIGHT_CLASS,
   composerDecorationSources,
@@ -48,7 +48,7 @@ describe("composerDecorationSources", () => {
     expect(findUltracodeRanges("ultracodes myultracode supercode")).toEqual([]);
   });
 
-  it("paints bb's highlight first, then plugin rules, then text effects", () => {
+  it("paints sandy's highlight first, then plugin rules, then text effects", () => {
     const sources = composerDecorationSources(
       [
         {

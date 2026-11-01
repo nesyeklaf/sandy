@@ -1,5 +1,5 @@
-import { PROMPT_ATTACHMENT_MAX_BYTES } from "@bb/domain";
-import { escapeHtmlText } from "@bb/text-utils";
+import { PROMPT_ATTACHMENT_MAX_BYTES } from "@sandy/domain";
+import { escapeHtmlText } from "@sandy/text-utils";
 import { z } from "zod";
 
 const messageClipboardSchema = z
@@ -15,13 +15,13 @@ export function buildMessageClipboardHtml(
   imageUrl: string,
 ): string {
   const payload = JSON.stringify({ version: 1, text, imageUrl });
-  return `<meta name="bb-message" content="${escapeHtmlText(payload)}"><pre>${escapeHtmlText(text)}</pre><img src="${escapeHtmlText(imageUrl)}">`;
+  return `<meta name="sandy-message" content="${escapeHtmlText(payload)}"><pre>${escapeHtmlText(text)}</pre><img src="${escapeHtmlText(imageUrl)}">`;
 }
 
 export function readMessageClipboardHtml(html: string) {
   if (html.length > 1000000) return null;
   const document = new DOMParser().parseFromString(html, "text/html");
-  const metadata = document.querySelector('meta[name="bb-message"]');
+  const metadata = document.querySelector('meta[name="sandy-message"]');
   const raw = metadata?.getAttribute("content");
   if (!raw) return null;
   try {

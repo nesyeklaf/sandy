@@ -1,4 +1,4 @@
-import type { BbDesktopInfo } from "@bb/desktop-contract";
+import type { SandyDesktopInfo } from "@sandy/desktop-contract";
 
 export function getDesktopVersion(version: string | undefined): string {
   if (version === undefined || version.length === 0) {
@@ -7,9 +7,9 @@ export function getDesktopVersion(version: string | undefined): string {
   return version;
 }
 
-export function resolveBbDesktopPlatform(
+export function resolveSandyDesktopPlatform(
   platform: NodeJS.Platform,
-): BbDesktopInfo["platform"] {
+): SandyDesktopInfo["platform"] {
   if (platform === "darwin") {
     return "macos";
   }

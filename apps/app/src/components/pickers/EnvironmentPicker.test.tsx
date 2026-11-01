@@ -3,10 +3,10 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { MemoryRouter } from "react-router-dom";
-import type { Host, ProjectSource } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
+import type { Host, ProjectSource } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   EnvironmentPickerUI,
@@ -642,8 +642,8 @@ describe("EnvironmentPickerUI multi-machine menu", () => {
   ] as const;
 
   const machineSources: readonly ProjectSource[] = [
-    { ...sources[0]!, id: "src_local", hostId: thisMachine.id, path: "~/bb" },
-    { ...sources[0]!, id: "src_studio", hostId: studio.id, path: "~/code/bb" },
+    { ...sources[0]!, id: "src_local", hostId: thisMachine.id, path: "~/sandy" },
+    { ...sources[0]!, id: "src_studio", hostId: studio.id, path: "~/code/sandy" },
   ];
 
   function renderMachineMenu(overrides?: {
@@ -914,8 +914,8 @@ describe("EnvironmentPickerUI multi-machine menu", () => {
   it("does not show project checkout paths in machine headers", () => {
     renderMachineMenu();
 
-    expect(screen.queryByText("~/bb")).toBeNull();
-    expect(screen.queryByText("~/code/bb")).toBeNull();
+    expect(screen.queryByText("~/sandy")).toBeNull();
+    expect(screen.queryByText("~/code/sandy")).toBeNull();
   });
 
   it("selects a host-scoped provider for the previewed machine", () => {

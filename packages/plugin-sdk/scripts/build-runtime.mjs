@@ -42,5 +42,5 @@ try {
 }
 
 process.stdout.write(
-  `Built ${entries.length} @get-bb/plugin-sdk runtime entries.\n`,
+  `Built ${entries.length} @sandy-sdk/plugin-sdk runtime entries.\n`,
 );

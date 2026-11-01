@@ -22,7 +22,7 @@ import {
   type ProviderRawEvent,
   type ThreadDelta,
   type ThreadEventTokenUsageBreakdown,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { toCanonicalPiModelId } from "./model-list.js";
 import { piVisibilityMetadata } from "./visibility.js";
 import { runSettlementError } from "./bridge/run-settlement.js";

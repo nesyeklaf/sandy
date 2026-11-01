@@ -6,10 +6,10 @@ import {
   renderHook as renderHookBase,
 } from "@testing-library/react";
 import { getDefaultStore } from "jotai";
-import { PERSONAL_PROJECT_ID, type ThreadListEntry } from "@bb/domain";
+import { PERSONAL_PROJECT_ID, type ThreadListEntry } from "@sandy/domain";
 import { getThreadConversationCollapsedAtom } from "@/components/secondary-panel/threadSecondaryPanelAtoms";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import {
   useSidebarThreadActions,
   useSidebarThreadDraft,
@@ -110,7 +110,7 @@ vi.mock("@/components/ui/app-route-anchor", () => ({
   useRouteNavigate: () => actions.navigate,
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => false,
 }));
 
@@ -402,7 +402,7 @@ describe("useSidebarThreadActions", () => {
     });
   });
 
-  it("reuses an environment the way bb's environment header does", () => {
+  it("reuses an environment the way sandy's environment header does", () => {
     state.data = payload([]);
     const { result } = renderHook(() => useSidebarThreadActions());
 

@@ -5,7 +5,7 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registerComposerPlugin } from "@/test/fixtures/composer-plugin";
 import { ComposerTestProviders } from "@/test/fixtures/composer-test-providers";
-import { defaultAppSettings, pluginCommandId } from "@bb/domain";
+import { defaultAppSettings, pluginCommandId } from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandContext,
@@ -51,8 +51,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 const PLUGIN_COMMAND = pluginCommandId("saved-prompts", "search");

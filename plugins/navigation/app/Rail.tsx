@@ -4,7 +4,7 @@ import {
   experimental_useSidebarNavigation,
   experimental_useSidebarNavigationSplit,
   type ExperimentalSidebarNavigationItem,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { ShortcutPill } from "@/components/ui/shortcut-pill";
@@ -31,9 +31,9 @@ import {
 } from "./ItemMenus.js";
 import { clickTarget, isNewViewClick } from "./target.js";
 
-export const NEW_THREAD_ITEM_ID = "__bb__/new-thread";
+export const NEW_THREAD_ITEM_ID = "__sandy__/new-thread";
 
-const RAIL_ICON_CLASS = "size-(--bb-sidebar-control-icon-size)";
+const RAIL_ICON_CLASS = "size-(--sandy-sidebar-control-icon-size)";
 const RAIL_MENU_SIDE_OFFSET = 12;
 
 interface RailButtonProps extends Omit<

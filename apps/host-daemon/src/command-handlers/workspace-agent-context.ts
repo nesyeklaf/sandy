@@ -1,11 +1,11 @@
 import { constants } from "node:fs";
-import { isPathWithinDirectory } from "@bb/process-utils";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type {
   HostDaemonOnlineRpcResult,
   WorkspaceProjectSkillFile,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   CommandDispatchError,
   type CommandOf,
@@ -14,10 +14,10 @@ import { SKILL_FILE_NAME } from "../command-discovery.js";
 import { isFsErrorWithCode } from "../fs-errors.js";
 import { readFileForTransport } from "./file-read.js";
 import { listSharedSkills } from "./list-skills.js";
-import { findSkillFiles, resolveSkillPath } from "@bb/skill-index";
+import { findSkillFiles, resolveSkillPath } from "@sandy/skill-index";
 
-const PROJECT_SKILLS_RELATIVE_SEGMENTS = [".bb", "skills"] as const;
-const AGENT_INSTRUCTIONS_RELATIVE_SEGMENTS = [".bb", "AGENTS.md"] as const;
+const PROJECT_SKILLS_RELATIVE_SEGMENTS = [".sandy", "skills"] as const;
+const AGENT_INSTRUCTIONS_RELATIVE_SEGMENTS = [".sandy", "AGENTS.md"] as const;
 type SkillReadPolicy =
   CommandOf<"host.read_workspace_agent_context">["projectSkillRead"];
 

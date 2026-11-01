@@ -1,4 +1,4 @@
-import { type BbPluginApi } from "@get-bb/plugin-sdk";
+import { type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { AccountSummary } from "./contracts.js";
 import type { AccountPoolHub } from "./hub.js";
 import {
@@ -42,8 +42,8 @@ function accountKey(account: AccountSummary): string | null {
       : null;
 }
 
-export function registerUsageSource(bb: BbPluginApi, hub: AccountPoolHub) {
-  bb.rpc.register(
+export function registerUsageSource(sandy: SandyPluginApi, hub: AccountPoolHub) {
+  sandy.rpc.register(
     usageSourceRpcContract,
     {
       async [usageListMethod]() {

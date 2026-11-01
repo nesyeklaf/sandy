@@ -1,0 +1,393 @@
+import { useThreadActions, useSidebarThreads } from "./sandy-sdk";
+import { useRef, useState, type ReactNode } from "react";
+import * as ContextMenu from "@radix-ui/react-context-menu";
+import { useSandyNavigate, useRpc, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
+import { toast } from "./lib/toast";
+import type { sandySidebarRpcContract } from "./contract";
+import { ParentThreadMenu } from "./ParentThreadMenu";
+import { SectionAssignMenu } from "./SectionAssignMenu";
+import { notifiesParent, ParentNotificationsMenu } from "./ParentNotificationsMenu";
+import { DeleteThreadDialog } from "./DeleteThreadDialog";
+import { SnoozePickerDialog } from "./SnoozePickerDialog";
+import { Icon, type IconName } from "./components/Icon";
+import { cn } from "./lib/utils";
+import { usePortalScopeProps } from "./lib/portal-scope";
+import { ProjectActions } from "./ProjectContextMenu";
+import {
+  canParkThread,
+  formatSnoozeWakeTime,
+  resolveConfiguredSnoozePreset,
+  type ConfiguredSnoozePreset,
+} from "./lifecycle";
+import { beginTitleGeneration, finishTitleGeneration, useTitleGenerating } from "./title-generation-state";
+
+type RowContextMenuProps = {
+  thread: PluginSidebarThread;
+  children: ReactNode;
+  canSnooze?: boolean;
+  canArchive?: boolean;
+  snoozePresets?: readonly ConfiguredSnoozePreset[];
+  onSnooze?: (snoozedUntil: number) => void;
+  onPark?: () => void;
+  onResume?: () => void;
+  onSettle?: () => void;
+  onUnsettle?: () => void;
+  onWake?: () => void;
+  onRename?: () => void;
+};
+
+/** Keep the plugin's menus, but build their actions and dialogs only on first open. */
+export function RowContextMenu({ children, ...props }: RowContextMenuProps) {
+  const [activated, setActivated] = useState(false);
+  return (
+    <ContextMenu.Root
+      onOpenChange={(open) => {
+        if (open) setActivated(true);
+      }}
+    >
+      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
+      {activated ? <RowMenuContents {...props} /> : null}
+    </ContextMenu.Root>
+  );
+}
+
+function RowMenuContents({
+  thread,
+  canSnooze = false,
+  canArchive = true,
+  snoozePresets = [],
+  onSnooze,
+  onPark,
+  onResume,
+  onSettle,
+  onUnsettle,
+  onWake,
+  onRename,
+}: Omit<RowContextMenuProps, "children">) {
+  const actions = useThreadActions(thread, {
+    keys: ["sandy--core/split", "sandy--core/pin", "sandy--core/read", "sandy--core/rename", "sandy--core/archive"],
+    requestRename: () => onRename?.(),
+  });
+  const navigate = useSandyNavigate();
+  // sandy 0.46 always supplies pin/read/rename/archive for sidebar rows. Split is
+  // omitted in compact mode and for the focused pane; navigation handles both.
+  const run = (key: string) => {
+    const entry = actions.find((entry) => entry.key === `sandy--core/${key}`);
+    if (!entry && key === "split") return navigate.toThread(thread.id, { split: true });
+    return entry?.action.run();
+  };
+  const { projects, threads } = useSidebarThreads();
+  const project = projects.find((project) => project.id === thread.projectId);
+  const portalScope = usePortalScopeProps();
+  const rpc = useRpc<typeof sandySidebarRpcContract>();
+  const regenerating = useTitleGenerating(thread.id);
+  const renameAfterClose = useRef(false);
+  // Outlives the portaled submenu, which unmounts when a choice closes the menu.
+  const pendingNotificationSave = useRef<Promise<void> | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [pickingSnooze, setPickingSnooze] = useState(false);
+  // Archive takes the children with it, and sandy leaves every idle one's agent
+  // session loaded. Release them alongside the archive. Working children are
+  // skipped, so this never interrupts a turn archive itself would not.
+  const archive = () => {
+    void run("archive");
+    const threadIds = [
+      thread.id,
+      ...threads.filter((child) => child.parentThreadId === thread.id && canParkThread(child)).map((child) => child.id),
+    ];
+    void rpc.call("releaseRuntimes", { threadIds }).catch(() => {
+      void 0; // A missed release costs memory, not correctness.
+    });
+  };
+  const regenerate = async () => {
+    if (!beginTitleGeneration(thread.id)) return;
+    try {
+      await rpc.call("regenerateTitle", { threadId: thread.id });
+      toast.success("Thread title regenerated");
+    } catch (error) {
+      toast.error("Could not regenerate title", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      finishTitleGeneration(thread.id);
+    }
+  };
+  const hasPinLifecycleItems = !!(
+    thread.isPinned ||
+    thread.parentThreadId == null ||
+    onPark ||
+    onResume ||
+    onSettle ||
+    onUnsettle ||
+    onWake ||
+    (canSnooze && onSnooze && snoozePresets.length > 0)
+  );
+  const togglePin = async () => {
+    if (thread.isPinned) {
+      await run("pin");
+      return;
+    }
+    if (thread.parentThreadId != null) return;
+    try {
+      await rpc.call("pin", { threadId: thread.id });
+    } catch (error) {
+      toast.error("Could not pin thread", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  };
+
+  return (
+    <>
+      <ProjectActions project={project}>
+        {({ items: projectItems, onOpenChange, onCloseAutoFocus }) => (
+          <ContextMenu.Portal>
+            <ContextMenu.Content
+              {...portalScope}
+              aria-label="Thread actions"
+              onCloseAutoFocus={(event) => {
+                onCloseAutoFocus?.(event);
+                // A dialog takes focus next; do not pull it back to the row.
+                if (confirmingDelete || pickingSnooze) event.preventDefault();
+                if (!renameAfterClose.current) return;
+                renameAfterClose.current = false;
+                // Hand focus to the editor after the menu releases its focus scope.
+                event.preventDefault();
+                void run("rename");
+              }}
+              className="z-50 min-w-44 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+            >
+              <Item onSelect={() => void run("split")}>Open in split</Item>
+              <ParentThreadMenu thread={thread} />
+              <SectionAssignMenu thread={thread} />
+              {notifiesParent(thread) ? (
+                <ParentNotificationsMenu thread={thread} pendingSave={pendingNotificationSave} />
+              ) : null}
+              {projectItems ? (
+                <ContextMenu.Sub onOpenChange={onOpenChange}>
+                  <ContextMenu.SubTrigger className="flex cursor-pointer items-center rounded-md px-2 py-[0.3125rem] text-xs outline-none data-[state=open]:bg-accent data-[highlighted]:bg-accent">
+                    Repo
+                    <Icon name="ChevronRight" className="ml-auto size-4 opacity-60" />
+                  </ContextMenu.SubTrigger>
+                  <ContextMenu.Portal>
+                    <ContextMenu.SubContent
+                      {...portalScope}
+                      aria-label="Repo actions"
+                      sideOffset={4}
+                      className="z-50 min-w-44 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+                    >
+                      <ContextMenu.Label className="max-w-64 truncate px-2 py-1 text-xs text-muted-foreground">
+                        {project?.name}
+                      </ContextMenu.Label>
+                      {projectItems}
+                    </ContextMenu.SubContent>
+                  </ContextMenu.Portal>
+                </ContextMenu.Sub>
+              ) : null}
+              {hasPinLifecycleItems ? <Separator /> : null}
+              {thread.isPinned || thread.parentThreadId == null ? (
+                <Item icon={thread.isPinned ? "PinOff" : "Pin"} onSelect={() => void togglePin()}>
+                  {thread.isPinned ? "Unpin" : "Pin"}
+                </Item>
+              ) : null}
+              {canSnooze && onSnooze && snoozePresets.length > 0 ? (
+                <SnoozeSubmenu presets={snoozePresets} onSnooze={onSnooze} onPick={() => setPickingSnooze(true)} />
+              ) : null}
+              {onWake ? (
+                <Item icon="Pulse" onSelect={onWake}>
+                  Wake now
+                </Item>
+              ) : null}
+              {onPark ? (
+                <Item icon="Car" onSelect={onPark}>
+                  Park thread
+                </Item>
+              ) : null}
+              {onResume ? (
+                <Item icon="Pulse" onSelect={onResume}>
+                  Resume
+                </Item>
+              ) : null}
+              {onSettle ? (
+                <Item icon="Meditation" onSelect={onSettle}>
+                  Settle
+                </Item>
+              ) : null}
+              {onUnsettle ? (
+                <Item icon="Pulse" onSelect={onUnsettle}>
+                  Un-settle
+                </Item>
+              ) : null}
+              <Separator />
+              {onRename ? (
+                <Item
+                  onSelect={() => {
+                    renameAfterClose.current = true;
+                  }}
+                >
+                  Rename
+                </Item>
+              ) : null}
+              <Item disabled={regenerating} onSelect={() => void regenerate()}>
+                {regenerating ? "Regenerating title…" : "Regenerate title"}
+              </Item>
+              <Item onSelect={() => void run("read")}>{thread.isUnread ? "Mark read" : "Mark unread"}</Item>
+              <Separator />
+              <CopySubmenu thread={thread} />
+              <Separator />
+              <Item disabled={!canArchive} onSelect={archive}>
+                Archive
+              </Item>
+              <Item destructive onSelect={() => setConfirmingDelete(true)}>
+                Delete
+              </Item>
+            </ContextMenu.Content>
+          </ContextMenu.Portal>
+        )}
+      </ProjectActions>
+      <DeleteThreadDialog thread={thread} open={confirmingDelete} onOpenChange={setConfirmingDelete} />
+      {onSnooze ? (
+        <SnoozePickerDialog open={pickingSnooze} onOpenChange={setPickingSnooze} onSnooze={onSnooze} />
+      ) : null}
+    </>
+  );
+}
+
+function CopySubmenu({ thread }: { thread: PluginSidebarThread }) {
+  const { projects } = useSidebarThreads();
+  const portalScope = usePortalScopeProps();
+  const branchName = thread.environment?.branchName;
+  const copy = (text: string) => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    void navigator.clipboard.writeText(text);
+  };
+  const copyThreadLink = async () => {
+    const isPersonal = projects.some((project) => project.id === thread.projectId && project.isPersonal);
+    const threadPath = `/threads/${encodeURIComponent(thread.id)}`;
+    const path = isPersonal ? threadPath : `/projects/${encodeURIComponent(thread.projectId)}${threadPath}`;
+    try {
+      await navigator.clipboard.writeText(new URL(path, window.location.origin).href);
+      toast.success("Thread link copied");
+    } catch {
+      toast.error("Failed to copy thread link");
+    }
+  };
+
+  return (
+    <ContextMenu.Sub>
+      <ContextMenu.SubTrigger
+        className={cn(
+          "flex cursor-pointer items-center rounded-md px-2 py-[0.3125rem] text-xs outline-none",
+          "data-[state=open]:bg-accent data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        )}
+      >
+        Copy
+        <Icon name="ChevronRight" className="ml-auto size-4 opacity-60" />
+      </ContextMenu.SubTrigger>
+      <ContextMenu.Portal>
+        <ContextMenu.SubContent
+          {...portalScope}
+          aria-label="Copy thread data"
+          sideOffset={4}
+          className="z-50 min-w-40 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+        >
+          <Item onSelect={() => void copyThreadLink()}>Copy thread link</Item>
+          {branchName ? <Item onSelect={() => copy(branchName)}>Copy branch</Item> : null}
+          <Item onSelect={() => copy(thread.id)}>Copy thread ID</Item>
+        </ContextMenu.SubContent>
+      </ContextMenu.Portal>
+    </ContextMenu.Sub>
+  );
+}
+
+function SnoozeSubmenu({
+  presets,
+  onSnooze,
+  onPick,
+}: {
+  presets: readonly ConfiguredSnoozePreset[];
+  onSnooze: (snoozedUntil: number) => void;
+  onPick: () => void;
+}) {
+  const portalScope = usePortalScopeProps();
+  return (
+    <ContextMenu.Sub>
+      <ContextMenu.SubTrigger
+        className={cn(
+          "flex cursor-pointer items-center gap-2 rounded-md px-2 py-[0.3125rem] text-xs outline-none",
+          "data-[state=open]:bg-accent data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        )}
+      >
+        <Icon name="Clock" className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        Snooze
+        <Icon name="ChevronRight" className="ml-auto size-4 opacity-60" />
+      </ContextMenu.SubTrigger>
+      <ContextMenu.Portal>
+        <ContextMenu.SubContent
+          {...portalScope}
+          aria-label="Snooze times"
+          sideOffset={4}
+          className="z-50 min-w-40 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+        >
+          {presets.map((preset) => {
+            const wake = resolveConfiguredSnoozePreset(preset);
+            return (
+              <Item
+                key={preset.id}
+                disabled={wake === null}
+                title={wake === null ? "Today's time has passed" : formatSnoozeWakeTime(wake)}
+                onSelect={() => {
+                  const selectedWake = resolveConfiguredSnoozePreset(preset);
+                  if (selectedWake !== null) onSnooze(selectedWake);
+                }}
+              >
+                {preset.label}
+              </Item>
+            );
+          })}
+          <Separator />
+          <Item icon="Calendar" onSelect={onPick}>
+            Pick date & time…
+          </Item>
+        </ContextMenu.SubContent>
+      </ContextMenu.Portal>
+    </ContextMenu.Sub>
+  );
+}
+
+function Item({
+  children,
+  icon,
+  destructive = false,
+  disabled = false,
+  title,
+  onSelect,
+}: {
+  children: ReactNode;
+  icon?: IconName;
+  destructive?: boolean;
+  disabled?: boolean;
+  title?: string;
+  onSelect: () => void;
+}) {
+  return (
+    <ContextMenu.Item
+      disabled={disabled}
+      title={title}
+      onSelect={onSelect}
+      className={cn(
+        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-[0.3125rem] text-xs outline-none",
+        "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+        destructive && "text-destructive-text",
+      )}
+    >
+      {icon ? <Icon name={icon} className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" /> : null}
+      {children}
+    </ContextMenu.Item>
+  );
+}
+
+function Separator() {
+  return <ContextMenu.Separator className="my-1 h-px bg-border" />;
+}

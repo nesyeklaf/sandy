@@ -1,0 +1,265 @@
+{
+  "id": "full-control",
+  "title": "full-control: plan agent-built work",
+  "description": "Routes explore \u2192 design \u2192 spec \u2192 spec review \u2192 go. Nothing is built until the owner says go.",
+  "allow": {
+    "edits": false,
+    "subagents": [
+      {
+        "agent": "scout"
+      },
+      {
+        "agent": "oracle"
+      },
+      {
+        "agent": "researcher"
+      },
+      {
+        "agent": "evidence-auditor"
+      },
+      {
+        "agent": "reviewer"
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "intent",
+      "title": "Intent",
+      "description": "Restate the owner's goal, constraints and done criteria in their words.",
+      "inputs": [
+        "the owner's request"
+      ],
+      "outputs": [
+        {
+          "name": "goal",
+          "description": "goal and done criteria, one paragraph"
+        },
+        {
+          "name": "constraints",
+          "optional": true
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-control",
+          "explore-unknowns",
+          "limit-cognitive-debt"
+        ],
+        "edits": false,
+        "subagents": []
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "user",
+          "prompt": "Is this the goal?"
+        }
+      ],
+      "next": [
+        {
+          "to": "explore",
+          "when": "code, domain or requirements are unclear"
+        },
+        {
+          "to": "design",
+          "when": "the shape is open but the ground is known"
+        },
+        {
+          "to": "spec",
+          "when": "the change is small and clear"
+        }
+      ]
+    },
+    {
+      "id": "explore",
+      "title": "Explore unknowns",
+      "inputs": [
+        "intent.goal"
+      ],
+      "outputs": [
+        {
+          "name": "decision_map",
+          "description": "known/unknown quadrants and the decisions they force"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-control",
+          "explore-unknowns",
+          "understand",
+          "vault-recall"
+        ],
+        "edits": false
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "design"
+        },
+        {
+          "to": "spec",
+          "when": "no design choice is left open"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "title": "Design",
+      "description": "At least two competing sketches, then a choice.",
+      "inputs": [
+        "intent.goal",
+        "explore.decision_map"
+      ],
+      "outputs": [
+        {
+          "name": "options",
+          "description": "two or more sketches with tradeoffs"
+        },
+        {
+          "name": "choice",
+          "description": "the chosen design and why"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-control",
+          "architect",
+          "understand"
+        ],
+        "edits": false
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "user",
+          "prompt": "Do you agree with the chosen design?"
+        }
+      ],
+      "next": [
+        {
+          "to": "spec"
+        }
+      ]
+    },
+    {
+      "id": "spec",
+      "title": "Spec",
+      "description": "Verifiable slices in the draft MR/PR description.",
+      "inputs": [
+        "intent.goal",
+        "design.choice"
+      ],
+      "outputs": [
+        {
+          "name": "slices",
+          "description": "slices with their checks"
+        },
+        {
+          "name": "mr_url",
+          "optional": true,
+          "description": "the draft MR/PR"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-control",
+          "write-spec",
+          "write-tests"
+        ],
+        "edits": false
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "review"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": "Spec review",
+      "description": "A fresh-context review on a different model family.",
+      "inputs": [
+        "spec.slices"
+      ],
+      "outputs": [
+        {
+          "name": "verdict",
+          "description": "findings and how each was resolved"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-control"
+        ],
+        "edits": false,
+        "subagents": [
+          {
+            "agent": "reviewer"
+          },
+          {
+            "agent": "oracle"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "evidence",
+          "name": "reviewer",
+          "description": "which agent and model reviewed, and the run id"
+        }
+      ],
+      "next": [
+        {
+          "to": "go",
+          "when": "the spec holds"
+        },
+        {
+          "to": "spec",
+          "when": "the review found real issues"
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "title": "Go",
+      "description": "The owner records the go; full-send takes over afterwards.",
+      "inputs": [
+        "spec.slices",
+        "review.verdict"
+      ],
+      "outputs": [],
+      "allow": {
+        "skills": [
+          "full-control",
+          "full-send"
+        ],
+        "edits": false,
+        "subagents": []
+      },
+      "gate": [
+        {
+          "type": "user",
+          "prompt": "Go: build this plan with full-send?"
+        }
+      ],
+      "next": []
+    }
+  ]
+}

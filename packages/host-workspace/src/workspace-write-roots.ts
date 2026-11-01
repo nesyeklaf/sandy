@@ -3,7 +3,7 @@ import { getAbsoluteGitDir } from "./git.js";
 import {
   getGitCommonDir,
   type GitProcessOptions,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 function isSamePathOrNestedUnder(
   childPath: string,

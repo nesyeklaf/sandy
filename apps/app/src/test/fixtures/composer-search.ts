@@ -4,8 +4,8 @@ import {
   type PluginMentionTrigger,
   type PromptMentionSuggestion,
   type ProviderCommandSuggestion,
-} from "@bb/client-core";
-import type { PromptMentionCommandTrigger } from "@bb/domain";
+} from "@sandy/client-core";
+import type { PromptMentionCommandTrigger } from "@sandy/domain";
 import { orderPromptMentionSuggestions } from "@/hooks/promptMentionCandidates";
 import type {
   CommandSuggestionSource,

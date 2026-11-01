@@ -1,12 +1,12 @@
 import { useEffect, useId, useState } from "react";
-import { formatServerDataSize, type Host } from "@bb/domain";
+import { formatServerDataSize, type Host } from "@sandy/domain";
 import type {
   ServerMoveCheckItem,
   ServerMoveCheckResponse,
   ServerMoveCheckSeverity,
-} from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Checkbox } from "@bb/shared-ui/checkbox";
+} from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Checkbox } from "@sandy/shared-ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/dialog";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   useCheckServerMove,
   useStartServerMove,
@@ -352,7 +352,7 @@ function ServerAddressField({
           aria-describedby={hintId}
           className="min-w-0 flex-1"
           value={value}
-          placeholder="https://bb.example.com"
+          placeholder="https://sandy.example.com"
           inputMode="url"
           autoCapitalize="off"
           autoCorrect="off"
@@ -466,10 +466,10 @@ function ArchiveExistingDataConfirmation({
       />
       <span className="min-w-0 flex-1">
         <span className="block text-sm break-words text-foreground">
-          Archive the existing bb data at {path}
+          Archive the existing sandy data at {path}
         </span>
         <span className="block text-xs text-subtle-foreground">
-          {formatServerDataSize(sizeBytes)}. bb renames it to a backup folder
+          {formatServerDataSize(sizeBytes)}. sandy renames it to a backup folder
           next to it and never merges it.
         </span>
       </span>

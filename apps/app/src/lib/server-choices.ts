@@ -1,7 +1,7 @@
-import type { BbDesktopServerChoice } from "@bb/desktop-contract";
+import type { SandyDesktopServerChoice } from "@sandy/desktop-contract";
 import { getNativeShell } from "./native-shell";
 
-export type ServerChoice = BbDesktopServerChoice;
+export type ServerChoice = SandyDesktopServerChoice;
 
 export interface ServerChoicesSnapshot {
   status: "loading" | "ready";
@@ -70,7 +70,7 @@ function createServerChoices(source: ServerChoiceSource): ServerChoices {
 }
 
 function desktopSource(): ServerChoiceSource | null {
-  const desktop = typeof window === "undefined" ? undefined : window.bbDesktop;
+  const desktop = typeof window === "undefined" ? undefined : window.sandyDesktop;
   const listServerChoices = desktop?.listServerChoices?.bind(desktop);
   const onServerChoicesChange = desktop?.onServerChoicesChange?.bind(desktop);
   const selectServer = desktop?.selectServer?.bind(desktop);

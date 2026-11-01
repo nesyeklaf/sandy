@@ -1,12 +1,12 @@
 import { usePluginCollectionParams } from "./usePluginCollectionParams";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   ResourceCollectionViewport,
   ResourceListState,
-} from "@bb/shared-ui/resource-list";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/resource-list";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { TOOLS_PAGE_BAND_CLASSES } from "@/components/tools/tools-navigation";
 import {
   type PluginCatalogSearchEntry,
@@ -92,8 +92,8 @@ export function PluginAuthorPage({
   const author = useMemo(() => authorForEntries(entries), [entries]);
   const official =
     entries.length > 0 &&
-    entries.every((entry) => entry.marketplace === "bb-official");
-  const authorName = official ? "BB Official" : author?.name;
+    entries.every((entry) => entry.marketplace === "sandy-official");
+  const authorName = official ? "SANDY Official" : author?.name;
   const installsKnown = entries.some((entry) => entry.installs !== null);
   const sort =
     requestedSort === "most-installed" && !installsKnown ? null : requestedSort;

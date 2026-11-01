@@ -4,7 +4,7 @@ import {
   type AppDefaultKeybindings,
   type AppKeybindingOverrides,
   type AppKeybindings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { APP_COMMAND_GROUPS } from "./app-command-metadata";
 import {
   appShortcutFromInput,

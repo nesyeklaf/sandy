@@ -1,6 +1,6 @@
 import path from "node:path";
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { ExperimentalVcsProcessPriority } from "@get-bb/plugin-sdk/host";
+import type { ExperimentalVcsProcessPriority } from "@sandy-sdk/plugin-sdk/host";
 import {
   type GitCommandResult,
   type GitTimeoutOptions,
@@ -8,7 +8,7 @@ import {
   type RunGitOptions,
   trimOutput,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 const priorityStore = new AsyncLocalStorage<ExperimentalVcsProcessPriority>();
 

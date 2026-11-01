@@ -3,7 +3,7 @@ import {
   experimental_THREAD_CONTEXT_SEGMENT_GROUPS,
   experimental_THREAD_INFO_ROW_GROUPS,
   experimental_THREAD_INFO_SECTION_GROUPS,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { GIT_DIFF_TAB_ID } from "./contract.js";
 import { GitChangesContextCardRow } from "./ui/context-card/GitChangesContextCardRow.js";
 import { DiffTab, useDiffTabVisible } from "./ui/diff/DiffTab.js";

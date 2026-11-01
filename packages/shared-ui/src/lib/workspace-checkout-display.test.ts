@@ -7,15 +7,15 @@ describe("formatWorkspaceCheckoutDisplay", () => {
       formatWorkspaceCheckoutDisplay({
         checkout: {
           kind: "branch",
-          branchName: "bb/thread",
+          branchName: "sandy/thread",
           headSha: "1234567890abcdef",
         },
       }),
     ).toMatchObject({
-      copyValue: "bb/thread",
-      label: "bb/thread",
+      copyValue: "sandy/thread",
+      label: "sandy/thread",
       rowLabel: "Branch",
-      title: "Copy branch name: bb/thread",
+      title: "Copy branch name: sandy/thread",
     });
   });
 

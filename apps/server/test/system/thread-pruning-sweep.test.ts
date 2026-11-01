@@ -10,13 +10,13 @@ import {
   getThreadEventRewriteGeneration,
   threadPruningCursors,
   threads,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
   threadTimelineReadResponseSchema,
   type ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   runThreadPruningSweep,
   THREAD_PRUNING_SWEEP_LIMITS,

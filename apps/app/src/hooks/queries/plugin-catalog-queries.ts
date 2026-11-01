@@ -1,4 +1,4 @@
-import type { PluginMarketplaceCategory } from "@bb/domain";
+import type { PluginMarketplaceCategory } from "@sandy/domain";
 import type {
   PluginApplyUpdateResult as SdkPluginApplyUpdateResult,
   PluginCatalogAuthor,
@@ -9,7 +9,7 @@ import type {
   PluginMarketplaceRefreshResult,
   PluginSourceDetail as SdkPluginSourceDetail,
   PluginUpdateCheckEntry,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { invalidatePluginList } from "../cache-owners/plugin-cache-owner";
 import { createPluginsClient } from "./plugin-client";
@@ -27,7 +27,7 @@ type FetchLike = typeof fetch;
 interface PluginSourceDetail {
   requested: string;
   resolved: string;
-  engines: { bb: string | null; bbPluginSdk: string | null };
+  engines: { sandy: string | null; sandyPluginSdk: string | null };
   installedAt: number | null;
   history: { version: string; activatedAt: number | null }[];
 }
@@ -39,8 +39,8 @@ function toPluginSourceDetail(
     requested: source.requested,
     resolved: source.resolved,
     engines: {
-      bb: source.engines.bb ?? null,
-      bbPluginSdk: source.engines.bbPluginSdk ?? null,
+      sandy: source.engines.sandy ?? null,
+      sandyPluginSdk: source.engines.sandyPluginSdk ?? null,
     },
     installedAt: toEpochMs(source.installedAt),
     history: source.history.map((entry) => ({

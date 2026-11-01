@@ -14,9 +14,9 @@ import type {
   ComposerSelection,
   ComposerView,
   PluginComposerScope,
-} from "@get-bb/plugin-sdk";
-import { isComposerDraftEmpty } from "@get-bb/plugin-sdk/internal/composer-view";
-import type { PromptDraftState } from "@bb/client-core";
+} from "@sandy-sdk/plugin-sdk";
+import { isComposerDraftEmpty } from "@sandy-sdk/plugin-sdk/internal/composer-view";
+import type { PromptDraftState } from "@sandy/client-core";
 
 export interface PluginComposerHost {
   scope: PluginComposerScope;

@@ -1,7 +1,8 @@
 import { useMemo, useSyncExternalStore } from "react";
-import type { PluginComposerScope } from "@get-bb/plugin-sdk";
+import type { PluginComposerScope } from "@sandy-sdk/plugin-sdk";
 import {
   resolveComposerActions,
+  resolveComposerMenus,
   resolveComposerPopups,
   resolveComposerBanners,
   resolveComposerDraftObservers,
@@ -87,6 +88,10 @@ export function useResolvedComposerEditor(scopeKind: ComposerScopeKind) {
     resolveComposerEditor,
     emptyComposerEditor,
   );
+}
+
+export function useResolvedComposerMenus(scopeKind: ComposerScopeKind) {
+  return useResolvedComposerSlot(scopeKind, resolveComposerMenus, emptyList);
 }
 
 export function useResolvedComposerPopups(scopeKind: ComposerScopeKind) {

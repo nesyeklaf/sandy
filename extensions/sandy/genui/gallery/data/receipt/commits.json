@@ -1,0 +1,12 @@
+[
+  {
+    "sha": "b7d41e0",
+    "message": "Keep the upload queue's lock until the retry is scheduled",
+    "files": 2
+  },
+  {
+    "sha": "3fa91c2",
+    "message": "Test: two uploads of one file retry once, not twice",
+    "files": 1
+  }
+]

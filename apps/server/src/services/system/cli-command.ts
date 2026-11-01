@@ -1,4 +1,4 @@
-import { spawnHostProcess as spawn } from "@bb/process-utils";
+import { spawnHostProcess as spawn } from "@sandy/process-utils";
 import { constants as fsConstants } from "node:fs";
 import {
   access,
@@ -12,28 +12,28 @@ import {
   symlink,
 } from "node:fs/promises";
 import { dirname, join, resolve, win32 } from "node:path";
-import { CLI_LAUNCHER_MARKER } from "@bb/config/cli-command";
+import { CLI_LAUNCHER_MARKER } from "@sandy/config/cli-command";
 import type {
   SystemCliCommandShadow,
   SystemCliCommandStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { z } from "zod";
 import { ApiError } from "../../errors.js";
 
 export const MACHINE_CLI_SHIM_MARKER =
-  "No installed bb machine CLI is available.";
+  "No installed sandy machine CLI is available.";
 const CLI_LAUNCHER_MAX_BYTES = 16_384;
-const CLI_COMMAND_NAME = "bb";
+const CLI_COMMAND_NAME = "sandy";
 const WINDOWS_USER_PATH_SCRIPT = `
 $ErrorActionPreference = 'Stop'
-if ($env:BB_CLI_COMMAND_SET -eq '1') {
+if ($env:SANDY_CLI_COMMAND_SET -eq '1') {
   $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
   $kind = [Microsoft.Win32.RegistryValueKind]::ExpandString
   if ($key.GetValueNames() -contains 'Path' -and $key.GetValueKind('Path') -eq 'String') {
     $kind = [Microsoft.Win32.RegistryValueKind]::String
   }
-  $key.SetValue('Path', $env:BB_CLI_COMMAND_PATH, $kind)
-  Add-Type -Namespace BbCliCommand -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
+  $key.SetValue('Path', $env:SANDY_CLI_COMMAND_PATH, $kind)
+  Add-Type -Namespace SandyCliCommand -Name Env -MemberDefinition '[DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);'
   $result = [System.UIntPtr]::Zero
   [void][BbCliCommand.Env]::SendMessageTimeout([System.IntPtr]0xffff, 0x1A, [System.UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
 } else {
@@ -140,11 +140,11 @@ async function readSmallFile(path: string): Promise<string | null> {
   }
 }
 
-async function isBbLauncher(path: string): Promise<boolean> {
+async function isSandyLauncher(path: string): Promise<boolean> {
   return (await readSmallFile(path))?.includes(CLI_LAUNCHER_MARKER) === true;
 }
 
-async function isBbLauncherLink(link: string): Promise<boolean> {
+async function isSandyLauncherLink(link: string): Promise<boolean> {
   try {
     if (!(await lstat(link)).isSymbolicLink()) {
       return false;
@@ -152,20 +152,20 @@ async function isBbLauncherLink(link: string): Promise<boolean> {
   } catch {
     return false;
   }
-  return isBbLauncher(link);
+  return isSandyLauncher(link);
 }
 
-async function isBbAppPackageCommand(command: string): Promise<boolean> {
+async function isSandyAppPackageCommand(command: string): Promise<boolean> {
   try {
     const entryPath = await realpath(command);
     const packageJsonPath = resolve(entryPath, "..", "..", "package.json");
-    if (resolve(packageJsonPath, "..", "dist", "bb.js") !== entryPath) {
+    if (resolve(packageJsonPath, "..", "dist", "sandy.js") !== entryPath) {
       return false;
     }
     const parsed = z
       .object({ name: z.string() })
       .safeParse(JSON.parse(await readFile(packageJsonPath, "utf8")));
-    return parsed.success && parsed.data.name === "bb-app";
+    return parsed.success && parsed.data.name === "sandy-app";
   } catch {
     return false;
   }
@@ -187,10 +187,10 @@ async function shadowingCommand(
   context: CliCommandContext,
 ): Promise<SystemCliCommandShadow | null> {
   const first = await firstCommandOnPath(context);
-  if (first === null || (await isBbLauncherLink(first))) {
+  if (first === null || (await isSandyLauncherLink(first))) {
     return null;
   }
-  if (await isBbAppPackageCommand(first)) {
+  if (await isSandyAppPackageCommand(first)) {
     return { path: first, source: "npm" };
   }
   const isMachineShim =
@@ -206,7 +206,7 @@ async function findInstalledLink(
     context.platform,
   )) {
     const link = join(directory, CLI_COMMAND_NAME);
-    if (await isBbLauncherLink(link)) {
+    if (await isSandyLauncherLink(link)) {
       return link;
     }
   }
@@ -268,12 +268,12 @@ function describeShadow(
   shadow: SystemCliCommandShadow,
 ): string {
   if (shadow.source === "npm") {
-    return `bb is already on your PATH at ${shadow.path}, installed by npm.`;
+    return `sandy is already on your PATH at ${shadow.path}, installed by npm.`;
   }
   if (shadow.source === "machine") {
-    return `bb is already on your PATH at ${shadow.path}, installed with the bb machine on this computer.`;
+    return `sandy is already on your PATH at ${shadow.path}, installed with the sandy machine on this computer.`;
   }
-  return `Another bb at ${shadow.path} comes first on your PATH. Remove it, or run bb's command directly at ${context.launcherPath}.`;
+  return `Another sandy at ${shadow.path} comes first on your PATH. Remove it, or run sandy's command directly at ${context.launcherPath}.`;
 }
 
 async function installWindows(context: CliCommandContext): Promise<void> {
@@ -332,7 +332,7 @@ async function installUnix(context: CliCommandContext): Promise<void> {
     }
   }
   throw blocked(
-    `Another bb command is already installed, or no folder on your PATH is writable. Run bb's command directly at ${context.launcherPath}.`,
+    `Another sandy command is already installed, or no folder on your PATH is writable. Run sandy's command directly at ${context.launcherPath}.`,
   );
 }
 
@@ -356,7 +356,7 @@ async function removeUnix(context: CliCommandContext): Promise<void> {
     context.platform,
   )) {
     const link = join(directory, CLI_COMMAND_NAME);
-    if (await isBbLauncherLink(link)) {
+    if (await isSandyLauncherLink(link)) {
       try {
         await rm(link);
       } catch {
@@ -375,7 +375,7 @@ export function createCliCommandService(
       throw new ApiError(
         409,
         "cli_command_unsupported",
-        "The bb command needs an installed bb. Start bb with npx bb-app or the desktop app.",
+        "The sandy command needs an installed sandy. Start sandy with npx sandy-app or the desktop app.",
       );
     };
     return {
@@ -391,9 +391,9 @@ export function createCliCommandService(
   return {
     getStatus,
     async install() {
-      if (!(await isBbLauncher(launcherPath))) {
+      if (!(await isSandyLauncher(launcherPath))) {
         throw blocked(
-          `The bb command launcher at ${launcherPath} is missing. Restart bb, then try again.`,
+          `The sandy command launcher at ${launcherPath} is missing. Restart sandy, then try again.`,
         );
       }
       await (windows ? installWindows(context) : installUnix(context));
@@ -453,8 +453,8 @@ export function createWindowsUserPath(env: NodeJS.ProcessEnv): WindowsUserPath {
     },
     async write(value) {
       await runWindowsUserPathScript(env, {
-        BB_CLI_COMMAND_PATH: value,
-        BB_CLI_COMMAND_SET: "1",
+        SANDY_CLI_COMMAND_PATH: value,
+        SANDY_CLI_COMMAND_SET: "1",
       });
     },
   };

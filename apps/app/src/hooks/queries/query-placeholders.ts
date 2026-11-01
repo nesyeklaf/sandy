@@ -3,7 +3,7 @@ import type {
   ProjectBranchesResponse,
   ThreadResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   PROJECT_SOURCE_BRANCHES_QUERY_KEY,
   THREAD_QUERY_KEY,

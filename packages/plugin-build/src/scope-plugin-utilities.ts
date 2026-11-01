@@ -16,8 +16,8 @@ interface Statement {
 
 export function pluginScopeRoots(pluginId: string): readonly string[] {
   return [
-    `[data-bb-plugin="${pluginId}"]`,
-    "[data-bb-plugin-root]:not([data-bb-plugin])",
+    `[data-sandy-plugin="${pluginId}"]`,
+    "[data-sandy-plugin-root]:not([data-sandy-plugin])",
   ];
 }
 

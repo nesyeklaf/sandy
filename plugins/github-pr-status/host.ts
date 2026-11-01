@@ -1,6 +1,6 @@
 import { access } from "node:fs/promises";
-import { experimental_defineHostEntry } from "@get-bb/plugin-sdk/host";
-import { getCurrentBranch, runGit } from "bb-environment-provider-host/git";
+import { experimental_defineHostEntry } from "@sandy-sdk/plugin-sdk/host";
+import { getCurrentBranch, runGit } from "sandy-environment-provider-host/git";
 import { githubPrStatusHostContract } from "./contract.js";
 import {
   prepareCurrentBranchRead,

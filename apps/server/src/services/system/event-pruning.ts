@@ -3,9 +3,9 @@ import {
   getThread,
   getThreadEventRewriteGeneration,
   advanceThreadPruning,
-} from "@bb/db";
-import type { ThreadEventType } from "@bb/domain";
-import { roundDurationMs } from "@bb/process-utils";
+} from "@sandy/db";
+import type { ThreadEventType } from "@sandy/domain";
+import { roundDurationMs } from "@sandy/process-utils";
 import type { AppDeps } from "../../types.js";
 
 type ThreadEventPruningMode = "active" | "archived" | "idle";

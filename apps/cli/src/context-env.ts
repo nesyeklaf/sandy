@@ -1,5 +1,5 @@
-import { loadCliConfig, type CliConfig } from "@bb/config/cli";
-import { toOptionalString } from "@bb/config/strings";
+import { loadCliConfig, type CliConfig } from "@sandy/config/cli";
+import { toOptionalString } from "@sandy/config/strings";
 import { CliUsageError } from "./cli-usage-error.js";
 import { missingThreadIdHint } from "./context-hints.js";
 
@@ -36,18 +36,18 @@ function validateId(value: string, source: string): string {
 }
 
 export function resolveServerUrl(context: CliRuntimeContext): string {
-  return context.cliConfig.BB_SERVER_URL;
+  return context.cliConfig.SANDY_SERVER_URL;
 }
 
 export function resolveContextProjectId(): string | undefined {
-  const fromEnv = toOptionalString(process.env.BB_PROJECT_ID);
-  if (fromEnv) return validateId(fromEnv, "BB_PROJECT_ID");
+  const fromEnv = toOptionalString(process.env.SANDY_PROJECT_ID);
+  if (fromEnv) return validateId(fromEnv, "SANDY_PROJECT_ID");
   return undefined;
 }
 
 export function resolveContextThreadId(): string | undefined {
-  const fromEnv = toOptionalString(process.env.BB_THREAD_ID);
-  if (fromEnv) return validateId(fromEnv, "BB_THREAD_ID");
+  const fromEnv = toOptionalString(process.env.SANDY_THREAD_ID);
+  if (fromEnv) return validateId(fromEnv, "SANDY_THREAD_ID");
   return undefined;
 }
 
@@ -87,7 +87,7 @@ export function requireThreadIdOrSelf(
   if (opts.self) {
     const envThreadId = resolveContextThreadId();
     if (!envThreadId) {
-      throw new Error("--self requires BB_THREAD_ID to be set.");
+      throw new Error("--self requires SANDY_THREAD_ID to be set.");
     }
     return envThreadId;
   }
@@ -113,6 +113,6 @@ export function resolveContextSnapshot(
   return {
     projectId: resolveContextProjectId(),
     threadId: resolveContextThreadId(),
-    serverUrl: context.cliConfig.BB_SERVER_URL,
+    serverUrl: context.cliConfig.SANDY_SERVER_URL,
   };
 }

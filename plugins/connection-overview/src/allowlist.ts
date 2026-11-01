@@ -19,7 +19,7 @@ export const BUILTIN_ALLOWED_HOSTS = [
   "objects.githubusercontent.com",
 ] as const;
 
-export const PROVIDER_BRIDGE_PROCESS = "bb-provider-bridge";
+export const PROVIDER_BRIDGE_PROCESS = "sandy-provider-bridge";
 
 const PROVIDER_CLI_PROCESSES = [
   "claude",

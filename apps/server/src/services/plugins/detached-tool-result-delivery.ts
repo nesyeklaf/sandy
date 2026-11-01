@@ -1,10 +1,10 @@
-import { getThread } from "@bb/db";
+import { getThread } from "@sandy/db";
 import type {
   PromptInput,
   SystemMessageSubject,
   ToolCallResponse,
-} from "@bb/domain";
-import type { PluginRowPresentation } from "@get-bb/plugin-sdk";
+} from "@sandy/domain";
+import type { PluginRowPresentation } from "@sandy-sdk/plugin-sdk";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { queueParentSystemMessage } from "../threads/parent-system-messages.js";
 

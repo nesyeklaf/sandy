@@ -19,14 +19,14 @@ import {
   queuedThreadMessages,
   threads,
   updateQueuedThreadMessage,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   canonicalProjectAttachmentPath,
   projectAttachmentPaths,
   threadScope,
   type PromptInput,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   copyProjectAttachments,
   storeAttachment,

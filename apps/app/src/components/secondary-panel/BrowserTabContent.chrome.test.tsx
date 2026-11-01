@@ -9,14 +9,14 @@ import {
   waitFor,
 } from "@testing-library/react";
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserState,
-} from "@bb/desktop-contract";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserState,
+} from "@sandy/desktop-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  createBbDesktopApi,
+  createSandyDesktopApi,
   createNoopDesktopBrowserApi,
-} from "@/test/bb-desktop-test-utils";
+} from "@/test/sandy-desktop-test-utils";
 import { BrowserTabContent } from "./BrowserTabContent";
 
 const desktopInfo = {
@@ -29,8 +29,8 @@ const desktopInfo = {
 };
 
 interface BrowserChromeHarness {
-  api: BbDesktopBrowserApi;
-  emitState: (state: BbDesktopBrowserState) => void;
+  api: SandyDesktopBrowserApi;
+  emitState: (state: SandyDesktopBrowserState) => void;
   emitNativeFocus: (tabId: string) => void;
   focus: ReturnType<typeof vi.fn>;
   goBack: ReturnType<typeof vi.fn>;
@@ -38,12 +38,12 @@ interface BrowserChromeHarness {
 }
 
 function createBrowserChromeHarness(): BrowserChromeHarness {
-  const stateListeners = new Set<(state: BbDesktopBrowserState) => void>();
+  const stateListeners = new Set<(state: SandyDesktopBrowserState) => void>();
   const focusListeners = new Set<(tabId: string) => void>();
   const focus = vi.fn();
   const goBack = vi.fn();
   const stop = vi.fn();
-  const api: BbDesktopBrowserApi = {
+  const api: SandyDesktopBrowserApi = {
     ...createNoopDesktopBrowserApi(),
     goBack,
     focus,
@@ -72,8 +72,8 @@ function createBrowserChromeHarness(): BrowserChromeHarness {
 }
 
 function browserState(
-  overrides: Partial<BbDesktopBrowserState> = {},
-): BbDesktopBrowserState {
+  overrides: Partial<SandyDesktopBrowserState> = {},
+): SandyDesktopBrowserState {
   return {
     tabId: "browser:test",
     url: "https://example.com/docs",
@@ -96,7 +96,7 @@ function renderBrowserChrome(
     onOpenInNewTab?: (url: string) => void;
   } = {},
 ) {
-  window.bbDesktop = createBbDesktopApi(desktopInfo, harness.api);
+  window.sandyDesktop = createSandyDesktopApi(desktopInfo, harness.api);
   return render(
     <BrowserTabContent
       tabId="browser:test"
@@ -119,7 +119,7 @@ describe("BrowserTabContent persistent navigation", () => {
     cleanup();
     vi.restoreAllMocks();
     window.localStorage.clear();
-    delete window.bbDesktop;
+    delete window.sandyDesktop;
   });
 
   it("keeps navigation visible while loading and preserves the stop action", () => {

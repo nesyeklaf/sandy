@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import {
   defineRpcContract,
-  type BbPluginApi,
+  type SandyPluginApi,
   type MarkdownProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 export const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
@@ -154,20 +154,20 @@ export const inlineVisRpcContract = defineRpcContract({
   },
 });
 
-export default async function plugin(bb: BbPluginApi) {
-  bb.rpc.register(inlineVisRpcContract, {
+export default async function plugin(sandy: SandyPluginApi) {
+  sandy.rpc.register(inlineVisRpcContract, {
     async preparePreview({ threadId, file, source }) {
       let rootPath: string;
       let hostId: string;
       let target: NonNullable<MarkdownProps["experimental_document"]>["target"];
 
       if (source === "thread-storage") {
-        const storage = await bb.sdk.threads.storageLocation({ threadId });
+        const storage = await sandy.sdk.threads.storageLocation({ threadId });
         rootPath = storage.storageRootPath;
         hostId = storage.hostId;
         target = { kind: source, threadId, path: file };
       } else {
-        const thread = await bb.sdk.threads.get({
+        const thread = await sandy.sdk.threads.get({
           threadId,
           include: "environment",
         });
@@ -202,7 +202,7 @@ export default async function plugin(bb: BbPluginApi) {
 
       let result;
       try {
-        result = await bb.sdk.files.read({
+        result = await sandy.sdk.files.read({
           path: absolutePath,
           rootPath,
           hostId,

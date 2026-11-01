@@ -2,7 +2,7 @@ import {
   promptInputSchema,
   queuedMessageWaitingOnSchema,
   threadQueuedMessageSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   PermissionMode,
   PromptInput,
@@ -14,7 +14,7 @@ import type {
   StartedOnBehalfOfInitiator,
   ThreadQueuedMessage,
   ThreadCreateOrigin,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
 import { ApiError } from "../../errors.js";
 import { resolveDispatchAuthor } from "./dispatch-author.js";

@@ -59,7 +59,7 @@ import {
   type PluginThreadActionsTriggerProps,
   type PluginSidebarThreadRowStatus,
   type PluginProvidersState,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import type { SidebarThread } from "../model/sidebar-thread.js";
 import {
   NO_THREAD_IDS,
@@ -211,7 +211,7 @@ export const REORDER_PLACEMENT_CLASS: Record<SidebarReorderPlacement, string> =
 
 function getHoverActionsInsetStyle(actionCount: number): CSSProperties {
   return {
-    "--bb-sidebar-hover-actions-inset": `calc(var(--spacing) * ${7.5 * actionCount})`,
+    "--sandy-sidebar-hover-actions-inset": `calc(var(--spacing) * ${7.5 * actionCount})`,
   } as CSSProperties;
 }
 
@@ -334,7 +334,7 @@ function ThreadTrailingIndicator({
   );
 }
 
-const ARCHIVED_ROW_ACTION_KEYS = ["bb--core/archive"];
+const ARCHIVED_ROW_ACTION_KEYS = ["sandy--core/archive"];
 const CUSTOMIZE_ROW_ACTIONS_KEY = "thread-list/customizeRowActions";
 
 function renderThreadActionsTrigger(props: PluginThreadActionsTriggerProps) {
@@ -568,7 +568,7 @@ function ThreadRowComponent({
       ? COARSE_POINTER_COMPACT_ROW_HEIGHT_CLASS
       : COARSE_POINTER_ROW_HEIGHT_CLASS,
     showRowMetadata &&
-      "h-auto min-h-[var(--bb-sidebar-row-height)] max-md:pointer-coarse:h-auto max-md:pointer-coarse:min-h-[var(--bb-sidebar-row-height-coarse)]",
+      "h-auto min-h-[var(--sandy-sidebar-row-height)] max-md:pointer-coarse:h-auto max-md:pointer-coarse:min-h-[var(--sandy-sidebar-row-height-coarse)]",
     showActive
       ? SIDEBAR_ROW_SELECTED_STATE_CLASS
       : SIDEBAR_ROW_INTERACTIVE_STATE_CLASS,
@@ -645,14 +645,14 @@ function ThreadRowComponent({
         className={cn(
           "relative flex min-w-0 flex-1 items-center gap-1.5 self-stretch",
           showRowMetadata &&
-            "flex-wrap content-center gap-y-0 py-1 has-[[data-thread-row-metadata][data-has-items]]:py-1.25 has-[[data-thread-row-metadata][data-has-items]]:[&_.bb-thread-title]:leading-4",
+            "flex-wrap content-center gap-y-0 py-1 has-[[data-thread-row-metadata][data-has-items]]:py-1.25 has-[[data-thread-row-metadata][data-has-items]]:[&_.sandy-thread-title]:leading-4",
           !isActionsOpen &&
             "group-data-[sidebar-touch-armed=true]/thread-row:hidden",
           !shortcut &&
             !isEditing &&
             !isCustomizingActions &&
             (reserveActionSpace
-              ? "pr-(--bb-sidebar-hover-actions-inset) [@media(hover:none)]:pr-0"
+              ? "pr-(--sandy-sidebar-hover-actions-inset) [@media(hover:none)]:pr-0"
               : SIDEBAR_HOVER_ACTIONS_INSET_CLASS),
         )}
         style={getHoverActionsInsetStyle(quickActions.length)}
@@ -746,7 +746,7 @@ function ThreadRowComponent({
             ) : (
               <span
                 className={cn(
-                  "bb-thread-title",
+                  "sandy-thread-title",
                   crossProjectLabel !== null && "min-w-0 truncate",
                 )}
                 title={labelTitle}

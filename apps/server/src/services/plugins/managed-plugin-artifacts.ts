@@ -15,19 +15,19 @@ import {
   type PluginGitSelector,
   type PluginProvenance,
   type PluginSourceIntent,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   buildPluginApp,
   buildPluginHost,
   buildPluginServer,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 import { installGitDependencies } from "./git-plugin-dependencies.js";
 import { getPluginBuildToolchain } from "./build-toolchain.js";
 import { validatePluginArtifactMeta } from "./app-bundle.js";
 import type {
   InstalledPlugin,
   PluginSourceSelection,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { resolveSelectedSubdirectory } from "./collection-manifest.js";
 import {
   gitArtifactCacheDir,
@@ -491,8 +491,8 @@ export function createManagedPluginArtifacts(
       const manifest = await readPluginManifest(realRoot);
       assertExpectedPluginId(args.context, manifest.id, args.source);
       const compatibility = evaluateCompatibility({
-        bbRange: manifest.bbEngineRange,
-        sdkRange: manifest.bbPluginSdkRange,
+        sandyRange: manifest.sandyEngineRange,
+        sdkRange: manifest.sandyPluginSdkRange,
         appVersion: deps.appVersion,
       });
       return compatibility.effective.length > 0
@@ -800,8 +800,8 @@ export function createManagedPluginArtifacts(
       );
       const manifest = await readPluginManifest(targetRealRoot);
       const compatibility = evaluateCompatibility({
-        bbRange: manifest.bbEngineRange,
-        sdkRange: manifest.bbPluginSdkRange,
+        sandyRange: manifest.sandyEngineRange,
+        sdkRange: manifest.sandyPluginSdkRange,
         appVersion: deps.appVersion,
       });
       if (args.activationSelector === undefined) {
@@ -884,8 +884,8 @@ export function createManagedPluginArtifacts(
         };
       }
       const compatibility = evaluateCompatibility({
-        bbRange: manifest.bbEngineRange,
-        sdkRange: manifest.bbPluginSdkRange,
+        sandyRange: manifest.sandyEngineRange,
+        sdkRange: manifest.sandyPluginSdkRange,
         appVersion: deps.appVersion,
       });
       if (compatibility.effective.length > 0) {

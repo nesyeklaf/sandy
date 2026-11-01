@@ -10,8 +10,8 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HostDaemonOnlineRpcCommand } from "@bb/host-daemon-contract";
-import type { WatchPathRootArgs } from "@bb/host-watcher";
+import type { HostDaemonOnlineRpcCommand } from "@sandy/host-daemon-contract";
+import type { WatchPathRootArgs } from "@sandy/host-watcher";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PluginHostManager } from "./plugin-host-manager.js";
 
@@ -195,7 +195,7 @@ describe("PluginHostManager", () => {
   async function createManagerFixture(
     overrides: Partial<ConstructorParameters<typeof PluginHostManager>[0]> = {},
   ): Promise<{ dataDir: string; manager: PluginHostManager }> {
-    const dataDir = await mkdtemp(join(tmpdir(), "bb-plugin-host-test-"));
+    const dataDir = await mkdtemp(join(tmpdir(), "sandy-plugin-host-test-"));
     tempDirs.push(dataDir);
     const manager = new PluginHostManager({
       dataDir,

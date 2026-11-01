@@ -4,7 +4,7 @@ import type {
   ExperimentalPanelTabs,
   ExperimentalTabContext,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { parsePluginDetailKey } from "@/components/plugin/plugin-detail-key";
 import type { SecondaryPanelFixedTab } from "@/components/secondary-panel/ThreadSecondaryPanel";
 import type { SecondaryPanelRenderableTab } from "@/components/secondary-panel/secondaryPanelTab";

@@ -39,13 +39,13 @@ import {
 import {
   experimental_useAppPanel,
   definePluginApp,
-  useBbNavigate,
+  useSandyNavigate,
   useComposer,
   experimental_useRpcMutation,
   experimental_useRpcQuery,
   type PluginMessageDirectiveProps,
   type ExperimentalThreadActionTabProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   workflowUiRpcContract,
   type WorkflowCallView,
@@ -474,7 +474,7 @@ function WorkflowComposerSummary({ run }: { run: WorkflowRunView }) {
 }
 
 function WorkflowComposerCard({ run }: { run: WorkflowRunView }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const panel = experimental_useAppPanel();
   const [expanded, setExpanded] = useState(false);
   const bodyId = useId();
@@ -673,7 +673,7 @@ function WorkflowPreviewLoaded({
   threadId: string;
   source: string;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const panel = experimental_useAppPanel();
   const { state } = useWorkflowRun(threadId, runId);
   const [expanded, setExpanded] = useState(true);
@@ -858,7 +858,7 @@ function WorkflowRunPanelLoaded({
   threadId: string;
   runId: string | null;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const stopRun = experimental_useRpcMutation({
     contract: workflowUiRpcContract,
     method: "workflowStopRun",

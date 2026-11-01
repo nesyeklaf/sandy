@@ -1,5 +1,5 @@
-import { upsertProjectExecutionDefaults } from "@bb/db";
-import { threadSchema } from "@bb/domain";
+import { upsertProjectExecutionDefaults } from "@sandy/db";
+import { threadSchema } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { waitForQueuedCommand } from "../helpers/commands.js";
 import { readJson } from "../helpers/json.js";
@@ -182,7 +182,7 @@ describe("session options chosen when a thread is created", () => {
     });
   });
 
-  it("starts on a model that fits the chosen options when the caller left the model to bb, keeping a remembered model that fits", async () => {
+  it("starts on a model that fits the chosen options when the caller left the model to sandy, keeping a remembered model that fits", async () => {
     await withTestHarness(async (harness) => {
       const { host, session, project } = seedWorkspace(
         harness,

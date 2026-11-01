@@ -1,5 +1,5 @@
 {
-  "name": "@bb/logger",
+  "name": "@sandy/logger",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -16,7 +16,7 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@bb/config": "workspace:*",
+    "@sandy/config": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "pino": "^10.4.0",
     "pino-opentelemetry-transport": "4.0.2",
@@ -24,8 +24,8 @@
     "pino-roll": "^4.0.0"
   },
   "devDependencies": {
-    "@bb/telemetry": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/telemetry": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2"

@@ -10,7 +10,7 @@ import {
   threadListEntrySchema,
   gitBranchNameSchema,
   projectSourceCheckoutSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   rejectMultipleWorkspaceSelectors,
   branchListQuerySchema,
@@ -317,9 +317,9 @@ export const projectCommandsQuerySchema = z
 export type ProjectCommandsQuery = z.infer<typeof projectCommandsQuerySchema>;
 
 export const skillScopeSchema = z.enum([
-  "bb-builtin",
-  "bb-user",
-  "bb-project",
+  "sandy-builtin",
+  "sandy-user",
+  "sandy-project",
   "provider-user",
   "provider-project",
   "shared-user",
@@ -387,8 +387,8 @@ export const projectSkillsQuerySchema = z.object({
 export type ProjectSkillsQuery = z.infer<typeof projectSkillsQuerySchema>;
 
 export const editableSkillScopeSchema = z.enum([
-  "bb-user",
-  "bb-project",
+  "sandy-user",
+  "sandy-project",
   "provider-user",
   "provider-project",
 ]);

@@ -1,4 +1,4 @@
-import { inheritedNodeNetworkArgs } from "@bb/process-utils";
+import { inheritedNodeNetworkArgs } from "@sandy/process-utils";
 import {
   createBridgeProtocolAdapter,
   type BridgeProtocolAdapter,

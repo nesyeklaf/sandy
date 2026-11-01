@@ -6,11 +6,11 @@ import {
   type ReasoningLevel,
   type ServiceTier,
   type ThreadRuntimeDisplayStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ExistingThreadExecutionInputSources,
   SendMessageRequest,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { FollowUpSubmitMode } from "./follow-up-submit-mode.js";
 
 export interface SendMessageMutationRequest extends SendMessageRequest {

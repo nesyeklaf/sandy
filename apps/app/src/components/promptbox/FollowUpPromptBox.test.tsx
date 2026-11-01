@@ -46,11 +46,11 @@ vi.mock("@/components/ui/bottom-anchored-scroll-body.js", () => ({
   }),
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => mocks.isCompactViewport,
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-pointer-coarse", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-pointer-coarse", () => ({
   usePointerCoarse: () => mocks.isPointerCoarse,
 }));
 
@@ -83,9 +83,9 @@ vi.mock("@/components/promptbox/ComposerBox", async () => {
   const { ComposerCommand, ComposerCommandOwnerProvider } =
     await import("@/components/promptbox/composer-commands");
   const { useIsCompactViewport } =
-    await import("@bb/shared-ui/hooks/use-compact-viewport");
+    await import("@sandy/shared-ui/hooks/use-compact-viewport");
   const { usePointerCoarse } =
-    await import("@bb/shared-ui/hooks/use-pointer-coarse");
+    await import("@sandy/shared-ui/hooks/use-pointer-coarse");
   function useBlursOnPointerSubmit(surface: "thread" | "new-thread") {
     const isCompactViewport = useIsCompactViewport();
     const isPointerCoarse = usePointerCoarse();
@@ -445,7 +445,7 @@ describe("FollowUpPromptBox", () => {
     const initialMinHeight = Number(promptBox.getAttribute("data-min-height"));
     const stackElement = screen
       .getByText("Expandable plugin banner")
-      .closest("[data-bb-plugin-root]")?.parentElement;
+      .closest("[data-sandy-plugin-root]")?.parentElement;
     if (!stackElement) throw new Error("Expected measured composer stack");
     Object.defineProperty(stackElement, "offsetHeight", {
       configurable: true,
@@ -510,7 +510,7 @@ describe("FollowUpPromptBox", () => {
 
     const pluginHeaderRoot = screen
       .getByTestId("plugin-header")
-      .closest("[data-bb-plugin-root]");
+      .closest("[data-sandy-plugin-root]");
     const queuedMessages = screen.getByTestId("queued-messages");
     expect(queuedMessages.previousElementSibling).toBe(pluginHeaderRoot);
   });

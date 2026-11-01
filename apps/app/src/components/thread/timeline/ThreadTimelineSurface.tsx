@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import type { ActiveThinking, ThreadRuntimeDisplayStatus } from "@bb/domain";
-import type { TimelineRow } from "@bb/server-contract";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
-import { Button } from "@bb/shared-ui/button";
+import type { ActiveThinking, ThreadRuntimeDisplayStatus } from "@sandy/domain";
+import type { TimelineRow } from "@sandy/server-contract";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
+import { Button } from "@sandy/shared-ui/button";
 import { ConversationTimeline } from "@/components/ui/conversation.js";
 import { HeightTransition } from "@/components/ui/height-transition.js";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { isRouteLoadingSkeletonMounted } from "@/components/ui/route-loading-skeleton";
 import { toUserAttachmentImageSrc } from "@/lib/user-attachment-images";
 import {

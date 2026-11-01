@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useSyncExternalStore } from "react";
-import type { PluginSidebarThread } from "@get-bb/plugin-sdk";
+import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount";
 import { useSidebarThreads } from "@/lib/plugin-sidebar-hooks";
 import {

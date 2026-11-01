@@ -8,10 +8,10 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
-import { defaultAppSettings } from "@bb/domain";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
+import { defaultAppSettings } from "@sandy/domain";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
 import { createPortal } from "react-dom";
 import {
   resetPluginSlotStoreForTest,
@@ -24,7 +24,7 @@ import { Link, MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import { AppLayout } from "./AppLayout";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { setCompactSecondaryPanelPresentation } from "@/components/ui/secondary-panel-shelf-visibility";
 
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
@@ -44,12 +44,12 @@ const useThreadDetailBootstrapMock = vi.hoisted(() =>
 );
 
 const sidebarThreadsMock = vi.hoisted(() => {
-  const threads: import("@bb/domain").ThreadListEntry[] = [];
+  const threads: import("@sandy/domain").ThreadListEntry[] = [];
   return { threads };
 });
 
-const SIDEBAR_WIDTH_STORAGE_KEY = "bb.sidebar.width";
-const SIDEBAR_OPEN_STORAGE_KEY = "bb.sidebar.open";
+const SIDEBAR_WIDTH_STORAGE_KEY = "sandy.sidebar.width";
+const SIDEBAR_OPEN_STORAGE_KEY = "sandy.sidebar.open";
 const APP_ROUTE = "/projects/proj_one/threads/thr_one?message=12#event-12";
 const SETTINGS_ROUTE = "/settings/providers/codex?tab=models#preferred";
 const PLUGINS_ROUTE = "/plugins/ui-patterns?tab=settings#source";
@@ -129,7 +129,7 @@ vi.mock("./AppPageHeader", () => ({
   AppPageHeader: () => <header />,
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
+vi.mock("@/lib/sandy-desktop", () => ({
   BROWSER_SIDEBAR_TRIGGER_INSET_CLASS: "",
   CHROME_ROW_CLASS: "",
   DEFAULT_DESKTOP_WINDOW_STATE: { isFullScreen: false },
@@ -142,7 +142,7 @@ vi.mock("@/lib/bb-desktop", () => ({
   MACOS_TRAFFIC_LIGHT_RESERVE_PADDING_CLASS: "",
   MACOS_WINDOW_DRAG_CLASS: "",
   MACOS_WINDOW_NO_DRAG_CLASS: "",
-  getBbDesktopInfo: () => null,
+  getSandyDesktopInfo: () => null,
   shouldReserveMacosTrafficLights: () => false,
   shouldUseMacosDesktopChrome: () => false,
 }));
@@ -618,7 +618,7 @@ describe("AppLayout plugin overlay contexts", () => {
 
       expect(screen.getByRole("button", { name: "Page action" })).toBeDefined();
       const overlayHost = document.querySelector(
-        "[data-bb-plugin-app-overlays]",
+        "[data-sandy-plugin-app-overlays]",
       );
       expect(overlayHost).not.toBeNull();
       expect(overlayHost?.parentElement).toBe(getRoot().parentElement);
@@ -643,7 +643,7 @@ describe("AppLayout plugin overlay contexts", () => {
 
 it("synchronizes desktop attention when sidebar state changes and clears its report on unmount", async () => {
   const setAttentionThreads = vi.fn();
-  vi.stubGlobal("bbDesktop", { setAttentionThreads });
+  vi.stubGlobal("sandyDesktop", { setAttentionThreads });
   sidebarThreadsMock.threads = [
     makeThreadListEntry({
       id: "unread",

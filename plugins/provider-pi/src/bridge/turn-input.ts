@@ -1,9 +1,9 @@
-import { experimental_selectedSkillMentions as selectedSkillMentions } from "@get-bb/plugin-sdk/provider-bridge";
+import { experimental_selectedSkillMentions as selectedSkillMentions } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { readFileSync } from "node:fs";
 import {
   mimeTypeFromExtension,
   type PromptInput,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { ImageContent } from "@earendil-works/pi-ai";
 
 interface ExtractedPiPromptInput {

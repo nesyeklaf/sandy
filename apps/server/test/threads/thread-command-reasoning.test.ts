@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import { getStoredProviderModelCatalog, updateHost } from "@bb/db";
-import { encodeClientTurnRequestIdNumber } from "@bb/domain";
+import { getStoredProviderModelCatalog, updateHost } from "@sandy/db";
+import { encodeClientTurnRequestIdNumber } from "@sandy/domain";
 import {
   buildExecutionOptions,
   buildThreadStartCommand,

@@ -10,8 +10,8 @@ import type { ReactNode } from "react";
 import { Provider as JotaiProvider, createStore } from "jotai";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ExperimentalThreadContextCardProps } from "@get-bb/plugin-sdk";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import type { ExperimentalThreadContextCardProps } from "@sandy-sdk/plugin-sdk";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import {
   removePluginSlotRegistrations,

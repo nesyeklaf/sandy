@@ -1,13 +1,13 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { getThread } from "@bb/db";
+import { getThread } from "@sandy/db";
 import {
   promptInputSchema,
   systemMessageKindSchema,
   systemMessageSubjectSchema,
-} from "@bb/domain";
-import { sendMessageRequestSchema } from "@bb/server-contract";
-import type { SendMessageRequest } from "@bb/server-contract";
+} from "@sandy/domain";
+import { sendMessageRequestSchema } from "@sandy/server-contract";
+import type { SendMessageRequest } from "@sandy/server-contract";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { runtimeErrorLogFields } from "../lib/error-log-fields.js";
 import { queueParentSystemMessage } from "./parent-system-messages.js";

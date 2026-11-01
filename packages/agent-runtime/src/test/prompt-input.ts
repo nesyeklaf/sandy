@@ -1,4 +1,4 @@
-import type { PromptInput } from "@bb/domain";
+import type { PromptInput } from "@sandy/domain";
 
 interface PromptTextInputArgs {
   text: string;

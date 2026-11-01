@@ -4,7 +4,7 @@ import {
   getSessionById,
   hostDaemonSessions,
   noopNotifier,
-} from "@bb/db";
+} from "@sandy/db";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   HEARTBEAT_INTERVAL_MS,

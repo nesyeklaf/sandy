@@ -14,8 +14,8 @@ import {
   defaultAppSettings,
   type AppDefaultKeybindings,
   type AppKeybindingOverrides,
-} from "@bb/domain";
-import { collectPluginAppRegistrations } from "@get-bb/plugin-sdk/internal/plugin-app-collector";
+} from "@sandy/domain";
+import { collectPluginAppRegistrations } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 import {
   setPluginSlotRegistrations,
   removePluginSlotRegistrations,
@@ -176,8 +176,8 @@ vi.mock("@/hooks/mutations/settings-mutations", () => ({
   }),
 }));
 
-vi.mock("@bb/shared-ui/button", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@bb/shared-ui/button")>();
+vi.mock("@sandy/shared-ui/button", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@sandy/shared-ui/button")>();
   return {
     ...actual,
     Button: (props: ComponentProps<typeof actual.Button>) => {
@@ -196,8 +196,8 @@ vi.mock("@bb/shared-ui/button", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => (testState.isDesktop ? {} : null),
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => (testState.isDesktop ? {} : null),
 }));
 
 afterEach(() => {
@@ -221,7 +221,7 @@ describe("KeyboardSettingsSection", () => {
       setPluginSlotRegistrations(
         "test-shortcuts",
         collectPluginAppRegistrations({
-          __bbPluginApp: true,
+          __sandyPluginApp: true,
           setup(app) {
             for (const id of ["first", "second"]) {
               app.commands.register({
@@ -440,7 +440,7 @@ describe("KeyboardSettingsSection", () => {
     setPluginSlotRegistrations(
       "test-shortcuts",
       collectPluginAppRegistrations({
-        __bbPluginApp: true,
+        __sandyPluginApp: true,
         setup(app) {
           for (const [id, title] of [
             ["sidebar-open", "Open navigation"],
@@ -578,7 +578,7 @@ describe("KeyboardSettingsSection", () => {
     setPluginSlotRegistrations(
       "test-shortcuts",
       collectPluginAppRegistrations({
-        __bbPluginApp: true,
+        __sandyPluginApp: true,
         setup(app) {
           app.commands.register({
             id: "open",
@@ -607,7 +607,7 @@ describe("KeyboardSettingsSection", () => {
     setPluginSlotRegistrations(
       "test-shortcuts",
       collectPluginAppRegistrations({
-        __bbPluginApp: true,
+        __sandyPluginApp: true,
         setup(app) {
           app.commands.register({
             id: "open",

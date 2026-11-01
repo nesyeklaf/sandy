@@ -2,9 +2,9 @@ import {
   findStoredEventRow,
   getLastStoredTurnRequestEvent,
   getThread,
-} from "@bb/db";
-import type { DbQueryConnection } from "@bb/db";
-import type { PromptInput } from "@bb/domain";
+} from "@sandy/db";
+import type { DbQueryConnection } from "@sandy/db";
+import type { PromptInput } from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 import { parseStoredTurnRequestEvent } from "./thread-events.js";
 

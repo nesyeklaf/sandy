@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Environment } from "@bb/domain";
+import type { Environment } from "@sandy/domain";
 import {
   formatEnvironmentDisplay,
   resolveEnvironmentDisplayName,
@@ -96,7 +96,7 @@ describe("formatEnvironmentDisplay", () => {
     it("labels a branch-bearing row by its provider, since the branch is shown beside it", () => {
       const result = formatEnvironmentDisplay({
         environment: makeEnvironment({
-          branchName: "bb/feature",
+          branchName: "sandy/feature",
           environmentProviderId: "git-worktree",
         }),
         host: localHostContext,
@@ -110,7 +110,7 @@ describe("formatEnvironmentDisplay", () => {
       const result = formatEnvironmentDisplay({
         environment: makeEnvironment({
           name: "Review workspace",
-          branchName: "bb/feature",
+          branchName: "sandy/feature",
           environmentProviderId: "git-worktree",
         }),
         host: localHostContext,
@@ -170,7 +170,7 @@ describe("formatEnvironmentDisplay", () => {
         environment: makeEnvironment({
           status: "provisioning",
           environmentProviderId: "git-worktree",
-          branchName: "bb/feature",
+          branchName: "sandy/feature",
         }),
         host: remoteHostContext,
         providerLookup: worktreeProviderLookup,
@@ -265,13 +265,13 @@ describe("resolveEnvironmentDisplayName", () => {
       resolveEnvironmentDisplayName(
         {
           name: null,
-          branchName: "bb/feature",
+          branchName: "sandy/feature",
           path: null,
           environmentProviderId: "modal-sandbox",
         },
         loadingProviderLookup,
       ),
-    ).toBe("bb/feature");
+    ).toBe("sandy/feature");
   });
 
   it("names a branchless provider row by its provider, not its workspace folder", () => {
@@ -280,7 +280,7 @@ describe("resolveEnvironmentDisplayName", () => {
         {
           name: null,
           branchName: null,
-          path: "/Users/bb/.bb/plugins/environment-personal-workspace/host-data/workspaces/thr_k72wqg7tcs/",
+          path: "/Users/sandy/.sandy/plugins/environment-personal-workspace/host-data/workspaces/thr_k72wqg7tcs/",
           environmentProviderId: "personal-workspace",
         },
         {
@@ -301,7 +301,7 @@ describe("resolveEnvironmentDisplayName", () => {
         {
           name: null,
           branchName: null,
-          path: "C:\\bb\\workspaces\\thr_win",
+          path: "C:\\sandy\\workspaces\\thr_win",
           environmentProviderId: "personal-workspace",
         },
         loadingProviderLookup,
@@ -315,7 +315,7 @@ describe("resolveEnvironmentDisplayName", () => {
         {
           name: null,
           branchName: null,
-          path: "/Users/bb/Projects/notes/",
+          path: "/Users/sandy/Projects/notes/",
           environmentProviderId: null,
         },
         noProviderLookup,
@@ -326,7 +326,7 @@ describe("resolveEnvironmentDisplayName", () => {
         {
           name: null,
           branchName: null,
-          path: "C:\\Users\\bb\\notes",
+          path: "C:\\Users\\sandy\\notes",
           environmentProviderId: null,
         },
         noProviderLookup,

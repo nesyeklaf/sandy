@@ -2,13 +2,13 @@ export type DesktopReleaseChannel = "latest" | "nightly";
 export type DesktopBuildPlatform = "macos" | "linux" | "windows";
 
 export interface DesktopReleaseConfig {
-  appId: "dev.bb.desktop" | "dev.bb.desktop.nightly";
-  applicationName: "bb" | "bb Nightly";
+  appId: "dev.sandy.desktop" | "dev.sandy.desktop.nightly";
+  applicationName: "sandy" | "sandy Nightly";
   artifactName: string;
   iconFileName: "icon.png" | "icon-nightly.png";
-  linuxExecutableName: "bb" | "bb-nightly";
+  linuxExecutableName: "sandy" | "sandy-nightly";
   macIconPath: "assets/icon.icns" | "assets/icon-nightly.icns";
-  windowsInstallName: "bb" | "bb-nightly";
+  windowsInstallName: "sandy" | "sandy-nightly";
 }
 
 export function resolveDesktopReleaseChannel(

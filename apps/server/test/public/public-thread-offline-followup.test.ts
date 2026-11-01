@@ -1,6 +1,6 @@
-import { listEvents, listQueuedThreadMessages } from "@bb/db";
-import { queuedMessageWaitingOnSchema } from "@bb/domain";
-import { sendMessageResponseSchema } from "@bb/server-contract";
+import { listEvents, listQueuedThreadMessages } from "@sandy/db";
+import { queuedMessageWaitingOnSchema } from "@sandy/domain";
+import { sendMessageResponseSchema } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { applyLoggedThreadLifecycleEvent } from "../../src/services/threads/lifecycle-outcome.js";
 import { runQueuedMessageDispatch } from "../../src/services/threads/queued-message-dispatch.js";

@@ -4,7 +4,7 @@ import type {
   TimelineOutputPreview,
   TimelineRow,
   TimelineToolWorkRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { useThreadTimelineTurnSummaryDetails } from "@/hooks/queries/thread-panel-queries";
 
 export type TimelinePreviewableWorkRow =

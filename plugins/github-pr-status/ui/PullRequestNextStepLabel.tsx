@@ -1,5 +1,5 @@
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PULL_REQUEST_NEXT_STEP_TONE_CLASS,
   type PullRequestNextStep,

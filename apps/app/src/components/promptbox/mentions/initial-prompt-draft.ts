@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { isRawThreadId } from "@bb/domain";
-import type { PromptDraftState } from "@bb/client-core";
+import { isRawThreadId } from "@sandy/domain";
+import type { PromptDraftState } from "@sandy/client-core";
 import {
   resolveSerializedPromptMentions,
   useSidebarThreadTitleMentionResources,

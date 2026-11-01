@@ -25,7 +25,7 @@ import {
   updateProjectSource,
   setProjectGitRemoteUrlIfMissing,
   type ReorderProjectResult,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   projectListIncludeOptionSchema,
   publicApiRoutes,
@@ -36,7 +36,7 @@ import {
   type ProjectResponse,
   type ProjectWithThreadsResponse,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import type { AppDeps } from "../types.js";
 import { COMMAND_TIMEOUT_MS } from "../constants.js";
@@ -55,7 +55,7 @@ import {
 import {
   isWindowsHostPath,
   PROMPT_HISTORY_ENTRY_LIMIT,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { toThreadListEntryResponses } from "../services/threads/thread-runtime-display.js";
 import { callHostRetryableOnlineRpc } from "../services/hosts/online-rpc.js";
 import {

@@ -1,24 +1,24 @@
 import path from "node:path";
-import type { DiscoveredWorkspaceProperties } from "@bb/domain";
+import type { DiscoveredWorkspaceProperties } from "@sandy/domain";
 import {
   provisionWorkspace,
   type HostWorkspace,
   type LocalStateSnapshot,
   type ProvisionWorkspaceArgs,
   type SharedGitRefsSnapshot,
-} from "@bb/host-workspace";
+} from "@sandy/host-workspace";
 import type {
   HostDaemonEnvironmentChange,
   HostDaemonWatchSet,
   HostDaemonWatchSetThreadStorageTarget,
   HostDaemonWatchSetWorkspaceTarget,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type {
   HostWatcher,
   ThreadStorageWatchError,
   WorkspaceStatusWatchChangeKind,
   WorkspaceWatchError,
-} from "@bb/host-watcher";
+} from "@sandy/host-watcher";
 import { userExecutableProcessOptions } from "./user-executable-env.js";
 
 type StopWatching = () => void | Promise<void>;

@@ -9,13 +9,13 @@ import {
 describe("appTimings", () => {
   it("reads the phases of the longest switch span and ignores spans of other switches", () => {
     const timings = appTimings([
-      { name: "bb:switch", start: 0, duration: 40, label: "early" },
-      { name: "bb:switch:render", start: 5, duration: 30 },
-      { name: "bb:switch", start: 100, duration: 500, label: "thr_a" },
-      { name: "bb:switch:input", start: 100, duration: 90 },
-      { name: "bb:switch:render", start: 190, duration: 260 },
-      { name: "bb:switch:paint", start: 450, duration: 150 },
-      { name: "bb:open", start: 120, duration: 999 },
+      { name: "sandy:switch", start: 0, duration: 40, label: "early" },
+      { name: "sandy:switch:render", start: 5, duration: 30 },
+      { name: "sandy:switch", start: 100, duration: 500, label: "thr_a" },
+      { name: "sandy:switch:input", start: 100, duration: 90 },
+      { name: "sandy:switch:render", start: 190, duration: 260 },
+      { name: "sandy:switch:paint", start: 450, duration: 150 },
+      { name: "sandy:open", start: 120, duration: 999 },
     ]);
     assert.deepEqual(timings, {
       appMs: 500,
@@ -29,7 +29,7 @@ describe("appTimings", () => {
 
   it("returns null when the app recorded no switch", () => {
     assert.equal(
-      appTimings([{ name: "bb:open", start: 0, duration: 1 }]),
+      appTimings([{ name: "sandy:open", start: 0, duration: 1 }]),
       null,
     );
   });

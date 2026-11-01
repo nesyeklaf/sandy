@@ -1,4 +1,4 @@
-const PALETTE_RECENTS_KEY = "bb.palette.recents";
+const PALETTE_RECENTS_KEY = "sandy.palette.recents";
 const PALETTE_RECENTS_LIMIT = 8;
 
 export function readPaletteRecents(): string[] {

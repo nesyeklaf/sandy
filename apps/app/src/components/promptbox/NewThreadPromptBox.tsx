@@ -8,13 +8,13 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import type { Host, ProjectSource, PromptTextMention } from "@bb/domain";
+import type { Host, ProjectSource, PromptTextMention } from "@sandy/domain";
 import type {
   SystemEnvironmentProvider,
   SystemMachineProvider,
-} from "@bb/server-contract";
-import type { ComposerView } from "@get-bb/plugin-sdk";
-import type { ComposerSubmitExtras } from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy/server-contract";
+import type { ComposerView } from "@sandy-sdk/plugin-sdk";
+import type { ComposerSubmitExtras } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import type { ComposerTextEffectSource } from "@/lib/composer-text-effects";
 import { ComposerBannersSlot } from "@/components/plugin/PluginComposerBanners";
 import { PROMPT_STACK_TRACK_CLASS } from "@/components/promptbox/banner/PromptStackCard";

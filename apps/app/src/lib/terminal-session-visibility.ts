@@ -1,5 +1,5 @@
-import { isActiveTerminalSessionStatus } from "@bb/domain";
-import type { TerminalSession } from "@bb/server-contract";
+import { isActiveTerminalSessionStatus } from "@sandy/domain";
+import type { TerminalSession } from "@sandy/server-contract";
 
 export function isVisibleTerminalSession(session: TerminalSession): boolean {
   return (

@@ -29,11 +29,11 @@ import type {
   ThreadSearchSourceKind,
   ThreadStatus,
   ThreadVisibility,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   evaluateThreadLifecycleEvent,
   threadSearchSourceKindSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { DbConnection, DbTransaction } from "../connection.js";
 import type { DbQueryConnection } from "../connection.js";
 import type { DbNotifier } from "../notifier.js";
@@ -41,6 +41,7 @@ import {
   environments,
   pendingInteractions,
   projects,
+  promptHistoryEntries,
   terminalSessions,
   threadSearchSegments,
   threads,
@@ -1250,7 +1251,7 @@ export interface CountThreadsResult {
 }
 
 /**
- * `SELECT count(*)` over threads, optionally grouped. Backs `bb thread count`,
+ * `SELECT count(*)` over threads, optionally grouped. Backs `sandy thread count`,
  * which answers "how many" in the database instead of paging threads into
  * memory to count them. The host filter and the `host` grouping both need the
  * environment row, so they join it; every other shape reads `threads` alone.
@@ -1840,6 +1841,7 @@ export function reorderPinnedThread({
 
 export interface UpdateThreadInput {
   environmentId?: string | null;
+  projectId?: string;
   sectionId?: string | null;
   lastReadAt?: number | null;
   parentThreadId?: string | null;
@@ -1883,6 +1885,11 @@ export function updateThread(
   ) {
     changes.push("environment-changed");
   }
+  const projectChanged =
+    input.projectId !== undefined && input.projectId !== existing.projectId;
+  if (projectChanged) {
+    changes.push("parent-changed");
+  }
 
   const set: Partial<typeof threads.$inferInsert> = { updatedAt: now };
   if ("title" in input) set.title = input.title;
@@ -1890,6 +1897,7 @@ export function updateThread(
     set.sectionId = input.sectionId;
   }
   if ("environmentId" in input) set.environmentId = input.environmentId;
+  if (input.projectId !== undefined) set.projectId = input.projectId;
   if ("lastReadAt" in input) {
     set.lastReadAt = input.lastReadAt;
   }
@@ -1905,6 +1913,12 @@ export function updateThread(
     .where(eq(threads.id, id))
     .returning()
     .get();
+  if (updated && projectChanged) {
+    db.update(promptHistoryEntries)
+      .set({ projectId: updated.projectId })
+      .where(eq(promptHistoryEntries.threadId, id))
+      .run();
+  }
   if (updated && "title" in input) {
     upsertThreadTitleSearchSegments(db, {
       threadId: updated.id,

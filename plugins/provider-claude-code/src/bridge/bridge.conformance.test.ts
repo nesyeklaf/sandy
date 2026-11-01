@@ -10,8 +10,8 @@ import {
   experimental_captureBridgeJsonRpcOutput as captureBridgeJsonRpcOutput,
   experimental_formatConformanceReport as formatConformanceReport,
   experimental_runBridgeConformance as runBridgeConformance,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
-import type { CapturedBridgeJsonRpcOutput } from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
+import type { CapturedBridgeJsonRpcOutput } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 
 const { forkSessionMock, queryMock } = vi.hoisted(() => ({
   forkSessionMock: vi.fn(),
@@ -159,7 +159,7 @@ let workspaceDir: string;
 beforeEach(() => {
   vi.clearAllMocks();
   scriptedTurnCounter = 0;
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-claude-conformance-ws-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-claude-conformance-ws-"));
   queryMock.mockImplementation((call: ScriptedClaudeQueryCall) =>
     createScriptedClaudeQuery(call),
   );

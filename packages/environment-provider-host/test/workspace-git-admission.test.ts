@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import {
   experimental_runVcsProcess as runVcsProcess,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import { runGit as runProvisioningGit } from "../src/git.js";
 
 it.each([

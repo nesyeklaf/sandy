@@ -62,7 +62,7 @@ export default {
         await wait(200);
         const pasteStartedAt = performance.now();
         await browser.evaluate(
-          "window.__bbperf.arm(" +
+          "window.__sandyperf.arm(" +
             JSON.stringify(
               "document.querySelector('" +
                 SELECTORS.composer +
@@ -73,7 +73,7 @@ export default {
             ", 15000)",
         );
         await browser.insertText(paste);
-        phases.paste = await browser.evaluate("window.__bbperf.collectArmed()");
+        phases.paste = await browser.evaluate("window.__sandyperf.collectArmed()");
         phases.pasteMs = performance.now() - pasteStartedAt;
         await browser.pressKey("a", {
           code: "KeyA",
@@ -86,7 +86,7 @@ export default {
         });
         await wait(300);
         await browser.evaluate(
-          "window.__bbperf.arm(" +
+          "window.__sandyperf.arm(" +
             JSON.stringify(
               "Boolean(document.querySelector('[class*=\"mention-menu\"]'))",
             ) +
@@ -94,7 +94,7 @@ export default {
         );
         await browser.typeText("@", { perCharDelayMs: 0 });
         phases.mentionWait = await browser.evaluate(
-          "window.__bbperf.collectArmed()",
+          "window.__sandyperf.collectArmed()",
         );
         phases.mentionPopup = await browser.evaluate(
           "(() => { const popup = document.querySelector('[class*=\"mention-menu\"]'); return popup ? { text: popup.innerText.slice(0, 80) } : null })()",

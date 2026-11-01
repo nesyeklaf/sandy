@@ -4,15 +4,15 @@ import {
   type QueryKey,
   type QueryObserverOptions,
 } from "@tanstack/react-query";
-import type { AvailableModel } from "@bb/domain";
+import type { AvailableModel } from "@sandy/domain";
 import type {
   SystemExecutionOptionsResponse,
   SystemProviderStatesResponse,
-} from "@bb/server-contract";
-import type { ProviderInfo } from "@bb/domain";
-import { createMemoryStorage } from "@bb/test-helpers";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
-import type { ProviderCliStatusResponse } from "@bb/host-daemon-contract";
+} from "@sandy/server-contract";
+import type { ProviderInfo } from "@sandy/domain";
+import { createMemoryStorage } from "@sandy/test-helpers";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
+import type { ProviderCliStatusResponse } from "@sandy/host-daemon-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
@@ -32,7 +32,7 @@ import {
 } from "./system-queries";
 
 vi.mock("@/lib/sdk", () => ({
-  BbHttpError: class BbHttpError extends Error {},
+  SandyHttpError: class SandyHttpError extends Error {},
   sdk: {
     hosts: { providerCliStatus: vi.fn() },
     providers: { list: vi.fn() },

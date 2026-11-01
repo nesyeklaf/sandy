@@ -3,11 +3,19 @@ import { readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import {
+  GROUND,
+  canvasSvg,
+  glyphShapes,
+  markShapes,
+  palettes,
+} from "./brand-marks.mjs";
 
 const appDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const publicDir = join(appDir, "public");
 const checkOnly = process.argv.includes("--check");
 
+// Colours a user can pick for the favicon (and the installed icon).
 const faviconColorValues = {
   red: "#e5484d",
   orange: "#f76b15",
@@ -19,76 +27,51 @@ const faviconColorValues = {
   pink: "#d6409f",
 };
 
+// Install icons. `any`: a rounded tile with transparent corners. `maskable`
+// and the apple-touch icon: full bleed, because the platform cuts the shape
+// (the disc stays inside the 80% maskable safe circle; iOS renders
+// transparency as black).
 const icons = [
-  "icon-192.png",
-  "icon-512.png",
-  "icon-192-maskable.png",
-  "icon-512-maskable.png",
-  // Opaque white tile: iOS renders transparency in touch icons as black,
-  // and the system's dark/tinted home-screen treatments need a full-bleed
-  // opaque source.
-  "apple-touch-icon.png",
+  { file: "icon-192.png", size: 192, tile: "rounded", disc: 0.62 },
+  { file: "icon-512.png", size: 512, tile: "rounded", disc: 0.62 },
+  { file: "icon-192-maskable.png", size: 192, tile: "bleed", disc: 0.6 },
+  { file: "icon-512-maskable.png", size: 512, tile: "bleed", disc: 0.6 },
+  { file: "apple-touch-icon.png", size: 180, tile: "bleed", disc: 0.64 },
 ];
 
-// Monochrome manifest icons (purpose: "monochrome") are alpha masks — the
-// platform supplies the fill color when tinting (Android themed icons,
-// notification badges) — so a single color-independent asset serves every
-// manifest variant.
+// Monochrome manifest icons are alpha masks: the platform supplies the fill
+// when tinting (Android themed icons, notification badges). Themed icons are
+// cropped to a circle of about 66%, so the glyph stays inside it.
 const monochromeIcons = [
-  { source: "icon-192.png", target: "icon-monochrome-192.png" },
-  { source: "icon-512.png", target: "icon-monochrome-512.png" },
+  { file: "icon-monochrome-192.png", size: 192 },
+  { file: "icon-monochrome-512.png", size: 512 },
 ];
+
+const faviconSizes = [16, 32];
 
 const mismatches = [];
 
-function parseHex(hex) {
-  return [1, 3, 5].map((index) =>
-    Number.parseInt(hex.slice(index, index + 2), 16),
-  );
+function installIconSvg(icon, shapes) {
+  return canvasSvg({
+    size: icon.size,
+    shapes,
+    disc: icon.disc,
+    background: {
+      fill: GROUND,
+      radius: icon.tile === "rounded" ? 0.225 : 0,
+    },
+  });
+}
+
+function render(svg, { flatten = false } = {}) {
+  const image = sharp(Buffer.from(svg), { density: 72 });
+  return (flatten ? image.flatten({ background: GROUND }) : image)
+    .png({ compressionLevel: 9 })
+    .toBuffer();
 }
 
 function outputFileName(file, color) {
   return file.replace(/\.png$/u, `-${color}.png`);
-}
-
-function tintTileIcon(data, colorRgb) {
-  const output = Buffer.from(data);
-  for (let index = 0; index < output.length; index += 4) {
-    const red = data[index];
-    const green = data[index + 1];
-    const blue = data[index + 2];
-    const alpha = data[index + 3];
-    if (alpha === 0) continue;
-
-    const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-    if (luma >= 245) continue;
-
-    const maskAlpha = Math.round(
-      255 * Math.sqrt((245 - luma) / 245) * (alpha / 255),
-    );
-    if (maskAlpha <= 0) continue;
-
-    const ratio = maskAlpha / 255;
-    output[index] = Math.round(colorRgb[0] * ratio + 255 * (1 - ratio));
-    output[index + 1] = Math.round(colorRgb[1] * ratio + 255 * (1 - ratio));
-    output[index + 2] = Math.round(colorRgb[2] * ratio + 255 * (1 - ratio));
-    output[index + 3] = alpha;
-  }
-  return output;
-}
-
-async function generatedPng(file, hex) {
-  const { data, info } = await sharp(join(publicDir, file))
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const output = tintTileIcon(data, parseHex(hex));
-
-  return sharp(output, {
-    raw: { width: info.width, height: info.height, channels: 4 },
-  })
-    .png()
-    .toBuffer();
 }
 
 function generatedManifest(baseManifest, color) {
@@ -109,38 +92,6 @@ function generatedManifest(baseManifest, color) {
       2,
     )}\n`,
   );
-}
-
-// Platforms use only the alpha channel of a monochrome icon as the tint
-// mask, so the glyph's darkness (against the tile's white backing) becomes
-// alpha — the same luma mask tintTileIcon uses to find glyph pixels.
-async function generatedMonochromePng(sourceFile) {
-  const { data, info } = await sharp(join(publicDir, sourceFile))
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const output = Buffer.from(data);
-  for (let index = 0; index < output.length; index += 4) {
-    const luma =
-      0.2126 * data[index] +
-      0.7152 * data[index + 1] +
-      0.0722 * data[index + 2];
-    const maskAlpha =
-      luma >= 245
-        ? 0
-        : Math.round(
-            255 * Math.sqrt((245 - luma) / 245) * (data[index + 3] / 255),
-          );
-    output[index] = 255;
-    output[index + 1] = 255;
-    output[index + 2] = 255;
-    output[index + 3] = maskAlpha;
-  }
-  return sharp(output, {
-    raw: { width: info.width, height: info.height, channels: 4 },
-  })
-    .png()
-    .toBuffer();
 }
 
 async function writeOrCheck(fileName, content) {
@@ -168,18 +119,57 @@ const baseManifest = JSON.parse(
   await readFile(join(publicDir, "manifest.webmanifest"), "utf8"),
 );
 
-for (const monochromeIcon of monochromeIcons) {
+// Default install icons: the colour mark.
+for (const icon of icons) {
   await writeOrCheck(
-    monochromeIcon.target,
-    await generatedMonochromePng(monochromeIcon.source),
+    icon.file,
+    await render(installIconSvg(icon, markShapes(palettes.sandy)), {
+      flatten: icon.tile === "bleed",
+    }),
   );
 }
 
+for (const monochromeIcon of monochromeIcons) {
+  await writeOrCheck(
+    monochromeIcon.file,
+    await render(
+      canvasSvg({
+        size: monochromeIcon.size,
+        shapes: glyphShapes("#fff"),
+        disc: 0.58,
+      }),
+    ),
+  );
+}
+
+// Tab favicons: the mark alone, no tile, filling the tab's pixel box. Dev
+// builds are blue. `-mono` is the one-colour glyph that the app recolours
+// when the user picks a favicon colour.
+for (const size of faviconSizes) {
+  const base = { size, disc: 1 };
+  await writeOrCheck(
+    `favicon-${size}x${size}.png`,
+    await render(canvasSvg({ ...base, shapes: markShapes(palettes.sandy) })),
+  );
+  await writeOrCheck(
+    `favicon-${size}x${size}-dev.png`,
+    await render(canvasSvg({ ...base, shapes: markShapes(palettes.dev) })),
+  );
+  await writeOrCheck(
+    `favicon-${size}x${size}-mono.png`,
+    await render(canvasSvg({ ...base, shapes: glyphShapes("#fff") })),
+  );
+}
+
+// A chosen colour fills the glyph on the same tile, so a project's tab and
+// its installed icon read as one colour.
 for (const [color, hex] of Object.entries(faviconColorValues)) {
-  for (const file of icons) {
+  for (const icon of icons) {
     await writeOrCheck(
-      outputFileName(file, color),
-      await generatedPng(file, hex),
+      outputFileName(icon.file, color),
+      await render(installIconSvg(icon, glyphShapes(hex)), {
+        flatten: icon.tile === "bleed",
+      }),
     );
   }
 
@@ -194,7 +184,7 @@ if (mismatches.length > 0) {
     [
       "Generated PWA icon assets are out of date:",
       ...mismatches.map((fileName) => `  ${fileName}`),
-      "Run `pnpm --filter @bb/app generate:pwa-icons`.",
+      "Run \`pnpm --filter @sandy/app generate:pwa-icons\`.",
     ].join("\n"),
   );
   process.exitCode = 1;

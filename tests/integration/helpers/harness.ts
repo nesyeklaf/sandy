@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
-import { ensurePersonalProject, type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { defaultFeatureFlags } from "@bb/domain";
+import { ensurePersonalProject, type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { defaultFeatureFlags } from "@sandy/domain";
 import {
   acquireDaemonLock,
   createHostDaemonApp,
@@ -15,7 +15,7 @@ import {
   persistHostId,
   type HostDaemon,
   type HostDaemonApp,
-} from "@bb/host-daemon/test";
+} from "@sandy/host-daemon/test";
 import { createLifecycleDedupers } from "../../../apps/server/src/lifecycle-dedupers.js";
 import { createApp } from "../../../apps/server/src/server.js";
 import { createAiServiceRegistry } from "../../../apps/server/src/services/ai/ai-service-registry.js";
@@ -39,7 +39,7 @@ import { PluginHostArtifactRegistry } from "../../../apps/server/src/services/pl
 import { createCliCommandService } from "../../../apps/server/src/services/system/cli-command.js";
 import { createProviderNativeRootsCache } from "../../../apps/server/src/services/providers/native-roots.js";
 import { createProviderLiveCommandsCache } from "../../../apps/server/src/services/providers/provider-live-commands.js";
-import { createBbAppManagedConfigReloader } from "../../../apps/server/src/services/system/bb-app-managed-config.js";
+import { createSandyAppManagedConfigReloader } from "../../../apps/server/src/services/system/sandy-app-managed-config.js";
 import { TerminalSessionLifecycle } from "../../../apps/server/src/services/terminals/terminal-session-lifecycle.js";
 import type {
   ServerLogger,
@@ -47,11 +47,11 @@ import type {
 } from "../../../apps/server/src/types.js";
 import { NotificationHub } from "../../../apps/server/src/ws/hub.js";
 import { WatchInterestCoordinator } from "../../../apps/server/src/ws/watch-interests.js";
-import { createPublicApiClient } from "@bb/server-contract";
+import { createPublicApiClient } from "@sandy/server-contract";
 import {
   killProcessesReferencingPath,
   resolveProjectEnvCandidates,
-} from "@bb/test-helpers";
+} from "@sandy/test-helpers";
 import { waitForHostConnected } from "./assertions.js";
 import { createIntegrationFetch } from "./fetch.js";
 import { isNodeError, removePathWithRetry } from "./remove-path.js";
@@ -197,7 +197,7 @@ async function startIntegrationServer(
     featureFlags: defaultFeatureFlags,
     hostDaemonPort: 3001,
     inheritedSkillsRootPaths: [],
-    appUrl: "https://bb.example.test",
+    appUrl: "https://sandy.example.test",
     serverPort: 0,
     sharedSkillRoots: { user: [], project: [] },
     isDevelopment: false,
@@ -218,7 +218,7 @@ async function startIntegrationServer(
   });
   await machineAuth.ensureReady();
   const lifecycleDedupers = createLifecycleDedupers();
-  const bbAppManagedConfig = await createBbAppManagedConfigReloader({
+  const sandyAppManagedConfig = await createSandyAppManagedConfigReloader({
     config,
     hub,
     logger: testLogger,
@@ -255,7 +255,7 @@ async function startIntegrationServer(
         write: () => Promise.reject(new Error("no Windows PATH in tests")),
       },
     }),
-    bbAppManagedConfig,
+    sandyAppManagedConfig,
     providerRegistry,
     providerNativeRoots: createProviderNativeRootsCache(),
     providerLiveCommands: createProviderLiveCommandsCache(),
@@ -400,7 +400,7 @@ export async function createIntegrationHarness(
   options: CreateHarnessOptions = {},
 ): Promise<IntegrationHarness> {
   await loadProjectEnvFile();
-  const tmpRoot = await fs.mkdtemp(path.join(tmpdir(), "bb-integration-"));
+  const tmpRoot = await fs.mkdtemp(path.join(tmpdir(), "sandy-integration-"));
   await fs.writeFile(
     path.join(tmpRoot, "parent.pid"),
     `${process.pid}\n`,

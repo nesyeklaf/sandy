@@ -3,10 +3,10 @@
   "name": "switch",
   "type": "registry:ui",
   "title": "switch",
-  "description": "BB ui \"switch\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"switch\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

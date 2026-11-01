@@ -1,8 +1,8 @@
-import { parseApplicationUrl } from "@bb/domain/application-url";
+import { parseApplicationUrl } from "@sandy/domain/application-url";
 import { useAtom } from "jotai";
 import { createBooleanPreferenceAtom } from "./browser-storage";
 
-const OPEN_LINKS_IN_APP_BROWSER_STORAGE_KEY = "bb.openLinksInAppBrowser";
+const OPEN_LINKS_IN_APP_BROWSER_STORAGE_KEY = "sandy.openLinksInAppBrowser";
 
 const OPEN_LINKS_IN_APP_BROWSER_DEFAULT = true;
 

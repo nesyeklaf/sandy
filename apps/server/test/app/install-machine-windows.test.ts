@@ -47,9 +47,9 @@ describe("Windows machine installer", () => {
 
   it("accepts an install or one lifecycle action and refuses mixed arguments", async () => {
     const { parseArguments } = await loadInstaller();
-    expect(parseArguments(["--bootstrap-env", "BB_ENROLLMENT"])).toMatchObject({
+    expect(parseArguments(["--bootstrap-env", "SANDY_ENROLLMENT"])).toMatchObject({
       action: null,
-      bootstrapEnv: "BB_ENROLLMENT",
+      bootstrapEnv: "SANDY_ENROLLMENT",
     });
     expect(
       parseArguments(["--uninstall", "--host-id", "host_1"]),
@@ -60,7 +60,7 @@ describe("Windows machine installer", () => {
       parseArguments(["--start", "--stop", "--host-id", "host_1"]),
     ).toThrow("Usage:");
     expect(() =>
-      parseArguments(["--bootstrap-env", "BB_ENROLLMENT", "--host-id", "x"]),
+      parseArguments(["--bootstrap-env", "SANDY_ENROLLMENT", "--host-id", "x"]),
     ).toThrow("Usage:");
   });
 
@@ -70,24 +70,24 @@ describe("Windows machine installer", () => {
       parseBootstrap(
         JSON.stringify({
           hostId: "host_1",
-          serverUrl: "https://bb.example.com/",
+          serverUrl: "https://sandy.example.com/",
           headers: { "x-access": "token", ignored: 1 },
           reconnect: true,
-          dataDir: "C:\\Users\\me\\.bb-machines\\bb.example.com",
+          dataDir: "C:\\Users\\me\\.sandy-machines\\sandy.example.com",
         }),
       ),
     ).toEqual({
-      dataDir: "C:\\Users\\me\\.bb-machines\\bb.example.com",
+      dataDir: "C:\\Users\\me\\.sandy-machines\\sandy.example.com",
       headers: { "x-access": "token" },
       hostId: "host_1",
       reconnect: true,
-      serverUrl: "https://bb.example.com",
+      serverUrl: "https://sandy.example.com",
     });
     expect(() =>
       parseBootstrap(
         JSON.stringify({
           hostId: "host_1",
-          serverUrl: "https://user:secret@bb.example.com",
+          serverUrl: "https://user:secret@sandy.example.com",
         }),
       ),
     ).toThrow("invalid server URL");
@@ -97,14 +97,14 @@ describe("Windows machine installer", () => {
   it("names the startup entry after the server and machine", async () => {
     const { serviceName } = await loadInstaller();
     expect(serviceName("http://127.0.0.1:38886", "host_a/b")).toBe(
-      "bb-host-daemon-127-0-0-1-38886-host_a-b",
+      "sandy-host-daemon-127-0-0-1-38886-host_a-b",
     );
   });
 
   it("starts the daemon at sign-in through a hidden PowerShell with quoted paths", async () => {
     const { startupCommand } = await loadInstaller();
     const command = startupCommand({
-      dataDir: "C:\\Users\\O'Brien\\.bb-machines\\bb",
+      dataDir: "C:\\Users\\O'Brien\\.sandy-machines\\sandy",
       hostId: "host_1",
       nodePath: "C:\\Program Files\\nodejs\\node.exe",
     });
@@ -126,7 +126,7 @@ describe("Windows machine installer", () => {
       expect(await anonymous.text()).toMatch(/^throw 'This installer needs/u);
 
       const unknown = await harness.app.request("/install.ps1", {
-        headers: { "X-BB-Enrollment": "bbde_unknown" },
+        headers: { "X-SANDY-Enrollment": "sandyde_unknown" },
       });
       expect(unknown.status).toBe(200);
       expect(await unknown.text()).toMatch(

@@ -8,10 +8,10 @@ import type {
   PendingInteractionCreate,
   PendingInteractionResolution,
   ThreadEvent,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { promptTextInput } from "./test/prompt-input.js";
-import { parseJsonRpcLine } from "@bb/provider-bridge-protocol/bridge-kit";
-import type { JsonRpcMessage } from "@bb/provider-bridge-protocol/bridge-kit";
+import { parseJsonRpcLine } from "@sandy/provider-bridge-protocol/bridge-kit";
+import type { JsonRpcMessage } from "@sandy/provider-bridge-protocol/bridge-kit";
 import { createProviderForId } from "./provider-registry.js";
 import { handleRuntimeProviderRequest } from "./runtime-provider-requests.js";
 import {
@@ -106,7 +106,7 @@ async function answerDirectRequest(args: {
   try {
     handleRuntimeProviderRequest({
       toolCalls: new RuntimeToolCalls(),
-      getActiveTurnId: args.getActiveTurnId ?? (() => "bb-turn-1"),
+      getActiveTurnId: args.getActiveTurnId ?? (() => "sandy-turn-1"),
       getThreadExecutionOptions:
         args.getThreadExecutionOptions ?? (() => undefined),
       onInteractiveRequest: args.onInteractiveRequest,
@@ -134,7 +134,7 @@ describe("createAgentRuntime interactive requests", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "bb-runtime-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "sandy-runtime-test-"));
   });
 
   afterEach(() => {
@@ -540,7 +540,7 @@ describe("createAgentRuntime interactive requests", () => {
 
   it.each([
     ["explicit turn", "turn-1", "turn-1"],
-    ["active turn", null, "bb-active-turn"],
+    ["active turn", null, "sandy-active-turn"],
   ])(
     "forwards a plugin-defined request for an %s even under a deny escalation",
     async (_name, providerTurnId, expectedTurnId) => {
@@ -567,7 +567,7 @@ describe("createAgentRuntime interactive requests", () => {
           },
         },
         handshake: { approvalEnforcedBy: "runtime" },
-        getActiveTurnId: () => "bb-active-turn",
+        getActiveTurnId: () => "sandy-active-turn",
         getThreadExecutionOptions: () => deniedEscalationOptions,
         onInteractiveRequest,
       });

@@ -1,6 +1,6 @@
 import { AppPanelTabsPublisher } from "@/lib/app-panel-tabs";
-import { appendQuoteAndAttachmentsToDraft } from "@bb/client-core";
-import type { ComposerAttachment } from "@get-bb/plugin-sdk";
+import { appendQuoteAndAttachmentsToDraft } from "@sandy/client-core";
+import type { ComposerAttachment } from "@sandy-sdk/plugin-sdk";
 import { createCoreComposerActions } from "@/lib/plugin-composer-handle";
 
 import {
@@ -18,11 +18,11 @@ import {
   type Host,
   type ProviderInfo,
   type ThreadListEntry,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   SidebarBootstrapResponse,
   TerminalSession,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   NewThreadComposer,
   type NewThreadComposerState,
@@ -32,7 +32,7 @@ import {
   ProviderCliBanner,
   providerCliBlockedReason,
 } from "@/components/promptbox/banner/ProviderCliBanner";
-import { PROJECT_CHECKOUT_ENVIRONMENT_PROVIDER_ID } from "@bb/client-core";
+import { PROJECT_CHECKOUT_ENVIRONMENT_PROVIDER_ID } from "@sandy/client-core";
 import {
   encodeProviderValue,
   encodeReuseValue,
@@ -57,13 +57,13 @@ import {
   LazyBrowserTabDeck,
   preloadThreadSecondaryPanel,
 } from "@/components/secondary-panel/lazySecondaryPanelComponents";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PageShell } from "@/components/ui/page-shell.js";
-import { Button } from "@bb/shared-ui/button";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { Button } from "@sandy/shared-ui/button";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import {
   createPanelActionDestination,
   usePluginNewThreadPanelActions,
@@ -89,7 +89,7 @@ import {
   type OpenAttachmentRequest,
 } from "@/components/secondary-panel/AttachmentOpenerContext";
 import { PluginComposerHostProvider } from "@/components/plugin/plugin-composer-host";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import { useQuickCreateProjectController } from "@/hooks/useQuickCreateProject";
 import { useNavigateToThreadAfterCreatePreference } from "@/lib/root-compose-create-preference";
 import {
@@ -101,7 +101,7 @@ import {
   getProjectComposeRoutePath,
   getRootComposeRoutePath,
 } from "@/lib/route-paths";
-import { isDesktopBrowserAvailable } from "@/lib/bb-desktop";
+import { isDesktopBrowserAvailable } from "@/lib/sandy-desktop";
 import {
   useFixedPanelTabsState,
   useFixedPanelTabsStorageMaintenance,
@@ -126,7 +126,7 @@ import {
   useThreadFileTabs,
   type FileSearchSelection,
 } from "@/components/secondary-panel/useThreadFileTabs";
-import { isSecondaryFileTab } from "@bb/client-core";
+import { isSecondaryFileTab } from "@sandy/client-core";
 import {
   buildTerminalSyncedSecondaryFileTabs,
   syncTerminalTabsInFixedPanelState,

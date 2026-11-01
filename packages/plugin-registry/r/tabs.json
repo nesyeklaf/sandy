@@ -3,12 +3,12 @@
   "name": "tabs",
   "type": "registry:ui",
   "title": "tabs",
-  "description": "BB ui \"tabs\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"tabs\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-tabs"
   ],
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

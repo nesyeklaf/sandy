@@ -3,12 +3,12 @@
   "name": "label",
   "type": "registry:ui",
   "title": "label",
-  "description": "BB ui \"label\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"label\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-label"
   ],
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

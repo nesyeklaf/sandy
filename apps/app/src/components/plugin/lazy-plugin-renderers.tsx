@@ -6,10 +6,10 @@ import type {
   DiffProps,
   MarkdownProps,
   SourceCodeProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { defineSplit } from "@/lib/define-split";
 import { SourceLoadingSkeleton } from "@/components/code/code-loading-skeletons";
-import { DiffLoadingSkeleton } from "@bb/shared-ui/diff-loading-skeleton";
+import { DiffLoadingSkeleton } from "@sandy/shared-ui/diff-loading-skeleton";
 
 export const LazyPluginMarkdown = defineSplit<MarkdownProps>({
   id: "plugin-markdown",

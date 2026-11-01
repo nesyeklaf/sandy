@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
-import type { ExperimentalThreadContextSegmentProps } from "@get-bb/plugin-sdk";
+import type { ExperimentalThreadContextSegmentProps } from "@sandy-sdk/plugin-sdk";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -201,7 +201,7 @@ describe("thread context segments", () => {
     );
     expect(
       screen.getByText(
-        "Plugin summary bb--core/parent-thread,demo/status,bb--git/changed-files",
+        "Plugin summary sandy--core/parent-thread,demo/status,sandy--git/changed-files",
       ),
     ).toBeTruthy();
     expect(seenProps.at(-1)).toMatchObject({
@@ -219,7 +219,7 @@ describe("thread context segments", () => {
 
     expect(
       screen.getByText(
-        "Plugin summary bb--core/parent-thread,bb--git/changed-files,demo/status",
+        "Plugin summary sandy--core/parent-thread,sandy--git/changed-files,demo/status",
       ),
     ).toBeTruthy();
   });

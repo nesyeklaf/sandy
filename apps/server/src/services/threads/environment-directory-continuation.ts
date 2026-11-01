@@ -1,6 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import { events as storedEvents, getThread } from "@bb/db";
-import { renderTemplate } from "@bb/templates";
+import { events as storedEvents, getThread } from "@sandy/db";
+import { renderTemplate } from "@sandy/templates";
 import { z } from "zod";
 import type {
   AppDeps,

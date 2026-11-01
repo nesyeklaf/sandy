@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { arrayMove } from "@dnd-kit/sortable";
-import type { Host } from "@bb/domain";
-import type { ProjectWithThreadsResponse } from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
-import "@bb/shared-ui/icon-extended";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { Host } from "@sandy/domain";
+import type { ProjectWithThreadsResponse } from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
+import "@sandy/shared-ui/icon-extended";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   ResourceOverflowMenu,
   ResourceRowDetailChevron,
   targetsResourceAction,
-} from "@bb/shared-ui/resource-list";
+} from "@sandy/shared-ui/resource-list";
 import { ProjectPathDialog } from "@/components/dialogs/ProjectPathDialog";
 import {
   ProjectDeleteDialog,
@@ -41,7 +41,7 @@ import {
 } from "./sortable-settings-rows";
 
 const PROJECTS_SECTION_DESCRIPTION =
-  "Repositories bb can work in. Drag to change the order projects appear in the sidebar.";
+  "Repositories sandy can work in. Drag to change the order projects appear in the sidebar.";
 
 export function formatGitRemote(url: string): string {
   const sshMatch = /^[^@]+@([^:]+):(.+?)(?:\.git)?$/.exec(url);

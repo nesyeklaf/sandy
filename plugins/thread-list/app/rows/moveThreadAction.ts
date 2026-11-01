@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import {
   experimental_THREAD_ACTION_GROUPS,
   experimental_useSidebarThreads,
-  type PluginBrowserBbSdk,
+  type PluginBrowserSandySdk,
   type PluginThreadActionRegistration,
   type PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   buildSidebarEntitySectionId,
   normalizeSidebarSectionOrder,
@@ -27,7 +27,7 @@ const THREADS_CHOICE_ID = "threads";
 const ANCESTORS_BATCH_SIZE = 200;
 
 async function selectedRoots(
-  sdk: PluginBrowserBbSdk,
+  sdk: PluginBrowserSandySdk,
   threads: readonly PluginThreadActionTarget[],
 ): Promise<PluginThreadActionTarget[]> {
   const threadIds = threads.map((thread) => thread.id);

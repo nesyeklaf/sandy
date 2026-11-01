@@ -111,10 +111,10 @@ revision is stored or checked. Other edits do not automatically reject a cursor.
 A content cut can return only part of a group. Ancestor summaries retain their
 full IDs, source bounds, counts, and status; their child arrays can contain only
 part of the group. Prepend older pages with
-`prependOlderTimelineRows` from `@bb/client-core`: it joins turn children and
+`prependOlderTimelineRows` from `@sandy/client-core`: it joins turn children and
 delegation children recursively by ID while preserving order. Do not flatten
 responses by concatenation or replace an entire summary solely because its ID
-was already seen. `bb thread log --all --format verbose` uses this merge.
+was already seen. `sandy thread log --all --format verbose` uses this merge.
 
 The 4 MiB response target and event setting determine content-page boundaries
 after grouping. At least one indivisible row is returned, even if it exceeds
@@ -148,7 +148,7 @@ resolves. An item the range does not contain returns HTTP 400
 
 `deferContent=true` on the timeline and on `turn-summary-details` leaves out
 content that is only visible when a settled row is expanded. Without it,
-responses keep every row's content inline, as `bb thread log` and SDK callers
+responses keep every row's content inline, as `sandy thread log` and SDK callers
 expect. With it:
 
 - a delegation that is no longer pending and has children returns
@@ -206,7 +206,7 @@ keeps at most 16 threads within 32 MB of window JSON, dropping the least
 recently used threads first, and never keeps a window over 8 MB. A dropped tag
 only costs a full window.
 
-`applyThreadTimelineDelta` from `@bb/server-contract` rebuilds the full window,
+`applyThreadTimelineDelta` from `@sandy/server-contract` rebuilds the full window,
 or returns `null` when the held window's tag differs from `afterTag` or the
 delta does not fit its rows; the client then reads again with its own tag. The
 client keeps optimistic rows after the server's rows, so ranges still address
@@ -321,7 +321,7 @@ layout. iOS WebKit moves the scroll position on its own, for example when
 inline elements are re-inserted, and these scrolls cannot be told apart from
 intended ones. A detached view follows such a scroll as navigation, such as
 find in page. While the desktop window find bar is open, from the
-`bb:window-find-open` event until the window regains focus, an attached view
+`sandy:window-find-open` event until the window regains focus, an attached view
 follows it too, so find works from the bottom. Browser find on the web gets no
 such signal, so from the bottom it is pulled back.
 

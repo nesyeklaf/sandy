@@ -8,7 +8,7 @@ import { WebSocket } from "ws";
 import {
   DESKTOP_BROWSER_BROKER_DESCRIPTOR_FILE,
   desktopBrowserBrokerRequestSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   startDesktopBrowserBroker,
   type DesktopBrowserBroker,
@@ -38,13 +38,13 @@ afterEach(async () => {
   );
 });
 async function setup(timeoutMs = 1000) {
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-browser-broker-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-browser-broker-"));
   directories.push(dataDir);
   const onChanged = vi.fn();
   const broker = await startDesktopBrowserBroker({
     dataDir,
     hostId: "host-1",
-    serverUrl: "https://bb.example",
+    serverUrl: "https://sandy.example",
     onChanged,
     requestTimeoutMs: timeoutMs,
   });
@@ -54,7 +54,7 @@ async function setup(timeoutMs = 1000) {
 }
 async function connect(
   broker: DesktopBrowserBroker,
-  serverUrl = "https://bb.example",
+  serverUrl = "https://sandy.example",
 ) {
   const socket = new WebSocket(broker.descriptor.url, {
     headers: { Authorization: `Bearer ${broker.descriptor.token}` },
@@ -106,7 +106,7 @@ describe("desktop browser broker", () => {
       {},
       {
         Authorization: `Bearer ${broker.descriptor.token}`,
-        Origin: "https://bb.example",
+        Origin: "https://sandy.example",
       },
     ];
     for (const headers of invalidHeaders) {
@@ -242,7 +242,7 @@ describe("desktop browser broker", () => {
       JSON.stringify({
         type: "register",
         hostId: "host-1",
-        serverUrl: "https://bb.example",
+        serverUrl: "https://sandy.example",
         instances: [
           {
             instanceId: scope.instanceId,
@@ -269,7 +269,7 @@ it("proves the active broker without exposing its token and retires proofs on di
   const challenge = "c".repeat(64);
   expect(broker.prove(challenge)).toEqual({
     proof: createHmac("sha256", broker.descriptor.token)
-      .update(`bb-desktop-broker:${challenge}`)
+      .update(`sandy-desktop-broker:${challenge}`)
       .digest("hex"),
   });
   expect(broker.prove("d".repeat(64))).not.toEqual(broker.prove(challenge));

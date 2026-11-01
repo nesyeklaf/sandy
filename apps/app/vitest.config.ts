@@ -43,12 +43,12 @@ export default defineWorkspaceTestConfig({
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
       aliases: { "@": path.resolve(__dirname, "./src") },
-      name: "@bb/app",
+      name: "@sandy/app",
       include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
       exclude: [
         "dist/**",
         "node_modules/**",
-        ...(process.env.BB_SIDEBAR_BENCH === "1"
+        ...(process.env.SANDY_SIDEBAR_BENCH === "1"
           ? []
           : ["src/components/sidebar/sidebar.bench.test.tsx"]),
       ],

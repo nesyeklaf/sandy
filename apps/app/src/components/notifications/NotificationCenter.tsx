@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { Popover, PopoverAnchor, PopoverContent } from "@bb/shared-ui/popover";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { Popover, PopoverAnchor, PopoverContent } from "@sandy/shared-ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { HOVER_REVEAL_NO_HOVER_VISIBLE_CLASS } from "@bb/shared-ui/hover-reveal";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/tooltip";
+import { HOVER_REVEAL_NO_HOVER_VISIBLE_CLASS } from "@sandy/shared-ui/hover-reveal";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
 import { appToast, iconForTone } from "@/components/ui/app-toast";
 import { copyToClipboard } from "@/lib/clipboard";

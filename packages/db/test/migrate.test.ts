@@ -12,7 +12,7 @@ import {
   dropQueuedMessageEditHeldUntilColumn,
   rewindQueuedMessageStateMigration,
 } from "./helpers/rewind.js";
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import {
   createQueuedThreadMessage,
   createThread,
@@ -1807,7 +1807,7 @@ describe("migrate", () => {
         machineGitCredentialsEnabled: true,
         streamerMode: false,
         allowFastServiceTier: true,
-        managedBranchPrefix: "bb/",
+        managedBranchPrefix: "sandy/",
         idleProviderSessionTimeoutMinutes: 30,
         onboardingCompletedAt: "2026-08-01T00:00:00.000Z",
         earlyAdopter: false,

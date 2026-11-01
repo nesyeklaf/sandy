@@ -1,22 +1,22 @@
 import {
   hostToolchain,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { timingSafeEqual } from "node:crypto";
 import { mkdir, rename, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { readBbAppRuntimeFile } from "@bb/config/app-runtime-file";
-import { resolveCodexHome } from "@bb/config/codex-home";
-import { isLoopbackHostname } from "@bb/config/loopback";
-import { createNodeVerifiedProcessOps } from "@bb/config/verified-process-stop";
-import type { ServerMoveStepId } from "@bb/domain";
+import { readSandyAppRuntimeFile } from "@sandy/config/app-runtime-file";
+import { resolveCodexHome } from "@sandy/config/codex-home";
+import { isLoopbackHostname } from "@sandy/config/loopback";
+import { createNodeVerifiedProcessOps } from "@sandy/config/verified-process-stop";
+import type { ServerMoveStepId } from "@sandy/domain";
 import type {
   HostDaemonOnlineRpcResult,
   HostPlatform,
   ServerMoveProgressMessage,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   archiveExistingServerData,
   discardImportBackups,
@@ -35,7 +35,7 @@ import {
   ServerArchiveError,
   writeLastServerMoveFile,
   writeServerImportFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import {
   CommandDispatchError,
   ExpectedCommandDispatchError,
@@ -67,7 +67,7 @@ import {
 } from "./host-probes.js";
 import {
   detectLauncherMovedMode,
-  isLiveBbAppRuntime,
+  isLiveSandyAppRuntime,
   serverUrlPort,
   type LauncherMovedMode,
   type LauncherProcessOps,
@@ -94,11 +94,11 @@ import {
   validateServerHeaders,
 } from "./moved-server.js";
 import {
-  npmPrefixBbAppRoot,
-  readBbAppVersion,
-  resolveBbAppLauncherEntry,
-  resolveBbServerEntry,
-  resolvePackagedBbAppRoot,
+  npmPrefixSandyAppRoot,
+  readSandyAppVersion,
+  resolveSandyAppLauncherEntry,
+  resolveSandyServerEntry,
+  resolvePackagedSandyAppRoot,
 } from "./package-layout.js";
 import {
   createDefaultPendingServerLauncher,
@@ -140,11 +140,11 @@ const ACTIVATION_SESSION_CLOSE_TIMEOUT_MS = 90_000;
 const SESSION_CLOSE_POLL_INTERVAL_MS = 250;
 const PROBE_TIMEOUT_MS = 10_000;
 const PROGRESS_INTERVAL_MS = 1_000;
-const BB_APP_MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024;
-const SERVER_DATABASE_PATHS = ["bb.db", "bb.db-wal", "bb.db-shm"] as const;
+const SANDY_APP_MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024;
+const SERVER_DATABASE_PATHS = ["sandy.db", "sandy.db-wal", "sandy.db-shm"] as const;
 const HOST_ARTIFACT_DIGEST_FILE_NAME = "host-artifact.sha256";
-const STANDALONE_DATA_DIR_NAME = ".bb";
-const SERVER_DATABASE_FILE_NAME = "bb.db";
+const STANDALONE_DATA_DIR_NAME = ".sandy";
+const SERVER_DATABASE_FILE_NAME = "sandy.db";
 const SERVER_MOVE_LOG_FILE_NAME = "server-move.log";
 const INSTALL_DAEMON_PID_FILE_NAME = "install-daemon.pid";
 const PENDING_SERVER_LOG_FILE_NAME = "server-move-pending-server.log";
@@ -175,7 +175,7 @@ export interface ServerMoveServiceOptions {
   runCommand: ServerMoveCommandRunner;
   spawnDetached: DetachedProcessSpawner;
   launchPendingServer: PendingServerLauncher;
-  installBbApp: (tarballPath: string) => Promise<void>;
+  installSandyApp: (tarballPath: string) => Promise<void>;
   checkGhAuthenticated: GhAuthenticationCheck;
   checkPortAvailable: PortAvailabilityCheck;
   processOps: LauncherProcessOps;
@@ -204,7 +204,7 @@ export function defaultServerMoveServiceOptions() {
     launchPendingServer: createDefaultPendingServerLauncher(
       defaultDetachedProcessSpawner,
     ),
-    installBbApp: (tarballPath: string) =>
+    installSandyApp: (tarballPath: string) =>
       defaultInstallTarball(tarballPath, defaultRunProcess),
     checkGhAuthenticated: defaultGhAuthenticationCheck,
     checkPortAvailable: defaultPortAvailabilityCheck,
@@ -330,7 +330,7 @@ export class ServerMoveService {
         );
     const [
       serverEntry,
-      bbAppVersion,
+      sandyAppVersion,
       dataDirHasDatabase,
       oldServerCopyPending,
       importBackupPresent,
@@ -341,9 +341,9 @@ export class ServerMoveService {
       diskFreeBytes,
     ] = await Promise.all([
       this.resolveServerEntry(),
-      readBbAppVersion({
+      readSandyAppVersion({
         env: this.options.env,
-        packageRoot: resolvePackagedBbAppRoot(this.options.daemonEntryPath),
+        packageRoot: resolvePackagedSandyAppRoot(this.options.daemonEntryPath),
       }),
       this.dataDirHasDatabase(),
       this.oldServerCopyPending(),
@@ -370,7 +370,7 @@ export class ServerMoveService {
       dataDir,
       platform: this.options.platform,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
-      bbAppVersion,
+      sandyAppVersion,
       serverEntryAvailable: serverEntry !== null,
       existingServerData:
         standaloneDatabaseSize === null
@@ -405,7 +405,7 @@ export class ServerMoveService {
         reachable: false,
         message:
           health === null
-            ? `${command.url} answered, but it is not the new bb server`
+            ? `${command.url} answered, but it is not the new sandy server`
             : `${command.url} answered for a different server move`,
         state: null,
       };
@@ -571,7 +571,7 @@ export class ServerMoveService {
     });
     this.options.logger.info(
       { moveId: marker.moveId, entries: marker.oldCopyEntries.length },
-      "Deleted the old bb server copy",
+      "Deleted the old sandy server copy",
     );
     return { deleted: true };
   }
@@ -674,7 +674,7 @@ export class ServerMoveService {
     await rm(join(dataDir, SERVER_IMPORT_FILE_NAME), { force: true });
     this.options.logger.info(
       { moveId: state.moveId, plan: plan.kind },
-      "Activated the imported bb server; switching this machine to run it",
+      "Activated the imported sandy server; switching this machine to run it",
     );
     if (plan.kind === "launcher") {
       await rm(join(dataDir, SERVER_MOVED_FILE_NAME), { force: true });
@@ -706,7 +706,7 @@ export class ServerMoveService {
     const { dataDir } = this.options;
     if ((await this.resolveServerEntry()) === null) {
       throw rejectActivation(
-        "This machine's bb installation does not include the bb server",
+        "This machine's sandy installation does not include the sandy server",
       );
     }
     if (fixedKind === "launcher") {
@@ -717,7 +717,7 @@ export class ServerMoveService {
       if (movedMode !== null) {
         if (movedMode.serverPort !== state.serverPort) {
           throw rejectActivation(
-            `The bb launcher on this machine serves port ${String(movedMode.serverPort)}, but the move expects port ${state.serverPort}`,
+            `The sandy launcher on this machine serves port ${String(movedMode.serverPort)}, but the move expects port ${state.serverPort}`,
           );
         }
         return { kind: "launcher" };
@@ -728,7 +728,7 @@ export class ServerMoveService {
       definition = await this.findServiceDefinition();
     } catch (error) {
       throw rejectActivation(
-        `Could not read this machine's bb service definition: ${errorMessage(error)}`,
+        `Could not read this machine's sandy service definition: ${errorMessage(error)}`,
       );
     }
     if (definition !== null && fixedKind !== "replacement") {
@@ -751,20 +751,20 @@ export class ServerMoveService {
         return { kind: "service", definition, programArguments };
       } catch (error) {
         throw rejectActivation(
-          `Cannot switch ${definition.path} to run the bb server: ${errorMessage(error)}`,
+          `Cannot switch ${definition.path} to run the sandy server: ${errorMessage(error)}`,
         );
       }
     }
     if (fixedKind === "service") {
       throw new Error(
-        `The bb service definition for ${dataDir} disappeared during activation`,
+        `The sandy service definition for ${dataDir} disappeared during activation`,
       );
     }
     if (fixedKind === null) {
       const supervisor = await this.detectUnrecognizedSupervisor();
       if (supervisor !== null) {
         throw rejectActivation(
-          `This machine's bb runs under ${supervisor}, but no bb service definition for ${dataDir} was found`,
+          `This machine's sandy runs under ${supervisor}, but no sandy service definition for ${dataDir} was found`,
         );
       }
     }
@@ -773,7 +773,7 @@ export class ServerMoveService {
     }
     const launcherEntry = await this.resolveLauncherEntry();
     if (launcherEntry === null) {
-      throw rejectActivation("No bb-app launcher was found on this machine");
+      throw rejectActivation("No sandy-app launcher was found on this machine");
     }
     return {
       kind: "replacement",
@@ -859,7 +859,7 @@ export class ServerMoveService {
     } catch (error) {
       this.options.logger.error(
         { err: error, moveId: state.moveId },
-        "The old bb server moved to this machine, but this machine cannot start the server",
+        "The old sandy server moved to this machine, but this machine cannot start the server",
       );
       return true;
     }
@@ -882,7 +882,7 @@ export class ServerMoveService {
     await writeIncomingMoveState(dataDir, activatingState);
     this.options.logger.warn(
       { moveId: state.moveId, serverUrl },
-      "The old bb server committed the move to this machine without confirming; finishing activation",
+      "The old sandy server committed the move to this machine without confirming; finishing activation",
     );
     void this.startActivation(activatingState, false);
     return true;
@@ -946,16 +946,16 @@ export class ServerMoveService {
     ) {
       return;
     }
-    const runtime = await readBbAppRuntimeFile(standaloneDataDir);
+    const runtime = await readSandyAppRuntimeFile(standaloneDataDir);
     if (
       runtime === null ||
-      !(await isLiveBbAppRuntime(runtime, this.options.processOps))
+      !(await isLiveSandyAppRuntime(runtime, this.options.processOps))
     ) {
       return;
     }
     throw new ExpectedCommandDispatchError(
       "server_move_rejected",
-      `bb is running from ${standaloneDataDir} on this machine (pid ${runtime.pid}). Quit bb there first, then start the move again.`,
+      `sandy is running from ${standaloneDataDir} on this machine (pid ${runtime.pid}). Quit sandy there first, then start the move again.`,
     );
   }
 
@@ -1023,7 +1023,7 @@ export class ServerMoveService {
       if (this.options.now() >= deadline) {
         throw new CommandDispatchError(
           SERVER_MOVE_START_FAILED,
-          `Port ${port} is still in use on this machine after ${Math.round(this.options.portReleaseTimeoutMs / 1000)}s. Stop whatever answers on that port (for bb, restart bb on this machine), then start the move again.`,
+          `Port ${port} is still in use on this machine after ${Math.round(this.options.portReleaseTimeoutMs / 1000)}s. Stop whatever answers on that port (for sandy, restart sandy on this machine), then start the move again.`,
         );
       }
       await this.options.sleep(PORT_RELEASE_POLL_INTERVAL_MS);
@@ -1042,9 +1042,9 @@ export class ServerMoveService {
     const roots = new Set<string>();
     const npmPrefix = this.npmPrefix();
     if (npmPrefix !== null) {
-      roots.add(npmPrefixBbAppRoot(npmPrefix));
+      roots.add(npmPrefixSandyAppRoot(npmPrefix));
     }
-    const packagedRoot = resolvePackagedBbAppRoot(this.options.daemonEntryPath);
+    const packagedRoot = resolvePackagedSandyAppRoot(this.options.daemonEntryPath);
     if (packagedRoot !== null) {
       roots.add(packagedRoot);
     }
@@ -1052,7 +1052,7 @@ export class ServerMoveService {
   }
 
   private npmPrefix(): string | null {
-    const npmPrefix = this.options.env.BB_APP_NPM_PREFIX?.trim();
+    const npmPrefix = this.options.env.SANDY_APP_NPM_PREFIX?.trim();
     return npmPrefix !== undefined && npmPrefix !== "" && isAbsolute(npmPrefix)
       ? npmPrefix
       : null;
@@ -1060,7 +1060,7 @@ export class ServerMoveService {
 
   private async resolveServerEntry(): Promise<string | null> {
     for (const root of this.packageRoots()) {
-      const entry = await resolveBbServerEntry(root);
+      const entry = await resolveSandyServerEntry(root);
       if (entry !== null) {
         return entry;
       }
@@ -1071,13 +1071,13 @@ export class ServerMoveService {
   private async resolveLauncherEntry(): Promise<string | null> {
     const npmPrefix = this.npmPrefix();
     if (npmPrefix !== null) {
-      const npmBin = join(npmPrefix, "bin", "bb-app");
+      const npmBin = join(npmPrefix, "bin", "sandy-app");
       if (await pathExists(npmBin)) {
         return npmBin;
       }
     }
     for (const root of this.packageRoots()) {
-      const entry = await resolveBbAppLauncherEntry(root);
+      const entry = await resolveSandyAppLauncherEntry(root);
       if (entry !== null) {
         return entry;
       }
@@ -1089,12 +1089,12 @@ export class ServerMoveService {
     const sanitized = sanitizeInheritedChildProcessEnv({
       env: this.options.env,
     });
-    const npmPrefix = this.options.env.BB_APP_NPM_PREFIX;
+    const npmPrefix = this.options.env.SANDY_APP_NPM_PREFIX;
     return {
       ...sanitized,
       PATH: hostToolchain.environment(sanitized).PATH,
-      BB_DATA_DIR: this.options.dataDir,
-      ...(npmPrefix === undefined ? {} : { BB_APP_NPM_PREFIX: npmPrefix }),
+      SANDY_DATA_DIR: this.options.dataDir,
+      ...(npmPrefix === undefined ? {} : { SANDY_APP_NPM_PREFIX: npmPrefix }),
       ...(forcesNoServiceManager(this.options.env)
         ? { [SERVER_MOVE_SERVICE_MANAGER_ENV]: "none" }
         : {}),
@@ -1211,14 +1211,14 @@ export class ServerMoveService {
     try {
       await mkdir(moveDir, { recursive: true, mode: 0o700 });
       await updateState({});
-      if (command.bbApp !== null) {
-        await this.installBbApp(command, moveDir, signal);
+      if (command.sandyApp !== null) {
+        await this.installSandyApp(command, moveDir, signal);
       }
       const serverEntry = await this.resolveServerEntry();
       if (serverEntry === null) {
         throw new CommandDispatchError(
           "server_move_server_entry_unavailable",
-          "This machine's bb installation does not include the bb server",
+          "This machine's sandy installation does not include the sandy server",
         );
       }
       const archivePath = join(moveDir, ARCHIVE_FILE_NAME);
@@ -1302,7 +1302,7 @@ export class ServerMoveService {
       );
       const logPath = this.logPath(PENDING_SERVER_LOG_FILE_NAME);
       const pid = await this.options.launchPendingServer({
-        bbServerEntry: serverEntry,
+        sandyServerEntry: serverEntry,
         dataDir,
         serverPort: command.serverPort,
         hostDaemonPort: this.options.hostDaemonPort,
@@ -1349,39 +1349,39 @@ export class ServerMoveService {
     }
   }
 
-  private async installBbApp(
+  private async installSandyApp(
     command: CommandOf<"server_move.prepare">,
     moveDir: string,
     signal: AbortSignal,
   ): Promise<void> {
-    const bbApp = command.bbApp;
-    if (bbApp === null) {
+    const sandyApp = command.sandyApp;
+    if (sandyApp === null) {
       return;
     }
-    const tarballPath = join(moveDir, `bb-app-${bbApp.sha256}.tgz`);
+    const tarballPath = join(moveDir, `sandy-app-${sandyApp.sha256}.tgz`);
     await this.download({
       moveId: command.moveId,
       step: "update-target",
-      label: `bb ${bbApp.version}`,
-      downloadPath: bbApp.downloadPath,
+      label: `sandy ${sandyApp.version}`,
+      downloadPath: sandyApp.downloadPath,
       destinationPath: tarballPath,
-      sha256: bbApp.sha256,
-      sizeBytes: bbApp.sizeBytes,
-      maxSizeBytes: BB_APP_MAX_DOWNLOAD_BYTES,
+      sha256: sandyApp.sha256,
+      sizeBytes: sandyApp.sizeBytes,
+      maxSizeBytes: SANDY_APP_MAX_DOWNLOAD_BYTES,
       signal,
     });
     signal.throwIfAborted();
     this.emitProgress(
       command.moveId,
       "update-target",
-      `Installing bb ${bbApp.version}`,
+      `Installing sandy ${sandyApp.version}`,
     );
     try {
-      await this.options.installBbApp(tarballPath);
+      await this.options.installSandyApp(tarballPath);
     } catch (error) {
       throw new CommandDispatchError(
         "server_move_install_failed",
-        `Could not install bb ${bbApp.version}: ${errorMessage(error)}`,
+        `Could not install sandy ${sandyApp.version}: ${errorMessage(error)}`,
       );
     }
     await rm(join(this.options.dataDir, HOST_ARTIFACT_DIGEST_FILE_NAME), {
@@ -1391,7 +1391,7 @@ export class ServerMoveService {
     this.emitProgress(
       command.moveId,
       "update-target",
-      `Installed bb ${bbApp.version}`,
+      `Installed sandy ${sandyApp.version}`,
     );
   }
 
@@ -1452,7 +1452,7 @@ export class ServerMoveService {
     this.emitProgress(
       moveId,
       "start-target",
-      `Archiving the existing bb server data in ${originalPath}`,
+      `Archiving the existing sandy server data in ${originalPath}`,
     );
     const archivedPath = await archiveExistingServerData({
       dataDir: originalPath,
@@ -1522,7 +1522,7 @@ export class ServerMoveService {
   ): Promise<boolean> {
     this.options.logger.info(
       { manager: definition.manager, path: definition.path, reason },
-      "Restarting the bb service with its updated definition",
+      "Restarting the sandy service with its updated definition",
     );
     try {
       await restartService({
@@ -1537,7 +1537,7 @@ export class ServerMoveService {
     } catch (error) {
       this.options.logger.error(
         { err: error, manager: definition.manager, path: definition.path },
-        "The service manager could not restart bb; exiting so it restarts the daemon",
+        "The service manager could not restart sandy; exiting so it restarts the daemon",
       );
       await this.options.requestShutdown(`${reason}-restart-failed`, 1);
       return false;
@@ -1577,7 +1577,7 @@ export class ServerMoveService {
     ) {
       this.options.logger.info(
         { serverUrl },
-        "The bb server moved; exiting so the bb-app launcher reconnects to the new server",
+        "The sandy server moved; exiting so the sandy-app launcher reconnects to the new server",
       );
       await this.options.requestShutdown("server-moved", 0);
       return;
@@ -1586,7 +1586,7 @@ export class ServerMoveService {
     if (supervisor !== null) {
       this.options.logger.warn(
         { serverUrl, supervisor },
-        "The bb server moved, but this daemon runs under a service bb does not manage; updated config.json and exiting instead of starting a second daemon",
+        "The sandy server moved, but this daemon runs under a service sandy does not manage; updated config.json and exiting instead of starting a second daemon",
       );
       await this.options.requestShutdown("server-moved", 0);
       return;
@@ -1595,7 +1595,7 @@ export class ServerMoveService {
     if (launcherEntry === null) {
       this.options.logger.warn(
         { serverUrl },
-        "The bb server moved, but this daemon has no bb-app launcher to restart through; exiting",
+        "The sandy server moved, but this daemon has no sandy-app launcher to restart through; exiting",
       );
       await this.options.requestShutdown("server-moved", 0);
       return;
@@ -1634,7 +1634,7 @@ export class ServerMoveService {
     }
     this.options.logger.info(
       { pid, args },
-      "Started a replacement bb-app process for this machine",
+      "Started a replacement sandy-app process for this machine",
     );
   }
 }

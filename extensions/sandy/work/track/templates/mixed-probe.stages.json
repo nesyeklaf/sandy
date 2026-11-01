@@ -1,0 +1,73 @@
+{
+  "id": "mixed-probe",
+  "title": "Mixed probe: agent, autopilot, agent",
+  "start": "design",
+  "stages": [
+    {
+      "id": "design",
+      "title": "Design",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "plan",
+          "description": "one sentence: what to build"
+        }
+      ],
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "build"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build (autopilot)",
+      "inputs": [
+        "design.plan"
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "description": "what was built"
+        }
+      ],
+      "autopilot": {
+        "name": "track-probe",
+        "args": "describe how you would build the plan"
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "review"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": "Review",
+      "inputs": [
+        "build.result"
+      ],
+      "outputs": [
+        {
+          "name": "verdict",
+          "description": "ok or not, and why"
+        }
+      ],
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ]
+    }
+  ]
+}

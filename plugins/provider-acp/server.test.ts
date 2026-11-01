@@ -1,7 +1,7 @@
 import { getEventListeners } from "node:events";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { z } from "zod";
 import { KNOWN_ACP_AGENTS } from "./src/known-agents.js";
 import acpProvidersPlugin from "./server.js";
@@ -11,7 +11,7 @@ const PLUGIN_ID = "provider-acp";
 const DECLARED_ICON_NAMES = Object.keys(
   z
     .object({
-      bb: z.object({
+      sandy: z.object({
         branding: z.object({
           experimental_icons: z.record(z.string(), z.string()),
         }),
@@ -21,7 +21,7 @@ const DECLARED_ICON_NAMES = Object.keys(
       JSON.parse(
         readFileSync(new URL("./package.json", import.meta.url), "utf8"),
       ),
-    ).bb.branding.experimental_icons,
+    ).sandy.branding.experimental_icons,
 );
 
 function customAgents(...agents: unknown[]): string {
@@ -69,7 +69,7 @@ async function loadPlugin(options: {
     Promise.resolve(options.hosts ?? []),
   );
   host.harness.sdk.stub("providers.catalog", () => Promise.resolve([]));
-  await acpProvidersPlugin(host.bb);
+  await acpProvidersPlugin(host.sandy);
   return host;
 }
 
@@ -130,7 +130,7 @@ describe("the ACP plugin's registration bookkeeping", () => {
     });
     host.harness.sdk.stub("hosts.list", () => Promise.resolve([]));
 
-    const loading = acpProvidersPlugin(host.bb);
+    const loading = acpProvidersPlugin(host.sandy);
     expect(registeredIds(host)).toContain("acp-cursor");
     await loading;
   });
@@ -486,7 +486,7 @@ describe("the ACP registry", () => {
 
     await expect(
       host.harness.callRpc("addRegistryAgent", { id: "cursor" }),
-    ).rejects.toThrow("already built into bb");
+    ).rejects.toThrow("already built into sandy");
     await expect(
       host.harness.callRpc("addRegistryAgent", { id: "native-only" }),
     ).rejects.toThrow("only as a downloadable binary");

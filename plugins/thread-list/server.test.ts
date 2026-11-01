@@ -1,4 +1,4 @@
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import plugin, { migrateFromUiPreferences } from "./server.js";
 import { defaultPreferences } from "./shared/preferences.js";
@@ -28,8 +28,8 @@ function setup(
 
 describe("thread-list preferences rpc", () => {
   it("lists defaults on a fresh install and round-trips a valid write", async () => {
-    const { bb, harness } = setup();
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await plugin(sandy);
     await expect(
       harness.behavior.callRpc("listPreferences", null),
     ).resolves.toEqual({
@@ -44,7 +44,7 @@ describe("thread-list preferences rpc", () => {
       key: "showProviderIcons",
       value: false,
     });
-    await migrateFromUiPreferences(bb);
+    await migrateFromUiPreferences(sandy);
     await expect(
       harness.behavior.callRpc("listPreferences", null),
     ).resolves.toMatchObject({
@@ -59,7 +59,7 @@ describe("thread-list preferences rpc", () => {
       }),
     ).resolves.toEqual({ key: "organizationMode", value: "machine" });
     await expect(
-      bb.storage.kv.get("preference:organizationMode"),
+      sandy.storage.kv.get("preference:organizationMode"),
     ).resolves.toBe("machine");
     const listed = (await harness.behavior.callRpc(
       "listPreferences",
@@ -85,8 +85,8 @@ describe("thread-list preferences rpc", () => {
   });
 
   it("rejects a value that fails the preference's schema and leaves storage alone", async () => {
-    const { bb, harness } = setup();
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await plugin(sandy);
     await expect(
       harness.behavior.callRpc("setPreference", {
         key: "organizationMode",
@@ -94,7 +94,7 @@ describe("thread-list preferences rpc", () => {
       }),
     ).rejects.toThrow(/Invalid value for organizationMode/);
     await expect(
-      bb.storage.kv.get("preference:organizationMode"),
+      sandy.storage.kv.get("preference:organizationMode"),
     ).resolves.toBeUndefined();
     await expect(
       harness.behavior.callRpc("setPreference", {
@@ -111,8 +111,8 @@ describe("thread-list preferences rpc", () => {
   });
 
   it("dedupes hidden groups and resets to the default", async () => {
-    const { bb, harness } = setup();
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await plugin(sandy);
     await expect(
       harness.behavior.callRpc("setPreference", {
         key: "hiddenGroups",
@@ -126,28 +126,28 @@ describe("thread-list preferences rpc", () => {
       harness.behavior.callRpc("resetPreference", { key: "hiddenGroups" }),
     ).resolves.toEqual({ key: "hiddenGroups", value: [] });
     await expect(
-      bb.storage.kv.get("preference:hiddenGroups"),
+      sandy.storage.kv.get("preference:hiddenGroups"),
     ).resolves.toBeUndefined();
   });
 
   it("defaults row actions to archive, migrates bare ids, dedupes them, and rejects malformed or too many keys", async () => {
-    const { bb, harness } = setup();
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await plugin(sandy);
     const listed = (await harness.behavior.callRpc(
       "listPreferences",
       null,
     )) as {
       preferences: { rowActions: string[] };
     };
-    expect(listed.preferences.rowActions).toEqual(["bb--core/archive"]);
+    expect(listed.preferences.rowActions).toEqual(["sandy--core/archive"]);
     await expect(
       harness.behavior.callRpc("setPreference", {
         key: "rowActions",
-        value: ["pin", "core/archive", "bb--core/pin"],
+        value: ["pin", "core/archive", "sandy--core/pin"],
       }),
     ).resolves.toEqual({
       key: "rowActions",
-      value: ["bb--core/pin", "bb--core/archive"],
+      value: ["sandy--core/pin", "sandy--core/archive"],
     });
     await expect(
       harness.behavior.callRpc("setPreference", {
@@ -173,14 +173,14 @@ describe("thread-list preferences rpc", () => {
   });
 
   it("migrates stored bare ids and core/<id> keys and drops unknown ones instead of resetting the rest", async () => {
-    const { bb, harness } = setup();
-    await bb.storage.kv.set("preference:rowActions", [
+    const { sandy, harness } = setup();
+    await sandy.storage.kv.set("preference:rowActions", [
       "pin",
       "futureAction",
       "move",
       "core/rename",
     ]);
-    await plugin(bb);
+    await plugin(sandy);
     const listed = (await harness.behavior.callRpc(
       "listPreferences",
       null,
@@ -188,16 +188,16 @@ describe("thread-list preferences rpc", () => {
       preferences: { rowActions: string[] };
     };
     expect(listed.preferences.rowActions).toEqual([
-      "bb--core/pin",
+      "sandy--core/pin",
       "thread-list/move",
-      "bb--core/rename",
+      "sandy--core/rename",
     ]);
   });
 
   it("falls back to the default when a stored value no longer parses", async () => {
-    const { bb, harness } = setup();
-    await bb.storage.kv.set("preference:chronologicalSort", "by-vibes");
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await sandy.storage.kv.set("preference:chronologicalSort", "by-vibes");
+    await plugin(sandy);
     const listed = (await harness.behavior.callRpc(
       "listPreferences",
       null,
@@ -208,9 +208,9 @@ describe("thread-list preferences rpc", () => {
   });
 });
 
-describe("migration from bb's sidebar preferences", () => {
+describe("migration from sandy's sidebar preferences", () => {
   it("copies non-default values once and never overwrites a value the plugin already has", async () => {
-    const { bb } = setup({
+    const { sandy } = setup({
       uiPreferences: {
         "sidebar.organizationMode": { revision: 3, value: "machine" },
         "sidebar.sectionOrder": { revision: 1, value: ["proj_a"] },
@@ -218,55 +218,55 @@ describe("migration from bb's sidebar preferences", () => {
         "sidebar.hiddenGroups": { revision: 2, value: ["not-a-group"] },
       },
     });
-    await bb.storage.kv.set("preference:sectionOrder", ["proj_mine"]);
-    const first = await migrateFromUiPreferences(bb);
+    await sandy.storage.kv.set("preference:sectionOrder", ["proj_mine"]);
+    const first = await migrateFromUiPreferences(sandy);
     expect(first.migrated).toEqual(["organizationMode"]);
     await expect(
-      bb.storage.kv.get("preference:organizationMode"),
+      sandy.storage.kv.get("preference:organizationMode"),
     ).resolves.toBe("machine");
-    await expect(bb.storage.kv.get("preference:sectionOrder")).resolves.toEqual(
+    await expect(sandy.storage.kv.get("preference:sectionOrder")).resolves.toEqual(
       ["proj_mine"],
     );
     await expect(
-      bb.storage.kv.get("preference:chronologicalSort"),
+      sandy.storage.kv.get("preference:chronologicalSort"),
     ).resolves.toBeUndefined();
     await expect(
-      bb.storage.kv.get("preference:hiddenGroups"),
+      sandy.storage.kv.get("preference:hiddenGroups"),
     ).resolves.toBeUndefined();
 
-    await bb.storage.kv.delete("preference:organizationMode");
-    const second = await migrateFromUiPreferences(bb);
+    await sandy.storage.kv.delete("preference:organizationMode");
+    const second = await migrateFromUiPreferences(sandy);
     expect(second.migrated).toEqual([]);
     await expect(
-      bb.storage.kv.get("preference:organizationMode"),
+      sandy.storage.kv.get("preference:organizationMode"),
     ).resolves.toBeUndefined();
   });
 
-  it("skips the migration without marking it done when bb cannot be read", async () => {
-    const { bb } = setup({ uiPreferencesFail: true });
-    expect((await migrateFromUiPreferences(bb)).migrated).toEqual([]);
+  it("skips the migration without marking it done when sandy cannot be read", async () => {
+    const { sandy } = setup({ uiPreferencesFail: true });
+    expect((await migrateFromUiPreferences(sandy)).migrated).toEqual([]);
     await expect(
-      bb.storage.kv.get("migration:ui-preferences:v1"),
+      sandy.storage.kv.get("migration:ui-preferences:v1"),
     ).resolves.toBeUndefined();
   });
 });
 
-describe("bb thread-list prefs", () => {
+describe("sandy thread-list prefs", () => {
   it("names the CLI after the plugin id", async () => {
     const builtIn = setup();
-    await plugin(builtIn.bb);
+    await plugin(builtIn.sandy);
     expect(builtIn.harness.inspection.registrations.cli?.name).toBe(
       "thread-list",
     );
 
     const copy = createFakePluginHost({ pluginId: "my-sidebar" });
-    await plugin(copy.bb);
+    await plugin(copy.sandy);
     expect(copy.harness.inspection.registrations.cli?.name).toBe("my-sidebar");
   });
 
   it("lists, gets, sets, and resets through the CLI", async () => {
-    const { bb, harness } = setup();
-    await plugin(bb);
+    const { sandy, harness } = setup();
+    await plugin(sandy);
 
     const listed = await harness.behavior.runCli(["prefs", "list", "--json"]);
     expect(listed.exitCode).toBe(0);
@@ -307,7 +307,7 @@ describe("bb thread-list prefs", () => {
     expect(iconsOn.exitCode).toBe(0);
     expect(iconsOn.stdout).toBe("showProviderIcons = true");
     await expect(
-      bb.storage.kv.get("preference:showProviderIcons"),
+      sandy.storage.kv.get("preference:showProviderIcons"),
     ).resolves.toBe(true);
     const resetIcons = await harness.behavior.runCli([
       "prefs",
@@ -347,8 +347,8 @@ describe("bb thread-list prefs", () => {
 });
 
 it("validates lifecycle selection through CLI and RPC and broadcasts it", async () => {
-  const { bb, harness } = setup();
-  await plugin(bb);
+  const { sandy, harness } = setup();
+  await plugin(sandy);
   expect(
     (
       await harness.behavior.runCli([
@@ -360,7 +360,7 @@ it("validates lifecycle selection through CLI and RPC and broadcasts it", async 
     ).exitCode,
   ).toBe(0);
   await expect(
-    bb.storage.kv.get("preference:threadLifecycles"),
+    sandy.storage.kv.get("preference:threadLifecycles"),
   ).resolves.toEqual(["archived"]);
   for (const value of [[], ["archived", "archived"], ["deleted"]]) {
     await expect(
@@ -371,7 +371,7 @@ it("validates lifecycle selection through CLI and RPC and broadcasts it", async 
     ).rejects.toThrow(/Invalid value/);
   }
   await expect(
-    bb.storage.kv.get("preference:threadLifecycles"),
+    sandy.storage.kv.get("preference:threadLifecycles"),
   ).resolves.toEqual(["archived"]);
   expect(harness.realtimeSignals).toContainEqual({
     channel: "preferences",

@@ -1,11 +1,11 @@
-import type { ExperimentalFileOpenOptions } from "@get-bb/plugin-sdk";
+import type { ExperimentalFileOpenOptions } from "@sandy-sdk/plugin-sdk";
 import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import { useCanOpenFileExternally } from "@/hooks/useCanOpenFileExternally";
 import { useLocalOpenTargets } from "@/hooks/useLocalOpenTargets";
 import { useResolvedLiveFileTarget } from "@/hooks/useResolvedLiveFileTarget";
@@ -63,7 +63,7 @@ export function ExperimentalFileLinkMenu({
                 navigation.openFilePreview({ ...intent, viewer: "builtin" })
               }
             >
-              BB preview
+              SANDY preview
             </ContextMenuItem>
             {matchingOpeners.map((opener) => (
               <ContextMenuItem

@@ -3,7 +3,7 @@
 import {
   buildBridgeInjectionScript,
   type NativeShellHandshake,
-} from "@bb/mobile-bridge";
+} from "@sandy/mobile-bridge";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetNativeShellForTests } from "@/lib/native-shell/native-shell";
 import { canSaveFileNatively, saveFile } from "./save-file";
@@ -62,7 +62,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
-  Reflect.deleteProperty(window, "bb");
+  Reflect.deleteProperty(window, "sandy");
   Reflect.deleteProperty(window, "ReactNativeWebView");
   resetNativeShellForTests();
 });

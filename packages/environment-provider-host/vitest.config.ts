@@ -9,7 +9,7 @@ export default defineWorkspaceTestConfig({
     testTimeout: 15_000,
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "bb-environment-provider-host",
+      name: "sandy-environment-provider-host",
       include: ["test/**/*.test.ts"],
     }),
   },

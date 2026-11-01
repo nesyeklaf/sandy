@@ -1,9 +1,9 @@
-import { setExperiments } from "@bb/db";
-import { turnScope, type Thread } from "@bb/domain";
+import { setExperiments } from "@sandy/db";
+import { turnScope, type Thread } from "@sandy/domain";
 import {
   groupHostDaemonEvents,
   type HostDaemonEventEnvelope,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { acceptThreadSendRequest } from "../../src/services/threads/thread-send-request.js";
 import {

@@ -33,7 +33,7 @@ const upstream = new URL(values.upstream);
 const indexHtml = join(dist, "index.html");
 if (!existsSync(indexHtml)) {
   throw new Error(
-    `No index.html in ${dist}. Run pnpm --filter @bb/app run build:profiling first.`,
+    `No index.html in ${dist}. Run pnpm --filter @sandy/app run build:profiling first.`,
   );
 }
 

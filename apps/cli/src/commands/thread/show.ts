@@ -6,34 +6,34 @@ import {
   type Thread,
   type ThreadEventRow,
   type ThreadTimelinePendingTodos,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   type ThreadGitDiffResponse,
   type WorkspaceStatus,
   gitDiffResultSchema,
   gitStatusResultSchema,
-} from "bb-plugin-bb--git/contract";
-import { prependOlderTimelineRows } from "@bb/client-core";
+} from "sandy-plugin-sandy--git/contract";
+import { prependOlderTimelineRows } from "@sandy/client-core";
 import { Command } from "commander";
 import {
   formatThreadTimelineText,
   type ThreadTimelineTextFormat,
-} from "@bb/thread-view";
-import { BbHttpError, type BbSdk } from "@bb/sdk";
+} from "@sandy/thread-view";
+import { SandyHttpError, type SandySdk } from "@sandy/sdk";
 import {
   environmentPullRequestSchema,
   type PullRequest,
-} from "bb-plugin-bb--github-pr-status/contract";
-import { GITHUB_PR_STATUS_PLUGIN_ID } from "bb-plugin-bb--github-pr-status/read-contract";
+} from "sandy-plugin-sandy--github-pr-status/contract";
+import { GITHUB_PR_STATUS_PLUGIN_ID } from "sandy-plugin-sandy--github-pr-status/read-contract";
 import { z } from "zod";
 import {
   type ThreadTimelineResponse,
   type TimelineConversationRow,
   THREAD_EVENT_LIST_PAGE_SIZE,
   THREAD_MESSAGE_CONTEXT_LIMIT,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { action } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import {
   getErrorMessage,
   outputJson,
@@ -115,7 +115,7 @@ type CliEnvironmentDiffQuery =
 async function fetchWorkStatus(args: {
   environmentId: string;
   mergeBaseBranch: string;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<FetchedWorkStatus> {
   const environmentStatus = await args.sdk.plugins.callRpc({
     pluginId: GIT_PLUGIN_ID,
@@ -138,7 +138,7 @@ async function fetchWorkStatus(args: {
 async function fetchGitDiff(args: {
   environmentId: string;
   target: WorkspaceDiffTarget;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<FetchedGitDiff> {
   const environmentDiff = await args.sdk.plugins.callRpc({
     pluginId: GIT_PLUGIN_ID,
@@ -157,7 +157,7 @@ async function fetchGitDiff(args: {
 
 async function fetchPullRequest(args: {
   environmentId: string;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<FetchedPullRequest> {
   try {
     const rows = await args.sdk.plugins.callRpc({
@@ -218,7 +218,7 @@ export function registerShowCommand(
     .command("show [id]")
     .aliases(["get", "view", "status"])
     .description("Show thread details and pull request status")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .option("--work-status", "Include work status (git state) in output")
     .option("--git-diff", "Include git diff in output")
@@ -235,7 +235,7 @@ export function registerShowCommand(
     .action(
       action(async (id: string | undefined, opts: ThreadShowCommandOptions) => {
         const threadId = requireThreadIdOrSelf(id, opts);
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const thread = await sdk.threads.get({ threadId });
 
         const statusPayload: ThreadStatusPayload = { thread };
@@ -429,7 +429,7 @@ export function registerShowCommand(
     .command("log [id]")
     .aliases(["messages", "timeline"])
     .description("Show thread event log")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option(
       "--json",
       "Print machine-readable JSON output (alias for --format json)",
@@ -462,7 +462,7 @@ export function registerShowCommand(
     .action(
       action(async (id: string | undefined, opts: ThreadLogCommandOptions) => {
         const threadId = requireThreadIdOrSelf(id, opts);
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const format = resolveThreadTimelineTextFormat(opts);
 
         if (opts.message !== undefined) {
@@ -555,13 +555,13 @@ export function registerShowCommand(
   parent
     .command("output [id]")
     .description("Get the final output of a thread")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(
         async (id: string | undefined, opts: ThreadOutputCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const result = await sdk.threads.output({ threadId });
           if (outputJson(opts, result)) return;
           if (result.output) {
@@ -648,7 +648,7 @@ function printEnvironmentPullRequest(
 }
 
 async function printThreadLogMessage(
-  sdk: BbSdk,
+  sdk: SandySdk,
   args: {
     threadId: string;
     format: ThreadTimelineTextFormat;
@@ -725,7 +725,7 @@ interface ThreadLogEventBatch {
 }
 
 async function listThreadLogEventBatch(
-  sdk: BbSdk,
+  sdk: SandySdk,
   args: {
     threadId: string;
     limit: number;
@@ -743,7 +743,7 @@ async function listThreadLogEventBatch(
       return { pageSize, rows };
     } catch (error) {
       if (
-        !(error instanceof BbHttpError) ||
+        !(error instanceof SandyHttpError) ||
         error.status !== 413 ||
         error.code !== "event_data_too_large" ||
         pageSize === 1
@@ -760,7 +760,7 @@ function growThreadLogEventPageSize(pageSize: number): number {
 }
 
 async function listThreadLogEventsPage(
-  sdk: BbSdk,
+  sdk: SandySdk,
   args: { threadId: string; limit: number; afterSeq: string | undefined },
 ): Promise<ThreadLogEventsPage> {
   const requestedRows = args.limit + 1;
@@ -787,7 +787,7 @@ async function listThreadLogEventsPage(
 }
 
 async function listAllThreadLogEvents(
-  sdk: BbSdk,
+  sdk: SandySdk,
   threadId: string,
   afterSeq: string | undefined,
 ): Promise<ThreadLogEventsPage> {

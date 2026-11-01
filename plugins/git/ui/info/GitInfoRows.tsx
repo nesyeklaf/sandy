@@ -2,22 +2,22 @@ import { useMemo } from "react";
 import {
   experimental_DetailRow as DetailRow,
   type ExperimentalThreadInfoProps,
-} from "@get-bb/plugin-sdk/app";
-import { BranchPicker } from "@bb/shared-ui/branch-picker";
-import { CopyableInlineLabelView } from "@bb/shared-ui/copy-button";
-import { useSdkClipboardCopy } from "@bb/shared-ui/sdk-clipboard-copy";
+} from "@sandy-sdk/plugin-sdk/app";
+import { BranchPicker } from "@sandy/shared-ui/branch-picker";
+import { CopyableInlineLabelView } from "@sandy/shared-ui/copy-button";
+import { useSdkClipboardCopy } from "@sandy/shared-ui/sdk-clipboard-copy";
 import {
   getGitStatusDisplay,
   SquashMergeInfo,
-} from "@bb/shared-ui/git-status-display";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/git-status-display";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   getMergeBaseBranchCandidateGroups,
 } from "../merge-base-branch-candidates";
 import {
   formatWorkspaceCheckoutDisplay,
-} from "@bb/shared-ui/lib/workspace-checkout-display";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
+} from "@sandy/shared-ui/lib/workspace-checkout-display";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
 import {
   useMergeBase,
   type MergeBaseState,
@@ -25,7 +25,7 @@ import {
 import { useGitStatus } from "../queries.js";
 import type {
   WorkspaceResolutionFailure,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 import type { WorkspaceStatus } from "../../contract.js";
 
 function CopyableValue({

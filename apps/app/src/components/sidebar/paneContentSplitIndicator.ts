@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { atom, useAtomValue } from "jotai";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { multiPaneSplitLayoutAtom } from "@/lib/split-layout/atoms";
 import {
   computePaneRects,

@@ -1,8 +1,8 @@
 import { resolve, sep } from "node:path";
 import semver from "semver";
-import { formatServerDataSize } from "@bb/domain";
-import { APP_SURFACE_DESKTOP, type AppSurface } from "@bb/config/app-surface";
-import { isLoopbackHostname } from "@bb/config/loopback";
+import { formatServerDataSize } from "@sandy/domain";
+import { APP_SURFACE_DESKTOP, type AppSurface } from "@sandy/config/app-surface";
+import { isLoopbackHostname } from "@sandy/config/loopback";
 import {
   getHost,
   getInstalledPlugin,
@@ -10,25 +10,25 @@ import {
   listPluginSchedules,
   listPublicHosts,
   listRunningThreads,
-} from "@bb/db";
-import type { ServerMoveInspectResult } from "@bb/host-daemon-contract";
+} from "@sandy/db";
+import type { ServerMoveInspectResult } from "@sandy/host-daemon-contract";
 import {
   listServerOwnedEntries,
   readLastServerMoveFile,
   type ServerOwnedInventory,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import type {
   ServerMoveCheckItem,
   ServerMoveCheckRequest,
   ServerMoveCheckResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 import { callHostOnlineRpc } from "../hosts/online-rpc.js";
 import { readPrimaryHostIdFromDataDir } from "../hosts/primary-host.js";
 import { machineServerUrl } from "../machines/server-access.js";
 import type {
-  FullBbAppArtifactAvailability,
-  FullBbAppArtifactService,
+  FullSandyAppArtifactAvailability,
+  FullSandyAppArtifactService,
 } from "./full-artifact.js";
 import {
   isLoopbackUrl,
@@ -57,12 +57,12 @@ type HostRow = NonNullable<ReturnType<typeof getHost>>;
 type TargetVersionCheck =
   | { kind: "current" }
   | { kind: "newer" }
-  | { kind: "update"; availability: FullBbAppArtifactAvailability };
+  | { kind: "update"; availability: FullSandyAppArtifactAvailability };
 
 export interface ServerMoveCheckEnvironment {
   allowLoopbackServerUrl: boolean;
   deps: AppDeps;
-  fullArtifact: FullBbAppArtifactService;
+  fullArtifact: FullSandyAppArtifactService;
   inspectTimeoutMs: number;
   readServerDiskFreeBytes(): Promise<number | null>;
   serverAppSurface: AppSurface;
@@ -202,7 +202,7 @@ async function checkTargetVersion(
   inspect: ServerMoveInspectResult,
 ): Promise<TargetVersionCheck> {
   const appVersion = environment.deps.config.appVersion;
-  const targetVersion = semver.valid(inspect.bbAppVersion);
+  const targetVersion = semver.valid(inspect.sandyAppVersion);
   const serverVersion = semver.valid(appVersion);
   if (
     targetVersion !== null &&
@@ -211,7 +211,7 @@ async function checkTargetVersion(
   ) {
     return { kind: "newer" };
   }
-  if (inspect.serverEntryAvailable && inspect.bbAppVersion === appVersion) {
+  if (inspect.serverEntryAvailable && inspect.sandyAppVersion === appVersion) {
     return { kind: "current" };
   }
   return {
@@ -346,7 +346,7 @@ function appendTargetInspectItems(args: {
     items.push({
       id: "unsupported-platform",
       severity: "blocker",
-      title: `${targetName} can't run the bb server`,
+      title: `${targetName} can't run the sandy server`,
       detail: "The server runs on macOS and Linux.",
     });
   }
@@ -357,13 +357,13 @@ function appendTargetInspectItems(args: {
             id: "target-has-server-data",
             severity: "blocker",
             title: `The old server copy is still on ${targetName}`,
-            detail: `Delete it on ${targetName}'s page in Settings → Machines, or run bb server delete-old-copy on that machine, then check again.`,
+            detail: `Delete it on ${targetName}'s page in Settings → Machines, or run sandy server delete-old-copy on that machine, then check again.`,
           }
         : {
             id: "target-has-server-data",
             severity: "blocker",
-            title: `${targetName} already has bb server data`,
-            detail: `${inspect.dataDir} already contains a bb database.`,
+            title: `${targetName} already has sandy server data`,
+            detail: `${inspect.dataDir} already contains a sandy database.`,
           },
     );
   }
@@ -386,7 +386,7 @@ function appendTargetInspectItems(args: {
     items.push({
       id: "existing-target-server-data",
       severity: "warning",
-      title: `${targetName} has its own bb data`,
+      title: `${targetName} has its own sandy data`,
       detail: `${inspect.existingServerData.path} will be archived next to it with a .before-move date suffix. It is never merged.`,
     });
   }
@@ -456,7 +456,7 @@ function appendTargetInspectItems(args: {
   items.push({
     id: "managed-config-replaced",
     severity: "info",
-    title: `This server's bb skill settings and other configuration will replace matching settings on ${targetName}`,
+    title: `This server's sandy skill settings and other configuration will replace matching settings on ${targetName}`,
     detail: null,
   });
 }
@@ -476,8 +476,8 @@ function appendVersionItems(args: {
     args.items.push({
       id: "target-newer-version",
       severity: "blocker",
-      title: `${args.targetName} runs a newer bb than this server`,
-      detail: `${args.targetName} runs bb ${args.inspect.bbAppVersion} and this server runs bb ${appVersion}. Update the server to bb ${args.inspect.bbAppVersion} first, then check again.`,
+      title: `${args.targetName} runs a newer sandy than this server`,
+      detail: `${args.targetName} runs sandy ${args.inspect.sandyAppVersion} and this server runs sandy ${appVersion}. Update the server to sandy ${args.inspect.sandyAppVersion} first, then check again.`,
     });
     return;
   }
@@ -486,7 +486,7 @@ function appendVersionItems(args: {
     args.items.push({
       id: "target-update",
       severity: "info",
-      title: `bb ${availability.version} will be installed on ${args.targetName}`,
+      title: `sandy ${availability.version} will be installed on ${args.targetName}`,
       detail: `The update stays on ${args.targetName} even if the move is cancelled.`,
     });
     return;
@@ -496,13 +496,13 @@ function appendVersionItems(args: {
       ? {
           id: "target-version",
           severity: "blocker",
-          title: `${args.targetName} runs bb ${args.inspect.bbAppVersion}, but this server runs bb ${appVersion}`,
-          detail: `Update ${args.targetName} to bb ${appVersion}. ${availability.reason}`,
+          title: `${args.targetName} runs sandy ${args.inspect.sandyAppVersion}, but this server runs sandy ${appVersion}`,
+          detail: `Update ${args.targetName} to sandy ${appVersion}. ${availability.reason}`,
         }
       : {
           id: "server-entry-unavailable",
           severity: "blocker",
-          title: `${args.targetName} doesn't have the bb server installed`,
+          title: `${args.targetName} doesn't have the sandy server installed`,
           detail: availability.reason,
         },
   );
@@ -609,7 +609,7 @@ function appendManagedAddressItems(args: {
     if (url === null) {
       continue;
     }
-    const idPrefix = address.key === "BB_APP_URL" ? "app-url" : "external-url";
+    const idPrefix = address.key === "SANDY_APP_URL" ? "app-url" : "external-url";
     if (oldAddress !== null && url.origin === oldAddress.origin) {
       args.items.push({
         id: `${idPrefix}-rewrite`,
@@ -628,7 +628,7 @@ function appendManagedAddressItems(args: {
         severity: "warning",
         title: `${address.key} in ${address.file} points at ${address.value}`,
         detail:
-          "The move keeps this address as it is, so it may still point at this computer. Update it after the move if devices open bb through it.",
+          "The move keeps this address as it is, so it may still point at this computer. Update it after the move if devices open sandy through it.",
       });
     }
   }
@@ -662,7 +662,7 @@ export async function runServerMoveCheck(
       severity: "blocker",
       title: "This server doesn't run its own machine",
       detail:
-        "Moving the server needs the machine that runs it. Start bb with its local machine, then try again.",
+        "Moving the server needs the machine that runs it. Start sandy with its local machine, then try again.",
     });
   }
   const targetRow = getHost(deps.db, request.targetHostId);
@@ -808,7 +808,7 @@ export async function runServerMoveCheck(
       severity: "info",
       title: `${liveSourceServerHost.name} will keep running as a machine in the background`,
       detail:
-        "This server runs in the bb desktop app. After the move, the app installs a background service that keeps this computer connected to the new server and updates it with the server, even while the app is closed. The service needs Node.js 22.19 or newer on this computer; without it, the computer stays connected only while the app is open.",
+        "This server runs in the sandy desktop app. After the move, the app installs a background service that keeps this computer connected to the new server and updates it with the server, even while the app is closed. The service needs Node.js 22.19 or newer on this computer; without it, the computer stays connected only while the app is open.",
     });
   }
   if (liveSourceServerHost !== null) {

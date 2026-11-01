@@ -15,9 +15,9 @@ import {
   PanelGroup,
   type ImperativePanelGroupHandle,
 } from "react-resizable-panels";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { useResponsiveDrawerRealization } from "@bb/shared-ui/responsive-overlay";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { useResponsiveDrawerRealization } from "@sandy/shared-ui/responsive-overlay";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { CompactSecondaryPanelShelf } from "./CompactSecondaryPanelShelf";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
 import { dispatchBrowserViewBoundsSync } from "@/lib/browser-view-bounds-sync";

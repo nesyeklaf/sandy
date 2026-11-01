@@ -1,6 +1,6 @@
-import { getProjectSourceByHost } from "@bb/db";
-import { isLocalPathProjectSource } from "@bb/domain";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
+import { getProjectSourceByHost } from "@sandy/db";
+import { isLocalPathProjectSource } from "@sandy/domain";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
 import type { WorkSessionDeps } from "../../types.js";
 import {
   getNonDestroyedHostWithStatus,

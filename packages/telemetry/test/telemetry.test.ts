@@ -29,7 +29,7 @@ describe("startTelemetry", () => {
     try {
       const telemetry = startTelemetry({
         component: "host-daemon",
-        env: { BB_OTLP_ENDPOINT: receiver.endpoint, BB_APP_VERSION: "9.9.9" },
+        env: { SANDY_OTLP_ENDPOINT: receiver.endpoint, SANDY_APP_VERSION: "9.9.9" },
       });
       trace.getTracer("probe").startActiveSpan("probe-span", (span) => {
         span.end();
@@ -45,7 +45,7 @@ describe("startTelemetry", () => {
       );
       expect(traces?.contentType).toBe("application/x-protobuf");
       expect(traces?.body.includes("probe-span")).toBe(true);
-      expect(traces?.body.includes("bb-host-daemon")).toBe(true);
+      expect(traces?.body.includes("sandy-host-daemon")).toBe(true);
       expect(traces?.body.includes("9.9.9")).toBe(true);
       expect(exportedMetrics?.body.includes("probe_counter")).toBe(true);
     } finally {
@@ -58,7 +58,7 @@ describe("startTelemetry", () => {
     try {
       const telemetry = startTelemetry({
         component: "server",
-        env: { BB_OTLP_ENDPOINT: receiver.endpoint },
+        env: { SANDY_OTLP_ENDPOINT: receiver.endpoint },
       });
       const seen = await withOutgoingSpan(
         { name: "host-rpc probe" },

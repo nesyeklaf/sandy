@@ -291,7 +291,7 @@ function instrumentSqliteClient(
 }
 
 export function createConnection(
-  source: string | Buffer = "bb.db",
+  source: string | Buffer = "sandy.db",
   options: CreateConnectionOptions = {},
 ) {
   const sqlite = new Database(source);

@@ -4,19 +4,19 @@ import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import {
   HOST_DAEMON_PROTOCOL_VERSION,
   createHostDaemonLocalClient,
   type WorkspaceOpenTarget,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { startLocalApiServer, type LocalApiServer } from "./local-api.js";
 import { resolveHostPlatform } from "./host-platform.js";
 import type { HostDaemonLocalApiConfig } from "./local-api-config.js";
 import {
   WorkspaceOpenTargetError,
   type ListWorkspaceOpenTargetsOptions,
-} from "@bb/local-open-targets";
+} from "@sandy/local-open-targets";
 
 describe("local API server", () => {
   let server: LocalApiServer | null = null;
@@ -108,18 +108,18 @@ describe("local API server", () => {
     server = await startLocalApiServer({
       hostId: "host-remote",
       localApiConfig: createLocalApiConfig(),
-      serverUrl: "https://remote-bb.example.test/projects/proj_1",
+      serverUrl: "https://remote-sandy.example.test/projects/proj_1",
       serverPort: 0,
       getConnected: () => true,
     });
 
     const response = await fetch(`http://localhost:${server.port}/status`, {
-      headers: { Origin: "https://remote-bb.example.test" },
+      headers: { Origin: "https://remote-sandy.example.test" },
     });
 
     expect(response.status).toBe(200);
     expect(response.headers.get("access-control-allow-origin")).toBe(
-      "https://remote-bb.example.test",
+      "https://remote-sandy.example.test",
     );
   });
 
@@ -243,7 +243,7 @@ describe("local API server", () => {
   });
 
   it("lists workspace open targets and delegates target-aware open requests", async () => {
-    const workspacePath = await mkdtemp(path.join(tmpdir(), "bb-workspace-"));
+    const workspacePath = await mkdtemp(path.join(tmpdir(), "sandy-workspace-"));
     const targets: WorkspaceOpenTarget[] = [
       {
         capabilities: {
@@ -433,9 +433,9 @@ describe("local API server", () => {
   it("retries client configuration after an invalid file is repaired", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(0);
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-client-config-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-client-config-"));
     const configPath = path.join(dataDir, "client.json");
-    const origin = "https://remote-bb.example.test";
+    const origin = "https://remote-sandy.example.test";
     try {
       await writeFile(configPath, "{");
       server = await startLocalApiServer({
@@ -459,12 +459,12 @@ describe("local API server", () => {
   });
 
   it("allows configured remote origins and resolves remote SSH open requests", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-client-config-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-client-config-"));
     await writeFile(
       path.join(dataDir, "client.json"),
       JSON.stringify({
         servers: {
-          "https://remote-bb.example.test": {
+          "https://remote-sandy.example.test": {
             hosts: {
               host_remote: {
                 sshAuthority: "devbox",
@@ -496,19 +496,19 @@ describe("local API server", () => {
         `http://localhost:${server.port}/workspace-open-targets?path=/tmp/file.ts`,
         {
           headers: {
-            Origin: "https://remote-bb.example.test",
+            Origin: "https://remote-sandy.example.test",
           },
         },
       );
       expect(corsResponse.headers.get("access-control-allow-origin")).toBe(
-        "https://remote-bb.example.test",
+        "https://remote-sandy.example.test",
       );
 
       const response = await client["open-in-target"].$post({
         json: {
           context: {
             kind: "remote-ssh",
-            serverOrigin: "https://remote-bb.example.test/projects/proj_1",
+            serverOrigin: "https://remote-sandy.example.test/projects/proj_1",
             hostId: "host_remote",
           },
           columnNumber: 4,
@@ -532,12 +532,12 @@ describe("local API server", () => {
   });
 
   it("returns setup guidance for remote SSH opens without a mapping", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-client-config-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-client-config-"));
     await writeFile(
       path.join(dataDir, "client.json"),
       JSON.stringify({
         servers: {
-          "https://remote-bb.example.test": {
+          "https://remote-sandy.example.test": {
             hosts: {},
           },
         },
@@ -563,7 +563,7 @@ describe("local API server", () => {
         json: {
           context: {
             kind: "remote-ssh",
-            serverOrigin: "https://remote-bb.example.test",
+            serverOrigin: "https://remote-sandy.example.test",
             hostId: "host_missing",
           },
           columnNumber: null,
@@ -575,7 +575,7 @@ describe("local API server", () => {
 
       expect(response.status).toBe(400);
       expect(await response.text()).toContain(
-        "bb-app client ssh-target set https://remote-bb.example.test <ssh-target>",
+        "sandy-app client ssh-target set https://remote-sandy.example.test <ssh-target>",
       );
     } finally {
       await rm(dataDir, { recursive: true, force: true });

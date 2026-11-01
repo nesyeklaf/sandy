@@ -31,7 +31,7 @@ for (const kind of [
     `preserves cwd, arguments, stdin, output, and exit status through ${kind}`,
     async () => {
       const directory = realpathSync(
-        mkdtempSync(join(tmpdir(), "bb process é-")),
+        mkdtempSync(join(tmpdir(), "sandy process é-")),
       );
       onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
       const scriptPath = join(directory, "probe.cjs");
@@ -49,7 +49,7 @@ for (const kind of [
       mkdirSync(binDirectory, { recursive: true });
       const shimPath = join(
         binDirectory,
-        shebang ? "bb-process-probe" : "bb-process-probe.cmd",
+        shebang ? "sandy-process-probe" : "sandy-process-probe.cmd",
       );
       if (shebang) {
         writeFileSync(
@@ -81,7 +81,7 @@ for (const kind of [
       const command = native
         ? process.execPath
         : kind === "a Windows .cmd shim on PATH"
-          ? "bb-process-probe"
+          ? "sandy-process-probe"
           : shimPath;
       const commandArgs = native ? [scriptPath, ...args] : args;
       const child = spawnPortablePipedProcess({
@@ -138,13 +138,13 @@ it.each(["name", "path"])(
   "reports ENOENT and finishes cleanup when a command %s cannot be resolved",
   async (kind) => {
     const directory = realpathSync(
-      mkdtempSync(join(tmpdir(), "bb-missing-process-")),
+      mkdtempSync(join(tmpdir(), "sandy-missing-process-")),
     );
     onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
     const command =
       kind === "path"
         ? join(directory, "missing-agent")
-        : "bb-process-utils-command-that-does-not-exist";
+        : "sandy-process-utils-command-that-does-not-exist";
     const managed = spawnManagedProcess({ command, args: [] });
     let spawned = false;
     let stderr = "";
@@ -191,8 +191,8 @@ it.runIf(process.platform === "win32")(
     const env = sanitizeInheritedChildProcessEnv({
       env: {
         ...process.env,
-        bb_data_dir: "parent-data",
-        Bb_HOST_DAEMON_PORT: "12345",
+        sandy_data_dir: "parent-data",
+        Sandy_HOST_DAEMON_PORT: "12345",
         Node_Env: "development",
         PROVIDER_TOKEN: "preserved-token",
       },
@@ -201,7 +201,7 @@ it.runIf(process.platform === "win32")(
       command: process.execPath,
       args: [
         "-e",
-        "process.stdout.write(JSON.stringify([process.env.BB_DATA_DIR ?? null, process.env.BB_HOST_DAEMON_PORT ?? null, process.env.NODE_ENV ?? null, process.env.PROVIDER_TOKEN]));",
+        "process.stdout.write(JSON.stringify([process.env.SANDY_DATA_DIR ?? null, process.env.SANDY_HOST_DAEMON_PORT ?? null, process.env.NODE_ENV ?? null, process.env.PROVIDER_TOKEN]));",
       ],
       env,
     });
@@ -235,7 +235,7 @@ it.runIf(process.platform === "win32")(
   "ends the process behind a Windows .cmd shim when the portable child is killed",
   async () => {
     const directory = realpathSync(
-      mkdtempSync(join(tmpdir(), "bb-portable-kill-")),
+      mkdtempSync(join(tmpdir(), "sandy-portable-kill-")),
     );
     onTestFinished(() => rmSync(directory, { force: true, recursive: true }));
     const pidFile = join(directory, "pid.txt");

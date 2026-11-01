@@ -2,8 +2,8 @@ import type { IncomingMessage } from "node:http";
 import {
   buildHostDaemonWebSocketProtocols,
   HOST_DAEMON_PROTOCOL_VERSION,
-} from "@bb/host-daemon-contract";
-import { setExperiments } from "@bb/db";
+} from "@sandy/host-daemon-contract";
+import { setExperiments } from "@sandy/db";
 import { afterEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { z } from "zod";

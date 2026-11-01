@@ -1,0 +1,227 @@
+/*
+ * Settle. While hovered the check lifts and tilts and three sparkles spring
+ * in and shimmer. A click pops the check, throws the sparkles off, sweeps the
+ * row green from the button, passes a glint across it and dims the text; the
+ * card holds the settle itself until the sweep is done (SETTLE_SWEEP_MS).
+ */
+
+.sandy-sidebar-settle {
+  --sandy-sidebar-settle-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --sandy-sidebar-settle-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sandy-sidebar-settle-art {
+  transition:
+    background-color 160ms ease-out,
+    box-shadow 220ms ease-out;
+}
+
+.sandy-sidebar-settle:is(:hover, :focus-visible, [data-settling]) .sandy-sidebar-settle-art {
+  background: color-mix(in oklab, var(--sandy-sidebar-settle-accent) 14%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--sandy-sidebar-settle-accent) 7%, transparent),
+    0 3px 8px -3px color-mix(in oklab, var(--sandy-sidebar-settle-accent) 55%, transparent);
+}
+
+.sandy-sidebar-settle-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A four-point star with curved sides; clip-path cannot draw the curves. */
+.sandy-sidebar-settle-star {
+  position: absolute;
+  width: var(--star-size);
+  height: var(--star-size);
+  background: var(--star-color, currentColor);
+  -webkit-mask: var(--sandy-sidebar-settle-star-shape) center / contain no-repeat;
+  mask: var(--sandy-sidebar-settle-star-shape) center / contain no-repeat;
+  opacity: 0;
+  --sandy-sidebar-settle-star-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 0Q6.2 3.8 10 5Q6.2 6.2 5 10Q3.8 6.2 0 5Q3.8 3.8 5 0Z'/%3E%3C/svg%3E");
+}
+
+.sandy-sidebar-settle-star:nth-child(1) {
+  top: -5px;
+  right: -5px;
+  --star-size: 9px;
+  --star-color: var(--sandy-sidebar-settle-spark);
+  --star-delay: 0ms;
+  --star-x: 9px;
+  --star-y: -6px;
+}
+
+.sandy-sidebar-settle-star:nth-child(2) {
+  top: -3px;
+  left: -6px;
+  --star-size: 6px;
+  --star-delay: 70ms;
+  --star-x: -4px;
+  --star-y: -8px;
+}
+
+.sandy-sidebar-settle-star:nth-child(3) {
+  bottom: -5px;
+  right: 0;
+  --star-size: 5px;
+  --star-delay: 130ms;
+  --star-x: 6px;
+  --star-y: 7px;
+}
+
+.sandy-sidebar-settle:is(:hover, :focus-visible) .sandy-sidebar-settle-star {
+  opacity: 0.85;
+}
+
+.sandy-sidebar-settle-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.sandy-sidebar-settle-sweep::before,
+.sandy-sidebar-settle-sweep::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+}
+
+/* The wash grows out of the button at the row's trailing edge. */
+.sandy-sidebar-settle-sweep::before {
+  inset-inline: 0;
+  background: linear-gradient(
+    to left,
+    color-mix(in oklab, var(--sandy-sidebar-settle-accent) 14%, transparent),
+    color-mix(in oklab, var(--sandy-sidebar-settle-accent) 6%, transparent)
+  );
+  transform-origin: right;
+  animation: sandy-sidebar-settle-wash 340ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sandy-sidebar-settle-sweep::after {
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--sandy-sidebar-settle-spark) 30%, transparent) 45%,
+    var(--sandy-sidebar-settle-glint) 50%,
+    color-mix(in oklab, var(--sandy-sidebar-settle-spark) 30%, transparent) 55%,
+    transparent
+  );
+  transform: translateX(240%) skewX(-20deg);
+  animation: sandy-sidebar-settle-glint 560ms 60ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+[data-parent-card][data-settling] [data-settle-fade] {
+  animation: sandy-sidebar-settle-fade 380ms 160ms cubic-bezier(0.55, 0, 0.75, 0.2) forwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sandy-sidebar-settle-art {
+    transition:
+      transform 360ms var(--sandy-sidebar-settle-spring),
+      background-color 160ms ease-out,
+      box-shadow 220ms ease-out;
+  }
+
+  .sandy-sidebar-settle:is(:hover, :focus-visible, [data-settling]) .sandy-sidebar-settle-art {
+    transform: translateY(-1px);
+  }
+
+  .sandy-sidebar-settle:active .sandy-sidebar-settle-art {
+    transform: scale(0.86);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--sandy-sidebar-settle-accent) 10%, transparent);
+    transition-duration: 70ms;
+  }
+
+  .sandy-sidebar-settle-check {
+    transition: transform 420ms var(--sandy-sidebar-settle-spring);
+  }
+
+  .sandy-sidebar-settle:is(:hover, :focus-visible) .sandy-sidebar-settle-check {
+    transform: rotate(-10deg) scale(1.1);
+  }
+
+  .sandy-sidebar-settle:is(:hover, :focus-visible) .sandy-sidebar-settle-star {
+    animation:
+      sandy-sidebar-settle-star-in 480ms var(--star-delay) var(--sandy-sidebar-settle-spring) both,
+      sandy-sidebar-settle-star-shimmer 1800ms calc(480ms + var(--star-delay)) ease-in-out infinite;
+  }
+
+  .sandy-sidebar-settle[data-settling] .sandy-sidebar-settle-check {
+    animation: sandy-sidebar-settle-pop 380ms var(--sandy-sidebar-settle-spring) forwards;
+  }
+
+  .sandy-sidebar-settle[data-settling] .sandy-sidebar-settle-star {
+    animation: sandy-sidebar-settle-star-fly 520ms var(--sandy-sidebar-settle-ease) forwards;
+  }
+}
+
+@keyframes sandy-sidebar-settle-star-in {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* `scale`, not `transform`, so the shimmer stacks on the spring-in. */
+@keyframes sandy-sidebar-settle-star-shimmer {
+  0%,
+  100% {
+    scale: 1;
+    opacity: 0.9;
+  }
+  50% {
+    scale: 0.7;
+    opacity: 0.55;
+  }
+}
+
+@keyframes sandy-sidebar-settle-star-fly {
+  0% {
+    opacity: 1;
+    transform: scale(1.15) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--star-x), var(--star-y)) scale(0.2) rotate(120deg);
+  }
+}
+
+@keyframes sandy-sidebar-settle-pop {
+  0% {
+    transform: rotate(-10deg) scale(0.7);
+  }
+  100% {
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes sandy-sidebar-settle-wash {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes sandy-sidebar-settle-glint {
+  100% {
+    transform: translateX(-140%) skewX(-20deg);
+  }
+}
+
+@keyframes sandy-sidebar-settle-fade {
+  100% {
+    transform: translateX(-6px);
+    opacity: 0.35;
+  }
+}

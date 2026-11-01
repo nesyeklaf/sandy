@@ -3,8 +3,8 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import {
   CLIENT_NOTIFICATION_CHANNEL,
   clientChannelSchema,
@@ -79,21 +79,21 @@ export function createPushNotificationsPlugin(
   options: PushNotificationsPluginOptions = {},
 ) {
   return async function pushNotificationsPlugin(
-    bb: BbPluginApi,
+    sandy: SandyPluginApi,
   ): Promise<void> {
-    const settings = bb.settings.define({
+    const settings = sandy.settings.define({
       webEnabled: {
         type: "boolean",
         label: "Web notifications",
         description:
-          "Show system notifications while bb is open in a browser. Each browser needs notification permission.",
+          "Show system notifications while sandy is open in a browser. Each browser needs notification permission.",
         default: true,
       },
       desktopEnabled: {
         type: "boolean",
         label: "Desktop notifications",
         description:
-          "Show system notifications while the bb desktop app is running.",
+          "Show system notifications while the sandy desktop app is running.",
         default: true,
       },
       defaultLevel: {
@@ -127,7 +127,7 @@ export function createPushNotificationsPlugin(
       },
     });
     const preferences = createNotificationPreferences({
-      bb,
+      sandy,
       getDefaults: async () => {
         const { defaultLevel, childLevel } = await settings.get();
         return {
@@ -136,10 +136,10 @@ export function createPushNotificationsPlugin(
         };
       },
       publish: (threadIds) =>
-        bb.rpc.experimental_invalidate(threadIds.map((id) => `thread:${id}`)),
+        sandy.rpc.experimental_invalidate(threadIds.map((id) => `thread:${id}`)),
     });
     const sender = createPushSender({
-      bb,
+      sandy,
       getDeliverySettings: () => settings.get(),
       getNotificationLevel: (thread) => preferences.effectiveLevel(thread),
       ...(options.coalesceMs === undefined
@@ -165,9 +165,9 @@ export function createPushNotificationsPlugin(
       if (!(channel === "web" ? config.webEnabled : config.desktopEnabled)) {
         throw new Error(`${channel} notifications are disabled`);
       }
-      bb.realtime.publish(CLIENT_NOTIFICATION_CHANNEL, {
+      sandy.realtime.publish(CLIENT_NOTIFICATION_CHANNEL, {
         id: randomUUID(),
-        title: "bb notifications are working",
+        title: "sandy notifications are working",
         body: "You’ll be notified when a thread needs your attention.",
         threadId: null,
         channels: [channel],
@@ -175,7 +175,7 @@ export function createPushNotificationsPlugin(
       return { ok: true as const };
     }
 
-    bb.rpc.register(
+    sandy.rpc.register(
       sendNotificationRpcContract,
       {
         "notifications.send": async (input, context) => ({
@@ -186,11 +186,11 @@ export function createPushNotificationsPlugin(
       {
         experimental_discoverable: true,
         experimental_description:
-          "Notifications on bb's web and desktop channels.",
+          "Notifications on sandy's web and desktop channels.",
       },
     );
 
-    bb.rpc.register(pushNotificationsRpcContract, {
+    sandy.rpc.register(pushNotificationsRpcContract, {
       "notifications.test": ({ channel }) => sendTest(channel),
       "threadNotifications.keyed": async ({ keys }) => {
         const rows = await preferences.list(keys);
@@ -208,7 +208,7 @@ export function createPushNotificationsPlugin(
         preferences.set(threadId, level),
     });
 
-    bb.cli.register(
+    sandy.cli.register(
       defineCli({
         name: "push-notifications",
         summary: "Manage web and desktop notifications",
@@ -242,7 +242,7 @@ export function createPushNotificationsPlugin(
                   error instanceof Error ? error.message : String(error),
                   {
                     code: "channel_disabled",
-                    hint: `Turn it on with \`bb plugin config push-notifications set ${channel.data}Enabled true\`.`,
+                    hint: `Turn it on with \`sandy plugin config push-notifications set ${channel.data}Enabled true\`.`,
                   },
                 );
               }
@@ -256,7 +256,7 @@ export function createPushNotificationsPlugin(
           }),
           send: cliCommand({
             summary: "Send a notification to every enabled channel",
-            description: `Uses the same delivery as thread notifications: connected web and desktop clients with permission. The title is cut to ${NOTIFICATION_TITLE_MAX_LENGTH} characters and the body to ${NOTIFICATION_BODY_MAX_LENGTH}. With --thread, a click opens that thread; otherwise it opens bb.`,
+            description: `Uses the same delivery as thread notifications: connected web and desktop clients with permission. The title is cut to ${NOTIFICATION_TITLE_MAX_LENGTH} characters and the body to ${NOTIFICATION_BODY_MAX_LENGTH}. With --thread, a click opens that thread; otherwise it opens sandy.`,
             options: {
               title: {
                 type: "string",
@@ -305,7 +305,7 @@ export function createPushNotificationsPlugin(
                     ? { code: error.code }
                     : {
                         code: error.code,
-                        hint: "Check the push-sender service in `bb plugin list`.",
+                        hint: "Check the push-sender service in `sandy plugin list`.",
                       },
                 );
               }
@@ -314,7 +314,7 @@ export function createPushNotificationsPlugin(
                   "No channel received the notification",
                   {
                     code: "not_delivered",
-                    hint: "Run `bb push-notifications status` to see which channels are on.",
+                    hint: "Run `sandy push-notifications status` to see which channels are on.",
                   },
                 );
               }
@@ -385,22 +385,22 @@ export function createPushNotificationsPlugin(
       }),
     );
 
-    bb.events.on("interaction.pending", (payload) => {
+    sandy.events.on("interaction.pending", (payload) => {
       sender.onInteractionPending(payload);
     });
-    bb.events.on("thread.idle", (payload) => {
+    sandy.events.on("thread.idle", (payload) => {
       sender.onThreadIdle(payload);
     });
-    bb.events.on("thread.failed", (payload) => {
+    sandy.events.on("thread.failed", (payload) => {
       sender.onThreadFailed(payload);
     });
-    bb.events.on("experimental_thread.parentChanged", ({ thread }) =>
+    sandy.events.on("experimental_thread.parentChanged", ({ thread }) =>
       preferences.publishSubtree(thread.id),
     );
-    bb.events.on("thread.unarchived", ({ thread }) =>
+    sandy.events.on("thread.unarchived", ({ thread }) =>
       preferences.publishSubtree(thread.id),
     );
-    bb.background.service("push-sender", {
+    sandy.background.service("push-sender", {
       async start(signal) {
         sender.start();
         try {

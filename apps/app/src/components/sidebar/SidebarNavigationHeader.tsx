@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
-import type { ExperimentalSidebarHeaderProps } from "@get-bb/plugin-sdk";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { ExperimentalSidebarHeaderProps } from "@sandy-sdk/plugin-sdk";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PluginReplacementSlot } from "@/components/plugin/PluginReplacementSlot";
 import { appToast } from "@/components/ui/app-toast";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -14,7 +14,7 @@ const DEFAULT_CONTROL_SIZE = 28;
 
 function readControlSize(element: HTMLElement): number {
   const value = Number.parseFloat(
-    getComputedStyle(element).getPropertyValue("--bb-sidebar-control-size"),
+    getComputedStyle(element).getPropertyValue("--sandy-sidebar-control-size"),
   );
   return Number.isFinite(value) && value > 0 ? value : DEFAULT_CONTROL_SIZE;
 }
@@ -122,7 +122,7 @@ function PluginNavigationHeader({
             description:
               fallbackHeader === null
                 ? `${slot.title} (${pluginId}) stopped working.`
-                : `${slot.title} (${pluginId}) stopped working, so bb drew the ${fallbackHeader} header instead.`,
+                : `${slot.title} (${pluginId}) stopped working, so sandy drew the ${fallbackHeader} header instead.`,
           });
         }}
       />

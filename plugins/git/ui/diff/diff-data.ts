@@ -4,7 +4,7 @@ import {
   experimental_useRpcKeyedQuery as useRpcKeyedQuery,
   experimental_useRpcMutation as useRpcMutation,
   experimental_useRpcQuery as useRpcQuery,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   GIT_PATCHES_MAX_KEYS,
   gitPatchKey,
@@ -16,7 +16,7 @@ import {
 } from "../../contract.js";
 import { gitRpcContract } from "../../rpc-contract.js";
 import { useGitViewed } from "../queries.js";
-import type { DiffViewedFile } from "@bb/server-contract";
+import type { DiffViewedFile } from "@sandy/server-contract";
 
 const UNCOMMITTED_TARGET: WorkspaceDiffTarget = { type: "uncommitted" };
 const PATCH_REQUEST_DEBOUNCE_MS = 80;

@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   THREAD_CONTEXT_CLEAR_OPERATION,
   type CompletedTurnDisplay,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   deleteThreadEventSuffixInTransaction,
   createThread,
   noopNotifier,
   getLatestStoredConversationOutlineSequence,
   getLatestThreadSequence,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   buildThreadConversationOutline,
   loadThreadConversationOutline,

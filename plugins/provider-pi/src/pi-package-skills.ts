@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   experimental_execHostFile as execHostFile,
   experimental_hostToolchain as hostToolchain,
-} from "@get-bb/plugin-sdk/process";
+} from "@sandy-sdk/plugin-sdk/process";
 import { z } from "zod";
 import { resolvePiLaunch } from "./bridge/rpc-child.js";
 

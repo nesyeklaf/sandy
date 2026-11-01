@@ -1,5 +1,5 @@
-import { createAsyncTtlMemo } from "@bb/async-cache";
-import type { AgentRuntimeOptions } from "@bb/agent-runtime";
+import { createAsyncTtlMemo } from "@sandy/async-cache";
+import type { AgentRuntimeOptions } from "@sandy/agent-runtime";
 
 export type RuntimeShellEnv = NonNullable<AgentRuntimeOptions["shellEnv"]>;
 

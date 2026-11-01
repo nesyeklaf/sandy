@@ -6,13 +6,13 @@ import {
   getLastStoredProviderThreadId,
   listEvents,
   listQueuedThreadMessages,
-} from "@bb/db";
-import { threadScope, turnScope } from "@bb/domain";
+} from "@sandy/db";
+import { threadScope, turnScope } from "@sandy/domain";
 import {
   groupHostDaemonEvents,
   hostDaemonEventBatchResponseSchema,
   type HostDaemonEventEnvelope,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { describe, expect, it } from "vitest";
 import { buildThreadTimelineWithProfile } from "../../src/services/threads/timeline.js";
 import {

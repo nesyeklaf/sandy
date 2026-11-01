@@ -1,0 +1,67 @@
+{
+  "id": "verify-probe",
+  "title": "Verify probe: token comparison, ran evidence, restart mid-check",
+  "start": "verify",
+  "stages": [
+    {
+      "id": "verify",
+      "title": "Verify the test suite",
+      "inputs": [],
+      "description": "Run the test suite in /tmp/track-fixture (node --test /tmp/track-fixture/) and summarise the result.",
+      "outputs": [
+        {
+          "name": "summary",
+          "description": "one sentence: did the suite pass, how many tests"
+        }
+      ],
+      "autopilot": {
+        "name": "verify",
+        "args": "node --test /tmp/track-fixture/"
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "check",
+          "label": "slow suite",
+          "command": "date +%s%N >> /tmp/track-fixture/checks.log; sleep 20; node --test /tmp/track-fixture/",
+          "timeoutSec": 120
+        }
+      ],
+      "next": [
+        {
+          "to": "proof"
+        }
+      ]
+    },
+    {
+      "id": "proof",
+      "title": "Ran proof",
+      "inputs": [
+        "verify.summary"
+      ],
+      "description": "Only a plugin-run command that exited 0 passes this gate.",
+      "outputs": [
+        {
+          "name": "summary",
+          "description": "one sentence on the run"
+        }
+      ],
+      "autopilot": {
+        "name": "verify",
+        "args": "node --test /tmp/track-fixture/"
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "evidence",
+          "name": "tests",
+          "ran": true
+        }
+      ]
+    }
+  ]
+}

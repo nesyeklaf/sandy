@@ -1,0 +1,40 @@
+{
+  "name": "sandy-plugin-permissions",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-strip-types *.test.ts",
+    "typecheck": "tsc -p ."
+  },
+  "engines": {
+    "sandy": ">=0.46",
+    "sandyPluginSdk": ">=0.6.49"
+  },
+  "sandy": {
+    "name": "Permissions [Experimental]",
+    "description": "Pick the pi permission mode and block commands such as ssh, except allowed ones like ssh AI.",
+    "branding": {
+      "icon": "Lock"
+    },
+    "server": "./server.ts",
+    "host": "./host.ts",
+    "skills": [
+      "skills"
+    ],
+    "app": "./app.tsx"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sandy-sdk/plugin-sdk": "file:../../../packages/plugin-sdk",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "better-sqlite3": "^12.0.0",
+    "cron-parser": "^5.5.0",
+    "hono": "^4.11.9",
+    "typescript": "^5.7.0"
+  }
+}

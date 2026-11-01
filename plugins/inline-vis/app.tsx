@@ -12,12 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   definePluginApp,
   Markdown,
-  useBbNavigate,
+  useSandyNavigate,
   useRpc,
   type ExperimentalCodeFenceRendererProps,
   type PluginMessageDirectiveProps,
   type MarkdownProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   FRAME_HEIGHT_BEFORE_FIRST_REPORT,
   FRAME_MAX_HEIGHT,
@@ -465,7 +465,7 @@ function InlineVisDirective({
   previewCache,
 }: PluginMessageDirectiveProps & { previewCache: PreviewCache }) {
   const rpc = useRpc<typeof inlineVisRpcContract>();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const fileAttr = attributes.file?.trim() ?? "";
   const sourceAttr = attributes.source;
   const heightAttr = attributes.height;

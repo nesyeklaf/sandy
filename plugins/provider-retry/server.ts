@@ -7,7 +7,7 @@ import {
   retryAvailabilitySchema,
   type RetryAvailability,
 } from "./src/retry-contract.js";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { registerProviderRetryCli } from "./src/cli.js";
 import {
   DEFAULT_MAXIMUM_WAIT_MS,
@@ -32,8 +32,8 @@ function maximumWaitMs(value: string): number | null {
   }
 }
 
-export default async function plugin(bb: BbPluginApi) {
-  const settings = bb.settings.define({
+export default async function plugin(sandy: SandyPluginApi) {
+  const settings = sandy.settings.define({
     maximumWait: {
       type: "select",
       label: "Maximum automatic wait",
@@ -49,18 +49,18 @@ export default async function plugin(bb: BbPluginApi) {
     maximumWait = maximumWaitMs(next.maximumWait);
   });
 
-  bb.rpc.register(retryDiagnosticContract, {
-    "decision.get": ({ threadId }) => readRetryDiagnostic(bb, threadId),
+  sandy.rpc.register(retryDiagnosticContract, {
+    "decision.get": ({ threadId }) => readRetryDiagnostic(sandy, threadId),
   });
-  bb.events.on("turn.failed", async (event) => {
+  sandy.events.on("turn.failed", async (event) => {
     let availability: RetryAvailability = { kind: "not-routed" };
     if (isRateLimitFailure(event)) {
-      const sources = await bb.sdk.plugins.experimental_discoverRpc({
+      const sources = await sandy.sdk.plugins.experimental_discoverRpc({
         method: retryAvailabilityMethod,
       });
       for (const source of sources) {
         try {
-          const result = await bb.sdk.plugins.callRpc({
+          const result = await sandy.sdk.plugins.callRpc({
             pluginId: source.pluginId,
             method: retryAvailabilityMethod,
             input: { threadId: event.threadId, requestId: event.requestId },
@@ -72,7 +72,7 @@ export default async function plugin(bb: BbPluginApi) {
             break;
           }
         } catch (error) {
-          bb.log.warn(
+          sandy.log.warn(
             `Retry availability failed for ${event.threadId}: ${String(error)}`,
           );
           availability = { kind: "unavailable", reason: "source-unavailable" };
@@ -87,7 +87,7 @@ export default async function plugin(bb: BbPluginApi) {
       random: Math.random(),
     });
     const recordDecision = () =>
-      bb.storage.kv.set(`decision:${event.threadId}`, {
+      sandy.storage.kv.set(`decision:${event.threadId}`, {
         requestId: event.requestId,
         observedAt: Date.now(),
         availability,
@@ -95,12 +95,12 @@ export default async function plugin(bb: BbPluginApi) {
       });
     if (decision.kind === "decline") {
       await recordDecision();
-      bb.log.info(
+      sandy.log.info(
         `Automatic retry skipped for ${event.threadId}: ${decision.reason}${availability.kind === "unavailable" ? ` (${availability.reason})` : ""}.`,
       );
       return;
     }
-    await bb.sdk.threads.retry({
+    await sandy.sdk.threads.retry({
       threadId: event.threadId,
       turnRequestId: event.requestId,
       sendAt: decision.sendAt,
@@ -109,5 +109,5 @@ export default async function plugin(bb: BbPluginApi) {
     await recordDecision();
   });
 
-  registerProviderRetryCli(bb);
+  registerProviderRetryCli(sandy);
 }

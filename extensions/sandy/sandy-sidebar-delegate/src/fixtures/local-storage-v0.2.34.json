@@ -1,0 +1,12 @@
+{
+  "sandy-sidebar:lifecycle-cache:v1": "[{\"threadId\":\"parked\",\"parkedAt\":1799999000000,\"settledAt\":null,\"settledOverride\":null,\"snoozedUntil\":null,\"snoozedAt\":null},{\"threadId\":\"snoozed\",\"parkedAt\":null,\"settledAt\":null,\"settledOverride\":null,\"snoozedUntil\":1800003600000,\"snoozedAt\":1800000000000},{\"threadId\":\"settled\",\"parkedAt\":null,\"settledAt\":1799999000000,\"settledOverride\":\"settled\",\"snoozedUntil\":null,\"snoozedAt\":null},{\"threadId\":\"override\",\"parkedAt\":null,\"settledAt\":null,\"settledOverride\":\"active\",\"snoozedUntil\":null,\"snoozedAt\":null},{\"threadId\":\"child\",\"parkedAt\":null,\"settledAt\":1799999000000,\"settledOverride\":\"settled\",\"snoozedUntil\":null,\"snoozedAt\":null}]",
+  "sandy-sidebar:inbox-order-cache:v1": "[\"second\",\"first\"]",
+  "sandy-sidebar:settings-cache:v1": "{\"snoozePresets\":\"1h, 4h, 2d\",\"inactiveThreadsEnabled\":false,\"inactiveAfterHours\":12,\"showRunningChildrenWhenCollapsed\":false,\"autoSettleInactive\":false,\"autoSettleAfterDays\":7,\"autoSettleOnMerge\":false,\"childSortField\":\"activity\",\"childSortDirection\":\"descending\",\"childIconStyle\":\"provider\",\"compactWorkingThreads\":true,\"workingShelf\":true,\"dockShelves\":true}",
+  "sandy-sidebar:shelf-expansion:v1": "{\"active\":true,\"pinned\":true,\"working\":true,\"inactive\":true,\"parked\":true,\"snoozed\":true,\"settled\":true}",
+  "sandy-sidebar:child-expansion:v1": "[\"settled\",\"override\"]",
+  "sandy-sidebar:project-collapse:v1": "[\"proj_1\"]",
+  "sandy-sidebar:active-sort:v1": "manual",
+  "sandy-sidebar:active-grouping:v1": "true",
+  "sandy-sidebar:working-since:v1": "{\"busy\":1799999700000}",
+  "sandy-sidebar:port-link-host:v1": "host_1"
+}

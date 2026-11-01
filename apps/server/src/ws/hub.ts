@@ -12,15 +12,15 @@ import {
   type ThreadChangeMetadata,
   type ThreadEventType,
   type ThreadTimelineSubscriptionTarget,
-} from "@bb/domain";
-import type { DbNotifier } from "@bb/db";
+} from "@sandy/domain";
+import type { DbNotifier } from "@sandy/db";
 import type {
   HostPlatform,
   HostDaemonOnlineRpcRequestMessage,
   HostDaemonOnlineRpcResponseMessage,
   HostDaemonServerWsMessage,
   HostDaemonSessionCloseReason,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   pluginSignalSchema,
   serverMessageSchema,
@@ -32,7 +32,7 @@ import {
   type ThreadOpenFile,
   type ThreadOpenSplit,
   type TerminalServerMessage,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { COMPRESSED_SEND } from "./compression.js";
 import {
   WatchedTargetRegistry,

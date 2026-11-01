@@ -4,15 +4,15 @@ import {
   createThreadSection,
   getThread,
   markThreadDeleted,
-} from "@bb/db";
-import { threadSchema } from "@bb/domain";
+} from "@sandy/db";
+import { threadSchema } from "@sandy/domain";
 import {
   apiErrorSchema,
   sidebarBootstrapResponseSchema,
   threadArchiveAllResponseSchema,
   threadChildSummaryResponseSchema,
   threadListResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { waitForQueuedCommand } from "../helpers/commands.js";
 import { readJson } from "../helpers/json.js";

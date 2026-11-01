@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createPortal } from "react-dom";
 import { afterEach, describe, expect, it } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PAGE_SCROLL_TO_TOP_EVENT } from "@/lib/page-scroll-to-top";
 import { AppPageHeader } from "./AppPageHeader";

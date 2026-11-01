@@ -3,7 +3,7 @@ import {
   pluginMarketplaceAddRequestSchema,
   pluginMarketplaceNameSchema,
   pluginMarketplaceRefreshRequestSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import type {
   PluginCatalogEntrySelector,

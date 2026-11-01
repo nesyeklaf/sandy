@@ -1,0 +1,50 @@
+/* Phones: the composer grows to three lines, then scrolls. sandy sets the
+   editor's max-height inline, hence !important. 16px covers its pt-3 pb-1. */
+@media (max-width: 767.98px) {
+  [data-promptbox-editor-scroll] {
+    max-height: calc(4.5em + 16px) !important;
+    max-height: calc(3lh + 16px) !important;
+  }
+}
+
+/* The tab sits first in the card stack, above every card. The plugin root
+   around it is display: contents, so order goes on the tab itself. app.tsx
+   sets its negative margin-bottom so it docks onto what comes next. */
+.cc-bar {
+  order: -1;
+  position: relative;
+  z-index: 1;
+}
+
+/* The tab: card chrome without a bottom edge, kept clear of the rounded
+   corner of the card below. */
+.cc-bar > button {
+  margin-right: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: var(--color-surface-raised-solid);
+}
+
+/* Collapsed: no gaps between the folded cards. */
+[data-cc-collapsed] {
+  row-gap: 0 !important;
+}
+
+/* Collapsed: fold every card app.tsx marked to height 0. Folding instead of
+   display: none keeps scrollHeight, so the tab can still count the cards. */
+[data-cc-collapsed] [data-cc-fold] {
+  height: 0 !important;
+  min-height: 0 !important;
+  margin-block: 0 !important;
+  padding-block: 0 !important;
+  border-block-width: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Pending questions keep their distance from each other without the gap. */
+[data-cc-collapsed] [data-cc-pin] {
+  margin-top: 0.5rem;
+}

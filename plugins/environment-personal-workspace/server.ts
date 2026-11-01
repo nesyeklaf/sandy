@@ -1,15 +1,15 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { personalWorkspaceHostContract } from "./contract.js";
 import { PERSONAL_WORKSPACE_ENVIRONMENT_PROVIDER_ID } from "./provider-id.js";
 
 export default async function personalWorkspacePlugin(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
 ): Promise<void> {
-  const host = bb.hosts.experimental_client({
+  const host = sandy.hosts.experimental_client({
     contract: personalWorkspaceHostContract,
   });
 
-  bb.experimental_environments.register({
+  sandy.experimental_environments.register({
     id: PERSONAL_WORKSPACE_ENVIRONMENT_PROVIDER_ID,
     displayName: "Personal workspace",
     description: "Create a personal directory without a project.",

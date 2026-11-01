@@ -1,4 +1,4 @@
-import { spawnHostProcess as spawn } from "@bb/process-utils";
+import { spawnHostProcess as spawn } from "@sandy/process-utils";
 import { mkdir, open, readFile, stat } from "node:fs/promises";
 import { dirname } from "node:path";
 import type {
@@ -122,8 +122,8 @@ export function formatMachineServiceFailureNotice(args: {
   reason: string;
 }): ServerMovedNotice {
   return {
-    detail: `bb couldn't install the background service that keeps this computer connected and up to date: ${args.reason} bb tries again the next time it opens. The installer log is ${args.logPath}.`,
-    message: `This computer stays connected to ${args.move.toHostName} only while bb is open`,
+    detail: `sandy couldn't install the background service that keeps this computer connected and up to date: ${args.reason} sandy tries again the next time it opens. The installer log is ${args.logPath}.`,
+    message: `This computer stays connected to ${args.move.toHostName} only while sandy is open`,
   };
 }
 

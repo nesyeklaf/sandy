@@ -1,4 +1,4 @@
-import type { BridgeServer } from "@bb/mobile-bridge";
+import type { BridgeServer } from "@sandy/mobile-bridge";
 import type { ServerProfile } from "../profiles/profile";
 
 export function bridgeServersForProfiles(

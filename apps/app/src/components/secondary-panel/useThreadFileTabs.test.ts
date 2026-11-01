@@ -4,7 +4,7 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getActiveSecondaryPanelTab } from "@bb/client-core";
+import { getActiveSecondaryPanelTab } from "@sandy/client-core";
 import { useFixedPanelTabsState } from "@/lib/fixed-panel-tabs";
 import {
   createEmptyFixedPanelTabsState,
@@ -30,9 +30,9 @@ import {
 import { makeTerminalSession as terminalSession } from "@/test/fixtures/terminal-sessions";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
 import {
-  createBbDesktopApi,
+  createSandyDesktopApi,
   createNoopDesktopBrowserApi,
-} from "@/test/bb-desktop-test-utils";
+} from "@/test/sandy-desktop-test-utils";
 
 const syncMocks = vi.hoisted(() => ({
   scheduleLocalThreadTabsMigration: vi.fn(),
@@ -100,7 +100,7 @@ afterEach(() => {
   syncMocks.scheduleLocalThreadTabsMigration.mockClear();
   syncMocks.scheduleThreadTabsPersistence.mockClear();
   syncMocks.useThreadTabs.mockClear();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
 });
 
 describe("useThreadFileTabs recently closed tabs", () => {
@@ -112,7 +112,7 @@ describe("useThreadFileTabs recently closed tabs", () => {
     };
     const browser = createNoopDesktopBrowserApi();
     browser.getTarget = async () => desktopTarget;
-    window.bbDesktop = createBbDesktopApi(
+    window.sandyDesktop = createSandyDesktopApi(
       {
         platform: "macos",
         version: "0.0.0-test",
@@ -1476,7 +1476,7 @@ describe("useThreadFileTabs file opener diversion", () => {
 
   it("keeps the built-in preview when Settings pins it", () => {
     window.localStorage.setItem(
-      "bb.fileOpenerByExtension",
+      "sandy.fileOpenerByExtension",
       JSON.stringify({ md: "__builtin__" }),
     );
     registerNotesOpener();

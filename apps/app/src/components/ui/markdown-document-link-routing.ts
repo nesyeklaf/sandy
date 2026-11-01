@@ -1,11 +1,11 @@
-import type { ExperimentalFileOpenOptions } from "@get-bb/plugin-sdk";
-import { getEnvironmentFilePreviewSourceAtRef } from "@bb/client-core";
+import type { ExperimentalFileOpenOptions } from "@sandy-sdk/plugin-sdk";
+import { getEnvironmentFilePreviewSourceAtRef } from "@sandy/client-core";
 import { normalizeExperimentalLiveFileTarget } from "@/lib/live-file-navigation";
 import {
   buildAbsoluteFilePath,
   isAbsoluteFilePathWithinRoot,
   normalizeAbsoluteFilePath,
-} from "@bb/shared-ui/lib/absolute-file-path";
+} from "@sandy/shared-ui/lib/absolute-file-path";
 import {
   buildEnvironmentFileContentUrl,
   buildThreadStorageRawContentUrl,

@@ -1,4 +1,4 @@
-import { fuzzyMatchText } from "@bb/fuzzy-match";
+import { fuzzyMatchText } from "@sandy/fuzzy-match";
 
 interface SearchPickerOptionsArgs<T> {
   options: readonly T[];

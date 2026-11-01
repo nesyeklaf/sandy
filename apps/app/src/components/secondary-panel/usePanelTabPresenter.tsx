@@ -1,8 +1,8 @@
 import { useCallback, type ReactNode } from "react";
-import type { TerminalSession } from "@bb/server-contract";
-import { getEnvironmentFilePreviewSourceRef } from "@bb/client-core";
-import { COARSE_POINTER_COMPACT_ICON_SIZE_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
+import type { TerminalSession } from "@sandy/server-contract";
+import { getEnvironmentFilePreviewSourceRef } from "@sandy/client-core";
+import { COARSE_POINTER_COMPACT_ICON_SIZE_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
 import { PluginIcon, PluginItemIcon } from "@/components/plugin/PluginIcon";
 import { resolvePluginDetailKey } from "@/components/plugin/management/installed-plugin-catalog";
 import { usePluginCatalogSearch } from "@/hooks/queries/plugin-catalog-queries";

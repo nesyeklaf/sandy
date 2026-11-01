@@ -1,0 +1,8 @@
+{
+  "status": "running",
+  "phase": "orders 2024-07",
+  "done": 182400,
+  "total": 410000,
+  "message": "batch 1824 of 4100, 412 rows/s",
+  "eta": "9 min"
+}

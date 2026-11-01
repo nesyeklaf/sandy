@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   experimental_useRpcKeyedQuery,
   experimental_useRpcMutation,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   CLOSED_TASK_STATUSES,
   OPEN_TASK_STATUSES,

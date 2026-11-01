@@ -18,25 +18,25 @@ import {
   type DbQueryConnection,
   type QueuedThreadMessageGroupClaimPolicy,
   type QueuedThreadMessageGroupEligibility,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   flattenPromptInputGroups,
   isQueuedMessageFailedState,
   queuedMessageSystemNoticeSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   PromptInput,
   QueuedMessageWaitingOn,
   Thread,
   ThreadQueuedMessage,
   ThreadTurnInitiator,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   CreateQueuedMessageRequest,
   QueuedMessageEditHoldResponse,
   SendMessageRequest,
   SendQueuedMessageMode,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   AppDeps,
   LoggedPendingInteractionWorkSessionDeps,

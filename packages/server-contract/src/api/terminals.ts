@@ -7,7 +7,7 @@ import {
   terminalRowsSchema,
   terminalSessionCloseReasonSchema,
   terminalSessionStatusSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export const terminalSessionIdSchema = z
   .string()

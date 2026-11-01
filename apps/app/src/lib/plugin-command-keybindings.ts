@@ -8,7 +8,7 @@ import {
   type AppKeybindingOverrides,
   type AppShortcut,
   type KeyboardCommandId,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export function shortcutsConflict(
   left: AppShortcut,

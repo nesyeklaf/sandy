@@ -44,7 +44,7 @@ async function installDeclaredDependencies(targetDir: string): Promise<void> {
     const target = join(targetDir, "node_modules", name);
     await mkdir(dirname(target), { recursive: true });
     const source =
-      name === "@get-bb/plugin-sdk"
+      name === "@sandy-sdk/plugin-sdk"
         ? pluginSdkRoot
         : workspacePackageRoot(name);
     await symlink(source, target, "dir");
@@ -85,12 +85,12 @@ describe("scaffold typechecks the runtime-shimmed imports (#2072)", () => {
   let targetDir: string;
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-scaffold-shims-"));
-    targetDir = join(workDir, "bb-plugin-toasty");
+    workDir = await mkdtemp(join(tmpdir(), "sandy-scaffold-shims-"));
+    targetDir = join(workDir, "sandy-plugin-toasty");
     await scaffoldPlugin({
       targetDir,
-      packageName: "bb-plugin-toasty",
-      bbVersion: "0.39.0",
+      packageName: "sandy-plugin-toasty",
+      sandyVersion: "0.39.0",
     });
     await installDeclaredDependencies(targetDir);
   });

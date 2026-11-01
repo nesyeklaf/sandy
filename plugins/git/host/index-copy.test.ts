@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { initRepo, makeTempDir } from "@bb/test-helpers";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { initRepo, makeTempDir } from "@sandy/test-helpers";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 import { WorkspaceReads } from "./workspace-reads.js";
 
 let freshReads = 0;
@@ -44,14 +44,14 @@ afterEach(() => {
 
 describe.skipIf(process.platform === "win32")("WorkspaceReads index copy", () => {
   it("reads status and diffs when the resolved index is below a marker file", async () => {
-    const repo = await initRepo(await makeTempDir("bb-index-copy-marker-"));
-    const storage = await makeTempDir("bb-index-copy-storage-");
+    const repo = await initRepo(await makeTempDir("sandy-index-copy-marker-"));
+    const storage = await makeTempDir("sandy-index-copy-storage-");
     const gitDir = path.join(storage, "git-dir");
     await fs.rename(path.join(repo, ".git"), gitDir);
     await fs.writeFile(path.join(repo, ".git"), `gitdir: ${gitDir}\n`);
     await fs.writeFile(path.join(repo, "README.md"), "edited\n");
     const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
-    const shimDir = await makeTempDir("bb-git-marker-index-");
+    const shimDir = await makeTempDir("sandy-git-marker-index-");
     await fs.writeFile(
       path.join(shimDir, "git"),
       `#!/bin/sh\ncase " $* " in *" rev-parse --git-path index "*) printf '.git/index\\n'; exit 0;; esac\nexec "${realGit}" "$@"\n`,
@@ -75,7 +75,7 @@ describe.skipIf(process.platform === "win32")("WorkspaceReads index copy", () =>
   });
 
   it("sees a same-size rewrite made in the second of git add", async () => {
-    const repo = await initRepo(await makeTempDir("bb-index-copy-racy-"));
+    const repo = await initRepo(await makeTempDir("sandy-index-copy-racy-"));
     await fs.writeFile(path.join(repo, "f.txt"), "cccc\n");
     await runGit(["add", "f.txt"], { cwd: repo });
     await runGit(["commit", "-m", "f"], { cwd: repo });
@@ -90,10 +90,10 @@ describe.skipIf(process.platform === "win32")("WorkspaceReads index copy", () =>
   });
 
   it("keeps the index copy until reads using it finish when disposed mid-read", async () => {
-    const repo = await initRepo(await makeTempDir("bb-index-copy-dispose-"));
+    const repo = await initRepo(await makeTempDir("sandy-index-copy-dispose-"));
     await fs.writeFile(path.join(repo, "README.md"), "edited\n");
     const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
-    const shimDir = await makeTempDir("bb-git-slow-diff-");
+    const shimDir = await makeTempDir("sandy-git-slow-diff-");
     const marker = path.join(shimDir, "diff-started");
     await fs.writeFile(
       path.join(shimDir, "git"),
@@ -110,7 +110,7 @@ describe.skipIf(process.platform === "win32")("WorkspaceReads index copy", () =>
   });
 
   it("writes no shared index into the repository when core.splitIndex is on", async () => {
-    const repo = await initRepo(await makeTempDir("bb-index-copy-split-"));
+    const repo = await initRepo(await makeTempDir("sandy-index-copy-split-"));
     await runGit(["config", "core.splitIndex", "true"], { cwd: repo });
     await runGit(["update-index", "--split-index"], { cwd: repo });
     await fs.writeFile(path.join(repo, "README.md"), "edited\n");
@@ -131,7 +131,7 @@ describe.skipIf(process.platform === "win32")("WorkspaceReads index copy", () =>
   });
 
   it("re-reads an untracked file whose same-tick rewrite keeps its stat signature", async () => {
-    const repo = await initRepo(await makeTempDir("bb-index-copy-tick-"));
+    const repo = await initRepo(await makeTempDir("sandy-index-copy-tick-"));
     const file = path.join(repo, "notes.txt");
     await fs.writeFile(file, "one\n");
     const tick = Math.floor(Date.now() / 1_000) * 1_000;

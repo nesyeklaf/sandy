@@ -13,16 +13,16 @@ import {
   getDisabledProviderIds,
   setAppSettings,
   type DbConnection,
-} from "@bb/db";
-import { defaultFeatureFlags } from "@bb/domain";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { defaultFeatureFlags } from "@sandy/domain";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createApp } from "../../src/server.js";
 import { PendingInteractionLifecycle } from "../../src/services/interactions/pending-interactions.js";
 import { createMachineAuthService } from "../../src/services/machine-auth.js";
 import { createProviderRegistryService } from "../../src/services/providers/provider-registry.js";
 import { registerFirstPartyProviders } from "./provider-registry.js";
-import { validatePluginProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
+import { validatePluginProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 import { buildPluginProviderRegistration } from "../../src/services/providers/plugin-provider-registration.js";
 import { SkillTreeRegistry } from "../../src/services/skills/injected-skills.js";
 import { PluginHostArtifactRegistry } from "../../src/services/plugins/plugin-host-artifact-registry.js";
@@ -33,7 +33,7 @@ import {
   createCliCommandService,
   type CliCommandService,
 } from "../../src/services/system/cli-command.js";
-import { createBbAppManagedConfigReloader } from "../../src/services/system/bb-app-managed-config.js";
+import { createSandyAppManagedConfigReloader } from "../../src/services/system/sandy-app-managed-config.js";
 import { TerminalSessionLifecycle } from "../../src/services/terminals/terminal-session-lifecycle.js";
 import { createLifecycleDedupers } from "../../src/lifecycle-dedupers.js";
 import type { ServerAppDeps, ServerRuntimeConfig } from "../../src/types.js";
@@ -157,7 +157,7 @@ export async function createTestAppHarness(
     ...configOverrides
   } = overrides;
   const logger = createTestLogger();
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-server-test-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-server-test-"));
   const db = createTestDb();
   setAppSettings(db, {
     ...getAppSettings(db),
@@ -229,7 +229,7 @@ export async function createTestAppHarness(
     isDevelopment: true,
     serverPort: 3334,
     sharedSkillRoots: { user: [], project: [] },
-    appUrl: "https://bb.example.test",
+    appUrl: "https://sandy.example.test",
     ...configOverrides,
   };
   const terminalSessions = new TerminalSessionLifecycle({
@@ -243,7 +243,7 @@ export async function createTestAppHarness(
     logger,
     openTimeoutMs: terminalOpenTimeoutMs,
   });
-  const bbAppManagedConfig = await createBbAppManagedConfigReloader({
+  const sandyAppManagedConfig = await createSandyAppManagedConfigReloader({
     config,
     hub,
     logger,
@@ -266,7 +266,7 @@ export async function createTestAppHarness(
   pendingInteractions.start();
   setPluginToolCallRegistry(new PluginToolCallRegistry({ logger }));
   const deps: ServerAppDeps = {
-    bbAppManagedConfig,
+    sandyAppManagedConfig,
     cliCommand:
       cliCommandService ??
       createCliCommandService({

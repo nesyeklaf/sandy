@@ -8,7 +8,7 @@ on:
       - "packages/**"
       - "plugins/**"
       - "scripts/perf/**"
-      - "scripts/start-bb.mjs"
+      - "scripts/start-sandy.mjs"
       - "pnpm-lock.yaml"
       - ".github/workflows/perf-regression.yml"
   workflow_dispatch:
@@ -59,7 +59,7 @@ jobs:
       - name: Run the regression check
         env:
           TURBO_CACHE_DIR: ${{ runner.temp }}/turbo-cache
-          BB_PERF_CHROME: /usr/bin/google-chrome
+          SANDY_PERF_CHROME: /usr/bin/google-chrome
           BASE_REF: ${{ github.event_name == 'pull_request' && 'HEAD^1' || inputs.base }}
           HEAD_REF: ${{ github.event_name == 'pull_request' && 'HEAD' || inputs.head }}
           ROUNDS: ${{ inputs.rounds || '8' }}

@@ -1,9 +1,9 @@
 import type {
   PendingInteractionUserAnswer,
   PendingInteractionUserQuestionQuestion,
-} from "@bb/domain";
-import type { TimelineQuestionViewWorkRow } from "@bb/thread-view";
-import { formatPendingInteractionUserQuestionOptionLabel } from "@bb/core-ui";
+} from "@sandy/domain";
+import type { TimelineQuestionViewWorkRow } from "@sandy/thread-view";
+import { formatPendingInteractionUserQuestionOptionLabel } from "@sandy/core-ui";
 
 interface QuestionWorkRowBodyProps {
   row: TimelineQuestionViewWorkRow;

@@ -1,15 +1,15 @@
 import { useCallback } from "react";
-import type { AppCommandId } from "@bb/domain";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Button } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+import type { AppCommandId } from "@sandy/domain";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
+} from "@sandy/shared-ui/tooltip";
+import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
 import { useAppCommandShortcut } from "@/components/commands/AppCommandProvider";
 import { useRouteStateHistoryNavigation } from "@/lib/app-route-history";
 
@@ -97,7 +97,7 @@ export function SidebarHistoryNavigationControls({
     <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          "flex items-center gap-(--bb-chrome-control-gap)",
+          "flex items-center gap-(--sandy-chrome-control-gap)",
           className,
         )}
       >

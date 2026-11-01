@@ -1,6 +1,6 @@
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
-import { environmentHostProgressSchema } from "bb-environment-provider-host/progress";
+import { environmentHostProgressSchema } from "sandy-environment-provider-host/progress";
 
 export const checkoutBranchSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("existing"), name: z.string().min(1) }).strict(),

@@ -1,7 +1,7 @@
 import { PluginTabScope } from "./PluginTabs";
-import type { ExperimentalThreadEnvironment } from "@get-bb/plugin-sdk";
+import type { ExperimentalThreadEnvironment } from "@sandy-sdk/plugin-sdk";
 import { useMemo, type ReactNode } from "react";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
 import { usePluginFrontendsSettled } from "@/lib/plugin-frontend-boot-state";
 import {
   usePluginSlots,
@@ -62,7 +62,7 @@ interface PanelActionDestinationArgs {
     pluginId: string;
     id: string;
     title: string;
-    params?: import("@get-bb/plugin-sdk").JsonValue;
+    params?: import("@sandy-sdk/plugin-sdk").JsonValue;
   };
   openPluginPanel: OpenPluginPanelHandler;
 }
@@ -72,7 +72,7 @@ export function createPanelActionDestination({
   openPluginPanel,
 }: PanelActionDestinationArgs): AppFixedTabDestination {
   const serializeParams = (
-    params: import("@get-bb/plugin-sdk").JsonValue | undefined,
+    params: import("@sandy-sdk/plugin-sdk").JsonValue | undefined,
   ) =>
     serializePluginPanelParams(params === undefined ? action.params : params);
   return {

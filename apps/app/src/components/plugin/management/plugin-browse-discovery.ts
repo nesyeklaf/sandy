@@ -1,8 +1,8 @@
 import {
   PLUGIN_CATALOG_CATEGORIES,
   type PluginMarketplaceCategory,
-} from "@bb/domain";
-import type { PluginCatalogCollection } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { PluginCatalogCollection } from "@sandy/server-contract";
 import type {
   PluginCatalogSearchEntry,
   PluginCatalogSearchData,

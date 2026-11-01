@@ -1,5 +1,5 @@
-import type { ProvisioningTranscriptEntry } from "@bb/domain";
-import { pathExists } from "@bb/process-utils";
+import type { ProvisioningTranscriptEntry } from "@sandy/domain";
+import { pathExists } from "@sandy/process-utils";
 import {
   type CommitOptions,
   type LocalStateSnapshot,
@@ -7,7 +7,7 @@ import {
   Workspace,
 } from "./host-workspace.js";
 import { inspectGitRepository, type SharedGitRefsSnapshot } from "./git.js";
-import { WorkspaceError } from "bb-environment-provider-host/workspace-git";
+import { WorkspaceError } from "sandy-environment-provider-host/workspace-git";
 
 type ProvisionProgressCallback = (entry: ProvisioningTranscriptEntry) => void;
 

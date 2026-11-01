@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BbHttpError } from "@bb/sdk/browser";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { SandyHttpError } from "@sandy/sdk/browser";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { startQueuedMessageEditHold } from "./useQueuedMessageEditHold";
 
 const mocks = vi.hoisted(() => ({
@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/sdk", async () => ({
-  BbHttpError: (await import("@bb/sdk/browser")).BbHttpError,
+  SandyHttpError: (await import("@sandy/sdk/browser")).SandyHttpError,
   sdk: {
     threads: {
       queuedMessages: {
@@ -61,7 +61,7 @@ describe("startQueuedMessageEditHold", () => {
 
   it("closes the editor when a dispatch already claimed the message", async () => {
     mocks.holdForEdit.mockRejectedValue(
-      new BbHttpError({
+      new SandyHttpError({
         status: 409,
         code: "invalid_request",
         message: "Queued message is already being sent",

@@ -1,4 +1,4 @@
-import { experimental_saveFile } from "@get-bb/plugin-sdk/app";
+import { experimental_saveFile } from "@sandy-sdk/plugin-sdk/app";
 import { useEffect, useState } from "react";
 import { attachmentDownloadUrl } from "../../shared/attachments.js";
 import type { Attachment } from "../../shared/contract.js";
@@ -51,7 +51,7 @@ export async function uploadAttachment(
     `/api/v1/plugins/tasks/http/attachments/upload?${query.toString()}`,
     {
       method: "POST",
-      headers: { "x-bb-plugin-token": token },
+      headers: { "x-sandy-plugin-token": token },
       body: file,
     },
   );

@@ -5,8 +5,8 @@ import type {
   SystemMessageSubject,
   Thread,
   ThreadTurnInitiator,
-} from "@bb/domain";
-import { getThread, type DbTransaction, type EnvironmentRow } from "@bb/db";
+} from "@sandy/domain";
+import { getThread, type DbTransaction, type EnvironmentRow } from "@sandy/db";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import {
   goneThreadEnvironmentDetails,

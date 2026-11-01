@@ -1,10 +1,10 @@
 # Contributing
 
-Thanks for helping improve bb.
+Thanks for helping improve sandy.
 
 ## Before You Open A Pull Request
 
-A pull request from outside the bb team must meet all of these:
+A pull request from outside the sandy team must meet all of these:
 
 1. **Approved author.** You are on `.github/APPROVED_CONTRIBUTORS`. See [Contributor Approval](#contributor-approval).
 2. **Linked issue.** The description closes an open issue in this repo, for example `Fixes #123`. See [Linked Issue](#linked-issue).
@@ -14,7 +14,7 @@ The PR gate closes a pull request that misses any of these and comments with wha
 
 ## Contributor Approval
 
-bb approves new contributors before it reviews their pull requests. Anyone can open an issue. You need no approval for an issue.
+sandy approves new contributors before it reviews their pull requests. Anyone can open an issue. You need no approval for an issue.
 
 1. Open an issue for the change, or find an existing one. Feature requests and UI changes need sign-off first; see below.
 2. Open the pull request with `Fixes #<number>` in its description. The gate closes it because you are not approved yet. That is expected.
@@ -26,7 +26,7 @@ A maintainer can also approve you with `/approve @your-name` on the pull request
 
 ## Linked Issue
 
-Every pull request from outside the bb team must close an open issue in this repo.
+Every pull request from outside the sandy team must close an open issue in this repo.
 
 A pull request is one attempt at a change, and many attempts do not land as written. We may ask for rework, a pull request closes after two weeks open, or we may solve the problem another way. The issue records the problem itself, so it stays visible and tracked whatever happens to any one pull request.
 

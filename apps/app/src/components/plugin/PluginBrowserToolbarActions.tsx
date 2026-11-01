@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import type { ExperimentalPluginBrowserPage } from "@get-bb/plugin-sdk";
-import type { BbDesktopBrowserApi } from "@bb/desktop-contract";
-import { getDesktopBrowserApi } from "@/lib/bb-desktop";
+import type { ExperimentalPluginBrowserPage } from "@sandy-sdk/plugin-sdk";
+import type { SandyDesktopBrowserApi } from "@sandy/desktop-contract";
+import { getDesktopBrowserApi } from "@/lib/sandy-desktop";
 import {
   usePluginSlots,
   type PluginBrowserToolbarActionSlot,
@@ -9,7 +9,7 @@ import {
 import { PluginSlotMount } from "./PluginSlotMount";
 
 interface CreatePluginBrowserPageArgs {
-  desktopBrowser: BbDesktopBrowserApi | null;
+  desktopBrowser: SandyDesktopBrowserApi | null;
   pluginId: string;
   tabId: string;
 }

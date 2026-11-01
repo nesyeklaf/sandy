@@ -6,9 +6,9 @@ import {
   listPublicHosts,
   hosts,
   setAppSettings,
-} from "@bb/db";
-import { defaultAppSettings } from "@bb/domain";
-import type { ServerAccessGrant } from "@get-bb/plugin-sdk";
+} from "@sandy/db";
+import { defaultAppSettings } from "@sandy/domain";
+import type { ServerAccessGrant } from "@sandy-sdk/plugin-sdk";
 import { describe, expect, it, vi } from "vitest";
 import { getMachineEnrollmentService } from "../../../src/services/machines/machine-services.js";
 import { serverAccess } from "../../../src/services/machines/server-access.js";
@@ -19,15 +19,15 @@ import {
 } from "../../helpers/test-app.js";
 
 async function installPlugin(harness: TestAppHarness, id: string) {
-  const root = join(harness.config.dataDir, `bb-plugin-${id}`);
+  const root = join(harness.config.dataDir, `sandy-plugin-${id}`);
   await mkdir(root, { recursive: true });
   await writeFile(
     join(root, "package.json"),
     JSON.stringify({
-      name: `bb-plugin-${id}`,
+      name: `sandy-plugin-${id}`,
       version: "0.1.0",
       type: "module",
-      bb: {
+      sandy: {
         name: id,
         description: "Machine enrollment regression fixture",
         branding: { icon: "Zap" },
@@ -37,8 +37,8 @@ async function installPlugin(harness: TestAppHarness, id: string) {
   );
   await writeFile(
     join(root, "server.js"),
-    `export default function(bb) {
-    bb.experimental_machines.register({
+    `export default function(sandy) {
+    sandy.experimental_machines.register({
       id: "${id}-machine", displayName: "Runtime machine",
       description: "Provision a runtime test machine.", icon: "Terminal",
 
@@ -322,7 +322,7 @@ it("serves a composition's explicit icon instead of the machine provider's icon"
     const svg =
       '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1v1z"/></svg>';
     await writeFile(
-      join(h.config.dataDir, "bb-plugin-icon-runtime", "composition.svg"),
+      join(h.config.dataDir, "sandy-plugin-icon-runtime", "composition.svg"),
       svg,
     );
     api.experimental_environments.register({

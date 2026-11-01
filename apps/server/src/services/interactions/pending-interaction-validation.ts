@@ -15,7 +15,7 @@ import {
   isUserQuestionPendingInteraction,
   isUserQuestionPendingInteractionResolution,
   isPluginPendingInteractionResolution,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 
 type GrantedPendingInteractionResolution = Extract<

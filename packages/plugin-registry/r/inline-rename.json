@@ -3,10 +3,10 @@
   "name": "inline-rename",
   "type": "registry:ui",
   "title": "inline-rename",
-  "description": "BB ui \"inline-rename\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"inline-rename\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/use-compact-viewport",
-    "@bb/use-pointer-coarse"
+    "@sandy/use-compact-viewport",
+    "@sandy/use-pointer-coarse"
   ],
   "files": [
     {

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 const INFO_LIST_DEFAULT_LIMIT = 5;
 

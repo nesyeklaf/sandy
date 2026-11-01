@@ -143,7 +143,7 @@ describe.each([
     { path: "items/key%3A42" },
     { path: "items/key:42" },
     { path: "items/discount%25" },
-    { path: "items/%D0%BF%D0%BB%D0%B0%D0%BD" },
+    { path: "items/%D0%BF%D0%SANDY%D0%B0%D0%BD" },
     { path: "items/key%252Fpart" },
     { path: "items/key/part" },
     { path: "items/key%2Fpart", subPath: "items/key/part" },

@@ -1,16 +1,16 @@
-import type { ThreadListEntry, ThreadQueuedMessage } from "@bb/domain";
+import type { ThreadListEntry, ThreadQueuedMessage } from "@sandy/domain";
 import type {
   SidebarBootstrapResponse,
   ThreadSearchResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { QueryObserver } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { createAppQueryClient } from "@/lib/query-client";
 import {
   makeThreadListEntry as makeThreadListEntryFixture,
   makeThreadQueuedMessage as makeThreadQueuedMessageFixture,
-} from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/test-helpers/domain-fixtures";
 import {
   makeProjectWithThreadsResponse,
   makeSidebarBootstrapResponse,

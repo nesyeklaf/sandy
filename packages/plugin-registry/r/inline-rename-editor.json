@@ -3,13 +3,13 @@
   "name": "inline-rename-editor",
   "type": "registry:ui",
   "title": "inline-rename-editor",
-  "description": "BB ui \"inline-rename-editor\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"inline-rename-editor\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/icon",
-    "@bb/inline-rename",
-    "@bb/sidebar-row-classes",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/icon",
+    "@sandy/inline-rename",
+    "@sandy/sidebar-row-classes",
+    "@sandy/utils"
   ],
   "files": [
     {

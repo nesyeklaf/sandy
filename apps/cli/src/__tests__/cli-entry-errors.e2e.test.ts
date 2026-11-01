@@ -14,14 +14,14 @@ interface CliResult {
   stdout: string;
 }
 
-describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
+describe.skipIf(process.platform === "win32")("sandy entrypoint errors", () => {
   let server: Server;
   let serverUrl: string;
   let dataDir: string;
   const pluginRuns: string[] = [];
 
   beforeAll(async () => {
-    dataDir = mkdtempSync(join(tmpdir(), "bb-cli-entry-"));
+    dataDir = mkdtempSync(join(tmpdir(), "sandy-cli-entry-"));
     server = createServer((request, response) => {
       response.setHeader("content-type", "application/json");
       if (request.url === "/api/v1/plugins/contributions") {
@@ -35,7 +35,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
                 {
                   name: "add",
                   summary: "Add",
-                  usage: `bb ${name} add --name NAME`,
+                  usage: `sandy ${name} add --name NAME`,
                 },
               ],
               rendersHelp: name === "spec",
@@ -51,7 +51,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
           JSON.stringify({
             exitCode: 0,
             stdout:
-              "Usage: bb spec add --name NAME\n  --name NAME  at most 80 characters\n",
+              "Usage: sandy spec add --name NAME\n  --name NAME  at most 80 characters\n",
             stderr: "",
           }),
         );
@@ -128,15 +128,15 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
   ): Promise<CliResult> {
     const env: NodeJS.ProcessEnv = {
       ...process.env,
-      BB_CLI_REEXEC: "1",
-      BB_DATA_DIR: dataDir,
-      BB_SERVER_URL: serverUrl,
-      BB_PROJECT_ID: "proj_fixture",
-      BB_THREAD_ID: "thr_fixture",
+      SANDY_CLI_REEXEC: "1",
+      SANDY_DATA_DIR: dataDir,
+      SANDY_SERVER_URL: serverUrl,
+      SANDY_PROJECT_ID: "proj_fixture",
+      SANDY_THREAD_ID: "thr_fixture",
       ...envOverrides,
     };
-    delete env.BB_CLI;
-    delete env.BB_ENVIRONMENT_ID;
+    delete env.SANDY_CLI;
+    delete env.SANDY_ENVIRONMENT_ID;
     return new Promise((resolve) => {
       execFile(
         process.execPath,
@@ -164,7 +164,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
       [
         "error: required option '--project <id>' not specified",
         "This thread's project is proj_fixture; add --project proj_fixture.",
-        "Usage: bb thread spawn [options]",
+        "Usage: sandy thread spawn [options]",
         "",
       ].join("\n"),
     );
@@ -208,7 +208,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
     expect(result.stderr).toContain("Commands: list, enable, disable, models");
   }, 30_000);
 
-  it("runs bb machine for bb host when no plugin owns that name", async () => {
+  it("runs sandy machine for sandy host when no plugin owns that name", async () => {
     const result = await runCli(["host", "list", "--json"]);
 
     expect(result.exitCode).toBe(0);
@@ -220,13 +220,13 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
     const legacy = await runCli(["legacy", "add", "--help"]);
 
     expect(spec.stdout).toContain("at most 80 characters");
-    expect(legacy.stdout).toBe("bb legacy add --name NAME\n");
+    expect(legacy.stdout).toBe("sandy legacy add --name NAME\n");
     expect(pluginRuns).toEqual(["spec"]);
   }, 30_000);
 
   it("records a failed plugin command by its declared name only", async () => {
     const result = await runCli(["failing", "add", "--name", "a secret"], {
-      BB_CLI_ERROR_LOG: "1",
+      SANDY_CLI_ERROR_LOG: "1",
     });
 
     expect(result.exitCode).toBe(3);
@@ -244,16 +244,16 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
 
   it("still answers help for a soft alias when the server is down", async () => {
     const result = await runCli(["hosts", "--help"], {
-      BB_SERVER_URL: "http://127.0.0.1:1",
+      SANDY_SERVER_URL: "http://127.0.0.1:1",
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("Usage: bb machine");
+    expect(result.stdout).toContain("Usage: sandy machine");
   }, 30_000);
 
   it("prints the JSON envelope when the server is down", async () => {
     const pluginCommand = await runCli(["memory", "catalog", "--json"], {
-      BB_SERVER_URL: "http://127.0.0.1:1",
+      SANDY_SERVER_URL: "http://127.0.0.1:1",
     });
     expect(pluginCommand.exitCode).toBe(1);
     expect(JSON.parse(pluginCommand.stdout)).toMatchObject({
@@ -262,7 +262,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
     });
 
     const aliased = await runCli(["hosts", "list", "--json"], {
-      BB_SERVER_URL: "http://127.0.0.1:1",
+      SANDY_SERVER_URL: "http://127.0.0.1:1",
     });
     expect(aliased.exitCode).toBe(1);
     expect(JSON.parse(aliased.stdout)).toMatchObject({ ok: false });
@@ -271,7 +271,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
   it("never records the inline value of an unknown option", async () => {
     const result = await runCli(
       ["thread", "list", "--api-token=SYNTHETIC_SECRET", "--json"],
-      { BB_CLI_ERROR_LOG: "1" },
+      { SANDY_CLI_ERROR_LOG: "1" },
     );
 
     expect(result.exitCode).toBe(1);
@@ -290,7 +290,7 @@ describe.skipIf(process.platform === "win32")("bb entrypoint errors", () => {
   it("records the failure without any argument values", async () => {
     const result = await runCli(
       ["thread", "tell", "thr_other", "a secret message", "--bogus-flag"],
-      { BB_CLI_ERROR_LOG: "1" },
+      { SANDY_CLI_ERROR_LOG: "1" },
     );
 
     expect(result.exitCode).toBe(1);

@@ -22,7 +22,7 @@ import {
   omitNpmScriptPolicyEnv,
   spawnPortableOutputProcess,
   supportsProcessGroups,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import {
   installCancellationSignal,
   PluginInstallCancelledError,

@@ -59,7 +59,7 @@ describe.skipIf(process.platform === "win32")(
   "killProcessesReferencingPath",
   () => {
     it("kills a SIGTERM-ignoring process and its detached descendants, sparing paths that only share a prefix", async () => {
-      const root = await mkdtemp(join(tmpdir(), "bb-sweep-"));
+      const root = await mkdtemp(join(tmpdir(), "sandy-sweep-"));
       const sibling = `${root}-sibling`;
       roots.push(root, sibling);
       const target = spawnStubborn(join(root, "marker"), join(root, "child"));

@@ -9,7 +9,7 @@ import type {
   ThreadOriginKind,
   ThreadVisibility,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   allThreadQueryKeyPrefix,
   SIDEBAR_NAVIGATION_QUERY_KEY,

@@ -3,9 +3,9 @@
   "name": "card",
   "type": "registry:ui",
   "title": "card",
-  "description": "BB ui \"card\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"card\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { promisify } from "node:util";
-import { experimental_hostToolchain as hostToolchain } from "@get-bb/plugin-sdk/process";
-import { experimental_createHostEntryHarness } from "@get-bb/plugin-sdk/testing/host";
-import { runGit } from "bb-environment-provider-host/git";
+import { experimental_hostToolchain as hostToolchain } from "@sandy-sdk/plugin-sdk/process";
+import { experimental_createHostEntryHarness } from "@sandy-sdk/plugin-sdk/testing/host";
+import { runGit } from "sandy-environment-provider-host/git";
 import {
   afterAll,
   afterEach,
@@ -20,10 +20,10 @@ import { installFakeGh, makeTempDir } from "./test/fake-gh.js";
 
 const execFileAsync = promisify(execFile);
 
-const localBranch = "bb/review-github-issue-1235-thr_test";
+const localBranch = "sandy/review-github-issue-1235-thr_test";
 const forkRemote = "review-fork";
 const upstreamBranch = "per-turn-permission-escalation";
-const forkRemoteUrl = "git@github.com:fork-owner/bb.git";
+const forkRemoteUrl = "git@github.com:fork-owner/sandy.git";
 const qualifiedUpstream = `fork-owner:${upstreamBranch}`;
 
 function pullRequestJson(): string {
@@ -31,7 +31,7 @@ function pullRequestJson(): string {
     number: 1236,
     title: "Apply execution settings without replacing sessions",
     state: "OPEN",
-    url: "https://github.com/acme/bb/pull/1236",
+    url: "https://github.com/acme/sandy/pull/1236",
     isDraft: false,
     baseRefName: "main",
     headRefName: upstreamBranch,
@@ -48,17 +48,17 @@ function pullRequestJson(): string {
 let repositoryTemplate: string;
 
 beforeAll(async () => {
-  repositoryTemplate = await fs.mkdtemp(path.join(tmpdir(), "bb-pr-template-"));
+  repositoryTemplate = await fs.mkdtemp(path.join(tmpdir(), "sandy-pr-template-"));
   const workspacePath = repositoryTemplate;
   await runGit(["init", "-b", localBranch], { cwd: workspacePath });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: workspacePath });
-  await runGit(["config", "user.email", "bb@example.com"], {
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: workspacePath });
+  await runGit(["config", "user.email", "sandy@example.com"], {
     cwd: workspacePath,
   });
   await fs.writeFile(path.join(workspacePath, "README.md"), "test\n", "utf8");
   await runGit(["add", "README.md"], { cwd: workspacePath });
   await runGit(["commit", "-m", "Initial commit"], { cwd: workspacePath });
-  await runGit(["remote", "add", "origin", "git@github.com:acme/bb.git"], {
+  await runGit(["remote", "add", "origin", "git@github.com:acme/sandy.git"], {
     cwd: workspacePath,
   });
 });
@@ -78,7 +78,7 @@ async function createRepository(prefix: string): Promise<string> {
 async function createTrackedForkWorkspace(
   remoteUrl = forkRemoteUrl,
 ): Promise<string> {
-  const workspacePath = await createRepository("bb-pr-upstream-workspace-");
+  const workspacePath = await createRepository("sandy-pr-upstream-workspace-");
   await runGit(["remote", "add", forkRemote, remoteUrl], {
     cwd: workspacePath,
   });
@@ -100,7 +100,7 @@ async function createTrackedForkWorkspace(
 
 async function createManagedBaseTrackedWorkspace(): Promise<string> {
   const workspacePath = await createRepository(
-    "bb-pr-base-upstream-workspace-",
+    "sandy-pr-base-upstream-workspace-",
   );
   await runGit(["update-ref", "refs/remotes/origin/main", "HEAD"], {
     cwd: workspacePath,
@@ -205,7 +205,7 @@ describe("pull request lookup for differently named upstream branches", () => {
 
   it("uses the local branch when a differently named remote aliases origin", async () => {
     const workspacePath = await createTrackedForkWorkspace(
-      "git@github.com:acme/bb.git",
+      "git@github.com:acme/sandy.git",
     );
     const gh = await installFakeGh(sameRepository);
 
@@ -281,11 +281,11 @@ describe("pull request lookup for differently named upstream branches", () => {
   });
 
   it("looks up a fork clone's branch in the upstream repository, as gh does", async () => {
-    const workspacePath = await createRepository("bb-pr-fork-clone-");
+    const workspacePath = await createRepository("sandy-pr-fork-clone-");
     await runGit(["remote", "set-url", "origin", forkRemoteUrl], {
       cwd: workspacePath,
     });
-    await runGit(["remote", "add", "upstream", "git@github.com:acme/bb.git"], {
+    await runGit(["remote", "add", "upstream", "git@github.com:acme/sandy.git"], {
       cwd: workspacePath,
     });
     await runGit(["update-ref", `refs/remotes/origin/${localBranch}`, "HEAD"], {
@@ -308,7 +308,7 @@ describe("pull request lookup for differently named upstream branches", () => {
       pullRequest: { number: 1236 },
     });
     const query = (await gh.readQueries())[0]!;
-    expect(query).toContain('repository(owner: "acme", name: "bb")');
+    expect(query).toContain('repository(owner: "acme", name: "sandy")');
     expect(query).toContain(`headRefName: "${localBranch}"`);
   });
 
@@ -325,13 +325,13 @@ describe("pull request lookup for differently named upstream branches", () => {
       refresh: true,
     });
     expect((await gh.readQueries())[0]).toContain(
-      'repository(owner: "fork-owner", name: "bb")',
+      'repository(owner: "fork-owner", name: "sandy")',
     );
   });
 
   it("never passes an untrusted upstream URL to gh", async () => {
     const workspacePath = await createTrackedForkWorkspace(
-      "https://httpbin.org/fork-owner/bb.git",
+      "https://httpbin.org/fork-owner/sandy.git",
     );
     const gh = await installFakeGh(found);
     vi.stubEnv("GH_ENTERPRISE_TOKEN", "dummy-enterprise-token");
@@ -360,7 +360,7 @@ describe("pull request lookup for differently named upstream branches", () => {
       refresh: false,
     });
     await runGit(
-      ["remote", "set-url", forkRemote, "git@github.com:other-owner/bb.git"],
+      ["remote", "set-url", forkRemote, "git@github.com:other-owner/sandy.git"],
       { cwd: workspacePath },
     );
     const second = await view({
@@ -421,7 +421,7 @@ describe("pull request lookup for differently named upstream branches", () => {
 
   it("returns unavailable when gh is not installed", async () => {
     const workspacePath = await createTrackedForkWorkspace();
-    const binPath = await makeTempDir("bb-pr-upstream-no-gh-");
+    const binPath = await makeTempDir("sandy-pr-upstream-no-gh-");
     const { stdout } = await execFileAsync(
       process.platform === "win32" ? "where.exe" : "which",
       ["git"],
@@ -477,7 +477,7 @@ describe("workspace state", () => {
   });
 
   it("reports a missing workspace path as unavailable", async () => {
-    const missing = path.join(await makeTempDir("bb-pr-missing-"), "gone");
+    const missing = path.join(await makeTempDir("sandy-pr-missing-"), "gone");
     await expect(
       view({
         path: missing,
@@ -491,7 +491,7 @@ describe("workspace state", () => {
   });
 
   it("refuses actions from a detached workspace", async () => {
-    const workspacePath = await createRepository("bb-pr-detached-");
+    const workspacePath = await createRepository("sandy-pr-detached-");
     await runGit(["checkout", "--detach"], { cwd: workspacePath });
     const gh = await installFakeGh({});
 

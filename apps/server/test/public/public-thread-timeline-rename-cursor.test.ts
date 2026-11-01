@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { defaultFeatureFlags, turnScope } from "@bb/domain";
+import { defaultFeatureFlags, turnScope } from "@sandy/domain";
 import {
   threadTimelineResponseSchema,
   type TimelinePaginationCursor,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { seedEvent, seedThreadFixture } from "../helpers/seed.js";
 import { withTestHarness, type TestAppHarness } from "../helpers/test-app.js";

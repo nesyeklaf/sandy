@@ -16,10 +16,10 @@ import {
   PanelResizeHandle,
   type ImperativePanelGroupHandle,
 } from "react-resizable-panels";
-import { Button } from "@bb/shared-ui/button";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { HEADER_ICON_BUTTON_CLASS } from "@/components/layout/AppPageHeader";
 import { AppCommandShortcutHint } from "@/components/commands/AppCommandShortcutHint";
 import {
@@ -46,13 +46,13 @@ import {
   PANEL_RESIZE_HIT_TARGET_CLASS,
 } from "@/components/secondary-panel/panelTransitionTokens";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_APP_REGION_NO_DRAG_CLASS,
   MACOS_CHROME_CONTROL_AXIS_CLASS,
   MACOS_TITLE_BAR_CONTROL_SIZE_CLASS,
   MACOS_TITLE_BAR_PINNED_TOGGLE_CLASS,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { useIsSidebarFramed } from "@/components/ui/sidebar.js";
 import { PluginComposerHostProvider } from "@/components/plugin/plugin-composer-host";
 import { usePanelResizeSnap } from "@/components/secondary-panel/usePanelResizeSnap";
@@ -160,7 +160,7 @@ export function SplitWorkspaceSecondaryPanelHost({
     toggleWindowPanel();
     return true;
   });
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const isSidebarFramed = useIsSidebarFramed();
 

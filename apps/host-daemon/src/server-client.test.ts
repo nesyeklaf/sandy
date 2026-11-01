@@ -1,7 +1,7 @@
 import { AbortError } from "p-retry";
 import { describe, expect, it, vi } from "vitest";
-import type { PendingInteractionCreate } from "@bb/domain";
-import { HOST_ARTIFACT_MAX_BYTES } from "@bb/host-daemon-contract/protocol";
+import type { PendingInteractionCreate } from "@sandy/domain";
+import { HOST_ARTIFACT_MAX_BYTES } from "@sandy/host-daemon-contract/protocol";
 import {
   createServerClient,
   ServerResponseError,
@@ -63,13 +63,13 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     const result = client.openSession({
       hostId: "host-1",
       hostName: "Host",
-      dataDir: "/tmp/bb",
+      dataDir: "/tmp/sandy",
       instanceId: "instance-1",
       localApiPort: null,
       activeThreads: [],
@@ -90,13 +90,13 @@ describe("createServerClient", () => {
         serverUrl: "https://studio.example.test",
         toHostName: "studio",
         movedAt: 1_700_000_000_000,
-        headers: { "x-bb-machine-access": "bbcm_new" },
+        headers: { "x-sandy-machine-access": "sandycm_new" },
       },
       expected: {
         serverUrl: "https://studio.example.test",
         toHostName: "studio",
         movedAt: 1_700_000_000_000,
-        headers: { "x-bb-machine-access": "bbcm_new" },
+        headers: { "x-sandy-machine-access": "sandycm_new" },
       },
     },
     {
@@ -124,7 +124,7 @@ describe("createServerClient", () => {
         Response.json(
           {
             code: "server_moved",
-            message: "This bb server moved to studio",
+            message: "This sandy server moved to studio",
             details,
           },
           { status: 410 },
@@ -142,7 +142,7 @@ describe("createServerClient", () => {
         client.openSession({
           hostId: "host-1",
           hostName: "Host",
-          dataDir: "/tmp/bb",
+          dataDir: "/tmp/sandy",
           instanceId: "instance-1",
           localApiPort: null,
           activeThreads: [],
@@ -165,7 +165,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "http://bb.example.test",
+      serverUrl: "http://sandy.example.test",
     });
 
     await expect(
@@ -220,7 +220,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     const attachment = await client.fetchProjectAttachment({
@@ -248,7 +248,7 @@ describe("createServerClient", () => {
       expect(new Headers(init?.headers).get("authorization")).toBe(
         "Bearer host-key",
       );
-      expect(new Headers(init?.headers).get("x-bb-machine-access")).toBeNull();
+      expect(new Headers(init?.headers).get("x-sandy-machine-access")).toBeNull();
       if (url.pathname === `/internal/skills/tree/${treeHash}`) {
         return new Response(JSON.stringify(manifest), { status: 200 });
       }
@@ -280,7 +280,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     await expect(
@@ -298,7 +298,7 @@ describe("createServerClient", () => {
     const fetchFn = vi.fn<FetchFn>(async (_input, init) => {
       const headers = new Headers(init?.headers);
       expect(headers.get("authorization")).toBe("Bearer host-key");
-      expect(headers.get("x-bb-machine-access")).toBe("bbcm_machine");
+      expect(headers.get("x-sandy-machine-access")).toBe("sandycm_machine");
       return new Response(JSON.stringify({ treeHash, files: [] }), {
         status: 200,
       });
@@ -308,8 +308,8 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverHeaders: { "x-bb-machine-access": "bbcm_machine" },
-      serverUrl: "https://bb.example.test",
+      serverHeaders: { "x-sandy-machine-access": "sandycm_machine" },
+      serverUrl: "https://sandy.example.test",
     });
 
     await client.fetchSkillTreeManifest(treeHash);
@@ -330,7 +330,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     await expect(
@@ -415,7 +415,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger: createLogger(),
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     await expect(
@@ -485,7 +485,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger,
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     await expect(
@@ -529,7 +529,7 @@ describe("createServerClient", () => {
       getSessionId: () => "session-1",
       hostKey: "host-key",
       logger,
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
 
     const result = client.registerInteractiveRequest(

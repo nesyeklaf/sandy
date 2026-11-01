@@ -1,11 +1,11 @@
 import { PluginDetailTabContent } from "@/components/plugin/plugin-detail-navigation";
 import type { ReactNode } from "react";
 import type { SidebarProject } from "@/hooks/queries/project-queries";
-import { findLocalPathProjectSourceForHost } from "@bb/domain";
+import { findLocalPathProjectSourceForHost } from "@sandy/domain";
 import type {
   ExperimentalLiveFileTarget,
   PluginFileOpenerSource,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type {
   PluginPanelFixedPanelTab,
   SecondaryFileFixedPanelTab,
@@ -36,8 +36,8 @@ import { useEnvironment } from "@/hooks/queries/environment-queries";
 import { useThreadStorageLocation } from "@/hooks/queries/thread-panel-queries";
 import { useCanOpenFileExternally } from "@/hooks/useCanOpenFileExternally";
 import { useAppNavigationHost } from "@/lib/app-navigation-host";
-import { getFilePreviewLineRangeStart } from "@bb/client-core";
-import { resolveAbsoluteFilePath } from "@bb/shared-ui/lib/absolute-file-path";
+import { getFilePreviewLineRangeStart } from "@sandy/client-core";
+import { resolveAbsoluteFilePath } from "@sandy/shared-ui/lib/absolute-file-path";
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
 import type { MarkdownPreviewLinkHandler } from "@/components/ui/markdown-link";
 

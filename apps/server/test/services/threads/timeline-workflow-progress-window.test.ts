@@ -4,21 +4,21 @@ import {
   LOCAL_WORKFLOW_TASK_TYPE,
   threadScope,
   turnScope,
-} from "@bb/domain";
-import type { Thread } from "@bb/domain";
+} from "@sandy/domain";
+import type { Thread } from "@sandy/domain";
 import {
   createProject,
   createThread,
   insertEvents,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { DbConnection } from "@bb/db";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { DbConnection } from "@sandy/db";
 import type {
   TimelinePaginationCursor,
   TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   buildThreadConversationOutline,
   buildThreadTimelineWithProfile,

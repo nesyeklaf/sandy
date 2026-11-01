@@ -1,0 +1,4 @@
+$region = "eu-west"
+Card("Deploy region", [Form([
+  Select($region, ["us-east", "us-west", "eu-west", "eu-central", "ap-south", "ap-northeast"], label: "Region")
+])])

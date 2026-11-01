@@ -1,11 +1,11 @@
 import { defineConfig } from "drizzle-kit";
 import {
-  type BbRuntimeMode,
+  type SandyRuntimeMode,
   resolveCurrentDevInstanceConfig,
   resolveDataDirDatabasePath,
   resolveRuntimeDataDir,
   resolveRuntimeMode,
-} from "@bb/config/runtime";
+} from "@sandy/config/runtime";
 import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,7 +14,7 @@ const packageRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(packageRoot, "..", "..");
 const runtimeMode = resolveRuntimeMode();
 
-export function resolveDrizzleDataDir(mode: BbRuntimeMode): string {
+export function resolveDrizzleDataDir(mode: SandyRuntimeMode): string {
   if (mode === "dev") {
     return resolveCurrentDevInstanceConfig(repoRoot).dataDir;
   }

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { AiServiceSelection, AiTask, AiTextTask } from "@bb/domain";
+import type { AiServiceSelection, AiTask, AiTextTask } from "@sandy/domain";
 import type {
   SetAiServiceSelectionRequest,
   SystemAiService,
   SystemAiServicesResponse,
   TestAiServiceResponse,
-} from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
+} from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
 import { SettingsSection } from "@/components/ui/settings-section";
 import { appToast } from "@/components/ui/app-toast";
 import { useSystemAiServices } from "@/hooks/queries/system-queries";
@@ -43,7 +43,7 @@ const AI_TASK_ROWS: readonly AiTaskRow[] = [
     task: "commit-message",
     label: "Commit messages",
     hint: "Written when you use the Commit action.",
-    offDescription: "Commits say “bb: automated commit”.",
+    offDescription: "Commits say “sandy: automated commit”.",
     testTask: "commit-message",
   },
   {
@@ -99,7 +99,7 @@ export function aiTaskOptions(
       title: "Automatic",
       description:
         automatic === null
-          ? "Nothing bb ships is ready right now."
+          ? "Nothing sandy ships is ready right now."
           : `Currently using ${automatic.displayName}.`,
     },
     ...view.services
@@ -138,7 +138,7 @@ function rowDescription(
     const automatic = automaticServiceFor(view, row.task);
     current =
       automatic === null
-        ? " Nothing is ready, so bb falls back."
+        ? " Nothing is ready, so sandy falls back."
         : ` Using ${automatic.displayName}.`;
   } else if (selection.mode === "service") {
     const service = view.services.find(

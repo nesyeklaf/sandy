@@ -36,13 +36,13 @@ it.each([
 ])(
   "validates $name before registering",
   async ({ key, accepted, timeout }) => {
-    const homeDir = await mkdtemp(join(tmpdir(), "bb-broker-alias-"));
+    const homeDir = await mkdtemp(join(tmpdir(), "sandy-broker-alias-"));
     const server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
     await once(server, "listening");
     const address = server.address();
     if (typeof address === "string" || address === null)
       throw new Error("No port");
-    const directory = join(homeDir, ".bb-machines", "trusted.example");
+    const directory = join(homeDir, ".sandy-machines", "trusted.example");
     await mkdir(directory, { recursive: true });
     await writeFile(
       join(directory, "desktop-browser-broker.json"),
@@ -55,7 +55,7 @@ it.each([
       }),
       { mode: 0o600 },
     );
-    const stalledDirectory = join(homeDir, ".bb-machines", "stalled.example");
+    const stalledDirectory = join(homeDir, ".sandy-machines", "stalled.example");
     await mkdir(stalledDirectory, { recursive: true });
     await writeFile(
       join(stalledDirectory, "desktop-browser-broker.json"),
@@ -110,7 +110,7 @@ it.each([
         return Response.json({
           proof: createHmac("sha256", key ?? "a".repeat(64))
             .update(
-              `bb-desktop-broker:${key === null ? "0".repeat(64) : body.challenge}`,
+              `sandy-desktop-broker:${key === null ? "0".repeat(64) : body.challenge}`,
             )
             .digest("hex"),
         });
@@ -119,7 +119,7 @@ it.each([
     const client = createDesktopBrowserBrokerClient({
       broker,
       homeDir,
-      dataDir: join(homeDir, ".bb"),
+      dataDir: join(homeDir, ".sandy"),
       getServerUrl: () => "https://unrelated-address.example",
       fetchImpl,
     });
@@ -148,7 +148,7 @@ it.each([
           challenges.push(body.challenge);
           return Response.json({
             proof: createHmac("sha256", "a".repeat(64))
-              .update(`bb-desktop-broker:${body.challenge}`)
+              .update(`sandy-desktop-broker:${body.challenge}`)
               .digest("hex"),
           });
         });
@@ -189,7 +189,7 @@ async function writeDescriptor(
   serverHost: string,
   port: number,
 ) {
-  const directory = join(homeDir, ".bb-machines", serverHost);
+  const directory = join(homeDir, ".sandy-machines", serverHost);
   await mkdir(directory, { recursive: true });
   await writeFile(
     join(directory, "desktop-browser-broker.json"),
@@ -215,7 +215,7 @@ function stubBroker() {
 }
 
 it("registers a broker enrolled at the selected address without a server proof", async () => {
-  const homeDir = await mkdtemp(join(tmpdir(), "bb-broker-same-"));
+  const homeDir = await mkdtemp(join(tmpdir(), "sandy-broker-same-"));
   const server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
   await once(server, "listening");
   const address = server.address();
@@ -230,7 +230,7 @@ it("registers a broker enrolled at the selected address without a server proof",
   const client = createDesktopBrowserBrokerClient({
     broker: stubBroker(),
     homeDir,
-    dataDir: join(homeDir, ".bb"),
+    dataDir: join(homeDir, ".sandy"),
     getServerUrl: () => "https://trusted.example",
     fetchImpl,
   });
@@ -250,14 +250,14 @@ it("registers a broker enrolled at the selected address without a server proof",
 });
 
 it("backs off proof requests while no broker can be verified", async () => {
-  const homeDir = await mkdtemp(join(tmpdir(), "bb-broker-backoff-"));
+  const homeDir = await mkdtemp(join(tmpdir(), "sandy-broker-backoff-"));
   await writeDescriptor(homeDir, "trusted.example", 9);
   const fetchImpl = vi.fn(async () => new Response(null, { status: 409 }));
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
   const client = createDesktopBrowserBrokerClient({
     broker: stubBroker(),
     homeDir,
-    dataDir: join(homeDir, ".bb"),
+    dataDir: join(homeDir, ".sandy"),
     getServerUrl: () => "https://unrelated-address.example",
     fetchImpl,
   });

@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import {
   createFakePluginHost,
   makeHostResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { registerUsageSource as plugin } from "./usage-source.js";
 import {
   usageListMethod,
@@ -23,7 +23,7 @@ it("publishes only its own maintenance providers without a display and only meas
     },
   }));
   let removed = false;
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: {
       hosts: {
         list: async () => [
@@ -65,7 +65,7 @@ it("publishes only its own maintenance providers without a display and only meas
     },
   });
   try {
-    plugin(bb);
+    plugin(sandy);
     const list = async () =>
       usageResourceListSchema.parse(
         await harness.behavior.callRpc(usageListMethod, {}),
@@ -119,7 +119,7 @@ it("publishes only its own maintenance providers without a display and only meas
 });
 
 it("forwards validated provider-owned identity and normalization metadata while tolerating older providers", async () => {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: {
       hosts: {
         list: async () => [
@@ -156,7 +156,7 @@ it("forwards validated provider-owned identity and normalization metadata while 
     },
   });
   try {
-    plugin(bb);
+    plugin(sandy);
     const value = usageMeasurementSchema.parse(
       await harness.behavior.callRpc(usageFetchMethod, {
         resourceId: JSON.stringify(["host", "codex"]),
@@ -195,7 +195,7 @@ it("coalesces concurrent reads and makes a forced refresh wait for a fresh colle
       },
     };
   });
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: {
       hosts: {
         list: async () => [
@@ -213,7 +213,7 @@ it("coalesces concurrent reads and makes a forced refresh wait for a fresh colle
     },
   });
   try {
-    plugin(bb);
+    plugin(sandy);
     const read = (refresh: boolean) =>
       harness.behavior.callRpc(usageFetchMethod, {
         resourceId: JSON.stringify(["host", "codex"]),

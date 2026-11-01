@@ -5,9 +5,9 @@ import {
   normalizeProviderNativeRoots,
   providerNativeRootsAreEmpty,
   type ProviderNativeRoots,
-} from "@bb/domain";
-import type { DiscoveredSkill } from "@bb/host-daemon-contract";
-import type { SkillRegistration } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { DiscoveredSkill } from "@sandy/host-daemon-contract";
+import type { SkillRegistration } from "@sandy/server-contract";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { callHostRetryableOnlineRpc } from "../hosts/online-rpc.js";
@@ -88,7 +88,7 @@ export async function resolveSharedSkills(
     timeoutMs: COMMAND_TIMEOUT_MS,
     command: {
       type: "host.list_skills",
-      providerId: "bb-shared",
+      providerId: "sandy-shared",
       cwd: args.cwd,
       nativeRoots: {
         skills: roots,

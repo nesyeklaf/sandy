@@ -3,16 +3,16 @@ import {
   type TestEnvironmentProviderContext,
   type TestProviderDecision,
 } from "./provider-decisions.js";
-import type { PluginEnvironmentValidateDecision } from "@get-bb/plugin-sdk";
+import type { PluginEnvironmentValidateDecision } from "@sandy-sdk/plugin-sdk";
 import type {
   PluginEnvironmentProviderAvailability,
   PluginEnvironmentProviderValidateContext,
-} from "@get-bb/plugin-sdk/environment-provider";
+} from "@sandy-sdk/plugin-sdk/environment-provider";
 import { expect, onTestFinished, vi } from "vitest";
 import {
   validatePluginEnvironmentProviderDeclaration,
   type NormalizedPluginEnvironmentProvider,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { z } from "zod";
 import {
   setPluginEnvironmentProviderBridge,
@@ -21,7 +21,7 @@ import {
 import { DEFAULT_ENVIRONMENT_PROVIDER_ID } from "../../src/services/environments/environment-provider-ids.js";
 import { invokePluginInline } from "../../src/services/plugins/plugin-hook-registry.js";
 import { clearAllThreadProvisionSchedules } from "../../src/services/threads/thread-startup-store.js";
-import { gitBranchSelectionSchema } from "@bb/domain";
+import { gitBranchSelectionSchema } from "@sandy/domain";
 
 export interface FakeEnvironmentProvider {
   contexts: TestEnvironmentProviderContext[];

@@ -9,8 +9,8 @@ import {
   type AppSettings,
   type AppThemeSelection,
   type ExperimentUpdates,
-} from "@bb/domain";
-import type { SystemInstallCliSkillsRequest } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { SystemInstallCliSkillsRequest } from "@sandy/server-contract";
 import { sdk } from "@/lib/sdk";
 import {
   invalidateGeneralSettingsDependencies,
@@ -165,7 +165,7 @@ export function useUpdateKeyboardSettings() {
 export function useInstallCliSkills() {
   return useMutation({
     meta: {
-      errorMessage: "Failed to install the bb CLI skills.",
+      errorMessage: "Failed to install the sandy CLI skills.",
     },
     mutationFn: (args: SystemInstallCliSkillsRequest) =>
       sdk.system.installCliSkills(args),
@@ -175,7 +175,7 @@ export function useInstallCliSkills() {
 export function useChangeCliCommand() {
   return useMutation({
     meta: {
-      errorMessage: "Failed to change the bb CLI install.",
+      errorMessage: "Failed to change the sandy CLI install.",
     },
     mutationFn: (change: "install" | "remove") =>
       change === "install"

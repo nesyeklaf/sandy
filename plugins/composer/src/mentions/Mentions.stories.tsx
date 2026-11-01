@@ -3,7 +3,7 @@ import type {
   ExperimentalComposerCommandSuggestion,
   ExperimentalComposerMentionSuggestion,
   ExperimentalComposerThreadRelation,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { MentionMenu } from "./MentionMenu";
 import type {
   CommandMenuState,
@@ -66,7 +66,7 @@ function pathSuggestion(
 function threadSuggestion({
   threadId,
   title,
-  projectId = "proj_bb",
+  projectId = "proj_sandy",
   projectName = null,
   relation = null,
 }: {

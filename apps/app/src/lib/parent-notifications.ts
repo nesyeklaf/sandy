@@ -1,4 +1,4 @@
-import type { ThreadParentNotifications } from "@bb/domain";
+import type { ThreadParentNotifications } from "@sandy/domain";
 
 interface ParentNotificationsOption {
   value: ThreadParentNotifications;

@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { isSpanContextValid, trace } from "@opentelemetry/api";
 import pino from "pino";
 import type { Logger } from "pino";
-import { loadLoggerConfig } from "@bb/config/logger";
-import { otlpServiceName, otlpSignalUrl } from "@bb/config/otlp";
+import { loadLoggerConfig } from "@sandy/config/logger";
+import { otlpServiceName, otlpSignalUrl } from "@sandy/config/otlp";
 
 export type { Logger };
 
@@ -66,12 +66,12 @@ function pruneRotatedLogFiles(logDir: string, component: string): void {
 export function createLogger(options: CreateLoggerOptions): Logger {
   const component = sanitizeComponentName(options.component);
   const loggerConfig = loadLoggerConfig({ dataDir: options.dataDir });
-  const dataDir = loggerConfig.BB_DATA_DIR;
+  const dataDir = loggerConfig.SANDY_DATA_DIR;
   const logDir = join(dataDir, "logs");
   mkdirSync(logDir, { recursive: true });
   pruneRotatedLogFiles(logDir, component);
   const loggerOptions = {
-    level: loggerConfig.BB_LOG_LEVEL,
+    level: loggerConfig.SANDY_LOG_LEVEL,
     base: {
       component,
       ...(options.base ?? {}),
@@ -92,7 +92,7 @@ export function createLogger(options: CreateLoggerOptions): Logger {
         limit: { count: ROTATED_LOG_FILE_COUNT },
         size: "10m",
       },
-      level: loggerConfig.BB_LOG_LEVEL,
+      level: loggerConfig.SANDY_LOG_LEVEL,
     },
   ];
 
@@ -105,31 +105,31 @@ export function createLogger(options: CreateLoggerOptions): Logger {
         singleLine: true,
         translateTime: "SYS:HH:MM:ss",
       },
-      level: loggerConfig.BB_LOG_LEVEL,
+      level: loggerConfig.SANDY_LOG_LEVEL,
     });
   }
 
-  if (loggerConfig.BB_OTLP_ENDPOINT !== null) {
+  if (loggerConfig.SANDY_OTLP_ENDPOINT !== null) {
     targets.push({
       target: "pino-opentelemetry-transport",
       options: {
         loggerName: component,
-        serviceVersion: loggerConfig.BB_APP_VERSION,
+        serviceVersion: loggerConfig.SANDY_APP_VERSION,
         resourceAttributes: {
           "service.name": otlpServiceName(component),
-          "service.version": loggerConfig.BB_APP_VERSION,
+          "service.version": loggerConfig.SANDY_APP_VERSION,
         },
         logRecordProcessorOptions: {
           recordProcessorType: "batch",
           exporterOptions: {
             protocol: "http/protobuf",
             protobufExporterOptions: {
-              url: otlpSignalUrl(loggerConfig.BB_OTLP_ENDPOINT, "logs"),
+              url: otlpSignalUrl(loggerConfig.SANDY_OTLP_ENDPOINT, "logs"),
             },
           },
         },
       },
-      level: loggerConfig.BB_LOG_LEVEL,
+      level: loggerConfig.SANDY_LOG_LEVEL,
     });
   }
 

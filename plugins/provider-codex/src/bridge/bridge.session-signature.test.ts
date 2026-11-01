@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { z } from "zod";
 import { handleLine } from "./bridge.js";
 import {
@@ -30,7 +30,7 @@ let requestLogPath: string;
 let scriptPath: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-signature-ws-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-signature-ws-"));
   requestLogPath = join(workspaceDir, "requests.jsonl");
   scriptPath = join(workspaceDir, "script.json");
   writeFileSync(scriptPath, JSON.stringify({ requestLogPath }));

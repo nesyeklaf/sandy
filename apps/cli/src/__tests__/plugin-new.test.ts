@@ -8,8 +8,8 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
-import { RESERVED_BB_CLI_COMMANDS } from "@bb/domain/plugin-cli";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
+import { RESERVED_SANDY_CLI_COMMANDS } from "@sandy/domain/plugin-cli";
 import { Command } from "commander";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -19,9 +19,9 @@ import {
 
 describe("resolveNewPluginTarget", () => {
   it.each([
-    ["hello", "bb-plugin-hello", "bb-plugin-hello"],
-    ["bb-plugin-hello", "bb-plugin-hello", "bb-plugin-hello"],
-    ["@acme/bb-plugin-hello", "@acme/bb-plugin-hello", "bb-plugin-hello"],
+    ["hello", "sandy-plugin-hello", "sandy-plugin-hello"],
+    ["sandy-plugin-hello", "sandy-plugin-hello", "sandy-plugin-hello"],
+    ["@acme/sandy-plugin-hello", "@acme/sandy-plugin-hello", "sandy-plugin-hello"],
   ])("resolves %s", (name, expectedPackageName, expectedDirectoryName) => {
     expect(resolveNewPluginTarget(name)).toEqual({
       packageName: expectedPackageName,
@@ -31,22 +31,22 @@ describe("resolveNewPluginTarget", () => {
 
   it.each([
     "Hello",
-    "bb-plugin-",
+    "sandy-plugin-",
     "@acme/hello",
-    "@acme/bb-plugin-Hello",
-    "@acme/team/bb-plugin-hello",
+    "@acme/sandy-plugin-Hello",
+    "@acme/team/sandy-plugin-hello",
   ])("rejects %s", (name) => {
     expect(resolveNewPluginTarget(name)).toBeNull();
   });
 
-  it.each(RESERVED_BB_CLI_COMMANDS)("rejects reserved id %s", (id) => {
+  it.each(RESERVED_SANDY_CLI_COMMANDS)("rejects reserved id %s", (id) => {
     expect(resolveNewPluginTarget(id)).toBeNull();
-    expect(resolveNewPluginTarget(`bb-plugin-${id}`)).toBeNull();
-    expect(resolveNewPluginTarget(`@acme/bb-plugin-${id}`)).toBeNull();
+    expect(resolveNewPluginTarget(`sandy-plugin-${id}`)).toBeNull();
+    expect(resolveNewPluginTarget(`@acme/sandy-plugin-${id}`)).toBeNull();
   });
 });
 
-describe.sequential("bb plugin new", () => {
+describe.sequential("sandy plugin new", () => {
   const originalCwd = process.cwd();
   let workDir: string;
   let npmMarker: string;
@@ -54,7 +54,7 @@ describe.sequential("bb plugin new", () => {
   let warned: string[];
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-new-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-new-"));
     process.chdir(workDir);
     npmMarker = join(workDir, "npm-was-called");
     const binDir = join(workDir, "bin");
@@ -86,37 +86,37 @@ describe.sequential("bb plugin new", () => {
     const program = new Command();
     program.exitOverride();
     registerPluginCommands(program, () => "http://localhost");
-    await program.parseAsync(["node", "bb", "plugin", "new", ...args]);
+    await program.parseAsync(["node", "sandy", "plugin", "new", ...args]);
   }
 
   it("scaffolds without running npm or contacting the registry", async () => {
     await runPluginNew(["offline"]);
 
-    expect(logged).toContain("Created bb-plugin-offline/ (bb-plugin-offline).");
+    expect(logged).toContain("Created sandy-plugin-offline/ (sandy-plugin-offline).");
     expect(await stat(npmMarker).catch(() => null)).toBeNull();
     expect(warned).toEqual([]);
     expect(
-      await stat(join(workDir, "bb-plugin-offline", "node_modules")).catch(
+      await stat(join(workDir, "sandy-plugin-offline", "node_modules")).catch(
         () => null,
       ),
     ).toBeNull();
   });
 
-  it("tells the author to run npm install and bb plugin install", async () => {
+  it("tells the author to run npm install and sandy plugin install", async () => {
     await runPluginNew(["next-steps"]);
 
-    expect(logged).toContain("  cd bb-plugin-next-steps");
+    expect(logged).toContain("  cd sandy-plugin-next-steps");
     expect(logged).toContain("  npm install --include=dev");
-    expect(logged).toContain("  bb plugin install .");
+    expect(logged).toContain("  sandy plugin install .");
   });
 
-  it("pins the scaffold to this bb's SDK version", async () => {
+  it("pins the scaffold to this sandy's SDK version", async () => {
     await runPluginNew(["pinned"]);
 
     const manifest: { devDependencies: Record<string, string> } = JSON.parse(
-      await readFile(join(workDir, "bb-plugin-pinned", "package.json"), "utf8"),
+      await readFile(join(workDir, "sandy-plugin-pinned", "package.json"), "utf8"),
     );
-    expect(manifest.devDependencies["@get-bb/plugin-sdk"]).toBe(
+    expect(manifest.devDependencies["@sandy-sdk/plugin-sdk"]).toBe(
       PLUGIN_SDK_VERSION,
     );
   });

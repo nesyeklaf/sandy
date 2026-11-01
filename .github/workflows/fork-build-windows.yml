@@ -44,14 +44,14 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Package x64 installer
-        run: pnpm exec turbo run desktop:build:win --filter=@bb/desktop --output-logs=new-only
+        run: pnpm exec turbo run desktop:build:win --filter=@sandy/desktop --output-logs=new-only
 
       - name: Smoke test packaged desktop app
-        run: pnpm exec turbo run smoke:packaged --filter=@bb/desktop --force --output-logs=new-only
+        run: pnpm exec turbo run smoke:packaged --filter=@sandy/desktop --force --output-logs=new-only
 
       - name: Upload installer
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: bb-desktop-windows-x64
+          name: sandy-desktop-windows-x64
           path: apps/desktop/release/*.exe
           if-no-files-found: error

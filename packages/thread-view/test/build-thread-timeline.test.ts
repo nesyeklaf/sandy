@@ -1,4 +1,4 @@
-import { threadScope, turnScope } from "@bb/domain";
+import { threadScope, turnScope } from "@sandy/domain";
 import type {
   ApprovalPendingInteractionResolution,
   JsonObject,
@@ -9,7 +9,7 @@ import type {
   ThreadEventFileChange,
   ThreadEventItemStatus,
   UserQuestionPendingInteractionResolution,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   TimelineApprovalWorkRow,
   ThreadContextWindowUsage,
@@ -21,7 +21,7 @@ import type {
   TimelineRow,
   TimelineSystemRow,
   TimelineToolWorkRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   buildTimelineRowTitle,
@@ -1594,7 +1594,7 @@ describe("buildThreadTimelineFromEvents", () => {
               type: "output",
               key: "git-worktree-output-1",
               text: [
-                "Preparing worktree (new branch 'bb/example')\n",
+                "Preparing worktree (new branch 'sandy/example')\n",
                 "Updating files:  44% (1017/2287)\r",
                 "Updating files:  45% (1030/2287)\r",
                 "Updating files: 100% (2287/2287), done.",
@@ -1612,7 +1612,7 @@ describe("buildThreadTimelineFromEvents", () => {
 
     expect(row.detail).toBe(
       [
-        "Preparing worktree (new branch 'bb/example')",
+        "Preparing worktree (new branch 'sandy/example')",
         "Updating files: 100% (2287/2287), done.",
       ].join("\n"),
     );
@@ -3195,7 +3195,7 @@ describe("buildThreadTimelineFromEvents", () => {
   });
 
   it("relativizes absolute file-change paths against the workspace root", () => {
-    const workspaceRoot = "/Users/dev/worktrees/env_x/bb";
+    const workspaceRoot = "/Users/dev/worktrees/env_x/sandy";
     const rows = collectFileChangeRows(
       buildTimelineRows(
         [
@@ -3243,7 +3243,7 @@ describe("buildThreadTimelineFromEvents", () => {
           }),
         ],
         "idle",
-        "/Users/dev/worktrees/env_x/bb",
+        "/Users/dev/worktrees/env_x/sandy",
       ),
     );
 

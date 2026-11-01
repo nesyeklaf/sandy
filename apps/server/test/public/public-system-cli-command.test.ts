@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SystemCliCommandStatus } from "@bb/server-contract";
+import type { SystemCliCommandStatus } from "@sandy/server-contract";
 import type { CliCommandService } from "../../src/services/system/cli-command.js";
 import { readJson } from "../helpers/json.js";
 import { withTestHarness } from "../helpers/test-app.js";
@@ -12,7 +12,7 @@ function recordingService(): {
 } {
   const calls: string[] = [];
   const status = (installed: boolean): SystemCliCommandStatus => ({
-    installedPath: installed ? "/home/me/.local/bin/bb" : null,
+    installedPath: installed ? "/home/me/.local/bin/sandy" : null,
     onPath: installed,
     shadowedBy: null,
     supported: true,
@@ -37,7 +37,7 @@ function recordingService(): {
 }
 
 describe("/api/v1/system/cli-command", () => {
-  it("reports the bb command as unavailable when bb runs without the launcher", () =>
+  it("reports the sandy command as unavailable when sandy runs without the launcher", () =>
     withTestHarness(async (harness) => {
       const response = await harness.app.request(API);
 
@@ -66,7 +66,7 @@ describe("/api/v1/system/cli-command", () => {
       });
       expect(installed.status).toBe(200);
       expect(await readJson(installed)).toMatchObject({
-        installedPath: "/home/me/.local/bin/bb",
+        installedPath: "/home/me/.local/bin/sandy",
         onPath: true,
       });
 

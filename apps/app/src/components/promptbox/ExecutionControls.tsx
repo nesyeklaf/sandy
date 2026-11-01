@@ -4,11 +4,11 @@ import type {
   ProviderOptionDescriptor,
   ReasoningLevel,
   ServiceTier,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   SystemExecutionOptionsModelLoadError,
   SystemProvidersQuery,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { formatModelLabel } from "@/hooks/useThreadCreationOptions";
 import {
   ModelReasoningPicker,

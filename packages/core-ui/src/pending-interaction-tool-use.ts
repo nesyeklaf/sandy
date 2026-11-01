@@ -3,7 +3,7 @@ import type {
   PendingInteractionToolUseApprovalSubject,
   ThreadEventItemPresentationIcon,
   ThreadEventItemPresentationTint,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export interface PendingInteractionToolUseAsk {
   title: string;

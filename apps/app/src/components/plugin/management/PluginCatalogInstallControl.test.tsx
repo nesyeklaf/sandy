@@ -91,7 +91,7 @@ it.each([
         target: {
           kind: "catalog",
           entryId: "notes",
-          marketplace: "bb-community",
+          marketplace: "sandy-community",
         },
         displayName: "Notes",
         state,

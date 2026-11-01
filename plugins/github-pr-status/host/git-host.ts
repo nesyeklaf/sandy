@@ -7,11 +7,11 @@ import {
   experimental_sanitizeInheritedChildProcessEnv as sanitizeInheritedChildProcessEnv,
   experimental_spawnPortableOutputProcess as spawnPortableOutputProcess,
   type ExperimentalVcsProcessPriority,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import {
   runGit,
   type GitCommandResult,
-} from "bb-environment-provider-host/git";
+} from "sandy-environment-provider-host/git";
 import {
   gitHubPullRequestViewSchema,
   type GitHubPullRequestCheck,
@@ -1059,7 +1059,7 @@ async function runGraphQLRead(
   query: string,
   entry: QueuedRead,
 ): Promise<{ stdout: string }> {
-  const directory = await mkdtemp(join(tmpdir(), "bb-pr-read-"));
+  const directory = await mkdtemp(join(tmpdir(), "sandy-pr-read-"));
   try {
     const inputPath = join(directory, "query.json");
     await writeFile(inputPath, JSON.stringify({ query }), { mode: 0o600 });

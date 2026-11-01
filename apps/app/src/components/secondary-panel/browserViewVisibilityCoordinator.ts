@@ -1,7 +1,7 @@
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserTarget,
-} from "@bb/desktop-contract";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserTarget,
+} from "@sandy/desktop-contract";
 
 export interface BrowserViewVisibilityCoordinator {
   show(
@@ -26,33 +26,33 @@ interface RegisterBrowserViewArgs {
 }
 
 interface DestroyPersistedBrowserViewArgs {
-  desktopBrowser: BbDesktopBrowserApi;
+  desktopBrowser: SandyDesktopBrowserApi;
   tabId: string;
 }
 
 interface DestroyPersistedBrowserViewsForThreadArgs {
-  desktopBrowser: BbDesktopBrowserApi | null;
+  desktopBrowser: SandyDesktopBrowserApi | null;
   threadId: string;
 }
 
 interface DestroyPersistedBrowserViewsForEnvironmentArgs {
-  desktopBrowser: BbDesktopBrowserApi | null;
+  desktopBrowser: SandyDesktopBrowserApi | null;
   environmentId: string;
 }
 
 const browserViewRecords = new Map<string, BrowserViewRecord>();
-const browserViewRecreationTargets = new Map<string, BbDesktopBrowserTarget>();
+const browserViewRecreationTargets = new Map<string, SandyDesktopBrowserTarget>();
 
 export function allowBrowserViewRecreation(
   tabId: string,
-  target: BbDesktopBrowserTarget,
+  target: SandyDesktopBrowserTarget,
 ): void {
   browserViewRecreationTargets.set(tabId, target);
 }
 
 export function takeBrowserViewRecreation(
   tabId: string,
-  target: BbDesktopBrowserTarget,
+  target: SandyDesktopBrowserTarget,
 ): boolean {
   const allowedTarget = browserViewRecreationTargets.get(tabId);
   if (
@@ -67,7 +67,7 @@ export function takeBrowserViewRecreation(
 }
 
 export function createBrowserViewVisibilityCoordinator(
-  desktopBrowser: BbDesktopBrowserApi,
+  desktopBrowser: SandyDesktopBrowserApi,
 ): BrowserViewVisibilityCoordinator {
   let visibleTabId: string | null = null;
   return {

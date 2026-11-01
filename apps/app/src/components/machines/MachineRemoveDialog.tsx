@@ -1,12 +1,12 @@
-import type { Host } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Host } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { ConfirmDeleteDialog } from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/dialog";
+import { ConfirmDeleteDialog } from "@sandy/shared-ui/confirm-delete-dialog";
 import { useRemoveHost } from "@/hooks/mutations/host-mutations";
 import { canForceRemoveMachine } from "@/components/machines/machine-status";
 import { useMachineThreadPreview } from "@/hooks/queries/thread-queries";

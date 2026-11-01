@@ -1,5 +1,5 @@
 import { reportPluginUpdatePhase } from "./plugin-update-progress.js";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
 import {
   getInstalledPlugin,
   getPluginArtifact,
@@ -14,7 +14,7 @@ import {
   type PluginProvenance,
   type PluginSourceIntent,
   type PluginStateSnapshotRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   createPluginStateSnapshotOnDisk,
   readPluginSnapshotRegistration,
@@ -25,7 +25,7 @@ import {
   garbageCollectPluginArtifacts,
   pluginArtifactStorageRoot,
 } from "./plugin-artifact-gc.js";
-import type { PluginRuntimeStatus } from "@bb/server-contract";
+import type { PluginRuntimeStatus } from "@sandy/server-contract";
 import type { PluginServiceDeps } from "./plugin-service-internal.js";
 import type { PluginManifest } from "./manifest.js";
 
@@ -100,7 +100,7 @@ export function createPluginActivation(context: PluginActivationContext) {
     if (
       snapshot.rollbackCandidateVersion === null ||
       snapshot.rollbackSourceFingerprint === null ||
-      snapshot.rollbackBbVersion === null ||
+      snapshot.rollbackSandyVersion === null ||
       snapshot.rollbackSdkVersion === null ||
       snapshot.rollbackDetail === null
     ) {
@@ -111,7 +111,7 @@ export function createPluginActivation(context: PluginActivationContext) {
     return {
       candidateVersion: snapshot.rollbackCandidateVersion,
       sourceFingerprint: snapshot.rollbackSourceFingerprint,
-      bbVersion: snapshot.rollbackBbVersion,
+      sandyVersion: snapshot.rollbackSandyVersion,
       sdkVersion: snapshot.rollbackSdkVersion,
       detail: snapshot.rollbackDetail,
     };
@@ -314,7 +314,7 @@ export function createPluginActivation(context: PluginActivationContext) {
           !setPluginStateSnapshotRollbackPending(deps.db, snapshot.id, {
             candidateVersion,
             sourceFingerprint: sourceFingerprint(args.row),
-            bbVersion: deps.appVersion,
+            sandyVersion: deps.appVersion,
             sdkVersion: PLUGIN_SDK_VERSION,
             detail,
             updatedAt: now(),

@@ -23,7 +23,7 @@ import {
   WORKSPACE_STATUS_GIT_TIMEOUT_MS,
   runGit,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 import { ByteBudgetCache } from "./byte-budget-cache.js";
 import {
   readCommitChanges,
@@ -43,7 +43,7 @@ import type {
   WorkspaceFileStatusKind,
   WorkspaceStatus,
 } from "../contract.js";
-import type { GitCheckoutRef } from "bb-environment-provider-host/git-types";
+import type { GitCheckoutRef } from "sandy-environment-provider-host/git-types";
 
 export interface DiffOptions {
   freshness: ReadFreshness;
@@ -969,7 +969,7 @@ export class WorkspaceReads {
         users: 0,
         retired: false,
         env: (async () => {
-          const dir = await this.createTempDir("bb-index-copy-");
+          const dir = await this.createTempDir("sandy-index-copy-");
           const copyPath = path.join(dir, "index");
           await fs.copyFile(realPath, copyPath);
           await fs.utimes(copyPath, stats.atime, stats.mtime);
@@ -2313,7 +2313,7 @@ export class WorkspaceReads {
       indexedPaths: readonly string[],
     ) => boolean,
   ): Promise<T> {
-    const tempDir = await this.createTempDir("bb-untracked-index-");
+    const tempDir = await this.createTempDir("sandy-untracked-index-");
     const indexPath = path.join(tempDir, "index");
     const pathspecPath = path.join(tempDir, "pathspec");
     const env = { ...UNSPLIT_INDEX_ENV, GIT_INDEX_FILE: indexPath };

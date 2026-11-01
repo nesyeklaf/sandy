@@ -10,7 +10,7 @@ import {
 } from "../src/server-target.js";
 
 async function createStoragePath(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "bb-server-target-"));
+  const directory = await mkdtemp(join(tmpdir(), "sandy-server-target-"));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
   return join(directory, SERVER_TARGET_FILE_NAME);
 }
@@ -46,7 +46,7 @@ it.each([
     initial: { kind: "custom", url: firstUrl },
   },
   {
-    name: "legacy bb connect settings",
+    name: "legacy sandy connect settings",
     settings: {
       connectServer: {
         handle: "laptop",

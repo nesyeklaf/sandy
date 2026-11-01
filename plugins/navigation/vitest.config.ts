@@ -4,7 +4,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     silent: "passed-only",
-    name: "bb-plugin-navigation",
+    name: "sandy-plugin-navigation",
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**"],
   },

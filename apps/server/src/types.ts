@@ -1,11 +1,11 @@
-import type { CustomProviderModel } from "@bb/config/bb-app-managed-config";
-import type { DbConnection } from "@bb/db";
-import type { FeatureFlags, ProviderNativeSkillRoots } from "@bb/domain";
-import type { Logger } from "@bb/logger";
+import type { CustomProviderModel } from "@sandy/config/sandy-app-managed-config";
+import type { DbConnection } from "@sandy/db";
+import type { FeatureFlags, ProviderNativeSkillRoots } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
 import type { PendingInteractionLifecycle } from "./services/interactions/pending-interactions.js";
 import type { MachineAuthService } from "./services/machine-auth.js";
 import type { CliCommandService } from "./services/system/cli-command.js";
-import type { BbAppManagedConfigReloader } from "./services/system/bb-app-managed-config.js";
+import type { SandyAppManagedConfigReloader } from "./services/system/sandy-app-managed-config.js";
 import type { TerminalSessionLifecycle } from "./services/terminals/terminal-session-lifecycle.js";
 import type { LifecycleDedupers } from "./lifecycle-dedupers.js";
 import type { NotificationHub } from "./ws/hub.js";
@@ -55,7 +55,7 @@ export interface AppDeps {
 }
 
 export interface ServerAppDeps extends AppDeps {
-  bbAppManagedConfig: BbAppManagedConfigReloader;
+  sandyAppManagedConfig: SandyAppManagedConfigReloader;
   cliCommand: CliCommandService;
 }
 

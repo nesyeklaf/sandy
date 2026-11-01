@@ -2,12 +2,12 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { createConnection, migrate } from "@bb/db";
+import { createConnection, migrate } from "@sandy/db";
 import {
   resolveDataDirDatabasePath,
   resolveProdDataDir,
-} from "@bb/config/runtime";
-import { HOST_ID_FILE_NAME } from "@bb/host-daemon-contract";
+} from "@sandy/config/runtime";
+import { HOST_ID_FILE_NAME } from "@sandy/host-daemon-contract";
 import { resolveDevDataDir } from "../lib/dev-restart-utils.js";
 import { runMainIfEntrypoint } from "../lib/script-entry.js";
 import { seedPerfFixture } from "../lib/seed-perf-fixture.js";
@@ -24,9 +24,9 @@ interface SeedCommandArgs {
 
 function renderHelpText(): string {
   return `
-  ${bold("bb seed-perf-db")}
+  ${bold("sandy seed-perf-db")}
 
-  Seed a large, realistic BB database for performance testing.
+  Seed a large, realistic SANDY database for performance testing.
 
   ${dim("Usage")}
     pnpm seed:perf [-- options]
@@ -40,7 +40,7 @@ function renderHelpText(): string {
     --reset            Delete the existing database file before seeding
 
   ${dim("Notes")}
-    The command refuses to touch the production data dir (~/.bb).
+    The command refuses to touch the production data dir (~/.sandy).
     Without --reset the fixture is added to the existing database.
     Start the dev app once before seeding so the fixture attaches to
     the real local host; otherwise a synthetic offline host is used.
@@ -138,7 +138,7 @@ async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
     );
   }
 
-  process.stdout.write(`\n  ${bold("bb seed-perf-db")}\n\n`);
+  process.stdout.write(`\n  ${bold("sandy seed-perf-db")}\n\n`);
   log(dim("●"), `data dir ${cyan(dataDir)}`);
 
   mkdirSync(dataDir, { recursive: true });

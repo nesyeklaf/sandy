@@ -6,7 +6,7 @@ import { afterEach, expect, it } from "vitest";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { gitRpcContract } from "../../rpc-contract.js";
 import type { GitFilesResult, WorkspaceDiffTarget } from "../../contract.js";
 import { useDiffFiles } from "./diff-data.js";
@@ -74,7 +74,7 @@ it("keeps the previous file list and its target while another target loads", asy
     {
       rpc: rpc as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
     },
   );
   const output = () => screen.getByRole("status", { name: "files" });

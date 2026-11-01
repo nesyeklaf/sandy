@@ -1,11 +1,11 @@
 import { setTimeout as delay } from "node:timers/promises";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type {
   PluginEnvironmentProviderCreateContext,
   PluginEnvironmentProviderCreateResult,
   PluginEnvironmentProviderProgress,
-} from "@get-bb/plugin-sdk/environment-provider";
-import { reportHostProgress } from "bb-environment-provider-host/progress";
+} from "@sandy-sdk/plugin-sdk/environment-provider";
+import { reportHostProgress } from "sandy-environment-provider-host/progress";
 import { z } from "zod";
 import {
   checkoutBranchSelectionSchema,
@@ -51,8 +51,8 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export default async function checkoutPlugin(bb: BbPluginApi): Promise<void> {
-  const host = bb.hosts.experimental_client({
+export default async function checkoutPlugin(sandy: SandyPluginApi): Promise<void> {
+  const host = sandy.hosts.experimental_client({
     contract: checkoutHostContract,
     experimental_signals: checkoutHostSignals,
   });
@@ -68,12 +68,12 @@ export default async function checkoutPlugin(bb: BbPluginApi): Promise<void> {
     path: string;
     threadId: string | null;
   }): Promise<boolean> {
-    const rows = await bb.sdk.environments.list({
+    const rows = await sandy.sdk.environments.list({
       hostId: args.hostId,
       path: args.path,
     });
     for (const row of rows) {
-      const threads = await bb.sdk.threads.list({
+      const threads = await sandy.sdk.threads.list({
         environmentId: row.id,
         archived: false,
       });
@@ -142,7 +142,7 @@ export default async function checkoutPlugin(bb: BbPluginApi): Promise<void> {
     hostId: string;
     path: string;
   }): Promise<string | null> {
-    const rows = await bb.sdk.environments.list({
+    const rows = await sandy.sdk.environments.list({
       hostId: args.hostId,
       path: args.path,
     });
@@ -215,7 +215,7 @@ export default async function checkoutPlugin(bb: BbPluginApi): Promise<void> {
     }
   }
 
-  bb.experimental_environments.register({
+  sandy.experimental_environments.register({
     id: PROJECT_CHECKOUT_ENVIRONMENT_PROVIDER_ID,
     displayName: "Project checkout",
     description: "Work in a project checkout on this machine.",

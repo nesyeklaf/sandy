@@ -23,7 +23,7 @@ const run = (id, attempt, conclusion, jobs) => ({
   created_at: time(0),
   event: "pull_request",
   jobsComplete: true,
-  html_url: `https://github.com/get-bb/bb/actions/runs/${id}`,
+  html_url: `https://github.com/nesyeklaf/sandy/actions/runs/${id}`,
   jobs,
 });
 

@@ -5,7 +5,7 @@ import {
   type ThreadTimelineViewRow,
   type TimelineViewWorkRow,
   type TimelineWorkSummaryChild,
-} from "@bb/thread-view";
+} from "@sandy/thread-view";
 import { deferredTimelineContentItemId } from "./deferred-content.js";
 
 interface CollectTimelineAutoExpansionRowIdsArgs {

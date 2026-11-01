@@ -1,7 +1,7 @@
 import type {
   ServerAccessStatus,
   SystemMachineProvider,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { machineServerAccessBlockedReason } from "../src/components/machines/machine-server-access";
 import type { MachineAccessState } from "../src/components/settings/MachineAccessSettings";
 
@@ -41,7 +41,7 @@ export const TAILNET_READY: ServerAccessStatus = {
           ...provider,
           availability: {
             status: "available",
-            serverUrl: "https://bb.example.com",
+            serverUrl: "https://sandy.example.com",
           },
         }
       : provider,

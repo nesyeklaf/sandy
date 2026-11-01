@@ -1,4 +1,4 @@
-import { markSpanFailed, withOutgoingSpan } from "@bb/telemetry";
+import { markSpanFailed, withOutgoingSpan } from "@sandy/telemetry";
 import { hostCommandMayWake } from "./wake-policy.js";
 import { isHostCleanupAllowed } from "./cleanup-context.js";
 import { assertMachineLifecycleAdmission } from "../machines/lifecycle.js";
@@ -7,7 +7,7 @@ import {
   getLatestSessionForHost,
   getSessionById,
   getThread,
-} from "@bb/db";
+} from "@sandy/db";
 import { randomUUID } from "node:crypto";
 import {
   hostDaemonSupportsEnvironmentCleanupInspection,
@@ -17,7 +17,7 @@ import {
   parseHostDaemonRpcResultForCommand,
   type HostDaemonRpcCommand,
   type HostDaemonRpcResultForCommand,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { ApiError } from "../../errors.js";
 import type { WorkSessionDeps } from "../../types.js";
 import {
@@ -392,8 +392,8 @@ function requestHostOnlineRpcResponse(
     withOutgoingSpan(
       {
         attributes: {
-          "bb.host.id": args.hostId,
-          "bb.host_rpc.command": args.command.type,
+          "sandy.host.id": args.hostId,
+          "sandy.host_rpc.command": args.command.type,
         },
         name: `host-rpc ${args.command.type}`,
       },

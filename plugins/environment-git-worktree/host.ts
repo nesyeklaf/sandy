@@ -1,6 +1,6 @@
-import { experimental_defineHostEntry } from "@get-bb/plugin-sdk/host";
+import { experimental_defineHostEntry } from "@sandy-sdk/plugin-sdk/host";
 import { readdir, rm } from "node:fs/promises";
-import { createHostProgress } from "bb-environment-provider-host/progress";
+import { createHostProgress } from "sandy-environment-provider-host/progress";
 import { worktreeHostContract, worktreeHostSignals } from "./contract.js";
 import { resolveWorktreeBaseBranch } from "./host/base-branch.js";
 import {

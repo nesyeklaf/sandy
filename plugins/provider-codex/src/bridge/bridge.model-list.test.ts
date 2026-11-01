@@ -2,8 +2,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { BRIDGE_JSON_RPC_ERRORS } from "@get-bb/plugin-sdk/provider-bridge";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { experimental_killAllChildrenForTests, handleLine } from "./bridge.js";
 import {
   FULL_ACCESS_SESSION_OPTIONS,
@@ -30,7 +30,7 @@ afterEach(async () => {
 });
 
 it("refreshes the catalog when new models become available", async () => {
-  const workDir = await mkdtemp(join(tmpdir(), "bb-codex-model-refresh-"));
+  const workDir = await mkdtemp(join(tmpdir(), "sandy-codex-model-refresh-"));
   temporaryDirectories.push(workDir);
   const scriptPath = join(workDir, "script.json");
   const firstCatalog = [{ id: "first", model: "first", isDefault: true }];
@@ -61,7 +61,7 @@ it("refreshes the catalog when new models become available", async () => {
 });
 
 it("publishes the model catalog returned by a newly opened session", async () => {
-  const workDir = await mkdtemp(join(tmpdir(), "bb-codex-session-catalog-"));
+  const workDir = await mkdtemp(join(tmpdir(), "sandy-codex-session-catalog-"));
   temporaryDirectories.push(workDir);
   const scriptPath = join(workDir, "script.json");
   await writeFile(
@@ -88,7 +88,7 @@ it("publishes the model catalog returned by a newly opened session", async () =>
           deltas: expect.arrayContaining([
             expect.objectContaining({
               kind: "extension.state",
-              extensionKind: "bb/provider-model-catalog",
+              extensionKind: "sandy/provider-model-catalog",
               payload: expect.objectContaining({
                 models: [expect.objectContaining({ model: "session-model" })],
                 selectedOnlyModels: [],
@@ -102,7 +102,7 @@ it("publishes the model catalog returned by a newly opened session", async () =>
 });
 
 it("launches the catalog app-server on the requested pool route", async () => {
-  const workDir = await mkdtemp(join(tmpdir(), "bb-codex-model-route-"));
+  const workDir = await mkdtemp(join(tmpdir(), "sandy-codex-model-route-"));
   temporaryDirectories.push(workDir);
   const scriptPath = join(workDir, "script.json");
   const launchLogPath = join(workDir, "launches.jsonl");
@@ -135,14 +135,14 @@ it("launches the catalog app-server on the requested pool route", async () => {
         JSON.parse(line) as { args: string[]; poolToken: string | null },
     );
   expect(launches).toHaveLength(3);
-  expect(launches[0]?.args).toContain('model_provider="bb-account-pool"');
+  expect(launches[0]?.args).toContain('model_provider="sandy-account-pool"');
   expect(launches[0]?.args).toContain(
     'openai_base_url="http://127.0.0.1:1/pool/v1"',
   );
   expect(launches[0]?.poolToken).toBe("machine-token");
-  expect(launches[1]?.args).toContain('model_provider="bb-account-pool"');
+  expect(launches[1]?.args).toContain('model_provider="sandy-account-pool"');
   expect(launches[1]?.poolToken).toBe("machine-token");
-  expect(launches[2]?.args).not.toContain('model_provider="bb-account-pool"');
+  expect(launches[2]?.args).not.toContain('model_provider="sandy-account-pool"');
   expect(launches[2]?.poolToken).toBeNull();
 });
 
@@ -178,7 +178,7 @@ it.each([
     expectedDefaults: [true, false],
   },
 ])("resolves catalog defaults with $name", async (scenario) => {
-  const workDir = await mkdtemp(join(tmpdir(), "bb-codex-model-default-"));
+  const workDir = await mkdtemp(join(tmpdir(), "sandy-codex-model-default-"));
   temporaryDirectories.push(workDir);
   const scriptPath = join(workDir, "script.json");
   const catalog = [
@@ -224,7 +224,7 @@ it.each([
           deltas: expect.arrayContaining([
             expect.objectContaining({
               kind: "extension.state",
-              extensionKind: "bb/provider-model-catalog",
+              extensionKind: "sandy/provider-model-catalog",
               payload: expect.objectContaining({
                 models: catalog.map((model, index) =>
                   expect.objectContaining({
@@ -242,7 +242,7 @@ it.each([
 });
 
 it("recovers with a fresh app-server after a model catalog failure", async () => {
-  const workDir = await mkdtemp(join(tmpdir(), "bb-codex-model-list-"));
+  const workDir = await mkdtemp(join(tmpdir(), "sandy-codex-model-list-"));
   temporaryDirectories.push(workDir);
   const scriptPath = join(workDir, "script.json");
   await writeFile(
@@ -274,10 +274,10 @@ it("recovers with a fresh app-server after a model catalog failure", async () =>
 
 it("rejects a model catalog request with the missing-executable code when codex cannot be spawned", async () => {
   vi.stubEnv(
-    "BB_CODEX_BRIDGE_APP_SERVER_COMMAND",
-    join(tmpdir(), "bb-codex-does-not-exist"),
+    "SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND",
+    join(tmpdir(), "sandy-codex-does-not-exist"),
   );
-  vi.stubEnv("BB_CODEX_BRIDGE_APP_SERVER_ARGS", "[]");
+  vi.stubEnv("SANDY_CODEX_BRIDGE_APP_SERVER_ARGS", "[]");
 
   harness.sendRequest(1, "model/list", {});
   const response = await harness.waitForResponse(1);

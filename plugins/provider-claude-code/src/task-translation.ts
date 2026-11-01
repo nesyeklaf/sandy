@@ -12,7 +12,7 @@ import {
   backgroundTaskItemStatus,
   isBackgroundAgentTaskType,
   isSettledBackgroundTaskStatus,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   claudeTaskNotificationMessageSchema,
   claudeTaskProgressMessageSchema,

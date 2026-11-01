@@ -10,8 +10,8 @@ import {
   setAppSettings,
   setQueuedThreadMessageFailureReason,
   setQueuedThreadMessageGroupBoundary,
-} from "@bb/db";
-import type { EnvironmentRow } from "@bb/db";
+} from "@sandy/db";
+import type { EnvironmentRow } from "@sandy/db";
 import {
   changedMessageSchema,
   threadScope,
@@ -20,9 +20,9 @@ import {
   type Thread,
   type ThreadChangedMessage,
   type ThreadEvent,
-} from "@bb/domain";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/domain";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as queuedDispatch from "../../src/services/threads/queued-message-dispatch.js";
 import * as threadEvents from "../../src/services/threads/thread-events.js";
@@ -1378,7 +1378,7 @@ describe("session option selection dispatch", () => {
       scope: threadScope(),
       data: {
         providerThreadId: `provider-send-dispatch-${value}`,
-        kind: "bb/session-options",
+        kind: "sandy/session-options",
         payload: {
           options: [
             {

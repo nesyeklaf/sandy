@@ -1,8 +1,8 @@
-import type { PluginThreadEventPayloads } from "@get-bb/plugin-sdk";
+import type { PluginThreadEventPayloads } from "@sandy-sdk/plugin-sdk";
 import {
   createFakePluginHost,
   makeThreadResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it, vi } from "vitest";
 import { CLIENT_NOTIFICATION_CHANNEL } from "./contract.js";
 import {
@@ -137,7 +137,7 @@ async function setup(options: SetupOptions = {}) {
   await createPushNotificationsPlugin({
     coalesceMs: COALESCE_MS,
     ...(options.now === undefined ? {} : { now: options.now }),
-  })(fake.bb);
+  })(fake.sandy);
 
   function setThread(overrides: Partial<ThreadResponse> = {}) {
     const thread = makeThreadResponse({
@@ -287,7 +287,7 @@ describe("push sender", () => {
       host.setThread({
         id: "thr_23456789ab",
         title:
-          "Compare bb in-app terminal against Moshi, Termius, and Blink Shell",
+          "Compare sandy app terminal against Moshi, Termius, and Blink Shell",
       });
       const thread = host.setThread({ title: "Discord Dude" });
 
@@ -296,7 +296,7 @@ describe("push sender", () => {
         lastAssistantText: [
           "## Summary",
           "",
-          "@thread:thr_aedn9u3q8i fixed **[#4793](https://github.com/get-bb/bb/issues/4793)**",
+          "@thread:thr_aedn9u3q8i fixed **[#4793](https://github.com/nesyeklaf/sandy/issues/4793)**",
           "as `9579549809`; thr_8quy6y32b5 and snake_case_name remain.",
           "Then see @thread:thr_23456789ab.",
           "",
@@ -307,7 +307,7 @@ describe("push sender", () => {
       await vi.waitFor(() => expect(host.clientSignals()).toHaveLength(1));
       expect(host.clientSignals()[0]?.payload).toMatchObject({
         title: "Discord Dude",
-        body: "“Fix scroll jumps” fixed #4793 as 9579549809; thr_8quy6y32b5 and snake_case_name remain. Then see “Compare bb in-app terminal against Mosh…”.",
+        body: "“Fix scroll jumps” fixed #4793 as 9579549809; thr_8quy6y32b5 and snake_case_name remain. Then see “Compare sandy app terminal against Mosh…”.",
       });
     } finally {
       await host.cleanup();
@@ -562,7 +562,7 @@ describe("sending notifications", () => {
   });
 
   it("delivers a threadless message from another plugin to every channel", async () => {
-    const host = await setup({ appUrl: "https://bb.example.test" });
+    const host = await setup({ appUrl: "https://sandy.example.test" });
     try {
       const result = await host.harness.behavior.callRpc(
         "notifications.send",

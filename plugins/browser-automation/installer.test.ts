@@ -26,7 +26,7 @@ const dirs: string[] = [];
 const signal = new AbortController().signal;
 
 async function dataDir() {
-  const dir = await mkdtemp(join(tmpdir(), "bb-dev-browser-runtime-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-dev-browser-runtime-"));
   dirs.push(dir);
   return dir;
 }

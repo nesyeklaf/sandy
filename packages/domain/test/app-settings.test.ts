@@ -8,32 +8,32 @@ import {
 
 describe("managedBranchPrefixSchema", () => {
   it("accepts prefixes that start a valid branch name", () => {
-    for (const prefix of ["bb/", "", "sawyer/wt-", "team/bb/", "wip_"]) {
+    for (const prefix of ["sandy/", "", "sawyer/wt-", "team/sandy/", "wip_"]) {
       expect(managedBranchPrefixSchema.safeParse(prefix).success).toBe(true);
     }
   });
 
   it("rejects prefixes that cannot start a valid branch name", () => {
     for (const prefix of [
-      " bb/",
-      "bb //",
-      "-bb/",
-      "/bb/",
-      "bb//",
-      "bb../",
-      "bb:",
-      "bb~",
-      "bb\\",
-      "bb@{",
-      ".bb/",
+      " sandy/",
+      "sandy //",
+      "-sandy/",
+      "/sandy/",
+      "sandy//",
+      "sandy../",
+      "sandy:",
+      "sandy~",
+      "sandy\\",
+      "sandy@{",
+      ".sandy/",
       "a".repeat(MANAGED_BRANCH_PREFIX_MAX_LENGTH + 1),
     ]) {
       expect(managedBranchPrefixSchema.safeParse(prefix).success).toBe(false);
     }
   });
 
-  it("defaults to the bb namespace", () => {
-    expect(defaultAppSettings.managedBranchPrefix).toBe("bb/");
+  it("defaults to the sandy namespace", () => {
+    expect(defaultAppSettings.managedBranchPrefix).toBe("sandy/");
     expect(appSettingsSchema.parse(defaultAppSettings)).toEqual(
       defaultAppSettings,
     );

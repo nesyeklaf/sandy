@@ -6,13 +6,13 @@ import type {
   ThreadResponse,
   ThreadTimelineResponse,
   TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BottomAnchoredScrollBody } from "@/components/ui/bottom-anchored-scroll-body";
 import { ThreadTimelineSurface } from "@/components/thread/timeline/ThreadTimelineSurface";
 import { useThreadTimelineController } from "@/components/thread/timeline/useThreadTimelineController";
 import { sdk } from "@/lib/sdk";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import { threadListQueryKey, threadQueryKey } from "@/hooks/queries/query-keys";
 import { installFakeFlowLayout } from "@/test/fake-flow-layout";
 import {
@@ -48,10 +48,10 @@ vi.mock("@/hooks/useServerConnectionState", () => ({
   useServerConnectionState: () => "connected",
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", async (importOriginal) => {
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", async (importOriginal) => {
   const actual =
     await importOriginal<
-      typeof import("@bb/shared-ui/hooks/use-compact-viewport")
+      typeof import("@sandy/shared-ui/hooks/use-compact-viewport")
     >();
   return { ...actual, useIsCompactViewport: () => viewport.compact };
 });

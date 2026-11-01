@@ -1,7 +1,7 @@
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
-import type { EnvironmentDisplayInfo } from "@bb/core-ui";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
+import type { EnvironmentDisplayInfo } from "@sandy/core-ui";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
 import {
   findEnvironmentDisplayProvider,
   getEnvironmentDisplayIconName,

@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PanelGroup } from "react-resizable-panels";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import {
   createGitDiffFixedPanelTab,
   createThreadInfoFixedPanelTab,

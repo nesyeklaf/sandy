@@ -17,10 +17,10 @@ import {
   INSTALL_MACHINE_SCRIPT_PATH,
   INSTALL_MACHINE_WINDOWS_SCRIPT_PATH,
 } from "./install-machine-asset.js";
-import { getExperiments } from "@bb/db";
+import { getExperiments } from "@sandy/db";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { httpInstrumentationMiddleware } from "@hono/otel";
-import { otlpServiceName } from "@bb/config/otlp";
+import { otlpServiceName } from "@sandy/config/otlp";
 import {
   declineWebSocketCompression,
   WEB_SOCKET_COMPRESSION,
@@ -31,7 +31,7 @@ import { readFile, stat } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { extname, join, resolve } from "node:path";
 import { Hono } from "hono";
-import { terminalWebSocketQuerySchema } from "@bb/server-contract";
+import { terminalWebSocketQuerySchema } from "@sandy/server-contract";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import type { ServerAppDeps } from "./types.js";
@@ -96,17 +96,17 @@ import {
   onDaemonSocketOpen,
   validateDaemonWebSocket,
 } from "./ws/daemon-protocol.js";
-import { roundDurationMs } from "@bb/process-utils";
+import { roundDurationMs } from "@sandy/process-utils";
 import {
   onTerminalSocketClose,
   onTerminalSocketMessage,
   onTerminalSocketOpen,
 } from "./ws/terminal-protocol.js";
 import {
-  createBbAppArtifactService,
-  type BbAppArtifactService,
-} from "./services/install/bb-app-artifact.js";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+  createSandyAppArtifactService,
+  type SandyAppArtifactService,
+} from "./services/install/sandy-app-artifact.js";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import {
   createPluginCatalogService,
   type PluginCatalogService,
@@ -126,7 +126,7 @@ const PLUGIN_WIRE_HTTP_PATH = /^\/api\/v1\/plugins\/[^/]+\/http(?:\/|$)/u;
 import { rankAcceptedAssetEncodings } from "./asset-content-encoding.js";
 import { apiJsonCompression } from "./api-response-compression.js";
 import { serverTiming } from "./server-timing.js";
-import { APP_SURFACE_WEB, type AppSurface } from "@bb/config/app-surface";
+import { APP_SURFACE_WEB, type AppSurface } from "@sandy/config/app-surface";
 import { registerServerMoveRoutes } from "./routes/server-move.js";
 import {
   INTERNAL_SERVER_MOVE_PENDING_PATH,
@@ -194,7 +194,7 @@ export interface ServerMoveAppOptions {
 }
 
 interface CreateAppOptions {
-  bbAppArtifactService?: BbAppArtifactService;
+  sandyAppArtifactService?: SandyAppArtifactService;
   serverMove?: ServerMoveAppOptions;
   slowApiRequestLogThresholdMs?: number;
   performanceDiagnosticsEnabled?: () => boolean;
@@ -474,9 +474,9 @@ export function createApp(
   const requestPeers = createRequestPeerRecorder();
   const slowApiRequestLogThresholdMs =
     options?.slowApiRequestLogThresholdMs ?? SLOW_API_REQUEST_LOG_THRESHOLD_MS;
-  const bbAppArtifactService =
-    options?.bbAppArtifactService ??
-    createBbAppArtifactService({
+  const sandyAppArtifactService =
+    options?.sandyAppArtifactService ??
+    createSandyAppArtifactService({
       dataDir: deps.config.dataDir,
       serverEntryUrl: import.meta.url,
     });
@@ -570,7 +570,7 @@ export function createApp(
   });
   app.get("/install.sh", async (context) => {
     const script = await readFile(INSTALL_MACHINE_SCRIPT_PATH, "utf8");
-    const credential = context.req.header("X-BB-Enrollment");
+    const credential = context.req.header("X-SANDY-Enrollment");
     let bootstrap =
       credential === undefined
         ? null
@@ -583,7 +583,7 @@ export function createApp(
       } catch (error) {
         deps.logger.warn({ error }, "Could not refresh machine access");
         return new Response(
-          "echo 'Could not refresh machine access. Run the command again, or generate a new one in bb.' >&2\nexit 1\n",
+          "echo 'Could not refresh machine access. Run the command again, or generate a new one in sandy.' >&2\nexit 1\n",
           {
             status: 503,
             headers: {
@@ -596,7 +596,7 @@ export function createApp(
     }
     if (credential !== undefined && bootstrap === null) {
       return new Response(
-        "echo 'This enrollment command has already been used, replaced, or expired. Generate a new command in bb.' >&2\nexit 1\n",
+        "echo 'This enrollment command has already been used, replaced, or expired. Generate a new command in sandy.' >&2\nexit 1\n",
         {
           status: 403,
           headers: {
@@ -621,11 +621,11 @@ export function createApp(
       "cache-control": "no-store",
       "content-type": "text/plain; charset=utf-8",
     };
-    const credential = context.req.header("X-BB-Enrollment");
+    const credential = context.req.header("X-SANDY-Enrollment");
     if (credential === undefined) {
       return new Response(
         windowsInstallerFailureScript(
-          "This installer needs an enrollment command. Generate one in bb under Settings, Machines.",
+          "This installer needs an enrollment command. Generate one in sandy under Settings, Machines.",
         ),
         { headers },
       );
@@ -641,7 +641,7 @@ export function createApp(
         deps.logger.warn({ error }, "Could not refresh machine access");
         return new Response(
           windowsInstallerFailureScript(
-            "Could not refresh machine access. Run the command again, or generate a new one in bb.",
+            "Could not refresh machine access. Run the command again, or generate a new one in sandy.",
           ),
           { headers },
         );
@@ -650,7 +650,7 @@ export function createApp(
     if (bootstrap === null) {
       return new Response(
         windowsInstallerFailureScript(
-          "This enrollment command has already been used, replaced, or expired. Generate a new command in bb.",
+          "This enrollment command has already been used, replaced, or expired. Generate a new command in sandy.",
         ),
         { headers },
       );
@@ -665,19 +665,19 @@ export function createApp(
   });
   app.get("/install/version", async (context) => {
     return context.json({
-      version: await bbAppArtifactService.getVersion(),
+      version: await sandyAppArtifactService.getVersion(),
       protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
     });
   });
-  app.get("/install/bb-app.tgz", async (context) => {
+  app.get("/install/sandy-app.tgz", async (context) => {
     try {
-      const artifact = await bbAppArtifactService.getArtifact();
+      const artifact = await sandyAppArtifactService.getArtifact();
       const etag = `"sha256-${artifact.digest}"`;
       const headers = {
         "cache-control": "public, max-age=300",
         "content-type": "application/gzip",
         etag,
-        "x-bb-artifact-sha256": artifact.digest,
+        "x-sandy-artifact-sha256": artifact.digest,
       };
       if (context.req.header("if-none-match") === etag) {
         return new Response(null, { headers, status: 304 });
@@ -796,7 +796,7 @@ export function createApp(
         pluginId,
       });
     },
-    // `bb.experimental_hooks.recheck()`: a plugin whose wait condition
+    // `sandy.experimental_hooks.recheck()`: a plugin whose wait condition
     // may have changed asks core to re-attempt the plugin-queued rows. Core
     // owns the walk, the coalescing and the pacing; the plugin owns knowing
     // when to ask.
@@ -804,7 +804,7 @@ export function createApp(
       requestQueuedMessageDispatch(deps, { kind: "plugin-recheck" });
     },
     watchBuiltinPluginSources:
-      process.env.BB_MANAGED_DEV_BUILTIN_PLUGIN_HOT_RELOAD === "1",
+      process.env.SANDY_MANAGED_DEV_BUILTIN_PLUGIN_HOT_RELOAD === "1",
   });
   // Messages queued while a thread awaited user interaction stop waiting once
   // that interaction settles (#1650); the idle drain then delivers them.
@@ -1061,7 +1061,7 @@ export function createApp(
   if (options?.staticDir) {
     registerStaticAppRoutes(app, options.staticDir);
   } else {
-    app.get("/", (context) => context.text("bb server"));
+    app.get("/", (context) => context.text("sandy server"));
   }
 
   return {

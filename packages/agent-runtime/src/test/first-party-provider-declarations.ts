@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { pluginPackageJsonSchema } from "@bb/domain";
-import type { PluginSettingValue } from "@get-bb/plugin-sdk";
-import type { NormalizedPluginProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { pluginPackageJsonSchema } from "@sandy/domain";
+import type { PluginSettingValue } from "@sandy-sdk/plugin-sdk";
+import type { NormalizedPluginProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 
 export function firstPartyPluginRootDir(pluginId: string): string {
   return fileURLToPath(
@@ -21,7 +21,7 @@ async function declaredIconNames(pluginId: string): Promise<string[]> {
       ),
     ),
   );
-  return Object.keys(manifest.bb.branding.experimental_icons ?? {});
+  return Object.keys(manifest.sandy.branding.experimental_icons ?? {});
 }
 
 export interface CaptureFirstPartyProviderDeclarationsOptions {
@@ -48,7 +48,7 @@ export async function captureFirstPartyProviderDeclarations(
     ...(options.settings === undefined ? {} : { settings: options.settings }),
   });
   try {
-    await entry(host.bb);
+    await entry(host.sandy);
     const captured = [...host.harness.registrations.providerRegistrations];
     if (captured.length === 0) {
       throw new Error(`${pluginId} registered no provider declaration`);

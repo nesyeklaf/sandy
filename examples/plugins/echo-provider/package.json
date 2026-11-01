@@ -1,13 +1,13 @@
 {
-  "name": "bb-plugin-echo-provider",
+  "name": "sandy-plugin-echo-provider",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.3"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Echo provider",
     "description": "The third-party canary: a complete agent provider that exercises every provider-plugin capability through the public SDK alone.",
     "branding": {
@@ -20,14 +20,14 @@
     "host": "./host.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -2,14 +2,14 @@ import {
   experimental_ThreadContextCardRow as ThreadContextCardRow,
   experimental_useAppPanel as useAppPanel,
   type ExperimentalThreadContextCardProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   CHANGED_FILES_KIND_PREFIX,
   formatChangeSummary,
   selectWorkspaceChangedFilesSection,
   toChangeTally,
-} from "@bb/shared-ui/workspace-change-summary";
-import { DiffStatsTally } from "@bb/shared-ui/diff-stats-tally";
+} from "@sandy/shared-ui/workspace-change-summary";
+import { DiffStatsTally } from "@sandy/shared-ui/diff-stats-tally";
 import { GIT_DIFF_TAB_ID } from "../../contract.js";
 import { useGitStatus, useShowGitChanges } from "../queries.js";
 

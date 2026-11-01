@@ -19,13 +19,13 @@ import type {
   ThreadEvent,
   ToolCallRequest,
   ToolCallResponse,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   getThreadEventScopeTurnId,
   isApprovalPendingInteractionPayload,
   isUserQuestionPendingInteractionPayload,
-} from "@bb/domain";
-import { resolvePreferredTestModel } from "@bb/test-helpers";
+} from "@sandy/domain";
+import { resolvePreferredTestModel } from "@sandy/test-helpers";
 import { createAgentRuntime } from "../runtime.js";
 import type {
   AgentRuntimeExecutionOptions,
@@ -162,7 +162,7 @@ const runtimeOptionsTemplates = {
 
 const INTEGRATION_REASONING_LEVEL = "low" satisfies ReasoningLevel;
 const PI_CODING_AGENT_DIR_ENV = "PI_CODING_AGENT_DIR";
-const PI_BRIDGE_SESSION_DIR_ENV = "BB_PI_BRIDGE_SESSION_DIR";
+const PI_BRIDGE_SESSION_DIR_ENV = "SANDY_PI_BRIDGE_SESSION_DIR";
 
 function piAgentDir(): string {
   return (
@@ -816,7 +816,7 @@ function copyPiAgentFileIfPresent(args: CopyPiAgentFileIfPresentArgs): void {
 }
 
 function preparePiAgentDir(args: PreparePiAgentDirArgs): string {
-  const targetAgentDir = join(args.tmpDir, ".bb-pi-agent");
+  const targetAgentDir = join(args.tmpDir, ".sandy-pi-agent");
   mkdirSync(targetAgentDir, { recursive: true });
 
   const sourceAgentDir = piAgentDir();
@@ -838,7 +838,7 @@ function createRuntimeProcessEnv(
     return undefined;
   }
 
-  const sessionDir = join(args.tmpDir, ".bb-pi-bridge-sessions");
+  const sessionDir = join(args.tmpDir, ".sandy-pi-bridge-sessions");
   mkdirSync(sessionDir, { recursive: true });
   return {
     [PI_BRIDGE_SESSION_DIR_ENV]: sessionDir,
@@ -852,7 +852,7 @@ export function createTestRuntime(
 ): TestContext {
   const tmpDir =
     opts?.workspacePath ??
-    mkdtempSync(join(tmpdir(), `bb-integ-${providerId}-`));
+    mkdtempSync(join(tmpdir(), `sandy-integ-${providerId}-`));
   const ownsTmpDir = !opts?.workspacePath;
   const events: ThreadEvent[] = [];
   const toolCalls: ToolCallRequest[] = [];

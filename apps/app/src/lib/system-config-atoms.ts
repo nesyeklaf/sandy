@@ -1,13 +1,13 @@
 import { atom } from "jotai";
-import { defaultAppSettings, defaultAppTheme } from "@bb/domain";
-import type { WorkspaceOpenTarget } from "@bb/host-daemon-contract";
+import { defaultAppSettings, defaultAppTheme } from "@sandy/domain";
+import type { WorkspaceOpenTarget } from "@sandy/host-daemon-contract";
 import type { HostDaemonStatusSnapshot } from "./api-host-daemon";
-import type { SystemConfigResponse } from "@bb/server-contract";
+import type { SystemConfigResponse } from "@sandy/server-contract";
 import { systemConfigQueryOptions } from "@/hooks/queries/system-queries";
 import { markSystemConfigStale } from "@/hooks/cache-owners/system-config-cache-owner";
 import { appQueryClient } from "./app-query-client";
 import { fetchHostStatus, fetchWorkspaceOpenTargets } from "./api-host-daemon";
-import { getBbDesktopInfo } from "./bb-desktop";
+import { getSandyDesktopInfo } from "./sandy-desktop";
 import {
   getBrowserLocalNetworkPermissionQuery,
   resolveLocalHostDaemonAccess,
@@ -253,7 +253,7 @@ export const localHostDaemonAccessStateAtom = atom<
   return resolveLocalHostDaemonAccess({
     configuredPorts: config.localHelperPorts,
     hostname: typeof window === "undefined" ? null : window.location.hostname,
-    isDesktop: getBbDesktopInfo() !== null,
+    isDesktop: getSandyDesktopInfo() !== null,
     permissions: getBrowserLocalNetworkPermissionQuery(),
     sessionAccessGranted,
   });

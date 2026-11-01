@@ -1,5 +1,5 @@
-import { createBbSdk } from "@bb/sdk/core";
-import { createHttpTransport } from "@bb/sdk/node";
+import { createSandySdk } from "@sandy/sdk/core";
+import { createHttpTransport } from "@sandy/sdk/node";
 import { appendThreadProvisioningEvent } from "../../../src/services/threads/thread-events.js";
 import { requestThreadStopForCurrentState } from "../../../src/services/threads/thread-lifecycle.js";
 import {
@@ -10,12 +10,12 @@ import { withEnvironmentCleanupSlot } from "../../../src/services/environments/c
 import { reportEnvironmentHookProgress } from "../../../src/services/environments/environment-hooks.js";
 import { registerHostRpcResponder } from "../../helpers/host-rpc.js";
 import { registerTestHostRpcCapture } from "../../helpers/commands.js";
-import { recordProvisionedEnvironmentWorkspace } from "@bb/db/internal-environment-lifecycle";
+import { recordProvisionedEnvironmentWorkspace } from "@sandy/db/internal-environment-lifecycle";
 import { createThreadFromRequest } from "../../../src/services/threads/thread-create.js";
 import {
   encodeClientTurnRequestIdNumber,
   systemThreadProvisioningEventDataSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { requireThreadCommandEnvironment } from "../../../src/services/threads/thread-command-environment.js";
 import { ensureThreadProvisionEnvironmentReady } from "../../../src/services/threads/thread-provisioning-environment.js";
 import {
@@ -23,8 +23,8 @@ import {
   createThreadStartup,
 } from "../../../src/services/threads/thread-startup-store.js";
 import { z } from "zod";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { handleUpdateEnvironmentDirectoryToolCall } from "../../../src/services/threads/thread-environment-directory.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
@@ -43,11 +43,11 @@ import {
   updatePreparingEnvironment,
   threads,
   updateThread,
-} from "@bb/db";
-import type { JsonValue } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
-import type { PluginEnvironmentProviderDeclaration } from "@get-bb/plugin-sdk";
-import { validatePluginEnvironmentProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy/db";
+import type { JsonValue } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
+import type { PluginEnvironmentProviderDeclaration } from "@sandy-sdk/plugin-sdk";
+import { validatePluginEnvironmentProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   markProviderEnvironmentAttached,
   cancelProviderEnvironmentCreation,
@@ -125,7 +125,7 @@ function setup(
     projectCheckout: null,
     gitRemote: null,
     inputs: null,
-    suggestedBranchName: "bb/test",
+    suggestedBranchName: "sandy/test",
     environment: null,
   };
   let lastEnvironmentId: string | null = null;
@@ -811,7 +811,7 @@ describe("core environment orchestration", () => {
       });
       const module = z
         .object({
-          default: z.custom<(bb: BbPluginApi) => Promise<void>>(
+          default: z.custom<(sandy: SandyPluginApi) => Promise<void>>(
             (value) => typeof value === "function",
           ),
         })
@@ -823,7 +823,7 @@ describe("core environment orchestration", () => {
             ).href
           ),
         );
-      await module.default(fake.bb);
+      await module.default(fake.sandy);
       const provider =
         fake.harness.registrations.environmentProviders.get("project-checkout");
       if (provider?.validate === null || provider === undefined)
@@ -874,7 +874,7 @@ describe("core environment orchestration", () => {
       });
       const module = z
         .object({
-          default: z.custom<(bb: BbPluginApi) => Promise<void>>(
+          default: z.custom<(sandy: SandyPluginApi) => Promise<void>>(
             (value) => typeof value === "function",
           ),
         })
@@ -886,7 +886,7 @@ describe("core environment orchestration", () => {
             ).href
           ),
         );
-      await module.default(fake.bb);
+      await module.default(fake.sandy);
       const provider =
         fake.harness.registrations.environmentProviders.get("project-checkout");
       if (provider === undefined) throw new Error("Missing checkout provider");
@@ -1441,7 +1441,7 @@ describe("core environment orchestration", () => {
             .set({ archivedAt: Date.now() })
             .where(eq(threads.id, fixture.thread.id))
             .run();
-          const sdk = createBbSdk({
+          const sdk = createSandySdk({
             transport: createHttpTransport({
               baseUrl: "http://localhost",
               runtime: "node",
@@ -1499,7 +1499,7 @@ describe("core environment orchestration", () => {
       });
       const module = z
         .object({
-          default: z.custom<(bb: BbPluginApi) => Promise<void>>(
+          default: z.custom<(sandy: SandyPluginApi) => Promise<void>>(
             (value) => typeof value === "function",
           ),
         })
@@ -1511,7 +1511,7 @@ describe("core environment orchestration", () => {
             ).href
           ),
         );
-      await module.default(fake.bb);
+      await module.default(fake.sandy);
       const provider =
         fake.harness.registrations.environmentProviders.get("project-checkout");
       if (provider === undefined) throw new Error("Missing checkout provider");
@@ -2085,7 +2085,7 @@ it("serializes concurrent branchless checkout attaches until the first thread is
     try {
       const module = z
         .object({
-          default: z.custom<(bb: BbPluginApi) => Promise<void>>(
+          default: z.custom<(sandy: SandyPluginApi) => Promise<void>>(
             (value) => typeof value === "function",
           ),
         })
@@ -2097,7 +2097,7 @@ it("serializes concurrent branchless checkout attaches until the first thread is
             ).href
           ),
         );
-      await module.default(fake.bb);
+      await module.default(fake.sandy);
       const provider =
         fake.harness.registrations.environmentProviders.get("project-checkout");
       if (!provider) throw new Error("Missing checkout provider");
@@ -2529,7 +2529,7 @@ describe("worktree adoption cleanup", () => {
         });
         const module = z
           .object({
-            default: z.custom<(bb: BbPluginApi) => Promise<void>>(
+            default: z.custom<(sandy: SandyPluginApi) => Promise<void>>(
               (value) => typeof value === "function",
             ),
           })
@@ -2541,7 +2541,7 @@ describe("worktree adoption cleanup", () => {
               ).href
             ),
           );
-        await module.default(fake.bb);
+        await module.default(fake.sandy);
         const provider =
           fake.harness.registrations.environmentProviders.get("git-worktree");
         if (provider === undefined)

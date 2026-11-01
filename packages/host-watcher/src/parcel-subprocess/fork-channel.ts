@@ -1,4 +1,4 @@
-import { forkHostProcess as fork } from "@bb/process-utils";
+import { forkHostProcess as fork } from "@sandy/process-utils";
 import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -9,7 +9,7 @@ import type { ChildChannel } from "./parcel-watcher-proxy.js";
 function resolveChildEntry(): string {
   const moduleDir = dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    "bb-parcel-watcher-child.mjs",
+    "sandy-parcel-watcher-child.mjs",
     "parcel-child-entry.js",
     "parcel-child-entry.ts",
   ];

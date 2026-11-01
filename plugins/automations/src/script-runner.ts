@@ -2,7 +2,7 @@ import {
   experimental_hostToolchain as hostToolchain,
   experimental_execHostFile,
   experimental_spawnHostProcess as spawn,
-} from "@get-bb/plugin-sdk/process";
+} from "@sandy-sdk/plugin-sdk/process";
 import type { ChildProcess } from "node:child_process";
 import { delimiter, dirname, isAbsolute, join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
@@ -25,10 +25,10 @@ const SCRIPT_STOP_WAIT_MS = 3_000;
 const SCRIPT_INTERRUPTED_REASON =
   "interrupted: the automations plugin stopped before the script finished";
 
-let verifiedBbPath: string | null = null;
+let verifiedSandyPath: string | null = null;
 
-const BB_NOT_INJECTED_WARNING =
-  "[bb] warning: could not locate the bb CLI, so `bb` is not on PATH for this script.";
+const SANDY_NOT_INJECTED_WARNING =
+  "[sandy] warning: could not locate the sandy CLI, so `sandy` is not on PATH for this script.";
 
 async function commandWorks(command: string, args: string[]): Promise<boolean> {
   try {
@@ -47,27 +47,27 @@ async function isDirectory(candidate: string): Promise<boolean> {
   }
 }
 
-async function resolveBbBinary(
+async function resolveSandyBinary(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<string | null> {
-  const candidate = hostToolchain.resolve("bb", { env });
+  const candidate = hostToolchain.resolve("sandy", { env });
   if (candidate === null) return null;
-  if (candidate === verifiedBbPath) return candidate;
+  if (candidate === verifiedSandyPath) return candidate;
   if (!(await commandWorks(candidate, ["--version"]))) return null;
-  verifiedBbPath = candidate;
+  verifiedSandyPath = candidate;
   return candidate;
 }
 
 export function scriptPathEnv(
-  bbPath: string | null,
+  sandyPath: string | null,
   inheritedPath: string | undefined,
 ): string {
   const basePath = inheritedPath ?? "";
-  if (bbPath === null || !isAbsolute(bbPath)) {
+  if (sandyPath === null || !isAbsolute(sandyPath)) {
     return basePath;
   }
-  const bbDir = dirname(bbPath);
-  return basePath.length > 0 ? `${bbDir}${delimiter}${basePath}` : bbDir;
+  const sandyDir = dirname(sandyPath);
+  return basePath.length > 0 ? `${sandyDir}${delimiter}${basePath}` : sandyDir;
 }
 
 export function isWakeAgentSuppressed(output: string): boolean {
@@ -346,19 +346,19 @@ export async function executeStoredScript(args: {
   });
   const interpreter =
     args.interpreter ?? resolveDefaultInterpreter(args.scriptFile);
-  const bbPath = await resolveBbBinary();
-  const warning = bbPath === null ? `${BB_NOT_INJECTED_WARNING}\n` : "";
+  const sandyPath = await resolveSandyBinary();
+  const warning = sandyPath === null ? `${SANDY_NOT_INJECTED_WARNING}\n` : "";
   const scriptEnv: NodeJS.ProcessEnv = {
     ...process.env,
     ...(args.env ?? {}),
-    PATH: scriptPathEnv(bbPath, process.env.PATH),
-    BB_SERVER_URL: args.serverUrl,
-    BB_PROJECT_ID: args.projectId,
-    BB_AUTOMATION_ID: args.automationId,
-    BB_AUTOMATION_RUN_ID: args.runId,
+    PATH: scriptPathEnv(sandyPath, process.env.PATH),
+    SANDY_SERVER_URL: args.serverUrl,
+    SANDY_PROJECT_ID: args.projectId,
+    SANDY_AUTOMATION_ID: args.automationId,
+    SANDY_AUTOMATION_RUN_ID: args.runId,
   };
-  if (bbPath !== null) {
-    scriptEnv.BB_CLI = bbPath;
+  if (sandyPath !== null) {
+    scriptEnv.SANDY_CLI = sandyPath;
   }
   await mkdir(scriptsRoot(args.pluginDataDir), { recursive: true });
   if (!(await isDirectory(args.workingDir))) {

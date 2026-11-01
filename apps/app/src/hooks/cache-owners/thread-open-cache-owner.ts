@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { getMediaQuerySnapshot } from "@bb/shared-ui/hooks/use-media-query";
-import { POINTER_COARSE_QUERY } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { getMediaQuerySnapshot } from "@sandy/shared-ui/hooks/use-media-query";
+import { POINTER_COARSE_QUERY } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import {
   threadDetailBootstrapQueryKey,
   threadTimelineQueryKey,

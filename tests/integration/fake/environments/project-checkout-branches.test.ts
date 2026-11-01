@@ -42,7 +42,7 @@ async function cloneWithDevBranch(
   });
   await runGit({
     cwd: clone,
-    args: ["config", "user.name", "BB Integration Tests"],
+    args: ["config", "user.name", "SANDY Integration Tests"],
   });
   return clone;
 }

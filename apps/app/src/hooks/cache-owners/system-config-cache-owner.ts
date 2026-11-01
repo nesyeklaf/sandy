@@ -6,11 +6,11 @@ import {
   type AppSettings,
   type ExperimentUpdates,
   type Experiments,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   SystemAiServicesResponse,
   SystemConfigResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   systemAiServicesQueryKey,
   systemConfigQueryKey,

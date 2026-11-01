@@ -4,7 +4,7 @@ import type {
   WorkspaceOpenTargetIcon,
   WorkspaceOpenTargetId,
   WorkspaceOpenTargetKind,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 
 interface LocalOpenTargetContext {
   kind: "local";

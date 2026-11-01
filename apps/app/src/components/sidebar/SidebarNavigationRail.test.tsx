@@ -9,8 +9,8 @@ import {
   within,
 } from "@testing-library/react";
 import { useSyncExternalStore } from "react";
-import type { ExperimentalBadge } from "@get-bb/plugin-sdk";
-import { experimental_useSidebarNavigation } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalBadge } from "@sandy-sdk/plugin-sdk";
+import { experimental_useSidebarNavigation } from "@sandy-sdk/plugin-sdk/app";
 import { createStore, Provider } from "jotai";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import {
@@ -22,8 +22,8 @@ import {
   it,
   vi,
 } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -142,10 +142,10 @@ const THREAD_PATH = getThreadRoutePath({
   threadId: "thr_one",
 });
 const ALL_KEYS = [
-  "__bb__/new-thread",
-  "__bb__/search-threads",
-  "__bb__/extensions",
-  "__bb__/skills",
+  "__sandy__/new-thread",
+  "__sandy__/search-threads",
+  "__sandy__/extensions",
+  "__sandy__/skills",
   "garden/docs",
   "garden/alerts",
 ];
@@ -639,7 +639,7 @@ describe("Rail", () => {
     registerDocsBadge({ count: 2, label: "2 open pages" });
 
     renderRail(THREAD_PATH, {
-      visibleKeys: ["__bb__/new-thread", "__bb__/extensions"],
+      visibleKeys: ["__sandy__/new-thread", "__sandy__/extensions"],
     });
 
     const more = railButton("More, Docs: 2 open pages");
@@ -726,7 +726,7 @@ describe("Rail", () => {
       }),
     );
 
-    renderRail(THREAD_PATH, { visibleKeys: ["__bb__/extensions"] });
+    renderRail(THREAD_PATH, { visibleKeys: ["__sandy__/extensions"] });
 
     const more = railButton("More, Docs: 2 drafts, Alerts: 1 due today");
     expect(
@@ -738,7 +738,7 @@ describe("Rail", () => {
 
   it("keeps hidden destinations out of the rail", () => {
     renderRail(THREAD_PATH, {
-      visibleKeys: ["__bb__/new-thread", "__bb__/extensions"],
+      visibleKeys: ["__sandy__/new-thread", "__sandy__/extensions"],
     });
 
     expect(railLabels()).toEqual(["Home", "Plugins", "More", "Settings"]);
@@ -786,7 +786,7 @@ describe("Rail", () => {
     "toggles $name visibility from its customization row (compact: $isCompactViewport) without activating it",
     async ({ name, isCompactViewport }) => {
       renderRail(THREAD_PATH, {
-        visibleKeys: ["__bb__/skills"],
+        visibleKeys: ["__sandy__/skills"],
         isCompactViewport,
       });
       if (isCompactViewport) fireEvent.click(railButton("More"));
@@ -925,7 +925,7 @@ describe("Rail", () => {
   });
 
   it("keeps the header New thread button when stored preferences leave New thread out", () => {
-    renderRail(THREAD_PATH, { visibleKeys: ["__bb__/extensions"] });
+    renderRail(THREAD_PATH, { visibleKeys: ["__sandy__/extensions"] });
 
     fireEvent.click(screen.getByRole("button", { name: "New thread" }));
     expect(mocks.onNewChat).toHaveBeenCalledTimes(1);

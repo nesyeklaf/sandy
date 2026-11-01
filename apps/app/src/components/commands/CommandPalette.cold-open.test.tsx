@@ -14,7 +14,7 @@ import {
   defaultAppSettings,
   type AppCommandId,
   type AppKeybinding,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { AppCommandProvider, useAppCommandHandler } from "./AppCommandProvider";
 import { CommandPalette } from "./CommandPalette";
 
@@ -68,8 +68,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("@/hooks/useHostDaemon", () => ({

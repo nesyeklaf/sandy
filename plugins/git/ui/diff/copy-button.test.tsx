@@ -2,8 +2,8 @@
 
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { renderSlot } from "@get-bb/plugin-sdk/testing/app";
-import { GitDiffCopyButton } from "@bb/shared-ui/git-diff/renderers";
+import { renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
+import { GitDiffCopyButton } from "@sandy/shared-ui/git-diff/renderers";
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));

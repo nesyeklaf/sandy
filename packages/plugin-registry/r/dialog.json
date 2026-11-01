@@ -3,18 +3,18 @@
   "name": "dialog",
   "type": "registry:ui",
   "title": "dialog",
-  "description": "BB ui \"dialog\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"dialog\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-dialog",
     "@radix-ui/react-slot"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/overlay-trigger",
-    "@bb/portal-scope",
-    "@bb/responsive-overlay",
-    "@bb/use-browser-dimming-modal",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/overlay-trigger",
+    "@sandy/portal-scope",
+    "@sandy/responsive-overlay",
+    "@sandy/use-browser-dimming-modal",
+    "@sandy/utils"
   ],
   "files": [
     {

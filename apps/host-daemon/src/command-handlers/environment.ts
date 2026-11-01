@@ -2,12 +2,12 @@ import {
   threadScope,
   type ProvisioningTranscriptEntry,
   WORKSPACE_PROVISIONING_STEP_KEYS,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   EnvironmentProvisionCommand,
   HostDaemonCommandResult,
-} from "@bb/host-daemon-contract";
-import type { ProvisionWorkspaceArgs } from "@bb/host-workspace";
+} from "@sandy/host-daemon-contract";
+import type { ProvisionWorkspaceArgs } from "@sandy/host-workspace";
 import {
   type CommandDispatchOptions,
   type CommandOf,

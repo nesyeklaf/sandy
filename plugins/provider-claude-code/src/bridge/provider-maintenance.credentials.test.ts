@@ -36,9 +36,9 @@ vi.mock("node:fs/promises", () => ({
   },
 }));
 
-vi.mock("@get-bb/plugin-sdk/provider-bridge", async (importOriginal) => ({
+vi.mock("@sandy-sdk/plugin-sdk/provider-bridge", async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import("@get-bb/plugin-sdk/provider-bridge")
+    typeof import("@sandy-sdk/plugin-sdk/provider-bridge")
   >()),
   experimental_resolveExecutablePath: () => Promise.resolve("/test/claude"),
 }));

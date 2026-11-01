@@ -21,7 +21,7 @@ describe("terminal title normalization", () => {
     expect(
       normalizeTerminalTitle({
         title:
-          "michael@Michaels-MacBook-Pro:~/.bb-dev/worktrees/env_gj4ep9emi8/bb",
+          "michael@Michaels-MacBook-Pro:~/.sandy-dev/worktrees/env_gj4ep9emi8/sandy",
       }),
     ).toBeNull();
   });
@@ -29,7 +29,7 @@ describe("terminal title normalization", () => {
   it("ignores shell path titles with whitespace after the host separator", () => {
     expect(
       normalizeTerminalTitle({
-        title: "root@do-1: ~/.bb/worktrees/env_4gfkk8evua/bb",
+        title: "root@do-1: ~/.sandy/worktrees/env_4gfkk8evua/sandy",
       }),
     ).toBeNull();
   });
@@ -37,7 +37,7 @@ describe("terminal title normalization", () => {
   it("ignores short shell path titles", () => {
     expect(
       normalizeTerminalTitle({
-        title: "michael@host:~/bb",
+        title: "michael@host:~/sandy",
       }),
     ).toBeNull();
   });

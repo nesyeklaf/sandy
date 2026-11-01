@@ -11,9 +11,9 @@ import {
   listPluginArtifacts,
   upsertInstalledPlugin,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { Logger } from "@bb/logger";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { Logger } from "@sandy/logger";
 import {
   garbageCollectPluginArtifacts,
   prunePluginCache,
@@ -83,7 +83,7 @@ describe("plugin cache pruning", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    dataDir = await mkdtemp(join(tmpdir(), "bb-plugin-prune-"));
+    dataDir = await mkdtemp(join(tmpdir(), "sandy-plugin-prune-"));
     gitRepoCache = join(
       dataDir,
       "plugins",
@@ -135,7 +135,7 @@ describe("plugin cache pruning", () => {
       status,
       rollbackCandidateVersion: status === "ready" ? null : "candidate",
       rollbackSourceFingerprint: status === "ready" ? null : "source",
-      rollbackBbVersion: status === "ready" ? null : "1.0.0",
+      rollbackSandyVersion: status === "ready" ? null : "1.0.0",
       rollbackSdkVersion: status === "ready" ? null : "0.6.0",
       rollbackDetail: status === "ready" ? null : "failed",
       createdAt: Date.now(),
@@ -359,10 +359,10 @@ describe("git plugin cache lifecycle", () => {
     await writeFile(
       join(repo, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-cached",
+        name: "sandy-plugin-cached",
         version,
         type: "module",
-        bb: {
+        sandy: {
           name: "Cached fixture",
           description: "Plugin cache fixture.",
           branding: { icon: "Zap" },
@@ -372,7 +372,7 @@ describe("git plugin cache lifecycle", () => {
     );
     await writeFile(
       join(repo, "server.ts"),
-      `export default function plugin(bb: any) { bb.log.info(${JSON.stringify(version)}); }`,
+      `export default function plugin(sandy: any) { sandy.log.info(${JSON.stringify(version)}); }`,
     );
     await git(["add", "-A"]);
     await git(["commit", "-qm", version]);
@@ -381,7 +381,7 @@ describe("git plugin cache lifecycle", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-cache-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-cache-"));
     repo = join(workDir, "repo");
     await mkdir(repo, { recursive: true });
     await git(["init", "-q", "-b", "main"]);

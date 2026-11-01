@@ -1,7 +1,7 @@
-import { getAppSettings, getHost } from "@bb/db";
+import { getAppSettings, getHost } from "@sandy/db";
 import { resolveUserMachineEnvironment } from "../machines/environment-settings.js";
 import type { AppDeps } from "../../types.js";
-import type { HostDaemonContributedEnvEntry } from "@bb/host-daemon-contract";
+import type { HostDaemonContributedEnvEntry } from "@sandy/host-daemon-contract";
 import {
   githubGitConfiguration,
   resolveGitCredentials,

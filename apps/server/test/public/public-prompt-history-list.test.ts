@@ -1,5 +1,5 @@
-import { createPromptHistoryEntry, listQueuedThreadMessages } from "@bb/db";
-import { promptHistoryListResponseSchema } from "@bb/server-contract";
+import { createPromptHistoryEntry, listQueuedThreadMessages } from "@sandy/db";
+import { promptHistoryListResponseSchema } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   readAttachment,

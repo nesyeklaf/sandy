@@ -3,7 +3,7 @@ import type {
   ExperimentalThreadContextSegmentInput,
   ExperimentalThreadContextSegmentProps,
   ExperimentalThreadContextSegmentRegistration,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { compareGroupedPlacement } from "@/lib/grouped-placement";
 import {
   usePluginSlots,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/plugin-slots";
 import { PluginSlotMount } from "./PluginSlotMount";
 
-export const CORE_THREAD_CONTEXT_OWNER = "bb--core";
+export const CORE_THREAD_CONTEXT_OWNER = "sandy--core";
 
 export type CoreThreadContextSegment =
   ExperimentalThreadContextSegmentRegistration & {

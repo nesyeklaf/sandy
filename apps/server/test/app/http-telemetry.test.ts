@@ -1,6 +1,6 @@
 import { context, metrics, propagation, trace } from "@opentelemetry/api";
-import { startTelemetry } from "@bb/telemetry";
-import { startOtlpReceiver } from "@bb/telemetry/testing";
+import { startTelemetry } from "@sandy/telemetry";
+import { startOtlpReceiver } from "@sandy/telemetry/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import { withTestHarness } from "../helpers/test-app.js";
 
@@ -19,7 +19,7 @@ describe("HTTP telemetry", () => {
     try {
       const telemetry = startTelemetry({
         component: "server",
-        env: { BB_OTLP_ENDPOINT: receiver.endpoint },
+        env: { SANDY_OTLP_ENDPOINT: receiver.endpoint },
       });
       await withTestHarness(async (harness) => {
         const response = await harness.app.request(

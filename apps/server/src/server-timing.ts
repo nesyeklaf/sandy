@@ -1,4 +1,4 @@
-import { createDbTimeAccumulator, runWithDbTimeAccumulator } from "@bb/db";
+import { createDbTimeAccumulator, runWithDbTimeAccumulator } from "@sandy/db";
 import type { Context, MiddlewareHandler, Next } from "hono";
 import { matchedRoutes } from "hono/route";
 

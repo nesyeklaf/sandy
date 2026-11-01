@@ -8,7 +8,7 @@ import {
   threadSearchSegments,
   threads,
   type DbConnection,
-} from "@bb/db";
+} from "@sandy/db";
 
 export interface SeedPerfFixtureOptions {
   hostId: string;
@@ -906,7 +906,7 @@ export function seedPerfFixture(
           hostId: options.hostId,
           path: `${options.workspacesRootPath}/plugins/environment-git-worktree/host-data/worktrees/${threadId}/${project.name}`,
           isGitRepo: true,
-          branchName: `bb/${title
+          branchName: `sandy/${title
             .toLowerCase()
             .slice(0, 24)
             .replace(/[^a-z0-9]+/gu, "-")}-${threadId}`,

@@ -1,19 +1,19 @@
 import { useEffect, type ReactNode } from "react";
 import type {
-  BbDesktopApi,
-  BbDesktopBrowserApi,
-  BbDesktopBrowserState,
-  BbDesktopInfo,
-} from "@bb/desktop-contract";
+  SandyDesktopApi,
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserState,
+  SandyDesktopInfo,
+} from "@sandy/desktop-contract";
 
-const STORY_DESKTOP_INFO: BbDesktopInfo = {
+const STORY_DESKTOP_INFO: SandyDesktopInfo = {
   platform: "macos",
   version: "0.0.0-story",
 };
 
 function createStoryDesktopBrowserApi(
-  initialState: BbDesktopBrowserState | null,
-): BbDesktopBrowserApi {
+  initialState: SandyDesktopBrowserState | null,
+): SandyDesktopBrowserApi {
   return {
     attach() {},
     detach() {},
@@ -42,8 +42,8 @@ function createStoryDesktopBrowserApi(
 }
 
 function createStoryDesktopApi(
-  browserState: BbDesktopBrowserState | null,
-): BbDesktopApi {
+  browserState: SandyDesktopBrowserState | null,
+): SandyDesktopApi {
   return {
     ...STORY_DESKTOP_INFO,
     browser: createStoryDesktopBrowserApi(browserState),
@@ -59,7 +59,7 @@ function createStoryDesktopApi(
 }
 
 interface WithDesktopBrowserProps {
-  browserState?: BbDesktopBrowserState | null;
+  browserState?: SandyDesktopBrowserState | null;
   children: ReactNode;
 }
 
@@ -67,13 +67,13 @@ export function WithDesktopBrowser({
   browserState = null,
   children,
 }: WithDesktopBrowserProps) {
-  if (typeof window !== "undefined" && window.bbDesktop === undefined) {
-    window.bbDesktop = createStoryDesktopApi(browserState);
+  if (typeof window !== "undefined" && window.sandyDesktop === undefined) {
+    window.sandyDesktop = createStoryDesktopApi(browserState);
   }
   useEffect(() => {
     return () => {
       if (typeof window !== "undefined") {
-        delete window.bbDesktop;
+        delete window.sandyDesktop;
       }
     };
   }, []);

@@ -26,9 +26,9 @@ import {
   type HostDaemonToolCallResponse,
   type HostDaemonSkillTreeContentRequest,
   type HostDaemonSkillTreeManifest,
-} from "@bb/host-daemon-contract";
-import { HOST_ARTIFACT_MAX_BYTES } from "@bb/host-daemon-contract/protocol";
-import type { PendingInteractionCreate, ToolCallRequest } from "@bb/domain";
+} from "@sandy/host-daemon-contract";
+import { HOST_ARTIFACT_MAX_BYTES } from "@sandy/host-daemon-contract/protocol";
+import type { PendingInteractionCreate, ToolCallRequest } from "@sandy/domain";
 import type { HostDaemonLogger } from "./logger.js";
 import type { EventPostResult } from "./event-sink.js";
 import { runtimeErrorLogFields } from "./error-utils.js";

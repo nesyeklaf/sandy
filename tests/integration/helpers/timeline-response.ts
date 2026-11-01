@@ -1,4 +1,4 @@
-import type { ThreadTimelineResponse, TimelineRow } from "@bb/server-contract";
+import type { ThreadTimelineResponse, TimelineRow } from "@sandy/server-contract";
 
 export function timelineHasAssistantConversation(
   timeline: ThreadTimelineResponse,

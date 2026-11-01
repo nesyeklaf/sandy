@@ -10,7 +10,7 @@ import {
 } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   PaneContext,
   type PaneContextValue,
@@ -33,17 +33,17 @@ interface RenderRootComposeArgs {
 }
 
 type TestDesktopWindow = {
-  bbDesktop?: { platform: "macos" };
+  sandyDesktop?: { platform: "macos" };
 };
 
 const noop = () => {};
 
 function setMacosDesktopChrome(): void {
-  (window as unknown as TestDesktopWindow).bbDesktop = { platform: "macos" };
+  (window as unknown as TestDesktopWindow).sandyDesktop = { platform: "macos" };
 }
 
 function clearDesktopChrome(): void {
-  delete (window as unknown as TestDesktopWindow).bbDesktop;
+  delete (window as unknown as TestDesktopWindow).sandyDesktop;
 }
 
 vi.mock(
@@ -51,10 +51,10 @@ vi.mock(
   () => import("@/test/react-resizable-panels-stub"),
 );
 
-vi.mock("@bb/shared-ui/responsive-overlay", async (importOriginal) => {
+vi.mock("@sandy/shared-ui/responsive-overlay", async (importOriginal) => {
   const React = await import("react");
   const actual =
-    await importOriginal<typeof import("@bb/shared-ui/responsive-overlay")>();
+    await importOriginal<typeof import("@sandy/shared-ui/responsive-overlay")>();
 
   const PersistentResponsiveDrawerShell = ({
     children,

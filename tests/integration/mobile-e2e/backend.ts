@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseServerBindAddressesOnThisHost } from "@bb/config/server";
-import { getAppSettings, setAppSettings } from "@bb/db";
-import type { PendingInteraction } from "@bb/domain";
+import { parseServerBindAddressesOnThisHost } from "@sandy/config/server";
+import { getAppSettings, setAppSettings } from "@sandy/db";
+import type { PendingInteraction } from "@sandy/domain";
 import { createIntegrationHarness } from "../helpers/harness.js";
 import type { IntegrationHarness } from "../helpers/harness.js";
 import {
@@ -22,34 +22,34 @@ const DEFAULT_PORT = 41999;
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 function readStaticDir(): string | undefined {
-  if (process.env.BB_MOBILE_E2E_SERVE_APP !== "1") return undefined;
+  if (process.env.SANDY_MOBILE_E2E_SERVE_APP !== "1") return undefined;
   const dist = resolve(repoRoot, "apps/app/dist");
   if (!existsSync(resolve(dist, "index.html"))) {
     throw new Error(
-      `BB_MOBILE_E2E_SERVE_APP=1 but ${dist}/index.html is missing. Run: pnpm exec turbo run build --filter=@bb/app`,
+      `SANDY_MOBILE_E2E_SERVE_APP=1 but ${dist}/index.html is missing. Run: pnpm exec turbo run build --filter=@sandy/app`,
     );
   }
   return dist;
 }
 
 function readPort(): number {
-  const raw = process.env.BB_MOBILE_E2E_PORT;
+  const raw = process.env.SANDY_MOBILE_E2E_PORT;
   if (!raw) return DEFAULT_PORT;
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 65535) {
-    throw new Error(`Invalid BB_MOBILE_E2E_PORT: ${raw}`);
+    throw new Error(`Invalid SANDY_MOBILE_E2E_PORT: ${raw}`);
   }
   return parsed;
 }
 
 function readBindHost(): string {
-  const raw = process.env.BB_MOBILE_E2E_BIND_HOST;
+  const raw = process.env.SANDY_MOBILE_E2E_BIND_HOST;
   if (raw === undefined || raw === "127.0.0.1") return "127.0.0.1";
   const addresses = parseServerBindAddressesOnThisHost(raw);
   const [address] = addresses;
   if (addresses.length !== 1 || address === undefined) {
     throw new Error(
-      `BB_MOBILE_E2E_BIND_HOST must name exactly one tailnet or WireGuard address: ${raw}`,
+      `SANDY_MOBILE_E2E_BIND_HOST must name exactly one tailnet or WireGuard address: ${raw}`,
     );
   }
   return address;
@@ -116,7 +116,7 @@ const LONG_MARKDOWN_MESSAGE = [
   "## Commands",
   "",
   "```bash",
-  "pnpm exec turbo run typecheck lint test --filter=@bb/mobile",
+  "pnpm exec turbo run typecheck lint test --filter=@sandy/mobile",
   "cd apps/mobile && pnpm e2e:ios",
   "xcrun simctl io booted screenshot /tmp/timeline.png",
   "```",

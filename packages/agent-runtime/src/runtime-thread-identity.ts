@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import type { AgentRuntimeProviderSession } from "./types.js";
 
 export interface RuntimeProviderIdentityState {
@@ -22,7 +22,7 @@ interface RecordProviderThreadIdentityArgs {
   threadId: string;
 }
 
-interface ResolveBbThreadIdForProviderThreadArgs {
+interface ResolveSandyThreadIdForProviderThreadArgs {
   providerState: RuntimeProviderIdentityState;
   providerThreadId: string | undefined;
 }
@@ -90,20 +90,20 @@ export class RuntimeThreadIdentityRegistry {
     this.threadToProviderThread.set(args.threadId, args.providerThreadId);
   }
 
-  resolveBbThreadIdForProviderThread(
-    args: ResolveBbThreadIdForProviderThreadArgs,
+  resolveSandyThreadIdForProviderThread(
+    args: ResolveSandyThreadIdForProviderThreadArgs,
   ): string | undefined {
     if (!args.providerThreadId) {
       return undefined;
     }
 
-    for (const [bbThreadId, mappedProviderThreadId] of this
+    for (const [sandyThreadId, mappedProviderThreadId] of this
       .threadToProviderThread) {
       if (
         mappedProviderThreadId === args.providerThreadId &&
-        args.providerState.threadIds.has(bbThreadId)
+        args.providerState.threadIds.has(sandyThreadId)
       ) {
-        return bbThreadId;
+        return sandyThreadId;
       }
     }
 
@@ -129,13 +129,13 @@ export class RuntimeThreadIdentityRegistry {
 
     const lookupId = args.sourceThreadId || args.eventThreadId;
     if (lookupId) {
-      for (const [bbThreadId, providerThreadId] of this
+      for (const [sandyThreadId, providerThreadId] of this
         .threadToProviderThread) {
         if (
           providerThreadId === lookupId &&
-          args.providerState.threadIds.has(bbThreadId)
+          args.providerState.threadIds.has(sandyThreadId)
         ) {
-          return bbThreadId;
+          return sandyThreadId;
         }
       }
     }

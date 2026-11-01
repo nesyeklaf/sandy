@@ -1,8 +1,8 @@
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 
 export function useWindowReloadCommand(): void {
-  const desktopApi = getBbDesktopInfo();
+  const desktopApi = getSandyDesktopInfo();
   const reloadWindow = desktopApi?.reloadWindow;
 
   useAppCommandHandler(

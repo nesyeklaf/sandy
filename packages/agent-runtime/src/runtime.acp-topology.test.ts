@@ -27,7 +27,7 @@ describe("acp process topology", () => {
   const runtimes: AgentRuntime[] = [];
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), "bb-acp-topology-"));
+    workspaceDir = mkdtempSync(join(tmpdir(), "sandy-acp-topology-"));
   });
 
   afterEach(async () => {

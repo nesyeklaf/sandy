@@ -124,7 +124,7 @@ jobs:
           fi
           body="Thanks for the pull request, @$PR_AUTHOR. It was closed automatically because it does not meet the requirements below yet. This is an automated check, not a review of the change."
           if [ -z "$trusted" ]; then
-            body="$body"$'\n\n'"**Contributor approval.** bb reviews pull requests only from approved contributors, and you are not on the list yet. Join the #contributors channel in Discord ($DISCORD_INVITE_URL), post a link to your pull request, and explain what it changes and why. A maintainer then adds you to the list and reopens the pull request."
+            body="$body"$'\n\n'"**Contributor approval.** sandy reviews pull requests only from approved contributors, and you are not on the list yet. Join the #contributors channel in Discord ($DISCORD_INVITE_URL), post a link to your pull request, and explain what it changes and why. A maintainer then adds you to the list and reopens the pull request."
             add_label "needs-approval" "PR author is not on the approved contributor list" "d93f0b"
           fi
           if [ -n "$issue_missing" ]; then

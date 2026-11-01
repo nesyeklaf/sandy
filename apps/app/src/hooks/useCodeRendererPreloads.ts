@@ -1,5 +1,5 @@
-import { BbDiffSplit } from "@/components/code/BbDiffSplit";
-import { BbSourceCodeSplit } from "@/components/code/BbSourceCodeSplit";
+import { SandyDiffSplit } from "@/components/code/SandyDiffSplit";
+import { SandySourceCodeSplit } from "@/components/code/SandySourceCodeSplit";
 import { useEffect } from "react";
 import {
   useDiffRendererReplacement,
@@ -19,8 +19,8 @@ export function useCodeRendererPreloads(): void {
     queueSplitPreload(async () => {
       if (cancelled) return;
       await Promise.all([
-        warmDiff ? BbDiffSplit.preload() : undefined,
-        warmSource ? BbSourceCodeSplit.preload() : undefined,
+        warmDiff ? SandyDiffSplit.preload() : undefined,
+        warmSource ? SandySourceCodeSplit.preload() : undefined,
       ]).catch(() => undefined);
     });
     return () => {

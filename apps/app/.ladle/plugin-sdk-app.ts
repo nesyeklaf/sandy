@@ -4,7 +4,7 @@ import {
   useStoryComposerMentionSearch,
 } from "./composer-search-story";
 
-export type * from "@get-bb/plugin-sdk";
+export type * from "@sandy-sdk/plugin-sdk";
 
 export const {
   experimental_ThreadStatusGlyph,
@@ -32,8 +32,8 @@ export const {
   useRealtime,
   useRealtimeConnectionState,
   useSettings,
-  useBbContext,
-  useBbNavigate,
+  useSandyContext,
+  useSandyNavigate,
   experimental_useAppPanel,
   experimental_useFixedTabTarget,
   useComposer,

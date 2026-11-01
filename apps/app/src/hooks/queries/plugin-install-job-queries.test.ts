@@ -47,7 +47,7 @@ describe("starting plugin installs", () => {
       target: {
         kind: "catalog",
         entryId: "linear",
-        marketplace: "bb-official",
+        marketplace: "sandy-official",
       },
       displayName: "Linear",
       state: "running",

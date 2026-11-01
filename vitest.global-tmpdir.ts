@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { killProcessesReferencingPath } from "./packages/test-helpers/src/process-sweep.js";
 
-const ACTIVE = Symbol.for("@bb/vitest-tmpdir-sandbox");
+const ACTIVE = Symbol.for("@sandy/vitest-tmpdir-sandbox");
 
 interface Sandbox {
   root: string;
@@ -19,7 +19,7 @@ export default function setup(): () => Promise<void> {
   if (sandbox === undefined) {
     const previous = process.env.TMPDIR;
     sandbox = {
-      root: mkdtempSync(join(tmpdir(), "bb-vt-")),
+      root: mkdtempSync(join(tmpdir(), "sandy-vt-")),
       previous,
       references: 0,
     };

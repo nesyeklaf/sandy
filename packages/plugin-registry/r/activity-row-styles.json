@@ -3,9 +3,9 @@
   "name": "activity-row-styles",
   "type": "registry:ui",
   "title": "activity-row-styles",
-  "description": "BB ui \"activity-row-styles\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"activity-row-styles\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

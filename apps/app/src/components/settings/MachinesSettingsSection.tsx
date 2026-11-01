@@ -1,16 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import type { Host, PermissionMode } from "@bb/domain";
-import type { SystemMachineProvider } from "@bb/server-contract";
-import type { HostPlatform } from "@bb/host-daemon-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { Host, PermissionMode } from "@sandy/domain";
+import type { SystemMachineProvider } from "@sandy/server-contract";
+import type { HostPlatform } from "@sandy/host-daemon-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   ResourceOverflowMenu,
   ResourceRowDetailChevron,
   targetsResourceAction,
-} from "@bb/shared-ui/resource-list";
+} from "@sandy/shared-ui/resource-list";
 import { AddMachineDialog } from "@/components/dialogs/AddMachineDialog";
 import { AttentionBanner } from "@/components/ui/attention-banner";
 import { appToast } from "@/components/ui/app-toast";
@@ -394,7 +394,7 @@ export function MachinesSettingsSection() {
         ) : null}
         <div
           role="note"
-          aria-label="About the bb server"
+          aria-label="About the sandy server"
           className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3"
         >
           <Icon
@@ -405,7 +405,7 @@ export function MachinesSettingsSection() {
           <div className="min-w-0 space-y-1 text-xs leading-relaxed text-subtle-foreground">
             <p className="font-medium text-foreground">How machines connect</p>
             <p>
-              All your machines connect to one central bb server, where your
+              All your machines connect to one central sandy server, where your
               threads and settings are stored. Choose a machine that can stay
               awake and online to run the server.
             </p>

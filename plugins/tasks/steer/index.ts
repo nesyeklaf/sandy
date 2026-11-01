@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { TasksStore } from "../db";
 import { errorMessage } from "../shared/errors";
 import { isSideChatShapedThread } from "../shared/side-chat";
@@ -18,12 +18,12 @@ function steerPrompt(
   return (
     `New comment on task ${taskKey} from ${authorName}: ${body}\n\n` +
     "Treat this as updated context for your work on this task; " +
-    `reply via bb tasks comment ${taskKey} when relevant.`
+    `reply via sandy tasks comment ${taskKey} when relevant.`
   );
 }
 
 export async function deliverCommentToLatestAgent(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksStore,
   input: DeliverCommentInput,
 ): Promise<number> {
@@ -39,16 +39,16 @@ export async function deliverCommentToLatestAgent(
   const threadId = latestReply.threadId;
   const prompt = steerPrompt(task.key, input.authorName, input.body);
   try {
-    const thread = await bb.sdk.threads.get({ threadId });
+    const thread = await sandy.sdk.threads.get({ threadId });
     if (isSideChatShapedThread(thread)) return 0;
-    await bb.sdk.threads.send({
+    await sandy.sdk.threads.send({
       threadId,
       input: [{ type: "text", text: prompt, mentions: [] }],
       mode: "steer-if-active",
     });
     return 1;
   } catch (error) {
-    bb.log.warn(
+    sandy.log.warn(
       `failed to deliver comment ${input.commentId} to thread ${threadId}: ${errorMessage(error)}`,
     );
     return 0;

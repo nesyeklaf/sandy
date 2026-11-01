@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, renderHook } from "@testing-library/react";
-import type { OpenInTargetContext } from "@bb/host-daemon-contract";
+import type { OpenInTargetContext } from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it } from "vitest";
 import { useLocalOpenTargets } from "./useLocalOpenTargets";
 
@@ -22,7 +22,7 @@ const contextCases: Array<{
     createContext: () => ({
       kind: "remote-ssh",
       hostId: "host-1",
-      serverOrigin: "https://bb.example.test",
+      serverOrigin: "https://sandy.example.test",
     }),
   },
 ];

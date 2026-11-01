@@ -1,4 +1,4 @@
-import { readProcessIdentity, type ProcessIdentity } from "@bb/process-utils";
+import { readProcessIdentity, type ProcessIdentity } from "@sandy/process-utils";
 
 const POLL_INTERVAL_MS = 100;
 

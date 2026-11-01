@@ -7,11 +7,11 @@ import {
   CHROME_ROW_CLASS,
   MACOS_TITLE_BAR_BAND_CLASS,
   MACOS_TITLE_BAR_COLLAPSED_SIDEBAR_RESERVE_CLASS,
-} from "@/lib/bb-desktop";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { Skeleton } from "@bb/shared-ui/skeleton";
+} from "@/lib/sandy-desktop";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 import { ComposerLoadingSkeleton } from "@/components/promptbox/ComposerPlaceholder";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { useEffect, type ReactNode } from "react";
 
 interface RouteLoadingSkeletonProps {
@@ -51,7 +51,7 @@ export function RouteLoadingSkeleton({
       className={cn(
         SHELL_CLASS,
         (!isBoundedPane || isRootCompose) && STANDALONE_SHELL_BLEED_CLASS,
-        isRootCompose && "pt-(--bb-window-frame-top)",
+        isRootCompose && "pt-(--sandy-window-frame-top)",
       )}
       role="status"
       aria-busy="true"

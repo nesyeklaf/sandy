@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import type { PluginSourceSelection } from "@bb/server-contract";
+import type { PluginSourceSelection } from "@sandy/server-contract";
 import {
   normalizePluginSubdirectory,
   realPathInside,
 } from "./install-sources.js";
 import { readPluginManifest } from "./manifest.js";
 
-const COLLECTION_MANIFEST_PATH = ".bb/plugins.json";
+const COLLECTION_MANIFEST_PATH = ".sandy/plugins.json";
 
 const COLLECTION_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
@@ -99,7 +99,7 @@ export async function readPluginCollectionManifest(
   try {
     realPath = await realPathInside(
       checkoutDir,
-      join(checkoutDir, ".bb", "plugins.json"),
+      join(checkoutDir, ".sandy", "plugins.json"),
       COLLECTION_MANIFEST_PATH,
     );
   } catch (error) {

@@ -22,8 +22,8 @@ function plugin(
     name: null,
     provenance: "catalog",
     catalogEntryId: "linear",
-    publisherLabel: "BB Community",
-    sourceDisplay: "npm · @bb-plugins/linear · tracks compatible",
+    publisherLabel: "SANDY Community",
+    sourceDisplay: "npm · @sandy-plugins/linear · tracks compatible",
     updateState: { ...EMPTY_PLUGIN_UPDATE_STATE, ...updateState },
     ...overrides,
   });
@@ -47,7 +47,7 @@ describe("pluginRowSignal (the one-signal rule)", () => {
         plugin({
           blockedVersion: "1.9.0",
           blockedLabel: "1.9.0",
-          blockedReasons: ["requires bb >= 0.15"],
+          blockedReasons: ["requires sandy >= 0.15"],
         }),
       ),
     ).toBeNull();
@@ -183,7 +183,7 @@ describe("pluginRuntimeStatusPresentation", () => {
         ),
       ),
     ).toMatchObject({
-      recovery: "Update or reinstall bb.",
+      recovery: "Update or reinstall sandy.",
     });
     expect(
       pluginRuntimeStatusPresentation(plugin({}, { status: "missing" })),

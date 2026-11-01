@@ -7,7 +7,7 @@ import {
   type Thread,
   type ThreadEventItemType,
   type ThreadEventType,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   createConnection,
   createProject,
@@ -17,8 +17,8 @@ import {
   noopNotifier,
   upsertHost,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 
 export type Random = () => number;
 
@@ -53,8 +53,8 @@ function readMigratedImage(): Buffer {
 }
 
 export function withTestThread(run: (testThread: TestThread) => void): void {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-timeline-cache-"));
-  const file = path.join(dir, "bb.db");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sandy-timeline-cache-"));
+  const file = path.join(dir, "sandy.db");
   fs.writeFileSync(file, readMigratedImage());
   const db = createConnection(file);
   const coldDb = createConnection(file);

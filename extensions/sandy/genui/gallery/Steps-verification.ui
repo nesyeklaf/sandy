@@ -1,0 +1,9 @@
+Card("Rollout of the sidebar fix", [
+  Steps([
+    {title: "Unit tests", detail: "vitest: 42 passed", status: "done"},
+    {title: "Build on the VPS", detail: "scripts/build.sh exited 0", status: "done"},
+    {title: "Sidebar renders the new layout", detail: "Only the data path was checked, not the screen", status: "unverified"},
+    {title: "Reload SANDY on your phone", detail: "Pull down to refresh the thread list", status: "user"},
+    {title: "Close the ticket"}
+  ])
+])

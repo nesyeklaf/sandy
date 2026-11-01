@@ -1,4 +1,4 @@
-import type { ComposerSubmitExtras } from "@get-bb/plugin-sdk/internal/composer-handle";
+import type { ComposerSubmitExtras } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import type {
   PendingInteraction,
   PermissionMode,
@@ -7,14 +7,14 @@ import type {
   ThreadQueuedMessage,
   ThreadTimelineActivePromptMode,
   ThreadTimelineGoal,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ExistingThreadExecutionInputSources,
   TimelineWorkflowWorkRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
-import type { PromptDraftAttachment } from "@bb/client-core";
+import type { PromptDraftAttachment } from "@sandy/client-core";
 import type { TypeaheadConfig } from "@/components/promptbox/ComposerBox";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
 
@@ -44,7 +44,7 @@ export const promptAreaMocks = {
     restoreIfEmpty: vi.fn(),
     setDraft: vi.fn(),
     setTextAndMentions: vi.fn(),
-    storageKey: "bb.promptbox.contents-proj_1-thr_1-3",
+    storageKey: "sandy.promptbox.contents-proj_1-thr_1-3",
     subscribe: vi.fn(() => () => {}),
     text: "",
   },

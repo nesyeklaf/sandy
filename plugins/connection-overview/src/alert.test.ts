@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ALERT_BODY, ALERT_TITLE, alertBody, createAlerter } from "./alert.js";
 import type { ConnectionState } from "./classify.js";
@@ -13,14 +13,14 @@ afterEach(async () => {
 });
 
 async function harness() {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-alert-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-alert-"));
   cleanups.push(() => rm(dataDir, { recursive: true, force: true }));
   const host = createFakePluginHost({
-    pluginId: "bb--connection-overview",
+    pluginId: "sandy--connection-overview",
     dataDir,
   });
   const open = () =>
-    createStore(host.bb.storage.database(), host.bb.storage.migrate);
+    createStore(host.sandy.storage.database(), host.sandy.storage.migrate);
   return { open };
 }
 
@@ -223,8 +223,8 @@ describe("red destination alert", () => {
       .map((entry) => [entry.hostname, entry.state, entry.reason]);
     expect(states).toEqual(
       expect.arrayContaining([
-        ["google.example", "third-party", "chromium is not bb: unlisted host"],
-        [null, "third-party", "opencode is not bb: test"],
+        ["google.example", "third-party", "chromium is not sandy: unlisted host"],
+        [null, "third-party", "opencode is not sandy: test"],
         ["mixed.example", "red", "unlisted host"],
       ]),
     );

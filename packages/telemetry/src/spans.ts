@@ -8,7 +8,7 @@ import {
   type Span,
 } from "@opentelemetry/api";
 
-const TRACER_NAME = "bb";
+const TRACER_NAME = "sandy";
 const TRACEPARENT_KEY = "traceparent";
 
 interface SpanOptions {

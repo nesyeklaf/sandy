@@ -1,5 +1,5 @@
-import { compareReasoningLevels } from "@bb/domain";
-import type { AvailableModel, ReasoningLevel } from "@bb/domain";
+import { compareReasoningLevels } from "@sandy/domain";
+import type { AvailableModel, ReasoningLevel } from "@sandy/domain";
 import { agentModelFamilyId } from "./bridge/model-catalog.js";
 
 interface CursorParameterizedSelection {

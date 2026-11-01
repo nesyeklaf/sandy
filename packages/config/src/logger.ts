@@ -7,7 +7,7 @@ import {
 import { loadOtlpConfig, type OtlpConfig } from "./otlp.js";
 
 interface LoggerConfig extends LogLevelConfig, OtlpConfig {
-  BB_DATA_DIR: string;
+  SANDY_DATA_DIR: string;
 }
 
 interface LoadLoggerConfigArgs extends LoadCommonConfigArgs {
@@ -22,7 +22,7 @@ export function loadLoggerConfig(
     return {
       ...loadLogLevelConfig(args),
       ...otlpConfig,
-      BB_DATA_DIR: args.dataDir,
+      SANDY_DATA_DIR: args.dataDir,
     };
   }
 

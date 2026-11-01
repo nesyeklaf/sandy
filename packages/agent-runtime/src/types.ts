@@ -14,14 +14,14 @@ import type {
   ThreadEvent,
   ToolCallRequest,
   ToolCallResponse,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ProviderHealthResult,
   CommandListResult,
   ProviderInstallationStatus,
   ProviderUsageResult,
   SkillsConfigureRoot,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 
 export type AgentRuntimeShellEnvironment = Record<string, string>;
 

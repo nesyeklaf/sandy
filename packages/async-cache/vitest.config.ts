@@ -8,7 +8,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "@bb/async-cache",
+      name: "@sandy/async-cache",
       include: ["test/**/*.test.ts"],
     }),
   },

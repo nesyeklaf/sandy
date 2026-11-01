@@ -3,12 +3,12 @@ import { useResizeObserver } from "usehooks-ts";
 import {
   experimental_useFixedTabTarget as useFixedTabTarget,
   experimental_useTabVisible as useTabVisible,
-  useBbNavigate,
+  useSandyNavigate,
   type ExperimentalThreadTabProps,
-} from "@get-bb/plugin-sdk/app";
-import { Button } from "@bb/shared-ui/button";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+} from "@sandy-sdk/plugin-sdk/app";
+import { Button } from "@sandy/shared-ui/button";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 import type { DiffFileEntry } from "../../contract.js";
 import { GIT_DIFF_TAB_REFERENCE } from "../diff-tab-target.js";
 import { useMergeBase } from "../merge-base.js";
@@ -119,7 +119,7 @@ function EnvironmentDiffTab({
   const { width } = useResizeObserver({ ref: rootRef, box: "border-box" });
   const { gitDiffDisplayMode, handleGitDiffDisplayModeChange } =
     useResponsiveGitDiffPanelDisplay(width);
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const status = useGitStatus(environmentId);
   const isLive = useTabVisible();
   const workspacePath = useWorkspacePath(environmentId);

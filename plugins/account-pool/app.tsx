@@ -26,10 +26,10 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   definePluginApp,
   experimental_copyToClipboard,
-  useBbNavigate,
+  useSandyNavigate,
   useRealtime,
   useRpc,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -859,7 +859,7 @@ function ConfigFieldRow({
 
 function AccountPoolSettings() {
   const rpc = useRpc<typeof accountPoolRpcContract>();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const [status, setStatus] = useState<PoolStatus | null>(readCachedStatus);
   const [statusIsCached, setStatusIsCached] = useState(status !== null);
   const [config, setConfig] = useState<AccountPoolConfig | null>(null);

@@ -22,9 +22,9 @@ import { toast } from "sonner";
 import type { SidebarThread } from "../model/sidebar-thread.js";
 import {
   experimental_useProviders,
-  useBbNavigate,
+  useSandyNavigate,
   useSdk,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   SidebarRenameProvider,
   useSidebarRename,
@@ -1308,7 +1308,7 @@ function ProjectListComponent({
   onProjectSelect,
 }: ProjectListProps) {
   const sdk = useSdk();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const { providers } = experimental_useProviders();
   const { status, sections, projects, personalProject, archived } =
     useSidebarData();

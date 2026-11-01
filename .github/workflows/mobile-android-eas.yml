@@ -18,7 +18,7 @@ on:
         type: boolean
         default: false
       version:
-        description: BB version (X.Y.Z or X.Y.Z-nightly.RUN.ATTEMPT). Empty keeps the committed value.
+        description: SANDY version (X.Y.Z or X.Y.Z-nightly.RUN.ATTEMPT). Empty keeps the committed value.
         type: string
         default: ""
   workflow_call:
@@ -73,7 +73,7 @@ jobs:
           import { readFileSync, writeFileSync } from "node:fs";
           const version = process.env.MOBILE_VERSION;
           if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-nightly\.[1-9]\d*\.[1-9]\d*)?$/.test(version ?? "")) {
-            throw new Error(`Invalid BB Android version: ${version}`);
+            throw new Error(`Invalid SANDY Android version: ${version}`);
           }
           const config = JSON.parse(readFileSync("app.json", "utf8"));
           config.expo.version = version;
@@ -147,9 +147,9 @@ jobs:
         run: |
           set -euo pipefail
           if ! gh release view android-testing >/dev/null 2>&1; then
-            gh release create android-testing --target "$GITHUB_SHA" --title "bb Android testing" --notes "ARM Android phone APKs for Settings → Mobile." --prerelease --latest=false
+            gh release create android-testing --target "$GITHUB_SHA" --title "sandy Android testing" --notes "ARM Android phone APKs for Settings → Mobile." --prerelease --latest=false
           fi
           gh release upload android-testing android-release/android-testing/*.apk --clobber
-          cp android-release/build.apk android-release/bb-android.apk
-          gh release upload android-testing android-release/bb-android.apk --clobber
+          cp android-release/build.apk android-release/sandy-android.apk
+          gh release upload android-testing android-release/sandy-android.apk --clobber
           gh release upload android-testing android-release/android-testing/latest.json --clobber

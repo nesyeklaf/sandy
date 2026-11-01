@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { SystemAiServicesResponse } from "@bb/server-contract";
+import type { SystemAiServicesResponse } from "@sandy/server-contract";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import {
   AiServicesSettingsSection,
@@ -73,7 +73,7 @@ function stubFetch(
       const request =
         input instanceof Request
           ? input
-          : new Request(new URL(String(input), "http://bb.test"), init);
+          : new Request(new URL(String(input), "http://sandy.test"), init);
       const url = new URL(request.url).pathname;
       const text = await request.text();
       requests.push({ url, method: request.method, body: text });

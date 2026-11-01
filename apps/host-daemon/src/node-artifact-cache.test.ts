@@ -10,11 +10,11 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hashFile } from "@bb/file-transfer";
+import { hashFile } from "@sandy/file-transfer";
 import { ensureCachedNodeArtifact } from "./node-artifact-cache.js";
 
-vi.mock("@bb/file-transfer", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@bb/file-transfer")>();
+vi.mock("@sandy/file-transfer", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@sandy/file-transfer")>();
   return { ...actual, hashFile: vi.fn(actual.hashFile) };
 });
 
@@ -27,7 +27,7 @@ async function* body(...chunks: Uint8Array[]): AsyncGenerator<Uint8Array> {
 }
 
 async function cacheFixture() {
-  const cacheDir = await mkdtemp(join(tmpdir(), "bb-node-artifact-cache-"));
+  const cacheDir = await mkdtemp(join(tmpdir(), "sandy-node-artifact-cache-"));
   roots.push(cacheDir);
   const logger = { debug: vi.fn(), warn: vi.fn() };
   return {

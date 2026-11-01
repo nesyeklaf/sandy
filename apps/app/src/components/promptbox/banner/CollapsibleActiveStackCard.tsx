@@ -7,15 +7,15 @@ import {
   activityIconClass,
   activityRowClass,
   activityTextClass,
-} from "@bb/shared-ui/activity-row-styles";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/activity-row-styles";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PROMPT_STACK_DISCLOSURE_TRIGGER_CLASS,
   PromptStackHoverChevron,
   useDisclosureFocusHandoff,
   AnimatedDisclosureBody,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 
 const HEADER_GROUP_CLASS = activityRowClass(
   "active",

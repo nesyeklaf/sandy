@@ -3,7 +3,7 @@
   "name": "collapsible",
   "type": "registry:ui",
   "title": "collapsible",
-  "description": "BB ui \"collapsible\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"collapsible\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-collapsible"
   ],

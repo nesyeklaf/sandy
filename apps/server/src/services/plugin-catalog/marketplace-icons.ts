@@ -4,8 +4,8 @@ import {
   type DbConnection,
   type PluginMarketplaceIconRow,
   type UpsertPluginMarketplaceIconInput,
-} from "@bb/db";
-import { assertValidPluginCompactIconSvg } from "@bb/plugin-build";
+} from "@sandy/db";
+import { assertValidPluginCompactIconSvg } from "@sandy/plugin-build";
 import { marketplaceErrorMessage } from "./marketplace-http.js";
 import { brandingAssetHash } from "../plugins/app-bundle.js";
 import { realPathInside } from "../plugins/install-sources.js";

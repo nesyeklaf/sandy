@@ -15,7 +15,7 @@ import {
   loadOtlpConfig,
   otlpServiceName,
   otlpSignalUrl,
-} from "@bb/config/otlp";
+} from "@sandy/config/otlp";
 
 export { markSpanFailed, withIncomingSpan, withOutgoingSpan } from "./spans.js";
 
@@ -34,13 +34,13 @@ const SHUTDOWN_TIMEOUT_MS = 3_000;
 
 export function startTelemetry(options: StartTelemetryOptions): Telemetry {
   const config = loadOtlpConfig({ env: options.env ?? process.env });
-  const endpoint = config.BB_OTLP_ENDPOINT;
+  const endpoint = config.SANDY_OTLP_ENDPOINT;
   if (endpoint === null) {
     return { shutdown: async () => {} };
   }
   const resource = resourceFromAttributes({
     "service.name": otlpServiceName(options.component),
-    "service.version": config.BB_APP_VERSION,
+    "service.version": config.SANDY_APP_VERSION,
   });
   const tracerProvider = new NodeTracerProvider({
     resource,

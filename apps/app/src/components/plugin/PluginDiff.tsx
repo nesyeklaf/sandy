@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { DiffProps } from "@get-bb/plugin-sdk";
+import type { DiffProps } from "@sandy-sdk/plugin-sdk";
 import { DiffHost } from "@/components/code/DiffHost";
-import { normalizeFilePatch } from "@bb/shared-ui/git-diff/parsing";
+import { normalizeFilePatch } from "@sandy/shared-ui/git-diff/parsing";
 import { useSelectionAddToChat } from "@/components/thread/SelectionAddToChatContext";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 export function PluginDiff({
   patch,

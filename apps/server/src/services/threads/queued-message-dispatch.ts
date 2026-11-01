@@ -12,11 +12,11 @@ import {
   listQueuedThreadMessagesWaitingOnKind,
   listRetryableFailedQueuedThreadMessages,
   listThreadIdsWithHostOfflineQueueWaits,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   QUEUED_MESSAGE_PLUGIN_WAIT_HOLDER_PREFIX,
   type QueuedMessageWaitingOnKind,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { deferAfterResponse } from "../lib/response-deferral.js";
 import {

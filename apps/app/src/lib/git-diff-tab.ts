@@ -1,5 +1,5 @@
-import { GIT_PLUGIN_ID } from "@bb/domain";
-import { GIT_DIFF_TAB_ID } from "bb-plugin-bb--git/contract";
+import { GIT_PLUGIN_ID } from "@sandy/domain";
+import { GIT_DIFF_TAB_ID } from "sandy-plugin-sandy--git/contract";
 import { getThreadFixedTabOwnerId } from "@/lib/app-fixed-tab-navigation";
 import type { AppFixedTabReference } from "@/lib/app-navigation-host";
 

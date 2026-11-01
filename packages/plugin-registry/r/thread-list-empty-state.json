@@ -3,9 +3,9 @@
   "name": "thread-list-empty-state",
   "type": "registry:ui",
   "title": "thread-list-empty-state",
-  "description": "BB ui \"thread-list-empty-state\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"thread-list-empty-state\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/empty-state"
+    "@sandy/empty-state"
   ],
   "files": [
     {

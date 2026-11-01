@@ -9,7 +9,7 @@ describe("POST /api/v1/system/client-errors", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "user-agent": "bb-test-browser",
+          "user-agent": "sandy-test-browser",
         },
         body: JSON.stringify({
           source: "react-caught",
@@ -29,7 +29,7 @@ describe("POST /api/v1/system/client-errors", () => {
           clientPath: "/threads/thr_1",
           clientStack:
             "TypeError: Cannot read properties of undefined\n    at Panel",
-          userAgent: "bb-test-browser",
+          userAgent: "sandy-test-browser",
         },
         "Client error: Cannot read properties of undefined",
       );

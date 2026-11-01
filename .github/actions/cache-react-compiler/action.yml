@@ -7,7 +7,7 @@ runs:
       env:
         SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
       with:
-        path: .git/bb-cache/react-compiler
+        path: .git/sandy-cache/react-compiler
         key: react-compiler-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'apps/app/vite*.ts') }}-${{ github.sha }}
         restore-keys: |
           react-compiler-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'apps/app/vite*.ts') }}-

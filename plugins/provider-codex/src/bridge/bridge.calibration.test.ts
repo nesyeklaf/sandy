@@ -9,18 +9,18 @@ import {
   approvalInteractionOutcomeSchema,
   interactionRequestPayloadSchema,
   type PromptInput,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   experimental_createBridgeDeltaEventCollector as createBridgeDeltaEventCollector,
   experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness,
   experimental_describeCalibrationEvents as describeCalibrationEvents,
   experimental_normalizeCalibrationEvents as normalizeCalibrationEvents,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type {
   BridgeDeltaEventCollector,
   BridgeJsonRpcTestHarness,
   ThreadEvent,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type { ServerNotification as CodexEvent } from "../generated/codex-app-server/schema/ServerNotification.js";
 import type { Turn } from "../generated/codex-app-server/schema/v2/Turn.js";
 import { handleLine } from "./bridge.js";
@@ -368,11 +368,11 @@ async function replayCanonical(workspaceDir: string): Promise<ReplayResult> {
     });
     await settle(2);
 
-    const bbTurnId = firstTurnId(events);
+    const sandyTurnId = firstTurnId(events);
     const expectedTurnId =
-      bbTurnId === undefined
+      sandyTurnId === undefined
         ? undefined
-        : collector.assembler.getProviderTurnId(THREAD_ID, bbTurnId);
+        : collector.assembler.getProviderTurnId(THREAD_ID, sandyTurnId);
     if (expectedTurnId === undefined) {
       throw new Error("Expected a codex-native turn id to steer against");
     }
@@ -444,7 +444,7 @@ const GOLDEN_EVENT_STREAM: string[] = [
 let workspaceDir: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-calibration-ws-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-calibration-ws-"));
   const scriptPath = join(workspaceDir, "calibration-script.json");
   writeFileSync(scriptPath, JSON.stringify({ turns: SCRIPT }), "utf8");
   stubFakeCodexAppServer(scriptPath);
@@ -474,7 +474,7 @@ it("replays one scripted codex session onto the golden event stream", async () =
         canonical.events.filter(
           (event) =>
             event.type !== "thread/extensionState/updated" ||
-            event.kind !== "bb/provider-model-catalog",
+            event.kind !== "sandy/provider-model-catalog",
         ),
       ),
     ),
@@ -497,7 +497,7 @@ it("replays one scripted codex session onto the golden event stream", async () =
       event.item.command === "git status --short",
   );
   expect(
-    canonical.collector.assembler.getBbItemId(THREAD_ID, COMMAND_ITEM_ID),
+    canonical.collector.assembler.getSandyItemId(THREAD_ID, COMMAND_ITEM_ID),
   ).toBe(
     commandEventItemId?.type === "item/completed"
       ? commandEventItemId.item.id

@@ -8,12 +8,12 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PluginThreadListProps } from "@get-bb/plugin-sdk/app";
+import type { PluginThreadListProps } from "@sandy-sdk/plugin-sdk/app";
 import {
   loadPluginApp,
   renderSlot,
   type RenderSlotOptions,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { makePluginProject, makeSidebarThread } from "./app/model/fixtures.js";
 import {
   resetPreferencesSyncForTest,
@@ -337,7 +337,7 @@ describe("thread-list plugin", () => {
     await screen.findByText("Pinned thread");
     expect(
       JSON.parse(
-        window.localStorage.getItem("bb.thread-list.preferences.v1") ?? "{}",
+        window.localStorage.getItem("sandy.thread-list.preferences.v1") ?? "{}",
       ).organizationMode,
     ).toBe("machine");
     window.localStorage.clear();

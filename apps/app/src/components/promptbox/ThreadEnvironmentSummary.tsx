@@ -1,19 +1,19 @@
 import { memo } from "react";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import {
   OPTION_BASE_CLASS_NAME,
   OPTION_INTERACTIVE_CLASS_NAME,
   OPTION_MUTED_CLASS_NAME,
   OptionDisplay,
-} from "@bb/shared-ui/option-display";
+} from "@sandy/shared-ui/option-display";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
 import type {
   WorkspaceCheckoutDisplay,
-} from "@bb/shared-ui/lib/workspace-checkout-display";
+} from "@sandy/shared-ui/lib/workspace-checkout-display";
 import {
   MachineLabel,
   type MachineLabelHost,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { withoutBridgeRuntimeEnv } from "@bb/provider-bridge-protocol/bridge-kit";
+import { withoutBridgeRuntimeEnv } from "@sandy/provider-bridge-protocol/bridge-kit";
 import {
   AcpAgentExitedError,
   createAcpAgentConnection,
@@ -44,7 +44,7 @@ export async function probeAcpAgent(
       recordThreadId: null,
       onNotification: () => {},
       onRequest: (_method, _params, responder) => {
-        responder.error(-32601, "bb is probing this agent's capabilities");
+        responder.error(-32601, "sandy is probing this agent's capabilities");
       },
       onExit: () => {},
     });

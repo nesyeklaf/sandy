@@ -2,7 +2,7 @@ import type {
   ThreadListFilters,
   ThreadSearchFilters,
   EnvironmentFilePreviewSource,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   DEFAULT_THREAD_STORAGE_FILE_LIST_OPTIONS,
   type ThreadStorageFileListOptions,

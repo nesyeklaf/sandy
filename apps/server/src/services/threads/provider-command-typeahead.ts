@@ -2,9 +2,9 @@ import {
   providerCommandSectionRank,
   type CommandListResponse,
   type ProviderCommand,
-} from "@bb/server-contract";
-import type { ThreadProviderCommand } from "@bb/domain";
-import type { HostProviderCommand } from "@bb/host-daemon-contract";
+} from "@sandy/server-contract";
+import type { ThreadProviderCommand } from "@sandy/domain";
+import type { HostProviderCommand } from "@sandy/host-daemon-contract";
 import type { ProviderRegistration } from "../providers/provider-registry.js";
 import type { ResolvedSkillCatalogEntry } from "../skills/injected-skills.js";
 

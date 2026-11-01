@@ -1,7 +1,7 @@
-import type { PromptInput } from "@bb/domain";
-import { getProjectAttachment, projects, type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { makeTempDir } from "@bb/test-helpers";
+import type { PromptInput } from "@sandy/domain";
+import { getProjectAttachment, projects, type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { makeTempDir } from "@sandy/test-helpers";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

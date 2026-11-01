@@ -5,8 +5,8 @@ cd "$(dirname "$0")/../../../.."
 artifacts="$PWD/e2e-artifacts/android"
 mkdir -p "$artifacts"
 
-BB_MOBILE_E2E_SERVE_APP=1 pnpm exec turbo run e2e:mobile-backend \
-  --filter=@bb/integration-tests --output-logs=full --log-order=stream \
+SANDY_MOBILE_E2E_SERVE_APP=1 pnpm exec turbo run e2e:mobile-backend \
+  --filter=@sandy/integration-tests --output-logs=full --log-order=stream \
   > "$artifacts/backend.log" 2>&1 &
 backend_pid=$!
 
@@ -40,7 +40,7 @@ if [ "$ready" != 1 ]; then
 fi
 curl -fsS http://127.0.0.1:41999/health
 adb reverse tcp:41999 tcp:41999
-adb install -r apps/mobile/build-output/bb-android-local.apk
+adb install -r apps/mobile/build-output/sandy-android-local.apk
 adb logcat -c
 maestro test --format junit --output "$artifacts/junit.xml" \
   --test-output-dir "$artifacts/maestro" apps/mobile/e2e/android/smoke.yaml

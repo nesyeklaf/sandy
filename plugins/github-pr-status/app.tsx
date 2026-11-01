@@ -1,7 +1,7 @@
 import {
   definePluginApp,
   experimental_THREAD_INFO_ROW_GROUPS,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   PullRequestSegmentAction,
   PullRequestSegmentSummary,

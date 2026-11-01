@@ -20,10 +20,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   PluginComposerApi,
   PluginComposerScope,
-} from "@get-bb/plugin-sdk";
-import type { PromptDraftState } from "@bb/client-core";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+} from "@sandy-sdk/plugin-sdk";
+import type { PromptDraftState } from "@sandy/client-core";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { PluginContext } from "@/components/plugin/plugin-context";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
@@ -345,7 +345,7 @@ const SURFACES: readonly Surface[] = [
 
 const COMPOSERS: readonly Composer[] = [
   {
-    name: "bb's composer",
+    name: "sandy's composer",
     register: registerComposerPlugin,
     visibleText: (root) =>
       root.querySelector(".ProseMirror")?.textContent ?? "",
@@ -476,7 +476,7 @@ describe.each(COMPOSERS)("$name", (composer) => {
       );
     });
 
-    it("focuses its editor when bb focuses the pane's composer", async () => {
+    it("focuses its editor when sandy focuses the pane's composer", async () => {
       renderSurface(surface);
       const box = await composerBox();
       let focused = false;
@@ -526,7 +526,7 @@ describe.each(COMPOSERS)("$name", (composer) => {
       expect(skipped).not.toHaveBeenCalled();
     });
 
-    it("puts bb's voice transcript into the draft", async () => {
+    it("puts sandy's voice transcript into the draft", async () => {
       const { store } = renderSurface(surface);
       await composerBox();
       await waitFor(() =>

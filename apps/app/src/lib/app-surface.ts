@@ -3,13 +3,13 @@ import {
   APP_SURFACE_HEADER_NAME,
   APP_SURFACE_WEB,
   type RequestAppSurface,
-} from "@bb/config/app-surface";
+} from "@sandy/config/app-surface";
 import { isInsideNativeShell } from "@/lib/native-shell";
 
 const APP_SURFACE_MOBILE: RequestAppSurface = "mobile";
 
 export function getAppSurface(): RequestAppSurface {
-  if (typeof window !== "undefined" && window.bbDesktop !== undefined) {
+  if (typeof window !== "undefined" && window.sandyDesktop !== undefined) {
     return APP_SURFACE_DESKTOP;
   }
   if (isInsideNativeShell()) {

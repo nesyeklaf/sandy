@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {
   experimental_createHostEntryHarness,
-} from "@get-bb/plugin-sdk/testing/host";
-import { initRepo, makeTempDir } from "@bb/test-helpers";
+} from "@sandy-sdk/plugin-sdk/testing/host";
+import { initRepo, makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import hostEntry from "./host.js";
 
@@ -12,8 +12,8 @@ const LINE = "x".repeat(4_000);
 
 describe("Git plugin host patches", () => {
   it("keeps a batch of large patches under the worker's result cap and defers the rest", async () => {
-    const repo = await initRepo(await makeTempDir("bb-environment-provider-host-"));
-    const tempDir = await makeTempDir("bb-environment-provider-host-temp-");
+    const repo = await initRepo(await makeTempDir("sandy-environment-provider-host-"));
+    const tempDir = await makeTempDir("sandy-environment-provider-host-temp-");
     const paths: string[] = [];
     for (let index = 0; index < FILE_COUNT; index += 1) {
       const name = `generated-${index}.txt`;

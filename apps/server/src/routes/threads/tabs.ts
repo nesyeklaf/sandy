@@ -1,4 +1,4 @@
-import { getStoredThreadTabs, replaceStoredThreadTabs } from "@bb/db";
+import { getStoredThreadTabs, replaceStoredThreadTabs } from "@sandy/db";
 import {
   publicApiRoutes,
   threadTabsSchema,
@@ -7,7 +7,7 @@ import {
   type ThreadTab,
   type ThreadTabsResponse,
   type ThreadTabsWireResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import { ApiError } from "../../errors.js";
 import { requirePublicThread } from "../../services/lib/entity-lookup.js";

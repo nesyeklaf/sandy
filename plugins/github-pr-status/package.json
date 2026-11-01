@@ -1,14 +1,14 @@
 {
-  "name": "bb-plugin-bb--github-pr-status",
+  "name": "sandy-plugin-sandy--github-pr-status",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "GitHub pull request status and actions for each environment's branch",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.94"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.94"
   },
-  "bb": {
+  "sandy": {
     "name": "GitHub PR Status",
     "description": "GitHub pull request status and actions for each environment's branch",
     "branding": {
@@ -24,22 +24,22 @@
     "./refetch-on-show": "./ui/refetch-on-show.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
-    "bb-environment-provider-host": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
+    "sandy-environment-provider-host": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.0.0",

@@ -1,13 +1,13 @@
 import type {
   PluginEnvironmentProviderCreateContext,
   PluginEnvironmentProviderProgress,
-} from "@get-bb/plugin-sdk/environment-provider";
+} from "@sandy-sdk/plugin-sdk/environment-provider";
 import {
   createFakePluginHost,
   makeHostResponse,
   makeThreadResponse,
   type FakePluginHarness,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import plugin from "./server.js";
 type Project = PluginEnvironmentProviderCreateContext["project"];
@@ -71,10 +71,10 @@ function createFakeWorkspaceHost() {
 
 async function setup() {
   const host = createFakeWorkspaceHost();
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     experimental_callHostRpc: (call) => host.call(call),
   });
-  await plugin(bb);
+  await plugin(sandy);
   const provider = harness.registrations.environmentProviders.get(
     PERSONAL_WORKSPACE_ENVIRONMENT_PROVIDER_ID,
   );
@@ -92,7 +92,7 @@ async function setup() {
     projectCheckout: null,
     gitRemote: null,
     inputs: null,
-    suggestedBranchName: "bb/test",
+    suggestedBranchName: "sandy/test",
     attempt: 1,
     pathKey: THREAD_ID,
     experimental_claimPath: async () => true,

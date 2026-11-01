@@ -2,9 +2,9 @@ import type {
   PluginComposerApi,
   PluginMessageActionContext,
   ThreadChatMessageReference,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
-import { createComposerHandleBinding } from "@get-bb/plugin-sdk/internal/composer-handle";
+import { createComposerHandleBinding } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import { detachedComposerController } from "./plugin-composer-handle";
 import type { PluginMessageActionSlot } from "./plugin-slots";
 import type { AppPanelController } from "./app-fixed-tab-navigation";

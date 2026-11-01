@@ -10,10 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import type {
-  BbNavigate,
+  SandyNavigate,
   ExperimentalPanelController,
   PluginBoundThreadAction,
-  PluginBrowserBbSdk,
+  PluginBrowserSandySdk,
   PluginThreadAction,
   PluginThreadActionEntry,
   PluginThreadActionPlacement,
@@ -21,18 +21,18 @@ import type {
   PluginThreadActionRegistrationInfo,
   PluginThreadActionTarget,
   PluginThreadActionsOptions,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { PluginContext } from "@/components/plugin/plugin-context";
 import { getFocusedAppPanelController } from "@/lib/app-fixed-tab-navigation";
 import {
   createPluginPanelController,
   createRetiredOpenPanel,
 } from "@/lib/plugin-panel-controller";
-import { useBbNavigate, useSdk } from "@/lib/plugin-navigation-hooks";
+import { useSandyNavigate, useSdk } from "@/lib/plugin-navigation-hooks";
 import { compareGroupedPlacement } from "@/lib/grouped-placement";
 import { usePluginSlots } from "@/lib/plugin-slots";
 
-export const CORE_THREAD_ACTION_OWNER = "bb--core";
+export const CORE_THREAD_ACTION_OWNER = "sandy--core";
 
 export interface ThreadActionRegistrationRecord {
   key: string;
@@ -44,8 +44,8 @@ export interface ThreadActionRegistrationRecord {
 
 interface CollectedThreadAction {
   data: unknown;
-  sdk: PluginBrowserBbSdk;
-  navigate: BbNavigate;
+  sdk: PluginBrowserSandySdk;
+  navigate: SandyNavigate;
   panel: ExperimentalPanelController;
 }
 
@@ -240,15 +240,15 @@ function reportFailure(key: string, phase: string, error: unknown): void {
 }
 
 function useLatestNavigate(
-  navigate: BbNavigate,
+  navigate: SandyNavigate,
   panel: ExperimentalPanelController,
-): BbNavigate {
+): SandyNavigate {
   const latest = useRef(navigate);
   useLayoutEffect(() => {
     latest.current = navigate;
   });
   const [stable] = useState<
-    BbNavigate & { openThreadPanel: ReturnType<typeof createRetiredOpenPanel> }
+    SandyNavigate & { openThreadPanel: ReturnType<typeof createRetiredOpenPanel> }
   >(() => ({
     toThread: (...args) => latest.current.toThread(...args),
     toProject: (...args) => latest.current.toProject(...args),
@@ -280,7 +280,7 @@ function ThreadActionCollector({
   const [panel] = useState(() =>
     createPluginPanelController(record.pluginId, getFocusedAppPanelController),
   );
-  const navigate = useLatestNavigate(useBbNavigate(), panel);
+  const navigate = useLatestNavigate(useSandyNavigate(), panel);
   useLayoutEffect(() => {
     publishCollected(record.key, { data, sdk, navigate, panel });
   }, [data, navigate, panel, record.key, sdk]);

@@ -9,7 +9,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { experimental_nativeRootsResolveOutputSchema } from "@get-bb/plugin-sdk/host";
+import { experimental_nativeRootsResolveOutputSchema } from "@sandy-sdk/plugin-sdk/host";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { resolvePiNativeRoots } from "./native-roots.js";
 
@@ -17,10 +17,10 @@ let homeDir: string;
 
 const itWithFakePi = it.skipIf(process.platform === "win32");
 
-const NO_PI_ENV = { BB_PI_BRIDGE_COMMAND: "/nonexistent/bb-test-pi" };
+const NO_PI_ENV = { SANDY_PI_BRIDGE_COMMAND: "/nonexistent/sandy-test-pi" };
 
 beforeEach(() => {
-  homeDir = mkdtempSync(join(tmpdir(), "bb-pi-native-roots-"));
+  homeDir = mkdtempSync(join(tmpdir(), "sandy-pi-native-roots-"));
   vi.spyOn(console, "warn").mockImplementation(() => undefined);
 });
 
@@ -299,7 +299,7 @@ itWithFakePi(
 );
 
 itWithFakePi(
-  "hands Pi the agent dir and home bb resolved, not the daemon's own",
+  "hands Pi the agent dir and home sandy resolved, not the daemon's own",
   async () => {
     const fake = installFakePi();
     const agentDir = join(homeDir, "moved-agent");

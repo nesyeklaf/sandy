@@ -1,11 +1,11 @@
-import { getAiServiceSelections } from "@bb/db";
+import { getAiServiceSelections } from "@sandy/db";
 import type {
   AiServiceSelection,
   AiServiceStatus,
   AiTask,
   AiTextTask,
   JsonObject,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { runtimeErrorLogFields } from "../lib/error-log-fields.js";
 import { cleanGeneratedLine } from "./ai-reply.js";

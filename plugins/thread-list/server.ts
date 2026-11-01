@@ -3,8 +3,8 @@ import {
   defineCli,
   defineRpcContract,
   PluginCliError,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   defaultPreferences,
@@ -61,15 +61,15 @@ function kvKey(key: PreferenceKey): string {
   return `${PREFERENCE_KV_PREFIX}${key}`;
 }
 
-export function createPreferenceStore(bb: BbPluginApi) {
+export function createPreferenceStore(sandy: SandyPluginApi) {
   async function read<Key extends PreferenceKey>(
     key: Key,
   ): Promise<PreferenceValue<Key>> {
-    const stored = await bb.storage.kv.get<unknown>(kvKey(key));
+    const stored = await sandy.storage.kv.get<unknown>(kvKey(key));
     if (stored === undefined) return getPreferenceDefault(key);
     const parsed = parseStoredPreferenceValue(key, stored);
     if (parsed.success) return parsed.value;
-    bb.log.warn(
+    sandy.log.warn(
       `stored preference ${key} is invalid (${parsed.message}); using the default`,
     );
     return getPreferenceDefault(key);
@@ -94,8 +94,8 @@ export function createPreferenceStore(bb: BbPluginApi) {
     if (!parsed.success) {
       throw new PreferenceValidationError(key, parsed.message);
     }
-    await bb.storage.kv.set(kvKey(key), parsed.value);
-    bb.realtime.publish(PREFERENCES_CHANGED_CHANNEL, {
+    await sandy.storage.kv.set(kvKey(key), parsed.value);
+    sandy.realtime.publish(PREFERENCES_CHANGED_CHANNEL, {
       key,
       value: parsed.value,
       origin,
@@ -106,9 +106,9 @@ export function createPreferenceStore(bb: BbPluginApi) {
   async function reset<Key extends PreferenceKey>(
     key: Key,
   ): Promise<PreferenceValue<Key>> {
-    await bb.storage.kv.delete(kvKey(key));
+    await sandy.storage.kv.delete(kvKey(key));
     const value = getPreferenceDefault(key);
-    bb.realtime.publish(PREFERENCES_CHANGED_CHANNEL, {
+    sandy.realtime.publish(PREFERENCES_CHANGED_CHANNEL, {
       key,
       value,
       origin: null,
@@ -130,28 +130,28 @@ export class PreferenceValidationError extends Error {
 }
 
 export async function migrateFromUiPreferences(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
 ): Promise<{ migrated: PreferenceKey[] }> {
-  const done = await bb.storage.kv.get<boolean>(MIGRATION_KV_KEY);
+  const done = await sandy.storage.kv.get<boolean>(MIGRATION_KV_KEY);
   if (done === true) return { migrated: [] };
   const migrated: PreferenceKey[] = [];
   let entries: Record<string, { value: unknown } | undefined>;
   try {
-    const response = await bb.sdk.system.uiPreferences.list();
+    const response = await sandy.sdk.system.uiPreferences.list();
     entries = response.preferences as Record<
       string,
       { value: unknown } | undefined
     >;
   } catch (error) {
-    bb.log.warn(
-      `could not read bb's sidebar preferences to migrate them: ${
+    sandy.log.warn(
+      `could not read sandy's sidebar preferences to migrate them: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
     return { migrated };
   }
   for (const key of PREFERENCE_KEYS) {
-    const existing = await bb.storage.kv.get<unknown>(kvKey(key));
+    const existing = await sandy.storage.kv.get<unknown>(kvKey(key));
     if (existing !== undefined) continue;
     const legacyKey = preferenceDefinitions[key].legacyKey;
     if (legacyKey === null) continue;
@@ -164,10 +164,10 @@ export async function migrateFromUiPreferences(
     ) {
       continue;
     }
-    await bb.storage.kv.set(kvKey(key), parsed.value);
+    await sandy.storage.kv.set(kvKey(key), parsed.value);
     migrated.push(key);
   }
-  await bb.storage.kv.set(MIGRATION_KV_KEY, true);
+  await sandy.storage.kv.set(MIGRATION_KV_KEY, true);
   return { migrated };
 }
 
@@ -192,10 +192,10 @@ const JSON_OPTION = {
   description: "Emit machine-readable JSON",
 } as const;
 
-export default async function threadListPlugin(bb: BbPluginApi) {
-  const store = createPreferenceStore(bb);
+export default async function threadListPlugin(sandy: SandyPluginApi) {
+  const store = createPreferenceStore(sandy);
 
-  bb.rpc.register(threadListRpcContract, {
+  sandy.rpc.register(threadListRpcContract, {
     async listPreferences() {
       return { preferences: await store.readAll() };
     },
@@ -207,13 +207,13 @@ export default async function threadListPlugin(bb: BbPluginApi) {
     },
   });
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
-      name: bb.pluginId,
+      name: sandy.pluginId,
       summary:
         "Inspect and change the sidebar thread list's layout preferences",
       description:
-        "Organization mode, sort, section order, hidden groups, and collapsed groups for bb's sidebar thread list. Values are JSON; a bare word is read as a string.",
+        "Organization mode, sort, section order, hidden groups, and collapsed groups for sandy's sidebar thread list. Values are JSON; a bare word is read as a string.",
       commands: {
         "prefs list": cliCommand({
           summary: "List every preference and its current value",
@@ -307,10 +307,10 @@ export default async function threadListPlugin(bb: BbPluginApi) {
     }),
   );
 
-  const { migrated } = await migrateFromUiPreferences(bb);
+  const { migrated } = await migrateFromUiPreferences(sandy);
   if (migrated.length > 0) {
-    bb.log.info(
-      `migrated sidebar preferences from bb settings: ${migrated.join(", ")}`,
+    sandy.log.info(
+      `migrated sidebar preferences from sandy settings: ${migrated.join(", ")}`,
     );
   }
 }

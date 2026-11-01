@@ -4,13 +4,13 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   QUESTION_ACTION_APP_COMMAND_IDS,
   QUESTION_SELECT_APP_COMMAND_IDS,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   QuestionFormHostProvider,
   type QuestionFormAction,
   type QuestionFormHost,
-} from "@bb/shared-ui/question-form-host";
-import { VoiceInputTextareaProvider } from "@bb/shared-ui/voice-input-textarea";
+} from "@sandy/shared-ui/question-form-host";
+import { VoiceInputTextareaProvider } from "@sandy/shared-ui/voice-input-textarea";
 import {
   useAppCommandContext,
   useAppCommandShortcuts,

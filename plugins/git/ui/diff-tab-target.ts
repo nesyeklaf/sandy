@@ -1,7 +1,7 @@
 import type {
   ExperimentalFixedTabTargetContract,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { gitDiffTabTargetSchema, type GitDiffTabTarget } from "../contract.js";
 
 export const gitDiffTabTarget: ExperimentalFixedTabTargetContract<GitDiffTabTarget> =

@@ -5,7 +5,7 @@ import {
   threadScope,
   turnScope,
   type Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   createProject,
   createThread,
@@ -14,8 +14,8 @@ import {
   noopNotifier,
   upsertHost,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import {
   buildThreadConversationOutline,
   buildThreadTimelineWithProfile,

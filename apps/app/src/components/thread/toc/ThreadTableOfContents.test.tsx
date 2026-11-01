@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import type { ThreadListEntry, ThreadWithRuntime } from "@bb/domain";
+import type { ThreadListEntry, ThreadWithRuntime } from "@sandy/domain";
 import {
   act,
   cleanup,
@@ -26,7 +26,7 @@ import type {
   SidebarBootstrapResponse,
   TimelineConversationRow,
   TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { commandRow } from "@/test/fixtures/thread-timeline-rows";
 
 vi.mock("@/components/ui/bottom-anchored-scroll-body.js", () => ({
@@ -47,7 +47,7 @@ import type {
   ExperimentalThreadTocBand,
   ExperimentalThreadTocInput,
   ExperimentalThreadTocTabProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import {
   removePluginSlotRegistrations,
@@ -61,8 +61,8 @@ import {
   type TocItem,
 } from "./ThreadTableOfContents";
 import { ThreadTitleMentionResourcesProvider } from "@/components/thread/ThreadTitleMentions";
-import { makeThreadListEntry as makeThreadListEntryFixture } from "@bb/test-helpers/domain-fixtures";
-import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry as makeThreadListEntryFixture } from "@sandy/test-helpers/domain-fixtures";
+import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@sandy/test-helpers/domain-fixtures";
 import {
   makeProjectWithThreadsResponse,
   makeSidebarBootstrapResponse,
@@ -1007,7 +1007,7 @@ describe("ThreadTableOfContents", () => {
         id: "u2",
         role: "user",
         preview:
-          "[bb message from thread:thr_worker] Release bug report: the calendar is stale.",
+          "[sandy message from thread:thr_worker] Release bug report: the calendar is stale.",
         attachmentSummary: null,
         messageSeq: 0,
       },
@@ -1028,7 +1028,7 @@ describe("ThreadTableOfContents", () => {
       screen.getByText("Release bug report: the calendar is stale."),
     ).not.toBeNull();
     expect(
-      screen.queryByText(/\[bb message from thread:thr_worker\]/),
+      screen.queryByText(/\[sandy message from thread:thr_worker\]/),
     ).toBeNull();
   });
 
@@ -1063,7 +1063,7 @@ describe("ThreadTableOfContents", () => {
         id: "u2",
         role: "user",
         preview:
-          "[bb message from thread:thr_worker] Release bug report: the calendar is stale.",
+          "[sandy message from thread:thr_worker] Release bug report: the calendar is stale.",
         attachmentSummary: null,
         messageSeq: 0,
       },
@@ -1146,7 +1146,7 @@ describe("ThreadTableOfContents", () => {
     fireEvent.click(await screen.findByText("Loaded question"));
 
     await waitFor(() => expect(scrollElementIntoView).toHaveBeenCalledTimes(1));
-    expect(target.classList.contains("bb-search-flash")).toBe(true);
+    expect(target.classList.contains("sandy-search-flash")).toBe(true);
     expect(onNavigateToRow).toHaveBeenCalledWith("u2");
     expect(loadOlder).not.toHaveBeenCalled();
   });

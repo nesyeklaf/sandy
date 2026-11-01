@@ -3,15 +3,15 @@
   "name": "drawer",
   "type": "registry:ui",
   "title": "drawer",
-  "description": "BB ui \"drawer\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"drawer\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "vaul"
   ],
   "registryDependencies": [
-    "@bb/overlay-open-tracer",
-    "@bb/overlay-trigger",
-    "@bb/portal-scope",
-    "@bb/utils"
+    "@sandy/overlay-open-tracer",
+    "@sandy/overlay-trigger",
+    "@sandy/portal-scope",
+    "@sandy/utils"
   ],
   "files": [
     {

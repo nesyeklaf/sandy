@@ -11,7 +11,7 @@ import {
   type ExperimentalPanelController,
   type ExperimentalThreadActionTabProps,
   type ThreadChatMessageAction,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 const PLUGIN_ID = "side-chat";
 const PANEL_ACTION_ID = "side-chat";

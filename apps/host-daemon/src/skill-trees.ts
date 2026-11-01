@@ -1,4 +1,4 @@
-import type { HostDaemonSkillTreeManifest } from "@bb/host-daemon-contract";
+import type { HostDaemonSkillTreeManifest } from "@sandy/host-daemon-contract";
 
 export interface SkillTreeTransport {
   fetchManifest(treeHash: string): Promise<HostDaemonSkillTreeManifest>;

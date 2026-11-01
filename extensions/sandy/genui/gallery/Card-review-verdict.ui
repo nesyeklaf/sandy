@@ -1,0 +1,18 @@
+rounds = Load("data/review/rounds.json")
+findings = Load("data/review/findings.json")
+open = findings.filter(f => f.status == "open")
+inRound = (n, key, value) => findings.filter(f => f.round == n && f[key] == value).length
+earlier = n => inRound(n, "scope", "earlier code")
+$fix = []
+$next = null
+Card("Review of the upload retry slice, round 3", [
+  Table(["Reviewer", "Verdict", "Open findings", "Why"], rounds.verdicts.map(v => [v.model, Badge(v.verdict == "ship" ? "Ship" : "Fix required", tone: v.verdict == "ship" ? "good" : "warn"), open.filter(f => f.raisedBy == v.reviewer).length, v.why])),
+  Chart("bar", rounds.rounds.map(r => "Round " + r.round), {High: {values: rounds.rounds.map(r => inRound(r.round, "severity", "high")), tone: "bad"}, Medium: {values: rounds.rounds.map(r => inRound(r.round, "severity", "medium")), tone: "warn"}, Low: rounds.rounds.map(r => inRound(r.round, "severity", "low"))}, stacked: true),
+  Table(["Round", "Diff reviewed", "Findings", "In code an earlier round reviewed"], rounds.rounds.map(r => [r.round, r.lines + " lines, new: " + r.added, findings.filter(f => f.round == r.round).length, r.round == 1 ? "n/a" : earlier(r.round)])),
+  Callout(`Findings per round: ${rounds.rounds.map(r => findings.filter(f => f.round == r.round).length).join(", ")}. Each round reviewed more code (the diff grew from ${rounds.rounds[0].lines} to ${rounds.rounds[2].lines} lines), and ${earlier(3)} of the ${open.length} open findings are in code that an earlier round had already reviewed.`, tone: "info", title: "Convergence"),
+  Findings(open, "Open after round 3"),
+  Form([
+    Checklist($fix, open.map(f => f.id + " " + f.title), label: "Fix in round 4"),
+    Choice($next, ["Only the lines changed since round 3", "The whole diff again"], label: "Next review covers")
+  ])
+])

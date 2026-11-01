@@ -9,7 +9,7 @@ import {
 } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
-import { derivePluginId } from "@bb/domain";
+import { derivePluginId } from "@sandy/domain";
 import type { Metafile, Plugin } from "esbuild";
 import {
   PLUGIN_THEME_CSS,
@@ -80,7 +80,7 @@ let freshFacadeImportSequence = 0;
 async function freshModuleExports(moduleUrl: string): Promise<string[]> {
   const freshUrl = new URL(moduleUrl);
   freshUrl.searchParams.set(
-    "bb-plugin-build",
+    "sandy-plugin-build",
     String(++freshFacadeImportSequence),
   );
   const moduleNamespace = await import(freshUrl.href);
@@ -138,10 +138,10 @@ async function shimModuleSource(
 ): Promise<string> {
   const names = await shimExportsOf(specifier, pluginSdkAppModuleUrl);
   return [
-    `const runtime = globalThis.__bbPluginRuntime;`,
+    `const runtime = globalThis.__sandyPluginRuntime;`,
     `if (runtime == null || runtime.${slot} == null) {`,
     `  throw new Error(${JSON.stringify(
-      `Cannot load "${specifier}": this bundle must be loaded by the BB app, which provides the shared plugin runtime (globalThis.__bbPluginRuntime).`,
+      `Cannot load "${specifier}": this bundle must be loaded by the SANDY app, which provides the shared plugin runtime (globalThis.__sandyPluginRuntime).`,
     )});`,
     `}`,
     `const mod = runtime.${slot};`,
@@ -153,11 +153,11 @@ async function shimModuleSource(
   ].join("\n");
 }
 
-const SHIM_NAMESPACE = "bb-plugin-runtime-shim";
+const SHIM_NAMESPACE = "sandy-plugin-runtime-shim";
 
 const RETIRED_PLUGIN_SDK_APP_EXPORTS: Readonly<Record<string, string>> = {
   experimental_useSidebarThreadPullRequest:
-    'Render <experimental_ThreadRowMetadata thread={thread} /> in the row to draw bb\'s pull request badge, or read pull requests from the GitHub PR Status plugin: experimental_useRpcKeyedQuery({ pluginId: "bb--github-pr-status", contract, method: "pullRequests", keys: [thread.environment.id] }). See "Migrating from experimental_useSidebarThreadPullRequest" in the bb-plugin-authoring skill.',
+    'Render <experimental_ThreadRowMetadata thread={thread} /> in the row to draw sandy\'s pull request badge, or read pull requests from the GitHub PR Status plugin: experimental_useRpcKeyedQuery({ pluginId: "sandy--github-pr-status", contract, method: "pullRequests", keys: [thread.environment.id] }). See "Migrating from experimental_useSidebarThreadPullRequest" in the sandy-plugin-authoring skill.',
 };
 
 const NAMED_IMPORT_PATTERN =
@@ -192,7 +192,7 @@ const SHIM_FILTER = new RegExp(
 
 export function runtimeShimPlugin(pluginSdkAppModuleUrl?: string): Plugin {
   return {
-    name: "bb-plugin-runtime-shims",
+    name: "sandy-plugin-runtime-shims",
     setup(build) {
       build.onLoad(
         { filter: /\.[cm]?[jt]sx?$/, namespace: "file" },
@@ -205,7 +205,7 @@ export function runtimeShimPlugin(pluginSdkAppModuleUrl?: string): Plugin {
           const source = await readFile(args.path, "utf8");
           const warnings = [];
           const migration =
-            "See bb-plugin-authoring, frontend-registration.md#tab-api-migration.";
+            "See sandy-plugin-authoring, frontend-registration.md#tab-api-migration.";
           if (/\.\s*threadPanelAction\s*\(/u.test(source)) {
             warnings.push({
               text: `threadPanelAction is retired from SDK typings. Use app.slots.experimental_tab({ context: { kind: "thread" }, availability: "action", id, title, icon, component, run }). Existing bundles remain supported. ${migration}`,
@@ -221,7 +221,7 @@ export function runtimeShimPlugin(pluginSdkAppModuleUrl?: string): Plugin {
           }
           if (/\.\s*experimental_threadHeaderAction\b/u.test(source)) {
             warnings.push({
-              text: `experimental_threadHeaderAction is retired from SDK typings. Register a thread action with placement "header" instead: app.slots.experimental_threadAction({ id, title, icon, group, placement: "header", item }). Existing plugins remain supported. See bb-plugin-authoring, frontend-registration.md#a-button-in-the-thread-header.`,
+              text: `experimental_threadHeaderAction is retired from SDK typings. Register a thread action with placement "header" instead: app.slots.experimental_threadAction({ id, title, icon, group, placement: "header", item }). Existing plugins remain supported. See sandy-plugin-authoring, frontend-registration.md#a-button-in-the-thread-header.`,
             });
           }
           for (const text of retiredSdkMemberWarnings(source)) {
@@ -325,17 +325,17 @@ function readTailwindContentPatterns(
   pkg: Record<string, unknown>,
   packageJsonPath: string,
 ): string[] {
-  const bb = pkg.bb;
-  if (!isRecord(bb) || bb.pluginTailwindContent === undefined) {
+  const sandy = pkg.sandy;
+  if (!isRecord(sandy) || sandy.pluginTailwindContent === undefined) {
     return [];
   }
-  const patterns = bb.pluginTailwindContent;
+  const patterns = sandy.pluginTailwindContent;
   if (
     !Array.isArray(patterns) ||
     !patterns.every((pattern) => typeof pattern === "string")
   ) {
     throw new Error(
-      `bb.pluginTailwindContent must be an array of strings in ${packageJsonPath}`,
+      `sandy.pluginTailwindContent must be an array of strings in ${packageJsonPath}`,
     );
   }
   return patterns;
@@ -395,13 +395,13 @@ async function readPluginAppConfig(rootDir: string): Promise<PluginAppConfig> {
     rootDir,
     packageJsonPath,
   );
-  const app = manifest.bb.app;
+  const app = manifest.sandy.app;
   if (app === undefined) {
     throw new Error(
-      `no frontend entry: ${packageJsonPath} has no "bb": { "app": "./app.tsx" } field (only plugins with an app entry can be built)`,
+      `no frontend entry: ${packageJsonPath} has no "sandy": { "app": "./app.tsx" } field (only plugins with an app entry can be built)`,
     );
   }
-  const appEntry = await resolveManifestEntryFile(rootDir, app, "bb.app");
+  const appEntry = await resolveManifestEntryFile(rootDir, app, "sandy.app");
   return {
     appEntry,
     packageName: manifest.name,
@@ -527,7 +527,7 @@ interface PluginAppBuildOptions {
 
 export async function buildPluginApp(
   rootDir: string,
-  bbVersion: string,
+  sandyVersion: string,
   toolchain: PluginBuildToolchain,
   options: PluginAppBuildOptions = { minify: true },
 ): Promise<PluginAppBuildResult> {
@@ -566,14 +566,14 @@ export async function buildPluginApp(
       jsxDev: false,
       define: {
         "process.env.NODE_ENV": '"production"',
-        __BB_PLUGIN_ID__: JSON.stringify(pluginId),
+        __SANDY_PLUGIN_ID__: JSON.stringify(pluginId),
       },
       logLevel: "error",
       plugins: [zodLocaleStubPlugin(), runtimeShimPlugin()],
     });
 
     migrationWarnings = bundle.warnings
-      .filter((warning) => warning.pluginName === "bb-plugin-runtime-shims")
+      .filter((warning) => warning.pluginName === "sandy-plugin-runtime-shims")
       .map((warning) =>
         warning.location === null
           ? warning.text
@@ -614,7 +614,7 @@ export async function buildPluginApp(
           ...createPluginArtifactMeta({
             packageName,
             pluginVersion,
-            bbVersion,
+            sandyVersion,
           }),
           runtimeSlots,
         },

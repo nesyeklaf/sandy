@@ -4,8 +4,8 @@ import { useLayoutEffect } from "react";
 import type {
   PluginThreadAction,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk/app";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { pushNotificationsRpcContract } from "./contract.js";
 import type { ThreadNotificationInputs } from "./preferences.js";
@@ -104,8 +104,8 @@ describe("device notification settings", () => {
   });
 });
 
-const { experimental_useAppPanel, useBbNavigate, useSdk } =
-  await import("@get-bb/plugin-sdk/app");
+const { experimental_useAppPanel, useSandyNavigate, useSdk } =
+  await import("@sandy-sdk/plugin-sdk/app");
 const { notificationsThreadAction } = await import("./notificationsAction.js");
 
 function makeTarget(
@@ -140,7 +140,7 @@ function Probe({
 }) {
   const data = notificationsThreadAction.useData!({ threadIds });
   const sdk = useSdk();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const experimental_panel = experimental_useAppPanel();
   useLayoutEffect(() => {
     onItem(

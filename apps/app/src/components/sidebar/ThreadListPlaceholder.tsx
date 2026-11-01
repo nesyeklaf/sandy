@@ -1,6 +1,6 @@
-import { Button } from "@bb/shared-ui/button";
-import { Skeleton } from "@bb/shared-ui/skeleton";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 export type ThreadListPlaceholderState =
   | { kind: "loading" }

@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import type { PluginSidebarThread } from "@get-bb/plugin-sdk";
+import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk";
 import type { PluginThreadRowMetadataSlot } from "@/lib/plugin-slots";
 
 export function slotKey(slot: PluginThreadRowMetadataSlot): string {

@@ -2,8 +2,8 @@ import {
   RESOURCE_GRID_PAGE_SIZE,
   ResourceInfiniteScrollSentinel,
   useResourceInfiniteItems,
-} from "@bb/shared-ui/resource-pagination";
-import { Switch } from "@bb/shared-ui/switch";
+} from "@sandy/shared-ui/resource-pagination";
+import { Switch } from "@sandy/shared-ui/switch";
 import { usePluginEnabledMutation } from "@/components/plugin/usePluginEnabledMutation";
 import { PluginCatalogInstallControl } from "./PluginCatalogInstallControl";
 import type { PluginCatalogSearchEntry } from "@/hooks/queries/plugin-catalog-queries";

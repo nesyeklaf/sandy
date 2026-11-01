@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import type { FileContents } from "@pierre/diffs";
-import type { ExperimentalDiffFullFileContents } from "@get-bb/plugin-sdk";
+import type { ExperimentalDiffFullFileContents } from "@sandy-sdk/plugin-sdk";
 import { Button } from "../ui/button";
 import { DiffLoadingSkeleton } from "../ui/diff-loading-skeleton";
 import { usePointerCoarse } from "../ui/hooks/use-pointer-coarse";

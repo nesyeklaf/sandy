@@ -3,14 +3,14 @@
   "name": "checkbox",
   "type": "registry:ui",
   "title": "checkbox",
-  "description": "BB ui \"checkbox\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"checkbox\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-checkbox"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

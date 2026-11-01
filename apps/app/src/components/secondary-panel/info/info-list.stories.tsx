@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { PanelStage } from "../ThreadMetadataContent.fixtures";
 import { ThreadMetadataCard } from "../ThreadMetadataContent";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
-import { InfoListRow, InfoRowTime } from "@bb/shared-ui/info-list-row";
+import { InfoListRow, InfoRowTime } from "@sandy/shared-ui/info-list-row";
 import { InfoList, InfoSection } from "./info-list";
 
 export default {

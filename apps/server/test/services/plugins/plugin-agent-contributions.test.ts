@@ -2,10 +2,10 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { encodeClientTurnRequestIdNumber } from "@bb/domain";
-import type { Logger } from "@bb/logger";
+import { type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { encodeClientTurnRequestIdNumber } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -59,7 +59,7 @@ async function writePlugin(
   options: {
     name: string;
     serverSource?: string;
-    bbSkills?: string[];
+    sandySkills?: string[];
     skillNames?: string[];
     skillsDirName?: string;
   },
@@ -71,12 +71,12 @@ async function writePlugin(
     JSON.stringify({
       name: options.name,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Agent contributions fixture",
         description: "Agent contributions plugin fixture.",
         branding: { icon: "Zap" },
         server: "./server.ts",
-        ...(options.bbSkills ? { skills: options.bbSkills } : {}),
+        ...(options.sandySkills ? { skills: options.sandySkills } : {}),
       },
     }),
   );
@@ -100,7 +100,7 @@ describe("plugin skills tier", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-skills-test-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-skills-test-"));
     service = createPluginService({
       aiServices: createAiServiceRegistry(),
       db,
@@ -125,7 +125,7 @@ describe("plugin skills tier", () => {
 
   it("layers plugin skills below data-dir and project skills", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-skiller",
+      name: "sandy-plugin-skiller",
       skillNames: ["alpha", "beta", "gamma"],
     });
     await service.installPath(rootDir);
@@ -178,10 +178,10 @@ describe("plugin skills tier", () => {
     expect(sources).toHaveLength(byName.size);
   });
 
-  it("manifest bb.skills relocates the convention root and the experiment gates the tier", async () => {
+  it("manifest sandy.skills relocates the convention root and the experiment gates the tier", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-relocated",
-      bbSkills: ["./custom/*"],
+      name: "sandy-plugin-relocated",
+      sandySkills: ["./custom/*"],
       skillNames: ["relocated-skill"],
       skillsDirName: "custom",
     });
@@ -207,7 +207,7 @@ describe("plugin agent contributions reach thread runtime config", () => {
 
   beforeEach(async () => {
     harness = await createTestAppHarness();
-    pluginsDir = await mkdtemp(join(tmpdir(), "bb-plugin-runtime-test-"));
+    pluginsDir = await mkdtemp(join(tmpdir(), "sandy-plugin-runtime-test-"));
   });
 
   it("isolates resolver failures and timeouts", async () => {
@@ -230,13 +230,13 @@ describe("plugin agent contributions reach thread runtime config", () => {
     });
     try {
       const root = await writePlugin(pluginsDir, {
-        name: "bb-plugin-env-failures",
+        name: "sandy-plugin-env-failures",
         serverSource: `
-          export default function plugin(bb) {
-            bb.providers.experimental_contributeEnv("codex", () => {
+          export default function plugin(sandy) {
+            sandy.providers.experimental_contributeEnv("codex", () => {
               throw new Error("resolver exploded");
             });
-            bb.providers.experimental_contributeEnv("claude-code", () => new Promise(() => {}));
+            sandy.providers.experimental_contributeEnv("claude-code", () => new Promise(() => {}));
           }
         `,
       });
@@ -266,7 +266,7 @@ describe("plugin agent contributions reach thread runtime config", () => {
 
   it("plugin skills reach the thread.start command and update after reload", async () => {
     const rootDir = await writePlugin(pluginsDir, {
-      name: "bb-plugin-ctxdemo",
+      name: "sandy-plugin-ctxdemo",
       skillNames: ["ctx-skill"],
       serverSource: `
         export default function plugin() {}
@@ -328,10 +328,10 @@ describe("plugin agent contributions reach thread runtime config", () => {
 
   it("resolves provider environment per command and keeps the first plugin on conflicts", async () => {
     const firstRoot = await writePlugin(pluginsDir, {
-      name: "bb-plugin-env-first",
+      name: "sandy-plugin-env-first",
       serverSource: `
-        export default function plugin(bb) {
-          bb.providers.experimental_contributeEnv("codex", (context) => [
+        export default function plugin(sandy) {
+          sandy.providers.experimental_contributeEnv("codex", (context) => [
             {
               name: "PLUGIN_CONTEXT",
               value: context.threadId + ":" + context.projectId + ":" + context.hostId,
@@ -347,10 +347,10 @@ describe("plugin agent contributions reach thread runtime config", () => {
       `,
     });
     const secondRoot = await writePlugin(pluginsDir, {
-      name: "bb-plugin-env-second",
+      name: "sandy-plugin-env-second",
       serverSource: `
-        export default function plugin(bb) {
-          bb.providers.experimental_contributeEnv("codex", () => [
+        export default function plugin(sandy) {
+          sandy.providers.experimental_contributeEnv("codex", () => [
             {
               name: "SHARED_TOKEN",
               value: "second",

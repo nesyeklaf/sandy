@@ -3,9 +3,9 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import type { Thread } from "@bb/domain";
-import { makeThread as makeThreadFixture } from "@bb/test-helpers/domain-fixtures";
-import { defaultAppSettings } from "@bb/domain";
+import type { Thread } from "@sandy/domain";
+import { makeThread as makeThreadFixture } from "@sandy/test-helpers/domain-fixtures";
+import { defaultAppSettings } from "@sandy/domain";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import { PaneContext, type PaneContextValue } from "./PaneContext";
@@ -72,8 +72,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 function makeThread(id: string, title: string): Thread {

@@ -9,7 +9,7 @@ import {
   type AppCommandContextKey,
   type AppCommandId,
   type AppDefaultKeybinding,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandContext,
@@ -72,8 +72,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => (testState.isDesktop ? {
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => (testState.isDesktop ? {
     setSplitNavigationEnabled: testState.setSplitNavigationEnabled,
   } : null),
 }));

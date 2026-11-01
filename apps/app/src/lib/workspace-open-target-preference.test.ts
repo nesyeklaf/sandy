@@ -1,4 +1,4 @@
-import type { WorkspaceOpenTarget } from "@bb/host-daemon-contract";
+import type { WorkspaceOpenTarget } from "@sandy/host-daemon-contract";
 import { describe, expect, it } from "vitest";
 import {
   resolvePreferredWorkspaceOpenFileTarget,

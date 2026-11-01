@@ -22,10 +22,10 @@ import {
   type AppKeybinding,
   type AppKeybindingOverrides,
   type ThreadListEntry,
-} from "@bb/domain";
-import type { ThreadSearchResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { ThreadSearchResponse } from "@sandy/server-contract";
 import type { ThreadArchiveFilter } from "@/lib/thread-lifecycle-filter";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { AppCommandProvider, useAppCommandHandler } from "./AppCommandProvider";
 import {
   removePluginSlotRegistrations,
@@ -41,7 +41,7 @@ import {
   setPluginThreadRowStatus,
 } from "@/lib/plugin-thread-row-status";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
-import { collectPluginAppRegistrations } from "@get-bb/plugin-sdk/internal/plugin-app-collector";
+import { collectPluginAppRegistrations } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 import { LocationProbe } from "@/test/location-probe";
 
 beforeAll(async () => {
@@ -196,8 +196,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("@/hooks/useHostDaemon", () => ({
@@ -677,7 +677,7 @@ describe("CommandPalette", () => {
       setPluginSlotRegistrations(
         "linear",
         collectPluginAppRegistrations({
-          __bbPluginApp: true,
+          __sandyPluginApp: true,
           setup(app) {
             app.commands.register({
               id: "open-issue",
@@ -1229,7 +1229,7 @@ describe("CommandPalette", () => {
     const match = rows[0].querySelector("mark");
     expectText(match, "Matching");
     expectClasses(match, "bg-[var(--sidebar-search-match)]", "text-foreground");
-    expectClasses(match?.closest(".bb-thread-title"), "text-foreground");
+    expectClasses(match?.closest(".sandy-thread-title"), "text-foreground");
     expect(
       within(rows[1]).getByRole("img", { name: "Unread thread succeeded" }),
     ).toBeTruthy();
@@ -1487,7 +1487,7 @@ describe("CommandPalette", () => {
     const briefs = thread("briefs", "Briefs & Action Cards", 10);
     const contentPlan = thread("content", "Content strategy and calendar", 20);
     const blogPost = thread("blog", "Plugins blog post", 30);
-    const mossEditor = thread("moss-editor", "Moss editor in bb", 40);
+    const mossEditor = thread("moss-editor", "Moss editor in sandy", 40);
     modeState.activeRecents = [
       sceneSeed,
       briefs,
@@ -1525,7 +1525,7 @@ describe("CommandPalette", () => {
             thread: briefs,
             matches: [
               message(
-                "Ready at https://github.com/brsbl/bb-plugins/pull/240",
+                "Ready at https://github.com/brsbl/sandy-plugins/pull/240",
                 "plugins",
                 4,
               ),
@@ -1535,7 +1535,7 @@ describe("CommandPalette", () => {
             thread: mossPlugins,
             matches: [
               message(
-                "Command: git reset --hard origin/bb/moss-viewer-plugin",
+                "Command: git reset --hard origin/sandy/moss-viewer-plugin",
                 "moss",
                 88,
               ),
@@ -1573,17 +1573,17 @@ describe("CommandPalette", () => {
       screen
         .getAllByRole("option")
         .slice(0, 2)
-        .map((option) => option.querySelector(".bb-thread-title")?.textContent)
+        .map((option) => option.querySelector(".sandy-thread-title")?.textContent)
         .sort(),
-    ).toEqual(["Moss editor in bb", "Moss plugins"]);
+    ).toEqual(["Moss editor in sandy", "Moss plugins"]);
 
     fireEvent.change(input, { target: { value: "moss plugins" } });
     const [first] = screen.getAllByRole("option");
     expect(first.getAttribute("aria-selected")).toBe("true");
-    expect(first.querySelector(".bb-thread-title")?.textContent).toBe(
+    expect(first.querySelector(".sandy-thread-title")?.textContent).toBe(
       "Moss plugins",
     );
-    expect(first.querySelector(".bb-thread-title mark")?.textContent).toBe(
+    expect(first.querySelector(".sandy-thread-title mark")?.textContent).toBe(
       "Moss plugins",
     );
     expectText(
@@ -1917,7 +1917,7 @@ describe("CommandPalette", () => {
       "matching",
     );
     const option = screen.getByRole("option");
-    expect(option.querySelector(".bb-thread-title")?.textContent).toBe(
+    expect(option.querySelector(".sandy-thread-title")?.textContent).toBe(
       "Title archived-message",
     );
     const excerpt = option.querySelector("[data-palette-thread-excerpt]");
@@ -2162,7 +2162,7 @@ describe("CommandPalette", () => {
       setPluginSlotRegistrations(
         "linear",
         collectPluginAppRegistrations({
-          __bbPluginApp: true,
+          __sandyPluginApp: true,
           setup(app) {
             const registration = {
               id: "open-issue",
@@ -2193,7 +2193,7 @@ describe("CommandPalette", () => {
     let available = true;
     const run = vi.fn();
     const registrations = collectPluginAppRegistrations({
-      __bbPluginApp: true,
+      __sandyPluginApp: true,
       setup(app) {
         app.commands.register({
           id: "open-issue",

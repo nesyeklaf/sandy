@@ -5,12 +5,12 @@ import {
   LazyPluginSourceCode,
 } from "@/components/plugin/lazy-plugin-renderers";
 import { ProviderIcon } from "@/components/plugin/ProviderIcon";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import type {
   ExperimentalInfoListRowProps,
   ExperimentalPanelTabIconProps,
   PluginSdkApp,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { useSyncExternalStore } from "react";
 import { PluginBranchPicker } from "@/components/plugin/PluginBranchPicker";
 import {
@@ -52,11 +52,11 @@ import { ThreadStatusGlyph } from "@/components/thread/ThreadStatusGlyph";
 import { PluginUrlLink } from "@/components/plugin/PluginUrlLink";
 import { ExperimentalFileLink } from "@/components/plugin/ExperimentalFileLink";
 import { usePluginId } from "@/components/plugin/plugin-context";
-import { useQuestionFormHost } from "@bb/shared-ui/question-form-host";
+import { useQuestionFormHost } from "@sandy/shared-ui/question-form-host";
 import { definePluginApp } from "./plugin-app-definition";
 import {
-  useBbContext,
-  useBbNavigate,
+  useSandyContext,
+  useSandyNavigate,
   usePluginCanOpenFileExternally,
   useComposer,
   useComposers,
@@ -98,7 +98,7 @@ import {
   experimental_THREAD_CONTEXT_SEGMENT_GROUPS,
   experimental_THREAD_INFO_ROW_GROUPS,
   experimental_THREAD_INFO_SECTION_GROUPS,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   ThreadActionsContextMenu,
   ThreadActionsMenu,
@@ -120,7 +120,7 @@ import {
   InfoList,
   InfoSection,
 } from "@/components/secondary-panel/info/info-list";
-import { InfoListRow } from "@bb/shared-ui/info-list-row";
+import { InfoListRow } from "@sandy/shared-ui/info-list-row";
 import { DetailRow } from "@/components/ui/detail-card";
 import { ThreadContextCardRow } from "@/components/plugin/ThreadContextCardRow";
 import { useThreadContextKind } from "@/components/plugin/PluginThreadContextCard";
@@ -158,10 +158,10 @@ export const pluginSdkAppImplementation = {
   definePluginApp,
   experimental_Icon: Icon,
   experimental_ProviderIcon: ProviderIcon,
-  useBbContext,
+  useSandyContext,
   experimental_usePluginId: usePluginId,
   experimental_useQuestionFormHost: useQuestionFormHost,
-  useBbNavigate,
+  useSandyNavigate,
   experimental_useCanOpenFileExternally: usePluginCanOpenFileExternally,
   experimental_useTabVisible: useTabVisible,
   experimental_useServers: useServerChoices,

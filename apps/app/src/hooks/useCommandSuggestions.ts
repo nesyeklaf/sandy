@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import type { PromptMentionCommandTrigger } from "@bb/domain";
-import type { ProviderCommand } from "@bb/server-contract";
+import type { PromptMentionCommandTrigger } from "@sandy/domain";
+import type { ProviderCommand } from "@sandy/server-contract";
 import {
   filterCommandSuggestions,
   toProviderCommandSuggestion,
   type ProviderCommandSuggestion,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { useProjectCommands } from "./queries/project-queries";
 
 interface UseCommandSuggestionsArgs {

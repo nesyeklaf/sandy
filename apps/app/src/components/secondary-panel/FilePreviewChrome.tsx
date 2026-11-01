@@ -3,16 +3,16 @@ import { SourceLoadingSkeleton } from "@/components/code/code-loading-skeletons"
 import {
   COARSE_POINTER_COMPACT_ICON_SIZE_SHRINK_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { TruncateStart } from "@bb/shared-ui/truncate-start";
+} from "@sandy/shared-ui/tooltip";
+import { TruncateStart } from "@sandy/shared-ui/truncate-start";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
 
 export const FILE_PREVIEW_WRAPPER_STYLE = {

@@ -10,7 +10,7 @@ import {
   experimental_readCliVersion as readCliVersion,
   experimental_resolveExecutablePath as resolveExecutablePath,
   experimental_versionFrom as versionFrom,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { z } from "zod";
 import { fetchChatGpt } from "../ai/chatgpt-fetch.js";
 import {
@@ -273,8 +273,8 @@ export async function getCodexProviderUsage(): Promise<ProviderUsageResult> {
     const headers = new Headers({
       Authorization: `Bearer ${credentials.accessToken}`,
       "chatgpt-account-id": credentials.accountId,
-      originator: "bb",
-      "User-Agent": "bb-provider-codex",
+      originator: "sandy",
+      "User-Agent": "sandy-provider-codex",
       Accept: "application/json",
     });
     if (credentials.isFedrampAccount) headers.set("X-OpenAI-Fedramp", "true");

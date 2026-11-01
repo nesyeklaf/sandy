@@ -1,15 +1,15 @@
-declare const __BB_PLUGIN_ID__: string | undefined;
+declare const __SANDY_PLUGIN_ID__: string | undefined;
 
 export function usePortalScopeProps(): {
-  "data-bb-portaled-overlay": "";
-  "data-bb-plugin-root"?: "";
-  "data-bb-plugin"?: string;
+  "data-sandy-portaled-overlay": "";
+  "data-sandy-plugin-root"?: "";
+  "data-sandy-plugin"?: string;
 } {
   const pluginId =
-    typeof __BB_PLUGIN_ID__ === "string" ? __BB_PLUGIN_ID__ : undefined;
+    typeof __SANDY_PLUGIN_ID__ === "string" ? __SANDY_PLUGIN_ID__ : undefined;
   return {
-    "data-bb-portaled-overlay": "",
-    "data-bb-plugin-root": "",
-    ...(pluginId !== undefined ? { "data-bb-plugin": pluginId } : {}),
+    "data-sandy-portaled-overlay": "",
+    "data-sandy-plugin-root": "",
+    ...(pluginId !== undefined ? { "data-sandy-plugin": pluginId } : {}),
   };
 }

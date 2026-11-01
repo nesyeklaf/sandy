@@ -5,15 +5,15 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { ThreadQueuedMessage } from "@bb/domain";
+import type { ThreadQueuedMessage } from "@sandy/domain";
 import type {
   SendQueuedMessageMode,
   SendQueuedMessageResponse,
   ThreadQueuedMessageListResponse,
   UpdateQueuedMessageRequest,
-} from "@bb/server-contract";
-import type { AppCreateThreadRequest } from "@bb/client-core";
-import { BbHttpError, sdk } from "@/lib/sdk";
+} from "@sandy/server-contract";
+import type { AppCreateThreadRequest } from "@sandy/client-core";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 import { wsManager } from "@/lib/ws";
 import type { QueuedMessageReorderRequest } from "@/lib/queued-message-reorder";
 import type {
@@ -81,7 +81,7 @@ interface SetThreadQueuedMessageGroupBoundaryMutationRequest {
   id: string;
 }
 
-function getHttpErrorBodyMessage(error: BbHttpError): string | null {
+function getHttpErrorBodyMessage(error: SandyHttpError): string | null {
   const body = error.body;
   if (
     typeof body !== "object" ||
@@ -96,7 +96,7 @@ function getHttpErrorBodyMessage(error: BbHttpError): string | null {
 
 function isQueuedMessageNotFoundError(error: unknown): boolean {
   return (
-    error instanceof BbHttpError &&
+    error instanceof SandyHttpError &&
     error.status === 404 &&
     error.code === "invalid_request" &&
     getHttpErrorBodyMessage(error) === "Queued message not found"

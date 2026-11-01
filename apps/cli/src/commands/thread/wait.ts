@@ -1,13 +1,13 @@
 import { Command } from "commander";
-import { threadStatusSchema, threadStatusValues } from "@bb/domain";
+import { threadStatusSchema, threadStatusValues } from "@sandy/domain";
 import {
   DEFAULT_THREAD_WAIT_POLL_INTERVAL_MS,
   type ThreadWaitTarget,
   ThreadWaitTimeoutError,
   ThreadWaitUnreachableError,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import { action, CliExitError } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { durationHelp } from "../../duration.js";
 import { outputJson, requireThreadId } from "../helpers.js";
 import {
@@ -52,7 +52,7 @@ export function registerWaitCommand(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string | undefined, opts: ThreadWaitCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const threadId = requireThreadId(id);
         const target = parseThreadWaitTarget(opts);
         const timeoutMs = parseThreadWaitTimeoutMs(opts.timeout);

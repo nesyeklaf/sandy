@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { ThreadTimelineResponse } from "@bb/server-contract";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
 import { threadTimelineQueryKey } from "../queries/query-keys";
 
 const unseenTimelineSequencesByClient = new WeakMap<

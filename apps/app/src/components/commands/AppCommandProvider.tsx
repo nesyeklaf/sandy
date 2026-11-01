@@ -20,10 +20,10 @@ import {
   type AppCommandContextKey,
   type KeyboardCommandId,
   type AppShortcut,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { usePluginCommandBindings } from "@/hooks/usePluginCommandBindings";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 import {
   browserPlatform,
   isEditableKeyboardTarget,
@@ -108,7 +108,7 @@ export function AppCommandProvider({ children }: { children: ReactNode }) {
   const showKeyboardHints =
     systemConfig.data?.generalSettings?.showKeyboardHints ??
     defaultAppSettings.showKeyboardHints;
-  const isDesktop = getBbDesktopInfo() !== null;
+  const isDesktop = getSandyDesktopInfo() !== null;
   const [isShortcutHintModifierHeld, setIsShortcutHintModifierHeld] =
     useState(false);
   const modifierHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -218,7 +218,7 @@ export function AppCommandProvider({ children }: { children: ReactNode }) {
       }
     }
     if (key === "splitActive") {
-      getBbDesktopInfo()?.setSplitNavigationEnabled?.(sources.size > 0);
+      getSandyDesktopInfo()?.setSplitNavigationEnabled?.(sources.size > 0);
     }
   }, []);
 
@@ -405,7 +405,7 @@ export function AppCommandProvider({ children }: { children: ReactNode }) {
   }, [getShortcutCommand, handleKeyboardEvent]);
 
   useEffect(() => {
-    const desktop = getBbDesktopInfo();
+    const desktop = getSandyDesktopInfo();
     if (!desktop?.onAppCommand) return;
     return desktop.onAppCommand((command) => {
       dispatch(command, null);

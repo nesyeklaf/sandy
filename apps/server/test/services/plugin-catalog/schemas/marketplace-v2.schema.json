@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "BB plugin marketplace manifest version 2",
+  "title": "SANDY plugin marketplace manifest version 2",
   "description": "This document lists plugins and discovery data.",
   "type": "object",
   "additionalProperties": false,

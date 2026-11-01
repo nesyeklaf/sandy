@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAppKeybindingOverrides } from "@bb/db";
+import { getAppKeybindingOverrides } from "@sandy/db";
 import {
   PANE_FOCUS_APP_COMMAND_IDS,
   THREAD_JUMP_APP_COMMAND_IDS,
@@ -7,8 +7,8 @@ import {
   appKeybindingOverridesSchema,
   isAppKeybindingAvailableForClient,
   matchesAppShortcut,
-} from "@bb/domain";
-import { systemConfigResponseSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { systemConfigResponseSchema } from "@sandy/server-contract";
 import { DEFAULT_APP_KEYBINDINGS } from "../../src/services/system/app-keybindings.js";
 import { readJson } from "../helpers/json.js";
 import { withTestHarness } from "../helpers/test-app.js";
@@ -944,7 +944,7 @@ describe("app keybindings", () => {
       const response = await harness.app.request("/api/v1/system/config");
       const config = systemConfigResponseSchema.parse(await readJson(response));
       expect(config.keybindingOverrides).toEqual([
-        { command: "plugin:bb--git/toggle-diff", shortcut },
+        { command: "plugin:sandy--git/toggle-diff", shortcut },
       ]);
 
       harness.db.$client
@@ -957,7 +957,7 @@ describe("app keybindings", () => {
           "keybindingOverrides",
           JSON.stringify([
             { command: "diff.toggle", shortcut },
-            { command: "plugin:bb--git/toggle-diff", shortcut: null },
+            { command: "plugin:sandy--git/toggle-diff", shortcut: null },
           ]),
           Date.now(),
         );
@@ -965,7 +965,7 @@ describe("app keybindings", () => {
         await readJson(await harness.app.request("/api/v1/system/config")),
       );
       expect(explicit.keybindingOverrides).toEqual([
-        { command: "plugin:bb--git/toggle-diff", shortcut: null },
+        { command: "plugin:sandy--git/toggle-diff", shortcut: null },
       ]);
     });
     expect(

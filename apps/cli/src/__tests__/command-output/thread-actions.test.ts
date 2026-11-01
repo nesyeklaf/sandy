@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import * as domain from "@bb/domain";
+import * as domain from "@sandy/domain";
 import {
   setupCommandOutputTestEnvironment,
   collectLogLines,
@@ -16,13 +16,13 @@ interface RetryRequest {
   json: { turnRequestId: string | null; sendAt: number | null; reason: string };
 }
 
-describe("bb thread action command output", () => {
+describe("sandy thread action command output", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
     registerThreadCommands(program, () => "http://server");
 
-  it("bb thread archive sends the thread id from args", async () => {
+  it("sandy thread archive sends the thread id from args", async () => {
     const archivePost = vi.fn(async () => ({
       ok: true,
       archivedThreadIds: ["thread-archive-1"],
@@ -39,7 +39,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread archive reports related threads when cascading", async () => {
+  it("sandy thread archive reports related threads when cascading", async () => {
     const archivePost = vi.fn(async () => ({
       ok: true,
       archivedThreadIds: ["thread-child-1", "thread-archive-1"],
@@ -56,8 +56,8 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread archive --self resolves from BB_THREAD_ID", async () => {
-    vi.stubEnv("BB_THREAD_ID", "thread-archive-2");
+  it("sandy thread archive --self resolves from SANDY_THREAD_ID", async () => {
+    vi.stubEnv("SANDY_THREAD_ID", "thread-archive-2");
     const archivePost = vi.fn(async () => ({
       ok: true,
       archivedThreadIds: ["thread-archive-2"],
@@ -71,7 +71,7 @@ describe("bb thread action command output", () => {
     });
   });
 
-  it("bb thread archive prefixes failures with thread context", async () => {
+  it("sandy thread archive prefixes failures with thread context", async () => {
     const archivePost = vi.fn(async () => {
       throw new Error("HTTP 404: missing");
     });
@@ -89,8 +89,8 @@ describe("bb thread action command output", () => {
     });
   });
 
-  it("bb thread unarchive --self resolves from BB_THREAD_ID", async () => {
-    vi.stubEnv("BB_THREAD_ID", "thread-unarchive-1");
+  it("sandy thread unarchive --self resolves from SANDY_THREAD_ID", async () => {
+    vi.stubEnv("SANDY_THREAD_ID", "thread-unarchive-1");
     const unarchivePost = vi.fn(async () => ({ ok: true }));
     stubServerApi({ "v1.threads.:id.unarchive.$post": unarchivePost });
 
@@ -104,7 +104,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread edit-message targets the latest editable message by default", async () => {
+  it("sandy thread edit-message targets the latest editable message by default", async () => {
     const submitEdit = vi.fn(async () => ({
       ok: true,
       operationId: "edit-op-server",
@@ -131,8 +131,8 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread edit-message preserves an agent caller when targeting another thread", async () => {
-    vi.stubEnv("BB_THREAD_ID", "thread-agent-caller");
+  it("sandy thread edit-message preserves an agent caller when targeting another thread", async () => {
+    vi.stubEnv("SANDY_THREAD_ID", "thread-agent-caller");
     const submitEdit = vi.fn(async () => ({
       ok: true,
       operationId: "edit-op-server",
@@ -163,8 +163,8 @@ describe("bb thread action command output", () => {
     });
   });
 
-  it("bb thread edit-message accepts an explicit stale-edit guard", async () => {
-    vi.stubEnv("BB_THREAD_ID", "thread-edit-self");
+  it("sandy thread edit-message accepts an explicit stale-edit guard", async () => {
+    vi.stubEnv("SANDY_THREAD_ID", "thread-edit-self");
     const submitEdit = vi.fn(async () => ({
       ok: true,
       operationId: "edit-op-server",
@@ -201,7 +201,7 @@ describe("bb thread action command output", () => {
     });
   });
 
-  it("bb thread edit-message rejects a partially numeric request sequence", async () => {
+  it("sandy thread edit-message rejects a partially numeric request sequence", async () => {
     const submitEdit = vi.fn();
     stubServerApi({ "v1.threads.:id.edit-message.$post": submitEdit });
 
@@ -226,7 +226,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread pin sends the thread id from args", async () => {
+  it("sandy thread pin sends the thread id from args", async () => {
     const pinnedThread = fixtures.makeThread({
       id: "thread-pin-1",
       projectId: "proj-1",
@@ -246,8 +246,8 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread unpin --self resolves from BB_THREAD_ID", async () => {
-    vi.stubEnv("BB_THREAD_ID", "thread-unpin-1");
+  it("sandy thread unpin --self resolves from SANDY_THREAD_ID", async () => {
+    vi.stubEnv("SANDY_THREAD_ID", "thread-unpin-1");
     const unpinnedThread = fixtures.makeThread({
       id: "thread-unpin-1",
       projectId: "proj-1",
@@ -267,7 +267,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread delete prompts before deleting", async () => {
+  it("sandy thread delete prompts before deleting", async () => {
     const thread: domain.Thread = fixtures.makeThread({
       id: "thread-delete-1",
       projectId: "proj-1",
@@ -300,7 +300,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread delete cancels when confirmation is declined", async () => {
+  it("sandy thread delete cancels when confirmation is declined", async () => {
     const thread: domain.Thread = fixtures.makeThread({
       id: "thread-delete-2",
       projectId: "proj-1",
@@ -325,7 +325,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread delete --yes skips confirmation (requires explicit id)", async () => {
+  it("sandy thread delete --yes skips confirmation (requires explicit id)", async () => {
     const thread: domain.Thread = fixtures.makeThread({
       id: "thread-delete-3",
       projectId: "proj-1",
@@ -353,7 +353,7 @@ describe("bb thread action command output", () => {
     });
   });
 
-  it("bb thread delete forwards explicit child-thread confirmation", async () => {
+  it("sandy thread delete forwards explicit child-thread confirmation", async () => {
     const thread: domain.Thread = fixtures.makeThread({
       id: "thread-delete-children",
       projectId: "proj-1",
@@ -393,7 +393,7 @@ describe("bb thread action command output", () => {
     ["cancel-plan", "plan.cancel", "exited Plan mode"],
     ["clear-goal", "goal.clear", "cleared its Goal"],
   ])(
-    "bb thread %s posts its action without reading the thread first",
+    "sandy thread %s posts its action without reading the thread first",
     async (command, route, output) => {
       const post = vi.fn(async () => ({ ok: true }));
       stubServerApi({ [`v1.threads.:id.${route}.$post`]: post });
@@ -408,7 +408,56 @@ describe("bb thread action command output", () => {
     },
   );
 
-  it("bb thread retry defaults the turn and the reason at the boundary", async () => {
+  it("sandy thread move-directory puts the path and reports the new directory", async () => {
+    const put = vi.fn(async () => ({
+      changed: true,
+      path: "/work/next",
+      projectId: "proj_a",
+    }));
+    stubServerApi({ "v1.threads.:id.environment-directory.$put": put });
+
+    await runCommand(
+      ["thread", "move-directory", "thread-move", "--path", "/work/next"],
+      register,
+    );
+
+    expect(put).toHaveBeenCalledWith({
+      param: { id: "thread-move" },
+      json: { path: "/work/next" },
+    });
+    expect(collectLogLines(vi.mocked(console.log))).toContain(
+      "Thread thread-move now runs in /work/next (project proj_a)",
+    );
+  });
+
+  it("sandy thread move-directory --project sends the target project", async () => {
+    const put = vi.fn(async () => ({
+      changed: true,
+      path: "/work/next",
+      projectId: "proj_b",
+    }));
+    stubServerApi({ "v1.threads.:id.environment-directory.$put": put });
+
+    await runCommand(
+      [
+        "thread",
+        "move-directory",
+        "thread-move",
+        "--path",
+        "/work/next",
+        "--project",
+        "proj_b",
+      ],
+      register,
+    );
+
+    expect(put).toHaveBeenCalledWith({
+      param: { id: "thread-move" },
+      json: { path: "/work/next", projectId: "proj_b" },
+    });
+  });
+
+  it("sandy thread retry defaults the turn and the reason at the boundary", async () => {
     const retryPost = vi.fn(async () => ({
       ok: true,
       delivery: "sent",
@@ -430,7 +479,7 @@ describe("bb thread action command output", () => {
     );
   });
 
-  it("bb thread retry names the turn, the instant and the reason when asked", async () => {
+  it("sandy thread retry names the turn, the instant and the reason when asked", async () => {
     const retryPost = vi.fn(async (_request: RetryRequest) => ({
       ok: true,
       delivery: "queued",
@@ -461,7 +510,7 @@ describe("bb thread action command output", () => {
     expect(call?.param).toEqual({ id: "thread-retry-2" });
     expect(call?.json.turnRequestId).toBe("creq_3333333333");
     expect(call?.json.reason).toBe("Rate limited");
-    // `--send-at` is the same grammar `bb thread tell` uses: a duration from
+    // `--send-at` is the same grammar `sandy thread tell` uses: a duration from
     // now becomes an absolute instant at the boundary.
     expect(call?.json.sendAt).toBeGreaterThan(Date.now());
     expect(collectLogLines(vi.mocked(console.log)).join("\n")).toContain(

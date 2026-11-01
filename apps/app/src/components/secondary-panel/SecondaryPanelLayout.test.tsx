@@ -11,7 +11,7 @@ import {
 import { createStore, Provider, useSetAtom } from "jotai";
 import { RESET } from "jotai/utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { dispatchBrowserViewBoundsSync } from "@/lib/browser-view-bounds-sync";
 import { setCompactSidebarDrawerShowing } from "@/components/ui/sidebar-mobile-drawer-visibility";
 import {

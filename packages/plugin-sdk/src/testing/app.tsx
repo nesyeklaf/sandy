@@ -1,5 +1,5 @@
 import { experimental_PluginRpcCallError } from "../rpc-contract.js";
-import { invalidateTags, pluginTagScope } from "@bb/query-tags";
+import { invalidateTags, pluginTagScope } from "@sandy/query-tags";
 import { QueryClient } from "@tanstack/react-query";
 import {
   createRpcQueryHooks,
@@ -26,8 +26,8 @@ import {
 import { act, render, type RenderResult } from "@testing-library/react";
 import {
   type ExperimentalPageTitle,
-  type BbContext,
-  type BbNavigate,
+  type SandyContext,
+  type SandyNavigate,
   type BranchesState,
   type ComposerCustomization,
   type ComposerAttachment,
@@ -95,7 +95,7 @@ import {
   type PluginSettingsState,
   type PluginSidebarFooterActionRegistration,
   type PluginSidebarThreadActions,
-  type PluginBrowserBbSdk,
+  type PluginBrowserSandySdk,
   type PluginEnvironmentProvidersState,
   type PluginSidebarSplitLayout,
   type PluginSidebarThreadDraftState,
@@ -157,7 +157,7 @@ import {
   type DiffProps,
   type SourceCodeProps,
   type JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { isComposerDraftEmpty } from "../internal/composer-view.js";
 import {
   appendComposerDraft,
@@ -180,19 +180,19 @@ import {
 } from "../internal/plugin-app-collector.js";
 
 /**
- * `@get-bb/plugin-sdk/testing/app` — the frontend plugin test harness. Tests a
- * plugin's `app.tsx` source directly under vitest + jsdom, without the bb
+ * `@sandy-sdk/plugin-sdk/testing/app` — the frontend plugin test harness. Tests a
+ * plugin's `app.tsx` source directly under vitest + jsdom, without the sandy
  * host or the esbuild bundle:
  *
- * - {@link installTestPluginRuntime} fills `globalThis.__bbPluginRuntime.
- *   pluginSdkApp` with a test implementation of the `@get-bb/plugin-sdk/app`
- *   surface (the same seam `bb plugin build` shims to the real app). The
- *   `@get-bb/plugin-sdk/app` exports look the runtime up when they are called
+ * - {@link installTestPluginRuntime} fills `globalThis.__sandyPluginRuntime.
+ *   pluginSdkApp` with a test implementation of the `@sandy-sdk/plugin-sdk/app`
+ *   surface (the same seam `sandy plugin build` shims to the real app). The
+ *   `@sandy-sdk/plugin-sdk/app` exports look the runtime up when they are called
  *   or rendered, so import order does not matter: install the runtime any time
  *   before the first hook runs ({@link loadPluginApp} and {@link renderSlot}
  *   install it for you).
  * - {@link loadPluginApp} runs the definition's setup against a validating
- *   collector (ported from the BB app's interpreter, same error messages)
+ *   collector (ported from the SANDY app's interpreter, same error messages)
  *   and returns the typed slot registrations.
  * - {@link renderSlot} mounts one registration's component with mock hook
  *   backends: rpc as a method→handler map with a call log, realtime as a
@@ -229,12 +229,12 @@ type PluginSdkFakeTree<T> = {
  * methods the slot calls; a call to anything else throws with the missing
  * dot-path so the test fails loudly instead of returning undefined.
  */
-export type PluginSdkTestFakes = PluginSdkFakeTree<PluginBrowserBbSdk>;
+export type PluginSdkTestFakes = PluginSdkFakeTree<PluginBrowserSandySdk>;
 export type NavigateCall =
   | {
       method: "toThread";
       threadId: string;
-      options?: Parameters<BbNavigate["toThread"]>[1];
+      options?: Parameters<SandyNavigate["toThread"]>[1];
     }
   | { method: "toProject"; projectId: string }
   | {
@@ -244,7 +244,7 @@ export type NavigateCall =
     }
   | {
       method: "toCompose";
-      options?: Parameters<BbNavigate["toCompose"]>[0];
+      options?: Parameters<SandyNavigate["toCompose"]>[0];
     }
   | { method: "openUrl"; url: string }
   | {
@@ -257,7 +257,7 @@ export type NavigateCall =
     }
   | {
       method: "experimental_openTerminal";
-      options: Parameters<BbNavigate["experimental_openTerminal"]>[0];
+      options: Parameters<SandyNavigate["experimental_openTerminal"]>[0];
     };
 
 interface RetiredActionTabOpenOptions {
@@ -351,10 +351,10 @@ interface SlotEnv {
   realtimeHandlers: Map<string, Set<(payload: unknown) => void>>;
   realtimeConnection: TestRealtimeConnectionStore;
   settingsState: PluginSettingsState;
-  bbContext: BbContext;
+  sandyContext: SandyContext;
   pluginId: string;
   questionFormHost: ExperimentalQuestionFormHost;
-  navigate: BbNavigate;
+  navigate: SandyNavigate;
   navigateCalls: NavigateCall[];
   appPanel: ExperimentalPanelController;
   panelTabs: ExperimentalPanelTabs;
@@ -378,7 +378,7 @@ interface SlotEnv {
   sidebarSplitLayout: PluginSidebarSplitLayout | null;
   composerRenderer: ExperimentalComposerRendererApi | null;
   environmentProviders: PluginEnvironmentProvidersState;
-  sdk: PluginBrowserBbSdk;
+  sdk: PluginBrowserSandySdk;
   sdkCalls: SdkCall[];
   providers: PluginProvidersState;
   codeTheme: PluginCodeThemeState;
@@ -535,8 +535,8 @@ function createSdkFakeNode(
 function createSdkFake(
   fakes: PluginSdkTestFakes,
   calls: SdkCall[],
-): PluginBrowserBbSdk {
-  return createSdkFakeNode(fakes, "", calls) as PluginBrowserBbSdk;
+): PluginBrowserSandySdk {
+  return createSdkFakeNode(fakes, "", calls) as PluginBrowserSandySdk;
 }
 
 function TestThreadTitle({ threadId }: { threadId: string }) {
@@ -718,7 +718,7 @@ function useTestMenuOpenState({
   };
 }
 
-const TEST_TRIGGER_HOST_CLASS = "bb-test-thread-actions-trigger";
+const TEST_TRIGGER_HOST_CLASS = "sandy-test-thread-actions-trigger";
 
 function TestThreadActionsMenu({
   thread,
@@ -744,7 +744,7 @@ function TestThreadActionsMenu({
     }
   });
   return (
-    <span data-testid="bb-thread-actions-menu" data-thread-id={thread.id}>
+    <span data-testid="sandy-thread-actions-menu" data-thread-id={thread.id}>
       {trigger({
         ref: triggerElement,
         type: "button",
@@ -794,7 +794,7 @@ function TestThreadActionsContextMenu({
   };
   return (
     <div
-      data-testid="bb-thread-actions-context-menu"
+      data-testid="sandy-thread-actions-context-menu"
       data-thread-id={thread.id}
       data-selection-thread-ids={
         selection === null
@@ -838,29 +838,29 @@ function useSlotEnv(hook: string): SlotEnv {
   const env = useContext(SlotEnvContext);
   if (!env) {
     throw new Error(
-      `${hook}() needs the test slot environment — mount the component via renderSlot(...) from @get-bb/plugin-sdk/testing/app`,
+      `${hook}() needs the test slot environment — mount the component via renderSlot(...) from @sandy-sdk/plugin-sdk/testing/app`,
     );
   }
   return env;
 }
 
 // ---------------------------------------------------------------------------
-// The fake @get-bb/plugin-sdk/app runtime.
+// The fake @sandy-sdk/plugin-sdk/app runtime.
 // ---------------------------------------------------------------------------
 
-/** Same shape (and checks) as the BB app's real definePluginApp. */
+/** Same shape (and checks) as the SANDY app's real definePluginApp. */
 function definePluginApp(setup: PluginAppSetup): PluginAppDefinition {
   if (typeof setup !== "function") {
     throw new Error("definePluginApp expects a setup function");
   }
-  return Object.freeze({ __bbPluginApp: true as const, setup });
+  return Object.freeze({ __sandyPluginApp: true as const, setup });
 }
 
 function isPluginAppDefinition(value: unknown): value is PluginAppDefinition {
   return (
     typeof value === "object" &&
     value !== null &&
-    (value as { __bbPluginApp?: unknown }).__bbPluginApp === true &&
+    (value as { __sandyPluginApp?: unknown }).__sandyPluginApp === true &&
     typeof (value as { setup?: unknown }).setup === "function"
   );
 }
@@ -870,7 +870,7 @@ function isPluginAppDefinition(value: unknown): value is PluginAppDefinition {
  * records every public prop as a data attribute so plugin tests can assert
  * what their slot component passed without the real chat engine.
  * `leadingContent` renders inside the stub; each `messageActions` entry
- * renders as a button (`data-testid="bb-thread-chat-action-<id>"`) that
+ * renders as a button (`data-testid="sandy-thread-chat-action-<id>"`) that
  * invokes its `run` with a synthetic assistant message reference, so plugin
  * tests can drive the action without the real timeline.
  */
@@ -886,7 +886,7 @@ function TestThreadChat({
 }: ThreadChatProps) {
   return (
     <div
-      data-testid="bb-thread-chat"
+      data-testid="sandy-thread-chat"
       data-thread-id={threadId}
       data-variant={variant}
       data-layout={layout}
@@ -898,14 +898,14 @@ function TestThreadChat({
       className={className}
     >
       {leadingContent === undefined ? null : (
-        <div data-testid="bb-thread-chat-leading-content">{leadingContent}</div>
+        <div data-testid="sandy-thread-chat-leading-content">{leadingContent}</div>
       )}
       ThreadChat stub ({threadId})
       {(messageActions ?? []).map((action) => (
         <button
           key={action.id}
           type="button"
-          data-testid={`bb-thread-chat-action-${action.id}`}
+          data-testid={`sandy-thread-chat-action-${action.id}`}
           data-roles={action.roles === undefined ? "" : action.roles.join(" ")}
           onClick={() => {
             void action.run({
@@ -932,7 +932,7 @@ function TestThreadChat({
  */
 function TestMarkdown({ content, className }: MarkdownProps) {
   return (
-    <div data-testid="bb-markdown" className={className}>
+    <div data-testid="sandy-markdown" className={className}>
       {content}
     </div>
   );
@@ -1053,7 +1053,7 @@ function TestNewThreadComposer({
   const [text, setText] = useState(initialPrompt ?? "");
   return (
     <div
-      data-testid="bb-new-thread-composer"
+      data-testid="sandy-new-thread-composer"
       data-default-project-id={defaultProjectId ?? ""}
       data-default-provider-id={defaultProviderId ?? ""}
       data-default-model={defaultModel ?? ""}
@@ -1071,14 +1071,14 @@ function TestNewThreadComposer({
       className={className}
     >
       <textarea
-        data-testid="bb-new-thread-composer-input"
+        data-testid="sandy-new-thread-composer-input"
         placeholder={placeholder}
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
       <button
         type="button"
-        data-testid="bb-new-thread-composer-submit"
+        data-testid="sandy-new-thread-composer-submit"
         onClick={() => {
           // Untouched submits echo the `default*` seeds back, mirroring the
           // real composer's round-trip guarantee so plugin tests can cover
@@ -1138,7 +1138,7 @@ function TestProviderModelPicker({
 
   return (
     <div
-      data-testid="bb-provider-model-picker"
+      data-testid="sandy-provider-model-picker"
       data-routing-kind={routing?.kind ?? "primary"}
       data-routing-id={
         routing === undefined
@@ -1221,7 +1221,7 @@ function TestBranchPicker({
   const inert = hostId === null || projectId === null || disabled === true;
   return (
     <div
-      data-testid="bb-branch-picker"
+      data-testid="sandy-branch-picker"
       data-host-id={hostId ?? ""}
       data-project-id={projectId ?? ""}
       data-disabled={inert ? "true" : "false"}
@@ -1258,7 +1258,7 @@ function TestPermissionModePicker({
       aria-label="Permission mode"
       value={value}
       disabled={disabled}
-      data-testid="bb-permission-mode-picker"
+      data-testid="sandy-permission-mode-picker"
       data-provider-id={providerId}
       data-align={align}
       data-routing-kind={routing?.kind ?? "primary"}
@@ -1326,6 +1326,8 @@ const TEST_COMPOSER_CONTRIBUTIONS: ExperimentalComposerContributions = {
   popups: [],
   plusMenuItems: [],
   sendMenuItems: [],
+  menus: [],
+  runMenuItem: () => {},
   Actions: TestComposerPluginActions,
   Popup: TestComposerPluginPopup,
   MenuEntry: TestComposerMenuEntry,
@@ -1457,7 +1459,7 @@ function TestSourceCode({
 }: SourceCodeProps) {
   return (
     <pre
-      data-testid="bb-source-code"
+      data-testid="sandy-source-code"
       data-path={path}
       data-overflow={overflow}
       data-highlighted-lines={
@@ -1487,7 +1489,7 @@ function TestDiff({
 }: DiffProps) {
   return (
     <pre
-      data-testid="bb-diff"
+      data-testid="sandy-diff"
       data-path={path}
       data-view={view}
       data-overflow={overflow}
@@ -1511,7 +1513,7 @@ function TestInfoSection({
   children,
 }: ExperimentalInfoSectionProps) {
   return (
-    <section aria-label={label} data-testid="bb-info-section">
+    <section aria-label={label} data-testid="sandy-info-section">
       <h3>
         {label}
         {count === undefined ? null : <span>{count}</span>}
@@ -1526,7 +1528,7 @@ function TestInfoSection({
 /** Stand-in for the Info tab label and value row. */
 function TestDetailRow({ label, icon, children }: ExperimentalDetailRowProps) {
   return (
-    <div data-testid="bb-detail-row" data-icon={icon}>
+    <div data-testid="sandy-detail-row" data-icon={icon}>
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>
@@ -1558,7 +1560,7 @@ function TestThreadContextCardRow(
     props.onClick !== undefined ? (
       <button
         type="button"
-        data-testid="bb-thread-context-card-row"
+        data-testid="sandy-thread-context-card-row"
         data-icon={icon}
         title={title}
         disabled={disabled}
@@ -1568,7 +1570,7 @@ function TestThreadContextCardRow(
       </button>
     ) : (
       <div
-        data-testid="bb-thread-context-card-row"
+        data-testid="sandy-thread-context-card-row"
         data-icon={icon}
         title={title}
       >
@@ -1692,8 +1694,8 @@ const testPluginSdkApp = {
   experimental_useThreadContextKind(): ExperimentalThreadContextKind {
     return useSlotEnv("experimental_useThreadContextKind").threadContextKind;
   },
-  useBbContext(): BbContext {
-    return useSlotEnv("useBbContext").bbContext;
+  useSandyContext(): SandyContext {
+    return useSlotEnv("useSandyContext").sandyContext;
   },
   experimental_usePluginId(): string {
     return useSlotEnv("experimental_usePluginId").pluginId;
@@ -1701,8 +1703,8 @@ const testPluginSdkApp = {
   experimental_useQuestionFormHost(): ExperimentalQuestionFormHost {
     return useSlotEnv("experimental_useQuestionFormHost").questionFormHost;
   },
-  useBbNavigate(): BbNavigate {
-    return useSlotEnv("useBbNavigate").navigate;
+  useSandyNavigate(): SandyNavigate {
+    return useSlotEnv("useSandyNavigate").navigate;
   },
   experimental_useAppPanel(): ExperimentalPanelController {
     return useSlotEnv("experimental_useAppPanel").appPanel;
@@ -1712,7 +1714,7 @@ const testPluginSdkApp = {
   },
   experimental_useFixedTabTarget<Target extends JsonValue>(
     tab:
-      | import("@get-bb/plugin-sdk").ExperimentalTabTargetReference<Target>
+      | import("@sandy-sdk/plugin-sdk").ExperimentalTabTargetReference<Target>
       | ExperimentalPluginFixedTabReference<Target>,
   ): ExperimentalFixedTabTargetState<Target> | null {
     const store = useSlotEnv("experimental_useFixedTabTarget").fixedTabTarget;
@@ -1982,7 +1984,7 @@ const testPluginSdkApp = {
   useEnvironmentProviders(): PluginEnvironmentProvidersState {
     return useSlotEnv("useEnvironmentProviders").environmentProviders;
   },
-  useSdk(): PluginBrowserBbSdk {
+  useSdk(): PluginBrowserSandySdk {
     return useSlotEnv("useSdk").sdk;
   },
   experimental_useComposerRenderer(): ExperimentalComposerRendererApi {
@@ -2038,21 +2040,21 @@ const testPluginSdkApp = {
 } satisfies PluginSdkApp;
 
 interface PluginRuntimeHost {
-  __bbPluginRuntime?: { pluginSdkApp?: unknown; react?: unknown };
+  __sandyPluginRuntime?: { pluginSdkApp?: unknown; react?: unknown };
 }
 
 /**
- * Install the test runtime at `globalThis.__bbPluginRuntime.pluginSdkApp`,
- * plus the React the `@get-bb/plugin-sdk/app` components render through.
+ * Install the test runtime at `globalThis.__sandyPluginRuntime.pluginSdkApp`,
+ * plus the React the `@sandy-sdk/plugin-sdk/app` components render through.
  * Idempotent per module instance. Call it before the first SDK hook runs or
  * SDK component renders; when the plugin's modules are imported does not
  * matter.
  */
 export function installTestPluginRuntime(): void {
   const host = globalThis as PluginRuntimeHost;
-  host.__bbPluginRuntime = {
-    ...host.__bbPluginRuntime,
-    react: host.__bbPluginRuntime?.react ?? React,
+  host.__sandyPluginRuntime = {
+    ...host.__sandyPluginRuntime,
+    react: host.__sandyPluginRuntime?.react ?? React,
     pluginSdkApp: testPluginSdkApp,
   };
 }
@@ -2123,7 +2125,7 @@ export async function loadPluginApp(
     : (resolved as PluginAppModule).default;
   if (!isPluginAppDefinition(definition)) {
     throw new Error(
-      "the bundle's default export is not definePluginApp(...) from @get-bb/plugin-sdk/app",
+      "the bundle's default export is not definePluginApp(...) from @sandy-sdk/plugin-sdk/app",
     );
   }
   return collectPluginAppRegistrations(definition);
@@ -2193,13 +2195,13 @@ export async function mountPluginContentScripts(
     if (controller.signal.aborted) return;
     if (typeof threadId !== "string" || threadId.trim().length === 0) {
       console.warn(
-        `bb plugin "${options.pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
+        `sandy plugin "${options.pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
       );
       return;
     }
     const normalizedThreadId = threadId.trim();
     const normalizedStatus = normalizePluginThreadRowStatus(status, (reason) =>
-      console.warn(`bb plugin "${options.pluginId}": ${reason}`),
+      console.warn(`sandy plugin "${options.pluginId}": ${reason}`),
     );
     if (normalizedStatus === undefined) return;
     const recordedStatus =
@@ -2304,7 +2306,7 @@ export interface RenderSlotOptions<
   experimental_rpcContract?: NoInfer<Contract>;
   /** `useSettings()` values; omitted → `{ values: undefined, isLoading: false }`. */
   settings?: Record<string, string | number | boolean>;
-  /** `useBbContext()` selection; both default to null. */
+  /** `useSandyContext()` selection; both default to null. */
   context?: { projectId?: string | null; threadId?: string | null };
   /** `experimental_usePluginId()` value; defaults to `test-plugin`. */
   pluginId?: string;
@@ -2438,13 +2440,13 @@ export interface RenderSlotOptions<
   tabVisible?: boolean;
   /**
    * Answer for `experimental_useServers()`. Omitted → null, as in a web
-   * browser. Pass `{ status, servers, switchTo }` to act as bb Desktop or the
+   * browser. Pass `{ status, servers, switchTo }` to act as sandy Desktop or the
    * mobile app.
    */
   servers?: ExperimentalServers | null;
-  /** Host acceptance for `useBbNavigate().experimental_openTerminal`. */
+  /** Host acceptance for `useSandyNavigate().experimental_openTerminal`. */
   openTerminal?: (
-    options: Parameters<BbNavigate["experimental_openTerminal"]>[0],
+    options: Parameters<SandyNavigate["experimental_openTerminal"]>[0],
   ) => boolean;
   /**
    * Host acceptance for `experimental_useAppPanel()` calls, one handler per
@@ -2472,7 +2474,7 @@ export interface RenderSlotOptions<
 export interface RenderedSlotBehaviorDrivers {
   /**
    * Push a realtime event to `useRealtime(channel, …)` subscribers, wrapped
-   * in act. The payload is JSON-round-tripped like `bb.realtime.publish`.
+   * in act. The payload is JSON-round-tripped like `sandy.realtime.publish`.
    */
   experimental_invalidateRpc(
     tags: readonly string[] | null,
@@ -2495,7 +2497,7 @@ export interface RenderedSlotInspectionState {
   readonly experimental_pageTitle: ExperimentalPageTitle | null;
   /** Every `useRpc().call`, in order. */
   readonly rpcCalls: RpcCall[];
-  /** Every `useBbNavigate()` call, in order. */
+  /** Every `useSandyNavigate()` call, in order. */
   readonly navigateCalls: NavigateCall[];
   /** Every `experimental_useAppPanel()` call, in order. */
   readonly experimental_panelCalls: ExperimentalPanelCall[];
@@ -2526,7 +2528,7 @@ export interface RenderedSlotLifecycleControls {
 }
 
 /**
- * Testing Library result plus BB-specific helpers. Direct members are
+ * Testing Library result plus SANDY-specific helpers. Direct members are
  * retained for compatibility; named views make intent explicit in new tests.
  */
 export interface RenderedSlot
@@ -2989,7 +2991,7 @@ export function renderSlot<
       sidebarActionCalls.push({ method: "requestDelete", threadId });
     },
   };
-  const navigate: BbNavigate & {
+  const navigate: SandyNavigate & {
     openThreadPanel(options: RetiredActionTabOpenOptions): boolean;
   } = {
     toThread(threadId, threadOptions) {
@@ -3333,7 +3335,7 @@ export function renderSlot<
     realtimeHandlers,
     realtimeConnection,
     settingsState: { values: options.settings, isLoading: false },
-    bbContext: { projectId, threadId },
+    sandyContext: { projectId, threadId },
     pluginId: options.pluginId ?? "test-plugin",
     questionFormHost: {
       shortcuts: new Map(),

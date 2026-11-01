@@ -7,10 +7,10 @@ export function MobileAppSection() {
       <div>
         <h2 className="text-base font-semibold">Mobile</h2>
         <p className="mt-1 text-sm text-subtle-foreground">
-          Use bb from your phone
+          Use sandy from your phone
         </p>
       </div>
-      <MachineAccessSettings title="Accessing bb from your phone">
+      <MachineAccessSettings title="Accessing sandy from your phone">
         {(pluginId) => <PluginMobileSettingsSections pluginId={pluginId} />}
       </MachineAccessSettings>
     </section>

@@ -1,0 +1,239 @@
+import type { FabricAgentRunner } from "../config.js";
+import type { MeshEvent, MeshIdentity } from "../mesh/store.js";
+import type { FabricParticipantKind } from "../topology/types.js";
+
+export const FABRIC_PARTICIPANT_LIFECYCLE_TOPIC = "fabric.participant.lifecycle";
+export const FABRIC_LIFECYCLE_SUBSCRIPTION_PREFIX = "topology/subscriptions/";
+
+export const FABRIC_LIFECYCLE_EVENTS = [
+  "pi.input",
+  "pi.agent_start",
+  "pi.agent_end",
+  "pi.turn_end",
+  "pi.agent_settled",
+  "pi.tool_error",
+  "pi.session_compact",
+  "run.completed",
+  "run.failed",
+  "run.stopped",
+  "run.timed_out",
+  "run.resumed",
+  "run.detached",
+  "tokens.usage",
+  "component.state",
+] as const;
+
+export type FabricLifecycleEventType = (typeof FABRIC_LIFECYCLE_EVENTS)[number];
+type FabricLifecycleDelivery = "steer" | "followUp";
+
+export interface FabricLifecycleSource {
+  id: string;
+  name: string;
+  kind: FabricParticipantKind;
+  rootId: string;
+  runner: FabricAgentRunner;
+  ownerHostId?: string;
+  ownerIdentityId?: string;
+}
+
+export interface FabricLifecyclePublishRequest {
+  source: FabricLifecycleSource;
+  event: FabricLifecycleEventType;
+  occurredAt?: number;
+  runId?: string;
+  status?: string;
+  data?: unknown;
+}
+
+export interface FabricLifecycleEvent {
+  version: 1;
+  id: string;
+  sequence: number;
+  event: FabricLifecycleEventType;
+  source: FabricLifecycleSource;
+  occurredAt: number;
+  publishedAt: number;
+  runId?: string;
+  status?: string;
+  data?: unknown;
+}
+
+/**
+ * Attributed token usage for one token-bearing child event.
+ *
+ * The worker emits one of these per assistant message (Pi) or per usage-bearing
+ * assistant/result frame (Claude), tagged with the run/runner/depth identity the
+ * manager passes in. Cumulative tokens mirror in + cacheRead + cacheWrite at
+ * the moment the event fired; cost is micro-USD from the runner's own report.
+ */
+export interface FabricTokenUsagePayload {
+  runId: string;
+  name: string;
+  runner: FabricAgentRunner;
+  depth: number;
+  actorId?: string;
+  actorName?: string;
+  cumulativeTokens: number;
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  cost: number;
+}
+
+// Inlined RUNNER_ID_PATTERN (src/agents/runner-registry.ts): registered runner
+// ids pass without loading the registry.
+const RUNNER_ID_PATTERN = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/;
+const runnerId = (value: unknown): FabricAgentRunner | undefined =>
+  typeof value === "string" && value.length <= 64 && RUNNER_ID_PATTERN.test(value) ? value : undefined;
+
+export const tokenUsagePayloadFromValue = (
+  value: unknown,
+): FabricTokenUsagePayload | undefined => {
+  if (!isObject(value)) return undefined;
+  const runner = runnerId(value.runner);
+  if (
+    typeof value.runId !== "string" ||
+    typeof value.name !== "string" ||
+    runner === undefined ||
+    typeof value.depth !== "number" ||
+    typeof value.cumulativeTokens !== "number" ||
+    typeof value.input !== "number" ||
+    typeof value.output !== "number" ||
+    typeof value.cacheRead !== "number" ||
+    typeof value.cacheWrite !== "number" ||
+    typeof value.cost !== "number"
+  ) {
+    return undefined;
+  }
+  return value as unknown as FabricTokenUsagePayload;
+};
+
+export interface FabricLifecycleSubscriptionRequest {
+  from: string;
+  events: FabricLifecycleEventType[];
+  to: string;
+  delivery: FabricLifecycleDelivery;
+  triggerTurn: boolean;
+  once?: boolean;
+}
+
+export interface FabricLifecycleSubscription {
+  format: 1;
+  id: string;
+  from: string;
+  events: FabricLifecycleEventType[];
+  to: string;
+  delivery: FabricLifecycleDelivery;
+  triggerTurn: boolean;
+  once: boolean;
+  afterSequence: number;
+  createdAt: number;
+  updatedAt: number;
+  createdBy: MeshIdentity;
+  lastDeliveredAt?: number;
+  lastEventId?: string;
+  lastError?: string;
+}
+
+const lifecycleEvents = new Set<string>(FABRIC_LIFECYCLE_EVENTS);
+
+export const isFabricLifecycleEventType = (
+  value: unknown,
+): value is FabricLifecycleEventType =>
+  typeof value === "string" && lifecycleEvents.has(value);
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const participantKind = (value: unknown): FabricParticipantKind | undefined =>
+  value === "root" || value === "agent" || value === "actor" ? value : undefined;
+
+export const lifecycleSourceIdentity = (source: FabricLifecycleSource): MeshIdentity => ({
+  id: source.id,
+  name: source.name,
+  kind: source.kind === "root" ? "main" : source.kind === "provider" ? "agent" : source.kind,
+});
+
+export const lifecycleEventFromMesh = (
+  event: MeshEvent,
+): FabricLifecycleEvent | undefined => {
+  if (
+    event.topic !== FABRIC_PARTICIPANT_LIFECYCLE_TOPIC ||
+    !isObject(event.data) ||
+    event.data.version !== 1 ||
+    !isFabricLifecycleEventType(event.data.event) ||
+    event.kind !== event.data.event ||
+    !isObject(event.data.source)
+  ) {
+    return undefined;
+  }
+  const source = event.data.source;
+  const kind = participantKind(source.kind);
+  const runner = runnerId(source.runner);
+  if (
+    !kind ||
+    !runner ||
+    typeof source.id !== "string" ||
+    typeof source.name !== "string" ||
+    typeof source.rootId !== "string" ||
+    event.from.id !== source.id ||
+    (kind === "root" ? event.from.kind !== "main" : event.from.kind !== kind) ||
+    typeof event.data.occurredAt !== "number"
+  ) {
+    return undefined;
+  }
+  const parsedSource: FabricLifecycleSource = {
+    id: source.id,
+    name: source.name,
+    kind,
+    rootId: source.rootId,
+    runner,
+    ...(typeof source.ownerHostId === "string" ? { ownerHostId: source.ownerHostId } : {}),
+    ...(typeof source.ownerIdentityId === "string"
+      ? { ownerIdentityId: source.ownerIdentityId }
+      : {}),
+  };
+  return {
+    version: 1,
+    id: event.id,
+    sequence: event.sequence,
+    event: event.data.event,
+    source: parsedSource,
+    occurredAt: event.data.occurredAt,
+    publishedAt: event.createdAt,
+    ...(typeof event.data.runId === "string" ? { runId: event.data.runId } : {}),
+    ...(typeof event.data.status === "string" ? { status: event.data.status } : {}),
+    ...(Object.prototype.hasOwnProperty.call(event.data, "payload")
+      ? { data: event.data.payload }
+      : {}),
+  };
+};
+
+export const lifecycleSubscriptionFromValue = (
+  value: unknown,
+): FabricLifecycleSubscription | undefined => {
+  if (!isObject(value) || value.format !== 1 || !isObject(value.createdBy)) return undefined;
+  if (
+    typeof value.id !== "string" ||
+    typeof value.from !== "string" ||
+    typeof value.to !== "string" ||
+    !Array.isArray(value.events) ||
+    value.events.length === 0 ||
+    !value.events.every(isFabricLifecycleEventType) ||
+    (value.delivery !== "steer" && value.delivery !== "followUp") ||
+    typeof value.triggerTurn !== "boolean" ||
+    typeof value.once !== "boolean" ||
+    typeof value.afterSequence !== "number" ||
+    typeof value.createdAt !== "number" ||
+    typeof value.updatedAt !== "number" ||
+    typeof value.createdBy.id !== "string" ||
+    typeof value.createdBy.name !== "string" ||
+    (value.createdBy.kind !== "main" &&
+      value.createdBy.kind !== "agent" &&
+      value.createdBy.kind !== "actor")
+  ) {
+    return undefined;
+  }
+  return value as unknown as FabricLifecycleSubscription;
+};

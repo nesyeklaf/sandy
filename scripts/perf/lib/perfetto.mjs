@@ -30,11 +30,11 @@ export const writeTrace = (path, events) =>
   });
 
 export const traceProcessor = () => {
-  const explicit = process.env.BB_PERF_TRACE_PROCESSOR;
+  const explicit = process.env.SANDY_PERF_TRACE_PROCESSOR;
   if (explicit) {
     if (!existsSync(explicit))
       throw new Error(
-        "BB_PERF_TRACE_PROCESSOR points to a missing file: " + explicit,
+        "SANDY_PERF_TRACE_PROCESSOR points to a missing file: " + explicit,
       );
     return explicit;
   }
@@ -48,7 +48,7 @@ export const traceProcessor = () => {
   const path = found.stdout.trim();
   if (!path)
     throw new Error(
-      "No Perfetto trace processor. Download it with: curl -LO https://get.perfetto.dev/trace_processor && chmod +x trace_processor, then set BB_PERF_TRACE_PROCESSOR to its path.",
+      "No Perfetto trace processor. Download it with: curl -LO https://get.perfetto.dev/trace_processor && chmod +x trace_processor, then set SANDY_PERF_TRACE_PROCESSOR to its path.",
     );
   return path;
 };
@@ -88,7 +88,7 @@ export const querySqlFile = (
 ) => {
   const sqlPath = sqlName.includes("/") ? sqlName : join(SQL_DIR, sqlName);
   const sql = readFileSync(sqlPath, "utf8");
-  const scratch = mkdtempSync(join(tmpdir(), "bb-perf-sql-"));
+  const scratch = mkdtempSync(join(tmpdir(), "sandy-perf-sql-"));
   const queryPath = join(scratch, "query.sql");
   writeFileSync(
     queryPath,

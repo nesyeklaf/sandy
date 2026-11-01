@@ -1,28 +1,28 @@
 import { createStorage } from "./storage.js";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { storageRpc } from "./contract.js";
 import { createService } from "./service.js";
 import { registerCli } from "./cli.js";
 
-export default function plugin(bb: BbPluginApi) {
-  const service = createService(bb);
+export default function plugin(sandy: SandyPluginApi) {
+  const service = createService(sandy);
   const devCleanupEnabled = async () =>
     (await service.state()).policy.deleteDevDataOnCheckoutRemoval;
-  const storage = createStorage(bb, devCleanupEnabled);
-  bb.events.on("experimental_environment.removed", ({ removal }) =>
+  const storage = createStorage(sandy, devCleanupEnabled);
+  sandy.events.on("experimental_environment.removed", ({ removal }) =>
     removal.hostId === null
       ? undefined
       : storage.cleanDevelopmentStorage(removal.hostId),
   );
-  bb.background.schedule(
+  sandy.background.schedule(
     "development-storage-cleanup",
     "0 * * * *",
     storage.reconcileDevelopmentStorage,
   );
-  bb.background.service("development-storage-recovery", {
+  sandy.background.service("development-storage-recovery", {
     async start(signal) {
       if (signal.aborted) return;
-      const unsubscribe = bb.sdk.subscribe({
+      const unsubscribe = sandy.sdk.subscribe({
         event: "host:changed",
         callback: (event) => {
           if (event.changes.includes("host-connected"))
@@ -31,10 +31,10 @@ export default function plugin(bb: BbPluginApi) {
             event.changes.includes("host-connected") ||
             event.changes.includes("host-disconnected")
           )
-            bb.realtime.publish("changed", null);
+            sandy.realtime.publish("changed", null);
         },
       });
-      const unsubscribeConnection = bb.sdk.subscribe({
+      const unsubscribeConnection = sandy.sdk.subscribe({
         event: "realtime:connection",
         callback: (event) => {
           if (event.state === "connected" && event.reconnected)
@@ -56,7 +56,7 @@ export default function plugin(bb: BbPluginApi) {
   });
   const cleanupEnabled = async () =>
     (await service.state()).policy.deleteStorageOnArchive;
-  bb.events.on("thread.archived", async ({ thread }) => {
+  sandy.events.on("thread.archived", async ({ thread }) => {
     if (
       thread.archivedAt === null ||
       thread.pinnedAt !== null ||
@@ -67,15 +67,15 @@ export default function plugin(bb: BbPluginApi) {
     await storage.clearPendingArchives(cleanupEnabled);
   });
   for (const event of ["thread.idle", "thread.failed"] as const)
-    bb.events.on(event, () => storage.clearPendingArchives(cleanupEnabled));
+    sandy.events.on(event, () => storage.clearPendingArchives(cleanupEnabled));
   for (const event of ["thread.unarchived", "thread.deleted"] as const)
-    bb.events.on(event, ({ thread }) =>
+    sandy.events.on(event, ({ thread }) =>
       storage.cancelArchivedStorage(thread.id),
     );
-  bb.background.schedule("archive-storage-cleanup", "* * * * *", () =>
+  sandy.background.schedule("archive-storage-cleanup", "* * * * *", () =>
     storage.clearPendingArchives(cleanupEnabled),
   );
-  bb.rpc.register(storageRpc, {
+  sandy.rpc.register(storageRpc, {
     startEntryCleanup: storage.startEntryCleanup,
     entryCleanup: storage.entryCleanup,
     startCleanup: storage.startCleanup,
@@ -97,6 +97,6 @@ export default function plugin(bb: BbPluginApi) {
     preview: (policy) => service.preview(policy),
     configure: (policy) => service.configure(policy),
   });
-  registerCli(bb, service, storage);
-  bb.background.schedule("retention", "0 * * * *", () => service.sweep());
+  registerCli(sandy, service, storage);
+  sandy.background.schedule("retention", "0 * * * *", () => service.sweep());
 }

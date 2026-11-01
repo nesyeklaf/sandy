@@ -2,8 +2,8 @@ import type { FormEvent } from "react";
 import {
   experimental_DetailRow as DetailRow,
   useSdk,
-} from "@get-bb/plugin-sdk/app";
-import { Button } from "@bb/shared-ui/button";
+} from "@sandy-sdk/plugin-sdk/app";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,20 +11,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
+} from "@sandy/shared-ui/dialog";
 import {
   getGitStatusDisplay,
   SquashMergeInfo,
   type ThreadGitStatusDisplay,
-} from "@bb/shared-ui/git-status-display";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { WorkspaceChangesList } from "@bb/shared-ui/workspace-changes-list";
+} from "@sandy/shared-ui/git-status-display";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { WorkspaceChangesList } from "@sandy/shared-ui/workspace-changes-list";
 import {
   renderChangeSummary,
   selectWorkspaceChangedFilesSection,
   toChangeTally,
   type WorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
+} from "@sandy/shared-ui/workspace-change-summary";
 import { useGitStatus } from "../queries.js";
 import {
   closeCommitDialog,

@@ -1,14 +1,14 @@
 {
-  "name": "bb-plugin-bb--git",
+  "name": "sandy-plugin-sandy--git",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Git status, changed files and the Diff tab for each environment",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.90"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.90"
   },
-  "bb": {
+  "sandy": {
     "name": "Git",
     "description": "Git status, changed files and the Diff tab for each environment",
     "branding": {
@@ -25,31 +25,31 @@
     "./testing": "./testing.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
-    "@bb/async-cache": "workspace:*",
-    "@bb/domain": "workspace:*",
-    "@bb/server-contract": "workspace:*",
-    "@bb/shared-ui": "workspace:*",
+    "@sandy/async-cache": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/server-contract": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
     "@tanstack/react-virtual": "3.14.20",
-    "bb-environment-provider-host": "workspace:*",
+    "sandy-environment-provider-host": "workspace:*",
     "mime-types": "^3.0.2",
     "picomatch": "^4.0.5",
     "usehooks-ts": "^3.1.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/host-daemon-contract": "workspace:*",
-    "@bb/plugin-build": "workspace:*",
-    "@bb/test-helpers": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/host-daemon-contract": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/react": "^16.3.2",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.0.0",

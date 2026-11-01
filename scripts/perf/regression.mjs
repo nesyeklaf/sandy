@@ -35,9 +35,9 @@ Options:
   --fixture-threads <n>   Seeded thread count (default 1200)
   --fixture-events <n>    Seeded event rows (default 400000)
   --budgets <path>        Budget file (default scripts/perf/budgets.json)
-  --out <dir>             Output directory (default: <tmp>/bb-perf-regression/<timestamp>)
+  --out <dir>             Output directory (default: <tmp>/sandy-perf-regression/<timestamp>)
   --keep-worktrees        Keep the worktrees, fixture and server logs after the run
-  --chrome <path>         Chrome/Chromium executable (or BB_PERF_CHROME)
+  --chrome <path>         Chrome/Chromium executable (or SANDY_PERF_CHROME)
 `;
 
 const { values } = parseArgs({
@@ -67,17 +67,17 @@ if (values.help) {
 }
 
 const BUILD_FILTERS = [
-  "--filter=@bb/bundled-plugins",
-  "--filter=@get-bb/plugin-sdk",
-  "--filter=@bb/app",
-  "--filter=@bb/server",
-  "--filter=@bb/host-daemon",
+  "--filter=@sandy/bundled-plugins",
+  "--filter=@sandy-sdk/plugin-sdk",
+  "--filter=@sandy/app",
+  "--filter=@sandy/server",
+  "--filter=@sandy/host-daemon",
 ];
 const outDir = resolve(
   values.out ??
     join(
       tmpdir(),
-      "bb-perf-regression",
+      "sandy-perf-regression",
       new Date().toISOString().replaceAll(":", "-"),
     ),
 );
@@ -89,7 +89,7 @@ const budgets = JSON.parse(readFileSync(resolve(values.budgets), "utf8"));
 const buildEnv = {
   TURBO_CACHE_DIR:
     process.env.TURBO_CACHE_DIR ?? join(REPO_ROOT, ".turbo", "cache"),
-  BB_BUILD_TOOLCHAIN:
+  SANDY_BUILD_TOOLCHAIN:
     process.version + "-" + process.platform + "-" + process.arch,
 };
 

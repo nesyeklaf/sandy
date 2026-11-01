@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { ProviderUsageResult } from "@bb/provider-bridge-protocol";
+import type { ProviderUsageResult } from "@sandy/provider-bridge-protocol";
 import { z } from "zod";
 
 const apiCredentialSchema = z.object({
@@ -231,7 +231,7 @@ export async function readOpenCodeGoUsage(
         headers: {
           Authorization: `Bearer ${apiKey}`,
           Accept: "application/json",
-          "User-Agent": "bb-provider-acp",
+          "User-Agent": "sandy-provider-acp",
           ...(account?.active_org_id
             ? { "x-opencode-org-id": account.active_org_id }
             : {}),

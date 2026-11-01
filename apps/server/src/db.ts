@@ -1,10 +1,10 @@
-import { createConnection, ensurePersonalProject, migrate } from "@bb/db";
+import { createConnection, ensurePersonalProject, migrate } from "@sandy/db";
 import type {
   DbConnection,
   MigrationWarningLogger,
   SlowDbQueryLogger,
-} from "@bb/db";
-import type { Logger } from "@bb/logger";
+} from "@sandy/db";
+import type { Logger } from "@sandy/logger";
 import {
   exportLegacyAutomationsForPluginImport,
   hasLegacyAutomationsToExport,

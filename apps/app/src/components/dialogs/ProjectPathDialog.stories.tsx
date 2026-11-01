@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import type { HostDirectoryListing } from "@bb/server-contract";
+import type { HostDirectoryListing } from "@sandy/server-contract";
 import {
   ProjectPathDialogContent,
   type ProjectPathDialogTarget,
@@ -27,17 +27,17 @@ const createTarget: ProjectPathDialogTarget = { kind: "create" };
 
 const updateTarget: ProjectPathDialogTarget = {
   kind: "update",
-  projectId: PROJECT_IDS.bb,
-  projectName: PROJECT_NAMES.bb,
-  currentPath: "/Users/michael/Projects/bb",
+  projectId: PROJECT_IDS.sandy,
+  projectName: PROJECT_NAMES.sandy,
+  currentPath: "/Users/michael/Projects/sandy",
   hostId: HOST_IDS.local,
   hostName: HOST_NAMES.local,
 };
 
 const addSourceTarget: ProjectPathDialogTarget = {
   kind: "add-source",
-  projectId: PROJECT_IDS.bb,
-  projectName: PROJECT_NAMES.bb,
+  projectId: PROJECT_IDS.sandy,
+  projectName: PROJECT_NAMES.sandy,
 };
 
 const connectedMachine = makeHost();
@@ -100,20 +100,20 @@ function createBrowsedFoldersQueryClient() {
     },
   );
   queryClient.setQueryData<HostDirectoryListing>(
-    hostDirectoryQueryKey(HOST_IDS.local, "/Users/michael/Projects/bb"),
+    hostDirectoryQueryKey(HOST_IDS.local, "/Users/michael/Projects/sandy"),
     {
-      directory: "/Users/michael/Projects/bb",
+      directory: "/Users/michael/Projects/sandy",
       parent: "/Users/michael/Projects",
       entries: [
         {
           kind: "directory",
           name: "apps",
-          path: "/Users/michael/Projects/bb/apps",
+          path: "/Users/michael/Projects/sandy/apps",
         },
         {
           kind: "directory",
           name: "packages",
-          path: "/Users/michael/Projects/bb/packages",
+          path: "/Users/michael/Projects/sandy/packages",
         },
       ],
       roots: ["/"],

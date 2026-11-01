@@ -5,12 +5,12 @@ import {
   type HostDaemonOnlineRpcResponseMessage,
   type ServerMovedMessage,
   type ServerMoveInspectResult,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type {
   ServerMoveEnvironment,
   ServerMoveTimings,
 } from "../../src/services/server-move/coordinator.js";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { exportServerArchive } from "../../src/services/server-move/export.js";
 import type { TestAppHarness } from "./test-app.js";
 
@@ -53,10 +53,10 @@ export function inspectResult(
   overrides: Partial<ServerMoveInspectResult> = {},
 ): ServerMoveInspectResult {
   return {
-    dataDir: "/home/me/.bb-machines/laptop",
+    dataDir: "/home/me/.sandy-machines/laptop",
     platform: "linux",
     timeZone: "UTC",
-    bbAppVersion: "0.0.0-test",
+    sandyAppVersion: "0.0.0-test",
     serverEntryAvailable: true,
     existingServerData: null,
     dataDirHasServerData: false,
@@ -182,10 +182,10 @@ export function createTestServerMoveEnvironment(
     fullArtifact: {
       availability: async () => ({
         available: false,
-        reason: "The test server has no packaged bb-app.",
+        reason: "The test server has no packaged sandy-app.",
       }),
       build: async () => {
-        throw new Error("The test server has no packaged bb-app.");
+        throw new Error("The test server has no packaged sandy-app.");
       },
     },
     now: Date.now,

@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { runSettlementError } from "./run-settlement.js";
-import { experimental_buildBridgeToolCallContent as buildBridgeToolCallContent } from "@get-bb/plugin-sdk/provider-bridge";
+import { experimental_buildBridgeToolCallContent as buildBridgeToolCallContent } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { ImageContent } from "@earendil-works/pi-ai";
 import { z } from "zod";
 import {
@@ -139,7 +139,7 @@ function isPiCompactionPromptRejection(error: unknown): boolean {
   );
 }
 function readinessTimeoutMs(): number {
-  const configured = Number(process.env.BB_PI_BRIDGE_READINESS_TIMEOUT_MS);
+  const configured = Number(process.env.SANDY_PI_BRIDGE_READINESS_TIMEOUT_MS);
   return Number.isFinite(configured) && configured > 0 ? configured : 60_000;
 }
 const CHANNEL_REQUEST_TIMEOUT_MS = 30_000;
@@ -322,7 +322,7 @@ export class PiRpcSession {
       cwd: this.options.cwd,
       env: buildPiChildEnv({
         ...(this.options.shellEnvOverrides ?? {}),
-        PI_BB_TOOLS_FILE: toolsFilePath,
+        PI_SANDY_TOOLS_FILE: toolsFilePath,
       }),
       args,
       onEvent: (event) => {

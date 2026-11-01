@@ -3,9 +3,9 @@
   "name": "overlay-open-tracer",
   "type": "registry:ui",
   "title": "overlay-open-tracer",
-  "description": "BB ui \"overlay-open-tracer\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"overlay-open-tracer\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/perf-trace"
+    "@sandy/perf-trace"
   ],
   "files": [
     {

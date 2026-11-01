@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { COMPACT_VIEWPORT_QUERY } from "@/components/ui/hooks/use-compact-viewport";
 import type { Task } from "../../shared/contract.js";
 import { LIST_PREFERENCE_STORAGE_KEY } from "./list-preference.js";
@@ -45,7 +45,7 @@ const projectA = {
   nextTaskNumber: 5,
   color: "blue",
   folderId: null,
-  linkedBbProjectId: null,
+  linkedSandyProjectId: null,
   createdAt: "2026-07-15T00:00:00.000Z",
 };
 
@@ -56,7 +56,7 @@ const projectB = {
   nextTaskNumber: 5,
   color: "green",
   folderId: null,
-  linkedBbProjectId: null,
+  linkedSandyProjectId: null,
   createdAt: "2026-07-15T00:00:00.000Z",
 };
 

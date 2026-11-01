@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { updateHost } from "@bb/db";
+import { updateHost } from "@sandy/db";
 import { registerFakeAiService } from "../helpers/ai-services.js";
 import { generateCommitMessage } from "../../src/services/ai/commit-message.js";
 import { readJson } from "../helpers/json.js";
@@ -8,7 +8,7 @@ import {
   seedHostSession,
   seedProjectWithSource,
 } from "../helpers/seed.js";
-import { makeWorkspaceStatus } from "bb-plugin-bb--git/testing";
+import { makeWorkspaceStatus } from "sandy-plugin-sandy--git/testing";
 import { installGitPluginWithHost } from "../helpers/git-plugin.js";
 import { installMachineProvider } from "../helpers/machine-provider.js";
 import { setPluginMachineProviderBridge } from "../../src/services/plugins/plugin-machine-provider-registry.js";
@@ -218,7 +218,7 @@ describe("commit message generation", () => {
         throw new Error("Codex request failed");
       });
       await expect(commitThroughRoute(server)).resolves.toBe(
-        "bb: automated commit",
+        "sandy: automated commit",
       );
     });
   });

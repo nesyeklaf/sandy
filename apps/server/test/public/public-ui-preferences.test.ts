@@ -1,5 +1,5 @@
-import { overwriteStoredUiPreference } from "@bb/db";
-import { defaultUiPreferences, UI_PREFERENCE_KEYS } from "@bb/domain";
+import { overwriteStoredUiPreference } from "@sandy/db";
+import { defaultUiPreferences, UI_PREFERENCE_KEYS } from "@sandy/domain";
 import { describe, expect, it, vi } from "vitest";
 import { readJson } from "../helpers/json.js";
 import { withTestHarness, type TestAppHarness } from "../helpers/test-app.js";
@@ -70,15 +70,15 @@ describe("public ui preferences", () => {
           "commits",
           "uncommittedChanges",
           "forks",
-          "bb--git/commits",
+          "sandy--git/commits",
         ]),
       });
       const body = (await readJson(await listPreferences(harness))) as {
         preferences: Record<string, { value: unknown }>;
       };
       expect(body.preferences["infoPanel.collapsedSections"]?.value).toEqual([
-        "bb--git/commits",
-        "bb--git/uncommitted-changes",
+        "sandy--git/commits",
+        "sandy--git/uncommitted-changes",
         "forks",
       ]);
     });

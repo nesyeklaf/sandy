@@ -3,9 +3,9 @@ import type {
   SystemMessageSubject,
   ThreadEventTurnStatus,
   ChildThreadOutcome,
-} from "@bb/domain";
-import { listActiveBackgroundTaskCountsByThreadIds } from "@bb/db";
-import { renderTemplate } from "@bb/templates";
+} from "@sandy/domain";
+import { listActiveBackgroundTaskCountsByThreadIds } from "@sandy/db";
+import { renderTemplate } from "@sandy/templates";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import {
   buildParentSystemInputFromTemplateSlot,
@@ -77,8 +77,8 @@ interface QueueChildThreadNeedsAttentionNotificationArgs {
 
 const CHILD_THREAD_TURN_NOTIFICATION_BATCH_DELAY_MS = 2_000;
 const CHILD_THREAD_OUTCOME_BATCH_UPDATES_SLOT =
-  "__BB_CHILD_THREAD_OUTCOME_BATCH_UPDATES__";
-const CHILD_THREAD_MENTION_SLOT = "__BB_CHILD_THREAD_MENTION__";
+  "__SANDY_CHILD_THREAD_OUTCOME_BATCH_UPDATES__";
+const CHILD_THREAD_MENTION_SLOT = "__SANDY_CHILD_THREAD_MENTION__";
 const CHILD_THREAD_TERMINAL_OUTPUT_EXCERPT_CHAR_LIMIT = 4_000;
 const CHILD_THREAD_OUTPUT_TRUNCATION_MARKER = "\n\n[... output truncated ...]";
 const CHILD_THREAD_INSPECTION_GUIDANCE =

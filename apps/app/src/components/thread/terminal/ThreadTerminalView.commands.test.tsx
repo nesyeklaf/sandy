@@ -85,8 +85,8 @@ vi.mock("@xterm/addon-webgl", () => {
   throw new Error("WebGL unavailable");
 });
 
-vi.mock("@bb/client-core", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@bb/client-core")>()),
+vi.mock("@sandy/client-core", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@sandy/client-core")>()),
   TerminalWebSocketTransport: class {
     constructor(options: { onMessage: (message: unknown) => void }) {
       state.onMessage = options.onMessage;

@@ -22,7 +22,7 @@ import {
 
 const roots: string[] = [];
 async function scratch() {
-  const root = await mkdtemp(join(tmpdir(), "bb-host-toolchain-"));
+  const root = await mkdtemp(join(tmpdir(), "sandy-host-toolchain-"));
   roots.push(root);
   return root;
 }
@@ -71,7 +71,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     await mkdir(pkg);
     await writeFile(
       join(pkg, "package.json"),
-      JSON.stringify({ name: "bb-toolchain-fixture", version: "1.0.0" }),
+      JSON.stringify({ name: "sandy-toolchain-fixture", version: "1.0.0" }),
     );
     const env = {
       HOME: root,
@@ -104,7 +104,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
           after,
           "lib",
           "node_modules",
-          "bb-toolchain-fixture",
+          "sandy-toolchain-fixture",
           "package.json",
         ),
         "utf8",
@@ -143,7 +143,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     await writeFile(shellPath, "/usr/bin:/bin");
     await script(
       shell,
-      `#!/bin/sh\nprintf 'startup noise\\n__BB_SHELL_ENV_START__\\nPATH='\n/bin/cat "${shellPath}"\nprintf '\\nHTTPS_PROXY=http://proxy.example:8080\\nhttps_proxy=http://proxy.example:8080\\nIGNORED_SECRET=secret\\n__BB_SHELL_ENV_END__\\nshutdown noise\\n'\n`,
+      `#!/bin/sh\nprintf 'startup noise\\n__SANDY_SHELL_ENV_START__\\nPATH='\n/bin/cat "${shellPath}"\nprintf '\\nHTTPS_PROXY=http://proxy.example:8080\\nhttps_proxy=http://proxy.example:8080\\nIGNORED_SECRET=secret\\n__SANDY_SHELL_ENV_END__\\nshutdown noise\\n'\n`,
     );
     const env = { HOME: root, PATH: "/usr/bin:/bin", SHELL: shell };
     const toolchain = new HostToolchain(env);
@@ -173,34 +173,34 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     expect(run(toolchain, "host-fixture", [], env)).toBe("found");
   });
 
-  it("finds native providers and runs the bb Node shebang with a minimal service PATH", async () => {
+  it("finds native providers and runs the sandy Node shebang with a minimal service PATH", async () => {
     const root = await scratch();
-    const bb = join(root, "bb");
+    const sandy = join(root, "sandy");
     const claude = join(root, ".local", "bin", "claude");
-    await script(bb, "#!/usr/bin/env node\nconsole.log('bb works');\n");
+    await script(sandy, "#!/usr/bin/env node\nconsole.log('sandy works');\n");
     await script(claude, "#!/bin/sh\nprintf native-claude");
-    const env = { HOME: root, PATH: "/usr/bin:/bin", BB_CLI: bb };
+    const env = { HOME: root, PATH: "/usr/bin:/bin", SANDY_CLI: sandy };
     const toolchain = new HostToolchain(env);
-    expect(run(toolchain, "bb", [], env).trim()).toBe("bb works");
+    expect(run(toolchain, "sandy", [], env).trim()).toBe("sandy works");
     expect(run(toolchain, "claude", [], env)).toBe("native-claude");
   });
 
-  it("keeps execute-bit checks for explicit Node scripts and excludes relative bb discovery", async () => {
+  it("keeps execute-bit checks for explicit Node scripts and excludes relative sandy discovery", async () => {
     const root = await scratch();
-    const bb = join(root, "relative", "bb");
+    const sandy = join(root, "relative", "sandy");
     const plain = join(root, "not-executable");
-    await script(bb, "#!/usr/bin/env node\nconsole.log('wrong bb');\n");
+    await script(sandy, "#!/usr/bin/env node\nconsole.log('wrong sandy');\n");
     await script(plain, "#!/usr/bin/env node\nconsole.log('must not run');\n");
     await chmod(plain, 0o644);
     const env = {
       HOME: root,
       PATH: "relative",
-      BB_CLI: "./relative/bb",
-      BB_CLI_DIR: "relative",
+      SANDY_CLI: "./relative/sandy",
+      SANDY_CLI_DIR: "relative",
       SHELL: "/bin/sh",
     };
     const toolchain = new HostToolchain(env);
-    expect(toolchain.resolve("bb", { cwd: root, env })).not.toBe(bb);
+    expect(toolchain.resolve("sandy", { cwd: root, env })).not.toBe(sandy);
     const launch = toolchain.command(plain, [], { env });
     expect(
       spawnSync(launch.command, launch.args, { env: launch.env }).error,
@@ -234,15 +234,15 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     const env = { HOME: root, PATH: "/usr/bin:/bin", SHELL: shell };
     await script(
       shell,
-      `#!/bin/sh\nprintf '__BB_SHELL_ENV_START__\\nPATH=/interactive-bin\\n__BB_SHELL_ENV_END__\\n'\n`,
+      `#!/bin/sh\nprintf '__SANDY_SHELL_ENV_START__\\nPATH=/interactive-bin\\n__SANDY_SHELL_ENV_END__\\n'\n`,
     );
     const toolchain = new HostToolchain(env);
     await toolchain.refresh();
     await script(
       shell,
-      `#!/bin/sh\nprintf x >> "${calls}"\nif [ "$1" = '-ilc' ]; then exit 1; fi\nprintf '__BB_SHELL_ENV_START__\\nPATH=/wrong-fallback\\n__BB_SHELL_ENV_END__\\n'\n`,
+      `#!/bin/sh\nprintf x >> "${calls}"\nif [ "$1" = '-ilc' ]; then exit 1; fi\nprintf '__SANDY_SHELL_ENV_START__\\nPATH=/wrong-fallback\\n__SANDY_SHELL_ENV_END__\\n'\n`,
     );
-    for (const command of ["bb-missing-a", "bb-missing-b", "bb-missing-a"])
+    for (const command of ["sandy-missing-a", "sandy-missing-b", "sandy-missing-a"])
       expect(toolchain.resolve(command)).toBeNull();
     await toolchain.refresh();
     expect(await readFile(calls, "utf8")).toBe("x");
@@ -256,7 +256,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     const shell = join(root, "slow-shell");
     await script(
       shell,
-      "#!/bin/sh\nsleep 1\nprintf '__BB_SHELL_ENV_START__\\nPATH=/slow-bin\\n__BB_SHELL_ENV_END__\\n'\n",
+      "#!/bin/sh\nsleep 1\nprintf '__SANDY_SHELL_ENV_START__\\nPATH=/slow-bin\\n__SANDY_SHELL_ENV_END__\\n'\n",
     );
     const toolchain = new HostToolchain({
       HOME: root,
@@ -266,7 +266,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     const started = Date.now();
     const refresh = toolchain.refresh();
     toolchain.invalidateFailure(127);
-    expect(toolchain.resolve("bb-missing-command")).toBeNull();
+    expect(toolchain.resolve("sandy-missing-command")).toBeNull();
     expect(Date.now() - started).toBeLessThan(500);
     await refresh;
     expect(toolchain.environment().PATH?.split(delimiter)[0]).toBe("/slow-bin");
@@ -291,7 +291,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
     expect(run(toolchain, "host-fixture", [], env)).toBe("found");
   });
 
-  it("launches Node shebang scripts directly instead of through the bb runtime", async () => {
+  it("launches Node shebang scripts directly instead of through the sandy runtime", async () => {
     const root = await scratch();
     const tool = join(root, "bin", "node-tool");
     await script(tool, "#!/usr/bin/env node\nconsole.log('tool');\n");
@@ -306,7 +306,7 @@ describe.skipIf(process.platform === "win32")("host toolchain recovery", () => {
 
   it("adds the runtime directory to PATH only for a Node runtime", async () => {
     const root = await scratch();
-    const app = join(root, "bb.app", "Contents", "MacOS", "bb");
+    const app = join(root, "sandy.app", "Contents", "MacOS", "sandy");
     const node = join(root, "node", "bin", "node");
     await mkdir(dirname(app), { recursive: true });
     await mkdir(dirname(node), { recursive: true });

@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { encodeClientTurnRequestIdNumber } from "@bb/domain";
-import type { PromptInput } from "@bb/domain";
+import { encodeClientTurnRequestIdNumber } from "@sandy/domain";
+import type { PromptInput } from "@sandy/domain";
 import {
   buildExecutionOptions,
   buildThreadStartCommand,
@@ -106,7 +106,7 @@ describe("hero plugin: agent-enrichment (Phase 2 surfaces)", () => {
       required: ["query"],
     });
     expect(command.instructions).toContain(
-      'The following instructions come from the BB plugin "agent-enrichment" for its tool "docs_search":',
+      'The following instructions come from the SANDY plugin "agent-enrichment" for its tool "docs_search":',
     );
     expect(command.instructions).toContain(
       "Use the docs_search tool to look up repo conventions",

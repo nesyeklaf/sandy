@@ -3,11 +3,11 @@
   "name": "pagination",
   "type": "registry:ui",
   "title": "pagination",
-  "description": "BB ui \"pagination\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"pagination\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

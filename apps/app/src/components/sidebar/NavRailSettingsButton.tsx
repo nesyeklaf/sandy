@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
-import { SIDEBAR_RAIL_BUTTON_CLASS } from "@bb/shared-ui/sidebar-row-classes";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
+import { SIDEBAR_RAIL_BUTTON_CLASS } from "@sandy/shared-ui/sidebar-row-classes";
 import { useAppCommandShortcut } from "@/components/commands/AppCommandProvider";
 
 export function NavRailSettingsButton({

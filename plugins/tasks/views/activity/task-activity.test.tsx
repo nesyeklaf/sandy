@@ -9,7 +9,7 @@ import {
 import {
   createFakePluginHost,
   makeThreadResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createComment, createStore } from "../../api/index.js";
 import type { Attachment, DisplayComment } from "../../shared/contract.js";
@@ -29,9 +29,9 @@ vi.mock("../../shell/data.js", () => ({
   useTasksRpc: () => ({ call: rpcCall }),
 }));
 
-vi.mock("@get-bb/plugin-sdk/app", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@get-bb/plugin-sdk/app")>()),
-  useBbNavigate: () => ({ toThread: vi.fn() }),
+vi.mock("@sandy-sdk/plugin-sdk/app", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@sandy-sdk/plugin-sdk/app")>()),
+  useSandyNavigate: () => ({ toThread: vi.fn() }),
 }));
 
 vi.mock("../../editor/tasks-editor.js", () => ({
@@ -276,7 +276,7 @@ async function renderComposerWithTask(options?: {
   if (!options?.holdSend) {
     releaseSend = () => {};
   }
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "tasks",
     sdk: {
       threads: {
@@ -286,7 +286,7 @@ async function renderComposerWithTask(options?: {
       },
     },
   });
-  const store = createStore(bb);
+  const store = createStore(sandy);
   const project = store.tasks.createProject({
     name: "Composer",
     prefix: "CMP",
@@ -313,7 +313,7 @@ async function renderComposerWithTask(options?: {
       notify: boolean;
     };
     return {
-      comment: await createComment(bb, store, {
+      comment: await createComment(sandy, store, {
         taskId: request.taskId,
         kind: "user",
         authorName: "You",

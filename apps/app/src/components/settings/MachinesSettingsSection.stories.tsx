@@ -1,5 +1,5 @@
-import type { Host, MachineLifecycle } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import type { Host, MachineLifecycle } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { MachineRowContent } from "./MachinesSettingsSection";
 import { SettingsRowList } from "@/components/ui/settings-section";
 import {
@@ -82,7 +82,7 @@ export function Rows() {
     <StoryCard labelWidth="220px" className="max-w-4xl">
       <StoryRow
         label="this machine"
-        hint="the machine bb itself runs on, labeled by a laptop icon and its name"
+        hint="the machine sandy itself runs on, labeled by a laptop icon and its name"
       >
         <Row
           host={makeHost({

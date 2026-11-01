@@ -1,19 +1,19 @@
-import { spawnHostProcess as spawn } from "@bb/process-utils";
+import { spawnHostProcess as spawn } from "@sandy/process-utils";
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import { delimiter, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AgentRuntimeOptions } from "@bb/agent-runtime";
-import { assignIfDefined } from "@bb/config/objects";
+import type { AgentRuntimeOptions } from "@sandy/agent-runtime";
+import { assignIfDefined } from "@sandy/config/objects";
 
-interface ResolveLocalBbExecutablePathOptions {
+interface ResolveLocalSandyExecutablePathOptions {
   cliExecutablePath?: string;
   cliRuntimePath?: string;
 }
 
 interface PrepareRuntimeShellEnvOptions {
-  bbExecutableDirectory: string;
-  bbExecutablePath?: string;
+  sandyExecutableDirectory: string;
+  sandyExecutablePath?: string;
   hostDaemonPort?: number;
   serverUrl: string;
   inheritedPath?: string;
@@ -62,7 +62,7 @@ const DEFAULT_POWERSHELL_EXECUTION_POLICY = "RemoteSigned";
 const USER_SHELL_ENV_FORCE_KILL_AFTER_MS = 1_000;
 
 function getDefaultCliExecutablePath(): string {
-  return fileURLToPath(new URL("../../cli/bin/bb", import.meta.url));
+  return fileURLToPath(new URL("../../cli/bin/sandy", import.meta.url));
 }
 
 function getDefaultCliRuntimePath(): string {
@@ -87,7 +87,7 @@ async function resolveCliEntryPath(cliExecutablePath: string): Promise<string> {
   try {
     const stats = await fs.stat(cliEntryPath);
     if (!stats.isFile()) {
-      throw new Error(`Resolved bb CLI entry is not a file: ${cliEntryPath}`);
+      throw new Error(`Resolved sandy CLI entry is not a file: ${cliEntryPath}`);
     }
     if (process.platform !== "win32") {
       try {
@@ -95,7 +95,7 @@ async function resolveCliEntryPath(cliExecutablePath: string): Promise<string> {
       } catch (error) {
         if (getErrorCode(error) === "EACCES") {
           throw new Error(
-            `Resolved bb CLI entry is not executable: ${cliEntryPath}. Build @bb/cli before starting the host daemon.`,
+            `Resolved sandy CLI entry is not executable: ${cliEntryPath}. Build @sandy/cli before starting the host daemon.`,
           );
         }
         throw error;
@@ -104,7 +104,7 @@ async function resolveCliEntryPath(cliExecutablePath: string): Promise<string> {
   } catch (error) {
     if (getErrorCode(error) === "ENOENT") {
       throw new Error(
-        `Missing built bb CLI entry at ${cliEntryPath}. Build @bb/cli before starting the host daemon.`,
+        `Missing built sandy CLI entry at ${cliEntryPath}. Build @sandy/cli before starting the host daemon.`,
       );
     }
     throw error;
@@ -120,13 +120,13 @@ async function requireCliRuntimePath(cliRuntimePath: string): Promise<void> {
     const stats = await fs.stat(resolvedCliRuntimePath);
     if (!stats.isFile()) {
       throw new Error(
-        `Resolved bb CLI runtime is not a file: ${resolvedCliRuntimePath}`,
+        `Resolved sandy CLI runtime is not a file: ${resolvedCliRuntimePath}`,
       );
     }
   } catch (error) {
     if (getErrorCode(error) === "ENOENT") {
       throw new Error(
-        `Missing built bb CLI runtime at ${resolvedCliRuntimePath}. Build @bb/cli before starting the host daemon.`,
+        `Missing built sandy CLI runtime at ${resolvedCliRuntimePath}. Build @sandy/cli before starting the host daemon.`,
       );
     }
     throw error;
@@ -363,8 +363,8 @@ export async function resolvePowerShellExecutionPolicyDefault(
   return DEFAULT_POWERSHELL_EXECUTION_POLICY;
 }
 
-export async function resolveLocalBbExecutablePath(
-  options: ResolveLocalBbExecutablePathOptions = {},
+export async function resolveLocalSandyExecutablePath(
+  options: ResolveLocalSandyExecutablePathOptions = {},
 ): Promise<string> {
   const resolvedCliExecutablePath =
     options.cliExecutablePath ?? getDefaultCliExecutablePath();
@@ -380,28 +380,28 @@ export async function resolveLocalBbExecutablePath(
   return cliEntryPath;
 }
 
-export function resolveBbExecutablePathInDirectory(
-  bbExecutableDirectory: string,
+export function resolveSandyExecutablePathInDirectory(
+  sandyExecutableDirectory: string,
 ): string {
-  return resolve(bbExecutableDirectory, "bb");
+  return resolve(sandyExecutableDirectory, "sandy");
 }
 
 export function prepareRuntimeShellEnv(
   options: PrepareRuntimeShellEnvOptions,
 ): NonNullable<AgentRuntimeOptions["shellEnv"]> {
-  const bbExecutablePath =
-    options.bbExecutablePath ??
-    resolveBbExecutablePathInDirectory(options.bbExecutableDirectory);
+  const sandyExecutablePath =
+    options.sandyExecutablePath ??
+    resolveSandyExecutablePathInDirectory(options.sandyExecutableDirectory);
   const shellEnv: NonNullable<AgentRuntimeOptions["shellEnv"]> = {
     PATH: prependPath(
-      options.bbExecutableDirectory,
+      options.sandyExecutableDirectory,
       options.inheritedPath ?? process.env.PATH,
     ),
-    BB_CLI: bbExecutablePath,
-    BB_SERVER_URL: options.serverUrl,
+    SANDY_CLI: sandyExecutablePath,
+    SANDY_SERVER_URL: options.serverUrl,
   };
   assignIfDefined({
-    key: "BB_HOST_DAEMON_PORT",
+    key: "SANDY_HOST_DAEMON_PORT",
     target: shellEnv,
     value:
       options.hostDaemonPort === undefined

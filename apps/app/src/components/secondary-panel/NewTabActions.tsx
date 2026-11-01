@@ -5,16 +5,16 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { COARSE_POINTER_COMPACT_ICON_SIZE_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { COARSE_POINTER_COMPACT_ICON_SIZE_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { AppCommandShortcutHint } from "@/components/commands/AppCommandShortcutHint";
 import { useAppCommandShortcut } from "@/components/commands/AppCommandProvider";
 import { PluginItemIcon } from "@/components/plugin/PluginIcon";
 import type { PluginPanelActionEntry } from "@/components/plugin/PluginPanelActions";
-import { useSidebarSortable } from "@bb/shared-ui/sortable-motion";
-import { useReorderDnd } from "@bb/shared-ui/use-reorder-dnd";
-import { isDesktopBrowserAvailable } from "@/lib/bb-desktop";
+import { useSidebarSortable } from "@sandy/shared-ui/sortable-motion";
+import { useReorderDnd } from "@sandy/shared-ui/use-reorder-dnd";
+import { isDesktopBrowserAvailable } from "@/lib/sandy-desktop";
 import { arrangeByStoredOrder, reorderStoredOrder } from "@/lib/stored-order";
 import type { AppShortcutPresentation } from "@/lib/app-keybindings";
 import {

@@ -7,7 +7,7 @@ import {
   type DbNotifier,
   type DbQueryConnection,
   type QueuedThreadMessageRow,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   PromptInput,
   QueuedMessagePayload,
@@ -18,7 +18,7 @@ import type {
   Thread,
   ThreadCreateOrigin,
   ThreadQueuedMessage,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 import {
   emitPluginMessageDispatched,

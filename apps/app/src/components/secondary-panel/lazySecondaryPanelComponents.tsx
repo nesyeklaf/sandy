@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useAtomValue } from "jotai";
 import { Panel } from "react-resizable-panels";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { preloadTerminalModules } from "@/components/thread/terminal/terminal-modules";
 import { FilePreviewLoading } from "./FilePreviewChrome";
 import { SecondaryPanelContentSkeleton } from "./SecondaryPanelContentSkeleton";

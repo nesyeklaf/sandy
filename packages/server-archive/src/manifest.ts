@@ -5,7 +5,7 @@ import {
   safeRelativePathSchema,
 } from "./relative-path.js";
 
-export const SERVER_ARCHIVE_FORMAT = "bb-server-archive";
+export const SERVER_ARCHIVE_FORMAT = "sandy-server-archive";
 export const SERVER_ARCHIVE_VERSION = 2;
 export const SERVER_ARCHIVE_MANIFEST_PATH = "manifest.json";
 export const SERVER_ARCHIVE_FILES_DIR_NAME = "files";
@@ -26,7 +26,7 @@ export const serverArchiveManifestSchema = z
     format: z.literal(SERVER_ARCHIVE_FORMAT),
     version: z.literal(SERVER_ARCHIVE_VERSION),
     createdAt: z.number().int().nonnegative(),
-    bbVersion: z.string().min(1),
+    sandyVersion: z.string().min(1),
     protocolVersion: z.number().int().nonnegative(),
     migrationCount: z.number().int().nonnegative(),
     sourceDataDir: z.string().min(1),
@@ -66,13 +66,13 @@ export function parseServerArchiveManifest(
   if (!probe.success) {
     throw new ServerArchiveError(
       "corrupt",
-      "Archive manifest is not a bb server archive manifest",
+      "Archive manifest is not a sandy server archive manifest",
     );
   }
   if (probe.data.version !== SERVER_ARCHIVE_VERSION) {
     throw new ServerArchiveError(
       "unsupported_version",
-      `Unsupported bb server archive version ${String(probe.data.version)}`,
+      `Unsupported sandy server archive version ${String(probe.data.version)}`,
     );
   }
   const parsed = serverArchiveManifestSchema.safeParse(value);

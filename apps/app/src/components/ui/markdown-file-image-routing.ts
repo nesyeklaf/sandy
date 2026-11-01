@@ -3,13 +3,13 @@ import {
   getAbsoluteDirname,
   buildAbsoluteFilePath,
   normalizeAbsoluteFilePath,
-} from "@bb/shared-ui/lib/absolute-file-path";
+} from "@sandy/shared-ui/lib/absolute-file-path";
 import {
   buildHostFileContentUrl,
   buildThreadHostFileContentUrl,
 } from "@/lib/file-content-urls";
 
-const ROUTE_ROOT = "/__bb_markdown_file_root__";
+const ROUTE_ROOT = "/__sandy_markdown_file_root__";
 
 export function buildMarkdownFileImageRouting({
   path,

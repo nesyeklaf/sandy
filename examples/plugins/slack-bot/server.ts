@@ -1,12 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
 const SIGNATURE_VERSION = "v0";
 const SIGNATURE_MAX_AGE_SECONDS = 5 * 60;
 
 const CONFIGURE_HINT =
-  "Set botToken, signingSecret, and project with `bb plugin config slack-bot`, " +
-  "then `bb plugin reload slack-bot`.";
+  "Set botToken, signingSecret, and project with `sandy plugin config slack-bot`, " +
+  "then `sandy plugin reload slack-bot`.";
 
 function verifySlackSignature(args: {
   signingSecret: string;
@@ -41,8 +41,8 @@ interface SlackTarget {
   threadTs: string;
 }
 
-export default async function plugin(bb: BbPluginApi) {
-  const settings = bb.settings.define({
+export default async function plugin(sandy: SandyPluginApi) {
+  const settings = sandy.settings.define({
     botToken: {
       type: "string",
       label: "Slack bot token (xoxb-...)",
@@ -63,17 +63,17 @@ export default async function plugin(bb: BbPluginApi) {
     },
     project: {
       type: "project",
-      label: "BB project for mention threads",
-      description: "Mentions spawn BB threads in this project.",
+      label: "SANDY project for mention threads",
+      description: "Mentions spawn SANDY threads in this project.",
     },
   });
 
   const initial = await settings.get();
   if (!initial.botToken || !initial.signingSecret || !initial.project) {
-    bb.status.needsConfiguration(CONFIGURE_HINT);
+    sandy.status.needsConfiguration(CONFIGURE_HINT);
   }
 
-  bb.http.route(
+  sandy.http.route(
     "POST",
     "/events",
     async (context) => {
@@ -123,7 +123,7 @@ export default async function plugin(bb: BbPluginApi) {
           thread_ts?: string;
         };
         if (!current.project) {
-          bb.log.warn(
+          sandy.log.warn(
             `mention ignored — no project configured. ${CONFIGURE_HINT}`,
           );
           return context.json({ ok: true });
@@ -131,9 +131,9 @@ export default async function plugin(bb: BbPluginApi) {
         const prompt = stripMentions(event.text);
         const threadTs = event.thread_ts ?? event.ts;
 
-        const existing = await bb.storage.kv.get<string>(`slack:${threadTs}`);
+        const existing = await sandy.storage.kv.get<string>(`slack:${threadTs}`);
         if (existing !== undefined) {
-          await bb.sdk.threads.send({
+          await sandy.sdk.threads.send({
             threadId: existing,
             mode: "auto",
             input: [{ type: "text", text: prompt }],
@@ -141,18 +141,18 @@ export default async function plugin(bb: BbPluginApi) {
           return context.json({ ok: true });
         }
 
-        const thread = await bb.sdk.threads.spawn({
+        const thread = await sandy.sdk.threads.spawn({
           projectId: current.project,
           prompt,
           environment: { type: "project-default" },
           title: `Slack: ${prompt.slice(0, 60) || "mention"}`,
         });
-        await bb.storage.kv.set(`slack:${threadTs}`, thread.id);
-        await bb.storage.kv.set(`bb:${thread.id}`, {
+        await sandy.storage.kv.set(`slack:${threadTs}`, thread.id);
+        await sandy.storage.kv.set(`sandy:${thread.id}`, {
           channel: event.channel,
           threadTs,
         } satisfies SlackTarget);
-        bb.log.info(`mention in ${event.channel} → thread ${thread.id}`);
+        sandy.log.info(`mention in ${event.channel} → thread ${thread.id}`);
         return context.json({ ok: true });
       }
 
@@ -161,12 +161,12 @@ export default async function plugin(bb: BbPluginApi) {
     { auth: "none" },
   );
 
-  bb.events.on("thread.idle", async ({ thread, lastAssistantText }) => {
-    const target = await bb.storage.kv.get<SlackTarget>(`bb:${thread.id}`);
+  sandy.events.on("thread.idle", async ({ thread, lastAssistantText }) => {
+    const target = await sandy.storage.kv.get<SlackTarget>(`sandy:${thread.id}`);
     if (target === undefined || lastAssistantText === null) return;
     const { botToken } = await settings.get();
     if (!botToken) {
-      bb.status.needsConfiguration(CONFIGURE_HINT);
+      sandy.status.needsConfiguration(CONFIGURE_HINT);
       return;
     }
     const response = await fetch("https://slack.com/api/chat.postMessage", {
@@ -183,7 +183,7 @@ export default async function plugin(bb: BbPluginApi) {
     });
     const result = (await response.json()) as { ok: boolean; error?: string };
     if (!result.ok) {
-      bb.log.warn(
+      sandy.log.warn(
         `chat.postMessage failed: ${result.error ?? "unknown error"}`,
       );
     }

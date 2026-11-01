@@ -1,13 +1,13 @@
 {
-  "name": "bb-plugin-paced-stream-provider",
+  "name": "sandy-plugin-paced-stream-provider",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.3"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Paced stream provider",
     "description": "Perf fixture: an echo-derived provider that streams a long markdown answer in paced chunks.",
     "branding": {
@@ -20,11 +20,11 @@
     "host": "./host.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {},
   "dependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {

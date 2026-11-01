@@ -2,8 +2,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import {
   formatServerDataSize,
   type ServerMoveStepId,
-} from "@bb/domain";
-import { BbHttpError, type BbSdk } from "@bb/sdk";
+} from "@sandy/domain";
+import { SandyHttpError, type SandySdk } from "@sandy/sdk";
 import {
   serverMoveCheckItemSchema,
   type ServerMoveCheckItem,
@@ -14,7 +14,7 @@ import {
   type ServerMoveStatusResponse,
   type ServerMoveStep,
   type ServerMoveStepStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { z } from "zod";
 import { CliExitError } from "../action.js";
 import { getErrorMessage } from "./helpers.js";
@@ -36,7 +36,7 @@ export async function callServerMoveRoute<T>(
     return await run();
   } catch (error) {
     if (
-      error instanceof BbHttpError &&
+      error instanceof SandyHttpError &&
       error.code === SERVER_MOVE_EXPERIMENT_DISABLED_ERROR_CODE
     ) {
       const body = httpErrorMessageBodySchema.safeParse(error.body);
@@ -65,7 +65,7 @@ export type ServerMoveFollowOutcome =
   | { kind: "ended"; status: ServerMoveStatus };
 
 export interface FollowServerMoveArgs {
-  sdk: BbSdk;
+  sdk: SandySdk;
   initial: ServerMoveStatus;
   signal: AbortSignal;
   report: (line: string) => void;
@@ -79,7 +79,7 @@ export function serverMoveStepLabel(
     case "stop-work":
       return "Stop running work";
     case "update-target":
-      return `Update bb on ${targetHostName}`;
+      return `Update sandy on ${targetHostName}`;
     case "export":
       return "Export server data";
     case "transfer":
@@ -110,7 +110,7 @@ export function printServerMoveCheckItems(
 
 export function printServerMoveCheck(check: ServerMoveCheckResponse): void {
   console.log(
-    `Moving the bb server to ${check.targetHostName}`,
+    `Moving the sandy server to ${check.targetHostName}`,
   );
   if (check.serverUrl !== null) console.log(`New address: ${check.serverUrl}`);
   if (check.targetDataDir !== null) {
@@ -118,7 +118,7 @@ export function printServerMoveCheck(check: ServerMoveCheckResponse): void {
   }
   if (check.existingTargetServerData !== null) {
     console.log(
-      `Existing bb server data on ${check.targetHostName}: ${check.existingTargetServerData.path} (${formatServerDataSize(check.existingTargetServerData.sizeBytes)})`,
+      `Existing sandy server data on ${check.targetHostName}: ${check.existingTargetServerData.path} (${formatServerDataSize(check.existingTargetServerData.sizeBytes)})`,
     );
   }
   printServerMoveCheckItems(check.items);
@@ -126,7 +126,7 @@ export function printServerMoveCheck(check: ServerMoveCheckResponse): void {
 }
 
 export function missingAddressGuidance(check: ServerMoveCheckResponse): string {
-  return `The new server needs a direct address. Re-run with --address <url>: the URL every machine and app will use to reach bb on ${check.targetHostName}, such as a Tailscale Serve URL.`;
+  return `The new server needs a direct address. Re-run with --address <url>: the URL every machine and app will use to reach sandy on ${check.targetHostName}, such as a Tailscale Serve URL.`;
 }
 
 export function existingDataGuidance(check: ServerMoveCheckResponse): string {
@@ -135,14 +135,14 @@ export function existingDataGuidance(check: ServerMoveCheckResponse): string {
     existing === null
       ? ""
       : ` at ${existing.path} (${formatServerDataSize(existing.sizeBytes)})`;
-  return `${check.targetHostName} already has bb server data${location}. Re-run with --archive-existing-data to move it aside to a .before-move-<date> directory; it is never merged.`;
+  return `${check.targetHostName} already has sandy server data${location}. Re-run with --archive-existing-data to move it aside to a .before-move-<date> directory; it is never merged.`;
 }
 
 export function blockedStartItems(
   error: unknown,
 ): ServerMoveCheckItem[] | null {
   if (
-    !(error instanceof BbHttpError) ||
+    !(error instanceof SandyHttpError) ||
     error.code !== SERVER_MOVE_BLOCKED_ERROR_CODE
   ) {
     return null;
@@ -153,7 +153,7 @@ export function blockedStartItems(
 
 function isServerMovedError(error: unknown): boolean {
   return (
-    error instanceof BbHttpError &&
+    error instanceof SandyHttpError &&
     error.status === 410 &&
     error.code === SERVER_MOVED_ERROR_CODE
   );
@@ -184,10 +184,10 @@ export function serverMoveRecoveryGuidance(status: ServerMoveStatus): string[] {
   const name = status.targetHostName;
   const problem = status.error === null ? "" : ` (${status.error.message})`;
   return [
-    `bb couldn't confirm that ${name} took over${problem}.`,
-    `This server stays up but read-only, and bb finishes the move on its own as soon as ${name} answers.`,
-    `If ${name} isn't running the server, run bb server move cancel --yes to abandon the move and keep the server here.`,
-    "If this server stops, run bb server unlock on this computer.",
+    `sandy couldn't confirm that ${name} took over${problem}.`,
+    `This server stays up but read-only, and sandy finishes the move on its own as soon as ${name} answers.`,
+    `If ${name} isn't running the server, run sandy server move cancel --yes to abandon the move and keep the server here.`,
+    "If this server stops, run sandy server unlock on this computer.",
   ];
 }
 
@@ -256,7 +256,7 @@ export async function followServerMove(
       consecutiveFailures += 1;
       if (consecutiveFailures >= MAX_CONSECUTIVE_STATUS_FAILURES) {
         throw new Error(
-          `Lost contact with the bb server before the switch (${getErrorMessage(error)}). Run bb server move status once it answers again.`,
+          `Lost contact with the sandy server before the switch (${getErrorMessage(error)}). Run sandy server move status once it answers again.`,
         );
       }
       continue;
@@ -270,7 +270,7 @@ export async function followServerMove(
       return { kind: "moved", status };
     }
     throw new Error(
-      "The bb server no longer reports this move. A server restart before the switch abandons the move and keeps the server where it was.",
+      "The sandy server no longer reports this move. A server restart before the switch abandons the move and keeps the server where it was.",
     );
   }
 }
@@ -287,7 +287,7 @@ export function formatServerMoveFailure(status: ServerMoveStatus): string {
 
 export function printServerMoveStatus(status: ServerMoveStatus): void {
   console.log(
-    `Moving the bb server to ${status.targetHostName} (${STATE_LABELS[status.state]})`,
+    `Moving the sandy server to ${status.targetHostName} (${STATE_LABELS[status.state]})`,
   );
   console.log(`Address: ${status.serverUrl}`);
   console.log(`Started: ${new Date(status.startedAt).toLocaleString()}`);
@@ -311,7 +311,7 @@ export function printServerMoveStatus(status: ServerMoveStatus): void {
   }
   if (status.cancellable) {
     console.log("");
-    console.log("Cancel it with bb server move cancel.");
+    console.log("Cancel it with sandy server move cancel.");
   }
 }
 

@@ -6,17 +6,17 @@ import {
   hydrateRetainedEventOutputRows,
   listLatestTurnFinalAgentMessageEventRows,
   listStoredEventRows as listStoredEventRowRecords,
-} from "@bb/db";
-import type { DbConnection, StoredEventRow } from "@bb/db";
-import { toRecord } from "@bb/core-ui";
-import { buildThreadEventRow, parseStoredThreadEvent } from "@bb/domain";
-import { threadScope, turnScope } from "@bb/domain";
+} from "@sandy/db";
+import type { DbConnection, StoredEventRow } from "@sandy/db";
+import { toRecord } from "@sandy/core-ui";
+import { buildThreadEventRow, parseStoredThreadEvent } from "@sandy/domain";
+import { threadScope, turnScope } from "@sandy/domain";
 import type {
   ThreadEvent,
   ThreadEventRow,
   ThreadEventScope,
   ThreadEventType,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 
 const THREAD_EVENT_RESPONSE_DATA_BYTE_LIMIT = 8 * 1024 * 1024;

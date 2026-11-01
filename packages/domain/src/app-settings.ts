@@ -4,7 +4,7 @@ import { isValidGitBranchName } from "./git-checkout.js";
 
 export const MANAGED_BRANCH_PREFIX_MAX_LENGTH = 64;
 
-export const DEFAULT_MANAGED_BRANCH_PREFIX = "bb/";
+export const DEFAULT_MANAGED_BRANCH_PREFIX = "sandy/";
 
 export const IDLE_PROVIDER_SESSION_TIMEOUT_MINUTES = [
   0, 5, 10, 30, 60,
@@ -21,14 +21,14 @@ export const managedBranchPrefixSchema = z
     message: "Prefix must start a valid git branch name",
   });
 
-export const BB_SKILL_SOURCE_IDS = [
-  "bb-plugins",
-  "bb-user",
-  "bb-project",
+export const SANDY_SKILL_SOURCE_IDS = [
+  "sandy-plugins",
+  "sandy-user",
+  "sandy-project",
   "shared",
 ] as const;
-export const bbSkillSourceIdSchema = z.enum(BB_SKILL_SOURCE_IDS);
-export type BbSkillSourceId = z.infer<typeof bbSkillSourceIdSchema>;
+export const sandySkillSourceIdSchema = z.enum(SANDY_SKILL_SOURCE_IDS);
+export type SandySkillSourceId = z.infer<typeof sandySkillSourceIdSchema>;
 
 export const appSettingsSchema = z
   .object({
@@ -65,7 +65,7 @@ export const appSettingsSchema = z
     defaultMachineAccess: z.string().min(1).nullable(),
     onboardingCompletedAt: z.string().min(1).nullable(),
     earlyAdopter: z.boolean(),
-    disabledSkillSources: z.array(bbSkillSourceIdSchema),
+    disabledSkillSources: z.array(sandySkillSourceIdSchema),
   })
   .strict();
 export type AppSettings = z.infer<typeof appSettingsSchema>;
@@ -107,7 +107,7 @@ export const appSettingsUpdateSchema = z.union([
     showUnhandledProviderEvents: z.boolean().optional(),
     onboardingCompletedAt: z.string().min(1).nullable().optional(),
     earlyAdopter: z.boolean().optional(),
-    disabledSkillSources: z.array(bbSkillSourceIdSchema).optional(),
+    disabledSkillSources: z.array(sandySkillSourceIdSchema).optional(),
   }),
   appSettingsSchema.omit({ showDiagnosticEvents: true }).extend({
     idleProviderSessionTimeoutMinutes:
@@ -120,7 +120,7 @@ export const appSettingsUpdateSchema = z.union([
     showUnhandledProviderEvents: z.boolean(),
     onboardingCompletedAt: z.string().min(1).nullable().optional(),
     earlyAdopter: z.boolean().optional(),
-    disabledSkillSources: z.array(bbSkillSourceIdSchema).optional(),
+    disabledSkillSources: z.array(sandySkillSourceIdSchema).optional(),
   }),
 ]);
 export type AppSettingsUpdate = z.infer<typeof appSettingsUpdateSchema>;

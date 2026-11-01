@@ -1,4 +1,4 @@
-import type { Thread } from "@bb/domain";
+import type { Thread } from "@sandy/domain";
 
 type ForkableThread = Pick<Thread, "archivedAt" | "environmentId" | "providerId">;
 

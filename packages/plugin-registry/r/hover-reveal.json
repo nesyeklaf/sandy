@@ -3,7 +3,7 @@
   "name": "hover-reveal",
   "type": "registry:ui",
   "title": "hover-reveal",
-  "description": "BB ui \"hover-reveal\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"hover-reveal\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "files": [
     {
       "path": "registry/components/ui/hover-reveal.ts",

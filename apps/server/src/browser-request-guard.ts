@@ -2,7 +2,7 @@ import { isIP } from "node:net";
 import {
   buildLocalAppOrigins,
   type BuildLocalAppOriginsArgs,
-} from "@bb/config/local-app-origins";
+} from "@sandy/config/local-app-origins";
 import type { ServerRuntimeConfig } from "./types.js";
 
 interface BrowserRequestGuardDeps {
@@ -110,7 +110,7 @@ export function requestHostProblem(
   return {
     status: 403,
     error:
-      'Host must be localhost, an IP address, or the hostname configured in BB_APP_URL. To allow your custom hostname, run "npx bb-app config set BB_APP_URL https://bb.example.com" on the machine running BB (including the desktop app), replacing https://bb.example.com with your app URL, then reload this page.',
+      'Host must be localhost, an IP address, or the hostname configured in SANDY_APP_URL. To allow your custom hostname, run "npx sandy-app config set SANDY_APP_URL https://sandy.example.com" on the machine running SANDY (including the desktop app), replacing https://sandy.example.com with your app URL, then reload this page.',
   };
 }
 
@@ -188,7 +188,7 @@ export function browserRequestProblem(
   if (origin !== undefined && !isTrustedOrigin(context, deps, origin)) {
     return {
       status: 403,
-      error: `origin "${origin}" is not a local BB app origin`,
+      error: `origin "${origin}" is not a local SANDY app origin`,
     };
   }
 

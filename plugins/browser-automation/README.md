@@ -1,13 +1,13 @@
-# Browser Automation for BB
+# Browser Automation for SANDY
 
 Thread-owned browser scripts, desktop attachment, and local headless Chrome
 on enrolled hosts. Requires the public
-`bb.sdk.experimental_desktopBrowsers` API (SDK 0.4.48 or newer).
+`sandy.sdk.experimental_desktopBrowsers` API (SDK 0.4.48 or newer).
 
 Browser Automation is optional and disabled by default. Enable it in plugin
 settings when you want to use it.
 
-The plugin was scaffolded with `bb plugin new browser-automation`. It has server, host,
+The plugin was scaffolded with `sandy plugin new browser-automation`. It has server, host,
 app, CLI, RPC, and a bundled skill. Agents use the CLI through the skill. Screenshot
 commands return temporary JPEG file paths and the browser host ID. Local headless
 sessions show a live preview inline in the chat that expands into a lightbox; see
@@ -15,8 +15,8 @@ sessions show a live preview inline in the chat that expands into a lightbox; se
 
 ## Runtime installation and provenance
 
-bb never downloads the DevBrowser runtime. You install it on the **selected
-browser host** yourself, outside bb; the plugin only looks for it and verifies
+sandy never downloads the DevBrowser runtime. You install it on the **selected
+browser host** yourself, outside sandy; the plugin only looks for it and verifies
 it. `runtime-pin.ts` pins one exact release:
 
 | Field        | Value                                                               |
@@ -50,7 +50,7 @@ with a message that names the expected directory, the version and the digest.
 To install it, fetch `dev-browser-<platform>` from the GitHub release for the
 tag, confirm its SHA-256 against `SHA256SUMS` and the digest above, place it
 at the binary path, make it executable, and write `verified.json`. A runtime
-installed by an earlier bb release in the same layout keeps working.
+installed by an earlier sandy release in the same layout keeps working.
 
 ### No fallback
 
@@ -79,30 +79,30 @@ Desktop sessions attach to an existing browser and do not change its launch flag
 ## CLI and agent workflow
 
 Choose both the backend and its host explicitly. There is no silent fallback or
-profile migration. Find desktop instances through BB's core desktop-browser
+profile migration. Find desktop instances through SANDY's core desktop-browser
 CLI/SDK discovery. The selected instance's generation is resolved on opening.
 
 ```sh
-bb browser-automation open --backend local --headless --machine <host-id> --json
-bb browser-automation open --backend desktop --machine <desktop-host-id> --desktop <instance-id> --json
-bb browser-automation list --json
-bb browser-automation run <session-id> --script 'const p = await browser.getPage("main"); await p.goto("https://example.com"); await p.snapshot()' --json
-bb browser-automation run <session-id> --script-file ./check.js --script-host <invoking-host-id> --timeout-ms 30000 --json
-bb browser-automation pages <session-id> --json
-bb browser-automation screenshot <session-id> --page main --json
-bb browser-automation preview <session-id> [--after <sequence>] --json
-bb browser-automation stop <session-id> --json
-bb browser-automation close <session-id> --json
+sandy browser-automation open --backend local --headless --machine <host-id> --json
+sandy browser-automation open --backend desktop --machine <desktop-host-id> --desktop <instance-id> --json
+sandy browser-automation list --json
+sandy browser-automation run <session-id> --script 'const p = await browser.getPage("main"); await p.goto("https://example.com"); await p.snapshot()' --json
+sandy browser-automation run <session-id> --script-file ./check.js --script-host <invoking-host-id> --timeout-ms 30000 --json
+sandy browser-automation pages <session-id> --json
+sandy browser-automation screenshot <session-id> --page main --json
+sandy browser-automation preview <session-id> [--after <sequence>] --json
+sandy browser-automation stop <session-id> --json
+sandy browser-automation close <session-id> --json
 ```
 
 Outside a thread, supply `--thread <thread-id>`. Calls from an existing thread
 cannot override its ownership. `--script-file` requires `--script-host <host-id>` naming the source host
-explicitly and is read through `bb.sdk.files`, then transferred as script text to the
+explicitly and is read through `sandy.sdk.files`, then transferred as script text to the
 browser host. Relative paths use the invoking CLI working directory. Browser
 file reads/writes still occur on the browser's host; scripts are not run in the
 workspace directory.
 
-Desktop sessions create a tab in the BB browser's profile, so pages load with
+Desktop sessions create a tab in the SANDY browser's profile, so pages load with
 the user's signed-in cookies, including cookies imported from another browser.
 Acquiring control opens the side panel and selects its browser tab only when
 the owning thread is already focused. New or activated controller pages follow
@@ -137,7 +137,7 @@ must resolve inside that session's capture directory; oversized files and
 escaping symlinks fail. CLI `run` and `screenshot` JSON returns `hostId` plus
 `images: [{path, mimeType, width, height}]`, without inline image bytes. Paths
 are in the browser session's temporary directory on the selected host. Agents
-read them directly on that machine, or use `bb file read <path> --host <host-id>
+read them directly on that machine, or use `sandy file read <path> --host <host-id>
 --json` to fetch a remote image and decode its base64 content to a local temporary
 JPEG. The bundled skill includes a copy-pasteable command. Read or copy captures
 before closing the session; cleanup removes them. Endpoints and connection
@@ -175,7 +175,7 @@ immediately, and the plugin stops its worker session when notified.
 Opening a local headless session returns a `previewDirective` in the CLI
 result, `::browser-preview{session="<session-id>"}`. The plugin's agent
 instructions tell the agent to paste it once, as a standalone line, in its next
-message. BB renders that line inline in the chat as a live thumbnail of the
+message. SANDY renders that line inline in the chat as a live thumbnail of the
 browser with the page title, location, and a Live, Ended, or Unavailable state.
 The card collapses, and its expand button opens the same live view in a
 lightbox sized to the window; on compact screens the lightbox is the shared
@@ -211,22 +211,22 @@ frame dimmed for as long as it stays mounted; a card first viewed after that
 shows only its Ended header. A card whose session it can never read, such as a
 directive copied into a forked thread, gives up after five failed requests.
 
-`bb browser-automation preview <session-id> --json` reports the same live frame
+`sandy browser-automation preview <session-id> --json` reports the same live frame
 as `{session, frame}` where `frame` has `sequence`, `mimeType`, `width`,
 `height`, `url`, `title`, and `bytes`, or is `null` when nothing newer than
 `--after` arrived. It omits the image bytes; use `screenshot` for a file.
 
 ## Validation
 
-From the BB checkout, use Turbo:
+From the SANDY checkout, use Turbo:
 
 ```sh
-pnpm exec turbo run test typecheck build --filter=bb-plugin-browser-automation
+pnpm exec turbo run test typecheck build --filter=sandy-plugin-browser-automation
 DEV_BROWSER_SMOKE_BINARY=/absolute/path/to/verified/dev-browser \
 DEV_BROWSER_SMOKE_CHROME=/absolute/path/to/chrome \
-pnpm exec turbo run smoke --filter=bb-plugin-browser-automation
+pnpm exec turbo run smoke --filter=sandy-plugin-browser-automation
 DEV_BROWSER_SMOKE_CHROME=/absolute/path/to/chrome \
-pnpm exec turbo run smoke:install --filter=bb-plugin-browser-automation
+pnpm exec turbo run smoke:install --filter=sandy-plugin-browser-automation
 ```
 
 `installer.test.ts` drives the installer against a fake `npm` and a local
@@ -241,7 +241,7 @@ including a cross-origin iframe snapshot and a JPEG screenshot. It prints the
 binary path, its SHA-256, and timings.
 
 `smoke` takes an explicit binary and creates disposable directories and runs
-real Chrome, without starting a BB core or using an existing browser profile.
+real Chrome, without starting a SANDY core or using an existing browser profile.
 It verifies named pages, navigation, clicking, JPEG bytes, a live preview that
 follows a second named page while its script runs and switches to full-size
 frames on request, serialization,
@@ -253,7 +253,7 @@ Both smokes link directly to Chrome and exercise the production launch flags
 without a wrapper. The attachment smoke also launches its separate browser
 fixture with `--no-sandbox` so it works on hosts with restricted user namespaces.
 
-Build with a current BB CLI: an older installed CLI can successfully bundle the
+Build with a current SANDY CLI: an older installed CLI can successfully bundle the
 sources while stamping old SDK metadata. Inspect `dist/*.meta.json` before any
 future installation or distribution. Generated bundles and declarations are
 ignored. No plugin installation or live core is needed for these checks.

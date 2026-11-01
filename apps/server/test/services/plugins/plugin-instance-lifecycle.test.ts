@@ -3,9 +3,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
-import { createPendingInteraction, getPendingInteraction } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { Logger } from "@bb/logger";
+import { createPendingInteraction, getPendingInteraction } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   invokeServerAccessProvider,
@@ -32,7 +32,7 @@ interface LifecycleControl {
   availabilityCalls: number[];
   release: Promise<void>;
   disposeGate: Promise<void>;
-  afterRelease: (bb: {
+  afterRelease: (sandy: {
     realtime: { publish(channel: string, payload: unknown): void };
   }) => void;
   coreWork: () => void;
@@ -43,19 +43,19 @@ declare global {
 }
 
 const fixture = `
-  import { defineRpcContract } from "@get-bb/plugin-sdk";
+  import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
   import { z } from "zod";
-  export default function plugin(bb: any) {
+  export default function plugin(sandy: any) {
     const control = globalThis.__lifecycle;
     control.generation += 1;
     const generation = control.generation;
     const threadId = control.threadIds[generation - 1];
     if (threadId !== undefined) {
-      void bb.ui
+      void sandy.ui
         .requestInput({ threadId, rendererId: "probe", title: "Probe " + generation, payload: {} })
         .then((result: unknown) => control.formResults.push({ generation, result }));
     }
-    bb.rpc.register(
+    sandy.rpc.register(
       defineRpcContract({
         wait: { input: z.null(), output: z.number() },
         ping: { input: z.null(), output: z.number() },
@@ -72,7 +72,7 @@ const fixture = `
         ping: () => generation,
       },
     );
-    bb.cli.register({
+    sandy.cli.register({
       name: "lifecycle",
       summary: "Fixture",
       async run(argv: string[], ctx: any) {
@@ -89,11 +89,11 @@ const fixture = `
         if (argv[0] === "ping") return { exitCode: 0, stdout: String(generation) };
         await control.release;
         control.cliSignals.push({ generation, aborted: ctx.signal.aborted });
-        setTimeout(() => control.afterRelease(bb), 20);
+        setTimeout(() => control.afterRelease(sandy), 20);
         return { exitCode: 0 };
       },
     });
-    bb.http.experimental_websocket(
+    sandy.http.experimental_websocket(
       "/socket",
       () => ({
         onClose(_socket: any, event: any) {
@@ -102,7 +102,7 @@ const fixture = `
       }),
       { auth: "none" },
     );
-    bb.experimental_serverAccess.register({
+    sandy.experimental_serverAccess.register({
       id: "lifecycle-access",
       displayName: "Lifecycle access",
       description: "Fixture",
@@ -115,7 +115,7 @@ const fixture = `
       },
       async release() {},
     });
-    bb.onDispose(() => control.disposeGate);
+    sandy.onDispose(() => control.disposeGate);
   }
 `;
 
@@ -144,9 +144,9 @@ async function writeFixture(root: string): Promise<void> {
   await writeFile(
     join(root, "package.json"),
     JSON.stringify({
-      name: "bb-plugin-lifecycle",
+      name: "sandy-plugin-lifecycle",
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Lifecycle fixture",
         description: "Exercises plugin instance ownership.",
         branding: { icon: "Zap" },
@@ -400,7 +400,7 @@ describe("plugin instance lifecycle without cooperation", () => {
   let service: PluginService;
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-lifecycle-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-lifecycle-"));
     const created = newControl();
     releaseGate = created.release;
     globalThis.__lifecycle = created.control;
@@ -439,7 +439,7 @@ describe("plugin instance lifecycle without cooperation", () => {
     const uncaught = withUncaughtExceptions((error) =>
       service.handleUncaughtException(error),
     );
-    control().afterRelease = (bb) => bb.realtime.publish("changed", null);
+    control().afterRelease = (sandy) => sandy.realtime.publish("changed", null);
     try {
       const command = service.runCliCommand("lifecycle", [], {});
       await new Promise((resolve) => setTimeout(resolve, 50));

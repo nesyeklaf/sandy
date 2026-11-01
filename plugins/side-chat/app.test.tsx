@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 
 const app = await loadPluginApp(() => import("./app"));
 
@@ -23,7 +23,7 @@ describe("SideChatPanel", () => {
       { rpc: {}, sdk: { threads: { send } } },
     );
 
-    fireEvent.click(slot.getByTestId("bb-thread-chat-action-send-to-main"));
+    fireEvent.click(slot.getByTestId("sandy-thread-chat-action-send-to-main"));
 
     await waitFor(() => {
       expect(send).toHaveBeenCalledWith({

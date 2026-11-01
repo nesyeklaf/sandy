@@ -1,9 +1,9 @@
 import { TouchSensor } from "@dnd-kit/core";
-import { COMPACT_VIEWPORT_QUERY } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { COMPACT_VIEWPORT_QUERY } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   getMediaQuerySnapshot,
   subscribeMediaQuery,
-} from "@bb/shared-ui/hooks/use-media-query";
+} from "@sandy/shared-ui/hooks/use-media-query";
 import {
   isCompactSidebarDrawerShowing,
   subscribeCompactSidebarDrawerShowing,

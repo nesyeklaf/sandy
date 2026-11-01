@@ -15,7 +15,7 @@ import {
   buildPluginServer,
   pluginBuildCodeDigest,
   resolvePluginBuildToolchain,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildCachedPluginServer } from "../../../src/services/plugins/plugin-server-cache.js";
 
@@ -29,8 +29,8 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   return { ...actual, realpath: vi.fn(actual.realpath) };
 });
 
-vi.mock("@bb/plugin-build", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@bb/plugin-build")>();
+vi.mock("@sandy/plugin-build", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@sandy/plugin-build")>();
   return {
     ...actual,
     buildPluginServer: vi.fn(actual.buildPluginServer),
@@ -66,7 +66,7 @@ describe("plugin server cache", () => {
   }
 
   async function createPlugin(files: PluginFiles) {
-    const workDir = await mkdtemp(join(tmpdir(), "bb-server-cache-"));
+    const workDir = await mkdtemp(join(tmpdir(), "sandy-server-cache-"));
     tempDirs.push(workDir);
     const rootDir = join(workDir, "plugin");
     const dataDir = join(workDir, "data");
@@ -84,10 +84,10 @@ describe("plugin server cache", () => {
         dataDir,
         pluginId: "cache-fixture",
         sdkVersion: overrides.sdkVersion ?? "0.4.0",
-        bbVersion: "0.9.0",
+        sandyVersion: "0.9.0",
         validatedConfig: {
           serverEntry: join(rootDir, "server.ts"),
-          packageName: "bb-plugin-cache-fixture",
+          packageName: "sandy-plugin-cache-fixture",
           pluginVersion: "1.0.0",
         },
         toolchain: () => {
@@ -104,9 +104,9 @@ describe("plugin server cache", () => {
 
   it("builds an unchanged plugin once and reuses it with its warnings", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts":
-        'export default (bb: any) => ["first-build", bb.environments.status];\n',
+        'export default (sandy: any) => ["first-build", sandy.environments.status];\n',
     });
 
     const first = await plugin.load();
@@ -124,7 +124,7 @@ describe("plugin server cache", () => {
 
   it("does not reuse a build when a source file is saved while it builds", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts":
         'import late from "late-dependency";\nexport default () => ["entry-old", late];\n',
       "late.js": 'export default "late";\n',
@@ -207,7 +207,7 @@ describe("plugin server cache", () => {
     },
   ])("rebuilds after a change to $name", async ({ files, change }) => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       ...files,
     });
 
@@ -220,7 +220,7 @@ describe("plugin server cache", () => {
 
   it("checks unchanged inputs without reading them, and falls back to content", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts":
         'import { value } from "./value";\nexport default () => value;\n',
       "value.ts": 'export const value = "from-old";\n',
@@ -247,9 +247,9 @@ describe("plugin server cache", () => {
     expect(plugin.builds()).toBe(2);
   });
 
-  it("rebuilds when bb's plugin build code changes", async () => {
+  it("rebuilds when sandy's plugin build code changes", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts": 'export default () => "server";\n',
     });
 
@@ -266,7 +266,7 @@ describe("plugin server cache", () => {
 
   it("keeps a successful build whose inputs cannot be recorded", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts": 'export default () => "unrecorded";\n',
     });
     const actualRealpath = vi.mocked(realpath).getMockImplementation();
@@ -296,7 +296,7 @@ describe("plugin server cache", () => {
 
   it("keeps a bounded number of builds per plugin", async () => {
     const plugin = await createPlugin({
-      "package.json": '{"name":"bb-plugin-cache-fixture","type":"module"}\n',
+      "package.json": '{"name":"sandy-plugin-cache-fixture","type":"module"}\n',
       "server.ts":
         'import { value } from "cache-dependency";\nexport default () => value;\n',
       "node_modules/cache-dependency/package.json":

@@ -1,8 +1,8 @@
-import { getThread, listThreadDeletionTree } from "@bb/db";
+import { getThread, listThreadDeletionTree } from "@sandy/db";
 import type {
   ThreadCascadeAction,
   ThreadCascadeListResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 import { listArchiveCascadeThreadIds } from "./thread-archive.js";
 

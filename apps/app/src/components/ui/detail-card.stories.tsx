@@ -1,14 +1,14 @@
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import { DetailCard, DetailRow } from "./detail-card";
-import { Input } from "@bb/shared-ui/input";
-import { BranchPicker } from "@bb/shared-ui/branch-picker";
+import { Input } from "@sandy/shared-ui/input";
+import { BranchPicker } from "@sandy/shared-ui/branch-picker";
 import { OptionPicker } from "../pickers/OptionPicker";
 import {
   WorkspaceChangesList,
   type WorkspaceChangedFile,
-} from "@bb/shared-ui/workspace-changes-list";
+} from "@sandy/shared-ui/workspace-changes-list";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 
 export default {
   title: "ui/Detail Card",
@@ -80,7 +80,7 @@ export function Overview() {
               title="Copy branch name"
             >
               <span className="truncate">
-                bb/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk
+                sandy/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk
               </span>
               <Icon
                 name="Copy"

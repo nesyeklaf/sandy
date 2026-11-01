@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   cleanup:
-    if: github.repository == 'get-bb/bb'
+    if: github.repository == 'nesyeklaf/sandy'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

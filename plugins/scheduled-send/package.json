@@ -1,14 +1,14 @@
 {
-  "name": "bb-plugin-scheduled-send",
+  "name": "sandy-plugin-scheduled-send",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Schedule the current composer draft to send at a later time.",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.0"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.0"
   },
-  "bb": {
+  "sandy": {
     "name": "Send later",
     "description": "Schedule the current composer draft to send at a later time.",
     "branding": {
@@ -18,20 +18,20 @@
     "app": "./app.tsx"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*"
+    "@sandy/shared-ui": "workspace:*"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.0.0",

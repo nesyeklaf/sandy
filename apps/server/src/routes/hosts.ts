@@ -5,14 +5,14 @@ import {
   getNonDestroyedHost,
   getPublicProjectByLocalPathSource,
   updateHost,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import type { AppDeps } from "../types.js";
 import { getProviderInstallations } from "../services/system/provider-installations.js";
 import { COMMAND_TIMEOUT_MS } from "../constants.js";

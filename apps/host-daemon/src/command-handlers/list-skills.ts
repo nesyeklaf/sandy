@@ -1,18 +1,18 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { resolveDataDirSkillsRootPath } from "@bb/config/skill-storage-paths";
+import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths";
 import {
   EMPTY_PROVIDER_NATIVE_ROOTS,
   EMPTY_PROVIDER_RESOLVED_NATIVE_ROOTS,
   providerNativeRootsAreEmpty,
   type ProviderNativeRoots,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   DiscoveredSkill,
   HostDaemonOnlineRpcResult,
   SkillRootKind,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   CommandDispatchError,
   type CommandOf,
@@ -32,27 +32,27 @@ import { writeHostFile } from "./file-write.js";
 
 type SkillRootResolution = DeclaredScanRootResolution;
 
-const SHARED_SKILLS_PROVIDER_ID = "bb-shared";
+const SHARED_SKILLS_PROVIDER_ID = "sandy-shared";
 
-function createBbSkillScanRoot(
+function createSandySkillScanRoot(
   rootPath: string,
-  rootKind: Extract<SkillRootKind, `bb-${string}`>,
+  rootKind: Extract<SkillRootKind, `sandy-${string}`>,
 ): SkillScanRoot {
   return {
     rootPath,
-    ...(rootKind === "bb-project"
+    ...(rootKind === "sandy-project"
       ? { boundaryPath: path.dirname(path.dirname(rootPath)) }
       : {}),
     shape: "skill",
     namePrefix: "",
     source: "skill",
-    origin: rootKind === "bb-project" ? "project" : "user",
+    origin: rootKind === "sandy-project" ? "project" : "user",
     identitySeed: rootKind,
     rootKind,
   };
 }
 
-function resolveBbSkillScanRoots(
+function resolveSandySkillScanRoots(
   resolution: SkillRootResolution,
 ): SkillScanRoot[] {
   const roots: SkillScanRoot[] = [];
@@ -61,9 +61,9 @@ function resolveBbSkillScanRoots(
     resolution.providerId !== SHARED_SKILLS_PROVIDER_ID
   ) {
     roots.push(
-      createBbSkillScanRoot(
-        path.join(resolution.cwd, ".bb", "skills"),
-        "bb-project",
+      createSandySkillScanRoot(
+        path.join(resolution.cwd, ".sandy", "skills"),
+        "sandy-project",
       ),
     );
   }
@@ -103,7 +103,7 @@ function classifySkillRoot(
 export async function resolveSkillScanRoots(
   resolution: SkillRootResolution,
 ): Promise<SkillScanRoot[]> {
-  const skillRoots = resolveBbSkillScanRoots(resolution);
+  const skillRoots = resolveSandySkillScanRoots(resolution);
   const providerRoots = await resolveDeclaredScanRoots(resolution);
   for (const root of providerRoots) {
     const classification = classifySkillRoot(root, resolution);
@@ -171,21 +171,21 @@ function resolveDeletableSkillRoot(
   },
   dataDir: string,
 ): string {
-  if (args.scope === "bb-user") {
+  if (args.scope === "sandy-user") {
     return resolveDataDirSkillsRootPath(dataDir);
   }
-  if (args.scope === "bb-project") {
+  if (args.scope === "sandy-project") {
     const cwd = args.cwd;
     if (cwd === null) {
       throw new CommandDispatchError(
         "invalid_path",
-        "cwd is required for a bb-project skill",
+        "cwd is required for a sandy-project skill",
       );
     }
     if (!path.isAbsolute(cwd)) {
       throw new CommandDispatchError("invalid_path", "cwd must be absolute");
     }
-    return path.join(cwd, ".bb", "skills");
+    return path.join(cwd, ".sandy", "skills");
   }
   if (args.rootPath === null || !path.isAbsolute(args.rootPath)) {
     throw new CommandDispatchError(
@@ -285,7 +285,7 @@ export async function writeHostSkill(
   if (realTarget !== path.join(realRoot, command.name)) {
     throw new CommandDispatchError(
       "skill_outside_root",
-      "Refusing to edit a skill that resolves outside its bb root",
+      "Refusing to edit a skill that resolves outside its sandy root",
     );
   }
   const skillFilePath = path.join(realTarget, SKILL_FILE_NAME);

@@ -1,5 +1,5 @@
 import { nextZoomFactor } from "./desktop-zoom.js";
-import type { BbDesktopZoomCommand } from "@bb/desktop-contract";
+import type { SandyDesktopZoomCommand } from "@sandy/desktop-contract";
 import type { BrowserWindowConstructorOptions, Event } from "electron";
 import {
   MIN_WINDOW_HEIGHT,
@@ -23,8 +23,8 @@ import {
   MACOS_TRAFFIC_LIGHT_INSET_PX,
   MACOS_TRAFFIC_LIGHT_SIZE_PX,
   MACOS_TRAFFIC_LIGHT_TOP_INSET_PX,
-} from "@bb/desktop-contract";
-import { BB_DESKTOP_ZOOM_CHANGED_CHANNEL } from "./desktop-ipc-channels.js";
+} from "@sandy/desktop-contract";
+import { SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL } from "./desktop-ipc-channels.js";
 
 type DesktopWindowIcon = BrowserWindowConstructorOptions["icon"];
 
@@ -145,7 +145,7 @@ export interface DesktopWindowFactory {
   loadUrl(args: LoadDesktopWindowsUrlArgs): Promise<void>;
   openDevTools(): void;
   persistOpenWindows(): Promise<void>;
-  zoom(webContentsId: number, command: BbDesktopZoomCommand): boolean;
+  zoom(webContentsId: number, command: SandyDesktopZoomCommand): boolean;
   restoreSavedWindows(
     args: RestoreDesktopWindowsArgs,
   ): Promise<DesktopBrowserWindow[]>;
@@ -217,7 +217,7 @@ function createWindowOptions(
     minHeight: MIN_WINDOW_HEIGHT,
     minWidth: MIN_WINDOW_WIDTH,
     show: false,
-    title: "bb",
+    title: "sandy",
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -338,7 +338,7 @@ export function createDesktopWindowFactory(
         );
       }
       if (args.isMac) {
-        browserWindow.webContents.ipc.on(BB_DESKTOP_ZOOM_CHANGED_CHANNEL, () =>
+        browserWindow.webContents.ipc.on(SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL, () =>
           browserWindow.setWindowButtonPosition(
             getMacosTrafficLightPosition(
               browserWindow.webContents.getZoomFactor(),

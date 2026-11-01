@@ -6,7 +6,7 @@ import { afterEach, expect, it } from "vitest";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { gitRpcContract } from "../rpc-contract.js";
 import { useGitBranches } from "./queries.js";
 
@@ -53,7 +53,7 @@ it("only requests the branch search a typist settles on", async () => {
     {
       rpc: rpc as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
     },
   );
   const branchCalls = () =>

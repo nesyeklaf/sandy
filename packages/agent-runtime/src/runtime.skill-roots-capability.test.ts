@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import { createAgentRuntime } from "./runtime.js";
 import {
   createScriptedEchoLaunch,
@@ -27,7 +27,7 @@ describe("skills/configure handshake capability", () => {
   const runtimes: AgentRuntime[] = [];
 
   beforeEach(() => {
-    workspacePath = mkdtempSync(join(tmpdir(), "bb-skill-capability-"));
+    workspacePath = mkdtempSync(join(tmpdir(), "sandy-skill-capability-"));
   });
 
   afterEach(async () => {

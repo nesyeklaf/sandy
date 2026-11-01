@@ -2,15 +2,15 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { eq } from "drizzle-orm";
-import { hostDaemonSessions } from "@bb/db";
+import { hostDaemonSessions } from "@sandy/db";
 import {
   hostDaemonCommandSchema,
   hostDaemonOnlineRpcResponseMessageSchema,
   hostDaemonRpcCommandSchema,
   hostDaemonServerWsMessageSchema,
   parseHostDaemonRpcResultForCommand,
-} from "@bb/host-daemon-contract";
-import { type ThreadEvent } from "@bb/domain";
+} from "@sandy/host-daemon-contract";
+import { type ThreadEvent } from "@sandy/domain";
 import type {
   HostDaemonCommand,
   HostDaemonEventEnvelope,
@@ -18,7 +18,7 @@ import type {
   HostDaemonOnlineRpcRequestMessage,
   HostDaemonRpcCommand,
   HostDaemonRpcResultForCommand,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { TestAppHarness } from "./test-app.js";
 import { availableModelFixture } from "./available-models.js";
 import { createTestDaemonHostKey } from "./test-app.js";
@@ -116,7 +116,7 @@ export interface TestHostRpcSocket {
 function readWorkspaceAgentContextFromDisk(
   rootPath: string,
 ): HostDaemonOnlineRpcResult<"host.read_workspace_agent_context"> {
-  const skillsRootPath = path.join(rootPath, ".bb", "skills");
+  const skillsRootPath = path.join(rootPath, ".sandy", "skills");
   let directoryNames: string[] = [];
   try {
     directoryNames = readdirSync(skillsRootPath, { withFileTypes: true })
@@ -144,7 +144,7 @@ function readWorkspaceAgentContextFromDisk(
   let agentInstructions: string | null = null;
   try {
     const trimmed = readFileSync(
-      path.join(rootPath, ".bb", "AGENTS.md"),
+      path.join(rootPath, ".sandy", "AGENTS.md"),
       "utf8",
     ).trim();
     agentInstructions = trimmed.length > 0 ? trimmed : null;

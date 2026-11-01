@@ -7,26 +7,26 @@ import {
   type MouseEvent,
 } from "react";
 import { generatePath } from "react-router-dom";
-import type { TimelineUserConversationRow } from "@bb/server-contract";
+import type { TimelineUserConversationRow } from "@sandy/server-contract";
 import type {
   PromptTextMention,
   SystemMessageKind,
   SystemMessageSubject,
-} from "@bb/domain";
-import type { TimelineTitle, TimelineTitleSegment } from "@bb/thread-view";
-import { type IconName } from "@bb/shared-ui/icon";
+} from "@sandy/domain";
+import type { TimelineTitle, TimelineTitleSegment } from "@sandy/thread-view";
+import { type IconName } from "@sandy/shared-ui/icon";
 import { MarkdownPreview } from "@/components/ui/markdown-preview.js";
 import { RouteAnchor } from "@/components/ui/app-route-anchor.js";
 import { AUTOMATION_DETAIL_ROUTE_PATH } from "@/lib/route-paths";
 import type { MarkdownLinkRouting } from "@/components/ui/markdown-link-routing.js";
 import { buildMarkdownMessageLinkRouting } from "@/components/ui/markdown-message-link-routing";
-import { cn } from "@bb/shared-ui/lib/utils";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import {
   ConversationAttachments,
   type ConversationAttachmentItems,
 } from "./ConversationAttachments.js";
-import { computeMutedPrefixLength } from "@bb/client-core";
+import { computeMutedPrefixLength } from "@sandy/client-core";
 import {
   clipMentionTextToVisibleRange,
   shiftMentionsToTextRange,
@@ -38,7 +38,7 @@ import type {
   ThreadTimelineLinkHandler,
   ThreadTimelineLocalFileLinkHandler,
 } from "./types.js";
-import { turnRequestLabel } from "@bb/client-core";
+import { turnRequestLabel } from "@sandy/client-core";
 import { TurnRequestLabel } from "./TurnRequestLabel.js";
 import { formatShortMessageTime, MessageTime } from "./message-time.js";
 import { useOverflowMeasurement } from "./conversation-message-overflow.js";
@@ -49,7 +49,7 @@ import {
   closeUnterminatedMarkdownCodeSpan,
   endsInsideExactRawThreadIdCodeSpan,
   GENERATED_MESSAGE_COLLAPSED_PREVIEW_CHAR_CAP,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 
 interface AutomationLink {
   automationId: string;
@@ -329,7 +329,7 @@ function generatedConversationEmptyText(
     case "automation":
       return "Ran an automation";
     case "system":
-      return "Sent a BB system message";
+      return "Sent a SANDY system message";
   }
 }
 

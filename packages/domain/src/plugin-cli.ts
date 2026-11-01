@@ -1,4 +1,4 @@
-export const RESERVED_BB_CLI_COMMANDS: readonly string[] = [
+export const RESERVED_SANDY_CLI_COMMANDS: readonly string[] = [
   "browser",
   "diagnostics",
   "environment",
@@ -22,7 +22,7 @@ export const RESERVED_BB_CLI_COMMANDS: readonly string[] = [
 ];
 
 export function pluginCliCall(pluginId: string, name: string): string {
-  if (RESERVED_BB_CLI_COMMANDS.includes(name))
-    return `bb plugin run ${pluginId}`;
-  return `bb ${name}`;
+  if (RESERVED_SANDY_CLI_COMMANDS.includes(name))
+    return `sandy plugin run ${pluginId}`;
+  return `sandy ${name}`;
 }

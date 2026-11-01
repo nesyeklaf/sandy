@@ -1,15 +1,15 @@
-import { isValidGitBranchName } from "@bb/domain";
+import { isValidGitBranchName } from "@sandy/domain";
 import {
   cliCommand,
   defineCli,
   experimental_PluginRpcRefusal,
   PluginCliError,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { GitFileSideQuery, WorkspaceDiffTarget } from "../contract.js";
 import type { GitReads } from "./reads.js";
 import type { GitViewed } from "./viewed.js";
-import { BRANCH_LIST_LIMIT_MAX } from "bb-environment-provider-host/git-types";
+import { BRANCH_LIST_LIMIT_MAX } from "sandy-environment-provider-host/git-types";
 
 const JSON_OPTION = {
   type: "boolean",

@@ -3,25 +3,25 @@ import {
   type ClientMessage,
   type RealtimeSubscriptionTarget,
   realtimeSubscriptionTargetKey,
-} from "@bb/domain";
-import { serverMessageLenientSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { serverMessageLenientSchema } from "@sandy/server-contract";
 import { resolveRealtimeUrl } from "./realtime-url.js";
 import type {
-  BbRealtime,
-  BbRealtimeCallback,
-  BbRealtimeConnectionEvent,
-  BbRealtimeEventMap,
-  BbRealtimeEventName,
-  BbRealtimeSubscribeArgs,
-  BbRealtimeSubscribeArgsUnion,
-  BbRealtimeUnsubscribe,
+  SandyRealtime,
+  SandyRealtimeCallback,
+  SandyRealtimeConnectionEvent,
+  SandyRealtimeEventMap,
+  SandyRealtimeEventName,
+  SandyRealtimeSubscribeArgs,
+  SandyRealtimeSubscribeArgsUnion,
+  SandyRealtimeUnsubscribe,
   SystemRealtimeEvent,
 } from "./realtime-types.js";
 import type {
-  BbRealtimeSocket,
-  BbRealtimeSocketFactory,
-  BbRealtimeSocketMessageEvent,
-  BbSdkTransport,
+  SandyRealtimeSocket,
+  SandyRealtimeSocketFactory,
+  SandyRealtimeSocketMessageEvent,
+  SandySdkTransport,
 } from "./transport.js";
 
 const SOCKET_CONNECTING = 0;
@@ -30,8 +30,8 @@ const INITIAL_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 30_000;
 const RECONNECT_DELAY_MULTIPLIER = 1.5;
 
-interface CreateBbRealtimeClientArgs {
-  transport: BbSdkTransport;
+interface CreateSandyRealtimeClientArgs {
+  transport: SandySdkTransport;
 }
 
 interface TargetSubscription {
@@ -56,7 +56,7 @@ interface IdScopedChangedListenerRecord<
   TEventName extends IdScopedChangedEventName,
 > {
   active: boolean;
-  callback: BbRealtimeCallback<TEventName>;
+  callback: SandyRealtimeCallback<TEventName>;
   event: TEventName;
   selectorId?: string;
   target: RealtimeSubscriptionTarget;
@@ -66,7 +66,7 @@ interface UnscopedChangedListenerRecord<
   TEventName extends UnscopedChangedEventName,
 > {
   active: boolean;
-  callback: BbRealtimeCallback<TEventName>;
+  callback: SandyRealtimeCallback<TEventName>;
   event: TEventName;
   target: RealtimeSubscriptionTarget;
 }
@@ -85,7 +85,7 @@ type ChangedListenerRecord =
 
 interface ConnectionListenerRecord {
   active: boolean;
-  callback: BbRealtimeCallback<"realtime:connection">;
+  callback: SandyRealtimeCallback<"realtime:connection">;
   event: "realtime:connection";
 }
 
@@ -129,7 +129,7 @@ export function createRealtimeSocketAdapter(socket: {
   close(): void;
   readonly readyState: number;
   send(data: string): void;
-}): BbRealtimeSocket {
+}): SandyRealtimeSocket {
   return {
     close: () => socket.close(),
     onclose: null,
@@ -143,7 +143,7 @@ export function createRealtimeSocketAdapter(socket: {
   };
 }
 
-export function wrapStandardWebsocket(socket: WebSocket): BbRealtimeSocket {
+export function wrapStandardWebsocket(socket: WebSocket): SandyRealtimeSocket {
   const adapter = createRealtimeSocketAdapter(socket);
   socket.onopen = () => adapter.onopen?.();
   socket.onmessage = (event) => adapter.onmessage?.({ data: event.data });
@@ -152,7 +152,7 @@ export function wrapStandardWebsocket(socket: WebSocket): BbRealtimeSocket {
   return adapter;
 }
 
-function resolveDefaultWebsocketFactory(): BbRealtimeSocketFactory | null {
+function resolveDefaultWebsocketFactory(): SandyRealtimeSocketFactory | null {
   if (typeof WebSocket === "undefined") {
     return null;
   }
@@ -174,32 +174,32 @@ function isIdScopedChangedListenerFor<
   return listener.event === event;
 }
 
-export class BbRealtimeClient implements BbRealtime {
+export class SandyRealtimeClient implements SandyRealtime {
   private readonly listeners = new Set<RealtimeListenerRecord>();
   private readonly targetSubscriptions = new Map<string, TargetSubscription>();
-  private readonly transport: BbSdkTransport;
-  private lastConnectionEvent: BbRealtimeConnectionEvent | null = null;
+  private readonly transport: SandySdkTransport;
+  private lastConnectionEvent: SandyRealtimeConnectionEvent | null = null;
   private reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS;
   private reconnectingAfterUnexpectedClose = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private rejectSocketReady: ((error: Error) => void) | null = null;
   private resolveSocketReady: (() => void) | null = null;
-  private socket: BbRealtimeSocket | null = null;
+  private socket: SandyRealtimeSocket | null = null;
   private socketReadyPromise: Promise<void> | null = null;
 
-  constructor(args: CreateBbRealtimeClientArgs) {
+  constructor(args: CreateSandyRealtimeClientArgs) {
     this.transport = args.transport;
   }
 
-  subscribe<TEventName extends BbRealtimeEventName>(
-    args: BbRealtimeSubscribeArgs<TEventName>,
-  ): BbRealtimeUnsubscribe {
+  subscribe<TEventName extends SandyRealtimeEventName>(
+    args: SandyRealtimeSubscribeArgs<TEventName>,
+  ): SandyRealtimeUnsubscribe {
     return this.addListener(args);
   }
 
   private addListener(
-    args: BbRealtimeSubscribeArgsUnion,
-  ): BbRealtimeUnsubscribe {
+    args: SandyRealtimeSubscribeArgsUnion,
+  ): SandyRealtimeUnsubscribe {
     switch (args.event) {
       case "thread:changed":
         return this.activateListener({
@@ -258,7 +258,7 @@ export class BbRealtimeClient implements BbRealtime {
 
   private addConnectionListener(
     listener: ConnectionListenerRecord,
-  ): BbRealtimeUnsubscribe {
+  ): SandyRealtimeUnsubscribe {
     const unsubscribe = this.activateListener(listener);
     const snapshot = this.lastConnectionEvent;
     if (snapshot) {
@@ -273,14 +273,14 @@ export class BbRealtimeClient implements BbRealtime {
 
   private activateListener(
     listener: RealtimeListenerRecord,
-  ): BbRealtimeUnsubscribe {
+  ): SandyRealtimeUnsubscribe {
     this.listeners.add(listener);
     if (isTargetedListener(listener)) {
       this.addTarget(listener.target);
       try {
         void this.connectSocket().catch((error) => {
           if (listener.active) {
-            console.error("bb realtime connection failed", error);
+            console.error("sandy realtime connection failed", error);
           }
         });
       } catch (error) {
@@ -349,7 +349,7 @@ export class BbRealtimeClient implements BbRealtime {
       this.transport.websocket ?? resolveDefaultWebsocketFactory();
     if (!websocketFactory) {
       throw new Error(
-        "BB SDK realtime requires a WebSocket implementation. Pass websocket when creating the transport.",
+        "SANDY SDK realtime requires a WebSocket implementation. Pass websocket when creating the transport.",
       );
     }
     const socket = websocketFactory(
@@ -403,7 +403,7 @@ export class BbRealtimeClient implements BbRealtime {
       }
       this.socket = null;
       this.clearSocketReadyPromise(
-        new Error("bb realtime socket closed before it became ready."),
+        new Error("sandy realtime socket closed before it became ready."),
       );
       if (this.targetSubscriptions.size === 0) {
         if (this.lastConnectionEvent?.state !== "disconnected") {
@@ -433,10 +433,10 @@ export class BbRealtimeClient implements BbRealtime {
         );
         try {
           void this.connectSocket().catch((error) => {
-            console.error("bb realtime reconnect failed", error);
+            console.error("sandy realtime reconnect failed", error);
           });
         } catch (error) {
-          console.error("bb realtime reconnect failed", error);
+          console.error("sandy realtime reconnect failed", error);
         }
       }, reconnectDelayMs);
     };
@@ -468,7 +468,7 @@ export class BbRealtimeClient implements BbRealtime {
     this.reconnectDelayMs = INITIAL_RECONNECT_DELAY_MS;
     this.clearSocketReadyPromise(
       new Error(
-        "bb realtime socket closed because there are no active targets.",
+        "sandy realtime socket closed because there are no active targets.",
       ),
     );
     if (
@@ -495,7 +495,7 @@ export class BbRealtimeClient implements BbRealtime {
     }
   }
 
-  private handleSocketMessage(event: BbRealtimeSocketMessageEvent): void {
+  private handleSocketMessage(event: SandyRealtimeSocketMessageEvent): void {
     if (typeof event.data !== "string") {
       return;
     }
@@ -503,7 +503,7 @@ export class BbRealtimeClient implements BbRealtime {
     try {
       parsedMessage = JSON.parse(event.data);
     } catch (error) {
-      console.error("bb realtime ignored malformed websocket message", error);
+      console.error("sandy realtime ignored malformed websocket message", error);
       return;
     }
 
@@ -520,7 +520,7 @@ export class BbRealtimeClient implements BbRealtime {
     const parseResult = serverMessageLenientSchema.safeParse(parsedMessage);
     if (!parseResult.success) {
       console.error(
-        "bb realtime ignored invalid websocket message",
+        "sandy realtime ignored invalid websocket message",
         parseResult.error,
       );
       return;
@@ -550,7 +550,7 @@ export class BbRealtimeClient implements BbRealtime {
 
   private dispatchIdScopedChangedMessage<
     TEventName extends IdScopedChangedEventName,
-  >(event: TEventName, message: BbRealtimeEventMap[TEventName]): void {
+  >(event: TEventName, message: SandyRealtimeEventMap[TEventName]): void {
     for (const listener of this.listenerSnapshot()) {
       if (
         !isIdScopedChangedListenerFor(listener, event) ||
@@ -588,14 +588,14 @@ export class BbRealtimeClient implements BbRealtime {
       this.resetSocketReadyPromise();
     }
     if (!this.socketReadyPromise) {
-      throw new Error("BB SDK realtime socket readiness was not initialized.");
+      throw new Error("SANDY SDK realtime socket readiness was not initialized.");
     }
     return this.socketReadyPromise;
   }
 
   private resetSocketReadyPromise(): void {
     this.clearSocketReadyPromise(
-      new Error("bb realtime socket closed before it became ready."),
+      new Error("sandy realtime socket closed before it became ready."),
     );
     this.socketReadyPromise = new Promise((resolve, reject) => {
       this.resolveSocketReady = resolve;
@@ -637,7 +637,7 @@ export class BbRealtimeClient implements BbRealtime {
     this.socket.send(JSON.stringify(message));
   }
 
-  private emitConnection(event: BbRealtimeConnectionEvent): void {
+  private emitConnection(event: SandyRealtimeConnectionEvent): void {
     this.lastConnectionEvent = event;
     for (const listener of this.listenerSnapshot()) {
       if (listener.event !== "realtime:connection" || !listener.active) {
@@ -651,20 +651,20 @@ export class BbRealtimeClient implements BbRealtime {
     return [...this.listeners];
   }
 
-  private callListener<TEventName extends BbRealtimeEventName>(
-    callback: BbRealtimeCallback<TEventName>,
-    event: Parameters<BbRealtimeCallback<TEventName>>[0],
+  private callListener<TEventName extends SandyRealtimeEventName>(
+    callback: SandyRealtimeCallback<TEventName>,
+    event: Parameters<SandyRealtimeCallback<TEventName>>[0],
   ): void {
     try {
       callback(event);
     } catch (error) {
-      console.error("bb realtime listener failed", error);
+      console.error("sandy realtime listener failed", error);
     }
   }
 }
 
-export function createBbRealtimeClient(
-  args: CreateBbRealtimeClientArgs,
-): BbRealtimeClient {
-  return new BbRealtimeClient(args);
+export function createSandyRealtimeClient(
+  args: CreateSandyRealtimeClientArgs,
+): SandyRealtimeClient {
+  return new SandyRealtimeClient(args);
 }

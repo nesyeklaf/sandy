@@ -2,8 +2,8 @@
 
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import {
   makeProjectWithThreadsResponse,

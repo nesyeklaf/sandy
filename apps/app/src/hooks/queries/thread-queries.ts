@@ -9,7 +9,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import type { PendingInteraction, ThreadListEntry } from "@bb/domain";
+import type { PendingInteraction, ThreadListEntry } from "@sandy/domain";
 import type {
   ThreadListResponse,
   ThreadPendingInteractionsResponse,
@@ -18,13 +18,13 @@ import type {
   ThreadWithIncludesResponse,
   ThreadTimelineReadResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { useDebouncedValue } from "../useDebouncedValue";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
-} from "@bb/server-contract";
-import type { ThreadListFilters } from "@bb/client-core";
+} from "@sandy/server-contract";
+import type { ThreadListFilters } from "@sandy/client-core";
 import { sdk } from "@/lib/sdk";
 import {
   useThreadDetailRealtimeSubscription,
@@ -865,7 +865,7 @@ export async function fetchThreadTimeline({
     pushed !== undefined && pushed.maxSeq > merged.maxSeq ? pushed : merged;
   clearThreadTimelineUnseenEvents(queryClient, threadId, timeline.maxSeq);
   syncThreadTimelineSubscriptionTag(queryClient, threadId, timeline.tag);
-  markStreamTrace("bb:timeline-applied", {
+  markStreamTrace("sandy:timeline-applied", {
     threadId,
     maxSeq: timeline.maxSeq,
     source: isThreadTimelineDelta(response) ? "fetch-delta" : "fetch",

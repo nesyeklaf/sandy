@@ -1,11 +1,11 @@
 import { join } from "node:path";
 import {
-  bbAppRuntimeVerifyTokens,
-  readBbAppRuntimeFile,
-  type BbAppRuntimeFile,
-} from "@bb/config/app-runtime-file";
-import type { VerifiedProcessOps } from "@bb/config/verified-process-stop";
-import { SERVER_MOVED_FILE_NAME } from "@bb/server-archive";
+  sandyAppRuntimeVerifyTokens,
+  readSandyAppRuntimeFile,
+  type SandyAppRuntimeFile,
+} from "@sandy/config/app-runtime-file";
+import type { VerifiedProcessOps } from "@sandy/config/verified-process-stop";
+import { SERVER_MOVED_FILE_NAME } from "@sandy/server-archive";
 import { pathExists } from "./fs.js";
 
 export type LauncherProcessOps = Pick<
@@ -17,8 +17,8 @@ export interface LauncherMovedMode {
   serverPort: number | null;
 }
 
-export async function isLiveBbAppRuntime(
-  runtime: BbAppRuntimeFile,
+export async function isLiveSandyAppRuntime(
+  runtime: SandyAppRuntimeFile,
   processOps: LauncherProcessOps,
 ): Promise<boolean> {
   if (!processOps.isRunning(runtime.pid)) {
@@ -27,7 +27,7 @@ export async function isLiveBbAppRuntime(
   const command = (await processOps.readIdentity(runtime.pid))?.command ?? null;
   return (
     command !== null &&
-    bbAppRuntimeVerifyTokens(runtime.entryPath).some(
+    sandyAppRuntimeVerifyTokens(runtime.entryPath).some(
       (token) => token.length > 0 && command.includes(token),
     )
   );
@@ -56,10 +56,10 @@ export async function detectLauncherMovedMode(args: {
   if (!(await pathExists(join(args.dataDir, SERVER_MOVED_FILE_NAME)))) {
     return null;
   }
-  const runtime = await readBbAppRuntimeFile(args.dataDir);
+  const runtime = await readSandyAppRuntimeFile(args.dataDir);
   if (
     runtime === null ||
-    !(await isLiveBbAppRuntime(runtime, args.processOps))
+    !(await isLiveSandyAppRuntime(runtime, args.processOps))
   ) {
     return null;
   }

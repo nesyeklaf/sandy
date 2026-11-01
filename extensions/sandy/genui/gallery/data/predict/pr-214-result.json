@@ -1,0 +1,12 @@
+{
+  "question": "How many requests does typing “quarterly invoice” (17 characters, at normal speed) send to /search, before and after PR 214?",
+  "measured": {
+    "name": "Requests to /search for one typed query",
+    "before": 17,
+    "after": 3,
+    "unit": "requests",
+    "better": "lower",
+    "note": "Dev server, network panel, one run each"
+  },
+  "explanation": "Before: one request per keystroke. After: a 250 ms timer restarts on every keystroke, so only the pauses after “quart”, after “quarterly ” and at the end of the text sent a request."
+}

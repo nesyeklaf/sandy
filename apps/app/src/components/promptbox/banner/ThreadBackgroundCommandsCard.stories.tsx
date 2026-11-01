@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TimelineWorkflowWorkRow } from "@bb/server-contract";
+import type { TimelineWorkflowWorkRow } from "@sandy/server-contract";
 import { ThreadBackgroundCommandsCard } from "./ThreadBackgroundCommandsCard";
 import { backgroundCommandRow } from "@/test/fixtures/thread-timeline-rows";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
@@ -49,7 +49,7 @@ const longCommand: TimelineWorkflowWorkRow[] = [
   runningCommand({
     id: "thr_fixture:bg:ladle",
     description:
-      "cd /Users/fixture/.bb/plugins/environment-git-worktree/host-data/worktrees/thr_fixture-1/bb/apps/app && (pnpm exec ladle serve --port 61234 > $TMPDIR/ladle.log 2>&1 &) ; for i in $(seq 1 40); do curl -s localhost:61234/meta.json >/dev/null && break; sleep 2; done",
+      "cd /Users/fixture/.sandy/plugins/environment-git-worktree/host-data/worktrees/thr_fixture-1/sandy/apps/app && (pnpm exec ladle serve --port 61234 > $TMPDIR/ladle.log 2>&1 &) ; for i in $(seq 1 40); do curl -s localhost:61234/meta.json >/dev/null && break; sleep 2; done",
     startedAt: Date.now() - 74_000,
   }),
 ];

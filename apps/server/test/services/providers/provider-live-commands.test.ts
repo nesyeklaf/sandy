@@ -1,4 +1,4 @@
-import type { ThreadProviderCommand } from "@bb/domain";
+import type { ThreadProviderCommand } from "@sandy/domain";
 import { describe, expect, it, vi } from "vitest";
 import {
   PROVIDER_LIVE_COMMANDS_FRESH_MS,

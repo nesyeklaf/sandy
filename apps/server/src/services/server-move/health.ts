@@ -1,5 +1,5 @@
-import type { ServerMoveHealth } from "@bb/host-daemon-contract";
-import { readLastServerMoveFile } from "@bb/server-archive";
+import type { ServerMoveHealth } from "@sandy/host-daemon-contract";
+import { readLastServerMoveFile } from "@sandy/server-archive";
 import type { PendingServerMove } from "./pending-boot.js";
 
 export interface ReadServerMoveHealthArgs {

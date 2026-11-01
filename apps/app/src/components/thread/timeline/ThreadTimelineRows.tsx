@@ -13,13 +13,13 @@ import {
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { useComposedRefs } from "@radix-ui/react-compose-refs";
 import { TimelineImageGallery } from "./TimelineImageGallery";
-import type { PromptInput, ThreadRuntimeDisplayStatus } from "@bb/domain";
+import type { PromptInput, ThreadRuntimeDisplayStatus } from "@sandy/domain";
 import type {
   TimelineParentChange,
   TimelineRow,
   TimelineSystemOperationKind,
-} from "@bb/server-contract";
-import type { ThreadChatMessageReference } from "@get-bb/plugin-sdk";
+} from "@sandy/server-contract";
+import type { ThreadChatMessageReference } from "@sandy-sdk/plugin-sdk";
 import {
   activityIntentTitleGlyph,
   assertNever,
@@ -41,19 +41,19 @@ import {
   type TimelineViewDelegationWorkRow,
   type TimelineViewTurnRow,
   type TimelineViewWorkRow,
-} from "@bb/thread-view";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/thread-view";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   collectTimelineAutoExpansionRowIds,
   deferredTimelineContentItemId,
   isNonExpandableSummary,
   isRowExpandable,
   resolveDeferredTimelineContent,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   getMessageLinkPath,
   isRunningThreadRuntimeDisplayStatus,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type {
   ThreadTimelineAddToChatHandler,
   ThreadTimelineEditMessageHandler,
@@ -96,8 +96,8 @@ import {
 } from "./TimelineTitleView.js";
 import { WorkRowBody } from "./TimelineRowDetails.js";
 import { TimelineDetailScroll } from "./TimelineDetailScroll.js";
-import { Button } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 import { presentationTintStyle } from "./presentation-display.js";
 import { usePluginIconUrl } from "@/lib/plugin-logos";
 import {
@@ -105,7 +105,7 @@ import {
   isPluginRenderableWorkRow,
   usePluginTimelineRenderer,
 } from "./PluginTimelineRendererBody.js";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import {
   TimelineScrollRestoreContext,
   useBottomAnchoredScroll,
@@ -120,7 +120,7 @@ import {
 import {
   joinSignatureParts,
   timelineRowRenderSignature,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   TOP_LEVEL_TIMELINE_ROW_INTRINSIC_SIZE_CLASS_NAME,
   timelineRowContainmentStyle,

@@ -4,24 +4,24 @@ import {
   type EnvLoaderArgs,
 } from "./env.js";
 import {
-  BB_SERVER_HEADERS_ENV,
-  BB_BRIDGE_DIR_ENV,
-  BB_CLI_DIR_ENV,
-  BB_HOST_ENROLL_KEY_ENV,
-  BB_HOST_DAEMON_AUTO_UPDATE_ENV,
-  BB_HOST_DAEMON_SUPERVISED_ENV,
-  BB_HOST_ID_ENV,
+  SANDY_SERVER_HEADERS_ENV,
+  SANDY_BRIDGE_DIR_ENV,
+  SANDY_CLI_DIR_ENV,
+  SANDY_HOST_ENROLL_KEY_ENV,
+  SANDY_HOST_DAEMON_AUTO_UPDATE_ENV,
+  SANDY_HOST_DAEMON_SUPERVISED_ENV,
+  SANDY_HOST_ID_ENV,
 } from "./env-vars.js";
 import { assignIfDefined } from "./objects.js";
 
 export interface HostDaemonEntrypointConfig {
-  BB_BRIDGE_DIR?: string;
-  BB_CLI_DIR?: string;
-  BB_SERVER_HEADERS?: Record<string, string>;
-  BB_HOST_ENROLL_KEY?: string;
-  BB_HOST_DAEMON_AUTO_UPDATE?: boolean;
-  BB_HOST_DAEMON_SUPERVISED?: boolean;
-  BB_HOST_ID?: string;
+  SANDY_BRIDGE_DIR?: string;
+  SANDY_CLI_DIR?: string;
+  SANDY_SERVER_HEADERS?: Record<string, string>;
+  SANDY_HOST_ENROLL_KEY?: string;
+  SANDY_HOST_DAEMON_AUTO_UPDATE?: boolean;
+  SANDY_HOST_DAEMON_SUPERVISED?: boolean;
+  SANDY_HOST_ID?: string;
 }
 
 type LoadHostDaemonEntrypointConfigArgs = EnvLoaderArgs;
@@ -33,72 +33,72 @@ export function loadHostDaemonEntrypointConfig(
   const config: HostDaemonEntrypointConfig = {};
   const bridgeDir = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_BRIDGE_DIR_ENV,
+    definition: SANDY_BRIDGE_DIR_ENV,
     env: loader.env,
   });
   const cliDir = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_CLI_DIR_ENV,
+    definition: SANDY_CLI_DIR_ENV,
     env: loader.env,
   });
   const enrollKey = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_HOST_ENROLL_KEY_ENV,
+    definition: SANDY_HOST_ENROLL_KEY_ENV,
     env: loader.env,
   });
   const autoUpdate = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_HOST_DAEMON_AUTO_UPDATE_ENV,
+    definition: SANDY_HOST_DAEMON_AUTO_UPDATE_ENV,
     env: loader.env,
   });
   const supervised = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_HOST_DAEMON_SUPERVISED_ENV,
+    definition: SANDY_HOST_DAEMON_SUPERVISED_ENV,
     env: loader.env,
   });
   const serverHeaders = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_SERVER_HEADERS_ENV,
+    definition: SANDY_SERVER_HEADERS_ENV,
     env: loader.env,
   });
   const hostId = readOptionalEnvVar({
     context: loader.context,
-    definition: BB_HOST_ID_ENV,
+    definition: SANDY_HOST_ID_ENV,
     env: loader.env,
   });
 
   assignIfDefined({
-    key: "BB_BRIDGE_DIR",
+    key: "SANDY_BRIDGE_DIR",
     target: config,
     value: bridgeDir,
   });
   assignIfDefined({
-    key: "BB_CLI_DIR",
+    key: "SANDY_CLI_DIR",
     target: config,
     value: cliDir,
   });
   assignIfDefined({
-    key: "BB_SERVER_HEADERS",
+    key: "SANDY_SERVER_HEADERS",
     target: config,
     value: serverHeaders,
   });
   assignIfDefined({
-    key: "BB_HOST_DAEMON_AUTO_UPDATE",
+    key: "SANDY_HOST_DAEMON_AUTO_UPDATE",
     target: config,
     value: autoUpdate,
   });
   assignIfDefined({
-    key: "BB_HOST_DAEMON_SUPERVISED",
+    key: "SANDY_HOST_DAEMON_SUPERVISED",
     target: config,
     value: supervised,
   });
   assignIfDefined({
-    key: "BB_HOST_ENROLL_KEY",
+    key: "SANDY_HOST_ENROLL_KEY",
     target: config,
     value: enrollKey,
   });
   assignIfDefined({
-    key: "BB_HOST_ID",
+    key: "SANDY_HOST_ID",
     target: config,
     value: hostId,
   });

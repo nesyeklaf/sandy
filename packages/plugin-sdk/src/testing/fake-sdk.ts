@@ -1,9 +1,9 @@
-import { validatePluginMetadata } from "@bb/domain";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import { validatePluginMetadata } from "@sandy/domain";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
-type BbSdk = BbPluginApi["sdk"];
+type SandySdk = SandyPluginApi["sdk"];
 
-/** One recorded `bb.sdk` call. `path` is dot-joined, e.g. "threads.spawn". */
+/** One recorded `sandy.sdk` call. `path` is dot-joined, e.g. "threads.spawn". */
 export interface FakeSdkCall {
   path: string;
   args: unknown[];
@@ -19,7 +19,7 @@ type LooseStub<F> = F extends (...args: infer A) => unknown
   : never;
 
 /**
- * Stub implementations keyed like `BbSdk`: an object per area with a subset
+ * Stub implementations keyed like `SandySdk`: an object per area with a subset
  * of its methods, or a function for the root-level members (`on`).
  */
 type FakeSdkOverrideTree<T> = {
@@ -28,11 +28,11 @@ type FakeSdkOverrideTree<T> = {
     : FakeSdkOverrideTree<T[K]>;
 };
 
-export type FakeSdkOverrides = FakeSdkOverrideTree<BbSdk>;
+export type FakeSdkOverrides = FakeSdkOverrideTree<SandySdk>;
 
 export interface FakeSdkHarness {
   /**
-   * Every `bb.sdk` call in order, including ones whose stub threw. Calls
+   * Every `sandy.sdk` call in order, including ones whose stub threw. Calls
    * rejected by argument validation are not recorded.
    */
   readonly calls: FakeSdkCall[];
@@ -128,7 +128,7 @@ function normalizeCallArgs(
 }
 
 /**
- * Recordable `bb.sdk` stand-in for {@link createFakePluginHost}. Calls are
+ * Recordable `sandy.sdk` stand-in for {@link createFakePluginHost}. Calls are
  * recorded after the plugin-bound normalization the server applies, so
  * assertions see what the server would receive. Arguments the real SDK
  * rejects before sending, such as invalid `pluginMetadata`, return a rejected
@@ -138,7 +138,7 @@ function normalizeCallArgs(
 export function createFakeSdk(options: {
   pluginId: string;
   overrides?: FakeSdkOverrides;
-}): { sdk: BbSdk; harness: FakeSdkHarness } {
+}): { sdk: SandySdk; harness: FakeSdkHarness } {
   const calls: FakeSdkCall[] = [];
   const stubs = new Map<string, (...args: unknown[]) => unknown>();
 
@@ -165,7 +165,7 @@ export function createFakeSdk(options: {
     const stub = stubs.get(path);
     if (!stub) {
       throw new Error(
-        `bb.sdk.${path} is not stubbed — pass an implementation via ` +
+        `sandy.sdk.${path} is not stubbed — pass an implementation via ` +
           `createFakePluginHost({ sdk: { ... } }) or harness.sdk.stub("${path}", fn)`,
       );
     }
@@ -203,7 +203,7 @@ export function createFakeSdk(options: {
     },
   };
 
-  // The proxy is the genuinely unknowable boundary: it answers any BbSdk
+  // The proxy is the genuinely unknowable boundary: it answers any SandySdk
   // shape at runtime, and the type is re-imposed here once.
-  return { sdk: node("") as BbSdk, harness };
+  return { sdk: node("") as SandySdk, harness };
 }

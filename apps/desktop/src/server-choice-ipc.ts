@@ -1,11 +1,11 @@
 import {
-  bbDesktopServerChoiceSchema,
-  type BbDesktopServerChoice,
-} from "@bb/desktop-contract";
+  sandyDesktopServerChoiceSchema,
+  type SandyDesktopServerChoice,
+} from "@sandy/desktop-contract";
 import { ipcMain } from "electron";
 import {
-  BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
-  BB_DESKTOP_SELECT_SERVER_CHANNEL,
+  SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
+  SANDY_DESKTOP_SELECT_SERVER_CHANNEL,
 } from "./desktop-window-command-ipc.js";
 
 export function registerServerChoiceIpc({
@@ -15,21 +15,21 @@ export function registerServerChoiceIpc({
   onError,
 }: {
   applicationWindowWebContentsIds: ReadonlySet<number>;
-  list(): BbDesktopServerChoice[];
+  list(): SandyDesktopServerChoice[];
   select(id: string): Promise<void>;
   onError(error: unknown): void;
 }): void {
-  ipcMain.handle(BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL, (event) => {
+  ipcMain.handle(SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL, (event) => {
     if (
       !applicationWindowWebContentsIds.has(event.sender.id) ||
       event.senderFrame !== event.sender.mainFrame
     ) {
-      throw new Error("Server choices are limited to bb windows");
+      throw new Error("Server choices are limited to sandy windows");
     }
     return list();
   });
-  ipcMain.on(BB_DESKTOP_SELECT_SERVER_CHANNEL, (event, payload: unknown) => {
-    const parsed = bbDesktopServerChoiceSchema.shape.id.safeParse(payload);
+  ipcMain.on(SANDY_DESKTOP_SELECT_SERVER_CHANNEL, (event, payload: unknown) => {
+    const parsed = sandyDesktopServerChoiceSchema.shape.id.safeParse(payload);
     if (
       !applicationWindowWebContentsIds.has(event.sender.id) ||
       event.senderFrame !== event.sender.mainFrame ||

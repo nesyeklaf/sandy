@@ -3,9 +3,9 @@ Keep a Claude Code or Codex thread running when one account hits its limit. The 
 ## What you get
 
 - A pool of Claude and Codex accounts, added by importing the login already on the machine, signing in through the browser, or pasting an Anthropic API key.
-- Accounts run one after another in priority order, with ties following the order added. New conversations stay on the current fallback even when an earlier account recovers. Existing conversations keep their own account until it becomes unavailable.
-- Drag handles set the account order within each provider in settings (keyboard: Space to pick up, arrow keys to move, Space to drop, Escape to cancel), with the same operation available through `bb pool account reorder <claude|codex> <id>...`.
-- Live limit windows per account and model family in the plugin's settings page, and the same numbers from `bb pool status`.
+- Accounts run in priority order, with ties following the order added. New conversations stay on the current fallback even when an earlier account recovers. Existing conversations keep their own account until it becomes unavailable.
+- Drag handles set the account order within each provider in settings (keyboard: Space to pick up, arrows to move, Space to drop, Escape to cancel), with the same operation available through `sandy pool account reorder <claude|codex> <id>...`.
+- Live limit windows per account and model family in the plugin's settings, and the same numbers from `sandy pool status`.
 - A routing switch per provider and a bypass per thread, so one thread can go straight to its own credentials.
 
 ## How it works
@@ -16,9 +16,9 @@ The pool waits once on the same account for short temporary rate limits. Longer 
 
 The pool uses HTTP/1.1 and honors standard proxy environment variables. Connection failures log error codes without credentials or request contents.
 
-## Nested bb servers
+## Nested sandy servers
 
-A bb server started inside another bb server's thread detects the parent's pooler and enables this plugin. Choose in settings or with `bb pool parent`:
+A sandy server started inside another sandy server's thread detects the parent's pooler and enables this plugin. Choose in settings or with `sandy pool parent`:
 
 - **proxy** (default): keep a local hub with its own machine tokens and forward pooled traffic to the parent, so the parent's token never reaches this server's agents. Routing is contributed only for providers the parent can serve.
 - **isolate**: neutralise the inherited routing and use this instance's own accounts, or each provider's own credentials.
@@ -33,8 +33,8 @@ Experimental: routing, storage, and CLI may change.
 
 ## For agents
 
-`bb pool account add|list|remove|enable|disable|priority|reorder`, `bb pool status`, `bb pool routing <claude|codex> [--off]`, `bb pool config`, `bb pool config set`, `bb pool parent [proxy|isolate]`, `bb pool token rotate`, and `bb pool bypass <thread-id>`. Every command takes `--json` and `--help`; `bb pool --help` lists the commands and `bb pool <command> --help` prints its arguments, options, and rules.
+`sandy pool account add|list|remove|enable|disable|priority|reorder`, `sandy pool status`, `sandy pool routing <claude|codex> [--off]`, `sandy pool config`, `sandy pool config set`, `sandy pool parent [proxy|isolate]`, `sandy pool token rotate`, and `sandy pool bypass <thread-id>`. Every command takes `--json` and `--help`; `sandy pool --help` lists the commands and `sandy pool <command> --help` prints its arguments, options, and rules.
 
 ## Automatic retries
 
-Provider Retry uses pool recovery times. Inspect `bb provider-retry status` or `bb provider-retry explain <thread-id>`.
+Provider Retry uses pool recovery times. Inspect `sandy provider-retry status` or `sandy provider-retry explain <thread-id>`.

@@ -1,16 +1,16 @@
 {
-  "name": "bb-plugin-tasks",
+  "name": "sandy-plugin-tasks",
   "version": "0.1.2",
-  "description": "Plan and track work in BB, delegate tasks to agents, and keep task context connected to worker threads.",
+  "description": "Plan and track work in SANDY, delegate tasks to agents, and keep task context connected to worker threads.",
   "private": true,
   "license": "MIT",
-  "homepage": "https://github.com/get-bb/bb#readme",
+  "homepage": "https://github.com/nesyeklaf/sandy#readme",
   "bugs": {
-    "url": "https://github.com/get-bb/bb/issues"
+    "url": "https://github.com/nesyeklaf/sandy/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/get-bb/bb.git",
+    "url": "git+https://github.com/nesyeklaf/sandy.git",
     "directory": "plugins/tasks"
   },
   "type": "module",
@@ -22,12 +22,12 @@
     "README.md"
   ],
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.88"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.88"
   },
-  "bb": {
+  "sandy": {
     "name": "Tasks",
-    "description": "Plan and track work in BB, delegate tasks to agents, and keep task context connected to worker threads.",
+    "description": "Plan and track work in SANDY, delegate tasks to agents, and keep task context connected to worker threads.",
     "branding": {
       "icon": "ListTodo"
     },
@@ -38,18 +38,18 @@
     ]
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "build": "node --conditions=source --import tsx ../../scripts/build-official-plugins.mjs tasks",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
     "test": "vitest run --config vitest.config.ts",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.12",
@@ -67,7 +67,7 @@
     "vitest": "^4.1.1"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
     "@hugeicons/core-free-icons": "^4.3.4",
     "@hugeicons/react": "^1.1.6",
     "@tiptap/core": "^2.27.2",

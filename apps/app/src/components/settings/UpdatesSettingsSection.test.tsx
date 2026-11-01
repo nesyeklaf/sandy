@@ -11,10 +11,10 @@ import {
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Host } from "@bb/domain";
-import { makeHost as makeHostFixture } from "@bb/test-helpers/domain-fixtures";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import type { Host } from "@sandy/domain";
+import { makeHost as makeHostFixture } from "@sandy/test-helpers/domain-fixtures";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { appToast } from "@/components/ui/app-toast";
 import { makePluginListItem } from "@/test/fixtures/plugins";
 import { buildUpdateInventoryPlugins } from "@/hooks/useUpdateInventory";
@@ -83,7 +83,7 @@ vi.mock("@/hooks/mutations/host-mutations", () => ({
 
 const startPluginUpdateMock = vi.hoisted(() => vi.fn());
 const pluginUpdateJobs = vi.hoisted(() => ({
-  current: [] as import("@bb/server-contract").PluginUpdateJob[],
+  current: [] as import("@sandy/server-contract").PluginUpdateJob[],
 }));
 
 vi.mock("@/hooks/queries/plugin-catalog-queries", () => ({
@@ -286,7 +286,7 @@ describe("UpdatesSettingsSection", () => {
     );
     expect(row).not.toBeNull();
     expect(within(row as HTMLElement).getByText("homelab")).toBeDefined();
-    expect(within(row as HTMLElement).getByText("Updating bb")).toBeDefined();
+    expect(within(row as HTMLElement).getByText("Updating sandy")).toBeDefined();
     expect(
       row?.querySelector('[data-update-state="in-progress"]'),
     ).not.toBeNull();
@@ -350,7 +350,7 @@ describe("UpdatesSettingsSection", () => {
     );
   });
 
-  it("names a machine running a newer bb than the server", () => {
+  it("names a machine running a newer sandy than the server", () => {
     useUpdateInventoryMock.mockReturnValue(
       makeInventory({
         machines: [
@@ -375,7 +375,7 @@ describe("UpdatesSettingsSection", () => {
     ).toBeNull();
   });
 
-  it("sweeps every machine stalled on the same bb update", () => {
+  it("sweeps every machine stalled on the same sandy update", () => {
     const stalled = ["workstation", "studio-mac", "homelab"].map(
       (name, index) =>
         makeHost({
@@ -544,7 +544,7 @@ describe("UpdatesSettingsSection", () => {
               outcome: "incompatible",
               blockedVersion: "3.0.0",
               blockedLabel: "3.0.0",
-              blockedReasons: ["engines.bb requires >=9.0.0"],
+              blockedReasons: ["engines.sandy requires >=9.0.0"],
             },
           }),
         ]),
@@ -554,7 +554,7 @@ describe("UpdatesSettingsSection", () => {
     renderSection();
 
     const legacy = document.querySelector('[data-plugin-update-row="legacy"]');
-    expect(legacy?.textContent).toContain("3.0.0: engines.bb requires >=9.0.0");
+    expect(legacy?.textContent).toContain("3.0.0: engines.sandy requires >=9.0.0");
     expect(within(legacy as HTMLElement).queryByRole("button")).toBeNull();
     expect(
       within(legacy as HTMLElement)
@@ -604,7 +604,7 @@ describe("UpdatesSettingsSection", () => {
     const job = (
       pluginId: string,
       state: "queued" | "running",
-    ): import("@bb/server-contract").PluginUpdateJob =>
+    ): import("@sandy/server-contract").PluginUpdateJob =>
       state === "queued"
         ? { id: `job_${pluginId}`, pluginId, displayName: pluginId, state }
         : {

@@ -1,7 +1,7 @@
 import type {
   PendingInteraction,
   ProviderPendingInteraction,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ThreadPendingInteractionBanners } from "@/components/thread/pending-interactions/ThreadPendingInteractionBanner";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
 
@@ -39,8 +39,8 @@ const commandApproval: PendingInteraction = {
     subject: {
       kind: "command",
       itemId: "item_cmd",
-      command: "git push origin bb/promptbox-stories",
-      cwd: "/workspace/bb",
+      command: "git push origin sandy/promptbox-stories",
+      cwd: "/workspace/sandy",
       actions: [],
       sessionGrant: null,
     },
@@ -59,8 +59,8 @@ const longCommandApproval: PendingInteraction = {
       kind: "command",
       itemId: "item_cmd_long",
       command:
-        "pnpm exec turbo run typecheck --filter=@bb/app --filter=@bb/server --filter=@bb/domain --filter=@bb/server-contract --force",
-      cwd: "/workspace/bb",
+        "pnpm exec turbo run typecheck --filter=@sandy/app --filter=@sandy/server --filter=@sandy/domain --filter=@sandy/server-contract --force",
+      cwd: "/workspace/sandy",
       actions: [],
       sessionGrant: null,
     },
@@ -80,7 +80,7 @@ const chainedCommandApproval: PendingInteraction = {
       itemId: "item_cmd_chained",
       command:
         "cd apps/app && pnpm exec vitest run src/components/thread/pending-interactions 2>&1 | tail -40 && git status --short",
-      cwd: "/workspace/bb",
+      cwd: "/workspace/sandy",
       actions: [],
       sessionGrant: null,
     },
@@ -156,8 +156,8 @@ const permissionGrant: PendingInteraction = {
       permissions: {
         network: null,
         fileSystem: {
-          read: ["/workspace/bb/apps/app", "/workspace/bb/packages"],
-          write: ["/workspace/bb/apps/app/src/components/promptbox"],
+          read: ["/workspace/sandy/apps/app", "/workspace/sandy/packages"],
+          write: ["/workspace/sandy/apps/app/src/components/promptbox"],
         },
       },
     },
@@ -180,7 +180,7 @@ const toolUse: PendingInteraction = {
       presentation: {
         label: { pending: "Creating issue", completed: "Created issue" },
         icon: { glyph: "Globe" },
-        title: "get-bb/bb · Banner clips long titles",
+        title: "nesyeklaf/sandy · Banner clips long titles",
         detail: "Opens a **bug** issue with the repro steps from this thread.",
         tint: { light: "#2563eb", dark: "#93c5fd" },
       },

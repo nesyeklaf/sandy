@@ -1,5 +1,5 @@
-import type { ThreadTimelineViewRow } from "@bb/thread-view";
-import { buildTimelineViewRows } from "@bb/thread-view";
+import type { ThreadTimelineViewRow } from "@sandy/thread-view";
+import { buildTimelineViewRows } from "@sandy/thread-view";
 import { describe, expect, it } from "vitest";
 import {
   commandRow,

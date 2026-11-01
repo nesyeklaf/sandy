@@ -3,7 +3,7 @@ import {
   CLIENT_ERROR_STACK_MAX_LENGTH,
   type ClientErrorReport,
   type ClientErrorSource,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 const MAX_REPORTS_PER_PAGE = 20;
 

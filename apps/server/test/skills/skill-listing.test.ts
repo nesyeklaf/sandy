@@ -1,6 +1,6 @@
-import type { DiscoveredSkill, SkillRootKind } from "@bb/host-daemon-contract";
+import type { DiscoveredSkill, SkillRootKind } from "@sandy/host-daemon-contract";
 import { createHash } from "node:crypto";
-import type { SkillProvider } from "@bb/server-contract";
+import type { SkillProvider } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   assembleSkillList,
@@ -20,22 +20,22 @@ describe("mapSkillScope", () => {
   }> = [
     {
       provider: "claude-code",
-      rootKind: "bb-project",
-      scope: "bb-project",
+      rootKind: "sandy-project",
+      scope: "sandy-project",
       listedProvider: null,
       manageable: true,
     },
     {
       provider: "claude-code",
-      rootKind: "bb-data-dir",
-      scope: "bb-user",
+      rootKind: "sandy-data-dir",
+      scope: "sandy-user",
       listedProvider: null,
       manageable: true,
     },
     {
       provider: "claude-code",
-      rootKind: "bb-builtin",
-      scope: "bb-builtin",
+      rootKind: "sandy-builtin",
+      scope: "sandy-builtin",
       listedProvider: null,
       manageable: false,
     },
@@ -114,21 +114,21 @@ describe("assembleSkillList", () => {
     };
   }
 
-  it("de-dupes a bb skill discovered under both providers", () => {
-    const bb = discovered(
+  it("de-dupes a sandy skill discovered under both providers", () => {
+    const sandy = discovered(
       "shared",
-      "bb-data-dir",
+      "sandy-data-dir",
       "/data/skills/shared/SKILL.md",
     );
     const result = assembleSkillList([
-      { provider: "claude-code", skills: [bb] },
-      { provider: "codex", skills: [bb] },
+      { provider: "claude-code", skills: [sandy] },
+      { provider: "codex", skills: [sandy] },
     ]);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       name: "shared",
       provider: null,
-      scope: "bb-user",
+      scope: "sandy-user",
     });
   });
 
@@ -142,7 +142,7 @@ describe("assembleSkillList", () => {
             "provider-user",
             "/home/.claude/skills/zed/SKILL.md",
           ),
-          discovered("alpha", "bb-project", "/cwd/.bb/skills/alpha/SKILL.md"),
+          discovered("alpha", "sandy-project", "/cwd/.sandy/skills/alpha/SKILL.md"),
         ],
       },
       {
@@ -157,7 +157,7 @@ describe("assembleSkillList", () => {
       },
     ]);
     expect(result.map((skill) => [skill.scope, skill.name])).toEqual([
-      ["bb-project", "alpha"],
+      ["sandy-project", "alpha"],
       ["provider-user", "zed"],
       ["provider-user", "zed"],
     ]);

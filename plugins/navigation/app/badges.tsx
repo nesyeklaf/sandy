@@ -1,7 +1,7 @@
 import type {
   ExperimentalBadge,
   ExperimentalBadgeTone,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { cn } from "@/lib/utils";
 
 const RAIL_MAX_DRAWN_COUNT = 9;

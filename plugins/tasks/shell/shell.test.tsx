@@ -1,8 +1,8 @@
-import type { ExperimentalTabRegistration } from "@get-bb/plugin-sdk";
+import type { ExperimentalTabRegistration } from "@sandy-sdk/plugin-sdk";
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { labelsByProject, makeTask } from "../test-fixtures.js";
 import type { Task } from "../shared/contract.js";
 import { PROJECTS_TAG, commentsTag } from "../shared/tags";
@@ -48,13 +48,13 @@ const project = {
   nextTaskNumber: 5,
   color: "blue",
   folderId: FOLDER_ID,
-  linkedBbProjectId: null,
+  linkedSandyProjectId: null,
   createdAt: "2026-07-15T00:00:00.000Z",
 };
 
 const folder = {
   id: FOLDER_ID,
-  name: "bb",
+  name: "sandy",
   parentFolderId: null,
   createdAt: "2026-07-15T00:00:00.000Z",
 };
@@ -654,7 +654,7 @@ describe("tasks app shell", () => {
     it("prunes snapshots written under an older storage version", async () => {
       resetQuerySnapshotStateForTest();
       window.localStorage.setItem(
-        "bb-tasks:query-snapshot:v0:projects",
+        "sandy-tasks:query-snapshot:v0:projects",
         JSON.stringify([]),
       );
       const slot = renderSlot(
@@ -664,7 +664,7 @@ describe("tasks app shell", () => {
       );
       await slot.findByText(project.name);
       expect(
-        window.localStorage.getItem("bb-tasks:query-snapshot:v0:projects"),
+        window.localStorage.getItem("sandy-tasks:query-snapshot:v0:projects"),
       ).toBeNull();
       expect(window.localStorage.getItem(projectsKey)).not.toBeNull();
     });
@@ -892,26 +892,26 @@ describe("tasks app shell", () => {
   });
 
   it("does not mount New project queries until the dialog opens", async () => {
-    let bbProjectCalls = 0;
+    let sandyProjectCalls = 0;
     const slot = renderSlot(
       navigationRegistration,
       { subPath: "all" },
       {
         rpc: seededRpc({
-          listBbProjects: () => {
-            bbProjectCalls += 1;
-            return { bbProjects: [] };
+          listSandyProjects: () => {
+            sandyProjectCalls += 1;
+            return { sandyProjects: [] };
           },
         }),
       },
     );
     await slot.findByRole("button", { name: "New project" });
-    expect(bbProjectCalls).toBe(0);
+    expect(sandyProjectCalls).toBe(0);
 
     fireEvent.click(slot.getByRole("button", { name: "New project" }));
 
     await slot.findByText("Projects group tasks under a shared key prefix.");
-    expect(bbProjectCalls).toBeGreaterThan(0);
+    expect(sandyProjectCalls).toBeGreaterThan(0);
   });
 
   it("routes 'manage' to the manage panel from right-panel navigation", async () => {

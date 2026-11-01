@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const SKILL_ROOT = fileURLToPath(
   new URL(
-    "../../../../../plugins/bb-guide/skills/bb-plugin-authoring/",
+    "../../../../../plugins/sandy-guide/skills/sandy-plugin-authoring/",
     import.meta.url,
   ),
 );
@@ -45,8 +45,8 @@ interface SdkFence {
   line: number;
 }
 
-const SDK_CALL = /bb\.sdk\.([A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*)\s*\(/g;
-const SDK_CALL_IN_SOURCE = /bb\.sdk\.[A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*\s*\(/;
+const SDK_CALL = /sandy\.sdk\.([A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*)\s*\(/g;
+const SDK_CALL_IN_SOURCE = /sandy\.sdk\.[A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*\s*\(/;
 const TYPESCRIPT_FENCE = /```(?:ts|typescript)([^\n]*)\n([\s\S]*?)```/g;
 
 function skillLine(skill: string, index: number): number {
@@ -93,15 +93,15 @@ function probeSource(
   fences: readonly SdkFence[],
 ): string {
   return [
-    `import type { BbPluginApi } from "@get-bb/plugin-sdk";`,
-    `type Sdk = BbPluginApi["sdk"];`,
+    `import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";`,
+    `type Sdk = SandyPluginApi["sdk"];`,
     `type Callable = (...args: never[]) => unknown;`,
     `type AssertCallable<F extends Callable> = F;`,
     ...references.map(
       (reference) =>
         `type SdkReferenceAtLine${reference.line} = AssertCallable<Sdk${typeIndex(reference.path)}>;`,
     ),
-    `declare const bb: BbPluginApi;`,
+    `declare const sandy: SandyPluginApi;`,
     `type SpawnArgs = Parameters<Sdk["threads"]["spawn"]>[0];`,
     `declare const projectId: SpawnArgs["projectId"];`,
     `declare const threadId: Parameters<Sdk["threads"]["get"]>[0]["threadId"];`,
@@ -131,16 +131,16 @@ const PROBE_TSCONFIG = {
     noEmit: true,
     skipLibCheck: true,
     types: [],
-    paths: { "@get-bb/plugin-sdk": [pluginSdkEntry] },
+    paths: { "@sandy-sdk/plugin-sdk": [pluginSdkEntry] },
   },
   files: ["probe.ts"],
 };
 
-describe("bb-plugin-authoring skill examples", () => {
+describe("sandy-plugin-authoring skill examples", () => {
   let workDir: string;
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-doc-examples-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-doc-examples-"));
   });
 
   afterEach(async () => {

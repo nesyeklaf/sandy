@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import {
   experimental_formatConformanceReport as formatConformanceReport,
   experimental_runBridgeConformance as runBridgeConformance,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import { type FakePiBridgeHarness, startFakePiBridge } from "./test-support.js";
 
@@ -12,7 +12,7 @@ let harness: FakePiBridgeHarness;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-conformance-ws-",
+    prefix: "sandy-pi-conformance-ws-",
     initialize: false,
   });
 });

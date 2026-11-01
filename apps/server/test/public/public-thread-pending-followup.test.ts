@@ -4,9 +4,9 @@ import {
   listEvents,
   listQueuedThreadMessages,
   upsertProjectExecutionDefaults,
-} from "@bb/db";
-import { threadSchema } from "@bb/domain";
-import { sendMessageResponseSchema } from "@bb/server-contract";
+} from "@sandy/db";
+import { threadSchema } from "@sandy/domain";
+import { sendMessageResponseSchema } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { listQueuedThreadCommands } from "../helpers/commands.js";
 import { readJson } from "../helpers/json.js";

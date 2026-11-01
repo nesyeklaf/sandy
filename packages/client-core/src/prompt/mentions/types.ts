@@ -1,4 +1,4 @@
-import { fuzzyMatchText } from "@bb/fuzzy-match";
+import { fuzzyMatchText } from "@sandy/fuzzy-match";
 import {
   providerCommandSection,
   providerCommandSectionRank,
@@ -6,7 +6,7 @@ import {
   type ProviderCommandOrigin,
   type ProviderCommandSection,
   type ProviderCommandSource,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 type PromptPathMentionSource = "workspace" | "thread-storage";
 type PromptPathMentionEntryKind = "file" | "directory";

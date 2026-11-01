@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "*.ts",
+    "delegate/**/*.ts",
+    "delegate/**/*.tsx",
+    "goals/*.ts",
+    "goals/app.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "goals/pi-extension.ts"
+  ],
+  "//": "app.tsx is checked through the parts: track and workflows each map @/ to their own dir (tsc -p track, tsc -p workflows); the bundler resolves @/ from each file's nearest tsconfig."
+}

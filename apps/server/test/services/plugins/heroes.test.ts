@@ -2,8 +2,8 @@ import { createHmac } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getLatestThreadSequence, getThread } from "@bb/db";
-import { turnScope } from "@bb/domain";
+import { getLatestThreadSequence, getThread } from "@sandy/db";
+import { turnScope } from "@sandy/domain";
 import { applyLoggedThreadLifecycleEvent } from "../../../src/services/threads/lifecycle-outcome.js";
 import {
   seedEvent,
@@ -138,7 +138,7 @@ describe("hero plugin: slack-bot", () => {
       );
       expect(entry.id).toBe("slack-bot");
       expect(entry.status).toBe("needs-configuration");
-      expect(entry.statusDetail).toContain("bb plugin config slack-bot");
+      expect(entry.statusDetail).toContain("sandy plugin config slack-bot");
 
       const signingSecret = "test-signing-secret";
       await server.pluginService.updateSettings("slack-bot", {

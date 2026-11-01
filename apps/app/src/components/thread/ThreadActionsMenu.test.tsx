@@ -19,10 +19,10 @@ import {
   type PluginThreadActionEntry,
   type PluginThreadActionRegistration,
   type PluginThreadActionsInlineItem,
-} from "@get-bb/plugin-sdk";
-import type { ThreadListEntry } from "@bb/domain";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy-sdk/plugin-sdk";
+import type { ThreadListEntry } from "@sandy/domain";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { threadQueryKey } from "@/hooks/queries/query-keys";
 import {
   resetPluginSlotStoreForTest,
@@ -719,7 +719,7 @@ describe.each(SURFACES)("thread actions on the $name", (surface) => {
     );
   });
 
-  it("falls back to bb's rename dialog when the surface has no editor", async () => {
+  it("falls back to sandy's rename dialog when the surface has no editor", async () => {
     renderSurface(surface, { thread: baseThread });
     await surface.open();
     fireEvent.click(await screen.findByRole("menuitem", { name: "Rename" }));
@@ -859,27 +859,27 @@ describe("thread action registrations", () => {
     expect(
       screen.getAllByRole("listitem").map((item) => item.textContent),
     ).toEqual([
-      "bb--core/split",
-      "bb--core/copyLink",
-      "bb--core/newThreadInEnvironment",
-      "bb--core/pin",
-      "bb--core/read",
-      "bb--core/parentNotifications",
-      "bb--core/rename",
-      "bb--core/regenerateTitle",
+      "sandy--core/split",
+      "sandy--core/copyLink",
+      "sandy--core/newThreadInEnvironment",
+      "sandy--core/pin",
+      "sandy--core/read",
+      "sandy--core/parentNotifications",
+      "sandy--core/rename",
+      "sandy--core/regenerateTitle",
       "fixture/move",
-      "bb--core/archive",
-      "bb--core/delete",
+      "sandy--core/archive",
+      "sandy--core/delete",
       "fixture/notify",
     ]);
   });
 });
 
-describe("thread actions outside bb's own surfaces", () => {
+describe("thread actions outside sandy's own surfaces", () => {
   const [surface] = SURFACES;
   if (surface === undefined) throw new Error("no surface");
 
-  it("fetches a thread bb has not cached before archiving or deleting it", async () => {
+  it("fetches a thread sandy has not cached before archiving or deleting it", async () => {
     sdkThreads.get.mockResolvedValue(baseThread);
     renderSurface(surface, { thread: baseThread }, { cached: false });
 

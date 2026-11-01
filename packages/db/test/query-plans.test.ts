@@ -10,7 +10,7 @@ import {
   threadScope,
   turnScope,
   type ClientTurnRequestId,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   type DbConnection,
   type SlowDbQueryLogger,

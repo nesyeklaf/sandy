@@ -3,7 +3,7 @@ import { createJsonLocalStorage } from "@/lib/browser-storage";
 import { createThreadArchiveFilterAtom } from "@/lib/thread-lifecycle-filter";
 
 export const paletteThreadLifecyclesAtom = createThreadArchiveFilterAtom(
-  "bb.palette.threadArchiveFilter",
+  "sandy.palette.threadArchiveFilter",
 );
 
 export const PALETTE_THREAD_SORT_OPTIONS = [
@@ -20,7 +20,7 @@ function isPaletteThreadSort(value: unknown): value is PaletteThreadSort {
 }
 
 export const paletteThreadSortAtom = atomWithStorage<PaletteThreadSort>(
-  "bb.palette.threadSort",
+  "sandy.palette.threadSort",
   "relevance",
   createJsonLocalStorage(isPaletteThreadSort),
   { getOnInit: true },
@@ -36,7 +36,7 @@ function isPaletteThreadSortDirection(
 
 export const paletteThreadSortDirectionAtom =
   atomWithStorage<PaletteThreadSortDirection>(
-    "bb.palette.threadSortDirection",
+    "sandy.palette.threadSortDirection",
     "descending",
     createJsonLocalStorage(isPaletteThreadSortDirection),
     { getOnInit: true },

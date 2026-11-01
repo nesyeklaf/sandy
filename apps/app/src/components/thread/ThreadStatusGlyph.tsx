@@ -1,20 +1,20 @@
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   getThreadListIndicatorLabel,
   type ThreadListIndicatorKind,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type {
   PluginComposerThreadRowStatus,
   PluginThreadStatusGlyphProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { pluginIconName } from "@/components/plugin/PluginIcon";
 import {
   SIDEBAR_STATUS_ICON_CLASS,
   SIDEBAR_SUCCESS_STATUS_COLOR_CLASS,
   SIDEBAR_SUCCESS_STATUS_DOT_CLASS,
   SIDEBAR_WORKING_STATUS_COLOR_CLASS,
-} from "@bb/shared-ui/sidebar-row-classes";
+} from "@sandy/shared-ui/sidebar-row-classes";
 
 const WORKING_ACTIVITY_ICONS = {
   workflow: "Workflow",

@@ -13,7 +13,7 @@ runs:
       env:
         SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
       with:
-        path: ${{ runner.temp }}/bb-bun-${{ inputs.version }}/archive.zip
+        path: ${{ runner.temp }}/sandy-bun-${{ inputs.version }}/archive.zip
         key: bun-archive-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ hashFiles('.github/actions/setup-bun/*.sha256') }}
     - name: Install verified Bun
       shell: bash

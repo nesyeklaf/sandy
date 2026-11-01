@@ -1,6 +1,6 @@
 import { coreTabs } from "@/components/secondary-panel/thread-info-registration";
 import { coreMessageMetadata } from "@/components/thread/timeline/core-message-metadata";
-import { setAppIcons } from "@bb/shared-ui/icon-registry";
+import { setAppIcons } from "@sandy/shared-ui/icon-registry";
 import { useSyncExternalStore } from "react";
 import type {
   ExperimentalTabRegistration,
@@ -34,7 +34,7 @@ import type {
   ExperimentalPluginBrowserToolbarActionRegistration,
   PluginThreadListRegistration,
   PluginTimelineRendererRegistration,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   type CollectedPluginCommandRegistration,
   type LegacyThreadPanelActionRegistration,
@@ -47,7 +47,7 @@ import {
   type CollectedManagedSidebarFooterItem,
   type CollectedSidebarFooterItem,
   type CollectedSidebarNavigationRegistration,
-} from "@get-bb/plugin-sdk/internal/plugin-app-collector";
+} from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 
 export interface PluginRegistrationSet {
   homepageSections: readonly PluginHomepageSectionRegistration[];

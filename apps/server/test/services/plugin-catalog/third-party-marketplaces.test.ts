@@ -17,8 +17,8 @@ import {
   getPluginMarketplaceIcon,
   upsertInstalledPlugin,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createPluginCatalogService } from "../../../src/services/plugin-catalog/plugin-catalog-service.js";
 
@@ -79,7 +79,7 @@ describe("third-party marketplaces", () => {
   beforeEach(async () => {
     db = createMigratedConnection();
     installedCatalogEntries = [];
-    dataDir = await mkdtemp(join(tmpdir(), "bb-marketplace-data-"));
+    dataDir = await mkdtemp(join(tmpdir(), "sandy-marketplace-data-"));
     cleanup.push(dataDir);
   });
 
@@ -123,7 +123,7 @@ describe("third-party marketplaces", () => {
       if (document === undefined) throw new Error(`no document for ${url}`);
       let directory = published.get(url);
       if (directory === undefined) {
-        directory = await mkdtemp(join(tmpdir(), "bb-marketplace-doc-"));
+        directory = await mkdtemp(join(tmpdir(), "sandy-marketplace-doc-"));
         cleanup.push(directory);
         published.set(url, directory);
       }
@@ -184,7 +184,7 @@ describe("third-party marketplaces", () => {
     icon?: Buffer;
     subdirectory?: string;
   }): Promise<string> {
-    const repo = await mkdtemp(join(tmpdir(), "bb-marketplace-repo-"));
+    const repo = await mkdtemp(join(tmpdir(), "sandy-marketplace-repo-"));
     cleanup.push(repo);
     await run("git", ["init", "-q", "-b", "main"], { cwd: repo });
     await run("git", ["config", "user.email", "test@example.com"], {
@@ -333,7 +333,7 @@ describe("third-party marketplaces", () => {
         getPluginMarketplaceIcon(db, "acme-plugins", "notes"),
       ).toBeUndefined();
       expect(catalog.listMarketplaces().map((row) => row.name)).toEqual([
-        "bb-official",
+        "sandy-official",
       ]);
 
       const readded = await catalog.addMarketplace({
@@ -359,7 +359,7 @@ describe("third-party marketplaces", () => {
         name: "acme-plugins",
         plugins: [entry({ icon: { url: "./icons/notes.svg" } })],
         icon: VALID_SVG,
-        subdirectory: "tools/bb",
+        subdirectory: "tools/sandy",
       });
       await writeFile(
         join(repo, "marketplace.json"),
@@ -378,14 +378,14 @@ describe("third-party marketplaces", () => {
 
       const added = await catalog.addMarketplace({
         source: `git:${repo}@main`,
-        subdirectory: "./tools/bb",
+        subdirectory: "./tools/sandy",
       });
 
       expect(added).toMatchObject({
         name: "acme-plugins",
         sourceKind: "git",
         source: `git:${repo}@main`,
-        subdirectory: "tools/bb",
+        subdirectory: "tools/sandy",
         entryCount: 1,
       });
       expect(
@@ -394,7 +394,7 @@ describe("third-party marketplaces", () => {
       expect(await stagedCheckouts()).toEqual([]);
 
       await writeFile(
-        join(repo, "tools", "bb", "marketplace.json"),
+        join(repo, "tools", "sandy", "marketplace.json"),
         JSON.stringify(
           manifest("acme-plugins", [
             entry({ icon: { url: "./icons/notes.svg" } }),
@@ -410,19 +410,19 @@ describe("third-party marketplaces", () => {
       expect(refreshed).toMatchObject({
         name: "acme-plugins",
         ok: true,
-        marketplace: { subdirectory: "tools/bb", entryCount: 2 },
+        marketplace: { subdirectory: "tools/sandy", entryCount: 2 },
       });
       expect(getPluginMarketplace(db, "acme-plugins")).toMatchObject({
         sourceGitRef: "main",
-        sourceGitSubdirectory: "tools/bb",
+        sourceGitSubdirectory: "tools/sandy",
       });
       expect(
         catalog
           .listMarketplaces()
           .map((marketplace) => [marketplace.name, marketplace.subdirectory]),
       ).toEqual([
-        ["bb-official", null],
-        ["acme-plugins", "tools/bb"],
+        ["sandy-official", null],
+        ["acme-plugins", "tools/sandy"],
       ]);
     });
 
@@ -442,14 +442,14 @@ describe("third-party marketplaces", () => {
       ["/etc", /invalid marketplace subdirectory/u],
       ["tools/../..", /invalid marketplace subdirectory/u],
       [".git", /invalid marketplace subdirectory/u],
-      ["tools\\bb", /invalid marketplace subdirectory/u],
+      ["tools\\sandy", /invalid marketplace subdirectory/u],
       [
         "tools/missing",
         /"tools\/missing" is not a directory in the repository/u,
       ],
       [
-        "tools/bb/marketplace.json",
-        /"tools\/bb\/marketplace.json" is not a directory in the repository/u,
+        "tools/sandy/marketplace.json",
+        /"tools\/sandy\/marketplace.json" is not a directory in the repository/u,
       ],
     ])("refuses the subdirectory %s", async (subdirectory, message) => {
       const catalog = service();
@@ -465,7 +465,7 @@ describe("third-party marketplaces", () => {
     it.skipIf(process.platform === "win32")(
       "refuses a subdirectory that is a symlink out of the checkout",
       async () => {
-        const outside = await mkdtemp(join(tmpdir(), "bb-marketplace-out-"));
+        const outside = await mkdtemp(join(tmpdir(), "sandy-marketplace-out-"));
         cleanup.push(outside);
         await writeFile(
           join(outside, "marketplace.json"),
@@ -500,7 +500,7 @@ describe("third-party marketplaces", () => {
         });
 
         await expect(
-          catalog.addMarketplace({ source, subdirectory: "bb" }),
+          catalog.addMarketplace({ source, subdirectory: "sandy" }),
         ).rejects.toThrow(/a subdirectory applies to git: sources only/u);
       },
     );
@@ -530,7 +530,7 @@ describe("third-party marketplaces", () => {
   });
 
   it("reads a path marketplace and its icons in place", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "bb-marketplace-dir-"));
+    const directory = await mkdtemp(join(tmpdir(), "sandy-marketplace-dir-"));
     cleanup.push(directory);
     await mkdir(join(directory, "icons"), { recursive: true });
     await writeFile(join(directory, "icons", "notes.svg"), VALID_SVG);
@@ -581,7 +581,7 @@ describe("third-party marketplaces", () => {
       documents: {
         [ACME_URL]: manifest("acme-plugins", [entry()]),
         "https://official-impostor.test/marketplace.json": manifest(
-          "bb-official",
+          "sandy-official",
           [entry()],
         ),
         "https://other.test/marketplace.json": manifest("acme-plugins", [
@@ -602,12 +602,12 @@ describe("third-party marketplaces", () => {
         source: "https://official-impostor.test/marketplace.json",
         subdirectory: null,
       }),
-    ).rejects.toThrow(/"bb-official" is reserved/);
-    await expect(catalog.removeMarketplace("bb-official")).rejects.toThrow(
+    ).rejects.toThrow(/"sandy-official" is reserved/);
+    await expect(catalog.removeMarketplace("sandy-official")).rejects.toThrow(
       /cannot be removed/,
     );
     expect(catalog.listMarketplaces().map((row) => row.name)).toEqual([
-      "bb-official",
+      "sandy-official",
       "acme-plugins",
     ]);
   });
@@ -659,7 +659,7 @@ describe("third-party marketplaces", () => {
     ]);
   });
 
-  it("names a bundled official plugin with <id>@bb-official", async () => {
+  it("names a bundled official plugin with <id>@sandy-official", async () => {
     const catalog = createPluginCatalogService({
       db,
       appVersion: "1.0.0",
@@ -676,7 +676,7 @@ describe("third-party marketplaces", () => {
     });
 
     await expect(
-      catalog.install({ entryId: "docs", marketplace: "bb-official" }),
+      catalog.install({ entryId: "docs", marketplace: "sandy-official" }),
     ).rejects.toThrow(/bundled installation stopped by test/u);
     await expect(
       catalog.install({ entryId: "docs", marketplace: "acme-plugins" }),
@@ -854,7 +854,7 @@ describe("third-party marketplaces", () => {
 
     const results = await catalog.refreshMarketplaces({ attemptedAt: 2_000 });
     expect(results).toMatchObject([
-      { name: "bb-official", ok: true },
+      { name: "sandy-official", ok: true },
       { name: "acme-plugins", ok: false },
       { name: "beta-plugins", ok: true },
     ]);
@@ -914,7 +914,7 @@ describe("third-party marketplaces", () => {
 
   describe("install plans", () => {
     it("resolves a third-party git range to its current tag and commit", async () => {
-      const repo = await mkdtemp(join(tmpdir(), "bb-plugin-repo-"));
+      const repo = await mkdtemp(join(tmpdir(), "sandy-plugin-repo-"));
       cleanup.push(repo);
       await run("git", ["init", "-q", "-b", "main"], { cwd: repo });
       await run("git", ["config", "user.email", "test@example.com"], {
@@ -932,7 +932,7 @@ describe("third-party marketplaces", () => {
       const expected = (
         await run("git", ["rev-parse", "notes/v1.2.0"], { cwd: repo })
       ).stdout.trim();
-      const listedUrl = "https://acme.test/bb-plugins.git";
+      const listedUrl = "https://acme.test/sandy-plugins.git";
       await useGitUrlRewrite(listedUrl, repo);
 
       const catalog = service({
@@ -1013,7 +1013,7 @@ describe("third-party marketplaces", () => {
   });
 
   it("adds a local manifest larger than 1 MiB", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "bb-marketplace-big-"));
+    const directory = await mkdtemp(join(tmpdir(), "sandy-marketplace-big-"));
     cleanup.push(directory);
     const padded = manifest("acme-plugins", [
       entry({ description: "x".repeat(1_100_000) }),
@@ -1095,7 +1095,7 @@ describe("third-party marketplaces", () => {
     expect(getPluginMarketplace(db, "a".repeat(65))).toBeUndefined();
   });
 
-  it("refuses a marketplace source bb cannot interpret", async () => {
+  it("refuses a marketplace source sandy cannot interpret", async () => {
     const catalog = service();
     await expect(
       catalog.addMarketplace({

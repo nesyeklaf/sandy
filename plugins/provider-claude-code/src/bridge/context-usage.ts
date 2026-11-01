@@ -4,7 +4,7 @@ import {
   type ContextCategory,
   type ContextEntry,
   type ContextSnapshot,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 
 const tokens = z.number().int().nonnegative();
 const namedTokens = z.object({ name: z.string().min(1), tokens });

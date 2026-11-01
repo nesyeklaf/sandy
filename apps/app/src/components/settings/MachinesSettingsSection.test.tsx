@@ -8,16 +8,16 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
-import { RETRY_ACTION_ICON } from "@bb/domain/update-state";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
+import { RETRY_ACTION_ICON } from "@sandy/domain/update-state";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import type {
   ServerMoveStatus,
   SystemConfigResponse,
   SystemMachineProvider,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { MemoryRouter } from "react-router-dom";
-import { defaultExperiments, type Host } from "@bb/domain";
+import { defaultExperiments, type Host } from "@sandy/domain";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sdk } from "@/lib/sdk";
 import { serverMoveStatusQueryKey } from "@/hooks/queries/query-keys";
@@ -821,9 +821,9 @@ describe("MachinesSettingsSection", () => {
     vi.mocked(sdk.hosts.list).mockResolvedValue([primaryHost, offlineHost]);
     vi.mocked(sdk.hosts.experimental_reconnect).mockResolvedValue({
       command:
-        "curl -fsSL -H 'X-BB-Enrollment: bbde_test' 'https://bb.example.com/install.sh' | sh",
+        "curl -fsSL -H 'X-SANDY-Enrollment: sandyde_test' 'https://sandy.example.com/install.sh' | sh",
       windowsCommand:
-        "irm -Headers @{ 'X-BB-Enrollment' = 'bbde_test' } 'https://bb.example.com/install.ps1' | iex",
+        "irm -Headers @{ 'X-SANDY-Enrollment' = 'sandyde_test' } 'https://sandy.example.com/install.ps1' | iex",
       expiresAt: NOW + 15 * 60 * 1000,
       hostId: offlineHost.id,
     });
@@ -840,7 +840,7 @@ describe("MachinesSettingsSection", () => {
         hostId: offlineHost.id,
       });
     });
-    expect(await screen.findByText(/X-BB-Enrollment: bbde_test/)).toBeDefined();
+    expect(await screen.findByText(/X-SANDY-Enrollment: sandyde_test/)).toBeDefined();
     expect(
       await screen.findByText("Waiting for the machine to reconnect…"),
     ).toBeDefined();
@@ -878,7 +878,7 @@ describe("MachinesSettingsSection", () => {
       targetHostId: "host_desk",
       targetHostName: "desk",
       serverUrl: null,
-      targetDataDir: "/home/sawyer/.bb-machines/macbook-pro",
+      targetDataDir: "/home/sawyer/.sandy-machines/macbook-pro",
       existingTargetServerData: null,
       items: [],
       canMove: true,

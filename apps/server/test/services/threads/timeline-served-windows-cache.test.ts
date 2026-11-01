@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ThreadTimelineResponse } from "@bb/server-contract";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
 import { createTimelineServedWindowsCache } from "../../../src/services/threads/timeline-served-windows-cache.js";
 import { timelineWindowJsonLength } from "../../../src/services/threads/timeline-window-tag.js";
 

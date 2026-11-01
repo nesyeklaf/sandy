@@ -86,5 +86,5 @@ place. Rows that load while a write is pending show its prediction. A row
 leaves the store, with its accepted predictions, when no view holds it.
 `writeKeyedEntity` changes a stored row directly, beneath predictions.
 
-`@bb/query-tags/testing` exports `keyedStoreContract`, the cases every keyed
+`@sandy/query-tags/testing` exports `keyedStoreContract`, the cases every keyed
 surface runs through a `KeyedStoreSubject`.

@@ -1,4 +1,4 @@
-import { createMemoryStorage } from "@bb/test-helpers";
+import { createMemoryStorage } from "@sandy/test-helpers";
 import { createStore } from "jotai";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { createThreadArchiveFilterAtom } from "./thread-lifecycle-filter";

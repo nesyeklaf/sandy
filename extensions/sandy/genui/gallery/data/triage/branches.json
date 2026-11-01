@@ -1,0 +1,44 @@
+[
+  {
+    "name": "fix/queue-lock",
+    "merged": true,
+    "notOnMain": 0,
+    "pushed": true
+  },
+  {
+    "name": "feat/retry-backoff",
+    "merged": true,
+    "notOnMain": 0,
+    "pushed": true
+  },
+  {
+    "name": "docs/readme-typos",
+    "merged": true,
+    "notOnMain": 0,
+    "pushed": false
+  },
+  {
+    "name": "fix/upload-race",
+    "merged": false,
+    "notOnMain": 3,
+    "pushed": true
+  },
+  {
+    "name": "chore/deps-bump",
+    "merged": false,
+    "notOnMain": 1,
+    "pushed": true
+  },
+  {
+    "name": "exp/keep-alive",
+    "merged": false,
+    "notOnMain": 3,
+    "pushed": false
+  },
+  {
+    "name": "tmp/debug-logs",
+    "merged": false,
+    "notOnMain": 2,
+    "pushed": false
+  }
+]

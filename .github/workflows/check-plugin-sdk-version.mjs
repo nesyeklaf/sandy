@@ -5,10 +5,10 @@ import { execFileSync } from "node:child_process";
  *
  * Pre-1.0 the major is the compatibility number and never moves for additive
  * work, so the patch is the only thing a plugin author can point
- * `engines.bbPluginSdk` at to say "I need a host new enough to have this" —
+ * `engines.sandyPluginSdk` at to say "I need a host new enough to have this" —
  * `isPluginSdkRangeSatisfied` reads that range as a floor within the major.
  * Ship a new export without a bump and a plugin using it has no version to
- * require, so installing it on an older bb fails at runtime instead of
+ * require, so installing it on an older sandy fails at runtime instead of
  * legibly at load.
  *
  * Nothing else catches this: `version.test.ts` only checks that package.json

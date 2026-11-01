@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import { useRpc } from "@get-bb/plugin-sdk/app";
+import { useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type {
   DiffFileContentsResult,
   RequestDiffFileContents,
-} from "@bb/shared-ui/git-diff/card-body";
+} from "@sandy/shared-ui/git-diff/card-body";
 import type {
   GitFileContent,
   GitFileSideQuery,

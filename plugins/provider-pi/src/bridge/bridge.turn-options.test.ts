@@ -5,7 +5,7 @@ import { z } from "zod";
 import type {
   BridgeJsonRpcObject,
   BridgeJsonRpcOutputMessage,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import {
   FULL_PERMISSION_OPTIONS,
   type FakePiBridgeHarness,
@@ -32,7 +32,7 @@ let harness: FakePiBridgeHarness;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-turn-options-",
+    prefix: "sandy-pi-turn-options-",
     initialize: true,
   });
 }, 30_000);

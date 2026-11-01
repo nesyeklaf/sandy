@@ -6,7 +6,7 @@ import {
 } from "./git.js";
 import type {
   GitCommandResult,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 export type CommitGitRunner = (
   args: string[],

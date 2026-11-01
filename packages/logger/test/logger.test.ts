@@ -4,15 +4,15 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { context, metrics, propagation, trace } from "@opentelemetry/api";
-import { startTelemetry } from "@bb/telemetry";
-import { startOtlpReceiver } from "@bb/telemetry/testing";
+import { startTelemetry } from "@sandy/telemetry";
+import { startOtlpReceiver } from "@sandy/telemetry/testing";
 
-const LOGGER_IMPORT_SPECIFIER = "@bb/logger";
+const LOGGER_IMPORT_SPECIFIER = "@sandy/logger";
 
 const tempDirs: string[] = [];
 
 function createTempDir(): string {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-logger-"));
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "sandy-logger-"));
   tempDirs.push(tempDir);
   return tempDir;
 }
@@ -54,7 +54,7 @@ async function runLoggerInSubprocess(args: {
 
   const childEnv: NodeJS.ProcessEnv = {
     ...process.env,
-    BB_DATA_DIR: args.dataDir,
+    SANDY_DATA_DIR: args.dataDir,
     TZ: args.timezone,
   };
   delete childEnv.VITEST;
@@ -156,7 +156,7 @@ describe("createLogger", () => {
   it("rotates files when the active log exceeds the configured size", async () => {
     const dataDir = createTempDir();
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
 
     const { createLogger } = await importFreshLogger();
     const logger = createLogger({ component: "server" });
@@ -197,7 +197,7 @@ describe("createLogger", () => {
     fs.writeFileSync(path.join(logDir, "server-stdio.log"), "capture");
     fs.writeFileSync(path.join(logDir, "host-daemon.1.log"), "");
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
 
     const { createLogger } = await importFreshLogger();
     createLogger({ component: "server" });
@@ -274,7 +274,7 @@ describe("createLogger", () => {
     const envDataDir = createTempDir();
     const explicitDataDir = createTempDir();
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", envDataDir);
+    vi.stubEnv("SANDY_DATA_DIR", envDataDir);
 
     const { createLogger } = await importFreshLogger();
     const logger = createLogger({
@@ -305,8 +305,8 @@ describe("createLogger", () => {
     const dataDir = createTempDir();
     const receiver = await startOtlpReceiver();
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", dataDir);
-    vi.stubEnv("BB_OTLP_ENDPOINT", receiver.endpoint);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_OTLP_ENDPOINT", receiver.endpoint);
     vi.stubEnv("OTEL_BLRP_SCHEDULE_DELAY", "50");
 
     try {
@@ -326,7 +326,7 @@ describe("createLogger", () => {
       );
       expect(request?.path).toBe("/v1/logs");
       expect(request?.contentType).toBe("application/x-protobuf");
-      expect(request?.body.includes("bb-server")).toBe(true);
+      expect(request?.body.includes("sandy-server")).toBe(true);
       expect(request?.body.includes("pluginId")).toBe(true);
       expect(request?.body.includes("otlp-fixture")).toBe(true);
       expect(request?.body.includes("warn")).toBe(true);
@@ -341,11 +341,11 @@ describe("createLogger", () => {
   it("adds the active span's ids to log lines", async () => {
     const dataDir = createTempDir();
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
     const receiver = await startOtlpReceiver();
     const telemetry = startTelemetry({
       component: "server",
-      env: { BB_OTLP_ENDPOINT: receiver.endpoint },
+      env: { SANDY_OTLP_ENDPOINT: receiver.endpoint },
     });
 
     try {
@@ -383,7 +383,7 @@ describe("createLogger", () => {
   it("serializes nested error causes", async () => {
     const dataDir = createTempDir();
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("BB_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
 
     const { createLogger } = await importFreshLogger();
     const logger = createLogger({ component: "server" });

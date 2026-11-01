@@ -13,11 +13,11 @@ case "$architecture" in
   *) echo "Usage: build-android-local.sh [arm64-v8a|x86_64]" >&2; exit 1 ;;
 esac
 case "$variant" in
-  production) apk_name=bb-android-local.apk ;;
-  dev) apk_name=bb-dev.apk ;;
+  production) apk_name=sandy-android-local.apk ;;
+  dev) apk_name=sandy-dev.apk ;;
   *) echo "Usage: build-android-local.sh [arm64-v8a|x86_64] [production|dev]" >&2; exit 1 ;;
 esac
-export BB_MOBILE_VARIANT="$variant"
+export SANDY_MOBILE_VARIANT="$variant"
 mkdir -p build-output
 if ! mkdir build-output/.android-build-lock 2>/dev/null; then
   echo "An Android build is already running in this checkout. If it was interrupted, remove apps/mobile/build-output/.android-build-lock before retrying." >&2

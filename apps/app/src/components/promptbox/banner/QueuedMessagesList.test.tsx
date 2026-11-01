@@ -12,11 +12,11 @@ import { useContext, useLayoutEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { threadsQueryKey } from "@/hooks/queries/query-keys";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ThreadQueuedMessage } from "@bb/domain";
+import type { ThreadQueuedMessage } from "@sandy/domain";
 import {
   makeThreadListEntry,
   makeThreadQueuedMessage,
-} from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/test-helpers/domain-fixtures";
 import type { Active, DroppableContainer } from "@dnd-kit/core";
 import { focusWithKeyboard } from "@/test/keyboard-focus";
 import {
@@ -460,7 +460,7 @@ describe("QueuedMessagesList", () => {
 
     const count = () =>
       container.querySelector<HTMLElement>("[data-queued-messages-count]");
-    expect(count()?.classList.contains("bb-count-flash")).toBe(false);
+    expect(count()?.classList.contains("sandy-count-flash")).toBe(false);
 
     const secondMessage = makeQueuedMessage("q_two", "Second queued message");
     rerender(
@@ -480,7 +480,7 @@ describe("QueuedMessagesList", () => {
         'section[aria-label="Queued messages"]',
       )?.style.height,
     ).toBe("44px");
-    expect(count()?.classList.contains("bb-count-flash")).toBe(true);
+    expect(count()?.classList.contains("sandy-count-flash")).toBe(true);
     const previousCount = container.querySelector<HTMLElement>(
       "[data-queued-messages-previous-count]",
     );
@@ -530,7 +530,7 @@ describe("QueuedMessagesList", () => {
       />,
     );
     expect(count()).toBe(restingPill);
-    expect(count()?.classList.contains("bb-count-flash")).toBe(false);
+    expect(count()?.classList.contains("sandy-count-flash")).toBe(false);
 
     rerender(
       <QueuedMessagesList
@@ -543,7 +543,7 @@ describe("QueuedMessagesList", () => {
       />,
     );
     const bumpedPill = count();
-    expect(bumpedPill?.classList.contains("bb-count-flash")).toBe(true);
+    expect(bumpedPill?.classList.contains("sandy-count-flash")).toBe(true);
 
     rerender(
       <QueuedMessagesList

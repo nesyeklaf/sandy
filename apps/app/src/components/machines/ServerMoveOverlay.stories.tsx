@@ -1,9 +1,9 @@
-import { SERVER_MOVE_STEP_IDS, type ServerMoveStepId } from "@bb/domain";
+import { SERVER_MOVE_STEP_IDS, type ServerMoveStepId } from "@sandy/domain";
 import type {
   ServerMoveStatus,
   ServerMoveStepStatus,
-} from "@bb/server-contract";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/server-contract";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import {
   ServerMoveOverlayView,
   type ServerMoveOverlayViewProps,
@@ -148,7 +148,7 @@ export function Progress() {
       </StoryRow>
       <StoryRow
         label="needs recovery"
-        hint="the target never confirmed it took over, so the server stays up read-only while bb keeps checking; Abandon asks first"
+        hint="the target never confirmed it took over, so the server stays up read-only while sandy keeps checking; Abandon asks first"
       >
         <Overlay
           content={{
@@ -218,7 +218,7 @@ export function Finished() {
             kind: "redirecting",
             move: completedDirect,
             destination:
-              "https://desk.example.com/projects/proj_bb/threads/thr_1",
+              "https://desk.example.com/projects/proj_sandy/threads/thr_1",
           }}
         />
       </StoryRow>

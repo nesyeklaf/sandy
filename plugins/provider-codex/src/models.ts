@@ -5,11 +5,11 @@ import {
   type ModelReasoningEffort,
   type ModelServiceTier,
   type ReasoningLevel,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { z } from "zod";
 
 const CODEX_FAST_SERVICE_TIER = "priority";
-const BB_FAST_SERVICE_TIER = "fast";
+const SANDY_FAST_SERVICE_TIER = "fast";
 
 export const CODEX_DAYBREAK_OPTION_ID = "daybreak";
 const CODEX_CYBER_PROGRAMS = [
@@ -42,7 +42,7 @@ const codexModelIdentitySchema = z
   })
   .passthrough();
 
-function mapCodexReasoningLevelToBb(value: unknown): ReasoningLevel | null {
+function mapCodexReasoningLevelToSandy(value: unknown): ReasoningLevel | null {
   if (typeof value !== "string") {
     return null;
   }
@@ -50,7 +50,7 @@ function mapCodexReasoningLevelToBb(value: unknown): ReasoningLevel | null {
   return parsed.success ? parsed.data : null;
 }
 
-export function mapBbReasoningLevelToCodex(
+export function mapSandyReasoningLevelToCodex(
   level: ReasoningLevel,
 ): string | null {
   return level === "ultracode" ? null : level;
@@ -65,7 +65,7 @@ function parseReasoningEffortOption(raw: unknown): ModelReasoningEffort | null {
     return null;
   }
   const record = raw as Record<string, unknown>;
-  const level = mapCodexReasoningLevelToBb(record.reasoningEffort);
+  const level = mapCodexReasoningLevelToSandy(record.reasoningEffort);
   if (!level) {
     return null;
   }
@@ -98,13 +98,13 @@ function parseSupportedReasoningEfforts(raw: unknown): ModelReasoningEffort[] {
   return efforts.length > 0 ? efforts : cloneDefaultReasoningEfforts();
 }
 
-function mapCodexServiceTierToBb(id: string): string {
-  return id === CODEX_FAST_SERVICE_TIER ? BB_FAST_SERVICE_TIER : id;
+function mapCodexServiceTierToSandy(id: string): string {
+  return id === CODEX_FAST_SERVICE_TIER ? SANDY_FAST_SERVICE_TIER : id;
 }
 
 function parseServiceTierOption(raw: unknown): ModelServiceTier | null {
   if (typeof raw === "string") {
-    return raw.length > 0 ? { id: mapCodexServiceTierToBb(raw) } : null;
+    return raw.length > 0 ? { id: mapCodexServiceTierToSandy(raw) } : null;
   }
   if (raw == null || typeof raw !== "object") {
     return null;
@@ -114,7 +114,7 @@ function parseServiceTierOption(raw: unknown): ModelServiceTier | null {
     return null;
   }
   return {
-    id: mapCodexServiceTierToBb(record.id),
+    id: mapCodexServiceTierToSandy(record.id),
     ...(typeof record.name === "string" && record.name.length > 0
       ? { label: record.name }
       : {}),
@@ -133,7 +133,7 @@ function parseSupportedServiceTiers(
       ? raw.additionalSpeedTiers
       : null;
   if (listed === null) {
-    return [{ id: BB_FAST_SERVICE_TIER }];
+    return [{ id: SANDY_FAST_SERVICE_TIER }];
   }
   const tiers: ModelServiceTier[] = [];
   const seen = new Set<string>();
@@ -152,7 +152,7 @@ function toAvailableModel(
   raw: z.infer<typeof codexModelIdentitySchema>,
 ): AvailableModel {
   const efforts = parseSupportedReasoningEfforts(raw.supportedReasoningEfforts);
-  const mappedDefault = mapCodexReasoningLevelToBb(raw.defaultReasoningEffort);
+  const mappedDefault = mapCodexReasoningLevelToSandy(raw.defaultReasoningEffort);
   const defaultReasoningEffort =
     mappedDefault &&
     efforts.some((effort) => effort.reasoningEffort === mappedDefault)

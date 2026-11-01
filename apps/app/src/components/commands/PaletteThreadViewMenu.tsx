@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
-import { Icon } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
+} from "@sandy/shared-ui/dropdown-menu";
 import {
   ThreadLifecycleFilterItems,
   threadLifecycleFilterLabel,

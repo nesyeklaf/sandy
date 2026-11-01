@@ -16,7 +16,7 @@ function raw(number: number) {
     number,
     title: `PR ${number}`,
     state: "OPEN",
-    url: `https://github.com/acme/bb/pull/${number}`,
+    url: `https://github.com/acme/sandy/pull/${number}`,
     isDraft: false,
     autoMergeRequest: null,
     isInMergeQueue: false,
@@ -69,7 +69,7 @@ describe("host GraphQL batching", () => {
         },
       },
     });
-    const cwd = await makeTempDir("bb-pr-batch-");
+    const cwd = await makeTempDir("sandy-pr-batch-");
     const [first, duplicate, second] = await Promise.all([
       getPullRequestByUrl(raw(1).url, cwd),
       getPullRequestByUrl(raw(1).url, cwd),
@@ -95,7 +95,7 @@ describe("host GraphQL batching", () => {
     const gh = await installFakeGh({
       "api graphql": { stderr: "API rate limit exceeded", exit: 1 },
     });
-    const cwd = await makeTempDir("bb-pr-rate-");
+    const cwd = await makeTempDir("sandy-pr-rate-");
     vi.stubEnv("GH_TOKEN", "credential-one");
     await expect(getPullRequestByUrl(raw(1).url, cwd)).resolves.toMatchObject({
       outcome: "unavailable",
@@ -116,7 +116,7 @@ describe("host GraphQL batching", () => {
     });
     vi.stubEnv("GH_TOKEN", undefined);
     vi.stubEnv("GITHUB_TOKEN", undefined);
-    const cwd = await makeTempDir("bb-pr-account-");
+    const cwd = await makeTempDir("sandy-pr-account-");
     await getPullRequestByUrl(raw(1).url, cwd);
     await getPullRequestByUrl(raw(2).url, cwd);
     expect(await gh.readCalls()).toHaveLength(1);
@@ -145,7 +145,7 @@ describe("host GraphQL batching", () => {
           },
         },
       });
-      const cwd = await makeTempDir("bb-pr-partial-");
+      const cwd = await makeTempDir("sandy-pr-partial-");
       const results = await Promise.all([
         getPullRequestByUrl(raw(firstNumber).url, cwd),
         getPullRequestByUrl(raw(secondNumber).url, cwd),
@@ -187,7 +187,7 @@ describe("host GraphQL batching", () => {
         },
       },
     });
-    const cwd = await makeTempDir("bb-pr-ghes-");
+    const cwd = await makeTempDir("sandy-pr-ghes-");
     await expect(getPullRequestByUrl(raw(3).url, cwd)).resolves.toMatchObject({
       outcome: "found",
       pullRequest: { number: 3, inMergeQueue: null },
@@ -209,7 +209,7 @@ describe("host GraphQL batching", () => {
         ),
       },
     });
-    const cwd = await makeTempDir("bb-pr-cap-");
+    const cwd = await makeTempDir("sandy-pr-cap-");
     const results = await Promise.all(
       Array.from({ length: 26 }, (_, index) =>
         getPullRequestByUrl(raw(index + 1).url, cwd),
@@ -243,17 +243,17 @@ describe("host GraphQL batching", () => {
         }),
       },
     });
-    const cwd = await makeTempDir("bb-pr-branches-");
+    const cwd = await makeTempDir("sandy-pr-branches-");
     const git = promisify(execFile);
     await git("git", ["init", "-q"], { cwd });
     await git(
       "git",
-      ["remote", "add", "origin", "https://github.com/acme/bb.git"],
+      ["remote", "add", "origin", "https://github.com/acme/sandy.git"],
       { cwd },
     );
     const prepared = await prepareCurrentBranchRead({
       cwd,
-      localBranch: "bb/branch-0",
+      localBranch: "sandy/branch-0",
       refresh: false,
     });
     if (prepared.kind !== "batched" || prepared.target.kind !== "branch")
@@ -263,7 +263,7 @@ describe("host GraphQL batching", () => {
       Array.from({ length: 25 }, (_, index) =>
         Promise.resolve({
           ...prepared,
-          target: { ...target, branch: `bb/branch-${index}` },
+          target: { ...target, branch: `sandy/branch-${index}` },
         }),
       ),
     );
@@ -279,7 +279,7 @@ describe("host GraphQL batching", () => {
         ),
       },
     });
-    const cwd = await makeTempDir("bb-pr-prepared-");
+    const cwd = await makeTempDir("sandy-pr-prepared-");
     const later = (delay: number, url: string) =>
       new Promise<void>((resolve) => setTimeout(resolve, delay)).then(() =>
         prepareUrlRead(url, cwd),

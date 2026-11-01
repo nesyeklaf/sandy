@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import type { BbDesktopBrowserTarget } from "@bb/desktop-contract";
-import { COARSE_POINTER_TEXT_SM_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { SandyDesktopBrowserTarget } from "@sandy/desktop-contract";
+import { COARSE_POINTER_TEXT_SM_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { BrowserFixedPanelTab } from "@/lib/fixed-panel-tabs-state";
-import { getDesktopBrowserApi } from "@/lib/bb-desktop";
+import { getDesktopBrowserApi } from "@/lib/sandy-desktop";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
 import { sdk } from "@/lib/sdk";
 import { openUrlInExternalBrowser } from "@/lib/url-open-routing";
@@ -50,7 +50,7 @@ function windowRetryDelay(attempt: number): number {
 
 type WindowTargetCheck =
   | { status: "pending" }
-  | { status: "ready"; target: BbDesktopBrowserTarget | null };
+  | { status: "ready"; target: SandyDesktopBrowserTarget | null };
 
 type SavedWindowCheck = {
   key: string;
@@ -65,7 +65,7 @@ type BrowserTabPlacement =
   | "unavailable";
 
 function resolveBrowserTabPlacement(
-  saved: BbDesktopBrowserTarget | undefined,
+  saved: SandyDesktopBrowserTarget | undefined,
   windowTarget: WindowTargetCheck,
 ): BrowserTabPlacement {
   if (saved === undefined) return "open";
@@ -274,23 +274,23 @@ export function BrowserTabDeck({
 const BROWSER_TAB_ELSEWHERE_COPY = {
   "desktop-required": {
     title: "Browser tabs need the desktop app",
-    body: "This tab is open in the bb desktop app.",
+    body: "This tab is open in the sandy desktop app.",
   },
   "other-window": {
-    title: "This tab is open in another bb window",
+    title: "This tab is open in another sandy window",
     body: "Switch to that window to keep browsing.",
   },
   "other-computer": {
     title: "This tab is open on another computer",
-    body: "It was opened in bb on a different computer.",
+    body: "It was opened in sandy on a different computer.",
   },
   reconnecting: {
     title: "Reconnecting to this tab",
-    body: "The tab opens again as soon as bb reconnects.",
+    body: "The tab opens again as soon as sandy reconnects.",
   },
   unreachable: {
     title: "Can't reach this tab",
-    body: "bb couldn't reconnect. Try again in a moment.",
+    body: "sandy couldn't reconnect. Try again in a moment.",
   },
 } as const;
 

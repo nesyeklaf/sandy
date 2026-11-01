@@ -1,4 +1,4 @@
-import { parseApplicationUrl } from "@bb/domain/application-url";
+import { parseApplicationUrl } from "@sandy/domain/application-url";
 import { visit } from "unist-util-visit";
 import { useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
@@ -13,9 +13,9 @@ const MARKDOWN_HTML_SCHEMA = {
   tagNames: [
     ...(defaultSchema.tagNames ?? []),
     "video",
-    "bb-thread-mention",
-    "bb-prompt-mention",
-    "bb-message-directive",
+    "sandy-thread-mention",
+    "sandy-prompt-mention",
+    "sandy-message-directive",
   ],
   protocols: {
     ...defaultSchema.protocols,
@@ -49,13 +49,13 @@ const MARKDOWN_HTML_SCHEMA = {
       "dataCodeFenceOffset",
       "dataCodeFenceClosed",
     ],
-    "bb-thread-mention": [
+    "sandy-thread-mention": [
       "dataThreadId",
       "dataRawThreadId",
       "dataRawThreadInlineCode",
     ],
-    "bb-prompt-mention": ["dataMentionIndex"],
-    "bb-message-directive": ["dataDirectiveIndex"],
+    "sandy-prompt-mention": ["dataMentionIndex"],
+    "sandy-message-directive": ["dataDirectiveIndex"],
   },
 };
 

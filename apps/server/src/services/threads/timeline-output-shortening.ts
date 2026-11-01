@@ -1,5 +1,5 @@
-import { mapTimelineRowTree, type TimelineRow } from "@bb/server-contract";
-import { sliceUtf16HeadAndTail } from "@bb/text-utils";
+import { mapTimelineRowTree, type TimelineRow } from "@sandy/server-contract";
+import { sliceUtf16HeadAndTail } from "@sandy/text-utils";
 import type { ThreadTimelineWindow } from "./timeline.js";
 
 export const DEFAULT_MAX_INLINE_OUTPUT_CHARS = 32_000;

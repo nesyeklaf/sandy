@@ -1,5 +1,5 @@
-import type { Environment } from "@bb/domain";
-import { makeEnvironment } from "@bb/test-helpers/domain-fixtures";
+import type { Environment } from "@sandy/domain";
+import { makeEnvironment } from "@sandy/test-helpers/domain-fixtures";
 import { describe, expect, it } from "vitest";
 import {
   resolveEnvironmentOpenContext,
@@ -28,19 +28,19 @@ describe("resolveThreadWorkspaceOpenPath", () => {
     expect(
       resolveEnvironmentOpenContext({
         environment: makeWorkspaceEnvironment({ hostId: "host-local" }),
-        serverOrigin: "https://bb.example.test",
+        serverOrigin: "https://sandy.example.test",
         threadEnvironmentIsLocal: true,
       }),
     ).toEqual({ kind: "local" });
     expect(
       resolveEnvironmentOpenContext({
         environment: makeWorkspaceEnvironment({ hostId: "host-remote" }),
-        serverOrigin: "https://bb.example.test",
+        serverOrigin: "https://sandy.example.test",
         threadEnvironmentIsLocal: false,
       }),
     ).toEqual({
       kind: "remote-ssh",
-      serverOrigin: "https://bb.example.test",
+      serverOrigin: "https://sandy.example.test",
       hostId: "host-remote",
     });
   });

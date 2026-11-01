@@ -1,18 +1,18 @@
 import fs from "node:fs/promises";
-import { createAsyncTtlMemo } from "@bb/async-cache";
+import { createAsyncTtlMemo } from "@sandy/async-cache";
 import { serve } from "@hono/node-server";
 import {
   buildLocalAppOrigins,
   type BuildLocalAppOriginsArgs,
-} from "@bb/config/local-app-origins";
+} from "@sandy/config/local-app-origins";
 import {
   formatClientConfigPath,
   normalizeClientServerOrigin,
   parseClientConfig,
   resolveClientSshAuthority,
   type ClientConfig,
-} from "@bb/config/client-config";
-import { assignIfDefined } from "@bb/config/objects";
+} from "@sandy/config/client-config";
+import { assignIfDefined } from "@sandy/config/objects";
 import {
   healthResponseSchema,
   HOST_DAEMON_PROTOCOL_VERSION,
@@ -22,7 +22,7 @@ import {
   type HostDaemonLocalSchema,
   type OpenInTargetRequest,
   type WorkspaceOpenTarget,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   createWorkspaceOpenTargetRuntime,
   listWorkspaceOpenTargetsWithRuntime,
@@ -30,7 +30,7 @@ import {
   type OpenPathInTargetArgs,
   type ListWorkspaceOpenTargetsOptions,
   WorkspaceOpenTargetError,
-} from "@bb/local-open-targets";
+} from "@sandy/local-open-targets";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
@@ -158,7 +158,7 @@ async function resolveOpenPathInTargetArgs({
   if (sshAuthority === null) {
     throw new WorkspaceOpenTargetError({
       code: "remote_mapping_missing",
-      message: `No SSH target configured for host ${request.context.hostId} on ${serverOrigin}. Run: bb-app client ssh-target set ${serverOrigin} <ssh-target> --host-id ${request.context.hostId}`,
+      message: `No SSH target configured for host ${request.context.hostId} on ${serverOrigin}. Run: sandy-app client ssh-target set ${serverOrigin} <ssh-target> --host-id ${request.context.hostId}`,
     });
   }
 
@@ -267,7 +267,7 @@ export async function startLocalApiServer(
       !(await isAllowedAppOrigin(origin, c.req.url))
     ) {
       return c.json(
-        { error: `origin "${origin}" is not a local BB app origin` },
+        { error: `origin "${origin}" is not a local SANDY app origin` },
         403,
       );
     }

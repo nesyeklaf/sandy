@@ -6,11 +6,11 @@ import {
   jsonObjectSchema,
   permissionModeSchema,
   providerForkSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { AgentRuntimeBridgeLaunch } from "../types.js";
 
 export function integrationProviderBridgeManifestPath(): string {
-  return join(tmpdir(), "bb-agent-runtime-integration-provider-bridges.json");
+  return join(tmpdir(), "sandy-agent-runtime-integration-provider-bridges.json");
 }
 
 const bridgeLaunchSchema = z.object({

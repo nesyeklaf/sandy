@@ -1,12 +1,12 @@
 {
-  "name": "bb-plugin-replacement-lab-beta",
+  "name": "sandy-plugin-replacement-lab-beta",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "bbPluginSdk": ">=0.4.3"
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Replacement Lab Beta",
     "description": "A second provider for precedence and fallback testing.",
     "branding": {
@@ -19,7 +19,7 @@
     "typecheck": "tsrs --noEmit"
   },
   "devDependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",

@@ -1,6 +1,6 @@
 import { readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
-import { experimental_hostToolchain as hostToolchain } from "@get-bb/plugin-sdk/process";
+import { experimental_hostToolchain as hostToolchain } from "@sandy-sdk/plugin-sdk/process";
 import { z } from "zod";
 
 const piPackageSchema = z.object({

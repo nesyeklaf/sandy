@@ -1,4 +1,4 @@
-See a custom theme on real bb screens before you commit to it, and find contrast problems while you still edit the file.
+See a custom theme on real sandy screens before you commit to it, and find contrast problems while you still edit the file.
 
 ## What you get
 
@@ -10,8 +10,8 @@ See a custom theme on real bb screens before you commit to it, and find contrast
 
 ## How it works
 
-The panel reads the theme catalog from bb and from installed plugins that ship themes. Choose a theme in the dropdown to activate it app-wide. Contrast rows are measurements for guidance. The plugin never creates, edits, or repairs a theme file.
+The panel reads the theme catalog from sandy and from installed plugins that ship themes. Choose a theme in the dropdown to activate it app-wide. Contrast rows are measurements for guidance. The plugin never creates, edits, or repairs a theme file.
 
 ## For agents
 
-The bundled `bb-theme-authoring` skill explains the theme file layout, the token groups, and the checks to run. Agents use the built-in `bb theme dir`, `bb theme list`, `bb theme set`, and `bb theme show` commands. Work in a split: the agent edits `theme.css` on one side and you watch the preview on the other.
+The bundled `sandy-theme-authoring` skill explains the theme file layout, the token groups, and the checks to run. Agents use the built-in `sandy theme dir`, `sandy theme list`, `sandy theme set`, and `sandy theme show` commands. Work in a split: the agent edits `theme.css` on one side and you watch the preview on the other.

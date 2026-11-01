@@ -1,4 +1,4 @@
-Find out where a plugin can add to bb before you write one. The Plugin Guide is a page in the sidebar that shows the bb product as a set of annotated wireframes.
+Find out where a plugin can add to sandy before you write one. The Plugin Guide is a page in the sidebar that shows the sandy product as a set of annotated wireframes.
 
 ## What you get
 
@@ -9,7 +9,7 @@ Find out where a plugin can add to bb before you write one. The Plugin Guide is 
 
 ## How it works
 
-Open Plugin Guide from the sidebar. Click a number on the wireframe to read its card. Each card names the exact types and methods from `@get-bb/plugin-sdk` so you can search for them in your editor.
+Open Plugin Guide from the sidebar. Click a number on the wireframe to read its card. Each card names the exact types and methods from `@sandy-sdk/plugin-sdk` so you can search for them in your editor.
 
 ## For agents
 

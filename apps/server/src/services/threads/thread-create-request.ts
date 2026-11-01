@@ -6,13 +6,13 @@ import type {
   ThreadOriginKind,
   ThreadParentNotifications,
   ThreadVisibility,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   CreateThreadEnvironmentArgs,
   CreateThreadRequest,
   EnvironmentArgs,
   ProviderEnvironmentArgs,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 export interface ThreadCreateServiceRequestInput {
   environment: CreateThreadEnvironmentArgs;

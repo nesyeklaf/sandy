@@ -23,12 +23,12 @@ import {
   getInstalledPluginRegistration,
   listPluginArtifacts,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { ROOT_PLUGIN_SOURCE_SELECTION } from "@bb/server-contract";
-import type { Logger } from "@bb/logger";
-import { scaffoldPlugin } from "@bb/templates/plugin-scaffold";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { ROOT_PLUGIN_SOURCE_SELECTION } from "@sandy/server-contract";
+import type { Logger } from "@sandy/logger";
+import { scaffoldPlugin } from "@sandy/templates/plugin-scaffold";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
 import { validatePluginArtifactMeta } from "../../../src/services/plugins/app-bundle.js";
 import {
   gitArtifactCacheDir,
@@ -115,14 +115,14 @@ async function writePluginFixture(
       ...(options.engines || options.pluginSdkRange
         ? {
             engines: {
-              ...(options.engines ? { bb: options.engines } : {}),
+              ...(options.engines ? { sandy: options.engines } : {}),
               ...(options.pluginSdkRange
-                ? { bbPluginSdk: options.pluginSdkRange }
+                ? { sandyPluginSdk: options.pluginSdkRange }
                 : {}),
             },
           }
         : {}),
-      bb: {
+      sandy: {
         name: "Install fixture",
         description: "Plugin installation fixture.",
         branding: { icon: "Zap" },
@@ -134,7 +134,7 @@ async function writePluginFixture(
   );
   await writeFile(
     join(rootDir, "server.ts"),
-    `export default function plugin(bb: any) { bb.log.info("loaded"); }`,
+    `export default function plugin(sandy: any) { sandy.log.info("loaded"); }`,
   );
   if (options.appSource !== undefined) {
     await writeFile(join(rootDir, "app.tsx"), options.appSource);
@@ -177,7 +177,7 @@ function artifactMeta(args: {
     pluginId: args.pluginId,
     pluginVersion: args.pluginVersion ?? "0.1.0",
     builtWith: {
-      bbVersion: "0.9.0-test",
+      sandyVersion: "0.9.0-test",
       pluginSdkVersion: sdkVersion,
     },
   });
@@ -194,15 +194,15 @@ function localGitCachePath(repoDir: string): string {
 describe("plugin install sources", () => {
   it("reads a Windows folder as a local git source", () => {
     expect(
-      parsePluginSource("git:C:\\Users\\me\\plugins\\bb-plugin-foo@v1"),
+      parsePluginSource("git:C:\\Users\\me\\plugins\\sandy-plugin-foo@v1"),
     ).toMatchObject({
       kind: "git",
-      url: "C:\\Users\\me\\plugins\\bb-plugin-foo",
+      url: "C:\\Users\\me\\plugins\\sandy-plugin-foo",
       spec: "v1",
-      cachePath: expect.stringMatching(/^local\/bb-plugin-foo-[a-f0-9]{12}$/u),
+      cachePath: expect.stringMatching(/^local\/sandy-plugin-foo-[a-f0-9]{12}$/u),
     });
-    expect(localGitCachePath("c:/users/ME/plugins/bb-plugin-foo/")).toBe(
-      localGitCachePath("C:\\Users\\me\\plugins\\bb-plugin-foo"),
+    expect(localGitCachePath("c:/users/ME/plugins/sandy-plugin-foo/")).toBe(
+      localGitCachePath("C:\\Users\\me\\plugins\\sandy-plugin-foo"),
     );
     expect(() => parsePluginSource("git:C:\\Users\\me\\..\\other")).toThrow(
       "invalid git repository path",
@@ -210,34 +210,34 @@ describe("plugin install sources", () => {
   });
 
   it("parses git URLs, tracks HEAD by default, and rejects traversal", () => {
-    expect(parsePluginSource("git:github.com/acme/bb-plugin-foo@v1")).toEqual({
+    expect(parsePluginSource("git:github.com/acme/sandy-plugin-foo@v1")).toEqual({
       kind: "git",
-      url: "https://github.com/acme/bb-plugin-foo",
+      url: "https://github.com/acme/sandy-plugin-foo",
       spec: "v1",
       selector: { kind: "ref", ref: "v1" },
-      cachePath: "github.com/acme/bb-plugin-foo",
+      cachePath: "github.com/acme/sandy-plugin-foo",
     });
     expect(
       parsePluginSource(
-        "git:https://github.com/acme/bb-plugin-foo.git@abc1234",
+        "git:https://github.com/acme/sandy-plugin-foo.git@abc1234",
       ),
     ).toMatchObject({
       kind: "git",
-      url: "https://github.com/acme/bb-plugin-foo.git",
+      url: "https://github.com/acme/sandy-plugin-foo.git",
     });
-    expect(parsePluginSource("https://github.com/acme/bb-plugin-foo")).toEqual({
+    expect(parsePluginSource("https://github.com/acme/sandy-plugin-foo")).toEqual({
       kind: "git",
-      url: "https://github.com/acme/bb-plugin-foo",
+      url: "https://github.com/acme/sandy-plugin-foo",
       spec: "HEAD",
       selector: { kind: "ref", ref: "HEAD" },
-      cachePath: "github.com/acme/bb-plugin-foo",
+      cachePath: "github.com/acme/sandy-plugin-foo",
     });
     expect(
-      parsePluginSource("https://github.com/acme/bb-plugin-foo/"),
+      parsePluginSource("https://github.com/acme/sandy-plugin-foo/"),
     ).toMatchObject({
       kind: "git",
       spec: "HEAD",
-      cachePath: "github.com/acme/bb-plugin-foo",
+      cachePath: "github.com/acme/sandy-plugin-foo",
     });
     expect(parsePluginSource("git:github.com/acme/repo")).toMatchObject({
       kind: "git",
@@ -308,7 +308,7 @@ describe("plugin install sources", () => {
   });
 
   it("refuses npm sources", () => {
-    expect(() => parsePluginSource("npm:bb-plugin-linear@0.3.0")).toThrow(
+    expect(() => parsePluginSource("npm:sandy-plugin-linear@0.3.0")).toThrow(
       /npm plugin sources are not supported/,
     );
   });
@@ -394,7 +394,7 @@ describe("plugin install flows", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-install-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-install-"));
     dataDir = join(workDir, "data");
     afterArtifactPromoted = undefined;
     materializationCount = 0;
@@ -428,7 +428,7 @@ describe("plugin install flows", () => {
   describe.skipIf(!hasGit)("git sources", { timeout: 30_000 }, () => {
     it("installs and tracks the default branch when the ref is omitted", async () => {
       const repoDir = join(workDir, "repo-default-branch");
-      await writePluginFixture(repoDir, { name: "bb-plugin-default-branch" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-default-branch" });
       await initGitRepo(repoDir);
       const commit = await commitAll(repoDir, "init");
 
@@ -453,14 +453,14 @@ describe("plugin install flows", () => {
 
     it("stamps catalog provenance for a git official catalog entry", async () => {
       const repoDir = join(workDir, "repo-catalog");
-      await writePluginFixture(repoDir, { name: "bb-plugin-catalog-git" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-catalog-git" });
       await initGitRepo(repoDir);
       const commit = await commitAll(repoDir, "init");
       await git(repoDir, ["branch", "plugin/catalog-git"]);
 
       const source = `git:${repoDir}@plugin/catalog-git`;
       const entry = await service.installCatalogPlugin({
-        marketplace: "bb-community",
+        marketplace: "sandy-community",
         entryId: "catalog-git-entry",
         pluginId: "catalog-git",
         source,
@@ -472,13 +472,13 @@ describe("plugin install flows", () => {
         source,
         provenance: "catalog",
         catalogEntryId: "catalog-git-entry",
-        catalogMarketplaceName: "bb-community",
+        catalogMarketplaceName: "sandy-community",
         status: "running",
       });
       expect(getInstalledPluginRegistration(db, "catalog-git")).toMatchObject({
         provenance: "catalog",
         catalogEntryId: "catalog-git-entry",
-        catalogMarketplaceName: "bb-community",
+        catalogMarketplaceName: "sandy-community",
         sourceKind: "git",
         sourceGitUrl: repoDir,
         sourceGitRequestedRef: "plugin/catalog-git",
@@ -489,7 +489,7 @@ describe("plugin install flows", () => {
 
     it("refuses a git commit that changed after marketplace confirmation", async () => {
       const repoDir = join(workDir, "repo-catalog-confirmed");
-      await writePluginFixture(repoDir, { name: "bb-plugin-confirmed" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-confirmed" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "initial");
 
@@ -509,7 +509,7 @@ describe("plugin install flows", () => {
     it("refuses a catalog entry whose plugin requires another plugin SDK", async () => {
       const repoDir = join(workDir, "repo-catalog-sdk-too-new");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-sdk-listed",
+        name: "sandy-plugin-sdk-listed",
         pluginSdkRange: ">=99.0.0",
       });
       await initGitRepo(repoDir);
@@ -518,7 +518,7 @@ describe("plugin install flows", () => {
 
       await expect(
         service.installCatalogPlugin({
-          marketplace: "bb-community",
+          marketplace: "sandy-community",
           entryId: "sdk-listed",
           pluginId: "sdk-listed",
           source: `git:${repoDir}@plugin/listed`,
@@ -526,7 +526,7 @@ describe("plugin install flows", () => {
         }),
       ).rejects.toThrow(
         new RegExp(
-          `install refused.*requires bb plugin SDK >=99\\.0\\.0, running SDK is ${PLUGIN_SDK_VERSION.replaceAll(".", "\\.")}`,
+          `install refused.*requires sandy plugin SDK >=99\\.0\\.0, running SDK is ${PLUGIN_SDK_VERSION.replaceAll(".", "\\.")}`,
           "u",
         ),
       );
@@ -535,14 +535,14 @@ describe("plugin install flows", () => {
 
     it("refuses a git catalog install whose manifest id differs from the entry", async () => {
       const repoDir = join(workDir, "repo-catalog-mismatch");
-      await writePluginFixture(repoDir, { name: "bb-plugin-imposter" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-imposter" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       await git(repoDir, ["branch", "plugin/imposter"]);
 
       await expect(
         service.installCatalogPlugin({
-          marketplace: "bb-community",
+          marketplace: "sandy-community",
           entryId: "catalog-git-entry",
           pluginId: "expected-id",
           source: `git:${repoDir}@plugin/imposter`,
@@ -553,7 +553,7 @@ describe("plugin install flows", () => {
 
     it("clones a pinned tag into its exact immutable cache dir and loads it", async () => {
       const repoDir = join(workDir, "repo");
-      await writePluginFixture(repoDir, { name: "bb-plugin-gitty" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-gitty" });
       await initGitRepo(repoDir);
       const commit = await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1"]);
@@ -579,7 +579,7 @@ describe("plugin install flows", () => {
 
     it("resolves a semver range over release tags and tracks compatible", async () => {
       const repoDir = join(workDir, "repo-range");
-      await writePluginFixture(repoDir, { name: "bb-plugin-ranger" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-ranger" });
       await initGitRepo(repoDir);
       const first = await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1.0.0"]);
@@ -615,7 +615,7 @@ describe("plugin install flows", () => {
 
     it("refuses a range spec that is also a ref, and honors the explicit forms", async () => {
       const repoDir = join(workDir, "repo-ambiguous");
-      await writePluginFixture(repoDir, { name: "bb-plugin-ambiguous" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-ambiguous" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1.0.0"]);
@@ -643,7 +643,7 @@ describe("plugin install flows", () => {
 
     it("resolves a prefixed range and reports one with no matching tag", async () => {
       const repoDir = join(workDir, "repo-prefixed");
-      await writePluginFixture(repoDir, { name: "bb-plugin-prefixed" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-prefixed" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v9.0.0"]);
@@ -670,13 +670,13 @@ describe("plugin install flows", () => {
 
     it("installs a catalog entry that lists a semver range", async () => {
       const repoDir = join(workDir, "repo-catalog-range");
-      await writePluginFixture(repoDir, { name: "bb-plugin-catalog-range" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-catalog-range" });
       await initGitRepo(repoDir);
       const commit = await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1.3.0"]);
 
       const entry = await service.installCatalogPlugin({
-        marketplace: "bb-community",
+        marketplace: "sandy-community",
         entryId: "catalog-range",
         pluginId: "catalog-range",
         source: `git:${repoDir}@semver:^1.0.0`,
@@ -700,7 +700,7 @@ describe("plugin install flows", () => {
 
     it("refuses a git plugin that shadows a builtin after materialization", async () => {
       const repoDir = join(workDir, "repo-github");
-      await writePluginFixture(repoDir, { name: "bb-plugin-github" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-github" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
 
@@ -712,11 +712,11 @@ describe("plugin install flows", () => {
 
     it("installs a pinned commit sha via clone + checkout", async () => {
       const repoDir = join(workDir, "repo-sha");
-      await writePluginFixture(repoDir, { name: "bb-plugin-shaman" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-shaman" });
       await initGitRepo(repoDir);
       const sha = await commitAll(repoDir, "init");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-shaman",
+        name: "sandy-plugin-shaman",
         version: "9.9.9",
       });
       await commitAll(repoDir, "later");
@@ -730,7 +730,7 @@ describe("plugin install flows", () => {
 
     it("never reuses an exact-resolution artifact owned by another plugin", async () => {
       const repoDir = join(workDir, "repo-owner");
-      await writePluginFixture(repoDir, { name: "bb-plugin-owner" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-owner" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1"]);
@@ -757,7 +757,7 @@ describe("plugin install flows", () => {
 
     it("serializes concurrent installs of the same exact resolution", async () => {
       const repoDir = join(workDir, "repo-concurrent");
-      await writePluginFixture(repoDir, { name: "bb-plugin-concurrent" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-concurrent" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       await git(repoDir, ["tag", "v1"]);
@@ -773,7 +773,7 @@ describe("plugin install flows", () => {
           expect.objectContaining({
             status: "rejected",
             reason: expect.objectContaining({
-              message: expect.stringContaining("bb plugin update concurrent"),
+              message: expect.stringContaining("sandy plugin update concurrent"),
             }),
           }),
         ]),
@@ -784,7 +784,7 @@ describe("plugin install flows", () => {
 
     it("refuses a managed reinstall and points to the update command", async () => {
       const repoDir = join(workDir, "repo-refresh");
-      await writePluginFixture(repoDir, { name: "bb-plugin-fresh" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-fresh" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "v0.1.0");
       const source = `git:${repoDir}@main`;
@@ -792,12 +792,12 @@ describe("plugin install flows", () => {
       expect(first.version).toBe("0.1.0");
 
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-fresh",
+        name: "sandy-plugin-fresh",
         version: "0.2.0",
       });
       await commitAll(repoDir, "v0.2.0");
       await expect(service.install(source, { kind: "root" })).rejects.toThrow(
-        "bb plugin update fresh",
+        "sandy plugin update fresh",
       );
       expect(
         service.list().find((plugin) => plugin.id === "fresh"),
@@ -807,7 +807,7 @@ describe("plugin install flows", () => {
     it("refuses a managed frontend reinstall before validating a broken new tip or creating an artifact", async () => {
       const repoDir = join(workDir, "repo-managed-frontend");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-managed-frontend",
+        name: "sandy-plugin-managed-frontend",
         appSource:
           'export default function App() { return <div className="line-clamp-2">working</div>; }\n',
       });
@@ -828,14 +828,14 @@ describe("plugin install flows", () => {
       expect(artifactsBefore).toHaveLength(1);
 
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-managed-frontend",
+        name: "sandy-plugin-managed-frontend",
         version: "0.2.0",
         appSource: "export default function App( {\n",
       });
       await commitAll(repoDir, "broken frontend");
 
       await expect(service.install(source, { kind: "root" })).rejects.toThrow(
-        "bb plugin update managed-frontend",
+        "sandy plugin update managed-frontend",
       );
       expect(getInstalledPluginRegistration(db, "managed-frontend")).toEqual(
         registrationBefore,
@@ -850,7 +850,7 @@ describe("plugin install flows", () => {
 
     it("keeps the previous install intact when a reinstall fails validation", async () => {
       const repoDir = join(workDir, "repo-sturdy");
-      await writePluginFixture(repoDir, { name: "bb-plugin-sturdy" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-sturdy" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "v1");
       const source = `git:${repoDir}@main`;
@@ -873,7 +873,7 @@ describe("plugin install flows", () => {
     it("rebuilds a git plugin's server bundle over any committed dist", async () => {
       const identityRepo = join(workDir, "repo-artifact-identity");
       await writePluginFixture(identityRepo, {
-        name: "bb-plugin-artifact-identity",
+        name: "sandy-plugin-artifact-identity",
       });
       await mkdir(join(identityRepo, "dist"), { recursive: true });
       await writeFile(
@@ -897,10 +897,10 @@ describe("plugin install flows", () => {
       });
     });
 
-    it("hard-fails install on an engines.bb mismatch and cleans up the clone", async () => {
+    it("hard-fails install on an engines.sandy mismatch and cleans up the clone", async () => {
       const repoDir = join(workDir, "repo-too-new");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-too-new",
+        name: "sandy-plugin-too-new",
         engines: ">=99.0.0",
       });
       await initGitRepo(repoDir);
@@ -909,7 +909,7 @@ describe("plugin install flows", () => {
       const source = `git:${repoDir}@main`;
       await expect(
         service.install(source, { kind: "root" }),
-      ).rejects.toThrowError(/install refused.*requires bb >=99\.0\.0/);
+      ).rejects.toThrowError(/install refused.*requires sandy >=99\.0\.0/);
       expect(service.list()).toHaveLength(0);
       const managed = join(
         dataDir,
@@ -922,7 +922,7 @@ describe("plugin install flows", () => {
 
     it("remove deletes cached git artifacts and never touches a path source", async () => {
       const repoDir = join(workDir, "repo-rm");
-      await writePluginFixture(repoDir, { name: "bb-plugin-managed" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-managed" });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
       const managedEntry = await service.install(`git:${repoDir}@main`, {
@@ -930,7 +930,7 @@ describe("plugin install flows", () => {
       });
 
       const pathDir = join(workDir, "local-plugin");
-      await writePluginFixture(pathDir, { name: "bb-plugin-localdir" });
+      await writePluginFixture(pathDir, { name: "sandy-plugin-localdir" });
       await service.install(pathDir, { kind: "root" });
 
       expect(await service.remove("managed")).toBe(true);
@@ -946,7 +946,7 @@ describe("plugin install flows", () => {
     it("refuses a cached artifact whose engine range no longer matches", async () => {
       const repoDir = join(workDir, "repo-cached-engine");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-cached-engine",
+        name: "sandy-plugin-cached-engine",
         engines: ">=0.9.0",
       });
       await initGitRepo(repoDir);
@@ -979,7 +979,7 @@ describe("plugin install flows", () => {
 
       await expect(
         service.install(source, { kind: "root" }),
-      ).rejects.toThrowError(/install refused.*requires bb >=0\.9\.0/u);
+      ).rejects.toThrowError(/install refused.*requires sandy >=0\.9\.0/u);
       expect(materializationCount).toBe(clonesBefore);
       expect(
         getInstalledPluginRegistration(db, "cached-engine"),
@@ -991,13 +991,13 @@ describe("plugin install flows", () => {
       async () => {
         const repoDir = join(workDir, "repo-host-with-dev-sdk-omitted");
         await writePluginFixture(repoDir, {
-          name: "bb-plugin-host-with-dev-sdk-omitted",
+          name: "sandy-plugin-host-with-dev-sdk-omitted",
           devDependencies: {
-            "@get-bb/plugin-sdk": "file:./sdk-type-fixture",
+            "@sandy-sdk/plugin-sdk": "file:./sdk-type-fixture",
           },
           hostSource: `
-            import { defineRpcContract } from "@get-bb/plugin-sdk";
-            import { experimental_defineHostEntry } from "@get-bb/plugin-sdk/host";
+            import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
+            import { experimental_defineHostEntry } from "@sandy-sdk/plugin-sdk/host";
             const schema = { "~standard": { validate(value) { return { value }; } } };
             const contract = defineRpcContract({ echo: { input: schema, output: schema } });
             export default experimental_defineHostEntry({
@@ -1010,7 +1010,7 @@ describe("plugin install flows", () => {
         await writeFile(
           join(repoDir, "sdk-type-fixture", "package.json"),
           JSON.stringify({
-            name: "@get-bb/plugin-sdk",
+            name: "@sandy-sdk/plugin-sdk",
             version: "0.0.0-test",
             private: true,
           }),
@@ -1027,10 +1027,10 @@ describe("plugin install flows", () => {
           join(entry.rootDir, "dist", "host.js"),
           "utf8",
         );
-        expect(bundle).not.toMatch(/from\s+["']@get-bb\/plugin-sdk/u);
+        expect(bundle).not.toMatch(/from\s+["']@sandy-sdk\/plugin-sdk/u);
         await stat(join(entry.rootDir, "dist", "host.meta.json"));
         await expect(
-          stat(join(entry.rootDir, "node_modules", "@get-bb", "plugin-sdk")),
+          stat(join(entry.rootDir, "node_modules", "@sandy-sdk", "plugin-sdk")),
         ).rejects.toMatchObject({ code: "ENOENT" });
       },
     );
@@ -1038,7 +1038,7 @@ describe("plugin install flows", () => {
     it("restores a target moved aside by an interrupted promotion", async () => {
       const repoDir = join(workDir, "repo-interrupted-promotion");
       await writePluginFixture(repoDir, {
-        name: "bb-plugin-interrupted-promotion",
+        name: "sandy-plugin-interrupted-promotion",
       });
       await initGitRepo(repoDir);
       await commitAll(repoDir, "init");
@@ -1090,7 +1090,7 @@ describe("plugin install flows", () => {
 
     it("ignores a repository .npmrc when installing dependencies", async () => {
       const repoDir = join(workDir, "repo-npmrc");
-      await writePluginFixture(repoDir, { name: "bb-plugin-npmrc" });
+      await writePluginFixture(repoDir, { name: "sandy-plugin-npmrc" });
       await writeFile(
         join(repoDir, ".npmrc"),
         "registry=http://127.0.0.1:1/evil\nstrict-ssl=false\n",
@@ -1114,7 +1114,7 @@ describe("plugin install flows", () => {
         await writeFile(
           join(depDir, "package.json"),
           JSON.stringify({
-            name: "bb-test-greeter",
+            name: "sandy-test-greeter",
             version: "1.0.0",
             main: "index.js",
           }),
@@ -1125,7 +1125,7 @@ describe("plugin install flows", () => {
         );
 
         const repoDir = join(workDir, "repo-with-deps");
-        await writePluginFixture(repoDir, { name: "bb-plugin-withdeps" });
+        await writePluginFixture(repoDir, { name: "sandy-plugin-withdeps" });
         const manifestPath = join(repoDir, "package.json");
         const manifest: unknown = JSON.parse(
           await readFile(manifestPath, "utf8"),
@@ -1134,13 +1134,13 @@ describe("plugin install flows", () => {
           manifestPath,
           JSON.stringify({
             ...(manifest as Record<string, unknown>),
-            dependencies: { "bb-test-greeter": `file:${depDir}` },
+            dependencies: { "sandy-test-greeter": `file:${depDir}` },
           }),
         );
         await writeFile(
           join(repoDir, "server.ts"),
-          `import { greet } from "bb-test-greeter";\n` +
-            `export default function plugin(bb: any) { bb.log.info(greet()); }`,
+          `import { greet } from "sandy-test-greeter";\n` +
+            `export default function plugin(sandy: any) { sandy.log.info(greet()); }`,
         );
         await initGitRepo(repoDir);
         await commitAll(repoDir, "init");
@@ -1165,14 +1165,14 @@ describe("plugin install flows", () => {
     () => {
       async function writeCollectionRepo(repoDir: string): Promise<string> {
         await writePluginFixture(join(repoDir, "plugins", "alpha"), {
-          name: "bb-plugin-collection-alpha",
+          name: "sandy-plugin-collection-alpha",
         });
         await writePluginFixture(join(repoDir, "plugins", "beta"), {
-          name: "bb-plugin-collection-beta",
+          name: "sandy-plugin-collection-beta",
         });
-        await mkdir(join(repoDir, ".bb"), { recursive: true });
+        await mkdir(join(repoDir, ".sandy"), { recursive: true });
         await writeFile(
-          join(repoDir, ".bb", "plugins.json"),
+          join(repoDir, ".sandy", "plugins.json"),
           JSON.stringify({
             schemaVersion: 1,
             name: "collection",
@@ -1234,15 +1234,15 @@ describe("plugin install flows", () => {
         async () => {
           const repoDir = join(workDir, "repo-collection-symlinked-entry");
           await writePluginFixture(join(repoDir, "plugins", "actual"), {
-            name: "bb-plugin-collection-linked",
+            name: "sandy-plugin-collection-linked",
           });
           await writePluginFixture(join(repoDir, "plugins", "sibling"), {
-            name: "bb-plugin-collection-sibling",
+            name: "sandy-plugin-collection-sibling",
           });
           await symlink("actual", join(repoDir, "plugins", "linked"));
-          await mkdir(join(repoDir, ".bb"), { recursive: true });
+          await mkdir(join(repoDir, ".sandy"), { recursive: true });
           await writeFile(
-            join(repoDir, ".bb", "plugins.json"),
+            join(repoDir, ".sandy", "plugins.json"),
             JSON.stringify({
               schemaVersion: 1,
               name: "collection",
@@ -1272,9 +1272,9 @@ describe("plugin install flows", () => {
       it("keeps a nested sibling intact when the repository root installs too", async () => {
         const repoDir = join(workDir, "repo-collection-root");
         await writePluginFixture(join(repoDir, "plugins", "alpha"), {
-          name: "bb-plugin-collection-alpha",
+          name: "sandy-plugin-collection-alpha",
         });
-        await writePluginFixture(repoDir, { name: "bb-plugin-collection-top" });
+        await writePluginFixture(repoDir, { name: "sandy-plugin-collection-top" });
         await initGitRepo(repoDir);
         await commitAll(repoDir, "init");
 
@@ -1306,10 +1306,10 @@ describe("plugin install flows", () => {
       it("refreshes a root artifact hash after a nested install", async () => {
         const repoDir = join(workDir, "repo-collection-root-first");
         await writePluginFixture(join(repoDir, "plugins", "alpha"), {
-          name: "bb-plugin-collection-root-first-alpha",
+          name: "sandy-plugin-collection-root-first-alpha",
         });
         await writePluginFixture(repoDir, {
-          name: "bb-plugin-collection-root-first-top",
+          name: "sandy-plugin-collection-root-first-top",
         });
         await initGitRepo(repoDir);
         await commitAll(repoDir, "init");
@@ -1332,11 +1332,11 @@ describe("plugin install flows", () => {
         async () => {
           const repoDir = join(workDir, "repo-collection-root-symlink");
           await writePluginFixture(join(repoDir, "plugins", "actual"), {
-            name: "bb-plugin-collection-linked-root",
+            name: "sandy-plugin-collection-linked-root",
           });
           await symlink("actual", join(repoDir, "plugins", "linked"));
           await writePluginFixture(repoDir, {
-            name: "bb-plugin-collection-top-linked",
+            name: "sandy-plugin-collection-top-linked",
           });
           await initGitRepo(repoDir);
           await commitAll(repoDir, "init");
@@ -1433,12 +1433,12 @@ describe("plugin install flows", () => {
 
       it("refuses a collection entry whose directory leaves the repository", async () => {
         const outsideDir = join(workDir, "outside-plugin");
-        await writePluginFixture(outsideDir, { name: "bb-plugin-outside" });
+        await writePluginFixture(outsideDir, { name: "sandy-plugin-outside" });
         const repoDir = join(workDir, "repo-collection-symlink");
         await mkdir(join(repoDir, "plugins"), { recursive: true });
-        await mkdir(join(repoDir, ".bb"), { recursive: true });
+        await mkdir(join(repoDir, ".sandy"), { recursive: true });
         await writeFile(
-          join(repoDir, ".bb", "plugins.json"),
+          join(repoDir, ".sandy", "plugins.json"),
           JSON.stringify({
             schemaVersion: 1,
             name: "collection",
@@ -1455,12 +1455,12 @@ describe("plugin install flows", () => {
       it("refuses a collection entry symlinked to the repository root", async () => {
         const repoDir = join(workDir, "repo-collection-root-link");
         await writePluginFixture(repoDir, {
-          name: "bb-plugin-collection-root-link",
+          name: "sandy-plugin-collection-root-link",
         });
         await mkdir(join(repoDir, "plugins"), { recursive: true });
-        await mkdir(join(repoDir, ".bb"), { recursive: true });
+        await mkdir(join(repoDir, ".sandy"), { recursive: true });
         await writeFile(
-          join(repoDir, ".bb", "plugins.json"),
+          join(repoDir, ".sandy", "plugins.json"),
           JSON.stringify({
             schemaVersion: 1,
             name: "collection",
@@ -1511,14 +1511,14 @@ describe("plugin install flows", () => {
   it("keeps path installs developer-friendly while surfacing SDK incompatibility", async () => {
     const rootDir = join(workDir, "local-sdk-mismatch");
     await writePluginFixture(rootDir, {
-      name: "bb-plugin-local-sdk-mismatch",
+      name: "sandy-plugin-local-sdk-mismatch",
       pluginSdkRange: ">=99.0.0",
     });
 
     const entry = await service.installPath(rootDir);
     expect(entry.status).toBe("incompatible");
     expect(entry.statusDetail).toContain(
-      `requires bb plugin SDK >=99.0.0, running SDK is ${PLUGIN_SDK_VERSION}`,
+      `requires sandy plugin SDK >=99.0.0, running SDK is ${PLUGIN_SDK_VERSION}`,
     );
   });
 
@@ -1526,7 +1526,7 @@ describe("plugin install flows", () => {
     const rootDir = join(workDir, "local-stale-server-meta");
     const incompatibleMajor = PLUGIN_SDK_MAJOR + 1;
     await writePluginFixture(rootDir, {
-      name: "bb-plugin-local-stale-server-meta",
+      name: "sandy-plugin-local-stale-server-meta",
     });
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(
@@ -1548,35 +1548,35 @@ describe("plugin install flows", () => {
 
   it("refuses an npm source before installing anything", async () => {
     await expect(
-      service.install("npm:bb-plugin-connect@1.2.3", { kind: "root" }),
+      service.install("npm:sandy-plugin-connect@1.2.3", { kind: "root" }),
     ).rejects.toThrowError(/npm plugin sources are not supported/);
     expect(getInstalledPluginRegistration(db, "connect")).toBeUndefined();
   });
 
   it("refuses a path plugin whose manifest id shadows a builtin", async () => {
-    const rootDir = join(workDir, "bb-plugin-github");
-    await writePluginFixture(rootDir, { name: "bb-plugin-github" });
+    const rootDir = join(workDir, "sandy-plugin-github");
+    await writePluginFixture(rootDir, { name: "sandy-plugin-github" });
     await expect(service.installPath(rootDir)).rejects.toThrowError(
       /reserved by the bundled plugin.*builtin:github/,
     );
     expect(getInstalledPluginRegistration(db, "github")).toBeUndefined();
   });
 
-  it("refuses a path plugin whose id uses the reserved bb-- prefix", async () => {
-    const rootDir = join(workDir, "bb-plugin-bb--notes");
-    await writePluginFixture(rootDir, { name: "bb-plugin-bb--notes" });
+  it("refuses a path plugin whose id uses the reserved sandy-- prefix", async () => {
+    const rootDir = join(workDir, "sandy-plugin-sandy--notes");
+    await writePluginFixture(rootDir, { name: "sandy-plugin-sandy--notes" });
     await expect(service.installPath(rootDir)).rejects.toThrowError(
-      /ids starting with "bb--" are reserved/,
+      /ids starting with "sandy--" are reserved/,
     );
-    expect(getInstalledPluginRegistration(db, "bb--notes")).toBeUndefined();
+    expect(getInstalledPluginRegistration(db, "sandy--notes")).toBeUndefined();
   });
 
-  it("the bb plugin new scaffold installs and loads through the plugin service", async () => {
-    const targetDir = join(workDir, "bb-plugin-scaffolded");
+  it("the sandy plugin new scaffold installs and loads through the plugin service", async () => {
+    const targetDir = join(workDir, "sandy-plugin-scaffolded");
     await scaffoldPlugin({
       targetDir,
-      packageName: "bb-plugin-scaffolded",
-      bbVersion: "0.9.0",
+      packageName: "sandy-plugin-scaffolded",
+      sandyVersion: "0.9.0",
     });
     await stat(join(targetDir, "skills", "example-todos", "SKILL.md"));
     await stat(join(targetDir, ".gitignore"));
@@ -1591,8 +1591,8 @@ describe("plugin install flows", () => {
     await expect(
       scaffoldPlugin({
         targetDir,
-        packageName: "bb-plugin-scaffolded",
-        bbVersion: "0.9.0",
+        packageName: "sandy-plugin-scaffolded",
+        sandyVersion: "0.9.0",
       }),
     ).rejects.toThrowError(/already exists/);
   });

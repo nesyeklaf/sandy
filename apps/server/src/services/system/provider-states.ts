@@ -2,8 +2,8 @@ import type {
   SystemProviderState,
   SystemProviderStatesResponse,
   SystemProvidersQuery,
-} from "@bb/server-contract";
-import type { ProviderInfo } from "@bb/domain";
+} from "@sandy/server-contract";
+import type { ProviderInfo } from "@sandy/domain";
 import type { AppDeps } from "../../types.js";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import {

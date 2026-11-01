@@ -10,11 +10,11 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { Thread } from "@bb/domain";
-import type { ThreadCascadeListResponse } from "@bb/server-contract";
-import { makeThread as makeThreadFixture } from "@bb/test-helpers/domain-fixtures";
+import type { Thread } from "@sandy/domain";
+import type { ThreadCascadeListResponse } from "@sandy/server-contract";
+import { makeThread as makeThreadFixture } from "@sandy/test-helpers/domain-fixtures";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import {
   makeProjectWithThreadsResponse,
   makeSidebarBootstrapResponse,

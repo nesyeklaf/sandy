@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { experimental_useComposerRenderer as useComposerRenderer } from "@get-bb/plugin-sdk/app";
+import { experimental_useComposerRenderer as useComposerRenderer } from "@sandy-sdk/plugin-sdk/app";
 import { ComposerRendererTestHost } from "@/test/fixtures/composer-renderer";
 import { testTypeaheadConfig } from "@/test/fixtures/composer-search";
 

@@ -7,8 +7,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { BbDesktopBrowserApi } from "@bb/desktop-contract";
-import type { DesktopBrowserImportSource } from "@bb/host-daemon-contract";
+import type { SandyDesktopBrowserApi } from "@sandy/desktop-contract";
+import type { DesktopBrowserImportSource } from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrowserSettingsSectionContent } from "./BrowserSettingsSection";
 import { BROWSER_IMPORT_RECORDS_STORAGE_KEY } from "./browser-import-wizard";
@@ -45,8 +45,8 @@ const sources: DesktopBrowserImportSource[] = [
 ];
 
 function makeDesktopBrowser(
-  overrides: Partial<BbDesktopBrowserApi> = {},
-): BbDesktopBrowserApi {
+  overrides: Partial<SandyDesktopBrowserApi> = {},
+): SandyDesktopBrowserApi {
   const noop = () => undefined;
   return {
     attach: noop,
@@ -88,7 +88,7 @@ describe("BrowserSettingsSectionContent", () => {
   it("explains that import is desktop only outside the desktop app", () => {
     render(<BrowserSettingsSectionContent desktopBrowser={null} />);
     expect(
-      screen.getByText("Only available in the BB desktop app."),
+      screen.getByText("Only available in the SANDY desktop app."),
     ).toBeDefined();
   });
 

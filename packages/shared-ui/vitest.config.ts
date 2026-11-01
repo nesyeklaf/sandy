@@ -8,7 +8,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "@bb/shared-ui",
+      name: "@sandy/shared-ui",
       include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     }),
   },

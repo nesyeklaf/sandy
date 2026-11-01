@@ -18,11 +18,11 @@ describe("retiredSdkMemberWarnings", () => {
       "sdk.environments?.diff({ environmentId })",
       ["diff"],
     ],
-    ["an alias", "const read = bb.sdk.environments.diffPatch;", ["diffPatch"]],
+    ["an alias", "const read = sandy.sdk.environments.diffPatch;", ["diffPatch"]],
     ["bracket access", 'sdk.environments["diffFile"](args)', ["diffFile"]],
     [
       "destructuring",
-      "const { diffFiles, diffBranches: branches, list } = bb.sdk.environments;",
+      "const { diffFiles, diffBranches: branches, list } = sandy.sdk.environments;",
       ["diffBranches", "diffFiles"],
     ],
   ])("flags %s", (_label, source, names) => {
@@ -49,14 +49,14 @@ describe("retiredSdkMemberWarnings", () => {
       "ctx.openPanel",
     ],
     [
-      "useBbNavigate().openThreadPanel",
+      "useSandyNavigate().openThreadPanel",
       'navigate.openThreadPanel({ actionId: "task" })',
-      "useBbNavigate().openThreadPanel",
+      "useSandyNavigate().openThreadPanel",
     ],
     [
       "a destructured openThreadPanel",
-      "const { openThreadPanel } = useBbNavigate();",
-      "useBbNavigate().openThreadPanel",
+      "const { openThreadPanel } = useSandyNavigate();",
+      "useSandyNavigate().openThreadPanel",
     ],
     [
       "experimental_openTab",
@@ -101,7 +101,7 @@ describe("retiredRpcInvalidatesWarnings", () => {
     ],
   ])("flags %s", (_label, source) => {
     expect(retiredRpcInvalidatesWarnings(source)).toEqual([
-      expect.stringContaining("bb.rpc.experimental_invalidate(tags)"),
+      expect.stringContaining("sandy.rpc.experimental_invalidate(tags)"),
     ]);
   });
 

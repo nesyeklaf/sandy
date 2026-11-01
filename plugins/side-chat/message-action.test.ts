@@ -1,6 +1,6 @@
-import { experimental_makePanelController } from "@get-bb/plugin-sdk/testing";
+import { experimental_makePanelController } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadPluginApp } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp } from "@sandy-sdk/plugin-sdk/testing/app";
 
 const app = await loadPluginApp(() => import("./app"));
 const { parsePanelParams } = await import("./app");

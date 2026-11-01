@@ -1,0 +1,27 @@
+[
+  {
+    "id": "D1",
+    "question": "Where do sessions live?",
+    "answer": "Redis",
+    "status": "answered"
+  },
+  {
+    "id": "D2",
+    "question": "How long does a session last?",
+    "answer": "24 hours, fixed",
+    "status": "superseded",
+    "by": "D4"
+  },
+  {
+    "id": "D3",
+    "question": "How do we roll it out?",
+    "answer": "Write to both stores for a week, then switch reads",
+    "status": "answered"
+  },
+  {
+    "id": "D4",
+    "question": "When does an idle session expire?",
+    "answer": "30 days after the last request",
+    "status": "answered"
+  }
+]

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UPDATE_ACTION_ICON } from "@bb/domain/update-state";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+import { UPDATE_ACTION_ICON } from "@sandy/domain/update-state";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 import { usePluginNotificationAction } from "@/components/plugin/PluginNotificationDescription";
 import { appToast } from "@/components/ui/app-toast";
 import { applyPluginUpdateJob } from "@/hooks/cache-owners/plugin-cache-owner";
@@ -128,7 +128,7 @@ export function PluginDetailReleaseStatus({
           aria-hidden
         />
         <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">
-          bb couldn&rsquo;t activate {failure.label}. It restored{" "}
+          sandy couldn&rsquo;t activate {failure.label}. It restored{" "}
           {plugin.version} and its data.
         </p>
       </div>
@@ -183,7 +183,7 @@ export function PluginDetailReleaseStatus({
       <div className="min-w-0">
         <p className="text-xs leading-relaxed text-muted-foreground">
           {blockedReasons[0] === undefined
-            ? `${blockedVersion} isn’t compatible with this bb.`
+            ? `${blockedVersion} isn’t compatible with this sandy.`
             : sentence(blockedReasons[0])}{" "}
           {plugin.version} remains installed. Keep using it and check again when
           a compatible plugin version is available.

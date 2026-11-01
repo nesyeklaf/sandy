@@ -7,11 +7,11 @@ import type {
   PendingInteraction,
   PendingInteractionResolution,
   PendingInteractionRequestedPermissionProfile,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   isApprovalPendingInteractionPayload,
   isUserQuestionPendingInteractionPayload,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { assertNever } from "./assert-never.js";
 import {
   describePendingInteractionToolUse,

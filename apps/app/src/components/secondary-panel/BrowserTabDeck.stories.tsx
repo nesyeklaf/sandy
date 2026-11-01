@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { BbDesktopBrowserState } from "@bb/desktop-contract";
+import type { SandyDesktopBrowserState } from "@sandy/desktop-contract";
 import {
   getBrowserHistoryStorageKey,
   type BrowserHistoryEntry,
@@ -7,7 +7,7 @@ import {
 import type { BrowserFixedPanelTab } from "@/lib/fixed-panel-tabs-state";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
 import { WithDesktopBrowser } from "../../../.ladle/story-desktop";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { BrowserTabDeck } from "./BrowserTabDeck";
 import {
   ThreadSecondaryPanel,
@@ -39,7 +39,7 @@ const LOADING_TAB: BrowserFixedPanelTab = {
   title: "Example Docs",
   url: "https://example.com/docs",
 };
-const LOADING_BROWSER_STATE: BbDesktopBrowserState = {
+const LOADING_BROWSER_STATE: SandyDesktopBrowserState = {
   tabId: LOADING_TAB.id,
   url: LOADING_TAB.url,
   title: LOADING_TAB.title,

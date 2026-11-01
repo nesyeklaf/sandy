@@ -3,14 +3,14 @@ import {
   listHostsByIds,
   type DbConnection,
   type EnvironmentRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   resolveEnvironmentHostLifecycle,
   type Environment,
   type EnvironmentHostLifecycle,
   type EnvironmentWorkspaceDisplayKind,
   type WorkspaceProvisionType,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { DEFAULT_ENVIRONMENT_PROVIDER_ID } from "./environment-provider-ids.js";
 
 const DEPRECATED_WORKSPACE_PROVISION_TYPE_BY_PROVIDER_ID = new Map<

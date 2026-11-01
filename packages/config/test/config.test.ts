@@ -44,9 +44,9 @@ function createServerRuntimeEnv(
   overrides: NodeJS.ProcessEnv = {},
 ): NodeJS.ProcessEnv {
   return {
-    BB_DATA_DIR: "/tmp/bb-data",
-    BB_HOST_DAEMON_PORT: "5555",
-    BB_SERVER_PORT: "4444",
+    SANDY_DATA_DIR: "/tmp/sandy-data",
+    SANDY_HOST_DAEMON_PORT: "5555",
+    SANDY_SERVER_PORT: "4444",
     NODE_ENV: "development",
     ...overrides,
   };
@@ -56,8 +56,8 @@ function createHostDaemonRuntimeEnv(
   overrides: NodeJS.ProcessEnv = {},
 ): NodeJS.ProcessEnv {
   return {
-    BB_HOST_DAEMON_PORT: "5555",
-    BB_SERVER_URL: "http://localhost:4444",
+    SANDY_HOST_DAEMON_PORT: "5555",
+    SANDY_SERVER_URL: "http://localhost:4444",
     NODE_ENV: "development",
     ...overrides,
   };
@@ -77,11 +77,11 @@ describe("common config", () => {
           NODE_ENV: "production",
         },
         homeDir: "/Users/tester",
-      }).BB_DATA_DIR,
-    ).toBe(path.normalize("/Users/tester/.bb"));
+      }).SANDY_DATA_DIR,
+    ).toBe(path.normalize("/Users/tester/.sandy"));
   });
 
-  it("requires repoRoot or BB_DATA_DIR for development data dir resolution", () => {
+  it("requires repoRoot or SANDY_DATA_DIR for development data dir resolution", () => {
     expect(() =>
       loadCommonConfig({
         env: {
@@ -89,12 +89,12 @@ describe("common config", () => {
         },
         homeDir: "/Users/tester",
       }),
-    ).toThrow("repoRoot is required to resolve development BB_DATA_DIR");
+    ).toThrow("repoRoot is required to resolve development SANDY_DATA_DIR");
   });
 
   it("resolves development defaults from the checkout instance", () => {
     const homeDir = "/Users/tester";
-    const repoRoot = "/Users/tester/src/bb";
+    const repoRoot = "/Users/tester/src/sandy";
 
     expect(
       loadCommonConfig({
@@ -103,19 +103,19 @@ describe("common config", () => {
         },
         homeDir,
         repoRoot,
-      }).BB_DATA_DIR,
-    ).toBe(path.normalize("/Users/tester/.bb-dev/src-bb-9039de53a76a"));
+      }).SANDY_DATA_DIR,
+    ).toBe(path.normalize("/Users/tester/.sandy-dev/src-sandy-d51679e46e2a"));
   });
 
-  it("expands home-directory overrides for BB_DATA_DIR", () => {
+  it("expands home-directory overrides for SANDY_DATA_DIR", () => {
     expect(
       loadCommonConfig({
         env: {
-          BB_DATA_DIR: "~/custom-bb",
+          SANDY_DATA_DIR: "~/custom-sandy",
           NODE_ENV: "production",
         },
-      }).BB_DATA_DIR,
-    ).toBe(path.join(os.homedir(), "custom-bb"));
+      }).SANDY_DATA_DIR,
+    ).toBe(path.join(os.homedir(), "custom-sandy"));
   });
 
   it.runIf(process.platform === "win32")(
@@ -124,34 +124,34 @@ describe("common config", () => {
       expect(
         loadCommonConfig({
           env: {
-            BB_DATA_DIR: "~\\custom-bb",
+            SANDY_DATA_DIR: "~\\custom-sandy",
             NODE_ENV: "production",
           },
-        }).BB_DATA_DIR,
-      ).toBe(path.join(os.homedir(), "custom-bb"));
+        }).SANDY_DATA_DIR,
+      ).toBe(path.join(os.homedir(), "custom-sandy"));
     },
   );
 
-  it("rejects whitespace-only BB_DATA_DIR overrides", () => {
+  it("rejects whitespace-only SANDY_DATA_DIR overrides", () => {
     expect(() =>
       loadCommonConfig({
         env: {
-          BB_DATA_DIR: "   ",
+          SANDY_DATA_DIR: "   ",
           NODE_ENV: "production",
         },
       }),
-    ).toThrow("BB_DATA_DIR must not be empty");
+    ).toThrow("SANDY_DATA_DIR must not be empty");
   });
 
-  it("rejects unsupported BB_LOG_LEVEL overrides", () => {
+  it("rejects unsupported SANDY_LOG_LEVEL overrides", () => {
     expect(() =>
       loadCommonConfig({
         env: {
-          BB_LOG_LEVEL: "bogus",
+          SANDY_LOG_LEVEL: "bogus",
           NODE_ENV: "production",
         },
       }),
-    ).toThrow(/BB_LOG_LEVEL/u);
+    ).toThrow(/SANDY_LOG_LEVEL/u);
   });
 });
 
@@ -159,9 +159,9 @@ describe("data-dir helpers", () => {
   it("expands a bare home-directory override", () => {
     expect(
       resolveConfiguredDataDir({
-        defaultDataDir: path.join(os.homedir(), ".bb"),
+        defaultDataDir: path.join(os.homedir(), ".sandy"),
         env: {
-          BB_DATA_DIR: "~",
+          SANDY_DATA_DIR: "~",
         },
         homeDir: os.homedir(),
       }),
@@ -171,18 +171,18 @@ describe("data-dir helpers", () => {
   it("rejects whitespace-only data dir overrides", () => {
     expect(() =>
       resolveConfiguredDataDir({
-        defaultDataDir: path.join(os.homedir(), ".bb"),
+        defaultDataDir: path.join(os.homedir(), ".sandy"),
         env: {
-          BB_DATA_DIR: " ",
+          SANDY_DATA_DIR: " ",
         },
         homeDir: os.homedir(),
       }),
-    ).toThrow("BB_DATA_DIR must not be empty");
+    ).toThrow("SANDY_DATA_DIR must not be empty");
   });
 
   it("resolves development defaults from the current checkout instance", () => {
     const homeDir = "/Users/tester";
-    const repoRoot = "/Users/tester/src/bb";
+    const repoRoot = "/Users/tester/src/sandy";
 
     expect(
       resolveRuntimeDataDir({
@@ -191,7 +191,7 @@ describe("data-dir helpers", () => {
         mode: "dev",
         repoRoot,
       }),
-    ).toBe(path.normalize("/Users/tester/.bb-dev/src-bb-9039de53a76a"));
+    ).toBe(path.normalize("/Users/tester/.sandy-dev/src-sandy-d51679e46e2a"));
   });
 
   it("keeps the legacy fallback label for degenerate checkout labels", () => {
@@ -202,7 +202,7 @@ describe("data-dir helpers", () => {
         mode: "dev",
         repoRoot: "/Users/tester/---",
       }),
-    ).toBe(path.normalize("/Users/tester/.bb-dev/worktree-41987f975862"));
+    ).toBe(path.normalize("/Users/tester/.sandy-dev/worktree-41987f975862"));
   });
 });
 
@@ -210,13 +210,13 @@ describe("port helpers", () => {
   it("accepts the TCP port boundary values", () => {
     expect(
       parsePortValue({
-        name: "BB_SERVER_PORT",
+        name: "SANDY_SERVER_PORT",
         rawPort: "1",
       }),
     ).toBe(1);
     expect(
       parsePortValue({
-        name: "BB_SERVER_PORT",
+        name: "SANDY_SERVER_PORT",
         rawPort: "65535",
       }),
     ).toBe(65_535);
@@ -238,10 +238,10 @@ describe("port helpers", () => {
     ]) {
       expect(() =>
         parsePortValue({
-          name: "BB_SERVER_PORT",
+          name: "SANDY_SERVER_PORT",
           rawPort,
         }),
-      ).toThrow("BB_SERVER_PORT must be a valid TCP port");
+      ).toThrow("SANDY_SERVER_PORT must be a valid TCP port");
     }
   });
 
@@ -250,7 +250,7 @@ describe("port helpers", () => {
       resolvePortFromEnv({
         defaultPort: 4444,
         env: {},
-        name: "BB_SERVER_PORT",
+        name: "SANDY_SERVER_PORT",
       }),
     ).toBe(4444);
 
@@ -258,40 +258,40 @@ describe("port helpers", () => {
       resolvePortFromEnv({
         defaultPort: 4444,
         env: {
-          BB_SERVER_PORT: "",
+          SANDY_SERVER_PORT: "",
         },
-        name: "BB_SERVER_PORT",
+        name: "SANDY_SERVER_PORT",
       }),
-    ).toThrow("BB_SERVER_PORT must be a valid TCP port");
+    ).toThrow("SANDY_SERVER_PORT must be a valid TCP port");
   });
 
   it("rejects whitespace-padded port env values through every port loader path", () => {
     expect(() =>
       loadServerPortConfig({
         env: {
-          BB_SERVER_PORT: " 4444",
+          SANDY_SERVER_PORT: " 4444",
           NODE_ENV: "development",
         },
       }),
-    ).toThrow("BB_SERVER_PORT must be a valid TCP port");
+    ).toThrow("SANDY_SERVER_PORT must be a valid TCP port");
 
     expect(() =>
       resolvePortFromEnv({
         defaultPort: 4444,
         env: {
-          BB_SERVER_PORT: " 4444",
+          SANDY_SERVER_PORT: " 4444",
         },
-        name: "BB_SERVER_PORT",
+        name: "SANDY_SERVER_PORT",
       }),
-    ).toThrow("BB_SERVER_PORT must be a valid TCP port");
+    ).toThrow("SANDY_SERVER_PORT must be a valid TCP port");
 
     expect(() =>
       loadCliConfig({
         env: createHostDaemonRuntimeEnv({
-          BB_HOST_DAEMON_PORT: " 5555",
+          SANDY_HOST_DAEMON_PORT: " 5555",
         }),
       }),
-    ).toThrow("BB_HOST_DAEMON_PORT must be a valid TCP port");
+    ).toThrow("SANDY_HOST_DAEMON_PORT must be a valid TCP port");
   });
 });
 
@@ -299,21 +299,21 @@ describe("consumer-specific config", () => {
   it("builds server config from explicit runtime env", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_URL: undefined,
-        BB_APP_VERSION: undefined,
-        BB_EXTERNAL_URL: undefined,
-        BB_FF_PLACEHOLDER: undefined,
+        SANDY_APP_URL: undefined,
+        SANDY_APP_VERSION: undefined,
+        SANDY_EXTERNAL_URL: undefined,
+        SANDY_FF_PLACEHOLDER: undefined,
       }),
     });
 
-    expect(serverConfig.BB_PERF_DIAGNOSTICS).toBe(false);
-    expect(serverConfig.BB_SERVER_PORT).toBe(4444);
-    expect(serverConfig.BB_HOST_DAEMON_PORT).toBe(5555);
-    expect(serverConfig.databasePath).toBe(path.resolve("/tmp/bb-data/bb.db"));
-    expect(serverConfig.BB_APP_URL).toBe("");
-    expect(serverConfig.BB_APP_SURFACE).toBe("web");
-    expect(serverConfig.BB_APP_VERSION).toBe("0.0.0-dev");
-    expect(serverConfig.BB_EXTERNAL_URL).toBe("");
+    expect(serverConfig.SANDY_PERF_DIAGNOSTICS).toBe(false);
+    expect(serverConfig.SANDY_SERVER_PORT).toBe(4444);
+    expect(serverConfig.SANDY_HOST_DAEMON_PORT).toBe(5555);
+    expect(serverConfig.databasePath).toBe(path.resolve("/tmp/sandy-data/sandy.db"));
+    expect(serverConfig.SANDY_APP_URL).toBe("");
+    expect(serverConfig.SANDY_APP_SURFACE).toBe("web");
+    expect(serverConfig.SANDY_APP_VERSION).toBe("0.0.0-dev");
+    expect(serverConfig.SANDY_EXTERNAL_URL).toBe("");
     expect(serverConfig.featureFlags).toEqual({
       placeholder: false,
       timelineWindowEventBudget: 1_500,
@@ -323,47 +323,47 @@ describe("consumer-specific config", () => {
   it("validates the opt-in performance diagnostics setting", () => {
     expect(
       loadServerConfig({
-        env: createServerRuntimeEnv({ BB_PERF_DIAGNOSTICS: "1" }),
-      }).BB_PERF_DIAGNOSTICS,
+        env: createServerRuntimeEnv({ SANDY_PERF_DIAGNOSTICS: "1" }),
+      }).SANDY_PERF_DIAGNOSTICS,
     ).toBe(true);
     expect(() =>
       loadServerConfig({
-        env: createServerRuntimeEnv({ BB_PERF_DIAGNOSTICS: "typo" }),
+        env: createServerRuntimeEnv({ SANDY_PERF_DIAGNOSTICS: "typo" }),
       }),
-    ).toThrow("BB_PERF_DIAGNOSTICS must be a boolean");
+    ).toThrow("SANDY_PERF_DIAGNOSTICS must be a boolean");
   });
 
   it("carries the launcher's server launch id only when it is set", () => {
     expect(
       loadServerConfig({
-        env: createServerRuntimeEnv({ BB_SERVER_LAUNCH_ID: undefined }),
+        env: createServerRuntimeEnv({ SANDY_SERVER_LAUNCH_ID: undefined }),
       }),
-    ).not.toHaveProperty("BB_SERVER_LAUNCH_ID");
+    ).not.toHaveProperty("SANDY_SERVER_LAUNCH_ID");
     expect(
       loadServerConfig({
-        env: createServerRuntimeEnv({ BB_SERVER_LAUNCH_ID: "launch-123" }),
-      }).BB_SERVER_LAUNCH_ID,
+        env: createServerRuntimeEnv({ SANDY_SERVER_LAUNCH_ID: "launch-123" }),
+      }).SANDY_SERVER_LAUNCH_ID,
     ).toBe("launch-123");
   });
 
   it("defaults to no bind addresses beyond loopback", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_SERVER_BIND_HOST: undefined,
+        SANDY_SERVER_BIND_HOST: undefined,
       }),
     });
 
-    expect(serverConfig.BB_SERVER_BIND_HOST).toEqual([]);
+    expect(serverConfig.SANDY_SERVER_BIND_HOST).toEqual([]);
   });
 
   it("loads a list of additional tailnet bind addresses", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_SERVER_BIND_HOST: "127.0.0.1,100.64.1.2 fd7a:115c:a1e0::2",
+        SANDY_SERVER_BIND_HOST: "127.0.0.1,100.64.1.2 fd7a:115c:a1e0::2",
       }),
     });
 
-    expect(serverConfig.BB_SERVER_BIND_HOST).toEqual([
+    expect(serverConfig.SANDY_SERVER_BIND_HOST).toEqual([
       "100.64.1.2",
       "fd7a:115c:a1e0::2",
     ]);
@@ -374,9 +374,9 @@ describe("consumer-specific config", () => {
     (bindHost) => {
       expect(() =>
         loadServerConfig({
-          env: createServerRuntimeEnv({ BB_SERVER_BIND_HOST: bindHost }),
+          env: createServerRuntimeEnv({ SANDY_SERVER_BIND_HOST: bindHost }),
         }),
-      ).toThrow(/BB_SERVER_BIND_HOST/u);
+      ).toThrow(/SANDY_SERVER_BIND_HOST/u);
     },
   );
 
@@ -384,16 +384,16 @@ describe("consumer-specific config", () => {
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_SERVER_BIND_HOST: "localhost",
+          SANDY_SERVER_BIND_HOST: "localhost",
         }),
       }),
-    ).toThrow(/BB_SERVER_BIND_HOST/u);
+    ).toThrow(/SANDY_SERVER_BIND_HOST/u);
   });
 
   it("parses the placeholder feature flag from env", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_FF_PLACEHOLDER: "true",
+        SANDY_FF_PLACEHOLDER: "true",
       }),
     });
 
@@ -403,7 +403,7 @@ describe("consumer-specific config", () => {
   it("parses the timeline window event budget from env", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_FF_TIMELINE_WINDOW_EVENT_BUDGET: "4000",
+        SANDY_FF_TIMELINE_WINDOW_EVENT_BUDGET: "4000",
       }),
     });
 
@@ -414,7 +414,7 @@ describe("consumer-specific config", () => {
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_FF_TIMELINE_WINDOW_EVENT_BUDGET: "0",
+          SANDY_FF_TIMELINE_WINDOW_EVENT_BUDGET: "0",
         }),
       }),
     ).toThrow(/positive integer/);
@@ -424,64 +424,64 @@ describe("consumer-specific config", () => {
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_FF_PLACEHOLDER: "not-bool",
+          SANDY_FF_PLACEHOLDER: "not-bool",
         }),
       }),
-    ).toThrow(/BB_FF_PLACEHOLDER/u);
+    ).toThrow(/SANDY_FF_PLACEHOLDER/u);
   });
 
-  it("uses 0.0.0-dev as the default BB_APP_VERSION in production", () => {
+  it("uses 0.0.0-dev as the default SANDY_APP_VERSION in production", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_VERSION: undefined,
+        SANDY_APP_VERSION: undefined,
         NODE_ENV: "production",
       }),
     });
 
-    expect(serverConfig.BB_APP_VERSION).toBe("0.0.0-dev");
+    expect(serverConfig.SANDY_APP_VERSION).toBe("0.0.0-dev");
   });
 
-  it("honors an explicit BB_APP_VERSION env override", () => {
+  it("honors an explicit SANDY_APP_VERSION env override", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_VERSION: "0.1.2",
+        SANDY_APP_VERSION: "0.1.2",
         NODE_ENV: "production",
       }),
     });
 
-    expect(serverConfig.BB_APP_VERSION).toBe("0.1.2");
+    expect(serverConfig.SANDY_APP_VERSION).toBe("0.1.2");
   });
 
   it("parses the internal app surface marker", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_SURFACE: "desktop",
+        SANDY_APP_SURFACE: "desktop",
         NODE_ENV: "production",
       }),
     });
 
-    expect(serverConfig.BB_APP_SURFACE).toBe("desktop");
+    expect(serverConfig.SANDY_APP_SURFACE).toBe("desktop");
 
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_APP_SURFACE: "mobile",
+          SANDY_APP_SURFACE: "mobile",
           NODE_ENV: "production",
         }),
       }),
-    ).toThrow("BB_APP_SURFACE must be one of desktop, web");
+    ).toThrow("SANDY_APP_SURFACE must be one of desktop, web");
   });
 
   it("lets tooling read the server port without validating unrelated server env", () => {
     const serverPortConfig = loadServerPortConfig({
       env: {
-        BB_EXTERNAL_URL: "not-a-url",
-        BB_SERVER_PORT: "4444",
+        SANDY_EXTERNAL_URL: "not-a-url",
+        SANDY_SERVER_PORT: "4444",
         NODE_ENV: "development",
       },
     });
 
-    expect(serverPortConfig.BB_SERVER_PORT).toBe(4444);
+    expect(serverPortConfig.SANDY_SERVER_PORT).toBe(4444);
   });
 
   it("validates server port env at loader call time", () => {
@@ -491,121 +491,121 @@ describe("consumer-specific config", () => {
           NODE_ENV: "development",
         },
       }),
-    ).toThrow(/BB_SERVER_PORT/u);
+    ).toThrow(/SANDY_SERVER_PORT/u);
   });
 
   it("derives the database path from data dir without validating unrelated server env", () => {
     const databaseConfig = loadDatabaseConfig({
       env: {
-        BB_DATA_DIR: "/tmp/bb-data",
-        BB_EXTERNAL_URL: "not-a-url",
+        SANDY_DATA_DIR: "/tmp/sandy-data",
+        SANDY_EXTERNAL_URL: "not-a-url",
         NODE_ENV: "development",
       },
     });
 
     expect(databaseConfig.databasePath).toBe(
-      path.resolve("/tmp/bb-data/bb.db"),
+      path.resolve("/tmp/sandy-data/sandy.db"),
     );
   });
 
   it("requires a valid server URL for the daemon and CLI", () => {
     const env = createHostDaemonRuntimeEnv({
-      BB_SERVER_URL: "http://localhost:9999",
+      SANDY_SERVER_URL: "http://localhost:9999",
     });
     const hostDaemonConfig = loadHostDaemonConnectionConfig({ env });
     const cliConfig = loadCliConfig({ env });
 
-    expect(hostDaemonConfig.BB_SERVER_URL).toBe("http://localhost:9999");
-    expect(cliConfig.BB_SERVER_URL).toBe("http://localhost:9999");
+    expect(hostDaemonConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
+    expect(cliConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
 
     expect(() =>
       loadCliConfig({
         env: createHostDaemonRuntimeEnv({
-          BB_SERVER_URL: "not-a-url",
+          SANDY_SERVER_URL: "not-a-url",
         }),
       }),
-    ).toThrow(/BB_SERVER_URL/u);
+    ).toThrow(/SANDY_SERVER_URL/u);
   });
 
   it("normalizes server URL whitespace consistently for the daemon and CLI", () => {
     const env = createHostDaemonRuntimeEnv({
-      BB_SERVER_URL: " http://localhost:9999 ",
+      SANDY_SERVER_URL: " http://localhost:9999 ",
     });
     const hostDaemonConfig = loadHostDaemonConnectionConfig({ env });
     const cliConfig = loadCliConfig({ env });
 
-    expect(hostDaemonConfig.BB_SERVER_URL).toBe("http://localhost:9999");
-    expect(cliConfig.BB_SERVER_URL).toBe("http://localhost:9999");
+    expect(hostDaemonConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
+    expect(cliConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
 
     expect(() =>
       loadCliConfig({
         env: createHostDaemonRuntimeEnv({
-          BB_SERVER_URL: "   ",
+          SANDY_SERVER_URL: "   ",
         }),
       }),
-    ).toThrow("BB_SERVER_URL must not be empty");
+    ).toThrow("SANDY_SERVER_URL must not be empty");
   });
 
   it("validates host-daemon connection config without requiring data dir", () => {
     const hostDaemonConfig = loadHostDaemonConnectionConfig({
       env: {
-        BB_HOST_DAEMON_PORT: "3999",
-        BB_SERVER_URL: "http://localhost:9999",
+        SANDY_HOST_DAEMON_PORT: "3999",
+        SANDY_SERVER_URL: "http://localhost:9999",
         NODE_ENV: "development",
       },
     });
 
-    expect(hostDaemonConfig.BB_SERVER_URL).toBe("http://localhost:9999");
-    expect(hostDaemonConfig.BB_HOST_DAEMON_PORT).toBe(3999);
+    expect(hostDaemonConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
+    expect(hostDaemonConfig.SANDY_HOST_DAEMON_PORT).toBe(3999);
   });
 
   it("validates explicit host-daemon ports with the shared port validator", () => {
     expect(() =>
       loadHostDaemonConnectionConfig({
         env: {
-          BB_SERVER_URL: "http://localhost:9999",
+          SANDY_SERVER_URL: "http://localhost:9999",
           NODE_ENV: "development",
         },
         hostDaemonPort: 0,
       }),
-    ).toThrow("BB_HOST_DAEMON_PORT must be a valid TCP port");
+    ).toThrow("SANDY_HOST_DAEMON_PORT must be a valid TCP port");
   });
 
   it("builds full host-daemon config when the daemon entrypoint owns data dir", () => {
     const hostDaemonConfig = loadHostDaemonConfig({
       env: {
-        BB_DATA_DIR: "/tmp/bb-data",
-        BB_HOST_DAEMON_PORT: "3999",
-        BB_SERVER_URL: "http://localhost:9999",
+        SANDY_DATA_DIR: "/tmp/sandy-data",
+        SANDY_HOST_DAEMON_PORT: "3999",
+        SANDY_SERVER_URL: "http://localhost:9999",
         NODE_ENV: "development",
       },
     });
 
-    expect(hostDaemonConfig.BB_DATA_DIR).toBe(path.resolve("/tmp/bb-data"));
-    expect(hostDaemonConfig.BB_SERVER_URL).toBe("http://localhost:9999");
-    expect(hostDaemonConfig.BB_HOST_DAEMON_PORT).toBe(3999);
+    expect(hostDaemonConfig.SANDY_DATA_DIR).toBe(path.resolve("/tmp/sandy-data"));
+    expect(hostDaemonConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
+    expect(hostDaemonConfig.SANDY_HOST_DAEMON_PORT).toBe(3999);
   });
 
   it("builds host-daemon start config from full config when data dir is not provided", () => {
     const hostDaemonStartConfig = loadHostDaemonStartConfig({
       env: {
-        BB_DATA_DIR: "/tmp/bb-data",
-        BB_HOST_DAEMON_PORT: "3999",
-        BB_SERVER_URL: "http://localhost:9999",
+        SANDY_DATA_DIR: "/tmp/sandy-data",
+        SANDY_HOST_DAEMON_PORT: "3999",
+        SANDY_SERVER_URL: "http://localhost:9999",
         NODE_ENV: "development",
       },
     });
 
-    expect(hostDaemonStartConfig.dataDir).toBe(path.resolve("/tmp/bb-data"));
-    expect(hostDaemonStartConfig.connectionConfig.BB_SERVER_URL).toBe(
+    expect(hostDaemonStartConfig.dataDir).toBe(path.resolve("/tmp/sandy-data"));
+    expect(hostDaemonStartConfig.connectionConfig.SANDY_SERVER_URL).toBe(
       "http://localhost:9999",
     );
-    expect(hostDaemonStartConfig.connectionConfig.BB_HOST_DAEMON_PORT).toBe(
+    expect(hostDaemonStartConfig.connectionConfig.SANDY_HOST_DAEMON_PORT).toBe(
       3999,
     );
   });
 
-  it("builds logger config from an explicit data dir without resolving BB_DATA_DIR", () => {
+  it("builds logger config from an explicit data dir without resolving SANDY_DATA_DIR", () => {
     const loggerConfig = loadLoggerConfig({
       dataDir: "/tmp/logger-data",
       env: {
@@ -613,33 +613,33 @@ describe("consumer-specific config", () => {
       },
     });
 
-    expect(loggerConfig.BB_DATA_DIR).toBe("/tmp/logger-data");
-    expect(loggerConfig.BB_LOG_LEVEL).toBe("debug");
+    expect(loggerConfig.SANDY_DATA_DIR).toBe("/tmp/logger-data");
+    expect(loggerConfig.SANDY_LOG_LEVEL).toBe("debug");
   });
 
   it("leaves OTLP export off unless an http endpoint is configured", () => {
     const env = { NODE_ENV: "production" };
     expect(
-      loadLoggerConfig({ dataDir: "/tmp/logger-data", env }).BB_OTLP_ENDPOINT,
+      loadLoggerConfig({ dataDir: "/tmp/logger-data", env }).SANDY_OTLP_ENDPOINT,
     ).toBeNull();
     expect(
       loadLoggerConfig({
         dataDir: "/tmp/logger-data",
-        env: { ...env, BB_OTLP_ENDPOINT: "" },
-      }).BB_OTLP_ENDPOINT,
+        env: { ...env, SANDY_OTLP_ENDPOINT: "" },
+      }).SANDY_OTLP_ENDPOINT,
     ).toBeNull();
     expect(
       loadLoggerConfig({
         dataDir: "/tmp/logger-data",
-        env: { ...env, BB_OTLP_ENDPOINT: "http://127.0.0.1:4318/" },
-      }).BB_OTLP_ENDPOINT,
+        env: { ...env, SANDY_OTLP_ENDPOINT: "http://127.0.0.1:4318/" },
+      }).SANDY_OTLP_ENDPOINT,
     ).toBe("http://127.0.0.1:4318");
     expect(() =>
       loadLoggerConfig({
         dataDir: "/tmp/logger-data",
-        env: { ...env, BB_OTLP_ENDPOINT: "grpc://127.0.0.1:4317" },
+        env: { ...env, SANDY_OTLP_ENDPOINT: "grpc://127.0.0.1:4317" },
       }),
-    ).toThrow("BB_OTLP_ENDPOINT must be an http or https URL");
+    ).toThrow("SANDY_OTLP_ENDPOINT must be an http or https URL");
   });
 
   it("defaults CLI connection env to the local app instance", () => {
@@ -649,85 +649,85 @@ describe("consumer-specific config", () => {
       },
     });
 
-    expect(cliConfig.BB_SERVER_URL).toBe("http://127.0.0.1:38886");
-    expect(cliConfig.BB_HOST_DAEMON_PORT).toBe(38887);
+    expect(cliConfig.SANDY_SERVER_URL).toBe("http://127.0.0.1:38886");
+    expect(cliConfig.SANDY_HOST_DAEMON_PORT).toBe(38887);
   });
 
   it("lets explicit CLI env overrides win over NODE_ENV-selected defaults", () => {
     const cliConfig = loadCliConfig({
       env: {
-        BB_HOST_DAEMON_PORT: "3999",
-        BB_SERVER_URL: "http://localhost:9999",
+        SANDY_HOST_DAEMON_PORT: "3999",
+        SANDY_SERVER_URL: "http://localhost:9999",
         NODE_ENV: "development",
       },
     });
 
-    expect(cliConfig.BB_SERVER_URL).toBe("http://localhost:9999");
-    expect(cliConfig.BB_HOST_DAEMON_PORT).toBe(3999);
+    expect(cliConfig.SANDY_SERVER_URL).toBe("http://localhost:9999");
+    expect(cliConfig.SANDY_HOST_DAEMON_PORT).toBe(3999);
   });
 
   it("allows app and external URLs to be omitted in production server config", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_URL: undefined,
-        BB_EXTERNAL_URL: undefined,
+        SANDY_APP_URL: undefined,
+        SANDY_EXTERNAL_URL: undefined,
         NODE_ENV: "production",
       }),
     });
 
-    expect(serverConfig.BB_APP_URL).toBe("");
-    expect(serverConfig.BB_EXTERNAL_URL).toBe("");
+    expect(serverConfig.SANDY_APP_URL).toBe("");
+    expect(serverConfig.SANDY_EXTERNAL_URL).toBe("");
   });
 
   it("validates app and external URLs independently", () => {
     const serverConfig = loadServerConfig({
       env: createServerRuntimeEnv({
-        BB_APP_URL: "https://app.example.test",
-        BB_EXTERNAL_URL: "https://external.example.test",
+        SANDY_APP_URL: "https://app.example.test",
+        SANDY_EXTERNAL_URL: "https://external.example.test",
         NODE_ENV: "production",
       }),
     });
 
-    expect(serverConfig.BB_APP_URL).toBe("https://app.example.test");
-    expect(serverConfig.BB_EXTERNAL_URL).toBe("https://external.example.test");
+    expect(serverConfig.SANDY_APP_URL).toBe("https://app.example.test");
+    expect(serverConfig.SANDY_EXTERNAL_URL).toBe("https://external.example.test");
 
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_APP_URL: "not-a-url",
+          SANDY_APP_URL: "not-a-url",
           NODE_ENV: "production",
         }),
       }),
-    ).toThrow(/BB_APP_URL/u);
+    ).toThrow(/SANDY_APP_URL/u);
 
     expect(() =>
       loadServerConfig({
         env: createServerRuntimeEnv({
-          BB_APP_URL: "https://app.example.test",
-          BB_EXTERNAL_URL: "not-a-url",
+          SANDY_APP_URL: "https://app.example.test",
+          SANDY_EXTERNAL_URL: "not-a-url",
           NODE_ENV: "production",
         }),
       }),
-    ).toThrow(/BB_EXTERNAL_URL/u);
+    ).toThrow(/SANDY_EXTERNAL_URL/u);
   });
 
   it("reads dev app host from its dedicated config scope", () => {
     const devAppConfig = loadDevAppConfig({
       env: {
-        BB_DEV_APP_HOST: "0.0.0.0",
+        SANDY_DEV_APP_HOST: "0.0.0.0",
         NODE_ENV: "development",
       },
     });
 
-    expect(devAppConfig.BB_DEV_APP_HOST).toBe("0.0.0.0");
-    expect(devAppConfig.BB_DEV_APP_PORT).toBeUndefined();
+    expect(devAppConfig.SANDY_DEV_APP_HOST).toBe("0.0.0.0");
+    expect(devAppConfig.SANDY_DEV_APP_PORT).toBeUndefined();
   });
 
   it("builds app Vite dev config from the app dev entrypoint scope", () => {
     const defaultViteDevConfig = loadViteDevConfig({
       env: {
-        BB_DEV_APP_PORT: "4173",
-        BB_SERVER_PORT: "4444",
+        SANDY_DEV_APP_PORT: "4173",
+        SANDY_SERVER_PORT: "4444",
         NODE_ENV: "development",
       },
     });
@@ -741,9 +741,9 @@ describe("consumer-specific config", () => {
 
     const explicitViteDevConfig = loadViteDevConfig({
       env: {
-        BB_DEV_APP_HOST: "0.0.0.0",
-        BB_DEV_APP_PORT: "4173",
-        BB_SERVER_PORT: "4444",
+        SANDY_DEV_APP_HOST: "0.0.0.0",
+        SANDY_DEV_APP_PORT: "4173",
+        SANDY_SERVER_PORT: "4444",
         NODE_ENV: "development",
       },
     });
@@ -755,39 +755,39 @@ describe("consumer-specific config", () => {
     expect(() =>
       loadViteDevConfig({
         env: {
-          BB_SERVER_PORT: "4444",
+          SANDY_SERVER_PORT: "4444",
           NODE_ENV: "development",
         },
       }),
-    ).toThrow("BB_DEV_APP_PORT is required to run the app dev server");
+    ).toThrow("SANDY_DEV_APP_PORT is required to run the app dev server");
   });
 
   it("parses optional host-daemon entrypoint env vars in one place", () => {
     const hostDaemonEntrypointConfig = loadHostDaemonEntrypointConfig({
       env: {
-        BB_BRIDGE_DIR: " /tmp/bridges ",
-        BB_CLI_DIR: " /tmp/bb-bin ",
-        BB_HOST_ENROLL_KEY: " enroll-token ",
-        BB_HOST_DAEMON_AUTO_UPDATE: "true",
-        BB_HOST_ID: " host-123 ",
+        SANDY_BRIDGE_DIR: " /tmp/bridges ",
+        SANDY_CLI_DIR: " /tmp/sandy-bin ",
+        SANDY_HOST_ENROLL_KEY: " enroll-token ",
+        SANDY_HOST_DAEMON_AUTO_UPDATE: "true",
+        SANDY_HOST_ID: " host-123 ",
       },
     });
 
     expect(hostDaemonEntrypointConfig).toEqual({
-      BB_BRIDGE_DIR: "/tmp/bridges",
-      BB_CLI_DIR: "/tmp/bb-bin",
-      BB_HOST_ENROLL_KEY: "enroll-token",
-      BB_HOST_DAEMON_AUTO_UPDATE: true,
-      BB_HOST_ID: "host-123",
+      SANDY_BRIDGE_DIR: "/tmp/bridges",
+      SANDY_CLI_DIR: "/tmp/sandy-bin",
+      SANDY_HOST_ENROLL_KEY: "enroll-token",
+      SANDY_HOST_DAEMON_AUTO_UPDATE: true,
+      SANDY_HOST_ID: "host-123",
     });
   });
 
   it("drops empty optional host-daemon entrypoint env vars", () => {
     const hostDaemonEntrypointConfig = loadHostDaemonEntrypointConfig({
       env: {
-        BB_BRIDGE_DIR: "",
-        BB_CLI_DIR: "   ",
-        BB_HOST_ENROLL_KEY: " ",
+        SANDY_BRIDGE_DIR: "",
+        SANDY_CLI_DIR: "   ",
+        SANDY_HOST_ENROLL_KEY: " ",
       },
     });
 

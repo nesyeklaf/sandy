@@ -1,11 +1,11 @@
-import type { TimelineConversationAttachments } from "@bb/server-contract";
+import type { TimelineConversationAttachments } from "@sandy/server-contract";
 import type { ThreadTimelinePluginMessageAction } from "@/components/thread/timeline/types";
-import type { PromptMentionResource, PromptTextMention } from "@bb/domain";
-import { renderTemplate } from "@bb/templates";
+import type { PromptMentionResource, PromptTextMention } from "@sandy/domain";
+import { renderTemplate } from "@sandy/templates";
 import type { ReactNode } from "react";
 import { ConversationMessageContent } from "@/components/thread/timeline/ConversationMessageContent";
 import { ThreadTitleMentionResourcesProvider } from "@/components/thread/ThreadTitleMentions";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import {
   StoryDraftPromptBox,
   useStoryPromptDraft,
@@ -141,7 +141,7 @@ function threadMentionResource(
 
 const agentInitiatedMessage = buildMessage(
   [
-    '[bb message from thread:thr_ux3h8sxg65; reply with `bb thread tell thr_ux3h8sxg65 "<your response>"`]',
+    '[sandy message from thread:thr_ux3h8sxg65; reply with `sandy thread tell thr_ux3h8sxg65 "<your response>"`]',
     "",
     "Fixed both blockers on @apps/server/src/services/manager/manager-system-messages.ts. No merge or push.",
     "",
@@ -177,7 +177,7 @@ const agentInitiatedMessage = buildMessage(
 
 const agentSteerMessage = buildMessage(
   [
-    '[bb message from thread:thr_h4u3fgr6be; reply with `bb thread tell thr_h4u3fgr6be "<your response>"`]',
+    '[sandy message from thread:thr_h4u3fgr6be; reply with `sandy thread tell thr_h4u3fgr6be "<your response>"`]',
     "",
     "Committed the two scoped fixes touching @apps/app/src/components/thread/timeline/ConversationMessageContent.tsx. Worktree is clean.",
   ].join("\n"),
@@ -290,7 +290,7 @@ const parentChildSystemMessageFixtures = [
       renderTemplate("systemMessageChildThreadNeedsAttention", {
         blockerSummary: [
           "Blocked on command approval:",
-          "Command: git push origin bb/child-thread-parent-message-plan",
+          "Command: git push origin sandy/child-thread-parent-message-plan",
         ].join("\n"),
         threadMention: "@thread:thr_deployer",
       }),
@@ -313,7 +313,7 @@ const parentChildSystemMessageFixtures = [
         updates: [
           "@thread:thr_schema completed:",
           "",
-          "Migrated the thread ownership queries to targeted joins and added regression coverage. Validation passed for @bb/server.",
+          "Migrated the thread ownership queries to targeted joins and added regression coverage. Validation passed for @sandy/server.",
         ].join("\n"),
       }),
       [
@@ -413,7 +413,7 @@ const parentChildSystemMessageFixtures = [
 
 const longSystemMessage = buildMessage(
   [
-    "[bb system]",
+    "[sandy system]",
     "",
     "@thread:thr_cpf5sq7pyr completed:",
     "",
@@ -430,8 +430,8 @@ const longSystemMessage = buildMessage(
     "- Sweep does not queue duplicate stop RPCs while one is already in flight.",
     "",
     "Validation:",
-    "- `pnpm exec turbo run test --filter=@bb/server -- test/threads/thread-stop-retry.test.ts` passed, 2 tests.",
-    "- `pnpm exec turbo run typecheck --filter=@bb/server` passed.",
+    "- `pnpm exec turbo run test --filter=@sandy/server -- test/threads/thread-stop-retry.test.ts` passed, 2 tests.",
+    "- `pnpm exec turbo run typecheck --filter=@sandy/server` passed.",
     "",
     "Blockers: none. Worktree status: clean.",
   ].join("\n"),
@@ -500,7 +500,7 @@ const mentionedMessageMentions: PromptTextMention[] = [
     resource: {
       kind: "thread",
       threadId: "thr_parent",
-      projectId: "proj_bb",
+      projectId: "proj_sandy",
       label: "Prompt UX thread",
     },
   }),
@@ -631,7 +631,7 @@ export function Overview() {
             timestamp={0}
             attachments={null}
             mentions={mentionedMessageMentions}
-            projectId="proj_bb"
+            projectId="proj_sandy"
             turnRequest={acceptedMessage}
             onAddToChat={handleAddToChat}
           />

@@ -1,4 +1,4 @@
-import { TERMINAL_DATA_MAX_BYTES } from "@bb/domain";
+import { TERMINAL_DATA_MAX_BYTES } from "@sandy/domain";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { Terminal } from "@xterm/xterm";
 import { describe, expect, it, vi } from "vitest";

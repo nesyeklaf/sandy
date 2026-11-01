@@ -3,17 +3,17 @@
   "name": "popover",
   "type": "registry:ui",
   "title": "popover",
-  "description": "BB ui \"popover\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"popover\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-popover"
   ],
   "registryDependencies": [
-    "@bb/overlay-anchor",
-    "@bb/overlay-trigger",
-    "@bb/portal-scope",
-    "@bb/responsive-overlay",
-    "@bb/use-pointer-coarse",
-    "@bb/utils"
+    "@sandy/overlay-anchor",
+    "@sandy/overlay-trigger",
+    "@sandy/portal-scope",
+    "@sandy/responsive-overlay",
+    "@sandy/use-pointer-coarse",
+    "@sandy/utils"
   ],
   "files": [
     {

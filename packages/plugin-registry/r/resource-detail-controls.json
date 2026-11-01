@@ -3,12 +3,12 @@
   "name": "resource-detail-controls",
   "type": "registry:ui",
   "title": "resource-detail-controls",
-  "description": "BB ui \"resource-detail-controls\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-detail-controls\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/icon",
-    "@bb/tooltip",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/icon",
+    "@sandy/tooltip",
+    "@sandy/utils"
   ],
   "files": [
     {

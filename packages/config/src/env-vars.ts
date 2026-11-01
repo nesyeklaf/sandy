@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { delimiter } from "node:path";
-import { defaultFeatureFlags } from "@bb/domain";
+import { defaultFeatureFlags } from "@sandy/domain";
 import { DEFAULTS } from "./defaults.js";
 import { CLI_LAUNCHER_ENV_NAME } from "./cli-command.js";
 import { defineEnvVar, type EnvVarParseArgs } from "./env.js";
@@ -114,9 +114,9 @@ function parseLogLevelValue(args: EnvVarParseArgs): string {
   return validateLogLevel(args.value);
 }
 
-export const BB_LOG_LEVEL_ENV = defineEnvVar<string>({
+export const SANDY_LOG_LEVEL_ENV = defineEnvVar<string>({
   description: "Log level: trace, debug, info, warn, error, fatal",
-  name: "BB_LOG_LEVEL",
+  name: "SANDY_LOG_LEVEL",
   parse: parseLogLevelValue,
 });
 
@@ -132,189 +132,189 @@ function parseOtlpEndpointValue(args: EnvVarParseArgs): string | null {
   return endpoint.replace(/\/+$/u, "");
 }
 
-export const BB_OTLP_ENDPOINT_ENV = defineEnvVar<string | null>({
+export const SANDY_OTLP_ENDPOINT_ENV = defineEnvVar<string | null>({
   description:
     "Base URL of an OTLP/HTTP receiver, such as http://127.0.0.1:4318. When set, the server and host daemon export logs, traces, and metrics there. Unset or empty: nothing is exported.",
-  name: "BB_OTLP_ENDPOINT",
+  name: "SANDY_OTLP_ENDPOINT",
   parse: parseOtlpEndpointValue,
 });
 
-export const BB_SERVER_PORT_ENV = defineEnvVar<number>({
+export const SANDY_SERVER_PORT_ENV = defineEnvVar<number>({
   description: "HTTP port for the server",
-  name: "BB_SERVER_PORT",
+  name: "SANDY_SERVER_PORT",
   parse: parsePortEnvValue,
 });
 
-export const BB_SERVER_BIND_HOST_ENV = defineEnvVar<string[]>({
+export const SANDY_SERVER_BIND_HOST_ENV = defineEnvVar<string[]>({
   description:
     "Additional tailnet or WireGuard addresses the server listens on besides 127.0.0.1",
-  name: "BB_SERVER_BIND_HOST",
+  name: "SANDY_SERVER_BIND_HOST",
   parse: parseServerBindHostEnvValue,
 });
 
-export const BB_HOST_DAEMON_PORT_ENV = defineEnvVar<number>({
+export const SANDY_HOST_DAEMON_PORT_ENV = defineEnvVar<number>({
   description: "Port the host daemon listens on for local API requests",
-  name: "BB_HOST_DAEMON_PORT",
+  name: "SANDY_HOST_DAEMON_PORT",
   parse: parsePortEnvValue,
 });
 
-export const BB_SERVER_URL_ENV = defineEnvVar<string>({
-  description: "URL of the bb server",
-  name: "BB_SERVER_URL",
+export const SANDY_SERVER_URL_ENV = defineEnvVar<string>({
+  description: "URL of the sandy server",
+  name: "SANDY_SERVER_URL",
   parse: parseRequiredUrlEnvValue,
 });
 
-export const BB_APP_VERSION_ENV = defineEnvVar<string>({
+export const SANDY_APP_VERSION_ENV = defineEnvVar<string>({
   description:
-    "Version of the running bb-app package. The bb-app launcher sets this from packages/bb-app/package.json; defaults to a sentinel for dev/source runs.",
-  name: "BB_APP_VERSION",
+    "Version of the running sandy-app package. The sandy-app launcher sets this from packages/sandy-app/package.json; defaults to a sentinel for dev/source runs.",
+  name: "SANDY_APP_VERSION",
   parse: parseNonEmptyStringEnvValue,
 });
 
-export const BB_SERVER_LAUNCH_ID_ENV = defineEnvVar<string>({
+export const SANDY_SERVER_LAUNCH_ID_ENV = defineEnvVar<string>({
   description:
-    "Internal per-spawn identity the bb-app launcher hands its server child. The server echoes it on /health so the launcher can tell its own child apart from another bb server that already owns the port.",
-  name: "BB_SERVER_LAUNCH_ID",
+    "Internal per-spawn identity the sandy-app launcher hands its server child. The server echoes it on /health so the launcher can tell its own child apart from another sandy server that already owns the port.",
+  name: "SANDY_SERVER_LAUNCH_ID",
   parse: parseNonEmptyStringEnvValue,
 });
 
-export const BB_CLI_LAUNCHER_ENV = defineEnvVar<string>({
+export const SANDY_CLI_LAUNCHER_ENV = defineEnvVar<string>({
   description:
-    "Internal path the bb-app launcher hands its server child: the bb command launcher it wrote in the data directory for this install. The server offers to put the bb command on PATH only when it is set.",
+    "Internal path the sandy-app launcher hands its server child: the sandy command launcher it wrote in the data directory for this install. The server offers to put the sandy command on PATH only when it is set.",
   name: CLI_LAUNCHER_ENV_NAME,
   parse: parseNonEmptyStringEnvValue,
 });
 
-export const BB_APP_SURFACE_ENV = defineEnvVar<AppSurface>({
-  description: "Internal launcher marker. Set by bb-app and desktop launchers.",
+export const SANDY_APP_SURFACE_ENV = defineEnvVar<AppSurface>({
+  description: "Internal launcher marker. Set by sandy-app and desktop launchers.",
   name: APP_SURFACE_ENV_NAME,
   parse: parseAppSurfaceEnvValue,
 });
 
-export const BB_APP_URL_ENV = defineEnvVar<string>({
+export const SANDY_APP_URL_ENV = defineEnvVar<string>({
   description:
     "Human-facing app/server base URL used for generated links, allowed browser origins, and the allowed DNS hostname for incoming requests. Does not control which host or port the server binds to.",
-  name: "BB_APP_URL",
+  name: "SANDY_APP_URL",
   parse: parseOptionalUrlEnvValue,
 });
 
-export const BB_EXTERNAL_URL_ENV = defineEnvVar<string>({
+export const SANDY_EXTERNAL_URL_ENV = defineEnvVar<string>({
   description:
     "Internet-facing HTTPS base URL used for generated public links. Does not control which host or port the server binds to.",
-  name: "BB_EXTERNAL_URL",
+  name: "SANDY_EXTERNAL_URL",
   parse: parseOptionalUrlEnvValue,
 });
 
-export const BB_PERF_DIAGNOSTICS_ENV = defineEnvVar<boolean>({
+export const SANDY_PERF_DIAGNOSTICS_ENV = defineEnvVar<boolean>({
   description:
     "Permit server performance diagnostics when the performanceDiagnostics experiment is on. Requires restart.",
-  name: "BB_PERF_DIAGNOSTICS",
+  name: "SANDY_PERF_DIAGNOSTICS",
   parse: parseBooleanEnvValue,
 });
 
-export const BB_SKIP_ONBOARDING_ENV = defineEnvVar<boolean>({
+export const SANDY_SKIP_ONBOARDING_ENV = defineEnvVar<boolean>({
   description:
     "Mark first-run setup as completed at server startup so the setup screen is skipped. Settings can still replay it.",
-  name: "BB_SKIP_ONBOARDING",
+  name: "SANDY_SKIP_ONBOARDING",
   parse: parseBooleanEnvValue,
 });
 
-export const BB_FF_PLACEHOLDER_ENV = defineEnvVar<boolean>({
+export const SANDY_FF_PLACEHOLDER_ENV = defineEnvVar<boolean>({
   description:
     "Permanent placeholder feature flag. Non-functional keep-alive so the flag system has at least one entry; do not gate behavior on it.",
-  name: "BB_FF_PLACEHOLDER",
+  name: "SANDY_FF_PLACEHOLDER",
   parse: parseBooleanEnvValue,
 });
 
-export const BB_FF_TIMELINE_WINDOW_EVENT_BUDGET_ENV = defineEnvVar<number>({
+export const SANDY_FF_TIMELINE_WINDOW_EVENT_BUDGET_ENV = defineEnvVar<number>({
   description:
     "Max events one thread-timeline window may span. Raise far above the default to restore unbounded windows.",
-  name: "BB_FF_TIMELINE_WINDOW_EVENT_BUDGET",
+  name: "SANDY_FF_TIMELINE_WINDOW_EVENT_BUDGET",
   parse: parsePositiveIntegerEnvValue,
 });
 
-export const BB_DEV_APP_HOST_ENV = defineEnvVar<string>({
+export const SANDY_DEV_APP_HOST_ENV = defineEnvVar<string>({
   description:
     "Development-only Vite bind host override for apps/app. Defaults to 127.0.0.1 when unset.",
-  name: "BB_DEV_APP_HOST",
+  name: "SANDY_DEV_APP_HOST",
   parse: parseStringEnvValue,
 });
 
-export const BB_DEV_APP_PORT_ENV = defineEnvVar<number | undefined>({
+export const SANDY_DEV_APP_PORT_ENV = defineEnvVar<number | undefined>({
   description: "Development-only Vite port for apps/app.",
-  name: "BB_DEV_APP_PORT",
+  name: "SANDY_DEV_APP_PORT",
   parse: parseOptionalPortEnvValue,
 });
 
-export const BB_CLI_DIR_ENV = defineEnvVar<string | undefined>({
+export const SANDY_CLI_DIR_ENV = defineEnvVar<string | undefined>({
   description:
-    "Directory containing the bb CLI executable to inject into runtime shells",
-  name: "BB_CLI_DIR",
+    "Directory containing the sandy CLI executable to inject into runtime shells",
+  name: "SANDY_CLI_DIR",
   parse: parseOptionalTrimmedStringEnvValue,
 });
 
-export const BB_INHERITED_SKILLS_ROOTS_ENV = defineEnvVar<string[]>({
+export const SANDY_INHERITED_SKILLS_ROOTS_ENV = defineEnvVar<string[]>({
   description:
-    "Development-only path list of lower-priority inherited bb skill roots",
-  name: "BB_INHERITED_SKILLS_ROOTS",
+    "Development-only path list of lower-priority inherited sandy skill roots",
+  name: "SANDY_INHERITED_SKILLS_ROOTS",
   parse: parsePathListEnvValue,
 });
 
-export const BB_BRIDGE_DIR_ENV = defineEnvVar<string | undefined>({
+export const SANDY_BRIDGE_DIR_ENV = defineEnvVar<string | undefined>({
   description:
     "Directory containing provider bridge bundles for the host daemon runtime",
-  name: "BB_BRIDGE_DIR",
+  name: "SANDY_BRIDGE_DIR",
   parse: parseOptionalTrimmedStringEnvValue,
 });
 
-export const BB_SERVER_HEADERS_ENV = defineEnvVar<Record<string, string>>({
+export const SANDY_SERVER_HEADERS_ENV = defineEnvVar<Record<string, string>>({
   description: "Private JSON headers attached to machine server requests",
-  name: "BB_SERVER_HEADERS",
+  name: "SANDY_SERVER_HEADERS",
   parse: ({ value }) => {
     try {
       return z.record(z.string(), z.string()).parse(JSON.parse(value));
     } catch {
       throw new Error(
-        "BB_SERVER_HEADERS must be a JSON object with string values",
+        "SANDY_SERVER_HEADERS must be a JSON object with string values",
       );
     }
   },
 });
 
-export const BB_HOST_ENROLL_KEY_ENV = defineEnvVar<string | undefined>({
+export const SANDY_HOST_ENROLL_KEY_ENV = defineEnvVar<string | undefined>({
   description:
-    "One-time enrollment token used to bootstrap a host daemon with the bb server",
-  name: "BB_HOST_ENROLL_KEY",
+    "One-time enrollment token used to bootstrap a host daemon with the sandy server",
+  name: "SANDY_HOST_ENROLL_KEY",
   parse: parseOptionalTrimmedStringEnvValue,
 });
 
-export const BB_HOST_DAEMON_AUTO_UPDATE_ENV = defineEnvVar<boolean>({
+export const SANDY_HOST_DAEMON_AUTO_UPDATE_ENV = defineEnvVar<boolean>({
   description:
-    "Allow a remote host daemon to install the exact bb-app package served by its server on a newer protocol mismatch",
-  name: "BB_HOST_DAEMON_AUTO_UPDATE",
+    "Allow a remote host daemon to install the exact sandy-app package served by its server on a newer protocol mismatch",
+  name: "SANDY_HOST_DAEMON_AUTO_UPDATE",
   parse: parseBooleanEnvValue,
 });
 
-export const BB_HOST_DAEMON_SUPERVISED_ENV = defineEnvVar<boolean>({
+export const SANDY_HOST_DAEMON_SUPERVISED_ENV = defineEnvVar<boolean>({
   description:
-    "Set by bb-app host-daemon --supervise so a daemon that relaunches itself after a server move keeps its launcher restarting it",
-  name: "BB_HOST_DAEMON_SUPERVISED",
+    "Set by sandy-app host-daemon --supervise so a daemon that relaunches itself after a server move keeps its launcher restarting it",
+  name: "SANDY_HOST_DAEMON_SUPERVISED",
   parse: parseBooleanEnvValue,
 });
 
-export const BB_HOST_ID_ENV = defineEnvVar<string | undefined>({
+export const SANDY_HOST_ID_ENV = defineEnvVar<string | undefined>({
   description:
     "Preferred host ID to persist for the daemon instead of generating one locally",
-  name: "BB_HOST_ID",
+  name: "SANDY_HOST_ID",
   parse: parseOptionalTrimmedStringEnvValue,
 });
 
-export const DEFAULT_BB_APP_VERSION = DEFAULTS.appVersion;
-export const DEFAULT_BB_APP_SURFACE = APP_SURFACE_WEB;
-export const DEFAULT_BB_APP_URL = "";
-export const DEFAULT_BB_SERVER_BIND_HOST: string[] = [];
-export const DEFAULT_BB_EXTERNAL_URL = "";
-export const DEFAULT_BB_DEV_APP_HOST = "";
-export const DEFAULT_BB_FF_PLACEHOLDER = defaultFeatureFlags.placeholder;
-export const DEFAULT_BB_FF_TIMELINE_WINDOW_EVENT_BUDGET =
+export const DEFAULT_SANDY_APP_VERSION = DEFAULTS.appVersion;
+export const DEFAULT_SANDY_APP_SURFACE = APP_SURFACE_WEB;
+export const DEFAULT_SANDY_APP_URL = "";
+export const DEFAULT_SANDY_SERVER_BIND_HOST: string[] = [];
+export const DEFAULT_SANDY_EXTERNAL_URL = "";
+export const DEFAULT_SANDY_DEV_APP_HOST = "";
+export const DEFAULT_SANDY_FF_PLACEHOLDER = defaultFeatureFlags.placeholder;
+export const DEFAULT_SANDY_FF_TIMELINE_WINDOW_EVENT_BUDGET =
   defaultFeatureFlags.timelineWindowEventBudget;

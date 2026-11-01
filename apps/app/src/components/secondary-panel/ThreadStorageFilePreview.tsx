@@ -5,23 +5,23 @@ import {
   type TextFilePreviewKind,
 } from "./FilePreview";
 import { useEffect } from "react";
-import { BbSourceCodeSplit } from "@/components/code/BbSourceCodeSplit";
+import { SandySourceCodeSplit } from "@/components/code/SandySourceCodeSplit";
 import { hashSourceContents } from "@/components/code/source-code-budget";
 import { useRequestPierreWorkerPool } from "@/lib/pierre-worker-pool-gate";
 import type { MarkdownLinkRouting } from "@/components/ui/markdown-link-routing.js";
 import { asHttpError, getHttpErrorMessage } from "@/lib/http-error";
-import { extractErrorMessage } from "@bb/core-ui";
+import { extractErrorMessage } from "@sandy/core-ui";
 import type {
   FilePreview,
   FilePreviewLineRange,
   TextFilePreview,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   FILE_PREVIEW_HTML_MAX_BYTES,
   isCsvFilePreview,
   isHtmlFilePreviewPath,
   isMarkdownFilePreview,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 
 const GENERIC_HTML_IFRAME_SANDBOX = "allow-scripts";
 
@@ -188,7 +188,7 @@ export function SecondaryPanelFilePreview({
 }: SecondaryPanelFilePreviewProps) {
   const requestCodeWorkers = useRequestPierreWorkerPool();
   useEffect(() => {
-    void BbSourceCodeSplit.preload();
+    void SandySourceCodeSplit.preload();
     requestCodeWorkers();
   }, [requestCodeWorkers]);
   const state = resolveSecondaryPanelFilePreviewState({

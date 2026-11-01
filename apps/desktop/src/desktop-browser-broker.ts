@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type {
-  BbDesktopBrowserControlState,
-  BbDesktopBrowserTarget,
-} from "@bb/desktop-contract";
-import { isRawThreadId } from "@bb/domain";
+  SandyDesktopBrowserControlState,
+  SandyDesktopBrowserTarget,
+} from "@sandy/desktop-contract";
+import { isRawThreadId } from "@sandy/domain";
 import type {
   DesktopBrowserChanged,
   DesktopBrowserCommand,
@@ -11,15 +11,15 @@ import type {
   DesktopBrowserLease,
   DesktopBrowserResult,
   DesktopBrowserTab,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   createDesktopBrowserCdpBridge,
   type DesktopBrowserCdpAdapter,
 } from "./desktop-browser-cdp.js";
 import { createDesktopBrowserCdpAdapter } from "./desktop-browser-cdp-adapter.js";
 import {
-  BB_DESKTOP_BROWSER_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_REVEAL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_REVEAL_CHANNEL,
 } from "./desktop-browser-ipc.js";
 import type {
   DesktopBrowserHostWindow,
@@ -121,7 +121,7 @@ export function createDesktopBrowserBroker(args: {
     if (isRawThreadId(threadId))
       for (const listener of listeners) listener(event);
     for (const tab of tabs) {
-      instance.window.webContents.send(BB_DESKTOP_BROWSER_CONTROL_CHANNEL, {
+      instance.window.webContents.send(SANDY_DESKTOP_BROWSER_CONTROL_CHANNEL, {
         tabId: tab.tabId,
         threadId,
         control: tab.control,
@@ -204,7 +204,7 @@ export function createDesktopBrowserBroker(args: {
     requireTab(instance, threadId, tabId);
     if (hostId === null)
       throw new Error("Desktop is not connected to its host daemon");
-    instance.window.webContents.send(BB_DESKTOP_BROWSER_REVEAL_CHANNEL, {
+    instance.window.webContents.send(SANDY_DESKTOP_BROWSER_REVEAL_CHANNEL, {
       tabId,
       threadId,
       desktopTarget: {
@@ -298,7 +298,7 @@ export function createDesktopBrowserBroker(args: {
       const descriptor = {
         instanceId: randomUUID(),
         generation: randomUUID(),
-        label: `BB window ${window.webContents.id}`,
+        label: `SANDY window ${window.webContents.id}`,
       };
       instances.set(descriptor.instanceId, {
         window,
@@ -341,7 +341,7 @@ export function createDesktopBrowserBroker(args: {
       snapshots.clear();
       args.manager.setServerOrigin(value);
     },
-    getTarget(webContentsId: number): BbDesktopBrowserTarget | null {
+    getTarget(webContentsId: number): SandyDesktopBrowserTarget | null {
       const instance = instanceForWindow(webContentsId);
       return instance && hostId !== null
         ? {
@@ -354,7 +354,7 @@ export function createDesktopBrowserBroker(args: {
     getControl(
       webContentsId: number,
       tabId: string,
-    ): BbDesktopBrowserControlState | null {
+    ): SandyDesktopBrowserControlState | null {
       const instance = instanceForWindow(webContentsId);
       const tab =
         instance &&

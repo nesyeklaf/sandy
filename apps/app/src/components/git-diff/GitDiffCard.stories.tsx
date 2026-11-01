@@ -3,13 +3,13 @@ import {
   builtInThemes,
   defaultAppTheme,
   type BuiltInThemeId,
-} from "@bb/domain";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Button } from "@bb/shared-ui/button";
+} from "@sandy/domain";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
 import { resolveAppThemeCss } from "@/lib/themes";
 import { GitDiffCard } from "@/components/git-diff/GitDiffCard";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
-import { parseGitDiffFiles } from "@bb/shared-ui/git-diff/parsing";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
+import { parseGitDiffFiles } from "@sandy/shared-ui/git-diff/parsing";
 
 export default {
   title: "Git Diff / Themed Panel",

@@ -1,7 +1,7 @@
-import type { JsonObject } from "@bb/domain";
+import type { JsonObject } from "@sandy/domain";
 import { describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
-import { createBbSdk } from "../src/core.js";
+import { createSandySdk } from "../src/core.js";
 import type { FetchImplementation } from "../src/response.js";
 import { createHttpTransport } from "../src/transport-http.js";
 
@@ -21,9 +21,9 @@ function createRecordingSdk() {
     });
     return Response.json({ ok: true });
   });
-  const sdk = createBbSdk({
+  const sdk = createSandySdk({
     transport: createHttpTransport({
-      baseUrl: "http://bb.test",
+      baseUrl: "http://sandy.test",
       fetch,
       runtime: "node",
     }),
@@ -45,12 +45,12 @@ describe("thread plugin metadata transport", () => {
 
     expect(requests).toEqual([
       {
-        url: "http://bb.test/api/v1/threads/t/plugin-metadata?pluginId=p",
+        url: "http://sandy.test/api/v1/threads/t/plugin-metadata?pluginId=p",
         method: "GET",
         body: undefined,
       },
       {
-        url: "http://bb.test/api/v1/threads/t/plugin-metadata",
+        url: "http://sandy.test/api/v1/threads/t/plugin-metadata",
         method: "PATCH",
         body: { pluginId: "p", set: { nested: { value: 1 } }, remove: ["old"] },
       },

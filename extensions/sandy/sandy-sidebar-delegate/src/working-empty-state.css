@@ -1,0 +1,85 @@
+/*
+ * The little typist that fills Active while every thread is working: its head
+ * bobs to the keys, it blinks now and then, the sprout on top sways, and the
+ * typing bubble pulses. All of it holds still under reduced motion.
+ */
+
+.sandy-sidebar-working-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.sandy-sidebar-working-sprout {
+  transform-box: view-box;
+  transform-origin: 90px 36px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sandy-sidebar-working-head {
+    animation: sandy-sidebar-working-bob 0.9s ease-in-out infinite;
+  }
+
+  .sandy-sidebar-working-eye {
+    animation: sandy-sidebar-working-blink 4.2s ease-in-out infinite;
+  }
+
+  .sandy-sidebar-working-sprout {
+    animation: sandy-sidebar-working-sway 2.4s ease-in-out infinite;
+  }
+
+  .sandy-sidebar-working-dot {
+    animation: sandy-sidebar-working-dot 1.2s ease-in-out infinite;
+  }
+
+  .sandy-sidebar-working-dot:nth-of-type(2) {
+    animation-delay: 0.15s;
+  }
+
+  .sandy-sidebar-working-dot:nth-of-type(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes sandy-sidebar-working-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1.5px);
+  }
+}
+
+@keyframes sandy-sidebar-working-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes sandy-sidebar-working-sway {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes sandy-sidebar-working-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateY(-1.5px);
+  }
+}

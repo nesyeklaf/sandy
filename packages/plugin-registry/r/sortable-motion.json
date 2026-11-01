@@ -3,7 +3,7 @@
   "name": "sortable-motion",
   "type": "registry:ui",
   "title": "sortable-motion",
-  "description": "BB ui \"sortable-motion\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"sortable-motion\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@dnd-kit/core",
     "@dnd-kit/sortable",

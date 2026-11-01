@@ -63,7 +63,7 @@ function enqueueDatabaseTask(
     database =
       typeof indexedDB === "undefined"
         ? null
-        : createStore("bb-voice-recordings", "recordings");
+        : createStore("sandy-voice-recordings", "recordings");
   }
   const store = database;
   if (!store) return databaseQueue;

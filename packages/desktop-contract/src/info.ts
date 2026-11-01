@@ -1,85 +1,85 @@
-import type { BbDesktopServerChoice } from "./servers.js";
+import type { SandyDesktopServerChoice } from "./servers.js";
 import { z } from "zod";
-import type { BbDesktopBrowserApi } from "./browser.js";
-import type { BbDesktopWindowFindRequest } from "./find.js";
-import type { AppCommandId } from "@bb/domain";
+import type { SandyDesktopBrowserApi } from "./browser.js";
+import type { SandyDesktopWindowFindRequest } from "./find.js";
+import type { AppCommandId } from "@sandy/domain";
 
-export const bbDesktopPlatformSchema = z.enum(["macos", "linux", "windows"]);
-export type BbDesktopPlatform = z.infer<typeof bbDesktopPlatformSchema>;
+export const sandyDesktopPlatformSchema = z.enum(["macos", "linux", "windows"]);
+export type SandyDesktopPlatform = z.infer<typeof sandyDesktopPlatformSchema>;
 
-export const bbDesktopInfoSchema = z.object({
-  platform: bbDesktopPlatformSchema,
+export const sandyDesktopInfoSchema = z.object({
+  platform: sandyDesktopPlatformSchema,
   serverDaemonLogsAvailable: z.boolean().optional(),
   version: z.string().min(1),
 });
-export type BbDesktopInfo = z.infer<typeof bbDesktopInfoSchema>;
+export type SandyDesktopInfo = z.infer<typeof sandyDesktopInfoSchema>;
 
-export const bbDesktopWindowStateSchema = z
+export const sandyDesktopWindowStateSchema = z
   .object({
     isFullScreen: z.boolean(),
   })
   .strict();
-export type BbDesktopWindowState = z.infer<typeof bbDesktopWindowStateSchema>;
+export type SandyDesktopWindowState = z.infer<typeof sandyDesktopWindowStateSchema>;
 
-export const bbDesktopThemeSchema = z.enum(["system", "light", "dark"]);
-export type BbDesktopTheme = z.infer<typeof bbDesktopThemeSchema>;
+export const sandyDesktopThemeSchema = z.enum(["system", "light", "dark"]);
+export type SandyDesktopTheme = z.infer<typeof sandyDesktopThemeSchema>;
 
-export const bbDesktopClipboardContentSchema = z
+export const sandyDesktopClipboardContentSchema = z
   .object({
     text: z.string(),
     html: z.string().optional(),
   })
   .strict();
-export type BbDesktopClipboardContent = z.infer<
-  typeof bbDesktopClipboardContentSchema
+export type SandyDesktopClipboardContent = z.infer<
+  typeof sandyDesktopClipboardContentSchema
 >;
 
-export const bbDesktopZoomCommandSchema = z.enum(["in", "out", "reset"]);
-export type BbDesktopZoomCommand = z.infer<typeof bbDesktopZoomCommandSchema>;
-export const BB_DESKTOP_MIN_ZOOM_PERCENT = 50;
-export const BB_DESKTOP_MAX_ZOOM_PERCENT = 300;
+export const sandyDesktopZoomCommandSchema = z.enum(["in", "out", "reset"]);
+export type SandyDesktopZoomCommand = z.infer<typeof sandyDesktopZoomCommandSchema>;
+export const SANDY_DESKTOP_MIN_ZOOM_PERCENT = 50;
+export const SANDY_DESKTOP_MAX_ZOOM_PERCENT = 300;
 
-export type BbDesktopInfoChangeHandler = (info: BbDesktopInfo) => void;
-export type BbDesktopInfoUnsubscribe = () => void;
-export type BbDesktopWindowStateChangeHandler = (
-  state: BbDesktopWindowState,
+export type SandyDesktopInfoChangeHandler = (info: SandyDesktopInfo) => void;
+export type SandyDesktopInfoUnsubscribe = () => void;
+export type SandyDesktopWindowStateChangeHandler = (
+  state: SandyDesktopWindowState,
 ) => void;
-export type BbDesktopZoomChangeHandler = (zoomFactor: number) => void;
-export type BbDesktopOpenNewTabHandler = () => void;
-export type BbDesktopAppCommandHandler = (command: AppCommandId) => void;
-export type BbDesktopCloseWindowRequestHandler = () => boolean;
+export type SandyDesktopZoomChangeHandler = (zoomFactor: number) => void;
+export type SandyDesktopOpenNewTabHandler = () => void;
+export type SandyDesktopAppCommandHandler = (command: AppCommandId) => void;
+export type SandyDesktopCloseWindowRequestHandler = () => boolean;
 
-export interface BbDesktopAttentionThreads {
+export interface SandyDesktopAttentionThreads {
   pendingThreadIds: string[];
   unreadThreadIds: string[];
 }
 
-export interface BbDesktopApi extends BbDesktopInfo {
-  browser: BbDesktopBrowserApi;
-  getServerChoices?(): Promise<BbDesktopServerChoice[]>;
-  listServerChoices?(): Promise<BbDesktopServerChoice[]>;
+export interface SandyDesktopApi extends SandyDesktopInfo {
+  browser: SandyDesktopBrowserApi;
+  getServerChoices?(): Promise<SandyDesktopServerChoice[]>;
+  listServerChoices?(): Promise<SandyDesktopServerChoice[]>;
   onServerChoicesChange?(
-    listener: (choices: BbDesktopServerChoice[]) => void,
+    listener: (choices: SandyDesktopServerChoice[]) => void,
   ): () => void;
   selectServer?(id: string): void;
-  getInfo(): Promise<BbDesktopInfo>;
+  getInfo(): Promise<SandyDesktopInfo>;
   focusWindow?(): void;
-  setAttentionThreads?(threads: BbDesktopAttentionThreads): void;
-  getWindowState?(): Promise<BbDesktopWindowState>;
+  setAttentionThreads?(threads: SandyDesktopAttentionThreads): void;
+  getWindowState?(): Promise<SandyDesktopWindowState>;
   macosTrafficLightInset?: number;
   macosTrafficLightTopInset?: number;
-  onChange(listener: BbDesktopInfoChangeHandler): BbDesktopInfoUnsubscribe;
+  onChange(listener: SandyDesktopInfoChangeHandler): SandyDesktopInfoUnsubscribe;
   onWindowStateChange?(
-    listener: BbDesktopWindowStateChangeHandler,
-  ): BbDesktopInfoUnsubscribe;
-  onZoomChange?(listener: BbDesktopZoomChangeHandler): BbDesktopInfoUnsubscribe;
-  zoom?(command: BbDesktopZoomCommand): void;
-  onOpenNewTab?(listener: BbDesktopOpenNewTabHandler): BbDesktopInfoUnsubscribe;
-  onAppCommand?(listener: BbDesktopAppCommandHandler): BbDesktopInfoUnsubscribe;
+    listener: SandyDesktopWindowStateChangeHandler,
+  ): SandyDesktopInfoUnsubscribe;
+  onZoomChange?(listener: SandyDesktopZoomChangeHandler): SandyDesktopInfoUnsubscribe;
+  zoom?(command: SandyDesktopZoomCommand): void;
+  onOpenNewTab?(listener: SandyDesktopOpenNewTabHandler): SandyDesktopInfoUnsubscribe;
+  onAppCommand?(listener: SandyDesktopAppCommandHandler): SandyDesktopInfoUnsubscribe;
   onCloseWindowRequest?(
-    listener: BbDesktopCloseWindowRequestHandler,
-  ): BbDesktopInfoUnsubscribe;
-  openWindowFind?(request: BbDesktopWindowFindRequest): void;
+    listener: SandyDesktopCloseWindowRequestHandler,
+  ): SandyDesktopInfoUnsubscribe;
+  openWindowFind?(request: SandyDesktopWindowFindRequest): void;
   openDataDirectory?(): Promise<void>;
   openExternalUrl(url: string): void;
   openApplicationUrl?(url: string): Promise<void>;
@@ -89,6 +89,6 @@ export interface BbDesktopApi extends BbDesktopInfo {
     enabled: boolean,
     directionalCommands?: readonly AppCommandId[],
   ): void;
-  setTheme(theme: BbDesktopTheme): void;
-  writeClipboard?(content: BbDesktopClipboardContent): Promise<void>;
+  setTheme(theme: SandyDesktopTheme): void;
+  writeClipboard?(content: SandyDesktopClipboardContent): Promise<void>;
 }

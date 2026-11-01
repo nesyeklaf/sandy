@@ -1,0 +1,15 @@
+$pick = null
+log = Load("data/decisions/log.json")
+q = Load("data/decisions/question.json")
+chosen = q.options.find(o => o.value == $pick)
+Card("Session store: decisions", [
+  Progress(log.length, max: q.total, label: `Question ${log.length + 1} of ${q.total} open, ${log.length} answered`),
+  Details("Decided so far", [
+    Table(["", "Question", "Decision", "State"], log.map(d => [d.id, d.question, d.answer, d.status == "superseded" ? Badge(`Replaced by ${d.by}`, tone: "warn") : Badge("Decided")]))
+  ], open: true),
+  Divider(),
+  Text(`**${q.id}. ${q.question}**`),
+  Form([OptionCards($pick, q.options.map(o => ({value: o.value, title: o.title, detail: o.detail})), label: "Your decision")]),
+  Callout(chosen == null ? "Pick an option to see what it locks for later decisions." : chosen.locks, tone: "info", title: "What this locks"),
+  Callout(q.options.find(o => o.value == q.recommend).title + ". " + q.why, title: "My recommendation (not selected)")
+])

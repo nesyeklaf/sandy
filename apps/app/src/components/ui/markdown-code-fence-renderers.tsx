@@ -15,7 +15,7 @@ import type {} from "mdast-util-to-hast";
 import type {
   ExperimentalCodeFenceRendererProps,
   ExperimentalCodeFenceStatus,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { visit } from "unist-util-visit";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount.js";
 import { resolveCodeFenceRendererRegistry } from "@/lib/plugin-slot-resolvers.js";
@@ -52,7 +52,7 @@ export function buildCodeFenceRendererRegistry(
   for (const [language, resolved] of resolveCodeFenceRendererRegistry(slots)) {
     if (resolved.status === "collision") {
       warn(
-        `[plugin] code fence language "${language}" claimed by multiple plugins (${resolved.pluginIds.join(", ")}); rendering BB's code block`,
+        `[plugin] code fence language "${language}" claimed by multiple plugins (${resolved.pluginIds.join(", ")}); rendering SANDY's code block`,
       );
       continue;
     }

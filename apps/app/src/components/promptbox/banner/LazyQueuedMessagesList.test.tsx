@@ -8,8 +8,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { ThreadQueuedMessage } from "@bb/domain";
-import { makeThreadQueuedMessage } from "@bb/test-helpers/domain-fixtures";
+import type { ThreadQueuedMessage } from "@sandy/domain";
+import { makeThreadQueuedMessage } from "@sandy/test-helpers/domain-fixtures";
 import { useState } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import {

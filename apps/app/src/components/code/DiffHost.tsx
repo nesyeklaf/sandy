@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import type { ExperimentalDiffFullFileContents } from "@get-bb/plugin-sdk";
+import type { ExperimentalDiffFullFileContents } from "@sandy-sdk/plugin-sdk";
 import { PluginReplacementSlot } from "@/components/plugin/PluginReplacementSlot";
-import type { ParsedGitDiffFile } from "@bb/shared-ui/git-diff/parsing";
-import { buildFileDiffPatchText } from "@bb/shared-ui/git-diff/patch-text";
-import { BbDiffSplit } from "./BbDiffSplit";
+import type { ParsedGitDiffFile } from "@sandy/shared-ui/git-diff/parsing";
+import { buildFileDiffPatchText } from "@sandy/shared-ui/git-diff/patch-text";
+import { SandyDiffSplit } from "./SandyDiffSplit";
 import { useDiffRendererReplacement } from "./codeRendererProvider";
 import { DEFAULT_CODE_OVERFLOW, DEFAULT_DIFF_VIEW } from "./code-rendering";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 
 const DIFF_RENDERER_SLOT_KIND = "diffRenderer";
 
@@ -36,7 +36,7 @@ export function DiffHost({
   );
 
   const original = (
-    <BbDiffSplit
+    <SandyDiffSplit
       file={file}
       patchText={patchText}
       fullFileContents={fullFileContents}

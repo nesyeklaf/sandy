@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
-import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { afterEach, describe, expect, it } from "vitest";
 import type { EnvironmentPullRequest, PullRequest } from "./contract.js";
@@ -55,7 +55,7 @@ function thread(
         : {
             id: environmentId,
             name: null,
-            branchName: "bb/row",
+            branchName: "sandy/row",
             path: "/work/row",
             isWorktree: true,
             providerId: null,
@@ -74,9 +74,9 @@ function pullRequest(overrides: Partial<PullRequest> = {}): PullRequest {
     number: 6143,
     title: "Share and persist GitHub PR refreshes",
     state: "open",
-    url: "https://github.com/get-bb/bb/pull/6143",
+    url: "https://github.com/nesyeklaf/sandy/pull/6143",
     baseRefName: "main",
-    headRefName: "bb/row",
+    headRefName: "sandy/row",
     updatedAt: "2026-10-22T00:00:00Z",
     autoMerge: false,
     inMergeQueue: false,

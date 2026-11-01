@@ -6,8 +6,8 @@ import type {
   TerminalListResponse,
   TerminalSession,
   UpdateTerminalRequest,
-} from "@bb/server-contract";
-import { BbHttpError, sdk } from "@/lib/sdk";
+} from "@sandy/server-contract";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 import {
   applyTerminalSessionClose,
   applyTerminalSessionMissing,
@@ -111,7 +111,7 @@ export function useCloseTerminal() {
     },
     mutationFn: ({ mode, terminalId }: CloseTerminalMutationRequest) =>
       sdk.terminals.close({ mode, terminalId }).catch((error: unknown) => {
-        if (error instanceof BbHttpError && error.status === 404) return null;
+        if (error instanceof SandyHttpError && error.status === 404) return null;
         throw error;
       }),
     onSuccess: (session: TerminalSession | null, variables) => {

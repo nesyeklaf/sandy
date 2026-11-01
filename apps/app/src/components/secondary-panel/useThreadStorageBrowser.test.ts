@@ -1,4 +1,4 @@
-import type { WorkspaceFile } from "@bb/server-contract";
+import type { WorkspaceFile } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   filterThreadStorageFiles,

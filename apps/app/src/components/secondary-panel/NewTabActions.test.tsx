@@ -7,7 +7,7 @@ import {
   setPluginLogoUrls,
   resetPluginLogoStoreForTest,
 } from "@/lib/plugin-logos";
-import { COMPACT_VIEWPORT_QUERY } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { COMPACT_VIEWPORT_QUERY } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import type { PluginPanelActionEntry } from "@/components/plugin/PluginPanelActions";
 import { setCompactSidebarDrawerShowing } from "@/components/ui/sidebar-mobile-drawer-visibility";
 import {
@@ -205,7 +205,7 @@ describe("NewTabActions", () => {
     { shape: "a non-string entry", stored: ["side-chat", 7] },
   ])("uses the default order after stored data has $shape", ({ stored }) => {
     window.localStorage.setItem(
-      "bb.newTab.actionOrder",
+      "sandy.newTab.actionOrder",
       JSON.stringify(stored),
     );
     const store = createStore();

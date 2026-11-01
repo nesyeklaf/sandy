@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/react";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { compile } from "tailwindcss";
 import { afterEach, expect, it } from "vitest";
 import { Sidebar, SidebarProvider } from "./sidebar";

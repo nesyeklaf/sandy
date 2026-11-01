@@ -6,18 +6,18 @@ import {
 } from "../src/index.js";
 import { templateDefinitions } from "../src/generated/templates.generated.js";
 
-describe("@bb/templates", () => {
+describe("@sandy/templates", () => {
   it("documents project creation machine routing", () => {
-    const guide = renderTemplate("bbGuideProjects", {});
+    const guide = renderTemplate("sandyGuideProjects", {});
 
-    expect(guide).toContain("bb project create --name");
+    expect(guide).toContain("sandy project create --name");
     expect(guide).toContain("--machine <id-or-name>");
     expect(guide).toContain("--host <id-or-name>");
     expect(guide).toContain("local CLI machine fallback");
   });
 
   it("documents project-aware thread references", () => {
-    const guide = renderTemplate("bbGuideThreadInspection", {});
+    const guide = renderTemplate("sandyGuideThreadInspection", {});
 
     expect(guide).toContain("@thread:thr_abc123");
     expect(guide).toContain("do not construct thread URLs manually");
@@ -31,7 +31,7 @@ describe("@bb/templates", () => {
 
     expect(rendered).toBe(
       [
-        "[bb message from thread:thr_sender]",
+        "[sandy message from thread:thr_sender]",
         "",
         "Please check the failing test.",
       ].join("\n"),
@@ -49,7 +49,7 @@ describe("@bb/templates", () => {
 
     expect(rendered).toBe(
       [
-        "[bb system]",
+        "[sandy system]",
         "",
         "@thread:thr_child needs help.",
         "Blocked on command approval:",
@@ -67,7 +67,7 @@ describe("@bb/templates", () => {
       }),
     ).toBe(
       [
-        "[bb system]",
+        "[sandy system]",
         "",
         "@thread:thr_child is now a child of this thread.",
       ].join("\n"),
@@ -78,7 +78,7 @@ describe("@bb/templates", () => {
       }),
     ).toBe(
       [
-        "[bb system]",
+        "[sandy system]",
         "",
         "@thread:thr_child is no longer a child of this thread.",
       ].join("\n"),

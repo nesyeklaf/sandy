@@ -1,8 +1,8 @@
 param([Parameter(Mandatory)][ValidateSet('create', 'mount', 'detach')][string]$Operation)
 
 $ErrorActionPreference = 'Stop'
-$disk = Join-Path $env:RUNNER_TEMP 'bb-dependencies.vhdx'
-$script = Join-Path $env:RUNNER_TEMP 'bb-dependency-disk.txt'
+$disk = Join-Path $env:RUNNER_TEMP 'sandy-dependencies.vhdx'
+$script = Join-Path $env:RUNNER_TEMP 'sandy-dependency-disk.txt'
 
 function Invoke-DiskPart([string[]]$Commands) {
   $Commands | Set-Content $script
@@ -33,7 +33,7 @@ try {
       "select vdisk file=`"$disk`"",
       'attach vdisk',
       'create partition primary',
-      'format fs=ntfs quick label=bb-dependencies'
+      'format fs=ntfs quick label=sandy-dependencies'
     )
   } else {
     Mount-DiskImage -ImagePath $disk -NoDriveLetter

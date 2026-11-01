@@ -11,7 +11,7 @@ import { initializeFavicon } from "./lib/favicon-color-preference";
 import { installForeignDomMutationGuard } from "./lib/foreign-dom-mutation-guard";
 import { installAppQueryClientBrowserEvents } from "./lib/query-client";
 import { appQueryClient } from "./lib/app-query-client";
-import { applyAppFrameGeometry, getBbDesktopInfo } from "./lib/bb-desktop";
+import { applyAppFrameGeometry, getSandyDesktopInfo } from "./lib/sandy-desktop";
 import { applyCachedAppThemeCss } from "./lib/themes";
 import { installStaleChunkRecovery } from "./lib/stale-chunk-recovery";
 import {
@@ -39,7 +39,7 @@ installAppQueryClientBrowserEvents(appQueryClient);
 initializePreferredTheme();
 applyCachedAppThemeCss();
 initializeFavicon();
-applyAppFrameGeometry(document.documentElement, getBbDesktopInfo());
+applyAppFrameGeometry(document.documentElement, getSandyDesktopInfo());
 if (typeof CSS.registerProperty === "function") {
   moveStylesheetPropertiesToRegistry(document.styleSheets, CSS);
 }
@@ -55,7 +55,7 @@ createRoot(document.getElementById("root")!, {
   },
   onUncaughtError: (error, errorInfo) => {
     console.error(
-      "[bb] uncaught render error — the app root was torn down",
+      "[sandy] uncaught render error — the app root was torn down",
       error,
       errorInfo.componentStack,
     );

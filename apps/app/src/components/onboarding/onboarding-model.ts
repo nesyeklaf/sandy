@@ -1,7 +1,7 @@
 import type {
   HostDiscoveredRepo,
   SystemProviderState,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 export type OnboardingStepId = "agent" | "projects" | "plugins" | "devices";
 
@@ -15,7 +15,7 @@ export const ONBOARDING_STEPS: readonly {
   { id: "devices", label: "Devices" },
 ];
 
-export const ONBOARDING_PLUGIN_MARKETPLACE = "bb-official";
+export const ONBOARDING_PLUGIN_MARKETPLACE = "sandy-official";
 
 export const ONBOARDING_PLUGINS: readonly {
   entryId: string;
@@ -24,7 +24,7 @@ export const ONBOARDING_PLUGINS: readonly {
   { entryId: "browser-automation", pluginId: "browser-automation" },
   { entryId: "workflows", pluginId: "workflows" },
   { entryId: "monaco-editor", pluginId: "monaco-editor" },
-  { entryId: "prompt-library", pluginId: "bb--prompt-library" },
+  { entryId: "prompt-library", pluginId: "sandy--prompt-library" },
   { entryId: "agent-annotations", pluginId: "agent-annotations" },
   { entryId: "ask-user-question", pluginId: "ask-user-question" },
 ];

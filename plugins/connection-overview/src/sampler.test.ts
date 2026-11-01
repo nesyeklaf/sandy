@@ -107,8 +107,8 @@ describe("createSampler", () => {
         13: stat(13, 10, "node-MainThread"),
       },
       cmdlines: {
-        12: "/usr/bin/node\0--use-system-ca\0/opt/bb-app/host-daemon/dist/bb-provider-bridge-worker.mjs\0/plugins/provider-codex/host.js\0",
-        13: "/usr/bin/node\0/opt/bb-app/host-daemon/dist/daemon-bundle.mjs\0",
+        12: "/usr/bin/node\0--use-system-ca\0/opt/sandy-app/host-daemon/dist/sandy-provider-bridge-worker.mjs\0/plugins/provider-codex/host.js\0",
+        13: "/usr/bin/node\0/opt/sandy-app/host-daemon/dist/daemon-bundle.mjs\0",
       },
     };
     const sampler = createSampler({
@@ -120,7 +120,7 @@ describe("createSampler", () => {
     await sampler.tick();
     const reply = sampler.read({ generation: null, cursor: 0, gapCursor: 0 });
     expect(reply.rows.map((row) => [row.pid, row.comm]).sort()).toEqual([
-      [12, "bb-provider-bridge"],
+      [12, "sandy-provider-bridge"],
       [13, "node-MainThread"],
     ]);
   });

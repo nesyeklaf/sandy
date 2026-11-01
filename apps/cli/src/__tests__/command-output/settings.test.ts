@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defaultAppSettings, defaultExperiments } from "@bb/domain";
+import { defaultAppSettings, defaultExperiments } from "@sandy/domain";
 import {
   collectLogLines,
   collectLogPayloads,
@@ -10,7 +10,7 @@ import {
 import type { CommandRegistrar } from "../helpers/command-output-harness.js";
 import { registerSettingsCommands } from "../../commands/settings.js";
 
-describe("bb settings commands", () => {
+describe("sandy settings commands", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -464,9 +464,9 @@ describe("bb settings commands", () => {
     });
   });
 
-  it("shows, installs, and removes the bb CLI for use outside bb", async () => {
+  it("shows, installs, and removes the sandy CLI for use outside sandy", async () => {
     const install = vi.fn(async () => ({
-      installedPath: "/home/me/.local/bin/bb",
+      installedPath: "/home/me/.local/bin/sandy",
       onPath: true,
       shadowedBy: null,
       supported: true,
@@ -481,7 +481,7 @@ describe("bb settings commands", () => {
       "v1.system.cli-command.$get": vi.fn(async () => ({
         installedPath: null,
         onPath: false,
-        shadowedBy: { path: "/usr/local/bin/bb", source: "other" },
+        shadowedBy: { path: "/usr/local/bin/sandy", source: "other" },
         supported: true,
       })),
       "v1.system.cli-command.install.$post": install,
@@ -495,9 +495,9 @@ describe("bb settings commands", () => {
     expect(install).toHaveBeenCalledTimes(1);
     expect(remove).toHaveBeenCalledTimes(1);
     expect(collectLogLines(vi.mocked(console.log))).toEqual([
-      "The bb CLI is not installed for use outside bb. Another bb at /usr/local/bin/bb comes first on your PATH.",
-      "The bb CLI is installed at /home/me/.local/bin/bb for use outside bb.",
-      "Removed the bb CLI from your PATH.",
+      "The sandy CLI is not installed for use outside sandy. Another sandy at /usr/local/bin/sandy comes first on your PATH.",
+      "The sandy CLI is installed at /home/me/.local/bin/sandy for use outside sandy.",
+      "Removed the sandy CLI from your PATH.",
     ]);
   });
 

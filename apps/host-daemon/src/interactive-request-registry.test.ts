@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import type {
   PendingInteractionCreate,
   PendingInteractionResolution,
-} from "@bb/domain";
-import type { HostDaemonInteractiveRequestResponse } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/domain";
+import type { HostDaemonInteractiveRequestResponse } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import {
   InteractiveRequestRegistry,
   InteractiveRequestRegistryError,

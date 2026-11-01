@@ -11,7 +11,7 @@ import {
   projectAttachmentThreads,
   threads,
   setQueuedThreadMessageGroupBoundary,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   PERSONAL_PROJECT_ID,
   encodeClientTurnRequestIdNumber,
@@ -21,14 +21,14 @@ import {
   type ClientTurnRequestId,
   type EnvironmentProviderSelection,
   type PromptInput,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   threadResponseSchema,
   threadTimelineResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { eq } from "drizzle-orm";
-import { hostDaemonCommandSchema } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { hostDaemonCommandSchema } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { storeAttachment } from "../../src/services/projects/attachments.js";
@@ -1722,7 +1722,7 @@ describe("fork branch point and inherited history", () => {
       expect(await readJson(tip)).toMatchObject({
         code: "fork_source_session_unavailable",
         message:
-          "Cannot fork: another thread announced the source thread's provider session at the same moment, so bb cannot tell whose it is",
+          "Cannot fork: another thread announced the source thread's provider session at the same moment, so sandy cannot tell whose it is",
       });
       expect(listQueuedCommands(harness, "thread.start")).toHaveLength(0);
     });

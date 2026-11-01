@@ -1,10 +1,10 @@
-import { fuzzyMatchText } from "@bb/fuzzy-match";
-import { PERSONAL_PROJECT_ID, type Thread } from "@bb/domain";
+import { fuzzyMatchText } from "@sandy/fuzzy-match";
+import { PERSONAL_PROJECT_ID, type Thread } from "@sandy/domain";
 import type {
   PromptMentionSuggestion,
   ThreadMentionRelation,
-} from "@bb/client-core";
-import { compareCodepoint, mentionIdentityMatchRank } from "@bb/client-core";
+} from "@sandy/client-core";
+import { compareCodepoint, mentionIdentityMatchRank } from "@sandy/client-core";
 
 type ThreadMentionSuggestion = Extract<
   PromptMentionSuggestion,

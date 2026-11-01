@@ -12,7 +12,7 @@ function pullRequest(overrides: Partial<PullRequest> = {}): PullRequest {
   return {
     number: 42,
     title: "Change",
-    url: "https://github.com/acme/bb/pull/42",
+    url: "https://github.com/acme/sandy/pull/42",
     state: "open",
     baseRefName: "main",
     headRefName: "change",

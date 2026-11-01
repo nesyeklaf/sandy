@@ -5,7 +5,7 @@ import type {
   ComposerMention,
   ComposerSelection,
   PluginComposerApi,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   appendComposerDraft,
   createComposerHandleBinding,
@@ -14,22 +14,22 @@ import {
   type ComposerHandleBinding,
   type ComposerHandleController,
   type ComposerHandleTarget,
-} from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import {
   permissionModeSchema,
   reasoningLevelSchema,
   serviceTierSchema,
-} from "@bb/domain";
-import { createThreadEnvironmentArgsSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { createThreadEnvironmentArgsSchema } from "@sandy/server-contract";
 import {
   appendQuoteAndAttachmentsToDraft,
   composerMentionFromPromptTextMention,
   promptMentionResourceFromComposerMention,
   promptTextMentionFromComposerMention,
   type PromptDraftState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
-import { serializedTextForPromptMentionResource } from "@bb/client-core";
+import { serializedTextForPromptMentionResource } from "@sandy/client-core";
 import { subscribeComposerSubmitted } from "./composer-submissions";
 import {
   getComposerEditorBridge,

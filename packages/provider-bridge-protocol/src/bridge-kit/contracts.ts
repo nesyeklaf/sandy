@@ -1,7 +1,7 @@
 import type {
   PendingInteractionPayload,
   PendingInteractionResolution,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export interface ProviderRequestCommandPlan {
   kind: "request";

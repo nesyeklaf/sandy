@@ -1,4 +1,4 @@
-import { resolveCurrentDevProcessEnv } from "@bb/config/runtime";
+import { resolveCurrentDevProcessEnv } from "@sandy/config/runtime";
 import { runScriptProcess } from "../lib/process-helpers.js";
 import { repoRoot, runMainIfEntrypoint } from "../lib/script-entry.js";
 
@@ -17,9 +17,9 @@ export function resolveCliExecution(
   let args = ["apps/cli/dist/index.js", ...forwardedArgs];
   if (process.env.NODE_ENV !== "production") {
     const devEnv = resolveCurrentDevProcessEnv(repoRoot, process.env);
-    env.BB_SERVER_URL = process.env.BB_SERVER_URL ?? devEnv.BB_SERVER_URL;
-    env.BB_HOST_DAEMON_PORT =
-      process.env.BB_HOST_DAEMON_PORT ?? devEnv.BB_HOST_DAEMON_PORT;
+    env.SANDY_SERVER_URL = process.env.SANDY_SERVER_URL ?? devEnv.SANDY_SERVER_URL;
+    env.SANDY_HOST_DAEMON_PORT =
+      process.env.SANDY_HOST_DAEMON_PORT ?? devEnv.SANDY_HOST_DAEMON_PORT;
     args = [
       "--conditions=source",
       "--import",

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import type { Label, Task, TaskThread } from "../../shared/contract.js";
 import {
   makeTask,
@@ -22,7 +22,7 @@ const project = {
   nextTaskNumber: 9,
   color: "blue",
   folderId: null,
-  linkedBbProjectId: null,
+  linkedSandyProjectId: null,
   createdAt: "2026-07-15T00:00:00.000Z",
 };
 

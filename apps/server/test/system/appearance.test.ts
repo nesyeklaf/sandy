@@ -1,14 +1,14 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { getStoredFaviconColor, getStoredThemeId } from "@bb/db";
+import { getStoredFaviconColor, getStoredThemeId } from "@sandy/db";
 import {
   appThemeSchema,
   builtInPaletteCodeThemes,
   defaultAppTheme,
   formatPluginThemeId,
   resolveCodeTheme,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 function appearanceForPalette(
   themeId: keyof typeof builtInPaletteCodeThemes,
@@ -22,9 +22,11 @@ function appearanceForPalette(
   };
 }
 import {
+  createThemeResponseSchema,
   themeCatalogResponseSchema,
   systemConfigResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
+import { readFile } from "node:fs/promises";
 import { readJson } from "../helpers/json.js";
 import { withTestHarness } from "../helpers/test-app.js";
 
@@ -198,15 +200,15 @@ describe("appearance settings", () => {
       const root = join(
         harness.config.dataDir,
         "fixtures",
-        "bb-plugin-palette",
+        "sandy-plugin-palette",
       );
       await mkdir(join(root, "themes"), { recursive: true });
       await writeFile(
         join(root, "package.json"),
         JSON.stringify({
-          name: "bb-plugin-palette",
+          name: "sandy-plugin-palette",
           version: "0.1.0",
-          bb: {
+          sandy: {
             name: "Palette fixture",
             description: "Plugin palette fixture.",
             branding: { icon: "Zap" },
@@ -344,11 +346,65 @@ describe("appearance settings", () => {
         themeId: "ocean",
         customCss: ":root {}",
         resolvedCodeTheme: {
-          dark: "bb:ocean:dark",
+          dark: "sandy:ocean:dark",
           light: "pierre-light",
-          files: { "bb:ocean:dark": { ...darkTheme, name: "bb:ocean:dark" } },
+          files: { "sandy:ocean:dark": { ...darkTheme, name: "sandy:ocean:dark" } },
         },
       });
+    });
+  });
+});
+
+describe("theme kit", () => {
+  const kit = {
+    light: { canvas: "oklch(0.93 0.025 85)", ink: "oklch(0.3 0.03 65)", accent: "oklch(0.5 0.12 40)" },
+    dark: { canvas: "oklch(0.26 0.004 260)", ink: "oklch(0.86 0.005 260)", accent: "oklch(0.76 0.09 40)" },
+  };
+  function create(harness: { app: { request: (path: string, init: RequestInit) => Response | Promise<Response> } }, body: unknown) {
+    return harness.app.request("/api/v1/settings/themes", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it("writes a generated theme the catalog then lists and can activate", async () => {
+    await withTestHarness(async (harness) => {
+      const response = await create(harness, { name: "terra", kit });
+      expect(response.status).toBe(200);
+      const body = createThemeResponseSchema.parse(await readJson(response));
+      expect(body.issues).toEqual([]);
+      expect(await readFile(body.path, "utf8")).toBe(body.css);
+      const catalog = themeCatalogResponseSchema.parse(
+        await readJson(await harness.app.request("/api/v1/settings/themes")),
+      );
+      expect(catalog.custom).toContain("terra");
+      const put = await harness.app.request("/api/v1/settings/appearance", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ themeId: "terra", faviconColor: "default" }),
+      });
+      expect(put.status).toBe(200);
+    });
+  });
+
+  it("refuses to replace an existing theme unless overwrite is set", async () => {
+    await withTestHarness(async (harness) => {
+      expect((await create(harness, { name: "terra", kit })).status).toBe(200);
+      expect((await create(harness, { name: "terra", kit })).status).toBe(409);
+      expect((await create(harness, { name: "terra", kit, overwrite: true })).status).toBe(200);
+    });
+  });
+
+  it("rejects built-in ids, unreadable colors and CSS-breaking font stacks", async () => {
+    await withTestHarness(async (harness) => {
+      expect((await create(harness, { name: "nord", kit })).status).toBe(400);
+      expect(
+        (await create(harness, { name: "bad", kit: { ...kit, dark: { ...kit.dark, canvas: "tomato" } } })).status,
+      ).toBe(400);
+      expect(
+        (await create(harness, { name: "bad", kit: { ...kit, fonts: { mono: "x; } body { display:none" } } })).status,
+      ).toBe(400);
     });
   });
 });

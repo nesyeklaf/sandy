@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { z } from "zod";
-import { useCopiedFeedback } from "@bb/shared-ui/copy-button";
+import { useCopiedFeedback } from "@sandy/shared-ui/copy-button";
 import { appToast } from "@/components/ui/app-toast";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 import { getNativeShell } from "@/lib/native-shell/native-shell";
 import { buildMessageClipboardHtml } from "./message-clipboard";
 
@@ -64,7 +64,7 @@ export interface ClipboardContent {
 async function writeWithDesktopClipboard(
   content: ClipboardContent,
 ): Promise<boolean> {
-  const desktop = getBbDesktopInfo();
+  const desktop = getSandyDesktopInfo();
   if (desktop?.writeClipboard === undefined) return false;
   try {
     await desktop.writeClipboard(content);

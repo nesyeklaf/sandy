@@ -7,17 +7,17 @@ import {
   type ServiceTier,
   type ThreadParentNotifications,
   type ThreadVisibility,
-} from "@bb/domain";
-import { threadEnvironmentUnavailableApiErrorSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { threadEnvironmentUnavailableApiErrorSchema } from "@sandy/server-contract";
 import { action, CliExitError } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { requireTextInput, TEXT_FILE_HELP_SUFFIX } from "../../text-input.js";
 import {
-  BbHttpError,
+  SandyHttpError,
   type ThreadRetryResult,
   type ThreadSendResult,
-} from "@bb/sdk";
-import type { QueuedMessageWaitingOn } from "@bb/domain";
+} from "@sandy/sdk";
+import type { QueuedMessageWaitingOn } from "@sandy/domain";
 import {
   collectOption,
   confirmDestructiveAction,
@@ -168,7 +168,7 @@ export function registerActionsCommands(
   parent
     .command("update [id]")
     .description("Update a thread")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .option("--title <title>", "Set the thread title")
     .option("--parent-thread <id>", "Set the parent thread id")
@@ -255,7 +255,7 @@ export function registerActionsCommands(
             body.parentNotifications = parentNotifications;
           }
 
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const thread = await sdk.threads.update({ threadId, ...body });
           if (outputJson(opts, thread)) return;
           console.log(`Thread ${thread.id} updated`);
@@ -293,13 +293,13 @@ export function registerActionsCommands(
   parent
     .command("archive [id]")
     .description("Archive a thread")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(
         async (id: string | undefined, opts: ThreadArchiveCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           let archivedThreadIds: string[] = [threadId];
           try {
             const result = await sdk.threads.archive({ threadId });
@@ -336,13 +336,13 @@ export function registerActionsCommands(
   parent
     .command("unarchive [id]")
     .description("Unarchive a thread")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(
         async (id: string | undefined, opts: ThreadUnarchiveCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           await sdk.threads.unarchive({ threadId });
           if (outputJson(opts, { ok: true, threadId })) return;
           console.log(`Thread ${threadId} unarchived`);
@@ -355,7 +355,7 @@ export function registerActionsCommands(
     .description(
       "Restore the workspace of a thread whose environment was destroyed, when its environment provider supports restoring",
     )
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(
@@ -364,7 +364,7 @@ export function registerActionsCommands(
           opts: ThreadRestoreEnvironmentCommandOptions,
         ) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           let thread;
           try {
             thread = await sdk.threads.restoreEnvironment({ threadId });
@@ -389,13 +389,13 @@ export function registerActionsCommands(
     parent
       .command(`${name} [id]`)
       .description(description)
-      .option("--self", "Target the current thread (from BB_THREAD_ID)")
+      .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
       .option("--json", "Print machine-readable JSON output")
       .action(
         action(
           async (id: string | undefined, opts: ThreadPinCommandOptions) => {
             const threadId = requireThreadIdOrSelf(id, opts);
-            const sdk = createCliBbSdk(getUrl());
+            const sdk = createCliSandySdk(getUrl());
             const thread = await sdk.threads[name]({ threadId });
             if (outputJson(opts, thread)) return;
             console.log(`Thread ${thread.id} ${done}`);
@@ -409,7 +409,7 @@ export function registerActionsCommands(
     .description(
       "Replace a thread's title with one generated from its task and latest messages",
     )
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(
@@ -418,7 +418,7 @@ export function registerActionsCommands(
           opts: ThreadRegenerateTitleCommandOptions,
         ) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           let thread;
           try {
             thread = await sdk.threads.experimental_regenerateTitle({
@@ -447,7 +447,7 @@ export function registerActionsCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: ThreadDeleteCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         try {
           const thread = await sdk.threads.get({ threadId: id });
 
@@ -481,7 +481,7 @@ export function registerActionsCommands(
       "--message-file <path>",
       `Read the replacement message from a file; ${TEXT_FILE_HELP_SUFFIX}`,
     )
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option(
       "--expected-request-sequence <sequence>",
       "Edit the message at this event sequence (default: the latest editable message)",
@@ -500,7 +500,7 @@ export function registerActionsCommands(
             inline: opts.message,
             inlineLabel: "--message <text>",
           });
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const expectedRequestSequence =
             opts.expectedRequestSequence === undefined
               ? undefined
@@ -616,7 +616,7 @@ export function registerActionsCommands(
   parent
     .command("retry [id]")
     .description("Retry the failed turn on a thread")
-    .option("--self", "Target the current thread (from BB_THREAD_ID)")
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
     .option(
       "--turn <requestId>",
       "Retry this turn request id specifically; fails when it is not the thread's failed turn",
@@ -631,7 +631,7 @@ export function registerActionsCommands(
       action(
         async (id: string | undefined, opts: ThreadRetryCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const response = await sdk.threads.retry({
             threadId,
             ...(opts.turn === undefined ? {} : { turnRequestId: opts.turn }),
@@ -642,6 +642,44 @@ export function registerActionsCommands(
           });
           if (outputJson(opts, { threadId, ...response })) return;
           console.log(describeThreadRetryOutcome(threadId, response));
+        },
+      ),
+    );
+
+  parent
+    .command("move-directory [id]")
+    .description(
+      "Move an idle thread to another directory on its host, optionally into another project",
+    )
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
+    .requiredOption("--path <dir>", "Absolute path of the target directory")
+    .option(
+      "--project <id>",
+      "Move the thread into this project (default: keep its project)",
+    )
+    .option("--json", "Print machine-readable JSON output")
+    .action(
+      action(
+        async (
+          id: string | undefined,
+          opts: ThreadActionOptions & { path: string; project?: string },
+        ) => {
+          const threadId = requireThreadIdOrSelf(id, opts);
+          const sdk = createCliSandySdk(getUrl());
+          const result =
+            await sdk.threads.experimental_updateEnvironmentDirectory({
+              threadId,
+              path: opts.path,
+              ...(opts.project === undefined
+                ? {}
+                : { projectId: opts.project }),
+            });
+          if (outputJson(opts, { threadId, ...result })) return;
+          console.log(
+            result.changed
+              ? `Thread ${threadId} now runs in ${result.path} (project ${result.projectId})`
+              : `Thread ${threadId} already runs in ${result.path}`,
+          );
         },
       ),
     );
@@ -681,12 +719,12 @@ export function registerActionsCommands(
     parent
       .command(`${name} [id]`)
       .description(description)
-      .option("--self", "Target the current thread (from BB_THREAD_ID)")
+      .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
       .option("--json", "Print machine-readable JSON output")
       .action(
         action(async (id: string | undefined, opts: ThreadActionOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           await sdk.threads[method]({ threadId });
           if (outputJson(opts, { ok: true, threadId })) return;
           console.log(`Thread ${threadId} ${done}`);
@@ -698,7 +736,7 @@ export function registerActionsCommands(
 async function postThreadMessage(
   args: PostThreadMessageArgs,
 ): Promise<PostThreadMessageResult> {
-  const sdk = createCliBbSdk(args.getUrl());
+  const sdk = createCliSandySdk(args.getUrl());
   const input = await uploadClientAttachmentInputs({
     input: buildPromptInputs({
       message: args.message,
@@ -736,11 +774,11 @@ async function postThreadMessage(
 }
 
 async function withRestoreEnvironmentHint(
-  sdk: ReturnType<typeof createCliBbSdk>,
+  sdk: ReturnType<typeof createCliSandySdk>,
   threadId: string,
   error: unknown,
 ): Promise<unknown> {
-  if (!(error instanceof BbHttpError)) return error;
+  if (!(error instanceof SandyHttpError)) return error;
   const parsed = threadEnvironmentUnavailableApiErrorSchema.safeParse(
     error.body,
   );
@@ -751,7 +789,7 @@ async function withRestoreEnvironmentHint(
   return new CliExitError(error.message, 1, {
     code: parsed.data.code,
     hint: canRestoreEnvironment
-      ? `Its workspace was removed. Restore it with \`bb thread restore-environment ${threadId}\`, then send again.`
+      ? `Its workspace was removed. Restore it with \`sandy thread restore-environment ${threadId}\`, then send again.`
       : "Its workspace was removed and its environment provider cannot restore it. Start a new thread to continue.",
   });
 }
@@ -762,7 +800,7 @@ function describeThreadTellOutcome(
 ): string {
   if (response.delivery === "queued") {
     // The server says WHY it is waiting, so the CLI does not have to guess
-    // from the flags it happened to send. `bb thread queue list` shows the
+    // from the flags it happened to send. `sandy thread queue list` shows the
     // same reason for the row afterwards.
     return `Thread ${threadId} message queued (${describeQueueWait(response.queuedMessage)}); it dispatches when that clears`;
   }

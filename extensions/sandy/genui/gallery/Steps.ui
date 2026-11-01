@@ -1,0 +1,8 @@
+Card("Release 3.0", [
+  Steps([
+    {title: "Freeze", detail: "Thursday noon", status: "done"},
+    {title: "QA", detail: "Smoke tests on staging", status: "current"},
+    {title: "Ship", detail: "Then App Store review (1–2 days)"},
+    {title: "Announce"}
+  ])
+])

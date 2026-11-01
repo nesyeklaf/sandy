@@ -2,7 +2,7 @@ import type {
   MachineEnvironmentReplace,
   MachineEnvironmentSet,
   MachineEnvironmentList,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   AppKeybindingOverrides,
   AppSettings,
@@ -11,8 +11,8 @@ import type {
   Experiments,
   UiPreferenceKey,
   UiPreferenceValue,
-} from "@bb/domain";
-import type { ProviderUsageResponse } from "@bb/host-daemon-contract";
+} from "@sandy/domain";
+import type { ProviderUsageResponse } from "@sandy/host-daemon-contract";
 import type {
   ClientErrorReport,
   SetAiServiceSelectionRequest,
@@ -34,8 +34,8 @@ import type {
   TestAiServiceResponse,
   UiPreferenceResponse,
   UiPreferencesResponse,
-} from "@bb/server-contract";
-import { systemVoiceTranscriptionResponseSchema } from "@bb/server-contract";
+} from "@sandy/server-contract";
+import { systemVoiceTranscriptionResponseSchema } from "@sandy/server-contract";
 import {
   readExecutionOptions,
   signalRequestArgs,

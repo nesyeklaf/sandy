@@ -109,8 +109,8 @@ const mainThread = (overrides = {}) =>
     ],
     markers: [
       measure("lab:switch", 99, 106),
-      measure("bb:switch", 100, 106),
-      measure("bb:switch:render", 101, 104),
+      measure("sandy:switch", 100, 106),
+      measure("sandy:switch:render", 101, 104),
     ],
     ...overrides,
   });
@@ -243,11 +243,11 @@ describe("switch windows", () => {
   it("nests phases in their switch and pairs each lab action with the switch it started", () => {
     const timings = [
       { name: "lab:switch", start: 0, end: 50 },
-      { name: "bb:switch", start: 10, end: 60 },
-      { name: "bb:switch:render", start: 20, end: 40 },
+      { name: "sandy:switch", start: 10, end: 60 },
+      { name: "sandy:switch:render", start: 20, end: 40 },
       { name: "lab:switch", start: 100, end: 150 },
-      { name: "bb:switch", start: 300, end: 400 },
-      { name: "bb:switch:render", start: 310, end: 320 },
+      { name: "sandy:switch", start: 300, end: 400 },
+      { name: "sandy:switch:render", start: 310, end: 320 },
     ];
     const switches = switchWindows(timings);
     assert.deepEqual(

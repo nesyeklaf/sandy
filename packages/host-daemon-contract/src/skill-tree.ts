@@ -9,7 +9,7 @@ export function hashSkillTreeFiles(
   files: readonly HostDaemonSkillTreeFile[],
 ): string {
   const hash = createHash("sha256");
-  hash.update("bb-skill-tree-v2");
+  hash.update("sandy-skill-tree-v2");
   for (const file of [...files].sort((left, right) =>
     compareStringsByCodePoint(left.path, right.path),
   )) {

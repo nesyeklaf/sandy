@@ -2,7 +2,7 @@ import type {
   ThreadParentNotifications,
   ThreadStatus,
   ThreadTimelinePendingTodos,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   isThreadTimelineDelta,
   type ProjectResponse,
@@ -10,7 +10,7 @@ import {
   type ThreadResponse,
   type ThreadTimelineResponse,
   type ThreadWithIncludesResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export interface StatusGetArgs {

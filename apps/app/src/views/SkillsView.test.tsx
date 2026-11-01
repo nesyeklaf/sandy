@@ -11,11 +11,11 @@ import {
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { focusManager } from "@tanstack/react-query";
-import type { ProviderInfo } from "@bb/domain";
-import type { SkillSummary } from "@bb/server-contract";
+import type { ProviderInfo } from "@sandy/domain";
+import type { SkillSummary } from "@sandy/server-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
 import { sdk } from "@/lib/sdk";
 import { SkillDetailView } from "../components/tools/SkillDetailView";
 import {
@@ -130,19 +130,19 @@ function renderSkillDetailDialog(
 }
 
 describe("SkillsOverview", () => {
-  it("shows skills from every provider by default with BB Official skills first", () => {
+  it("shows skills from every provider by default with SANDY Official skills first", () => {
     const markup = render({
       skills: [
         makeSkill({ name: "claude-skill", provider: "claude-code" }),
         makeSkill({
           name: "aa-user-skill",
           provider: null,
-          scope: "bb-user",
+          scope: "sandy-user",
         }),
         makeSkill({
           name: "zz-official-skill",
           provider: null,
-          scope: "bb-builtin",
+          scope: "sandy-builtin",
           manageable: false,
         }),
       ],
@@ -152,8 +152,8 @@ describe("SkillsOverview", () => {
     expect(markup).toContain('aria-label="Filters"');
     expect(markup).toContain("Sort");
     expect(markup).not.toContain('role="tab"');
-    expect(markup).toContain("BB Official");
-    expect(markup).toContain("New bb skill");
+    expect(markup).toContain("SANDY Official");
+    expect(markup).toContain("New sandy skill");
     expect(markup).not.toContain('aria-label="Open zz-official-skill"');
     expect(markup.indexOf("zz-official-skill")).toBeLessThan(
       markup.indexOf("aa-user-skill"),
@@ -171,7 +171,7 @@ describe("SkillsOverview", () => {
           makeSkill({
             name: "official-skill",
             provider: null,
-            scope: "bb-builtin",
+            scope: "sandy-builtin",
             manageable: false,
           }),
           makeSkill({
@@ -184,7 +184,7 @@ describe("SkillsOverview", () => {
           makeSkill({
             name: "user-skill",
             provider: null,
-            scope: "bb-user",
+            scope: "sandy-user",
           }),
         ]}
         isLoading={false}
@@ -206,7 +206,7 @@ describe("SkillsOverview", () => {
     fireEvent.pointerDown(typeTrigger);
     expect(screen.getByText("Type")).toBeTruthy();
     expect(screen.queryByRole("menuitemcheckbox", { name: "All" })).toBeNull();
-    for (const name of ["BB Official", "Included in plugin", "User"]) {
+    for (const name of ["SANDY Official", "Included in plugin", "User"]) {
       expect(
         screen
           .getByRole("menuitemcheckbox", { name })
@@ -220,7 +220,7 @@ describe("SkillsOverview", () => {
     expect(await screen.findByText("automations")).toBeTruthy();
     expect(
       screen.getByLabelText(
-        "automations is included with Automations (bb plugin)",
+        "automations is included with Automations (sandy plugin)",
       ).textContent,
     ).toBe("Included");
     expect(screen.queryByText("official-skill")).toBeNull();
@@ -253,7 +253,7 @@ describe("SkillsOverview", () => {
           makeSkill({
             name: "official-skill",
             provider: null,
-            scope: "bb-builtin",
+            scope: "sandy-builtin",
             manageable: false,
           }),
         ]}
@@ -284,7 +284,7 @@ describe("SkillsOverview", () => {
     expect(screen.queryByText("codex-authored")).toBeNull();
   });
 
-  it("toggles BB Official independently from Included in plugin", async () => {
+  it("toggles SANDY Official independently from Included in plugin", async () => {
     renderDom(
       <SkillsOverview
         providerRoster={NO_PROVIDER_ROSTER}
@@ -292,7 +292,7 @@ describe("SkillsOverview", () => {
           makeSkill({
             name: "official-skill",
             provider: null,
-            scope: "bb-builtin",
+            scope: "sandy-builtin",
             manageable: false,
           }),
           makeSkill({
@@ -319,7 +319,7 @@ describe("SkillsOverview", () => {
     expect(screen.queryByText("official-skill")).toBeNull();
 
     fireEvent.click(
-      screen.getByRole("menuitemcheckbox", { name: "BB Official" }),
+      screen.getByRole("menuitemcheckbox", { name: "SANDY Official" }),
     );
     expect(await screen.findByText("official-skill")).toBeTruthy();
     expect(screen.getByText("automations")).toBeTruthy();
@@ -328,7 +328,7 @@ describe("SkillsOverview", () => {
       screen.getByRole("menuitemcheckbox", { name: "Included in plugin" }),
     );
     fireEvent.click(
-      screen.getByRole("menuitemcheckbox", { name: "BB Official" }),
+      screen.getByRole("menuitemcheckbox", { name: "SANDY Official" }),
     );
     expect(await screen.findByText("official-skill")).toBeTruthy();
     expect(screen.getByText("automations")).toBeTruthy();
@@ -344,7 +344,7 @@ describe("SkillsOverview", () => {
           makeSkill({
             name: "official-skill",
             provider: null,
-            scope: "bb-builtin",
+            scope: "sandy-builtin",
             manageable: false,
           }),
         ]}
@@ -457,12 +457,12 @@ describe("SkillsOverview", () => {
     ).not.toBeNull();
     expect(
       screen
-        .getByRole("menuitemcheckbox", { name: "bb" })
+        .getByRole("menuitemcheckbox", { name: "sandy" })
         .getAttribute("aria-disabled"),
     ).toBe("true");
   });
 
-  it("shows provider skills when the library has no bb skills", async () => {
+  it("shows provider skills when the library has no sandy skills", async () => {
     renderDom(
       <SkillsOverview
         providerRoster={NO_PROVIDER_ROSTER}
@@ -485,7 +485,7 @@ describe("SkillsOverview", () => {
     fireEvent.pointerDown(screen.getByRole("button", { name: /^Filters/ }));
     expect(
       screen
-        .getByRole("menuitemcheckbox", { name: "bb" })
+        .getByRole("menuitemcheckbox", { name: "sandy" })
         .getAttribute("aria-checked"),
     ).toBe("false");
   });
@@ -494,9 +494,9 @@ describe("SkillsOverview", () => {
     const initialSkills = [
       makeSkill({
         id: `skill_${"b".repeat(64)}`,
-        name: "bb-skill",
+        name: "sandy-skill",
         provider: null,
-        scope: "bb-user",
+        scope: "sandy-user",
       }),
       makeSkill({ name: "claude-skill", provider: "claude-code" }),
     ];
@@ -519,7 +519,7 @@ describe("SkillsOverview", () => {
 
     await waitFor(() => {
       expect(screen.getByText("claude-skill")).toBeTruthy();
-      expect(screen.queryByText("bb-skill")).toBeNull();
+      expect(screen.queryByText("sandy-skill")).toBeNull();
       expect(
         screen.getByRole("button", { name: /Provider: Claude Code/ }),
       ).toBeTruthy();
@@ -532,9 +532,9 @@ describe("SkillsOverview", () => {
           ...initialSkills,
           makeSkill({
             id: `skill_${"c".repeat(64)}`,
-            name: "new-bb-skill",
+            name: "new-sandy-skill",
             provider: null,
-            scope: "bb-user",
+            scope: "sandy-user",
           }),
         ]}
         isLoading={false}
@@ -545,23 +545,23 @@ describe("SkillsOverview", () => {
     );
 
     expect(screen.getByText("claude-skill")).toBeTruthy();
-    expect(screen.queryByText("new-bb-skill")).toBeNull();
+    expect(screen.queryByText("new-sandy-skill")).toBeNull();
   });
 
   it("keeps edit and delete actions in detail rather than overview rows", () => {
     const markup = render({
       skills: [
         makeSkill({
-          name: "bb-skill",
+          name: "sandy-skill",
           provider: null,
-          scope: "bb-user",
+          scope: "sandy-user",
           manageable: true,
         }),
         makeSkill({ name: "provider-skill" }),
       ],
     });
-    expect(markup).not.toContain('aria-label="Edit bb-skill"');
-    expect(markup).not.toContain('aria-label="Delete bb-skill"');
+    expect(markup).not.toContain('aria-label="Edit sandy-skill"');
+    expect(markup).not.toContain('aria-label="Delete sandy-skill"');
     expect(markup).not.toContain('aria-label="Edit provider-skill"');
     expect(markup).not.toContain('aria-label="Delete provider-skill"');
   });
@@ -573,7 +573,7 @@ describe("SkillsOverview", () => {
       renderDom(
         <SkillsOverview
           providerRoster={NO_PROVIDER_ROSTER}
-          skills={[makeSkill({ provider: null, scope: "bb-user" })]}
+          skills={[makeSkill({ provider: null, scope: "sandy-user" })]}
           isLoading={false}
           hasError={false}
           onCreateSkill={() => {}}
@@ -606,7 +606,7 @@ describe("SkillsLibrary library detail routing", () => {
     renderLibrarySkillRoute();
 
     expect(screen.getByText("Loading skill")).toBeTruthy();
-    expect(screen.queryByText("New bb skill")).toBeNull();
+    expect(screen.queryByText("New sandy skill")).toBeNull();
   });
 
   it("shows a retryable detail error when the skill library fails to load", async () => {
@@ -618,7 +618,7 @@ describe("SkillsLibrary library detail routing", () => {
 
     expect(await screen.findByText("Couldn't load skill.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
-    expect(screen.queryByText("New bb skill")).toBeNull();
+    expect(screen.queryByText("New sandy skill")).toBeNull();
   });
 
   it("shows not found on an unknown library skill detail route", async () => {
@@ -628,27 +628,27 @@ describe("SkillsLibrary library detail routing", () => {
 
     const notFound = await screen.findByText("Skill not found.");
     expect(notFound.closest("[data-resource-detail-state]")).not.toBeNull();
-    expect(screen.queryByText("New bb skill")).toBeNull();
+    expect(screen.queryByText("New sandy skill")).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
 describe("SkillDetailDialogView", () => {
-  it("presents a built-in skill as BB Official without an actions menu", async () => {
+  it("presents a built-in skill as SANDY Official without an actions menu", async () => {
     const skill = makeSkill({
-      name: "bb-cli",
+      name: "sandy-cli",
       provider: null,
-      scope: "bb-builtin",
+      scope: "sandy-builtin",
       manageable: false,
     });
     renderSkillDetailDialog(skill);
 
-    const official = screen.getByLabelText("bb-cli is BB Official");
-    expect(official.textContent).toBe("BB Official");
-    expect(screen.queryByRole("button", { name: "bb-cli actions" })).toBeNull();
+    const official = screen.getByLabelText("sandy-cli is SANDY Official");
+    expect(official.textContent).toBe("SANDY Official");
+    expect(screen.queryByRole("button", { name: "sandy-cli actions" })).toBeNull();
     fireEvent.pointerMove(official);
     expect((await screen.findByRole("tooltip")).textContent).toBe(
-      "Ships with bb",
+      "Ships with sandy",
     );
   });
 
@@ -674,9 +674,9 @@ describe("SkillDetailDialogView", () => {
         manageable: false,
       }),
       accessibleLabel:
-        "plugin-notes is included with Skill catalog fixture (bb plugin)",
+        "plugin-notes is included with Skill catalog fixture (sandy plugin)",
       tooltipName: "Skill catalog fixture plugin.",
-      providerIcon: "bb",
+      providerIcon: "sandy",
     },
   ])("presents $skill.name as plugin-provided", async (example) => {
     renderSkillDetailDialog(example.skill);
@@ -725,11 +725,11 @@ describe("SkillDetailDialogView", () => {
 
   it("uses a hoverable copy target and delegates editing to the thread flow", () => {
     const skill = makeSkill({
-      name: "bb-skill",
+      name: "sandy-skill",
       provider: null,
-      scope: "bb-user",
+      scope: "sandy-user",
       manageable: true,
-      filePath: "/home/u/.bb/skills/bb-skill/SKILL.md",
+      filePath: "/home/u/.sandy/skills/sandy-skill/SKILL.md",
     });
     const onEdit = vi.fn();
     renderSkillDetailDialog(skill, {
@@ -739,15 +739,15 @@ describe("SkillDetailDialogView", () => {
     });
 
     screen.getByRole("button", {
-      name: "Copy skill path: /home/u/.bb/skills/bb-skill",
+      name: "Copy skill path: /home/u/.sandy/skills/sandy-skill",
     });
-    expect(screen.getByText("~/.bb/skills/bb-skill")).toBeTruthy();
-    expect(screen.queryByText("BB Official", { exact: true })).toBeNull();
+    expect(screen.getByText("~/.sandy/skills/sandy-skill")).toBeTruthy();
+    expect(screen.queryByText("SANDY Official", { exact: true })).toBeNull();
     expect(screen.queryByText("Included", { exact: true })).toBeNull();
     expect(screen.queryByText("Imported", { exact: true })).toBeNull();
     expect(screen.queryByText("Editable", { exact: true })).toBeNull();
     fireEvent.pointerDown(
-      screen.getByRole("button", { name: "bb-skill actions" }),
+      screen.getByRole("button", { name: "sandy-skill actions" }),
     );
     fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(onEdit).toHaveBeenCalledOnce();

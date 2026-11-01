@@ -1,6 +1,6 @@
 import type {
   HostDaemonOnlineRpcRequestMessage,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   registerHostRpcResponder,
   type HostRpcHandlerResult,
@@ -13,7 +13,7 @@ import {
 import type {
   ThreadGitDiffResponse,
   WorkspaceStatus,
-} from "bb-plugin-bb--git/contract";
+} from "sandy-plugin-sandy--git/contract";
 
 export interface GitHostReads {
   status: WorkspaceStatus;
@@ -36,7 +36,7 @@ export async function installGitPluginWithHost(
     sessionId: args.sessionId,
     handle(request) {
       const { command } = request;
-      if (command.type !== "plugin.host.call" || command.pluginId !== "bb--git") {
+      if (command.type !== "plugin.host.call" || command.pluginId !== "sandy--git") {
         return args.handleOther(request);
       }
       switch (command.method) {

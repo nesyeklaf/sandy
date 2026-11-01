@@ -6,23 +6,23 @@ import {
   createAgentRuntime,
   type AgentRuntime,
   type AgentRuntimeProcessExitInfo,
-} from "@bb/agent-runtime";
+} from "@sandy/agent-runtime";
 import {
   createScriptedEchoRequestRecord,
   type ScriptedEchoLaunchScript,
   type ScriptedEchoRequestRecord,
-} from "@bb/agent-runtime/test";
-import { buildPluginHost, resolvePluginBuildToolchain } from "@bb/plugin-build";
+} from "@sandy/agent-runtime/test";
+import { buildPluginHost, resolvePluginBuildToolchain } from "@sandy/plugin-build";
 import {
   encodeClientTurnRequestIdNumber,
   type ClientTurnRequestId,
   type ThreadEvent,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonBridgeLaunch,
   HostDaemonOnlineRpcResponseMessage,
-} from "@bb/host-daemon-contract";
-import { makeTempDir } from "@bb/test-helpers";
+} from "@sandy/host-daemon-contract";
+import { makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { dispatchCommand } from "../../src/command-dispatch.js";
 import {
@@ -105,7 +105,7 @@ function buildScriptedEchoArtifact(): Promise<{
       new URL("../../../../tests/scripted-echo-provider", import.meta.url),
     );
     const toolchain = await resolvePluginBuildToolchain(
-      path.join(os.tmpdir(), "bb-plugin-build-toolchain"),
+      path.join(os.tmpdir(), "sandy-plugin-build-toolchain"),
     );
     const build = await buildPluginHost(rootDir, "0.0.0-test", toolchain);
     return {
@@ -144,7 +144,7 @@ async function scriptedEchoDispatchLaunch(
 }
 
 async function createRaceHarness(): Promise<RaceHarness> {
-  const workspacePath = await makeTempDir("bb-stop-race-workspace-");
+  const workspacePath = await makeTempDir("sandy-stop-race-workspace-");
   const events: ThreadEvent[] = [];
   const record = createScriptedEchoRequestRecord();
   let resolveUnexpectedProcessExit: (
@@ -178,7 +178,7 @@ async function createRaceHarness(): Promise<RaceHarness> {
   managers.push(manager);
 
   const artifact = await buildScriptedEchoArtifact();
-  const dataDir = await makeTempDir("bb-stop-race-daemon-data-");
+  const dataDir = await makeTempDir("sandy-stop-race-daemon-data-");
   return {
     dispatchOptions: makeDispatchOptions({
       runtimeManager: manager,
@@ -447,14 +447,14 @@ describe("thread.stop race semantics", () => {
   it("treats the second of two racing stops as an idempotent no-op", async () => {
     const harness = await createRaceHarness();
     const router = new CommandRouter({
-      dataDir: "/tmp/bb-stop-race-data",
+      dataDir: "/tmp/sandy-stop-race-data",
       eventSink: noopEventSink,
       fetchProjectAttachment: unexpectedProjectAttachmentFetch,
       fetchPluginHostArtifact: fetchDispatchTestArtifact,
       ...unexpectedProviderMaintenance,
       logger: { debug: () => undefined, warn: () => undefined },
       runtimeManager: harness.manager,
-      threadStorageRootPath: "/tmp/bb-stop-race-thread-storage",
+      threadStorageRootPath: "/tmp/sandy-stop-race-thread-storage",
     });
     await dispatchCommand(
       threadStartCommand(harness, {

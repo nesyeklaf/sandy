@@ -9,7 +9,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import type { ComposerView } from "@get-bb/plugin-sdk";
+import type { ComposerView } from "@sandy-sdk/plugin-sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resetPluginSlotStoreForTest,
@@ -168,12 +168,12 @@ describe("ComposerActionsSlot overflow", () => {
     expect(inlinePluginIds()).toEqual(["alpha", "beta", "delta"]);
   });
 
-  it("preserves BB-owned actions after plugin contributions", () => {
+  it("preserves SANDY-owned actions after plugin contributions", () => {
     registerPlugin("alpha", ["Plugin action"]);
 
     const view = render(
       <ComposerActionsSlot view={VIEW}>
-        <button type="button">BB action</button>
+        <button type="button">SANDY action</button>
       </ComposerActionsSlot>,
     );
 
@@ -181,6 +181,6 @@ describe("ComposerActionsSlot overflow", () => {
       Array.from(view.container.querySelectorAll("button"), (element) =>
         element.textContent?.trim(),
       ),
-    ).toEqual(["Plugin action", "BB action"]);
+    ).toEqual(["Plugin action", "SANDY action"]);
   });
 });

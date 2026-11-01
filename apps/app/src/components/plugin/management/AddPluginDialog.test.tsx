@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import type { PluginInstallJob } from "@bb/server-contract";
+import type { PluginInstallJob } from "@sandy/server-contract";
 import { pluginInstallJobsQueryKey } from "@/hooks/queries/query-keys";
 import { AddPluginDialog } from "./AddPluginDialog";
 
@@ -13,11 +13,11 @@ interface RecordedRequest {
 }
 
 function installPlanFor(url: string): unknown {
-  const params = new URL(url, "https://bb.test").searchParams;
+  const params = new URL(url, "https://sandy.test").searchParams;
   const entryId = params.get("entryId") ?? "";
-  const marketplace = params.get("marketplace") ?? "bb-community";
+  const marketplace = params.get("marketplace") ?? "sandy-community";
   const official =
-    marketplace === "bb-community" || marketplace === "bb-official";
+    marketplace === "sandy-community" || marketplace === "sandy-official";
   return {
     kind: "marketplace",
     entryId,
@@ -25,16 +25,16 @@ function installPlanFor(url: string): unknown {
     displayName: entryId,
     marketplace,
     marketplaceDisplayName:
-      marketplace === "bb-official"
-        ? "BB Official"
-        : marketplace === "bb-community"
-          ? "BB Community"
+      marketplace === "sandy-official"
+        ? "SANDY Official"
+        : marketplace === "sandy-community"
+          ? "SANDY Community"
           : "Acme Plugins",
     publisherLabel:
-      marketplace === "bb-official"
-        ? "BB Official"
-        : marketplace === "bb-community"
-          ? "BB Community"
+      marketplace === "sandy-official"
+        ? "SANDY Official"
+        : marketplace === "sandy-community"
+          ? "SANDY Community"
           : "Acme Plugins",
     official,
     author: { name: "Acme", url: "https://github.com/acme" },
@@ -53,7 +53,7 @@ function installPlanFor(url: string): unknown {
 
 const STARTED_JOB: PluginInstallJob = {
   id: "job-1",
-  target: { kind: "catalog", entryId: "linear", marketplace: "bb-official" },
+  target: { kind: "catalog", entryId: "linear", marketplace: "sandy-official" },
   displayName: "Linear",
   state: "queued",
 };
@@ -149,10 +149,10 @@ describe("AddPluginDialog", () => {
   it("leads with and submits a pasted GitHub repository URL", async () => {
     const requests = stubFetch();
     renderDialog();
-    const source = "https://github.com/acme/bb-plugin-usage";
+    const source = "https://github.com/acme/sandy-plugin-usage";
     const input = screen.getByLabelText("Plugin source") as HTMLInputElement;
 
-    expect(input.placeholder).toBe("https://github.com/owner/bb-plugin-name");
+    expect(input.placeholder).toBe("https://github.com/owner/sandy-plugin-name");
     expect(screen.getByText(/GitHub repository URL/)).toBeTruthy();
     fireEvent.change(input, { target: { value: source } });
     fireEvent.click(screen.getByRole("button", { name: /install plugin/i }));
@@ -227,8 +227,8 @@ describe("AddPluginDialog", () => {
     const { unmount } = renderDialog({
       entryId: "linear",
       pluginId: "linear",
-      marketplace: "bb-official",
-      publisherLabel: "BB Official",
+      marketplace: "sandy-official",
+      publisherLabel: "SANDY Official",
       displayName: "Linear",
       icon: "Github",
       iconUrl: null,
@@ -236,7 +236,7 @@ describe("AddPluginDialog", () => {
       source: "builtin:linear",
     });
     expect(
-      screen.getByText("Install this plugin, bundled with BB."),
+      screen.getByText("Install this plugin, bundled with SANDY."),
     ).not.toBeNull();
     unmount();
   });
@@ -250,14 +250,14 @@ describe("AddPluginDialog", () => {
       icon: "Zap",
       iconUrl: null,
       iconTinted: false,
-      marketplace: "bb-community",
-      publisherLabel: "BB Community",
-      source: "npm:bb-plugin-widgets@^1.0.0 (registry https://npm.acme.test)",
+      marketplace: "sandy-community",
+      publisherLabel: "SANDY Community",
+      source: "npm:sandy-plugin-widgets@^1.0.0 (registry https://npm.acme.test)",
     });
 
     expect(
       screen.getByText(
-        "npm:bb-plugin-widgets@^1.0.0 (registry https://npm.acme.test)",
+        "npm:sandy-plugin-widgets@^1.0.0 (registry https://npm.acme.test)",
       ),
     ).not.toBeNull();
   });
@@ -267,8 +267,8 @@ describe("AddPluginDialog", () => {
     renderDialog({
       entryId: "linear",
       pluginId: "linear",
-      marketplace: "bb-official",
-      publisherLabel: "BB Official",
+      marketplace: "sandy-official",
+      publisherLabel: "SANDY Official",
       displayName: "Linear",
       icon: "Github",
       iconUrl: null,
@@ -288,7 +288,7 @@ describe("AddPluginDialog", () => {
       expect(post).toBeDefined();
       expect(JSON.parse(String(post?.init?.body))).toEqual({
         entryId: "linear",
-        marketplace: "bb-official",
+        marketplace: "sandy-official",
       });
     });
   });
@@ -296,17 +296,17 @@ describe("AddPluginDialog", () => {
   it("shows the cached marketplace icon in the confirmation", () => {
     stubFetch();
     const iconUrl =
-      "/api/v1/plugin-catalog/icons/bb-community/widgets?h=icon-hash";
+      "/api/v1/plugin-catalog/icons/sandy-community/widgets?h=icon-hash";
     renderDialog({
       entryId: "widgets",
       pluginId: "widgets",
-      marketplace: "bb-community",
-      publisherLabel: "BB Community",
+      marketplace: "sandy-community",
+      publisherLabel: "SANDY Community",
       displayName: "Widgets",
       icon: null,
       iconUrl,
       iconTinted: false,
-      source: "npm:bb-plugin-widgets@1.0.0",
+      source: "npm:sandy-plugin-widgets@1.0.0",
     });
 
     expect(document.querySelector(`img[src="${iconUrl}"]`)).not.toBeNull();
@@ -323,8 +323,8 @@ describe("AddPluginDialog", () => {
         initial={{
           entryId: "linear",
           pluginId: "linear",
-          marketplace: "bb-official",
-          publisherLabel: "BB Official",
+          marketplace: "sandy-official",
+          publisherLabel: "SANDY Official",
           displayName: "Linear",
           icon: null,
           iconUrl: null,
@@ -402,8 +402,8 @@ describe("AddPluginDialog", () => {
     renderDialog({
       entryId: "linear",
       pluginId: "linear",
-      marketplace: "bb-official",
-      publisherLabel: "BB Official",
+      marketplace: "sandy-official",
+      publisherLabel: "SANDY Official",
       displayName: "Linear",
       icon: "Github",
       iconUrl: null,

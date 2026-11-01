@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import type {
   PluginThreadActionsInlineItem,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import type { SidebarThread } from "../model/sidebar-thread.js";
 import { useSidebarData } from "../model/use-sidebar-data.js";
 import { toThreadActionTarget } from "../rows/threadActionTarget.js";

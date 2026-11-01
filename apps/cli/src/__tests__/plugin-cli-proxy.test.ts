@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import { Writable } from "node:stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Agent, getGlobalDispatcher, setGlobalDispatcher } from "undici";
-import { RESERVED_BB_CLI_COMMANDS } from "@bb/domain/plugin-cli";
+import { RESERVED_SANDY_CLI_COMMANDS } from "@sandy/domain/plugin-cli";
 
 import {
   CORE_COMMAND_GROUPS,
@@ -20,9 +20,9 @@ import {
   type PluginCliContributionEntry,
 } from "../plugin-cli-proxy.js";
 
-describe("reserved bb CLI command names", () => {
+describe("reserved sandy CLI command names", () => {
   it("matches the complete core command-group registry plus help", () => {
-    expect([...RESERVED_BB_CLI_COMMANDS].sort()).toEqual(
+    expect([...RESERVED_SANDY_CLI_COMMANDS].sort()).toEqual(
       [...CORE_COMMAND_GROUPS.map((group) => group.name), "help"].sort(),
     );
   });
@@ -34,8 +34,8 @@ describe("pluginCommandLabel", () => {
     name: "pool",
     summary: "Pool",
     commands: [
-      { name: "account-add", summary: "Add", usage: "bb pool account add" },
-      { name: "status", summary: "Status", usage: "bb pool status" },
+      { name: "account-add", summary: "Add", usage: "sandy pool account add" },
+      { name: "status", summary: "Status", usage: "sandy pool status" },
     ],
   };
 
@@ -63,7 +63,7 @@ describe("pluginProxyCandidate", () => {
     const names = new Set(CORE_COMMAND_GROUPS.map((group) => group.name));
     names.add("help");
     for (const moved of ["automation", "connect"]) {
-      expect(RESERVED_BB_CLI_COMMANDS).not.toContain(moved);
+      expect(RESERVED_SANDY_CLI_COMMANDS).not.toContain(moved);
       expect(pluginProxyCandidate(moved, names)).toBe(moved);
     }
   });
@@ -314,9 +314,9 @@ describe("describeUnreachableServer", () => {
     });
   }
 
-  it("says bb is not running only on ECONNREFUSED", () => {
+  it("says sandy is not running only on ECONNREFUSED", () => {
     expect(describeUnreachableServer(url, fetchFailed("ECONNREFUSED"))).toBe(
-      `bb is not running at ${url} — open the bb app, then re-run this command.`,
+      `sandy is not running at ${url} — open the sandy app, then re-run this command.`,
     );
   });
 
@@ -327,23 +327,23 @@ describe("describeUnreachableServer", () => {
         aggregateFetchFailed(["ECONNREFUSED", "ECONNREFUSED"]),
       ),
     ).toBe(
-      `bb is not running at ${url} — open the bb app, then re-run this command.`,
+      `sandy is not running at ${url} — open the sandy app, then re-run this command.`,
     );
 
     const mixedMessage = describeUnreachableServer(
       url,
       aggregateFetchFailed(["ECONNREFUSED", "EPERM"]),
     );
-    expect(mixedMessage).toContain(`Cannot reach bb at ${url}: EPERM`);
-    expect(mixedMessage).toContain("bb may still be running");
+    expect(mixedMessage).toContain(`Cannot reach sandy at ${url}: EPERM`);
+    expect(mixedMessage).toContain("sandy may still be running");
     expect(mixedMessage).not.toContain("not running at");
   });
 
-  it("reports a blocked connection without declaring bb down", () => {
+  it("reports a blocked connection without declaring sandy down", () => {
     for (const code of ["EPERM", "EACCES"]) {
       const message = describeUnreachableServer(url, fetchFailed(code));
-      expect(message).toContain(`Cannot reach bb at ${url}: ${code}`);
-      expect(message).toContain("bb may still be running");
+      expect(message).toContain(`Cannot reach sandy at ${url}: ${code}`);
+      expect(message).toContain("sandy may still be running");
       expect(message).not.toContain("not running at");
     }
   });
@@ -353,10 +353,10 @@ describe("describeUnreachableServer", () => {
       name: "TimeoutError",
     });
     const message = describeUnreachableServer(url, timeout, 2000);
-    expect(message).toContain(`bb did not respond at ${url} within 2000ms`);
+    expect(message).toContain(`sandy did not respond at ${url} within 2000ms`);
     expect(message).toContain("it may be busy or temporarily unreachable");
     expect(message).not.toContain("not running at");
-    expect(message).not.toContain("bb is running");
+    expect(message).not.toContain("sandy is running");
     expect(message).toContain("re-run it");
   });
 
@@ -374,7 +374,7 @@ describe("describeUnreachableServer", () => {
       cause: new Error("getaddrinfo ENOTFOUND example.invalid"),
     });
     expect(describeUnreachableServer(url, err)).toBe(
-      `Cannot reach bb at ${url}: fetch failed: getaddrinfo ENOTFOUND example.invalid`,
+      `Cannot reach sandy at ${url}: fetch failed: getaddrinfo ENOTFOUND example.invalid`,
     );
   });
 });

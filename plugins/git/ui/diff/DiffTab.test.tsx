@@ -5,11 +5,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import type {
   ExperimentalLiveFileTarget,
   ExperimentalThreadTabProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { makeWorkspaceStatus } from "../../testing.js";
 import { gitRpcContract } from "../../rpc-contract.js";
 import type { GitStatusRow } from "../../contract.js";
@@ -82,7 +82,7 @@ function renderTab(
   return renderSlot({ component: DiffTab }, PROPS, {
     rpc: { ...RPC, ...rpc } as PluginRpcTestHandlers<typeof gitRpcContract>,
     experimental_rpcContract: gitRpcContract,
-    pluginId: "bb--git",
+    pluginId: "sandy--git",
     sdk: SDK as never,
     ...options,
   });
@@ -131,7 +131,7 @@ describe("useDiffTabVisible", () => {
           typeof gitRpcContract
         >,
         experimental_rpcContract: gitRpcContract,
-        pluginId: "bb--git",
+        pluginId: "sandy--git",
       },
     );
     await waitFor(() =>

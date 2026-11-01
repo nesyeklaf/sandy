@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
-import { jsonObjectSchema } from "@bb/domain";
+import { jsonObjectSchema } from "@sandy/domain";
 import { z } from "zod";
 
 type CdpObject = z.infer<typeof jsonObjectSchema>;
@@ -157,7 +157,7 @@ function createConnection(
   const browserInfo: CdpObject = {
     targetId: browserTargetId,
     type: "browser",
-    title: "BB",
+    title: "SANDY",
     url: "",
     attached: true,
     canAccessOpener: false,

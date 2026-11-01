@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { authApiKeys, authUsers } from "@bb/db";
-import { makeTempDir } from "@bb/test-helpers";
+import { authApiKeys, authUsers } from "@sandy/db";
+import { makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createMigratedConnection } from "@bb/db/testing";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createMachineAuthService } from "../src/services/machine-auth.js";
 
 const testLogger = {
@@ -213,7 +213,7 @@ describe("machine auth service", () => {
 
     expect(storedKey?.key).toBeTruthy();
     expect(storedKey?.key).not.toBe(issuedKey);
-    expect(storedKey?.key).not.toContain("bbdh_");
+    expect(storedKey?.key).not.toContain("sandydh_");
   });
 
   it("revokes older daemon host keys when a host reenrolls", async () => {

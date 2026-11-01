@@ -4,8 +4,8 @@ import { z } from "zod";
 import {
   normalizeProviderThreadNameEvent,
   toProviderExternalThreadName,
-} from "@bb/domain";
-import type { DynamicTool, InstructionMode, ThreadEvent } from "@bb/domain";
+} from "@sandy/domain";
+import type { DynamicTool, InstructionMode, ThreadEvent } from "@sandy/domain";
 import type { AdapterCommand } from "./provider-adapter.js";
 import {
   BRIDGE_JSON_RPC_ERRORS,
@@ -15,7 +15,7 @@ import {
   providerUsageResultSchema,
   ThreadEventGrammar,
   threadIdentityResultSchema,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import {
   JsonRpcResponseError,
   PROVIDER_TOOL_CALL_CANCELLED_METHOD,
@@ -26,13 +26,13 @@ import {
   sendJsonRpcError,
   sendJsonRpcRequest,
   settleJsonRpcResponse,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import type {
   JsonRpcObject,
   ProviderCommandPlan,
   ProviderRequestCommandPlan,
   SendJsonRpcRequestArgs,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import {
   assertProviderSupportsExecutionOptions,
   toProviderExecutionContext,
@@ -659,11 +659,11 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
     });
   }
 
-  function resolveBbThreadIdForProcess(
+  function resolveSandyThreadIdForProcess(
     proc: ProviderProcess,
     providerThreadId: string | undefined,
   ): string | undefined {
-    return threadIdentityRegistry.resolveBbThreadIdForProviderThread({
+    return threadIdentityRegistry.resolveSandyThreadIdForProviderThread({
       providerState: proc.identity,
       providerThreadId,
     });
@@ -678,7 +678,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
   function resolveProviderRequestThreadId(
     args: ResolveProviderRequestThreadIdArgs,
   ): string | null {
-    const resolvedThreadId = resolveBbThreadIdForProcess(
+    const resolvedThreadId = resolveSandyThreadIdForProcess(
       args.proc,
       args.providerThreadId,
     );
@@ -686,7 +686,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       sendJsonRpcError({
         child: args.proc.child,
         id: args.parsedId,
-        message: `Unable to resolve BB thread id for ${args.requestKind} on provider thread "${args.providerThreadId}"`,
+        message: `Unable to resolve SANDY thread id for ${args.requestKind} on provider thread "${args.providerThreadId}"`,
       });
       return null;
     }
@@ -694,7 +694,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       sendJsonRpcError({
         child: args.proc.child,
         id: args.parsedId,
-        message: `${formatProviderRequestKindForSentence(args.requestKind)} thread hint "${args.threadIdHint}" did not match resolved BB thread "${resolvedThreadId}" for provider thread "${args.providerThreadId}"`,
+        message: `${formatProviderRequestKindForSentence(args.requestKind)} thread hint "${args.threadIdHint}" did not match resolved SANDY thread "${resolvedThreadId}" for provider thread "${args.providerThreadId}"`,
       });
       return null;
     }
@@ -1187,7 +1187,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
         category: "config",
         summary: `Dropped environment variable "${contribution.name}" from plugin "${contribution.plugin}".`,
         details:
-          "BB_SERVER_URL is unavailable, so its serverPath contribution was not applied.",
+          "SANDY_SERVER_URL is unavailable, so its serverPath contribution was not applied.",
         scope: { kind: "thread" },
       });
     }
@@ -1223,18 +1223,18 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
         providerState: args.proc.identity,
         sourceThreadId: args.sourceThreadId,
       };
-      const resolvedBbThreadId =
+      const resolvedSandyThreadId =
         event.type === "thread/identity"
           ? threadIdentityRegistry.resolveProviderIdentityThreadId(scope)
           : threadIdentityRegistry.resolveProviderEventThreadId(scope);
 
-      if (!resolvedBbThreadId) {
+      if (!resolvedSandyThreadId) {
         options.onStderr?.(
-          `Dropping unscoped provider event ${event.type}; no bb thread could be resolved`,
+          `Dropping unscoped provider event ${event.type}; no sandy thread could be resolved`,
         );
         continue;
       }
-      const targetThreadId = resolvedBbThreadId;
+      const targetThreadId = resolvedSandyThreadId;
 
       if (suppressedThreadEventIds.has(targetThreadId)) {
         continue;
@@ -1878,7 +1878,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
           });
           if (providerThreadId !== undefined) {
             const ownerThreadId =
-              threadIdentityRegistry.resolveBbThreadIdForProviderThread({
+              threadIdentityRegistry.resolveSandyThreadIdForProviderThread({
                 providerState: proc.identity,
                 providerThreadId,
               });

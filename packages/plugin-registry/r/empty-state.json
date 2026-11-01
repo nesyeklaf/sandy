@@ -3,10 +3,10 @@
   "name": "empty-state",
   "type": "registry:ui",
   "title": "empty-state",
-  "description": "BB ui \"empty-state\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"empty-state\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

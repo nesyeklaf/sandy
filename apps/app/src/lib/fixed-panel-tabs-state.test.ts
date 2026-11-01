@@ -1,6 +1,6 @@
-import { createMemoryStorage } from "@bb/test-helpers";
+import { createMemoryStorage } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { threadTabsSchema } from "@bb/server-contract";
+import { threadTabsSchema } from "@sandy/server-contract";
 import {
   EMPTY_FIXED_PANEL_TABS_STATE,
   areFixedPanelTabsEquivalent,
@@ -68,12 +68,12 @@ describe("fixed-panel-tabs-state", () => {
     });
     expect(restored.secondary).toEqual({
       isOpen: true,
-      activeTabId: "plugin-fixed:bb--git:diff",
+      activeTabId: "plugin-fixed:sandy--git:diff",
       tabs: [
         {
-          id: "plugin-fixed:bb--git:diff",
+          id: "plugin-fixed:sandy--git:diff",
           kind: "plugin-fixed",
-          pluginId: "bb--git",
+          pluginId: "sandy--git",
           tabId: "diff",
         },
         terminal,
@@ -104,13 +104,13 @@ describe("fixed-panel-tabs-state", () => {
       });
       expect(restored.secondary).toEqual({
         isOpen: true,
-        activeTabId: "plugin-fixed:bb--git:diff",
+        activeTabId: "plugin-fixed:sandy--git:diff",
         tabs: [
           terminal,
           {
-            id: "plugin-fixed:bb--git:diff",
+            id: "plugin-fixed:sandy--git:diff",
             kind: "plugin-fixed",
-            pluginId: "bb--git",
+            pluginId: "sandy--git",
             tabId: "diff",
           },
           {
@@ -344,7 +344,7 @@ describe("fixed-panel-tabs-state", () => {
     ).toBe(true);
     expect(
       isFixedPanelTabsStateStorageKey(
-        "bb.thread.fixedPanelTabsState-thr_old-0",
+        "sandy.thread.fixedPanelTabsState-thr_old-0",
       ),
     ).toBe(true);
   });

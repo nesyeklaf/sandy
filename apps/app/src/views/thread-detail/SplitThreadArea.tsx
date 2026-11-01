@@ -1,9 +1,9 @@
 import { focusPaneComposer } from "@/lib/pane-composer-focus";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PANE_DIRECTION_APP_COMMAND_IDS,
   PANE_FOCUS_APP_COMMAND_IDS,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { useAtom, useAtomValue, useStore } from "jotai";
 import {
   Fragment,
@@ -26,7 +26,7 @@ import {
   type ThreadRoutePathArgs,
 } from "@/lib/route-paths";
 import { useIsMutating } from "@tanstack/react-query";
-import { BbHttpError } from "@/lib/sdk";
+import { SandyHttpError } from "@/lib/sdk";
 import { useThread } from "@/hooks/queries/thread-queries";
 import { useIsSidebarFramed } from "@/components/ui/sidebar.js";
 import { useSplitWorkspaceActive } from "@/hooks/useSplitWorkspaceActive";
@@ -87,9 +87,9 @@ import {
   HEADER_PANE_ACTION_ICON_BUTTON_CLASS,
 } from "@/components/layout/AppPageHeader";
 import { PluginPageTitleHost } from "@/components/plugin/PluginPageTitleHost";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
 import { usePluginNavPanelChrome } from "@/lib/plugin-nav-panel-chrome";
 import {
   PluginPanelHeaderActions,
@@ -107,16 +107,16 @@ import {
 } from "./splitThreadNavigation";
 import { ThreadDetailWorkerPoolProvider } from "./ThreadDetailWorkerPoolProvider";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_WINDOW_NO_DRAG_CLASS,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { SplitWorkspaceSecondaryPanelHost } from "./SplitWorkspaceSecondaryPanelHost";
 import { SecondaryPanelHostLayoutContext } from "@/components/secondary-panel/SecondaryPanelHostLayoutContext";
 import {
   CONTEXT_INACTIVE_TEXT_CLASS,
   CONTEXT_SELECTION_SURFACE_CLASS,
-} from "@bb/shared-ui/context-selection";
+} from "@sandy/shared-ui/context-selection";
 import { PaneMaximizeButton } from "./PaneMaximizeButton";
 import { wsManager } from "@/lib/ws";
 import { useImmediateRouteNavigate } from "@/components/ui/app-route-anchor";
@@ -821,7 +821,7 @@ function SplitPaneCommandHandlers({
     [isSplitActive, layout.root, layout.focusedPaneId],
   );
   useEffect(() => {
-    getBbDesktopInfo()?.setSplitNavigationEnabled?.(
+    getSandyDesktopInfo()?.setSplitNavigationEnabled?.(
       isSplitActive,
       PANE_DIRECTION_APP_COMMAND_IDS.filter(
         (_, index) => directionalTargets[index] !== null,
@@ -915,7 +915,7 @@ function SplitTree(props: SplitTreeProps) {
           "relative flex min-h-0 min-w-0 flex-1 overflow-hidden",
           isHiddenByMaximize && "invisible pointer-events-none",
           isMaximized && "absolute inset-0 z-30",
-          !isMaximized && !isBottomRow && "[--bb-content-bottom-inset:0px]",
+          !isMaximized && !isBottomRow && "[--sandy-content-bottom-inset:0px]",
         )}
         tabIndex={-1}
         data-split-pane-id={node.paneId}
@@ -958,7 +958,7 @@ function SplitTree(props: SplitTreeProps) {
             "pointer-events-none absolute inset-0 z-20 transition-colors",
             isSidebarFramed &&
               (isMaximized || isTopRow) &&
-              "top-[calc(var(--bb-window-frame-top)_+_1px)]",
+              "top-[calc(var(--sandy-window-frame-top)_+_1px)]",
             isFocused || !props.dimsInactiveSplits
               ? "bg-transparent"
               : "bg-background/30",
@@ -1278,7 +1278,7 @@ function NonThreadPaneContent({
   };
   const hostLayout = useContext(SecondaryPanelHostLayoutContext);
   const showsWindowPanelToggle = hostLayout?.pinsCornerToggle === true;
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const panelEntry =
     content.kind === "plugin-panel"
@@ -1353,7 +1353,7 @@ function NonThreadPaneContent({
         !isBoundedPane &&
           !panel &&
           content.kind !== "new-thread" &&
-          "pt-(--bb-window-frame-top)",
+          "pt-(--sandy-window-frame-top)",
       )}
     >
       {isBoundedPane || panel ? (
@@ -1680,7 +1680,7 @@ function PaneStaleWatcher({ threadId, onStale }: PaneStaleWatcherProps) {
       mutation.options.meta?.lifecycleOperation === "archive_thread",
   });
   const isGone =
-    isError && error instanceof BbHttpError && error.status === 404;
+    isError && error instanceof SandyHttpError && error.status === 404;
   const isDeleted =
     isSuccess && thread !== undefined && thread.deletedAt !== null;
   const isConfirmedArchived =

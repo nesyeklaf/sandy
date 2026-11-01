@@ -1,4 +1,4 @@
-import type { InternalDoNotUsePluginRequestPeers } from "@get-bb/plugin-sdk";
+import type { InternalDoNotUsePluginRequestPeers } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import { classifyRequestPeer } from "./classify.js";
 import type { Cidr } from "./ip.js";

@@ -11,8 +11,8 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PluginPendingInteraction } from "@bb/domain";
-import type { PluginPendingInteractionProps } from "@get-bb/plugin-sdk";
+import type { PluginPendingInteraction } from "@sandy/domain";
+import type { PluginPendingInteractionProps } from "@sandy-sdk/plugin-sdk";
 import {
   resetPluginSlotStoreForTest,
   setPluginSlotRegistrations,
@@ -42,7 +42,7 @@ vi.mock(
   "@/hooks/queries/system-queries",
   () => import("@/test/question-shortcuts-system-queries-mock"),
 );
-vi.mock("@/lib/bb-desktop", () => ({ getBbDesktopInfo: () => null }));
+vi.mock("@/lib/sandy-desktop", () => ({ getSandyDesktopInfo: () => null }));
 const pane = vi.hoisted(() => ({ isFocused: true }));
 vi.mock("@/views/thread-detail/PaneContext", () => ({
   useOptionalPaneContext: () => pane,

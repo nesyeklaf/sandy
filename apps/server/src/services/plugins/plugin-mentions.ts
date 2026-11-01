@@ -1,4 +1,4 @@
-import type { PromptInput } from "@bb/domain";
+import type { PromptInput } from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 import { resolvePluginMention } from "./plugin-agent-contributions.js";
 

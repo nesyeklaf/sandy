@@ -19,8 +19,8 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { ServerMoveProgressMessage } from "@bb/host-daemon-contract";
-import { writeServerArchive, writeServerMovedFile } from "@bb/server-archive";
+import type { ServerMoveProgressMessage } from "@sandy/host-daemon-contract";
+import { writeServerArchive, writeServerMovedFile } from "@sandy/server-archive";
 import { afterEach, vi } from "vitest";
 import type { CommandOf } from "../command-dispatch-support.js";
 import type { PendingServerLaunchRequest } from "./pending-server.js";
@@ -41,7 +41,7 @@ export const MOVE_ID = "move-0001";
 export const ACTIVATION_TOKEN = "activation-token-0123456789";
 export const HOST_KEY = "host-key-target";
 export const PARENT_PID = 424_242;
-export const LAUNCHER_ENTRY_PATH = "/opt/npm/bin/bb-app";
+export const LAUNCHER_ENTRY_PATH = "/opt/npm/bin/sandy-app";
 
 export const lastMove = {
   moveId: MOVE_ID,
@@ -66,7 +66,7 @@ const server = createServer((request, response) => {
     return;
   }
   if (request.url === "/internal/server-move/pending") {
-    response.end(JSON.stringify({ moveId: importFile.moveId, verified: existsSync(join(dataDir, "bb.db")), message: null }));
+    response.end(JSON.stringify({ moveId: importFile.moveId, verified: existsSync(join(dataDir, "sandy.db")), message: null }));
     return;
   }
   response.statusCode = 404;
@@ -138,7 +138,7 @@ export function registerServerMoveFixtureCleanup(): void {
 }
 
 export async function createRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "bb-server-move-test-"));
+  const root = await mkdtemp(join(tmpdir(), "sandy-server-move-test-"));
   roots.push(root);
   return root;
 }
@@ -189,21 +189,21 @@ export async function readJson(path: string): Promise<unknown> {
 interface SourceServer {
   archiveSha256: string;
   archiveSizeBytes: number;
-  bbAppSha256: string;
-  bbAppSizeBytes: number;
+  sandyAppSha256: string;
+  sandyAppSizeBytes: number;
   archiveRequests: IncomingMessage[];
   url: string;
 }
 
 async function createSourceServer(root: string): Promise<SourceServer> {
   const sourceDir = join(root, "source-data");
-  await writeFileWithDirs(join(sourceDir, "bb.db"), "sqlite database bytes");
+  await writeFileWithDirs(join(sourceDir, "sandy.db"), "sqlite database bytes");
   await writeFileWithDirs(
     join(sourceDir, "config.json"),
     JSON.stringify({
-      config: { BB_LOG_LEVEL: "info" },
-      serverUrl: "https://bb.example.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_source" },
+      config: { SANDY_LOG_LEVEL: "info" },
+      serverUrl: "https://sandy.example.test",
+      serverHeaders: { "x-sandy-machine-access": "sandycm_source" },
     }),
   );
   await writeFileWithDirs(
@@ -218,7 +218,7 @@ async function createSourceServer(root: string): Promise<SourceServer> {
   const archive = await writeServerArchive({
     outPath: archivePath,
     files: [
-      "bb.db",
+      "sandy.db",
       "config.json",
       "attachments/project/a.txt",
       "plugins/tasks/data.db",
@@ -228,17 +228,17 @@ async function createSourceServer(root: string): Promise<SourceServer> {
     })),
     manifest: {
       createdAt: 1_700_000_000_000,
-      bbVersion: "1.0.0",
+      sandyVersion: "1.0.0",
       protocolVersion: 209,
       migrationCount: 10,
-      sourceDataDir: "/Users/me/.bb",
+      sourceDataDir: "/Users/me/.sandy",
       sourceServerHostId: "host-source",
       serverMoveExperiment: true,
     },
   });
-  const bbAppPath = join(root, "bb-app.tgz");
-  await writeFile(bbAppPath, "full bb-app package");
-  const bbAppBytes = await readFile(bbAppPath);
+  const sandyAppPath = join(root, "sandy-app.tgz");
+  await writeFile(sandyAppPath, "full sandy-app package");
+  const sandyAppBytes = await readFile(sandyAppPath);
   const archiveRequests: IncomingMessage[] = [];
   const { url } = await listen((request, response) => {
     if (request.headers.authorization !== `Bearer ${HOST_KEY}`) {
@@ -252,8 +252,8 @@ async function createSourceServer(root: string): Promise<SourceServer> {
       createReadStream(archivePath).pipe(response);
       return;
     }
-    if (request.url === `/internal/server-move/${MOVE_ID}/bb-app.tgz`) {
-      response.write(bbAppBytes);
+    if (request.url === `/internal/server-move/${MOVE_ID}/sandy-app.tgz`) {
+      response.write(sandyAppBytes);
       response.end();
       return;
     }
@@ -263,29 +263,29 @@ async function createSourceServer(root: string): Promise<SourceServer> {
   return {
     archiveSha256: archive.sha256,
     archiveSizeBytes: archive.sizeBytes,
-    bbAppSha256: createHash("sha256").update(bbAppBytes).digest("hex"),
-    bbAppSizeBytes: bbAppBytes.byteLength,
+    sandyAppSha256: createHash("sha256").update(sandyAppBytes).digest("hex"),
+    sandyAppSizeBytes: sandyAppBytes.byteLength,
     archiveRequests,
     url,
   };
 }
 
 async function createPackageRoot(root: string): Promise<string> {
-  const packageRoot = join(root, "npm", "lib", "node_modules", "bb-app");
+  const packageRoot = join(root, "npm", "lib", "node_modules", "sandy-app");
   await writeFileWithDirs(
     join(packageRoot, "package.json"),
-    JSON.stringify({ name: "bb-app", version: "1.0.0" }),
+    JSON.stringify({ name: "sandy-app", version: "1.0.0" }),
   );
   for (const file of [
     "host-daemon/dist/daemon-bundle.mjs",
-    "dist/bb-app.js",
-    "dist/bb-server.js",
+    "dist/sandy-app.js",
+    "dist/sandy-server.js",
     "server/dist/index.js",
     "app/dist/index.html",
   ]) {
     await writeFileWithDirs(join(packageRoot, ...file.split("/")), "");
   }
-  await writeFileWithDirs(join(root, "npm", "bin", "bb-app"), "");
+  await writeFileWithDirs(join(root, "npm", "bin", "sandy-app"), "");
   return packageRoot;
 }
 
@@ -312,18 +312,18 @@ export async function writeLauncherMovedMode(args: {
     serverUrl: "http://other.example.test:38886",
     oldCopyEntries: args.oldCopyEntries ?? [],
   });
-  await writeBbAppRuntime({
+  await writeSandyAppRuntime({
     dataDir: args.dataDir,
     serverPort: args.serverPort,
   });
 }
 
-export async function writeBbAppRuntime(args: {
+export async function writeSandyAppRuntime(args: {
   dataDir: string;
   serverPort: number;
 }): Promise<void> {
   await writeFileWithDirs(
-    join(args.dataDir, "bb-app-runtime.json"),
+    join(args.dataDir, "sandy-app-runtime.json"),
     JSON.stringify({
       entryPath: LAUNCHER_ENTRY_PATH,
       pid: process.pid,
@@ -345,15 +345,15 @@ export async function writeSystemdUnit(args: {
     ".config",
     "systemd",
     "user",
-    "bb-host-daemon-old-server-studio.service",
+    "sandy-host-daemon-old-server-studio.service",
   );
   await writeFileWithDirs(
     unitPath,
     [
       "[Service]",
       `ExecStart=${args.execStart}`,
-      'Environment="BB_APP_NPM_PREFIX=/opt/npm"',
-      `Environment="BB_DATA_DIR=${args.dataDir.replaceAll("\\", "\\\\")}"`,
+      'Environment="SANDY_APP_NPM_PREFIX=/opt/npm"',
+      `Environment="SANDY_DATA_DIR=${args.dataDir.replaceAll("\\", "\\\\")}"`,
       "Restart=always",
       "",
     ].join("\n"),
@@ -367,7 +367,7 @@ export interface FixtureArgs {
   autoUpdate?: boolean;
   supervised?: boolean;
   hostDaemonPort?: number | null;
-  installBbApp?: ServerMoveServiceOptions["installBbApp"];
+  installSandyApp?: ServerMoveServiceOptions["installSandyApp"];
   checkPortAvailable?: ServerMoveServiceOptions["checkPortAvailable"];
   processOps?: ServerMoveServiceOptions["processOps"];
   portReleaseTimeoutMs?: number;
@@ -376,7 +376,7 @@ export interface FixtureArgs {
 export async function createFixture(args: FixtureArgs = {}) {
   const root = await createRoot();
   const homeDir = join(root, "home");
-  const dataDir = join(homeDir, ".bb-machines", "old-server");
+  const dataDir = join(homeDir, ".sandy-machines", "old-server");
   await mkdir(dataDir, { recursive: true });
   const packageRoot = await createPackageRoot(root);
   const stubPath = join(root, "pending-server.mjs");
@@ -412,7 +412,7 @@ export async function createFixture(args: FixtureArgs = {}) {
       args.hostDaemonPort === undefined ? 38_887 : args.hostDaemonPort,
     autoUpdate: args.autoUpdate ?? false,
     supervised: args.supervised ?? false,
-    env: args.env ?? { BB_SERVER_MOVE_SERVICE_MANAGER: "none" },
+    env: args.env ?? { SANDY_SERVER_MOVE_SERVICE_MANAGER: "none" },
     platform: "linux",
     uid: 1000,
     parentPid: PARENT_PID,
@@ -508,7 +508,7 @@ export async function createFixture(args: FixtureArgs = {}) {
       spawnedPids.push(pid);
       return pid;
     },
-    installBbApp: args.installBbApp ?? (async () => undefined),
+    installSandyApp: args.installSandyApp ?? (async () => undefined),
     checkGhAuthenticated: async () => null,
     checkPortAvailable: args.checkPortAvailable ?? (async () => true),
     processOps: args.processOps ?? launcherProcessOps,
@@ -569,11 +569,11 @@ export async function prepareCommand(
       sha256: fixture.source.archiveSha256,
       sizeBytes: fixture.source.archiveSizeBytes,
     },
-    bbApp: null,
+    sandyApp: null,
     serverPort: overrides.serverPort ?? (await fixture.reserveServerPort()),
-    sourceDataDir: "/Users/me/.bb",
+    sourceDataDir: "/Users/me/.sandy",
     sourceServerHostId: "host-source",
-    serverUrl: "https://bb.example.test",
+    serverUrl: "https://sandy.example.test",
     archiveExistingServerData: false,
     ...overrides,
   };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { turnScope, type PromptTextMention } from "@bb/domain";
+import { turnScope, type PromptTextMention } from "@sandy/domain";
 import {
   createTimelineEventFactory,
   decodeThreadEventRow,
@@ -46,7 +46,7 @@ function systemSteerRequest(): ClientTurnRequestedEventRow {
     initiator: "system",
     senderThreadId: null,
     target: { kind: "auto", expectedTurnId: "turn-1" },
-    text: "[bb system] Mid-turn nudge",
+    text: "[sandy system] Mid-turn nudge",
   });
 }
 
@@ -118,7 +118,7 @@ describe("user message parsing", () => {
     const parsed = parsePromptInput([
       {
         type: "text",
-        text: "[bb system]\n\nHidden agent-only context:\n\nsecret",
+        text: "[sandy system]\n\nHidden agent-only context:\n\nsecret",
         mentions: [],
         visibility: "agent-only",
       },
@@ -148,7 +148,7 @@ describe("user message parsing", () => {
     const parsed = parsePromptInput([
       {
         type: "text",
-        text: "[bb system]\n\nHidden agent-only context was removed.",
+        text: "[sandy system]\n\nHidden agent-only context was removed.",
         mentions: [],
         visibility: "agent-only",
       },
@@ -255,7 +255,7 @@ describe("user message parsing", () => {
 
   it("populates initiator, senderThreadId, and turnRequest for agent-initiated messages", () => {
     const factory = createTimelineEventFactory({ threadId: "thread-1" });
-    const agentText = "[bb message from thread:thr_sender]\n\nHi";
+    const agentText = "[sandy message from thread:thr_sender]\n\nHi";
     const row = factory.clientTurnRequested({
       initiator: "agent",
       senderThreadId: SENDER_THREAD_ID,
@@ -286,7 +286,7 @@ describe("user message parsing", () => {
       initiator: "user",
       senderThreadId: null,
       target: { kind: "new-turn" },
-      text: "[bb message from thread:thr_legacy; reply later]\n\nLegacy handoff",
+      text: "[sandy message from thread:thr_legacy; reply later]\n\nLegacy handoff",
     });
     const { event, meta } = decodeThreadEventRow(row);
 
@@ -301,15 +301,15 @@ describe("user message parsing", () => {
       kind: "user",
       initiator: "agent",
       senderThreadId: "thr_legacy",
-      text: "[bb message from thread:thr_legacy; reply later]\n\nLegacy handoff",
+      text: "[sandy message from thread:thr_legacy; reply later]\n\nLegacy handoff",
     });
   });
 
   it("preserves mentions for system-initiated messages", () => {
     const factory = createTimelineEventFactory({ threadId: "thread-1" });
     const mentionText = "@thread:thr_child";
-    const text = `[bb system]\n\n${mentionText} needs help.\nIt is blocked on a pending interaction.\n\nReview the blocker. If you can resolve it from existing context, reply to the thread with guidance. Otherwise, ask the user for the missing decision.`;
-    const mentionStart = "[bb system]\n\n".length;
+    const text = `[sandy system]\n\n${mentionText} needs help.\nIt is blocked on a pending interaction.\n\nReview the blocker. If you can resolve it from existing context, reply to the thread with guidance. Otherwise, ask the user for the missing decision.`;
+    const mentionStart = "[sandy system]\n\n".length;
     const mention: PromptTextMention = {
       start: mentionStart,
       end: mentionStart + mentionText.length,

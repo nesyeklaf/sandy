@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { pathWithRetiredPluginIdsReplaced } from "@bb/domain";
+import { pathWithRetiredPluginIdsReplaced } from "@sandy/domain";
 
 export function useRedirectRetiredPluginPaths(): void {
   const location = useLocation();

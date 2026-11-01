@@ -17,7 +17,7 @@ import {
   VERSION,
   type ExtensionFactory,
 } from "@earendil-works/pi-coding-agent";
-import { BB_PI_EXTENSION_SOURCE } from "./bb-pi-extension.js";
+import { SANDY_PI_EXTENSION_SOURCE } from "./sandy-pi-extension.js";
 import { createPiDeltaTranslator } from "../delta-translation.js";
 import { PiRpcSession, type PiRpcEvent } from "./rpc-session.js";
 
@@ -367,24 +367,24 @@ it("ignores duplicate authoritative settlement without duplicate delivery", asyn
   expect(h.kill).not.toHaveBeenCalled();
 });
 
-it.each(["bb-first", "bb-last"])(
+it.each(["sandy-first", "sandy-last"])(
   "real Pi 0.84 starts B inside an async settlement handler before A stdout (%s)",
   async (order) => {
     expect(VERSION).toBe("0.84.0");
     const h = harness();
-    const dir = mkdtempSync(join(tmpdir(), "bb-pi-real-settlement-"));
+    const dir = mkdtempSync(join(tmpdir(), "sandy-pi-real-settlement-"));
     const settingsManager = SettingsManager.inMemory({
       compaction: { enabled: false },
       retry: { enabled: false },
     });
     const sessionManager = SessionManager.inMemory(dir);
     const wireOrder: string[] = [];
-    const source = BB_PI_EXTENSION_SOURCE.replace(/^import .*;$/gm, "").replace(
-      "export default function bbExtension",
-      "function bbExtension",
+    const source = SANDY_PI_EXTENSION_SOURCE.replace(/^import .*;$/gm, "").replace(
+      "export default function sandyExtension",
+      "function sandyExtension",
     );
-    const bbFactory: ExtensionFactory = runInNewContext(
-      `${source}; bbExtension`,
+    const sandyFactory: ExtensionFactory = runInNewContext(
+      `${source}; sandyExtension`,
       {
         PiRuntime: { VERSION, SessionManager },
         Buffer,
@@ -438,7 +438,7 @@ it.each(["bb-first", "bb-last"])(
       noThemes: true,
       agentsFilesOverride: () => ({ agentsFiles: [] }),
       extensionFactories:
-        order === "bb-first" ? [bbFactory, startB] : [startB, bbFactory],
+        order === "sandy-first" ? [sandyFactory, startB] : [startB, sandyFactory],
     });
     let session:
       | Awaited<ReturnType<typeof createAgentSession>>["session"]
@@ -510,7 +510,7 @@ it.each(["bb-first", "bb-last"])(
         "B started inside A extension settlement",
         "agent_settled",
       ]);
-      if (order === "bb-last") {
+      if (order === "sandy-last") {
         expect((await a.settled)?.error).toEqual(
           new Error("Pi extension settlement identity is missing or invalid"),
         );

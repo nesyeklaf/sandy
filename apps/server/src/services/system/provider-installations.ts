@@ -1,9 +1,9 @@
-import { createAsyncTtlMemo, type AsyncTtlMemo } from "@bb/async-cache";
+import { createAsyncTtlMemo, type AsyncTtlMemo } from "@sandy/async-cache";
 import type {
   ProviderCliStatus,
   ProviderCliStatusResponse,
-} from "@bb/host-daemon-contract";
-import type { ProviderInfo } from "@bb/domain";
+} from "@sandy/host-daemon-contract";
+import type { ProviderInfo } from "@sandy/domain";
 import { ZodError } from "zod";
 import type { WorkSessionDeps } from "../../types.js";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";

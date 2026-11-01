@@ -6,7 +6,7 @@ import { act, cleanup, render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -16,12 +16,12 @@ import {
   UI_PREFERENCE_KEYS,
   type ThreadListEntry,
   type ThreadStatus,
-} from "@bb/domain";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
 import {
   makeHost,
   makeThreadListEntry,
-} from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/test-helpers/domain-fixtures";
 import { makeProjectWithThreadsResponse } from "@/test/fixtures/projects";
 import {
   hostsQueryKey,
@@ -48,12 +48,12 @@ import {
   ThreadActionSurfaceVisibility,
 } from "@/lib/thread-actions/thread-action-registry";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
-import { collectPluginAppRegistrations } from "@get-bb/plugin-sdk/internal/plugin-app-collector";
+import { collectPluginAppRegistrations } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 import { PluginThreadList } from "./PluginThreadList";
 import { SidebarThreadEntriesTestProvider } from "@/test/sidebarThreadEntriesTestProvider";
 
-const BENCH_ENABLED = process.env.BB_SIDEBAR_BENCH === "1";
-const THREAD_COUNT = Number(process.env.BB_SIDEBAR_BENCH_THREADS ?? 3000);
+const BENCH_ENABLED = process.env.SANDY_SIDEBAR_BENCH === "1";
+const THREAD_COUNT = Number(process.env.SANDY_SIDEBAR_BENCH_THREADS ?? 3000);
 const PROJECT_COUNT = 40;
 const SECTION_COUNT = 8;
 const ITERATIONS = 5;
@@ -583,7 +583,7 @@ describe.skipIf(!BENCH_ENABLED)("sidebar thread list benchmark", () => {
   );
 
   it("writes the comparison", () => {
-    const out = process.env.BB_SIDEBAR_BENCH_OUT;
+    const out = process.env.SANDY_SIDEBAR_BENCH_OUT;
     if (out) writeFileSync(out, `${JSON.stringify(collected, null, 2)}\n`);
   });
 });

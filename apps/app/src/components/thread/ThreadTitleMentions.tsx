@@ -17,20 +17,20 @@ import {
   type PromptMentionResource,
   type PromptTextMention,
   type ThreadListEntry,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { QueryClientContext } from "@tanstack/react-query";
 import {
   THREAD_MENTION_RESOLVE_MAX_IDS,
   type ThreadResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { PromptMentionPill } from "@/components/thread/timeline/ConversationMessageMentions";
 import { useThread } from "@/hooks/queries/thread-queries";
 import { threadQueryKey } from "@/hooks/queries/query-keys";
 import { sdk } from "@/lib/sdk";
 import { getThreadRoutePath } from "@/lib/route-paths";
-import { getMessageLinkPath } from "@bb/client-core";
+import { getMessageLinkPath } from "@sandy/client-core";
 import { getThreadDisplayTitle } from "@/lib/thread-title";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 type ThreadTitleMentionThread = Pick<
   ThreadListEntry,
@@ -994,7 +994,7 @@ export function ThreadTitle({
   return (
     <span
       {...spanProps}
-      className={cn(!inline && "bb-thread-title", className)}
+      className={cn(!inline && "sandy-thread-title", className)}
       title={tooltip ? displayTitle : undefined}
     >
       <ThreadTitleMentions title={title} highlightRanges={highlightRanges} />

@@ -4,9 +4,9 @@ import {
   threadScope,
   turnScope,
   type Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { eq } from "drizzle-orm";
-import { createConnection, getAppSettings, threads } from "@bb/db";
+import { createConnection, getAppSettings, threads } from "@sandy/db";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
@@ -14,7 +14,7 @@ import {
   type ThreadTimelineReadResponse,
   type ThreadTimelineResponse,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { countTimelineSelectionMemoEntries } from "../../src/services/threads/timeline-selection-memo.js";
 import { readJson } from "../helpers/json.js";
 import {

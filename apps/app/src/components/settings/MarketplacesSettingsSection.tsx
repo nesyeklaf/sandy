@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { PluginMarketplace } from "@bb/server-contract";
-import { Badge } from "@bb/shared-ui/badge";
-import { Button } from "@bb/shared-ui/button";
-import { Input } from "@bb/shared-ui/input";
+import type { PluginMarketplace } from "@sandy/server-contract";
+import { Badge } from "@sandy/shared-ui/badge";
+import { Button } from "@sandy/shared-ui/button";
+import { Input } from "@sandy/shared-ui/input";
 import { SettingsSection } from "@/components/ui/settings-section";
 import { appToast } from "@/components/ui/app-toast";
 import {
   ConfirmDeleteDialog,
   ConfirmDeleteDialogContent,
-} from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/confirm-delete-dialog";
 import { pluginAdminErrorMessage } from "@/lib/plugin-admin-error";
 import { invalidatePluginMarketplaces } from "@/hooks/cache-owners/plugin-cache-owner";
 import {
@@ -19,7 +19,7 @@ import {
   usePluginMarketplaces,
 } from "@/hooks/queries/plugin-catalog-queries";
 
-const SOURCE_PLACEHOLDER = "git:github.com/acme/bb-marketplace@main";
+const SOURCE_PLACEHOLDER = "git:github.com/acme/sandy-marketplace@main";
 const SUBDIRECTORY_PLACEHOLDER = "Subdirectory (optional)";
 
 function formatRefreshedAt(marketplace: PluginMarketplace): string {
@@ -71,7 +71,7 @@ export function MarketplacesSettingsSection() {
         return;
       }
       appToast.error("Refreshing the marketplace failed", {
-        description: `${failed[0]?.error ?? "Unknown error"}. The last catalog bb validated is still in use.`,
+        description: `${failed[0]?.error ?? "Unknown error"}. The last catalog sandy validated is still in use.`,
       });
     },
     onError: (error) => {
@@ -104,7 +104,7 @@ export function MarketplacesSettingsSection() {
   return (
     <SettingsSection
       title="Plugin marketplaces"
-      description="bb reads plugin catalogs from these marketplaces. Adding one validates and caches its catalog; it never installs, updates, or runs plugin code."
+      description="sandy reads plugin catalogs from these marketplaces. Adding one validates and caches its catalog; it never installs, updates, or runs plugin code."
       bodyClassName="border-0 bg-transparent p-0"
     >
       <div className="space-y-1.5">
@@ -146,7 +146,7 @@ export function MarketplacesSettingsSection() {
         </div>
         <p className="text-2xs text-subtle-foreground">
           <code>git:&lt;url&gt;[@&lt;ref&gt;]</code> or{" "}
-          <code>path:&lt;directory&gt;</code> on the bb server&rsquo;s machine.
+          <code>path:&lt;directory&gt;</code> on the sandy server&rsquo;s machine.
           {isGitSource
             ? " Set a subdirectory when the repository keeps marketplace.json outside its root."
             : null}

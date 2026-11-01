@@ -1,4 +1,4 @@
-import { formatDiffCount } from "@bb/thread-view";
+import { formatDiffCount } from "@sandy/thread-view";
 import { cn } from "../../lib/utils";
 
 interface DiffStatsTallyProps {

@@ -1,12 +1,12 @@
 import type { KeyboardEvent, RefObject } from "react";
-import { BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH } from "@bb/desktop-contract";
+import { SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH } from "@sandy/desktop-contract";
 import {
   COARSE_POINTER_HEADER_ICON_BUTTON_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
 import type { AppShortcutPresentation } from "@/lib/app-keybindings";
 import { SECONDARY_PANEL_TOP_CHROME_BACKGROUND_CLASS } from "./panelChromeClasses";
 
@@ -134,7 +134,7 @@ export function BrowserFindBar({
           aria-keyshortcuts={shortcut?.ariaKeyshortcuts}
           autoComplete="off"
           spellCheck={false}
-          maxLength={BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH}
+          maxLength={SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH}
           className={cn(
             "min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground",
             COARSE_POINTER_TEXT_SM_CLASS,

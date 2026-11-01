@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ThreadTimelinePendingTodos } from "@bb/domain";
-import type { ThreadTimelineResponse } from "@bb/server-contract";
+import type { ThreadTimelinePendingTodos } from "@sandy/domain";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
 import {
-  createNodeBbSdk,
-  type BbSdk,
+  createNodeSandySdk,
+  type SandySdk,
   type FetchImplementation,
-} from "@bb/sdk/node";
+} from "@sandy/sdk/node";
 
 import { fetchThreadPendingTodos, printPendingTodos } from "./pending-todos.js";
 
@@ -130,7 +130,7 @@ describe("fetchThreadPendingTodos", () => {
 
   interface SdkOverHttpBoundary {
     requestUrls: string[];
-    sdk: BbSdk;
+    sdk: SandySdk;
   }
 
   function makeSdkOverHttpBoundary(
@@ -144,7 +144,7 @@ describe("fetchThreadPendingTodos", () => {
     };
     return {
       requestUrls,
-      sdk: createNodeBbSdk({ baseUrl: "http://bb.test", fetch: fetchMock }),
+      sdk: createNodeSandySdk({ baseUrl: "http://sandy.test", fetch: fetchMock }),
     };
   }
 
@@ -163,7 +163,7 @@ describe("fetchThreadPendingTodos", () => {
     });
     expect(result).toEqual(snapshot);
     expect(requestUrls).toEqual([
-      "http://bb.test/api/v1/threads/thread-1/timeline?summaryOnly=true",
+      "http://sandy.test/api/v1/threads/thread-1/timeline?summaryOnly=true",
     ]);
   });
 

@@ -1,4 +1,4 @@
-import type { JsonValue } from "@bb/domain";
+import type { JsonValue } from "@sandy/domain";
 import { z } from "zod";
 
 export type BridgeJsonRpcId = string | number;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   AgentSignInGuide,
   AgentStep,
@@ -141,11 +141,11 @@ function anyReady(states: AgentStates): boolean {
 
 const REPOS: readonly OnboardingRepo[] = [
   {
-    id: "bb",
-    name: "bb",
-    path: "/Users/sawyer/projects/bb",
+    id: "sandy",
+    name: "sandy",
+    path: "/Users/sawyer/projects/sandy",
     lastActive: "12m ago",
-    remote: "get-bb/bb",
+    remote: "nesyeklaf/sandy",
     added: false,
   },
   {
@@ -181,7 +181,7 @@ const REPOS: readonly OnboardingRepo[] = [
     added: false,
   },
 ];
-const DEFAULT_REPO_IDS = ["bb", "acme-web", "dotfiles"];
+const DEFAULT_REPO_IDS = ["sandy", "acme-web", "dotfiles"];
 
 const PLUGINS: readonly {
   id: string;
@@ -194,7 +194,7 @@ const PLUGINS: readonly {
     name: "Browser Automation",
     icon: "Globe",
     description:
-      "Let BB control the in-app browser and browsers on connected machines, with inline previews for headless sessions.",
+      "Let SANDY control the in-app browser and browsers on connected machines, with inline previews for headless sessions.",
   },
   {
     id: "workflows",
@@ -207,7 +207,7 @@ const PLUGINS: readonly {
     name: "File Editor",
     icon: "Code",
     description:
-      "Edit files in BB with the Monaco editor instead of the read-only preview.",
+      "Edit files in SANDY with the Monaco editor instead of the read-only preview.",
   },
   {
     id: "prompt-library",
@@ -307,7 +307,7 @@ function AgentFrame({
       step="agent"
       compact={chrome.compact}
       title="Connect a coding agent"
-      description="bb runs the agents you already use. You need one that is installed and signed in on this computer."
+      description="sandy runs the agents you already use. You need one that is installed and signed in on this computer."
       footerNote={
         blocked ? "Threads can't start until one agent is ready." : null
       }
@@ -399,8 +399,8 @@ function PluginsFrame({
     <OnboardingLayout
       step="plugins"
       compact={chrome.compact}
-      title="Make bb yours"
-      description="Most of bb is plugins. These ones are off until you want them, and you can change your mind in Plugins."
+      title="Make sandy yours"
+      description="Most of sandy is plugins. These ones are off until you want them, and you can change your mind in Plugins."
       primaryLabel="Continue"
       secondaryLabel="Skip"
       onPrimary={chrome.onPrimary ?? noop}
@@ -441,9 +441,9 @@ function DevicesFrame({
     <OnboardingLayout
       step="devices"
       compact={chrome.compact}
-      title="Use bb from anywhere"
+      title="Use sandy from anywhere"
       description="All optional. Everything here also lives in Settings → Machines."
-      primaryLabel="Start using bb"
+      primaryLabel="Start using sandy"
       onPrimary={chrome.onPrimary ?? noop}
       onBack={chrome.onBack ?? noop}
       onSelectStep={chrome.onSelectStep ?? noop}
@@ -458,7 +458,7 @@ function HomeFrame() {
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col px-6 pt-14">
       <p className="rounded-lg border border-border px-3 py-6 text-sm text-muted-foreground">
-        The usual bb home composer goes here.
+        The usual sandy home composer goes here.
       </p>
     </div>
   );
@@ -700,7 +700,7 @@ export function Step1AgentStates() {
       </Captioned>
       <Captioned
         label="Signing in with a pasted code (Claude Code)"
-        hint="The login command runs in a hidden terminal; bb lifts the sign-in link out of its output and types the pasted code back in."
+        hint="The login command runs in a hidden terminal; sandy lifts the sign-in link out of its output and types the pasted code back in."
       >
         <StoryWindow>
           <AgentFrame
@@ -833,7 +833,7 @@ export function Step2ProjectStates() {
             selectedIds={new Set()}
             status={{
               kind: "error",
-              message: "bb couldn't scan this computer for git repos.",
+              message: "sandy couldn't scan this computer for git repos.",
             }}
           />
         </StoryWindow>
@@ -847,7 +847,7 @@ export function Step3Plugins() {
     <Gallery>
       <Captioned
         label="Built-in plugins that are off by default"
-        hint="Names, icons and descriptions come from the bb-official catalog."
+        hint="Names, icons and descriptions come from the sandy-official catalog."
       >
         <StoryWindow>
           <PluginsFrame />

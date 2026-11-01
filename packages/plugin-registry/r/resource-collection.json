@@ -3,15 +3,15 @@
   "name": "resource-collection",
   "type": "registry:ui",
   "title": "resource-collection",
-  "description": "BB ui \"resource-collection\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-collection\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/expandable-text",
-    "@bb/resource-detail-shell",
-    "@bb/resource-row",
-    "@bb/resource-toolbar",
-    "@bb/scroll-area",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/expandable-text",
+    "@sandy/resource-detail-shell",
+    "@sandy/resource-row",
+    "@sandy/resource-toolbar",
+    "@sandy/scroll-area",
+    "@sandy/utils"
   ],
   "files": [
     {

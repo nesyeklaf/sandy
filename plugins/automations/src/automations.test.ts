@@ -11,9 +11,9 @@ import {
 import { delimiter, dirname, isAbsolute, join } from "node:path";
 import { tmpdir } from "node:os";
 import Database from "better-sqlite3";
-import type { PluginCliRegistration } from "@get-bb/plugin-sdk";
+import type { PluginCliRegistration } from "@sandy-sdk/plugin-sdk";
 import { describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import {
   claimAutomationScheduledRun,
   closeAutomationRun,
@@ -176,7 +176,7 @@ function legacyAutomationRow(
   };
 }
 
-function createAutomationServiceBb() {
+function createAutomationServiceSandy() {
   return {
     sdk: {
       system: {
@@ -354,12 +354,12 @@ describe("data migrations", () => {
 });
 
 describe("startup reconciliation", () => {
-  function reconcileBb(threads: {
+  function reconcileSandy(threads: {
     get: (args: { threadId: string }) => Promise<unknown>;
   }) {
     const published: unknown[] = [];
     return {
-      bb: {
+      sandy: {
         sdk: {
           threads: {
             get: threads.get,
@@ -412,12 +412,12 @@ describe("startup reconciliation", () => {
       runMode: "agent",
       now: 1000,
     }).run;
-    const { bb, published } = reconcileBb({
+    const { sandy, published } = reconcileSandy({
       get: async () => {
         throw new Error("no thread should be asked about");
       },
     });
-    await reconcileRunningAutomationRuns(bb, db);
+    await reconcileRunningAutomationRuns(sandy, db);
     for (const run of [scriptRun, agentRun]) {
       const settled = listAutomationRuns(db, {
         automationId: run.automationId,
@@ -479,7 +479,7 @@ describe("startup reconciliation", () => {
       setAutomationRunThread(db, { runId: run.id, threadId });
       threads.set(threadId, testCase.thread);
     }
-    const { bb } = reconcileBb({
+    const { sandy } = reconcileSandy({
       get: async ({ threadId }) => {
         const value = threads.get(threadId);
         if (value === null) {
@@ -489,7 +489,7 @@ describe("startup reconciliation", () => {
         return value;
       },
     });
-    await reconcileRunningAutomationRuns(bb, db);
+    await reconcileRunningAutomationRuns(sandy, db);
     for (const testCase of cases) {
       const run = listAutomationRuns(db, {
         automationId: testCase.id,
@@ -825,7 +825,7 @@ describe("automation data access", () => {
     async (nextRunAt) => {
       const db = createTestDb();
       const automation = createScheduledAutomation(db, nextRunAt);
-      const bb = {
+      const sandy = {
         sdk: {
           hosts: {
             list: vi.fn(async () => {
@@ -872,7 +872,7 @@ describe("automation data access", () => {
         },
       };
 
-      await sweepDueAutomations(bb, db, {
+      await sweepDueAutomations(sandy, db, {
         pluginDataDir: "/tmp",
         serverUrl: "http://127.0.0.1:38886",
         serverHostId: "host_server",
@@ -880,7 +880,7 @@ describe("automation data access", () => {
         now: 1000,
       });
 
-      expect(bb.sdk.hosts.list).toHaveBeenCalledTimes(nextRunAt > 1000 ? 0 : 1);
+      expect(sandy.sdk.hosts.list).toHaveBeenCalledTimes(nextRunAt > 1000 ? 0 : 1);
       expect(getAutomation(db, automation.id)?.runCount).toBe(0);
       expect(
         listAutomationRuns(db, { automationId: automation.id, limit: 10 }),
@@ -1021,9 +1021,9 @@ describe("automation data access", () => {
 describe("automation service", () => {
   it("chooses runnable defaults for new scripts and preserves the automation-storage directory on replacement", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1137,12 +1137,12 @@ describe("automation service", () => {
 
   it("reads the server host identity after a co-located daemon initializes", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
-    const bb = createAutomationServiceBb();
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
+    const sandy = createAutomationServiceSandy();
     let serverHostId: string | null = null;
-    bb.sdk.system.config = async () => ({ primaryHostId: serverHostId });
+    sandy.sdk.system.config = async () => ({ primaryHostId: serverHostId });
     const service = createAutomationService({
-      bb,
+      sandy,
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1172,9 +1172,9 @@ describe("automation service", () => {
 
   it("updates only a script working-directory policy", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1236,7 +1236,7 @@ describe("automation service", () => {
             workingDirectory: { type: "path", path: "relative/path" },
           },
         }),
-      ).rejects.toThrow("absolute path on the bb server host");
+      ).rejects.toThrow("absolute path on the sandy server host");
       await expect(
         service.update({
           projectId: "proj_test",
@@ -1274,7 +1274,7 @@ describe("automation service", () => {
 
   it("validates project availability before creating an automation", async () => {
     const db = createTestDb();
-    const bb = {
+    const sandy = {
       sdk: {
         system: { config: async () => ({ primaryHostId: null }) },
         projects: {
@@ -1310,7 +1310,7 @@ describe("automation service", () => {
       },
     };
     const service = createAutomationService({
-      bb,
+      sandy,
       db,
       pluginDataDir: "/tmp",
       serverUrl: "http://127.0.0.1:38886",
@@ -1340,7 +1340,7 @@ describe("automation service", () => {
 
   it("removes a stored script directory after switching to agent execution", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const automation = createAutomation(db, {
       id: "auto_script_to_agent",
       projectId: "proj_test",
@@ -1362,7 +1362,7 @@ describe("automation service", () => {
     await mkdir(scriptDir, { recursive: true });
     await writeFile(join(scriptDir, "old.sh"), "echo old\n");
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1392,7 +1392,7 @@ describe("automation service", () => {
 
   it("removes only a superseded stored script file after a filename change", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const automation = createAutomation(db, {
       id: "auto_script_rename",
       projectId: "proj_test",
@@ -1415,7 +1415,7 @@ describe("automation service", () => {
     await writeFile(join(scriptDir, "old.sh"), "echo old\n");
     await writeFile(join(scriptDir, "keep.txt"), "keep\n");
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1448,7 +1448,7 @@ describe("automation service", () => {
 
   it("removes a newly staged filename when the database update fails", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const automation = createAutomation(db, {
       id: "auto_script_rollback",
       projectId: "proj_test",
@@ -1475,7 +1475,7 @@ describe("automation service", () => {
         SELECT RAISE(ABORT, 'update rejected');
       END`);
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1506,7 +1506,7 @@ describe("automation service", () => {
 
   it("does not overwrite the active filename when the database update fails", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-service-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-service-"));
     const automation = createAutomation(db, {
       id: "auto_script_same_name_rollback",
       projectId: "proj_test",
@@ -1533,7 +1533,7 @@ describe("automation service", () => {
         SELECT RAISE(ABORT, 'update rejected');
       END`);
     const service = createAutomationService({
-      bb: createAutomationServiceBb(),
+      sandy: createAutomationServiceSandy(),
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:38886",
@@ -1568,19 +1568,19 @@ describe("automation CLI --script-file", () => {
 
   async function setup() {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-1649-data-"));
-    const srcDir = await mkdtemp(join(tmpdir(), "bb-1649-src-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-1649-data-"));
+    const srcDir = await mkdtemp(join(tmpdir(), "sandy-1649-src-"));
     const reads: FileReadCall[] = [];
-    const serviceBb = createAutomationServiceBb();
+    const serviceSandy = createAutomationServiceSandy();
     const service = createAutomationService({
-      bb: serviceBb,
+      sandy: serviceSandy,
       db,
       pluginDataDir,
       serverUrl: "http://127.0.0.1:1",
       scriptRuns: createScriptRunScope(),
     });
     const sdk = {
-      ...serviceBb.sdk,
+      ...serviceSandy.sdk,
       hosts: {
         list: async () => [
           { id: "host_server", name: "server" },
@@ -1588,7 +1588,7 @@ describe("automation CLI --script-file", () => {
         ],
       },
       threads: {
-        ...serviceBb.sdk.threads,
+        ...serviceSandy.sdk.threads,
         get: async ({ threadId }: { threadId: string }) =>
           threadId === "thr_env"
             ? { id: threadId, environment: { hostId: "host_laptop" } }
@@ -1610,7 +1610,7 @@ describe("automation CLI --script-file", () => {
     };
     let cli: PluginCliRegistration | undefined;
     registerAutomationCli({
-      bb: {
+      sandy: {
         sdk: sdk as never,
         cli: {
           register: (registration) => {
@@ -1753,7 +1753,7 @@ describe("automation CLI --script-file", () => {
       expect(created.stdout).toContain(`Copied ${sourcePath}`);
       expect(created.stdout).toContain(`to ${storedPath}`);
       expect(created.stdout).toContain(
-        `bb automation update ${automationId} --project proj_test --script-file ${pastedShellArg(sourcePath)}\n`,
+        `sandy automation update ${automationId} --project proj_test --script-file ${pastedShellArg(sourcePath)}\n`,
       );
       expect(created.stdout).toContain("Working dir: /server/project");
 
@@ -1972,7 +1972,7 @@ describe("automation CLI --script-file", () => {
       expect(created.exitCode).toBe(0);
       const automationId = idFrom(created.stdout);
       expect(created.stdout).toContain(
-        `bb automation update ${automationId} --project proj_test --script-file '${sourcePath}'\n`,
+        `sandy automation update ${automationId} --project proj_test --script-file '${sourcePath}'\n`,
       );
 
       await writeFile(sourcePath, "echo two\n");
@@ -2065,14 +2065,14 @@ describe("automation CLI --script-file", () => {
   });
 });
 
-describe("bb CLI injection for script runs", () => {
-  it("prepends bb's directory to PATH only when it is absolute", () => {
-    expect(scriptPathEnv("/daemon/bundle/bb", "/usr/bin:/bin")).toBe(
-      `${dirname("/daemon/bundle/bb")}${delimiter}/usr/bin:/bin`,
+describe("sandy CLI injection for script runs", () => {
+  it("prepends sandy's directory to PATH only when it is absolute", () => {
+    expect(scriptPathEnv("/daemon/bundle/sandy", "/usr/bin:/bin")).toBe(
+      `${dirname("/daemon/bundle/sandy")}${delimiter}/usr/bin:/bin`,
     );
-    expect(scriptPathEnv("bb", "/usr/bin:/bin")).toBe("/usr/bin:/bin");
+    expect(scriptPathEnv("sandy", "/usr/bin:/bin")).toBe("/usr/bin:/bin");
     expect(scriptPathEnv(null, "/usr/bin:/bin")).toBe("/usr/bin:/bin");
-    expect(scriptPathEnv("/daemon/bundle/bb", undefined)).toBe(
+    expect(scriptPathEnv("/daemon/bundle/sandy", undefined)).toBe(
       "/daemon/bundle",
     );
   });
@@ -2103,7 +2103,7 @@ describe("script process containment", () => {
   it.skipIf(process.platform === "win32").each([0, 7])(
     "terminates an unreferenced worker after the script exits with code %i",
     async (exitCode) => {
-      const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-worker-"));
+      const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-worker-"));
       const scriptDir = automationScriptDir(pluginDataDir, "auto_worker");
       let workerPid: number | undefined;
       try {
@@ -2157,7 +2157,7 @@ describe("script process containment", () => {
     skip,
   }) => {
     skip(process.platform === "win32", BASH_SCRIPT_RUNS_ARE_POSIX_ONLY);
-    const pidDir = await mkdtemp(join(tmpdir(), "bb-auto-unload-"));
+    const pidDir = await mkdtemp(join(tmpdir(), "sandy-auto-unload-"));
     const pidFile = join(pidDir, "pids");
     const host = createFakePluginHost({
       pluginId: "automations",
@@ -2179,7 +2179,7 @@ describe("script process containment", () => {
         },
       },
     });
-    await plugin(host.bb as unknown as Parameters<typeof plugin>[0]);
+    await plugin(host.sandy as unknown as Parameters<typeof plugin>[0]);
     let pids: number[] = [];
     try {
       const automation = automationDetailResponseSchema.parse(
@@ -2252,7 +2252,7 @@ describe("script process containment", () => {
     skip,
   }) => {
     skip(process.platform === "win32", BASH_SCRIPT_RUNS_ARE_POSIX_ONLY);
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-stopped-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-stopped-"));
     const scriptDir = automationScriptDir(pluginDataDir, "auto_stopped");
     const marker = join(pluginDataDir, "started");
     await mkdir(scriptDir, { recursive: true });
@@ -2289,7 +2289,7 @@ describe("script process containment", () => {
   }) => {
     skip(process.platform === "win32", BASH_SCRIPT_RUNS_ARE_POSIX_ONLY);
     const pluginDataDir = await mkdtemp(
-      join(tmpdir(), "bb-auto-process-group-"),
+      join(tmpdir(), "sandy-auto-process-group-"),
     );
     const scriptDir = automationScriptDir(pluginDataDir, "auto_timeout");
     await mkdir(scriptDir, { recursive: true });
@@ -2330,11 +2330,11 @@ describe("script process containment", () => {
 });
 
 describe("script project context", () => {
-  function withoutMissingBbCliWarning(
+  function withoutMissingSandyCliWarning(
     output: string | null | undefined,
   ): string | null | undefined {
     return output?.replace(
-      /^\[bb\] warning: could not locate the bb CLI, so `bb` is not on PATH for this script\.\n/u,
+      /^\[sandy\] warning: could not locate the sandy CLI, so `sandy` is not on PATH for this script\.\n/u,
       "",
     );
   }
@@ -2375,7 +2375,7 @@ describe("script project context", () => {
       | { type: "path"; path: string };
   }) {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-context-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-context-"));
     const scriptDir = automationScriptDir(pluginDataDir, "auto_context");
     await mkdir(scriptDir, { recursive: true });
     await writeFile(join(scriptDir, "script.sh"), args.script);
@@ -2404,7 +2404,7 @@ describe("script project context", () => {
       now: 2_000,
     });
     const warnings: string[] = [];
-    const bb = {
+    const sandy = {
       sdk: {
         projects: {
           get: async () => ({
@@ -2427,7 +2427,7 @@ describe("script project context", () => {
       },
     };
     try {
-      await executeScriptRun(bb, db, {
+      await executeScriptRun(sandy, db, {
         pluginDataDir,
         automation,
         run,
@@ -2443,7 +2443,7 @@ describe("script project context", () => {
         serverUrl: "http://127.0.0.1:38886",
         scriptRuns: createScriptRunScope(),
         resolveWorkingDirectory: createScriptWorkingDirectoryResolver({
-          sdk: bb.sdk,
+          sdk: sandy.sdk,
           pluginDataDir,
           serverHostId:
             args.serverHostId === undefined ? "host_server" : args.serverHostId,
@@ -2454,10 +2454,10 @@ describe("script project context", () => {
         limit: 1,
       });
       const service = createAutomationService({
-        bb: {
-          ...bb,
+        sandy: {
+          ...sandy,
           sdk: {
-            ...bb.sdk,
+            ...sandy.sdk,
             system: {
               config: async () => ({
                 primaryHostId:
@@ -2466,7 +2466,7 @@ describe("script project context", () => {
                     : args.serverHostId,
               }),
             },
-            projects: { ...bb.sdk.projects, list: async () => [] },
+            projects: { ...sandy.sdk.projects, list: async () => [] },
             providers: { list: async () => [] as never },
           },
         } as never,
@@ -2498,8 +2498,8 @@ describe("script project context", () => {
     skip,
   }) => {
     skip(process.platform === "win32", BASH_SCRIPT_RUNS_ARE_POSIX_ONLY);
-    const serverProjectDir = await mkdtemp(join(tmpdir(), "bb-auto-server-"));
-    const remoteProjectDir = await mkdtemp(join(tmpdir(), "bb-auto-remote-"));
+    const serverProjectDir = await mkdtemp(join(tmpdir(), "sandy-auto-server-"));
+    const remoteProjectDir = await mkdtemp(join(tmpdir(), "sandy-auto-remote-"));
     await mkdir(join(serverProjectDir, "bin"));
     await writeFile(
       join(serverProjectDir, "bin", "build-views.txt"),
@@ -2526,7 +2526,7 @@ describe("script project context", () => {
         status: "succeeded",
         exitCode: 0,
       });
-      expect(withoutMissingBbCliWarning(result.closed?.output)).toBe(
+      expect(withoutMissingSandyCliWarning(result.closed?.output)).toBe(
         `${await realpath(serverProjectDir)}\nproject-relative file found\n`,
       );
     } finally {
@@ -2539,8 +2539,8 @@ describe("script project context", () => {
     skip,
   }) => {
     skip(process.platform === "win32", BASH_SCRIPT_RUNS_ARE_POSIX_ONLY);
-    const serverProjectDir = await mkdtemp(join(tmpdir(), "bb-auto-server-"));
-    const explicitDir = await mkdtemp(join(tmpdir(), "bb-auto-explicit-"));
+    const serverProjectDir = await mkdtemp(join(tmpdir(), "sandy-auto-server-"));
+    const explicitDir = await mkdtemp(join(tmpdir(), "sandy-auto-explicit-"));
     const sources = [
       projectSource({
         hostId: "host_server",
@@ -2560,7 +2560,7 @@ describe("script project context", () => {
           sources,
         });
         expect(result.displayedWorkingDirectory).not.toBeNull();
-        expect(withoutMissingBbCliWarning(result.closed?.output)).toBe(
+        expect(withoutMissingSandyCliWarning(result.closed?.output)).toBe(
           `${result.displayedWorkingDirectory}\n`,
         );
       }
@@ -2571,7 +2571,7 @@ describe("script project context", () => {
   });
 
   it("fails project policy instead of using another host's source", async () => {
-    const remoteProjectDir = await mkdtemp(join(tmpdir(), "bb-auto-remote-"));
+    const remoteProjectDir = await mkdtemp(join(tmpdir(), "sandy-auto-remote-"));
     try {
       const result = await runScriptAutomation({
         script: "pwd -P\n",
@@ -2586,7 +2586,7 @@ describe("script project context", () => {
       });
       expect(result.closed).toMatchObject({
         status: "failed",
-        error: "Project proj_test has no source on the bb server host",
+        error: "Project proj_test has no source on the sandy server host",
       });
     } finally {
       await rm(remoteProjectDir, { recursive: true, force: true });
@@ -2602,7 +2602,7 @@ describe("script project context", () => {
     });
     expect(result.closed).toMatchObject({
       status: "failed",
-      error: "Project proj_test has no source on the bb server host",
+      error: "Project proj_test has no source on the sandy server host",
     });
   });
 
@@ -2639,7 +2639,7 @@ describe("script project context", () => {
       sources: [
         projectSource({
           hostId: "host_server",
-          path: join(tmpdir(), "bb-auto-missing-project-source"),
+          path: join(tmpdir(), "sandy-auto-missing-project-source"),
           isDefault: true,
         }),
       ],
@@ -2665,7 +2665,7 @@ describe("script project context", () => {
       exitCode: 2,
       error: "Script exited with code 2: missing project file",
     });
-    expect(withoutMissingBbCliWarning(result.closed?.output)).toBe(
+    expect(withoutMissingSandyCliWarning(result.closed?.output)).toBe(
       "stdout kept\n\n  missing project file  \nlater detail\n",
     );
   });
@@ -2783,7 +2783,7 @@ describe("script wake gate", () => {
 describe("legacy import", () => {
   it("ingests legacy rows, moves environment into agent execution, and imports scripts once", async () => {
     const db = createTestDb();
-    const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-plugin-"));
+    const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-plugin-"));
     await mkdir(join(pluginDataDir, "import"), { recursive: true });
     await writeFile(
       join(pluginDataDir, "import", "legacy-automations.json"),
@@ -2813,7 +2813,7 @@ describe("legacy import", () => {
       }),
     );
     const kv = new Map<string, unknown>();
-    const bb = {
+    const sandy = {
       storage: {
         kv: {
           get: async <T>(key: string) => kv.get(key) as T | undefined,
@@ -2825,8 +2825,8 @@ describe("legacy import", () => {
       log: { info: () => undefined },
     };
 
-    await ingestLegacyImport({ bb, db, pluginDataDir });
-    await ingestLegacyImport({ bb, db, pluginDataDir });
+    await ingestLegacyImport({ sandy, db, pluginDataDir });
+    await ingestLegacyImport({ sandy, db, pluginDataDir });
 
     const imported = getAutomation(db, "auto_legacy");
     expect(imported).not.toBeNull();
@@ -2865,7 +2865,7 @@ describe("legacy import", () => {
 
     for (const testCase of cases) {
       const db = createTestDb();
-      const pluginDataDir = await mkdtemp(join(tmpdir(), "bb-auto-plugin-"));
+      const pluginDataDir = await mkdtemp(join(tmpdir(), "sandy-auto-plugin-"));
       try {
         await mkdir(join(pluginDataDir, "import"), { recursive: true });
         await writeFile(
@@ -2877,7 +2877,7 @@ describe("legacy import", () => {
           }),
         );
         const kv = new Map<string, unknown>();
-        const bb = {
+        const sandy = {
           storage: {
             kv: {
               get: async <T>(key: string) => kv.get(key) as T | undefined,
@@ -2890,7 +2890,7 @@ describe("legacy import", () => {
         };
 
         await expect(
-          ingestLegacyImport({ bb, db, pluginDataDir }),
+          ingestLegacyImport({ sandy, db, pluginDataDir }),
           testCase.name,
         ).rejects.toThrow(/does not match/u);
       } finally {

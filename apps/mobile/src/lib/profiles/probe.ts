@@ -84,7 +84,7 @@ export async function probeServer(
       ok: false,
       serverUrl: base,
       stage: "health",
-      error: "Not a bb server (unexpected /health response)",
+      error: "Not a sandy server (unexpected /health response)",
     };
   }
 
@@ -102,7 +102,7 @@ export async function probeServer(
       ok: false,
       serverUrl: base,
       stage: "config",
-      error: "Not a bb server (unexpected /system/config response)",
+      error: "Not a sandy server (unexpected /system/config response)",
     };
   }
 

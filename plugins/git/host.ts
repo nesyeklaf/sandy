@@ -4,7 +4,7 @@ process.env.GIT_OPTIONAL_LOCKS = "0";
 import {
   experimental_defineHostEntry,
   type ExperimentalHostRpcContext,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import { gitHostContract, type DiffPatchEntry } from "./contract.js";
 import {
   selectInitialPatchPaths,
@@ -14,12 +14,12 @@ import { WorkspaceReads } from "./host/workspace-reads.js";
 import { gitPriority, withGitPriority } from "./host/git.js";
 import type {
   WorkspaceResolutionFailure,
-} from "bb-environment-provider-host/git-types";
-import { listBranchOptions } from "bb-environment-provider-host/branch-options";
+} from "sandy-environment-provider-host/git-types";
+import { listBranchOptions } from "sandy-environment-provider-host/branch-options";
 import {
   detectGitRepo,
   workspaceResolutionFailureFromError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 const STATUS_MAX_FILES = 200;
 const STATUS_MAX_UNTRACKED_LINE_STAT_FILES = 50;

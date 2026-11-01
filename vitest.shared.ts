@@ -333,8 +333,8 @@ export function defineWorkspaceTestConfig(
         globalSetup: [
           fileURLToPath(new URL("./vitest.global-tmpdir.ts", import.meta.url)),
         ],
-        ...(process.env.BB_CI_TEST_SHARD
-          ? { shard: process.env.BB_CI_TEST_SHARD }
+        ...(process.env.SANDY_CI_TEST_SHARD
+          ? { shard: process.env.SANDY_CI_TEST_SHARD }
           : {}),
         sequence: { sequencer: SharedWorkerSequencer },
         coverage: {

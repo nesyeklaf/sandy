@@ -1,8 +1,8 @@
-import type { Environment, Thread } from "@bb/domain";
+import type { Environment, Thread } from "@sandy/domain";
 import type {
   CreateThreadRequest,
   UnmanagedBranchSpec,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   createHostThread,
   createProject,

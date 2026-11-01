@@ -1,9 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type {
-  BbSdkAreas,
+  SandySdkAreas,
   ThreadMutationResult,
   ThreadUpdateArgs,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import { sdk } from "@/lib/sdk";
 import { registerThreadEntityViews } from "../cache-owners/thread-entity-store";
 import { readThreadBack } from "../cache-owners/thread-read-back";
@@ -15,7 +15,7 @@ import {
   rollbackThreadMetadataBatchTransaction,
 } from "../cache-owners/thread-state-cache-owner";
 
-type ThreadMutations = Pick<BbSdkAreas["threads"], "update" | "pin" | "unpin">;
+type ThreadMutations = Pick<SandySdkAreas["threads"], "update" | "pin" | "unpin">;
 
 type PendingThreadMutation = {
   threadId: string;

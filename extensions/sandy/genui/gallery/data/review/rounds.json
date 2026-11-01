@@ -1,0 +1,33 @@
+{
+  "rounds": [
+    {
+      "round": 1,
+      "lines": 120,
+      "added": "retry.ts, upload.ts"
+    },
+    {
+      "round": 2,
+      "lines": 330,
+      "added": "jitter.ts, metrics.ts"
+    },
+    {
+      "round": 3,
+      "lines": 670,
+      "added": "queue.ts"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "Opus",
+      "model": "Opus 5.5",
+      "verdict": "fix-required",
+      "why": "2 medium findings open in queue.ts"
+    },
+    {
+      "reviewer": "Sol",
+      "model": "Sol 6.1",
+      "verdict": "ship",
+      "why": "only low findings open"
+    }
+  ]
+}

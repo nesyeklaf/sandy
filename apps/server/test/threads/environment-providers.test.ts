@@ -5,7 +5,7 @@ import {
 import { cancelProviderEnvironmentCreation } from "../../src/services/environments/environment-engine.js";
 import { sweepProviderMachine } from "../../src/services/machines/provider-orchestration.js";
 import { stopThreadForCurrentState } from "../../src/services/threads/thread-lifecycle.js";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { resolveGitCheckoutAvailability } from "../../src/services/environments/provider-availability.js";
 import { invalidateEnvironmentProviderMachineAvailability } from "../../src/services/environments/provider-machine-availability.js";
 import {
@@ -28,20 +28,20 @@ import {
   listProjectSourcesByProjectIds,
   setProjectGitRemoteUrlIfMissing,
   updateHost,
-} from "@bb/db";
-import { PERSONAL_PROJECT_ID, type JsonValue } from "@bb/domain";
+} from "@sandy/db";
+import { PERSONAL_PROJECT_ID, type JsonValue } from "@sandy/domain";
 import type {
   PluginDispatchEnvironmentIntent,
   PluginEnvironmentProviderDeclaration,
   PluginEnvironmentValidateDecision,
   PluginHookName,
-} from "@get-bb/plugin-sdk";
-import type { PluginEnvironmentProviderValidateContext } from "@get-bb/plugin-sdk/environment-provider";
-import type { PluginMachineProviderCreateContext } from "@get-bb/plugin-sdk/machine-provider";
+} from "@sandy-sdk/plugin-sdk";
+import type { PluginEnvironmentProviderValidateContext } from "@sandy-sdk/plugin-sdk/environment-provider";
+import type { PluginMachineProviderCreateContext } from "@sandy-sdk/plugin-sdk/machine-provider";
 import {
   validatePluginEnvironmentProviderDeclaration,
   validatePluginMachineProviderDeclaration,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { ApiError } from "../../src/errors.js";
@@ -284,11 +284,11 @@ describe("machine and environment provider composition", () => {
         "https://example.test/project.git",
       );
       const message =
-        "Machine bootstrap command failed:\nbb-machine-install: 9: node: not found\nbb-machine-install: 9: curl: not found";
+        "Machine bootstrap command failed:\nsandy-machine-install: 9: node: not found\nsandy-machine-install: 9: curl: not found";
       installCompositionMachine(async ({ report }) => {
         report.step("Bootstrapping machine");
-        report.log("bb-machine-install: 9: node: not found\n");
-        report.log("bb-machine-install: 9: curl: not found\n");
+        report.log("sandy-machine-install: 9: node: not found\n");
+        report.log("sandy-machine-install: 9: curl: not found\n");
         return { status: "failed", message };
       });
 
@@ -1103,7 +1103,7 @@ describe("environment providers are asked inside provisioning", () => {
 
       await reportQueuedCommandError(harness, queued, {
         errorCode: "setup_script_failed",
-        errorMessage: ".bb-env-setup.sh failed with exit code 7",
+        errorMessage: ".sandy-env-setup.sh failed with exit code 7",
       });
       await vi.waitFor(() => {
         expect(getThread(harness.db, created.id)).toMatchObject({
@@ -1469,7 +1469,7 @@ describe("environment providers are asked inside provisioning", () => {
             isWorktree: false,
             checkout: {
               kind: "branch",
-              branchName: "bb/next-thread",
+              branchName: "sandy/next-thread",
               headSha: "def456",
             },
             defaultBranch: "main",
@@ -1495,7 +1495,7 @@ describe("environment providers are asked inside provisioning", () => {
         });
         await vi.waitFor(() => {
           expect(getEnvironment(harness.db, attached.id)?.branchName).toBe(
-            "bb/next-thread",
+            "sandy/next-thread",
           );
         });
         expect(getThread(harness.db, created.id)?.environmentId).toBe(

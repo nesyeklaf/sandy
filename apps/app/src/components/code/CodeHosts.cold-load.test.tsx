@@ -4,23 +4,23 @@ import { act } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { PluginSourceCode } from "@/components/plugin/PluginSourceCode";
 import { LazyPluginDiff } from "@/components/plugin/lazy-plugin-renderers";
-import { parseGitDiffFiles } from "@bb/shared-ui/git-diff/parsing";
+import { parseGitDiffFiles } from "@sandy/shared-ui/git-diff/parsing";
 import { DiffHost } from "./DiffHost";
 import { SourceCodeHost } from "./SourceCodeHost";
 
 const downloads = await vi.hoisted(async () => {
-  const { createDeferredPromise } = await import("@bb/test-helpers");
+  const { createDeferredPromise } = await import("@sandy/test-helpers");
   return {
     diff: createDeferredPromise<void>(),
     source: createDeferredPromise<void>(),
   };
 });
 
-vi.mock("./BbDiff", async () => {
+vi.mock("./SandyDiff", async () => {
   await downloads.diff.promise;
   return { default: () => <p>Diff ready</p> };
 });
-vi.mock("./BbSourceCode", async () => {
+vi.mock("./SandySourceCode", async () => {
   await downloads.source.promise;
   return { default: () => <p>Source ready</p> };
 });

@@ -4,7 +4,7 @@ import {
   createFakePluginHost,
   makeThreadResponse,
   type FakePluginHost,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import slackBot from "./server";
 
 const SIGNING_SECRET = "test-signing-secret";
@@ -51,7 +51,7 @@ async function loadConfigured(): Promise<FakePluginHost> {
       },
     },
   });
-  await slackBot(host.bb);
+  await slackBot(host.sandy);
   return host;
 }
 
@@ -84,8 +84,8 @@ describe("slack-bot webhook", () => {
     expect(response.status).toBe(401);
   });
 
-  it("spawns an attributed BB thread on first mention and stores the kv mapping", async () => {
-    const { bb, harness } = await loadConfigured();
+  it("spawns an attributed SANDY thread on first mention and stores the kv mapping", async () => {
+    const { sandy, harness } = await loadConfigured();
     const rawBody = mentionEvent({
       text: "<@U1> run the tests please",
       ts: "111.222",
@@ -108,8 +108,8 @@ describe("slack-bot webhook", () => {
         },
       ],
     ]);
-    expect(await bb.storage.kv.get("slack:111.222")).toBe("th_1");
-    expect(await bb.storage.kv.get("bb:th_1")).toEqual({
+    expect(await sandy.storage.kv.get("slack:111.222")).toBe("th_1");
+    expect(await sandy.storage.kv.get("sandy:th_1")).toEqual({
       channel: "C42",
       threadTs: "111.222",
     });
@@ -146,7 +146,7 @@ describe("slack-bot webhook", () => {
 
   it("reports needs-configuration and serves 503 when unconfigured", async () => {
     const host = createFakePluginHost({ pluginId: "slack-bot" });
-    await slackBot(host.bb);
+    await slackBot(host.sandy);
     expect(host.harness.needsConfigurationMessages).toHaveLength(1);
 
     const response = await host.harness.fetchHttp("POST", "/events", {
@@ -159,7 +159,7 @@ describe("slack-bot webhook", () => {
 
 describe("slack-bot thread.idle", () => {
   it("posts the agent's answer back into the originating Slack thread", async () => {
-    const { bb, harness } = await loadConfigured();
+    const { sandy, harness } = await loadConfigured();
     const rawBody = mentionEvent({ text: "<@U1> summarize", ts: "9.9" });
     await harness.fetchHttp("POST", "/events", {
       headers: slackHeaders(rawBody),

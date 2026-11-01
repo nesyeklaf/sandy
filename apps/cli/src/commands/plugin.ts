@@ -10,12 +10,12 @@ import {
   derivePluginId,
   jsonValueSchema,
   PLUGIN_SDK_VERSION,
-} from "@bb/domain";
-import { pluginCliCall, RESERVED_BB_CLI_COMMANDS } from "@bb/domain/plugin-cli";
+} from "@sandy/domain";
+import { pluginCliCall, RESERVED_SANDY_CLI_COMMANDS } from "@sandy/domain/plugin-cli";
 import {
   pluginInstallBadge,
   type PluginInstallBadge,
-} from "@bb/domain/plugin-install-badge";
+} from "@sandy/domain/plugin-install-badge";
 import type {
   InstalledPlugin as PluginEntry,
   PluginApplyUpdateResult,
@@ -23,18 +23,18 @@ import type {
   PluginCatalogResolvedSource,
   PluginCatalogSearchResult,
   PluginUpdateCheckEntry as PluginUpdateResult,
-} from "@bb/server-contract";
-import { BbHttpError, pluginMutationResponseSchema } from "@bb/sdk";
-import { parseDataDirEnvValue, resolveProdDataDir } from "@bb/config/runtime";
+} from "@sandy/server-contract";
+import { SandyHttpError, pluginMutationResponseSchema } from "@sandy/sdk";
+import { parseDataDirEnvValue, resolveProdDataDir } from "@sandy/config/runtime";
 import {
   migratePluginToPackageLayout,
   resolvePluginSdkLayout,
   scaffoldPlugin,
   setPluginSdkPin,
   type PluginPackageLayoutMigration,
-} from "@bb/templates/plugin-scaffold";
+} from "@sandy/templates/plugin-scaffold";
 import { action, CliExitError } from "../action.js";
-import { cliFetch, createCliBbSdk } from "../client.js";
+import { cliFetch, createCliSandySdk } from "../client.js";
 import {
   buildPluginApp,
   buildPluginHost,
@@ -43,9 +43,9 @@ import {
   PLUGIN_TOOLCHAIN_PINS,
   resolvePluginBuildToolchain,
   type PluginBuildToolchain,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 import { runPluginCliCommand } from "../plugin-cli-proxy.js";
-import { resolveBbCliVersion } from "../version.js";
+import { resolveSandyCliVersion } from "../version.js";
 
 import { outputJson, type JsonOutputOptions } from "./helpers.js";
 import { renderBorderlessTable } from "../table.js";
@@ -58,21 +58,21 @@ interface NewPluginTarget {
 export function resolveNewPluginTarget(name: string): NewPluginTarget | null {
   const packageName = name.startsWith("@")
     ? name
-    : name.startsWith("bb-plugin-")
+    : name.startsWith("sandy-plugin-")
       ? name
-      : `bb-plugin-${name}`;
+      : `sandy-plugin-${name}`;
   if (
-    !/^(?:@[a-z0-9][a-z0-9-]*\/)?bb-plugin-[a-z0-9][a-z0-9-]*$/.test(
+    !/^(?:@[a-z0-9][a-z0-9-]*\/)?sandy-plugin-[a-z0-9][a-z0-9-]*$/.test(
       packageName,
     )
   ) {
     return null;
   }
   const pluginId = derivePluginId(packageName);
-  if (RESERVED_BB_CLI_COMMANDS.includes(pluginId)) return null;
+  if (RESERVED_SANDY_CLI_COMMANDS.includes(pluginId)) return null;
   return {
     packageName,
-    directoryName: `bb-plugin-${pluginId}`,
+    directoryName: `sandy-plugin-${pluginId}`,
   };
 }
 
@@ -95,7 +95,7 @@ function formatCacheBytes(bytes: number): string {
 }
 
 function toolchainBaseDir(): string {
-  const configured = process.env.BB_DATA_DIR;
+  const configured = process.env.SANDY_DATA_DIR;
   const dataDir =
     configured === undefined || configured.trim().length === 0
       ? resolveProdDataDir({ homeDir: homedir() })
@@ -122,7 +122,7 @@ async function searchCatalog(
   baseUrl: string,
   query: string,
 ): Promise<PluginCatalogSearchResult[]> {
-  return (await createCliBbSdk(baseUrl).plugins.catalog.search({ query }))
+  return (await createCliSandySdk(baseUrl).plugins.catalog.search({ query }))
     .results;
 }
 
@@ -157,7 +157,7 @@ const pluginPackageSummarySchema = z.object({
   version: z.string().optional(),
 });
 const pluginManifestSchema = z.object({
-  bb: z
+  sandy: z
     .object({
       server: z.unknown().optional(),
       app: z.unknown().optional(),
@@ -182,7 +182,7 @@ async function readPluginManifest(
 
 const LEGACY_PLUGIN_SDK_LAYOUT_MESSAGE =
   "This plugin uses the legacy vendored SDK layout. Its SDK types will not be updated.\n" +
-  "Please run `bb plugin migrate` to update to the latest SDK types.";
+  "Please run `sandy plugin migrate` to update to the latest SDK types.";
 
 async function checkPluginSdkLayout(rootDir: string): Promise<void> {
   const layout = await resolvePluginSdkLayout(rootDir);
@@ -199,24 +199,24 @@ function warnIfSdkPinIsStale(pin: string | null): void {
   if (pin === null || !EXACT_VERSION_PATTERN.test(pin)) return;
   if (pin === PLUGIN_SDK_VERSION) return;
   console.warn(
-    `This plugin pins @get-bb/plugin-sdk ${pin}; this bb's SDK is ${PLUGIN_SDK_VERSION} — \`bb plugin types\` updates the pin.`,
+    `This plugin pins @sandy-sdk/plugin-sdk ${pin}; this sandy's SDK is ${PLUGIN_SDK_VERSION} — \`sandy plugin types\` updates the pin.`,
   );
 }
 
 function printMigrationPlan(plan: PluginPackageLayoutMigration): void {
   if (plan.pin !== null) {
     console.log(
-      `  package.json   devDependencies "@get-bb/plugin-sdk": ${plan.pin.from ?? "(none)"} → ${plan.pin.to}`,
+      `  package.json   devDependencies "@sandy-sdk/plugin-sdk": ${plan.pin.from ?? "(none)"} → ${plan.pin.to}`,
     );
   }
   if (plan.movedFromDependencies) {
     console.log(
-      '  package.json   move "@get-bb/plugin-sdk" from dependencies to devDependencies',
+      '  package.json   move "@sandy-sdk/plugin-sdk" from dependencies to devDependencies',
     );
   }
   if (plan.enginesFloor !== null) {
     console.log(
-      `  package.json   engines.bbPluginSdk: ${plan.enginesFloor.from ?? "(none)"} → ${plan.enginesFloor.to}`,
+      `  package.json   engines.sandyPluginSdk: ${plan.enginesFloor.from ?? "(none)"} → ${plan.enginesFloor.to}`,
     );
   }
   for (const key of plan.removedPathMaps) {
@@ -233,7 +233,7 @@ function printMigrationPlan(plan: PluginPackageLayoutMigration): void {
   }
   for (const file of plan.rewrittenImports) {
     console.log(
-      `  rewrite        ${file.path} (${file.imports} import${file.imports === 1 ? "" : "s"} of "@bb/plugin-sdk" → "@get-bb/plugin-sdk")`,
+      `  rewrite        ${file.path} (${file.imports} import${file.imports === 1 ? "" : "s"} of "@sandy/plugin-sdk" → "@sandy-sdk/plugin-sdk")`,
     );
   }
 }
@@ -255,9 +255,9 @@ async function requirePluginManifest(
     );
     process.exit(1);
   }
-  if (typeof manifest.bb?.server !== "string") {
+  if (typeof manifest.sandy?.server !== "string") {
     console.error(
-      `${rootDir} is not a bb plugin — package.json has no "bb.server" entry.`,
+      `${rootDir} is not a sandy plugin — package.json has no "sandy.server" entry.`,
     );
     process.exit(1);
   }
@@ -406,7 +406,7 @@ function installPlan(
   baseUrl: string,
   args: { entryId: string; marketplace?: string },
 ): Promise<PluginCatalogInstallPlan> {
-  return createCliBbSdk(baseUrl).plugins.catalog.installPlan(args);
+  return createCliSandySdk(baseUrl).plugins.catalog.installPlan(args);
 }
 
 async function resolveInstallIntent(
@@ -496,10 +496,10 @@ function resolvedSourceLines(source: PluginCatalogResolvedSource): string[] {
 
 function installPlanSummary(plan: PluginCatalogInstallPlan): string {
   if (plan.kind === "bundled") {
-    return `Installing ${plan.displayName}, bundled with BB (${plan.source})`;
+    return `Installing ${plan.displayName}, bundled with SANDY (${plan.source})`;
   }
   if (plan.official) {
-    return `Installing ${plan.displayName} from the ${plan.marketplaceDisplayName} marketplace, reviewed by BB (${plan.source})`;
+    return `Installing ${plan.displayName} from the ${plan.marketplaceDisplayName} marketplace, reviewed by SANDY (${plan.source})`;
   }
   const author =
     plan.author.url === null
@@ -507,7 +507,7 @@ function installPlanSummary(plan: PluginCatalogInstallPlan): string {
       : `${plan.author.name} (${plan.author.url})`;
   return [
     `Installing ${plan.displayName} (${plan.entryId}@${plan.marketplace})`,
-    `  marketplace: ${plan.marketplaceDisplayName} — a third-party marketplace, not reviewed by BB`,
+    `  marketplace: ${plan.marketplaceDisplayName} — a third-party marketplace, not reviewed by SANDY`,
     `  author: ${author}`,
     ...resolvedSourceLines(plan.resolvedSource),
   ].join("\n");
@@ -536,10 +536,10 @@ function printPlugin(plugin: PluginEntry): void {
     );
   }
   if (plugin.cliCommand) {
-    const collisionNote = RESERVED_BB_CLI_COMMANDS.includes(
+    const collisionNote = RESERVED_SANDY_CLI_COMMANDS.includes(
       plugin.cliCommand.name,
     )
-      ? ` (core command "bb ${plugin.cliCommand.name}" takes precedence)`
+      ? ` (core command "sandy ${plugin.cliCommand.name}" takes precedence)`
       : "";
     console.log(
       `  command: ${pluginCliCall(plugin.id, plugin.cliCommand.name)} — ${plugin.cliCommand.summary}${collisionNote}`,
@@ -553,7 +553,7 @@ function exitWithError(result: { error?: string }): never {
 }
 
 function sdkErrorMessage(error: unknown): string {
-  if (error instanceof BbHttpError) {
+  if (error instanceof SandyHttpError) {
     return error.message.replace(/^HTTP \d+: /u, "");
   }
   return error instanceof Error ? error.message : String(error);
@@ -629,7 +629,7 @@ export function registerPluginCommands(
 ): void {
   const plugin = program
     .command("plugin")
-    .description("Manage BB plugins")
+    .description("Manage SANDY plugins")
     .enablePositionalOptions();
 
   const rpc = plugin
@@ -645,7 +645,7 @@ export function registerPluginCommands(
           pluginId: string | undefined,
           opts: JsonOutputOptions & { method?: string },
         ) => {
-          const methods = await createCliBbSdk(
+          const methods = await createCliSandySdk(
             getUrl(),
           ).plugins.experimental_discoverRpc({ pluginId, method: opts.method });
           if (opts.json) {
@@ -681,7 +681,7 @@ export function registerPluginCommands(
               : jsonValueSchema.parse(
                   JSON.parse(await readFile(opts.inputFile, "utf8")),
                 );
-          const result = await createCliBbSdk(getUrl())
+          const result = await createCliSandySdk(getUrl())
             .plugins.callRpc({
               pluginId,
               method,
@@ -689,7 +689,7 @@ export function registerPluginCommands(
               outputSchema: jsonValueSchema,
             })
             .catch((error: unknown) => {
-              if (error instanceof BbHttpError && error.code !== null) {
+              if (error instanceof SandyHttpError && error.code !== null) {
                 throw new CliExitError(`${error.code}: ${error.message}`, 1, {
                   code: error.code,
                   hint: null,
@@ -716,7 +716,7 @@ export function registerPluginCommands(
           method: string | undefined,
           opts: JsonOutputOptions,
         ) => {
-          const methods = await createCliBbSdk(
+          const methods = await createCliSandySdk(
             getUrl(),
           ).plugins.experimental_discoverRpc({ pluginId, method });
           if (opts.json) {
@@ -771,7 +771,7 @@ export function registerPluginCommands(
           result.installed
             ? "✓ installed"
             : !result.compatible
-              ? `requires newer bb${result.incompatibleReason ? `: ${result.incompatibleReason}` : ""}`
+              ? `requires newer sandy${result.incompatibleReason ? `: ${result.incompatibleReason}` : ""}`
               : result.conflictingInstallSource !== null
                 ? `id in use by ${result.conflictingInstallSource}`
                 : "compatible",
@@ -809,7 +809,7 @@ export function registerPluginCommands(
     .option("--json", "Output JSON")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const result = await createCliBbSdk(getUrl()).plugins.list();
+        const result = await createCliSandySdk(getUrl()).plugins.list();
         if (opts.json) {
           outputJson(opts, result);
           return;
@@ -830,7 +830,7 @@ export function registerPluginCommands(
     .option("--json", "Output JSON")
     .action(
       action(async (id: string, opts: JsonOutputOptions) => {
-        const source = await createCliBbSdk(getUrl()).plugins.getSource({
+        const source = await createCliSandySdk(getUrl()).plugins.getSource({
           pluginId: id,
         });
         if (opts.json) {
@@ -850,11 +850,11 @@ export function registerPluginCommands(
         if (source.resolvedTag !== undefined) {
           console.log(`  tag: ${source.resolvedTag}`);
         }
-        if (source.engines.bb) {
-          console.log(`  engines.bb: ${source.engines.bb}`);
+        if (source.engines.sandy) {
+          console.log(`  engines.sandy: ${source.engines.sandy}`);
         }
-        if (source.engines.bbPluginSdk) {
-          console.log(`  engines.bbPluginSdk: ${source.engines.bbPluginSdk}`);
+        if (source.engines.sandyPluginSdk) {
+          console.log(`  engines.sandyPluginSdk: ${source.engines.sandyPluginSdk}`);
         }
         if (source.installedAt !== undefined) {
           console.log(`  installed: ${formatAbsoluteDate(source.installedAt)}`);
@@ -875,7 +875,7 @@ export function registerPluginCommands(
   plugin
     .command("install <source>")
     .description(
-      "Install a catalog entry by name or <entry>@<marketplace>, a Git repository URL, a local path, builtin:<name>, or git:<url>[@<ref|semver-range>]. A catalog entry from a third-party marketplace is not reviewed by BB, so its confirmation names the marketplace, the author, and the exact resolved source (managed sources validate engines ranges and build artifacts; bundled plugin ids are reserved)",
+      "Install a catalog entry by name or <entry>@<marketplace>, a Git repository URL, a local path, builtin:<name>, or git:<url>[@<ref|semver-range>]. A catalog entry from a third-party marketplace is not reviewed by SANDY, so its confirmation names the marketplace, the author, and the exact resolved source (managed sources validate engines ranges and build artifacts; bundled plugin ids are reserved)",
     )
     .option(
       "--subdirectory <path>",
@@ -883,7 +883,7 @@ export function registerPluginCommands(
     )
     .option(
       "--plugin <name>",
-      "Install the .bb/plugins.json entry with this name (git:/path: repositories)",
+      "Install the .sandy/plugins.json entry with this name (git:/path: repositories)",
     )
     .option(
       "--tag-prefix <prefix>",
@@ -892,7 +892,7 @@ export function registerPluginCommands(
     .option("--yes", "Skip the confirmation prompt")
     .option(
       "--no-wait",
-      "Start the install in the background and print its job; follow it with `bb plugin install-jobs`",
+      "Start the install in the background and print its job; follow it with `sandy plugin install-jobs`",
     )
     .option("--json", "Output JSON")
     .action(
@@ -909,7 +909,7 @@ export function registerPluginCommands(
         ) => {
           if (opts.subdirectory !== undefined && opts.plugin !== undefined) {
             throw new Error(
-              "Use --subdirectory or --plugin, not both: --plugin resolves a name from .bb/plugins.json to a subdirectory.",
+              "Use --subdirectory or --plugin, not both: --plugin resolves a name from .sandy/plugins.json to a subdirectory.",
             );
           }
           const requested =
@@ -945,7 +945,7 @@ export function registerPluginCommands(
                 summary = `Installing ${pkg.name}@${pkg.version ?? "?"} from ${path}`;
                 const pluginId = derivePluginId(pkg.name);
                 const { plugins } =
-                  await createCliBbSdk(getUrl()).plugins.list();
+                  await createCliSandySdk(getUrl()).plugins.list();
                 const installed = plugins.find((p) => p.id === pluginId);
                 if (
                   installed !== undefined &&
@@ -966,8 +966,8 @@ export function registerPluginCommands(
           if (!opts.json) {
             console.log(summary);
             console.log(
-              "Plugins are full-trust code running inside the BB server. " +
-                "They can read all local BB data, including other plugins' secrets.",
+              "Plugins are full-trust code running inside the SANDY server. " +
+                "They can read all local SANDY data, including other plugins' secrets.",
             );
           }
           await confirmPluginAction(
@@ -975,7 +975,7 @@ export function registerPluginCommands(
             "Refusing to install without confirmation — re-run with --yes.",
             opts.yes === true,
           );
-          const plugins = createCliBbSdk(getUrl()).plugins;
+          const plugins = createCliSandySdk(getUrl()).plugins;
           const request =
             intent.kind === "source"
               ? {
@@ -1016,7 +1016,7 @@ export function registerPluginCommands(
               `Installing ${job.displayName} in the background (job ${job.id}).`,
             );
             console.log(
-              `Follow it with \`bb plugin install-jobs\`; cancel it with \`bb plugin cancel-install ${job.id}\`.`,
+              `Follow it with \`sandy plugin install-jobs\`; cancel it with \`sandy plugin cancel-install ${job.id}\`.`,
             );
             return;
           }
@@ -1043,7 +1043,7 @@ export function registerPluginCommands(
     .option("--json", "Output JSON")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const jobs = await createCliBbSdk(getUrl()).plugins.installJobs.list();
+        const jobs = await createCliSandySdk(getUrl()).plugins.installJobs.list();
         if (opts.json) {
           outputJson(opts, { jobs });
           return;
@@ -1082,7 +1082,7 @@ export function registerPluginCommands(
     .option("--json", "Output JSON")
     .action(
       action(async (jobId: string, opts: JsonOutputOptions) => {
-        const job = await createCliBbSdk(getUrl()).plugins.installJobs.cancel({
+        const job = await createCliSandySdk(getUrl()).plugins.installJobs.cancel({
           jobId,
         });
         if (opts.json) {
@@ -1103,7 +1103,7 @@ export function registerPluginCommands(
     .option("--json", "Output the raw update results as JSON")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const results = await createCliBbSdk(getUrl()).plugins.checkUpdates();
+        const results = await createCliSandySdk(getUrl()).plugins.checkUpdates();
         if (opts.json) {
           outputJson(opts, results);
           return;
@@ -1113,7 +1113,7 @@ export function registerPluginCommands(
           result.installed.display,
           result.candidate?.display ?? "—",
           blockedSummary(result),
-          `${UPDATE_STATUS_LABELS[result.outcome]}${result.devMode ? " [dev build: engines.bb not enforced]" : ""}`,
+          `${UPDATE_STATUS_LABELS[result.outcome]}${result.devMode ? " [dev build: engines.sandy not enforced]" : ""}`,
         ]);
         console.log(
           renderBorderlessTable(
@@ -1143,7 +1143,7 @@ export function registerPluginCommands(
     .action(
       action(async (jobId: string | undefined, opts: JsonOutputOptions) => {
         const updates =
-          createCliBbSdk(getUrl()).plugins.experimental_updateJobs;
+          createCliSandySdk(getUrl()).plugins.experimental_updateJobs;
         const jobs =
           jobId === undefined
             ? await updates.list()
@@ -1202,7 +1202,7 @@ export function registerPluginCommands(
             console.error("Specify exactly one plugin id or --all.");
             process.exit(1);
           }
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const results = await sdk.plugins.checkUpdates(
             id === undefined ? {} : { pluginId: id },
           );
@@ -1221,7 +1221,7 @@ export function registerPluginCommands(
             if (!shouldAttempt) {
               if (result.outcome === "pinned") {
                 console.log(
-                  `${result.id}: skipped — pinned${detail ? ` (${detail})` : ""}; remove and reinstall with a tracking git branch or git semver range to receive updates (remove deletes the plugin's settings, secrets, and schedules). A local path plugin updates with \`bb plugin reload\`; move it with \`bb plugin install path:<new directory>\`.`,
+                  `${result.id}: skipped — pinned${detail ? ` (${detail})` : ""}; remove and reinstall with a tracking git branch or git semver range to receive updates (remove deletes the plugin's settings, secrets, and schedules). A local path plugin updates with \`sandy plugin reload\`; move it with \`sandy plugin install path:<new directory>\`.`,
                 );
               } else if (result.outcome === "incompatible") {
                 console.log(
@@ -1257,7 +1257,7 @@ export function registerPluginCommands(
                 `Updating ${job.displayName} in the background (job ${job.id}).`,
               );
               console.log(
-                `Follow it with \`bb plugin update-jobs ${job.id}\`.`,
+                `Follow it with \`sandy plugin update-jobs ${job.id}\`.`,
               );
               continue;
             }
@@ -1287,14 +1287,14 @@ export function registerPluginCommands(
   plugin
     .command("new <name>")
     .description(
-      "Scaffold a plugin in ./bb-plugin-<name>; accepts @scope/bb-plugin-<name>",
+      "Scaffold a plugin in ./sandy-plugin-<name>; accepts @scope/sandy-plugin-<name>",
     )
     .action(
       action(async (name: string) => {
         const target = resolveNewPluginTarget(name);
         if (target === null) {
           console.error(
-            `Invalid or reserved plugin name "${name}" — use a non-core name, bb-plugin-name, or @scope/bb-plugin-name.`,
+            `Invalid or reserved plugin name "${name}" — use a non-core name, sandy-plugin-name, or @scope/sandy-plugin-name.`,
           );
           process.exit(1);
         }
@@ -1303,20 +1303,20 @@ export function registerPluginCommands(
         await scaffoldPlugin({
           targetDir,
           packageName,
-          bbVersion: resolveBbCliVersion(),
+          sandyVersion: resolveSandyCliVersion(),
         });
         console.log(`Created ${directoryName}/ (${packageName}).`);
         console.log("Next steps:");
         console.log(`  cd ${directoryName}`);
         console.log("  npm install --include=dev");
-        console.log("  bb plugin install .");
+        console.log("  sandy plugin install .");
       }),
     );
 
   plugin
     .command("types [path]")
     .description(
-      "Sync a package-layout plugin's @get-bb/plugin-sdk surface to the running bb (default: cwd): repin the npm devDependency and the declared type-only devDependencies of the packages bb shims at runtime (sonner, vaul, the portal radix families, ...); legacy vendored-layout plugins must migrate first",
+      "Sync a package-layout plugin's @sandy-sdk/plugin-sdk surface to the running sandy (default: cwd): repin the npm devDependency and the declared type-only devDependencies of the packages sandy shims at runtime (sonner, vaul, the portal radix families, ...); legacy vendored-layout plugins must migrate first",
     )
     .option(
       "--check",
@@ -1326,7 +1326,7 @@ export function registerPluginCommands(
       action(async (path: string | undefined, opts: { check?: boolean }) => {
         const rootDir = resolve(process.cwd(), path ?? ".");
         const manifest = await requirePluginManifest(rootDir);
-        const hasApp = typeof manifest.bb?.app === "string";
+        const hasApp = typeof manifest.sandy?.app === "string";
         const layout = await resolvePluginSdkLayout(rootDir);
         if (layout.kind === "vendored") {
           console.error(LEGACY_PLUGIN_SDK_LAYOUT_MESSAGE);
@@ -1335,7 +1335,7 @@ export function registerPluginCommands(
         if (layout.kind === "package") {
           if (opts.check) {
             console.log(
-              `This plugin uses the npm package @get-bb/plugin-sdk; pin is ${layout.pin ?? "not declared"}, host is ${PLUGIN_SDK_VERSION}.`,
+              `This plugin uses the npm package @sandy-sdk/plugin-sdk; pin is ${layout.pin ?? "not declared"}, host is ${PLUGIN_SDK_VERSION}.`,
             );
             const pending = await setPluginSdkPin({
               rootDir,
@@ -1344,22 +1344,22 @@ export function registerPluginCommands(
             });
             if (pending === null) {
               console.log(
-                "The declarations are in node_modules/@get-bb/plugin-sdk/bundled-types/ — read them for exact signatures.",
+                "The declarations are in node_modules/@sandy-sdk/plugin-sdk/bundled-types/ — read them for exact signatures.",
               );
               return;
             }
             if (pending.pin !== null || pending.movedFromDependencies) {
               console.error(
                 pending.pin === null
-                  ? 'Move "@get-bb/plugin-sdk" from dependencies to devDependencies — bb provides its runtime (`bb plugin types` does it for you).'
-                  : `Set "@get-bb/plugin-sdk" to ${PLUGIN_SDK_VERSION} in devDependencies and re-run npm install (\`bb plugin types\` does it for you).`,
+                  ? 'Move "@sandy-sdk/plugin-sdk" from dependencies to devDependencies — sandy provides its runtime (`sandy plugin types` does it for you).'
+                  : `Set "@sandy-sdk/plugin-sdk" to ${PLUGIN_SDK_VERSION} in devDependencies and re-run npm install (\`sandy plugin types\` does it for you).`,
               );
             }
             for (const shim of pending.shimmedTypePins) {
               console.error(
                 shim.movedFromDependencies
-                  ? `Move "${shim.name}" from dependencies to devDependencies at ${shim.to} — bb shims it at runtime and never bundles it (\`bb plugin types\` does it for you).`
-                  : `Set "${shim.name}" to ${shim.to} in devDependencies — the version this bb shims at runtime (\`bb plugin types\` does it for you).`,
+                  ? `Move "${shim.name}" from dependencies to devDependencies at ${shim.to} — sandy shims it at runtime and never bundles it (\`sandy plugin types\` does it for you).`
+                  : `Set "${shim.name}" to ${shim.to} in devDependencies — the version this sandy shims at runtime (\`sandy plugin types\` does it for you).`,
               );
             }
             process.exit(1);
@@ -1370,21 +1370,21 @@ export function registerPluginCommands(
           });
           if (changed === null) {
             console.log(
-              `@get-bb/plugin-sdk is already pinned to ${PLUGIN_SDK_VERSION} — this bb's SDK version${hasApp ? ", and the declared runtime-shimmed packages are at this bb's versions" : ""}.`,
+              `@sandy-sdk/plugin-sdk is already pinned to ${PLUGIN_SDK_VERSION} — this sandy's SDK version${hasApp ? ", and the declared runtime-shimmed packages are at this sandy's versions" : ""}.`,
             );
             console.log(
-              "The declarations are in node_modules/@get-bb/plugin-sdk/bundled-types/ — read them for exact signatures.",
+              "The declarations are in node_modules/@sandy-sdk/plugin-sdk/bundled-types/ — read them for exact signatures.",
             );
             return;
           }
           if (changed.pin !== null) {
             console.log(
-              `@get-bb/plugin-sdk: ${changed.pin.from ?? "(not declared)"} → ${changed.pin.to} in devDependencies.`,
+              `@sandy-sdk/plugin-sdk: ${changed.pin.from ?? "(not declared)"} → ${changed.pin.to} in devDependencies.`,
             );
           }
           if (changed.movedFromDependencies) {
             console.log(
-              "Moved @get-bb/plugin-sdk from dependencies to devDependencies.",
+              "Moved @sandy-sdk/plugin-sdk from dependencies to devDependencies.",
             );
           }
           for (const shim of changed.shimmedTypePins) {
@@ -1403,7 +1403,7 @@ export function registerPluginCommands(
   plugin
     .command("migrate [path]")
     .description(
-      "Switch a plugin that vendors types/ to the @get-bb/plugin-sdk npm package (default: cwd): pin the devDependency, drop the tsconfig path map, delete the vendored declarations, and rewrite pre-rename @bb/plugin-sdk imports in the plugin's sources; prints the plan and asks first",
+      "Switch a plugin that vendors types/ to the @sandy-sdk/plugin-sdk npm package (default: cwd): pin the devDependency, drop the tsconfig path map, delete the vendored declarations, and rewrite pre-rename @sandy/plugin-sdk imports in the plugin's sources; prints the plan and asks first",
     )
     .option("--yes", "Skip the confirmation prompt")
     .action(
@@ -1418,14 +1418,14 @@ export function registerPluginCommands(
         });
         if (!plan.changed) {
           console.log(
-            `Already migrated: this plugin uses the @get-bb/plugin-sdk npm package (pin ${layout.pin ?? "not declared"}).`,
+            `Already migrated: this plugin uses the @sandy-sdk/plugin-sdk npm package (pin ${layout.pin ?? "not declared"}).`,
           );
           return;
         }
         console.log(
           layout.kind === "vendored"
-            ? `${rootDir} vendors its SDK declarations. Migrating to the @get-bb/plugin-sdk npm package will:`
-            : `${rootDir} is missing part of the @get-bb/plugin-sdk npm package layout. Completing the migration will:`,
+            ? `${rootDir} vendors its SDK declarations. Migrating to the @sandy-sdk/plugin-sdk npm package will:`
+            : `${rootDir} is missing part of the @sandy-sdk/plugin-sdk npm package layout. Completing the migration will:`,
         );
         printMigrationPlan(plan);
         await confirmPluginAction(
@@ -1440,7 +1440,7 @@ export function registerPluginCommands(
         });
         if (!samePlan(plan, confirmedPlan)) {
           console.error(
-            "The plugin changed while awaiting confirmation — nothing was written. Re-run `bb plugin migrate` to see the current plan.",
+            "The plugin changed while awaiting confirmation — nothing was written. Re-run `sandy plugin migrate` to see the current plan.",
           );
           process.exit(1);
         }
@@ -1448,7 +1448,7 @@ export function registerPluginCommands(
           rootDir,
           sdkVersion: PLUGIN_SDK_VERSION,
         });
-        console.log("Migrated to the @get-bb/plugin-sdk npm package.");
+        console.log("Migrated to the @sandy-sdk/plugin-sdk npm package.");
         if (plan.removedTypesDir && !applied.removedTypesDir) {
           console.warn(
             `Warning: ${join(rootDir, "types")} still exists — a file appeared in it during the migration, so it was left in place along with the tsconfig "types" include.`,
@@ -1463,29 +1463,29 @@ export function registerPluginCommands(
   plugin
     .command("build [path]")
     .description(
-      "Compile the plugin into dist/: the bb.server backend bundle (server.js, server.meta.json), plus, when declared, the bb.app frontend bundle (app.js, app.css, app.meta.json) and the self-contained bb.host daemon bundle (host.js, host.js.map, host.meta.json) — which carries the plugin's host RPC entry, its provider bridge, or both; each *.meta.json stamps SDK/identity metadata; no server required",
+      "Compile the plugin into dist/: the sandy.server backend bundle (server.js, server.meta.json), plus, when declared, the sandy.app frontend bundle (app.js, app.css, app.meta.json) and the self-contained sandy.host daemon bundle (host.js, host.js.map, host.meta.json) — which carries the plugin's host RPC entry, its provider bridge, or both; each *.meta.json stamps SDK/identity metadata; no server required",
     )
     .action(
       action(async (path: string | undefined) => {
         const rootDir = resolve(process.cwd(), path ?? ".");
-        const bbVersion = resolveBbCliVersion();
+        const sandyVersion = resolveSandyCliVersion();
         const manifest = await readPluginManifest(rootDir);
-        const hasApp = typeof manifest?.bb?.app === "string";
-        const hasHost = typeof manifest?.bb?.host === "string";
+        const hasApp = typeof manifest?.sandy?.app === "string";
+        const hasHost = typeof manifest?.sandy?.host === "string";
         await checkPluginSdkLayout(rootDir);
         const toolchain = await cliBuildToolchain();
-        const server = await buildPluginServer(rootDir, bbVersion, toolchain);
+        const server = await buildPluginServer(rootDir, sandyVersion, toolchain);
         for (const warning of server.migrationWarnings)
           console.warn(`warning: ${warning}`);
         const files = [server.jsPath, server.mapPath, server.metaPath];
         if (hasApp) {
-          const app = await buildPluginApp(rootDir, bbVersion, toolchain);
+          const app = await buildPluginApp(rootDir, sandyVersion, toolchain);
           for (const warning of app.migrationWarnings)
             console.warn(`warning: ${warning}`);
           files.push(app.jsPath, app.cssPath, app.metaPath);
         }
         if (hasHost) {
-          const host = await buildPluginHost(rootDir, bbVersion, toolchain);
+          const host = await buildPluginHost(rootDir, sandyVersion, toolchain);
           files.push(host.jsPath, host.mapPath, host.metaPath);
         }
         for (const file of files) {
@@ -1503,37 +1503,37 @@ export function registerPluginCommands(
       action(async (path: string | undefined) => {
         const rootDir = resolve(process.cwd(), path ?? ".");
         const manifest = await requirePluginManifest(rootDir);
-        const hasApp = typeof manifest.bb?.app === "string";
-        const hasHost = typeof manifest.bb?.host === "string";
+        const hasApp = typeof manifest.sandy?.app === "string";
+        const hasHost = typeof manifest.sandy?.host === "string";
         await checkPluginSdkLayout(rootDir);
         const realDir = await realpath(rootDir).catch(() => rootDir);
-        const list = await createCliBbSdk(getUrl()).plugins.list();
+        const list = await createCliSandySdk(getUrl()).plugins.list();
         const entry = list.plugins.find(
           (candidate) =>
             candidate.rootDir === rootDir || candidate.rootDir === realDir,
         );
         if (!entry) {
           console.error(
-            `This directory is not installed as a plugin — run \`bb plugin install ${path ?? "."}\` first, then re-run \`bb plugin dev\`.`,
+            `This directory is not installed as a plugin — run \`sandy plugin install ${path ?? "."}\` first, then re-run \`sandy plugin dev\`.`,
           );
           process.exit(1);
         }
         const loop = createPluginDevLoop({
           pluginId: entry.id,
-          // Re-read per cycle: a plugin can add or drop bb.app/bb.host while
+          // Re-read per cycle: a plugin can add or drop sandy.app/sandy.host while
           // being watched, and a stale snapshot would demand a build that can
           // never succeed again.
           targets: async () => {
             const current = await requirePluginManifest(rootDir);
             return {
-              hasApp: typeof current.bb?.app === "string",
-              hasHost: typeof current.bb?.host === "string",
+              hasApp: typeof current.sandy?.app === "string",
+              hasHost: typeof current.sandy?.host === "string",
             };
           },
           buildApp: async () => {
             const app = await buildPluginApp(
               rootDir,
-              resolveBbCliVersion(),
+              resolveSandyCliVersion(),
               await cliBuildToolchain(),
               { minify: false },
             );
@@ -1543,7 +1543,7 @@ export function registerPluginCommands(
           buildHost: async () => {
             await buildPluginHost(
               rootDir,
-              resolveBbCliVersion(),
+              resolveSandyCliVersion(),
               await cliBuildToolchain(),
             );
           },
@@ -1652,7 +1652,7 @@ export function registerPluginCommands(
   plugin
     .command("safe-mode [state]")
     .description(
-      "Show plugin safe mode, or turn it on or off. `on` stops every plugin you installed (official store plugins included) while plugins included with bb keep running; `off` restarts the ones that were enabled and exits 1 if any fail to start",
+      "Show plugin safe mode, or turn it on or off. `on` stops every plugin you installed (official store plugins included) while plugins included with sandy keep running; `off` restarts the ones that were enabled and exits 1 if any fail to start",
     )
     .option("--json", "Output JSON")
     .action(
@@ -1660,7 +1660,7 @@ export function registerPluginCommands(
         if (state !== undefined && state !== "on" && state !== "off") {
           exitWithError({ error: `expected "on" or "off", got "${state}"` });
         }
-        const plugins = createCliBbSdk(getUrl()).plugins;
+        const plugins = createCliSandySdk(getUrl()).plugins;
         const updated =
           state === undefined
             ? null
@@ -1682,13 +1682,13 @@ export function registerPluginCommands(
   plugin
     .command("prune")
     .description(
-      "Delete cached plugin versions that no installed plugin uses, such as versions left by earlier bb releases, rolled-back updates, or interrupted operations, and unrecorded cache directories. Updates and removals already delete what they replace. Never touches a version an installed plugin runs or a local path source",
+      "Delete cached plugin versions that no installed plugin uses, such as versions left by earlier sandy releases, rolled-back updates, or interrupted operations, and unrecorded cache directories. Updates and removals already delete what they replace. Never touches a version an installed plugin runs or a local path source",
     )
     .option("--dry-run", "List what would be deleted without deleting it")
     .option("--json", "Output JSON")
     .action(
       action(async (opts: JsonOutputOptions & { dryRun?: boolean }) => {
-        const result = await createCliBbSdk(
+        const result = await createCliSandySdk(
           getUrl(),
         ).plugins.experimental_pruneCache({ dryRun: opts.dryRun === true });
         if (opts.json) {
@@ -1770,15 +1770,15 @@ export function registerPluginCommands(
           ) {
             console.error(
               actionName === "set"
-                ? "Usage: bb plugin config <id> set <key> <value>"
-                : "Usage: bb plugin config <id> unset <key>",
+                ? "Usage: sandy plugin config <id> set <key> <value>"
+                : "Usage: sandy plugin config <id> unset <key>",
             );
             process.exit(1);
           }
           let parsedValue: string | number | boolean | null = null;
           if (actionName === "set") {
             if (value === undefined) {
-              console.error("Usage: bb plugin config <id> set <key> <value>");
+              console.error("Usage: sandy plugin config <id> set <key> <value>");
               process.exit(1);
             }
             const current = pluginSettingsResultSchema.parse(
@@ -1838,7 +1838,7 @@ export function registerPluginCommands(
   plugin
     .command("run <id> [args...]")
     .description(
-      "Run a plugin's CLI command (explicit form of `bb <command> ...`)",
+      "Run a plugin's CLI command (explicit form of `sandy <command> ...`)",
     )
     .passThroughOptions()
     .allowUnknownOption()
@@ -1851,7 +1851,7 @@ export function registerPluginCommands(
 
   plugin
     .command("logs <id>")
-    .description("Print a plugin's log (bb.log output)")
+    .description("Print a plugin's log (sandy.log output)")
     .option("-n, --lines <count>", "Number of lines to show", "100")
     .option("-f, --follow", "Poll for new lines every second (Ctrl+C to stop)")
     .action(

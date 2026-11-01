@@ -59,11 +59,13 @@ export const builtInPaletteCodeThemes = {
     dark: DEFAULT_CODE_THEME_DARK,
     light: DEFAULT_CODE_THEME_LIGHT,
   },
-  nord: { dark: "nord", light: "bb:nord:light" },
-  dracula: { dark: "dracula", light: "bb:dracula:light" },
+  nord: { dark: "nord", light: "sandy:nord:light" },
+  dracula: { dark: "dracula", light: "sandy:dracula:light" },
   solarized: { dark: "solarized-dark", light: "solarized-light" },
   gruvbox: { dark: "gruvbox-dark-medium", light: "gruvbox-light-medium" },
   catppuccin: { dark: "catppuccin-mocha", light: "catppuccin-latte" },
+  sandy: { dark: DEFAULT_CODE_THEME_DARK, light: DEFAULT_CODE_THEME_LIGHT },
+  sand: { dark: DEFAULT_CODE_THEME_DARK, light: DEFAULT_CODE_THEME_LIGHT },
 } as const satisfies Record<string, CodeThemePair>;
 
 export interface DeclaredCodeThemeSlot {
@@ -86,7 +88,7 @@ export function formatRegisteredCodeThemeName(
   sourceId: string,
   side: "dark" | "light",
 ): string {
-  return `bb:${sourceId}:${side}`;
+  return `sandy:${sourceId}:${side}`;
 }
 
 const VSCODE_THEME_JSON_MAX_DEPTH = 32;
@@ -126,8 +128,8 @@ function paletteCodeThemeFallback(paletteId: string): CodeThemePair {
 const builtInPaletteCodeThemeFiles: Partial<
   Record<keyof typeof builtInPaletteCodeThemes, Record<string, JsonObject>>
 > = {
-  nord: { "bb:nord:light": nordLightCodeTheme },
-  dracula: { "bb:dracula:light": draculaLightCodeTheme },
+  nord: { "sandy:nord:light": nordLightCodeTheme },
+  dracula: { "sandy:dracula:light": draculaLightCodeTheme },
 };
 
 export function stampRegisteredThemeName(

@@ -9,36 +9,36 @@ import {
 } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { POINTER_COARSE_QUERY } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { POINTER_COARSE_QUERY } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import {
   COMPACT_VIEWPORT_QUERY,
   CompactViewportOverrideProvider,
-} from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Popover, PopoverContent } from "@bb/shared-ui/popover";
+} from "@sandy/shared-ui/dialog";
+import { Popover, PopoverContent } from "@sandy/shared-ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@bb/shared-ui/dropdown-menu";
-import { ActionMenuItem } from "@bb/shared-ui/action-menu-items";
+} from "@sandy/shared-ui/dropdown-menu";
+import { ActionMenuItem } from "@sandy/shared-ui/action-menu-items";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@bb/shared-ui/select";
+} from "@sandy/shared-ui/select";
 import {
   measureDrawerKeyboardOverlap,
   PersistentResponsiveDrawerShell,
   ResponsiveDrawerShell,
-} from "@bb/shared-ui/responsive-overlay";
+} from "@sandy/shared-ui/responsive-overlay";
 
 afterEach(() => {
   cleanup();
@@ -307,7 +307,7 @@ describe("responsive DropdownMenu", () => {
       dispatchEvent: () => false,
     }));
     vi.resetModules();
-    const pluginCopy = await import("@bb/shared-ui/dropdown-menu");
+    const pluginCopy = await import("@sandy/shared-ui/dropdown-menu");
     expect(pluginCopy.DropdownMenuItem).not.toBe(DropdownMenuItem);
     vi.useFakeTimers();
     const onSelect = vi.fn();
@@ -621,7 +621,7 @@ describe("PersistentResponsiveDrawerShell", () => {
     );
 
     const nestedAction = document.createElement("button");
-    nestedAction.setAttribute("data-bb-portaled-overlay", "");
+    nestedAction.setAttribute("data-sandy-portaled-overlay", "");
     nestedAction.addEventListener("keydown", (event) => {
       event.preventDefault();
     });
@@ -649,7 +649,7 @@ describe("PersistentResponsiveDrawerShell", () => {
     );
 
     const nestedAction = document.createElement("button");
-    nestedAction.setAttribute("data-bb-portaled-overlay", "");
+    nestedAction.setAttribute("data-sandy-portaled-overlay", "");
     document.body.appendChild(nestedAction);
     nestedAction.focus();
 
@@ -707,7 +707,7 @@ describe("PersistentResponsiveDrawerShell", () => {
   it("closes the top drawer first when it comes from a separately bundled copy", async () => {
     mockPointerCoarse(true);
     vi.resetModules();
-    const pluginCopy = await import("@bb/shared-ui/responsive-overlay");
+    const pluginCopy = await import("@sandy/shared-ui/responsive-overlay");
     const PluginDrawerShell = pluginCopy.PersistentResponsiveDrawerShell;
     expect(PluginDrawerShell).not.toBe(PersistentResponsiveDrawerShell);
 
@@ -1037,7 +1037,7 @@ describe("drawer software keyboard inset", () => {
         for (const frame of frames.splice(0)) frame(0);
       });
       expect(panel.style.bottom).toBe("336px");
-      expect(panel.style.getPropertyValue("--bb-drawer-keyboard-inset")).toBe(
+      expect(panel.style.getPropertyValue("--sandy-drawer-keyboard-inset")).toBe(
         "336px",
       );
 
@@ -1047,7 +1047,7 @@ describe("drawer software keyboard inset", () => {
         for (const frame of frames.splice(0)) frame(0);
       });
       expect(panel.style.bottom).toBe("");
-      expect(panel.style.getPropertyValue("--bb-drawer-keyboard-inset")).toBe(
+      expect(panel.style.getPropertyValue("--sandy-drawer-keyboard-inset")).toBe(
         "",
       );
     } finally {
@@ -1092,7 +1092,7 @@ describe("drawer software keyboard inset", () => {
       });
 
       expect(panel.style.bottom).toBe("");
-      expect(panel.style.getPropertyValue("--bb-drawer-keyboard-inset")).toBe(
+      expect(panel.style.getPropertyValue("--sandy-drawer-keyboard-inset")).toBe(
         "",
       );
     } finally {

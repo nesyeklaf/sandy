@@ -6,19 +6,19 @@ import {
   type AppSettings,
   type CompletedTurnDisplay,
   type ProviderInfo,
-} from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
-import { COARSE_POINTER_ICON_SIZE_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
+} from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
+import { COARSE_POINTER_ICON_SIZE_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Switch } from "@bb/shared-ui/switch";
+} from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Switch } from "@sandy/shared-ui/switch";
 import {
   SettingsBadge,
   SettingsRow,
@@ -317,7 +317,7 @@ export function ProvidersSettingsSection({
     <>
       <SettingsSection
         title="Providers"
-        description="Choose which agents you use in BB. Drag to reorder them in provider pickers."
+        description="Choose which agents you use in SANDY. Drag to reorder them in provider pickers."
       >
         {providersQuery.isPending ? (
           <p className="text-sm text-muted-foreground">Loading providers…</p>

@@ -1,7 +1,7 @@
 import {
   experimental_DetailRow as DetailRow,
   type ExperimentalThreadInfoProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   describePullRequestStatus,
   getPullRequestNextStep,

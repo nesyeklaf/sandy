@@ -1,4 +1,4 @@
-import type { ThreadEventRow } from "@bb/domain";
+import type { ThreadEventRow } from "@sandy/domain";
 
 export function stringifyThreadEventData(
   event: ThreadEventRow | undefined,

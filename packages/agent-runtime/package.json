@@ -1,5 +1,5 @@
 {
-  "name": "@bb/agent-runtime",
+  "name": "@sandy/agent-runtime",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -24,21 +24,21 @@
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
-    "@bb/process-utils": "workspace:*",
-    "@bb/provider-bridge-protocol": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/process-utils": "workspace:*",
+    "@sandy/provider-bridge-protocol": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@bb/test-helpers": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "tsx": "^4.23.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.1",
-    "bb-plugin-scripted-echo-provider": "workspace:*"
+    "sandy-plugin-scripted-echo-provider": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useResponsiveOverlayBehavior } from "@bb/shared-ui/responsive-overlay";
+import { useResponsiveOverlayBehavior } from "@sandy/shared-ui/responsive-overlay";
 
 interface HoverPopoverHandlers {
   onBlur: () => void;

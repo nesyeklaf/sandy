@@ -24,8 +24,8 @@ const acme = {
 
 const bundled = {
   ...acme,
-  name: "bb-official",
-  displayName: "BB Official",
+  name: "sandy-official",
+  displayName: "SANDY Official",
   official: true,
   source: "/app/builtin-plugins",
   entryCount: 25,
@@ -38,7 +38,7 @@ function json(value: object, status = 200): Response {
   });
 }
 
-describe("bb marketplace", () => {
+describe("sandy marketplace", () => {
   setupCommandOutputTestEnvironment();
   const register: CommandRegistrar = (program) =>
     registerMarketplaceCommands(program, () => "http://server");
@@ -62,7 +62,7 @@ describe("bb marketplace", () => {
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain("Added marketplace acme-plugins");
     expect(output).toContain("Adding a marketplace installs nothing");
-    expect(output).toContain("bb plugin install <id>@acme-plugins");
+    expect(output).toContain("sandy plugin install <id>@acme-plugins");
   });
 
   it("sends --subdirectory with a git source and prints the stored subdirectory", async () => {
@@ -73,7 +73,7 @@ describe("bb marketplace", () => {
           ...acme,
           sourceKind: "git",
           source: "git:https://github.com/acme/agent-plugins.git@main",
-          subdirectory: "bb",
+          subdirectory: "sandy",
           resolvedCommit: "0123456789abcdef0123456789abcdef01234567",
         },
       }),
@@ -85,7 +85,7 @@ describe("bb marketplace", () => {
         "add",
         "git:https://github.com/acme/agent-plugins.git@main",
         "--subdirectory",
-        "bb",
+        "sandy",
       ],
       register,
     );
@@ -94,13 +94,13 @@ describe("bb marketplace", () => {
       JSON.parse(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)),
     ).toEqual({
       source: "git:https://github.com/acme/agent-plugins.git@main",
-      subdirectory: "bb",
+      subdirectory: "sandy",
     });
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain(
       "source: git:https://github.com/acme/agent-plugins.git@main",
     );
-    expect(output).toContain("subdirectory: bb");
+    expect(output).toContain("subdirectory: sandy");
   });
 
   it("resolves a relative path: source on the invoking machine", async () => {
@@ -126,7 +126,7 @@ describe("bb marketplace", () => {
     await runCommand(["marketplace", "list"], register);
 
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
-    expect(output).toContain("bb-official (official)");
+    expect(output).toContain("sandy-official");
     expect(output).toContain("acme-plugins");
     expect(output).toContain("path:/work/acme-marketplace");
     expect(output).not.toContain("Subdirectory");
@@ -140,7 +140,7 @@ describe("bb marketplace", () => {
             ...acme,
             sourceKind: "git",
             source: "git:https://acme.test/repo.git@main",
-            subdirectory: "bb",
+            subdirectory: "sandy",
           },
         ],
       }),
@@ -151,7 +151,7 @@ describe("bb marketplace", () => {
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toMatch(/Source\s+Subdirectory\s+Entries/u);
     expect(output).toMatch(
-      /git:https:\/\/acme\.test\/repo\.git@main\s+bb\s+2\s/u,
+      /git:https:\/\/acme\.test\/repo\.git@main\s+sandy\s+2\s/u,
     );
   });
 
@@ -160,7 +160,7 @@ describe("bb marketplace", () => {
       json({
         results: [
           {
-            name: "bb-official",
+            name: "sandy-official",
             ok: true,
             error: null,
             marketplace: bundled,
@@ -180,7 +180,7 @@ describe("bb marketplace", () => {
     ).rejects.toThrow("process.exit:1");
 
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
-    expect(output).toContain("bb-official: 25 entries");
+    expect(output).toContain("sandy-official: 25 entries");
     expect(output).toContain("acme-plugins: refresh failed");
     expect(output).toContain("keeping the last catalog");
   });

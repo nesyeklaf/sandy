@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { ThreadListEntry } from "@bb/domain";
-import type { EnvironmentDisplayHostContext } from "@bb/core-ui";
+import type { ThreadListEntry } from "@sandy/domain";
+import type { EnvironmentDisplayHostContext } from "@sandy/core-ui";
 import {
   makeEnvironment,
   makeThread,
@@ -11,7 +11,7 @@ import type { ThreadMetadataContentProps } from "./ThreadMetadataContent";
 import type {
   WorkspaceMergeBase,
   WorkspaceWorkingTree,
-} from "bb-plugin-bb--git/contract";
+} from "sandy-plugin-sandy--git/contract";
 
 export { makeEnvironment, makeThread, makeWorkspaceStatus };
 
@@ -45,7 +45,7 @@ export const parentThreads: ThreadListEntry[] = [
 
 export const baseProps: ThreadMetadataContentProps = {
   thread: makeThread(),
-  projectId: "proj_bb",
+  projectId: "proj_sandy",
   parentThreadProjectId: null,
   parentThreadDisplayName: null,
   parentThreads,

@@ -1,6 +1,6 @@
-import { Icon } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { ShowcaseArchetype } from "./showcase-archetype";
 import { accentInk, accentTint, neutral } from "./showcase-tokens";
 

@@ -1,9 +1,9 @@
 import {
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { ConnectionState } from "./classify.js";
 import type { SourceHealth } from "./coverage.js";
 import { buildStatusReport, isIncoming } from "./report.js";
@@ -52,7 +52,7 @@ export function formatRows(rows: readonly DestinationRow[]): string {
 }
 
 export function registerCli(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   deps: { store: Store; health: () => SourceHealth[]; now?: () => number },
 ) {
   const now = deps.now ?? Date.now;
@@ -81,11 +81,11 @@ export function registerCli(
       },
     });
   }
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "connections",
       summary:
-        "Show where bb connects to and whether the measurement is healthy",
+        "Show where sandy connects to and whether the measurement is healthy",
       root: cliCommand({
         summary: "Show connection commands",
         run: (input) => ({ exitCode: 0, stdout: input.help }),

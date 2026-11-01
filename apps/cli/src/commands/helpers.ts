@@ -3,7 +3,7 @@ import {
   reasoningLevelSchema,
   reasoningLevelValues,
   type ReasoningLevel,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { noteJsonPayloadWritten } from "../cli-error-output.js";
 import type { ResolvedId } from "../context-env.js";
 
@@ -32,7 +32,7 @@ export function collectOption(value: string, previous: string[]): string[] {
 
 export function printThreadContextLabel(resolved: ResolvedId): void {
   if (resolved.source === "env") {
-    console.error(`Thread ${resolved.id} (from BB_THREAD_ID)`);
+    console.error(`Thread ${resolved.id} (from SANDY_THREAD_ID)`);
   }
 }
 

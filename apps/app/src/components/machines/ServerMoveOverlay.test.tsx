@@ -12,13 +12,13 @@ import {
   SERVER_MOVE_STEP_IDS,
   type LastServerMove,
   type ServerMoveStepId,
-} from "@bb/domain";
-import { BbHttpError } from "@bb/sdk/browser";
+} from "@sandy/domain";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import type {
   ServerMoveStatus,
   ServerMoveStep,
   ServerMoveStepStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appToast } from "@/components/ui/app-toast";
@@ -198,7 +198,7 @@ describe("ServerMoveOverlay", () => {
     expect(overlay.className).toContain("fixed");
     expect(overlay.className).toContain("inset-0");
     expect(stepStatus(overlay, "Stopping running work")).toBe("done");
-    expect(stepStatus(overlay, "Updating bb on desk")).toBe("skipped");
+    expect(stepStatus(overlay, "Updating sandy on desk")).toBe("skipped");
     expect(stepStatus(overlay, "Exporting server data")).toBe("running");
     expect(stepStatus(overlay, "Sending data to desk")).toBe("pending");
     expect(stepStatus(overlay, "Starting the new server")).toBe("pending");
@@ -278,12 +278,12 @@ describe("ServerMoveOverlay", () => {
     });
     expect(
       within(overlay).getByText(
-        "desk didn't confirm that it took over, so this server stays up but read-only. bb keeps checking and finishes the move as soon as desk answers.",
+        "desk didn't confirm that it took over, so this server stays up but read-only. sandy keeps checking and finishes the move as soon as desk answers.",
       ),
     ).toBeDefined();
     expect(
       within(overlay).getByText(
-        "If desk isn't running the server, abandon the move to keep the server here. If this server stops, run bb server unlock on this computer.",
+        "If desk isn't running the server, abandon the move to keep the server here. If this server stops, run sandy server unlock on this computer.",
       ),
     ).toBeDefined();
     expect(stepStatus(overlay, "Switching machines over")).toBe("running");
@@ -382,7 +382,7 @@ describe("ServerMoveOverlay", () => {
       within(waiting).queryByRole("link", { name: "Open the new address" }),
     ).toBeNull();
     const destination =
-      "https://desk.example.com/projects/proj_1/threads/thr_1?panel=diff&bbServerMove=move_1#turn-3";
+      "https://desk.example.com/projects/proj_1/threads/thr_1?panel=diff&sandyServerMove=move_1#turn-3";
     await waitFor(() => {
       expect(navigateTo).toHaveBeenCalledWith(destination);
     });
@@ -502,13 +502,13 @@ describe("ServerMoveOverlay", () => {
         lastMove: null,
       })
       .mockRejectedValue(
-        new BbHttpError({
+        new SandyHttpError({
           status: 410,
           code: "server_moved",
-          message: "This bb server moved to desk",
+          message: "This sandy server moved to desk",
           body: {
             code: "server_moved",
-            message: "This bb server moved to desk",
+            message: "This sandy server moved to desk",
             details: {
               serverUrl: "https://desk.tailnet.example",
               toHostName: "desk",
@@ -521,7 +521,7 @@ describe("ServerMoveOverlay", () => {
 
     await waitFor(() => {
       expect(navigateTo).toHaveBeenCalledWith(
-        "https://desk.tailnet.example/settings/machines?tab=all&bbServerMove=move_1",
+        "https://desk.tailnet.example/settings/machines?tab=all&sandyServerMove=move_1",
       );
     });
   });
@@ -531,7 +531,7 @@ describe("ServerMoveOverlay", () => {
       move: null,
       lastMove: lastMove(),
     });
-    renderOverlay("/threads/thr_1?panel=diff&bbServerMove=move_1#turn-3");
+    renderOverlay("/threads/thr_1?panel=diff&sandyServerMove=move_1#turn-3");
 
     await waitFor(() => {
       expect(vi.mocked(appToast.success)).toHaveBeenCalledWith(

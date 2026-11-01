@@ -1,26 +1,26 @@
-import { providerRawEventSchema, threadUsageCostSchema } from "@bb/domain";
-import type { ProviderRawEvent, ThreadUsageCost } from "@bb/domain";
+import { providerRawEventSchema, threadUsageCostSchema } from "@sandy/domain";
+import type { ProviderRawEvent, ThreadUsageCost } from "@sandy/domain";
 import {
   COMPACTION_PRESENTATION,
   errorEnvelopeSchema,
   jsonRpcEnvelopeSchema,
   planStepsPresentation,
   presentationTitle,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import type {
   JsonRpcMessage,
   ProviderRuntimeEvent,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import type {
   ThreadEventItemStatus,
   ThreadEventPlanStep,
   ThreadEventTurnStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   DeltaItemShape,
   DeltaNoTurnFallback,
   ThreadDelta,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import {
   ACP_COMPACTION_COMPLETED_METHOD,
   ACP_COMPACTION_STARTED_METHOD,

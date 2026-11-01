@@ -1,0 +1,97 @@
+{
+  "name": "sandy-plugin-sandy-sidebar-delegate",
+  "version": "0.3.7-delegate.1",
+  "type": "module",
+  "description": "Fork of sandy-sidebar 0.3.7 that also lists hidden delegate children and workflows-plus workers under their parent.",
+  "license": "MIT",
+  "author": "Yusuf Akbulut",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yusuf8834/bb-sidebar.git"
+  },
+  "homepage": "https://github.com/yusuf8834/bb-sidebar#readme",
+  "bugs": {
+    "url": "https://github.com/yusuf8834/bb-sidebar/issues"
+  },
+  "engines": {
+    "sandy": ">=0.47.0",
+    "sandyPluginSdk": ">=0.6.75"
+  },
+  "sandy": {
+    "name": "SANDY Sidebar (Delegate)",
+    "description": "sandy-sidebar plus hidden delegate children and workflows-plus workers, collapsed under their parent with needs-you on the parent.",
+    "branding": {
+      "icon": "PanelLeft"
+    },
+    "app": "./app.tsx",
+    "server": "./src/server.ts",
+    "host": "./src/ports-host.ts"
+  },
+  "keywords": ["sandy-plugin", "sidebar", "threads", "inbox", "productivity"],
+  "files": [
+    "dist",
+    "src",
+    "!src/fixtures",
+    "!src/**/*.test.*",
+    "!src/test-*",
+    "app.tsx",
+    "tsconfig.json",
+    "README.md",
+    "UPSTREAM.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "sandy plugin build",
+    "fixture:db": "node scripts/make-fixture-db.mjs",
+    "check": "npm run lint && npm run format:check && npm run knip && npm run typecheck && npm test && npm run build && node scripts/check-app-bundle.mjs",
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint . && node scripts/check-import-boundaries.mjs && node scripts/check-file-sizes.mjs",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "knip": "knip --no-config-hints",
+    "test:measure": "node scripts/measure-tests.mjs",
+    "test:stress": "node scripts/measure-tests.mjs --runs 5 --load",
+    "e2e:smoke": "node scripts/e2e-smoke.mjs",
+    "e2e": "node scripts/e2e/run.mjs"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "^4.1.3",
+    "@hugeicons/react": "^1.1.6",
+    "react-day-picker": "^9.14.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@sandy-sdk/plugin-sdk": "file:../../../packages/plugin-sdk",
+    "@playwright/test": "1.64.0",
+    "@radix-ui/react-context-menu": "^2.3.3",
+    "@radix-ui/react-dialog": "^1.1.19",
+    "@radix-ui/react-popover": "^1.1.19",
+    "@radix-ui/react-select": "^2.3.3",
+    "@radix-ui/react-tooltip": "^1.2.12",
+    "@testing-library/react": "^16.3.2",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "sandy-app": "file:../../../packages/sandy-app",
+    "better-sqlite3": "12.10.0",
+    "clsx": "^2.1.1",
+    "cron-parser": "^5.10.0",
+    "hono": "^4.13.3",
+    "jsdom": "^29.0.1",
+    "knip": "^5.88.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sonner": "^1.7.4",
+    "tailwind-merge": "^3.4.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^4.1.1"
+  },
+  "allowScripts": {
+    "node-pty@1.2.0-beta.15": true,
+    "better-sqlite3@12.10.0": true,
+    "@parcel/watcher@2.5.6": true
+  }
+}

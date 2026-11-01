@@ -5,7 +5,7 @@ import {
 
 const RESERVED_PUBLISHER_LABELS: ReadonlySet<string> = new Set([
   BUILTIN_PUBLISHER_LABEL,
-  "BB Community",
+  "SANDY Community",
 ]);
 
 export function marketplacePublisherLabel(args: {

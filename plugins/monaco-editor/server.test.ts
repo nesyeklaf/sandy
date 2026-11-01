@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server";
 
 const source = {
@@ -24,7 +24,7 @@ async function setup() {
     truncated: false,
   }));
   const write = vi.fn(() => ({ outcome: "written", sha256: "updated" }));
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "monaco-editor",
     sdk: {
       system: { config: () => ({ dataDir: "/server-data" }) },
@@ -32,7 +32,7 @@ async function setup() {
       files: { read, listPaths, write },
     },
   });
-  await plugin(bb);
+  await plugin(sandy);
   return { harness, storageLocation, read, listPaths, write };
 }
 

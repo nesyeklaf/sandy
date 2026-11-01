@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { ARCHIVE_UNDO_GRACE_MS } from "@bb/domain";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import { ARCHIVE_UNDO_GRACE_MS } from "@sandy/domain";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   diskCapacitySchema,
@@ -30,10 +30,10 @@ import type {
 
 type Thread = Awaited<ReturnType<typeof readThreads>>[number];
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["list"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["list"]>
 >[number];
 type Project = Awaited<
-  ReturnType<BbPluginApi["sdk"]["projects"]["list"]>
+  ReturnType<SandyPluginApi["sdk"]["projects"]["list"]>
 >[number];
 const cachedScanSchema = z.object({
   scannedAt: z.number(),
@@ -121,7 +121,7 @@ const liveEnvironment = (
   env.path !== null &&
   env.status !== "destroyed" &&
   env.lifecycle.teardown?.status !== "removed";
-function bbOwnedPaths(
+function sandyOwnedPaths(
   hostId: string,
   environments: Environment[],
   projects: Project[],
@@ -179,7 +179,7 @@ function entriesHoldingWorkspaces(
   return workspaces;
 }
 const isStorageEntry = (name: string) =>
-  /^(thr_[a-zA-Z0-9]+|\.bb-trash-[a-zA-Z0-9_-]+)$/.test(name);
+  /^(thr_[a-zA-Z0-9]+|\.sandy-trash-[a-zA-Z0-9_-]+)$/.test(name);
 
 class StorageLocationUnavailable extends Error {
   constructor() {
@@ -190,17 +190,17 @@ class StorageLocationUnavailable extends Error {
 }
 
 export function createStorage(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   devCleanupEnabled: () => Promise<boolean>,
 ) {
-  const db = bb.storage.database();
-  bb.storage.migrate(db, [
+  const db = sandy.storage.database();
+  sandy.storage.migrate(db, [
     "CREATE TABLE scans (host_id TEXT PRIMARY KEY, result_json TEXT NOT NULL)",
     "CREATE TABLE archive_cleanup (thread_id TEXT PRIMARY KEY, archived_at INTEGER NOT NULL)",
     "ALTER TABLE archive_cleanup ADD COLUMN failure_count INTEGER NOT NULL DEFAULT 0",
     "ALTER TABLE archive_cleanup ADD COLUMN next_attempt_at INTEGER NOT NULL DEFAULT 0",
   ]);
-  const worker = bb.hosts.experimental_client({
+  const worker = sandy.hosts.experimental_client({
     contract: hostStorageContract,
   });
   const lifecycle = new AbortController();
@@ -220,12 +220,12 @@ export function createStorage(
     Map<string, ExternalWorktreeRemoval>
   >();
   const jobs = new Set<Promise<void>>();
-  bb.onDispose(async () => {
+  sandy.onDispose(async () => {
     lifecycle.abort();
     await Promise.allSettled(jobs);
   });
   const changed = () => {
-    if (!lifecycle.signal.aborted) bb.realtime.publish("changed", null);
+    if (!lifecycle.signal.aborted) sandy.realtime.publish("changed", null);
   };
   function read(hostId: string): Scan | null {
     const row = db
@@ -279,14 +279,14 @@ export function createStorage(
   }
   async function requireHost(hostId: string, online = false) {
     lifecycle.signal.throwIfAborted();
-    const host = await bb.sdk.hosts.get({ hostId });
+    const host = await sandy.sdk.hosts.get({ hostId });
     if (host.type !== "persistent")
       throw new Error("Storage is only tracked for persistent machines");
     if (online && host.status !== "connected")
       throw new Error("The machine must be online");
   }
   async function storageRoot(hostId: string) {
-    const host = await bb.sdk.hosts.get({ hostId });
+    const host = await sandy.sdk.hosts.get({ hostId });
     if (host.threadStorageRootPath === null)
       throw new Error("The machine has not reported its filesystem locations");
     return host.threadStorageRootPath;
@@ -331,13 +331,13 @@ export function createStorage(
   function isCurrentInstance(developerPath: string, name: string) {
     return (
       hostPath(`${developerPath}/${name}`) ===
-      hostPath(bb.server.experimental_dataDir)
+      hostPath(sandy.server.experimental_dataDir)
     );
   }
   async function readEnvironments(hostId: string) {
     const environments: Environment[] = [];
     for (let offset = 0; ; offset += 500) {
-      const page = await bb.sdk.environments.list({
+      const page = await sandy.sdk.environments.list({
         hostId,
         limit: 500,
         offset,
@@ -379,8 +379,8 @@ export function createStorage(
   }
   async function readReportContext() {
     const [threads, projects] = await Promise.all([
-      readThreads(bb, lifecycle.signal),
-      bb.sdk.projects.list({ signal: lifecycle.signal }),
+      readThreads(sandy, lifecycle.signal),
+      sandy.sdk.projects.list({ signal: lifecycle.signal }),
     ]);
     return { threads, projects };
   }
@@ -394,7 +394,7 @@ export function createStorage(
     context: () => ReturnType<typeof readReportContext>,
   ): Promise<HostStorageReport> {
     const [{ threads, projects }, allEnvironments, machine] = await Promise.all(
-      [context(), readEnvironments(hostId), bb.sdk.hosts.get({ hostId })],
+      [context(), readEnvironments(hostId), sandy.sdk.hosts.get({ hostId })],
     );
     const byId = new Map(threads.map((thread) => [thread.id, thread]));
     const workspaces =
@@ -431,9 +431,9 @@ export function createStorage(
       if (environments.has(env.id)) counts.pendingPaths.add(env.path);
       projectCounts.set(env.projectId, counts);
     }
-    const bbPaths = bbOwnedPaths(hostId, allEnvironments, projects);
+    const sandyPaths = sandyOwnedPaths(hostId, allEnvironments, projects);
     const externalWorktrees = scan.externalWorktrees
-      .filter((worktree) => !bbPaths.has(hostPath(worktree.path)))
+      .filter((worktree) => !sandyPaths.has(hostPath(worktree.path)))
       .map((worktree) => ({
         ...worktree,
         threads: linkedThreads(
@@ -612,7 +612,7 @@ export function createStorage(
   }
   async function hosts() {
     lifecycle.signal.throwIfAborted();
-    const machines = await bb.sdk.hosts.list({ type: "persistent" });
+    const machines = await sandy.sdk.hosts.list({ type: "persistent" });
     const context = sharedReportContext();
     return {
       hosts: await Promise.all(
@@ -645,7 +645,7 @@ export function createStorage(
     environments: Environment[],
     projects: Project[],
   ): Promise<Scan["developerStorage"]> {
-    const developerRoot = `${homeDirectory.replace(/[\\/]$/, "")}/.bb-dev`;
+    const developerRoot = `${homeDirectory.replace(/[\\/]$/, "")}/.sandy-dev`;
     const result = await worker.call(
       "measure",
       {
@@ -661,7 +661,7 @@ export function createStorage(
     );
     if (developer?.outcome !== "measured") return null;
     const developerEntries = (developer.children ?? []).filter(
-      (entry) => !entry.name.startsWith(".bb-trash-"),
+      (entry) => !entry.name.startsWith(".sandy-trash-"),
     );
     const inspected = new Map<
       string,
@@ -713,7 +713,7 @@ export function createStorage(
         if (source.hostId === hostId && !projectByRepository.has(source.path))
           projectByRepository.set(source.path, project.id);
     const repositoryPaths = [...projectByRepository.keys()];
-    const owned = bbOwnedPaths(hostId, environments, projects);
+    const owned = sandyOwnedPaths(hostId, environments, projects);
     const found = new Map<
       string,
       Omit<Scan["externalWorktrees"][number], "sizeBytes">
@@ -760,9 +760,9 @@ export function createStorage(
         const [rootPath, threads, allEnvironments, projects] =
           await Promise.all([
             storageRoot(hostId),
-            readThreads(bb, lifecycle.signal),
+            readThreads(sandy, lifecycle.signal),
             readEnvironments(hostId),
-            bb.sdk.projects.list({ signal: lifecycle.signal }),
+            sandy.sdk.projects.list({ signal: lifecycle.signal }),
           ]);
         const environments = leftoverEnvironments(allEnvironments, threads);
         const homeDirectory = await worker.call("homeDirectory", null, {
@@ -906,7 +906,7 @@ export function createStorage(
       const candidates = entries.slice(offset, offset + 100);
       const [byId, workspaces] = await Promise.all([
         readThreadsById(
-          bb,
+          sandy,
           candidates.map((entry) => entry.name),
           lifecycle.signal,
         ),
@@ -980,7 +980,7 @@ export function createStorage(
         lifecycle.signal.throwIfAborted();
         const candidates = names.slice(offset, offset + 100);
         const [byId, workspaces] = await Promise.all([
-          readThreadsById(bb, candidates, lifecycle.signal),
+          readThreadsById(sandy, candidates, lifecycle.signal),
           workspaceEntries(hostId, rootPath),
         ]);
         const batch = candidates.filter((name) => {
@@ -1113,7 +1113,7 @@ export function createStorage(
         );
       const [environments, projects] = await Promise.all([
         readEnvironments(hostId),
-        bb.sdk.projects.list({ signal: lifecycle.signal }),
+        sandy.sdk.projects.list({ signal: lifecycle.signal }),
       ]);
       const candidatePaths = developerCandidatePaths(
         hostId,
@@ -1122,7 +1122,7 @@ export function createStorage(
       );
       if (names?.some((name) => isCurrentInstance(developer.path, name)))
         throw new Error(
-          "Cannot remove the development instance this BB is running from",
+          "Cannot remove the development instance this SANDY is running from",
         );
       const targets = developer.entries.filter(
         (entry) =>
@@ -1185,7 +1185,7 @@ export function createStorage(
   async function largeFileTargets(hostId: string | null) {
     lifecycle.signal.throwIfAborted();
     return hostId === null
-      ? (await bb.sdk.hosts.list({ type: "persistent" }))
+      ? (await sandy.sdk.hosts.list({ type: "persistent" }))
           .filter(
             (machine) =>
               machine.status === "connected" && read(machine.id) !== null,
@@ -1198,7 +1198,7 @@ export function createStorage(
     const targets: string[] = [];
     for (const target of candidates) {
       const names = (read(target)?.largeFiles ?? []).map((entry) => entry.name);
-      const byId = await readThreadsById(bb, names, lifecycle.signal);
+      const byId = await readThreadsById(sandy, names, lifecycle.signal);
       if (
         names.some((name) => {
           const thread = byId.get(name);
@@ -1286,7 +1286,7 @@ export function createStorage(
             else await removeMissingDevelopment(next, await acquire(next));
           } catch (error) {
             if (!lifecycle.signal.aborted)
-              bb.log.warn(
+              sandy.log.warn(
                 `Could not clean development storage on ${next}: ${error instanceof Error ? error.message : String(error)}`,
               );
           }
@@ -1309,7 +1309,7 @@ export function createStorage(
           signal: lifecycle.signal,
         }),
         readEnvironments(hostId),
-        bb.sdk.projects.list({ signal: lifecycle.signal }),
+        sandy.sdk.projects.list({ signal: lifecycle.signal }),
       ]);
       const developerStorage = await measureDeveloperStorage(
         hostId,
@@ -1343,7 +1343,7 @@ export function createStorage(
         if (await devCleanupEnabled()) await scanAll();
       } catch (error) {
         if (!lifecycle.signal.aborted)
-          bb.log.warn(
+          sandy.log.warn(
             `Could not reconcile development storage: ${error instanceof Error ? error.message : String(error)}`,
           );
       } finally {
@@ -1356,7 +1356,7 @@ export function createStorage(
   }
   async function scanAll() {
     lifecycle.signal.throwIfAborted();
-    const machines = await bb.sdk.hosts.list({ type: "persistent" });
+    const machines = await sandy.sdk.hosts.list({ type: "persistent" });
     for (const machine of machines)
       if (
         machine.status === "connected" &&
@@ -1374,12 +1374,12 @@ export function createStorage(
     started?: () => void,
   ) {
     lifecycle.signal.throwIfAborted();
-    const thread = await bb.sdk.threads.get({ threadId });
+    const thread = await sandy.sdk.threads.get({ threadId });
     if (["starting", "active", "stopping"].includes(thread.status))
       throw new Error("Stop the thread before clearing its storage");
     let hostId: string;
     if (thread.environmentId !== null) {
-      hostId = (await bb.sdk.threads.storageLocation({ threadId })).hostId;
+      hostId = (await sandy.sdk.threads.storageLocation({ threadId })).hostId;
     } else {
       const matches = db
         .prepare<[string], { host_id: string }>(
@@ -1402,7 +1402,7 @@ export function createStorage(
     const release = await acquire(hostId, started);
     try {
       const rootPath = await storageRoot(hostId);
-      const current = await bb.sdk.threads.get({ threadId });
+      const current = await sandy.sdk.threads.get({ threadId });
       if (["starting", "active", "stopping"].includes(current.status))
         throw new Error("Stop the thread before clearing its storage");
       if (archivedAt !== null) {
@@ -1478,7 +1478,7 @@ export function createStorage(
         return;
       }
       try {
-        const thread = await bb.sdk.threads.get({
+        const thread = await sandy.sdk.threads.get({
           threadId: entry.thread_id,
         });
         if (
@@ -1516,7 +1516,7 @@ export function createStorage(
           entry.archived_at,
         );
         if (missingLocation) continue;
-        bb.log.warn(
+        sandy.log.warn(
           `Could not clear archived storage for ${entry.thread_id}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
@@ -1531,13 +1531,13 @@ export function createStorage(
       await requireHost(hostId, true);
       const [allEnvironments, threads] = await Promise.all([
         readEnvironments(hostId),
-        readThreads(bb, lifecycle.signal),
+        readThreads(sandy, lifecycle.signal),
       ]);
       const environments = leftoverEnvironments(allEnvironments, threads);
       let retriedCount = 0;
       for (const env of environments) {
         lifecycle.signal.throwIfAborted();
-        await bb.sdk.environments.experimental_cleanup({
+        await sandy.sdk.environments.experimental_cleanup({
           environmentId: env.id,
         });
         retriedCount++;
@@ -1565,13 +1565,13 @@ export function createStorage(
     );
     if (unknown.length > 0)
       throw new Error(
-        `Not a worktree created outside BB in the last scan: ${unknown.join(", ")}`,
+        `Not a worktree created outside SANDY in the last scan: ${unknown.join(", ")}`,
       );
     const [environments, projects] = await Promise.all([
       readEnvironments(hostId),
-      bb.sdk.projects.list({ signal: lifecycle.signal }),
+      sandy.sdk.projects.list({ signal: lifecycle.signal }),
     ]);
-    return { targets, owned: bbOwnedPaths(hostId, environments, projects) };
+    return { targets, owned: sandyOwnedPaths(hostId, environments, projects) };
   }
   function setWorktreeRemoval(
     hostId: string,
@@ -1605,7 +1605,7 @@ export function createStorage(
       return { state: "started" as const };
     }
     const reasons: ExternalWorktreeSkipReason[] = owned.has(hostPath(target))
-      ? ["inUseByBb"]
+      ? ["inUseBySandy"]
       : force
         ? []
         : busy.has(hostId)
@@ -1703,7 +1703,7 @@ export function createStorage(
         if (owned.has(hostPath(worktree.path))) {
           response.skipped.push({
             path: worktree.path,
-            reasons: ["inUseByBb"],
+            reasons: ["inUseBySandy"],
           });
           continue;
         }
@@ -1783,7 +1783,7 @@ export function createStorage(
             { hostId, paths: null },
             release,
           );
-          message = `Removed ${result.removedCount} worktrees created outside BB; ${result.skipped.length + result.failed.length} kept`;
+          message = `Removed ${result.removedCount} worktrees created outside SANDY; ${result.skipped.length + result.failed.length} kept`;
         } else {
           const result = await retryWorktreeCleanup({ hostId }, release);
           message = `Retried cleanup for ${result.retriedCount} worktrees`;

@@ -1,14 +1,14 @@
 {
-  "name": "bb-plugin-provider-retry",
+  "name": "sandy-plugin-provider-retry",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Retry turns after transient provider errors and when subscription limits reset.",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.102"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.102"
   },
-  "bb": {
+  "sandy": {
     "name": "Provider retry",
     "description": "Retry turns after transient provider errors and when subscription limits reset.",
     "branding": {
@@ -17,17 +17,17 @@
     "server": "./server.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.0.0",
     "better-sqlite3": "12.10.0",

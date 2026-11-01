@@ -4,16 +4,16 @@ import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { machineServerAccessReady } from "@/components/machines/machine-server-access";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { Host } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Host } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/dialog";
+import { Icon } from "@sandy/shared-ui/icon";
 import { MachineStatusDot } from "@/components/machines/MachineStatusDot";
 import { useHosts } from "@/hooks/queries/host-queries";
 import { sdk } from "@/lib/sdk";
@@ -81,8 +81,8 @@ export function AddMachineContent({
 
 function serverMachineNotice(serverMachineName: string | null): string {
   return serverMachineName === null
-    ? "The new machine will connect to your bb server. Keep the server machine on so the new machine can keep working."
-    : `The new machine will connect to the bb server on ${serverMachineName}. Keep that computer on so the new machine can keep working.`;
+    ? "The new machine will connect to your sandy server. Keep the server machine on so the new machine can keep working."
+    : `The new machine will connect to the sandy server on ${serverMachineName}. Keep that computer on so the new machine can keep working.`;
 }
 
 export type MachineAccessGateState =
@@ -306,7 +306,7 @@ export function ManualMachineSetupView({
           }
         >
           {errorMessage ??
-            "Run this command on the machine you want to add. It installs bb and keeps the machine connected to this server."}
+            "Run this command on the machine you want to add. It installs sandy and keeps the machine connected to this server."}
         </DialogDescription>
       </DialogHeader>
       {errorMessage === null ? null : (

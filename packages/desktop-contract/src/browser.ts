@@ -1,57 +1,57 @@
-import { jsonValueSchema } from "@bb/domain";
+import { jsonValueSchema } from "@sandy/domain";
 import { z } from "zod";
 import {
   desktopBrowserImportSelectionSchema,
   type DesktopBrowserImportOutcome,
   type DesktopBrowserImportSource,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 
-export const BB_DESKTOP_BROWSER_MAX_URL_LENGTH = 4096;
-export const BB_DESKTOP_BROWSER_MAX_TITLE_LENGTH = 1024;
+export const SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH = 4096;
+export const SANDY_DESKTOP_BROWSER_MAX_TITLE_LENGTH = 1024;
 
-export const bbDesktopBrowserTargetSchema = z
+export const sandyDesktopBrowserTargetSchema = z
   .object({
     hostId: z.string().min(1),
     instanceId: z.string().min(1),
     generation: z.string().min(1),
   })
   .strict();
-export type BbDesktopBrowserTarget = z.infer<
-  typeof bbDesktopBrowserTargetSchema
+export type SandyDesktopBrowserTarget = z.infer<
+  typeof sandyDesktopBrowserTargetSchema
 >;
 
-export const bbDesktopBrowserControlSchema = z
+export const sandyDesktopBrowserControlSchema = z
   .object({
     leaseId: z.string().min(1),
     controllerLabel: z.string().min(1),
     expiresAt: z.number().int().positive(),
   })
   .strict();
-export type BbDesktopBrowserControl = z.infer<
-  typeof bbDesktopBrowserControlSchema
+export type SandyDesktopBrowserControl = z.infer<
+  typeof sandyDesktopBrowserControlSchema
 >;
-export const bbDesktopBrowserControlStateSchema = z
+export const sandyDesktopBrowserControlStateSchema = z
   .object({
     tabId: z.string().min(1),
     threadId: z.string().min(1),
-    control: bbDesktopBrowserControlSchema.nullable(),
+    control: sandyDesktopBrowserControlSchema.nullable(),
   })
   .strict();
-export type BbDesktopBrowserControlState = z.infer<
-  typeof bbDesktopBrowserControlStateSchema
+export type SandyDesktopBrowserControlState = z.infer<
+  typeof sandyDesktopBrowserControlStateSchema
 >;
-export const bbDesktopBrowserRevealRequestSchema = z
+export const sandyDesktopBrowserRevealRequestSchema = z
   .object({
     tabId: z.string().min(1),
     threadId: z.string().min(1),
-    desktopTarget: bbDesktopBrowserTargetSchema,
+    desktopTarget: sandyDesktopBrowserTargetSchema,
   })
   .strict();
-export type BbDesktopBrowserRevealRequest = z.infer<
-  typeof bbDesktopBrowserRevealRequestSchema
+export type SandyDesktopBrowserRevealRequest = z.infer<
+  typeof sandyDesktopBrowserRevealRequestSchema
 >;
 
-const bbDesktopBrowserViewBoundsSchema = z
+const sandyDesktopBrowserViewBoundsSchema = z
   .object({
     x: z.number().int(),
     y: z.number().int(),
@@ -59,11 +59,11 @@ const bbDesktopBrowserViewBoundsSchema = z
     height: z.number().int().nonnegative(),
   })
   .strict();
-export type BbDesktopBrowserViewBounds = z.infer<
-  typeof bbDesktopBrowserViewBoundsSchema
+export type SandyDesktopBrowserViewBounds = z.infer<
+  typeof sandyDesktopBrowserViewBoundsSchema
 >;
 
-export interface BbDesktopBrowserViewportBounds {
+export interface SandyDesktopBrowserViewportBounds {
   width: number;
   height: number;
 }
@@ -74,18 +74,18 @@ interface ClampIntegerToRangeArgs {
   value: number;
 }
 
-interface ClampBbDesktopBrowserViewBoundsArgs {
-  bounds: BbDesktopBrowserViewBounds;
-  viewport: BbDesktopBrowserViewportBounds;
+interface ClampSandyDesktopBrowserViewBoundsArgs {
+  bounds: SandyDesktopBrowserViewBounds;
+  viewport: SandyDesktopBrowserViewportBounds;
 }
 
 function clampIntegerToRange(args: ClampIntegerToRangeArgs): number {
   return Math.min(Math.max(args.value, args.min), args.max);
 }
 
-export function clampBbDesktopBrowserViewBounds(
-  args: ClampBbDesktopBrowserViewBoundsArgs,
-): BbDesktopBrowserViewBounds {
+export function clampSandyDesktopBrowserViewBounds(
+  args: ClampSandyDesktopBrowserViewBoundsArgs,
+): SandyDesktopBrowserViewBounds {
   const viewportRight = Math.max(0, Math.round(args.viewport.width));
   const viewportBottom = Math.max(0, Math.round(args.viewport.height));
   const x = clampIntegerToRange({
@@ -117,150 +117,150 @@ export function clampBbDesktopBrowserViewBounds(
   };
 }
 
-export const bbDesktopBrowserAttachRequestSchema = z
+export const sandyDesktopBrowserAttachRequestSchema = z
   .object({
     tabId: z.string().min(1),
     threadId: z.string().min(1),
-    url: z.string().max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH),
+    url: z.string().max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH),
     existingOnly: z.literal(true).optional(),
-    bounds: bbDesktopBrowserViewBoundsSchema,
+    bounds: sandyDesktopBrowserViewBoundsSchema,
     visible: z.boolean(),
   })
   .strict();
-export type BbDesktopBrowserAttachRequest = z.infer<
-  typeof bbDesktopBrowserAttachRequestSchema
+export type SandyDesktopBrowserAttachRequest = z.infer<
+  typeof sandyDesktopBrowserAttachRequestSchema
 >;
 
-export const bbDesktopBrowserNavigateRequestSchema = z
+export const sandyDesktopBrowserNavigateRequestSchema = z
   .object({
     tabId: z.string().min(1),
-    url: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH),
+    url: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH),
   })
   .strict();
-export type BbDesktopBrowserNavigateRequest = z.infer<
-  typeof bbDesktopBrowserNavigateRequestSchema
+export type SandyDesktopBrowserNavigateRequest = z.infer<
+  typeof sandyDesktopBrowserNavigateRequestSchema
 >;
 
-export const bbDesktopBrowserSetBoundsRequestSchema = z
+export const sandyDesktopBrowserSetBoundsRequestSchema = z
   .object({
     tabId: z.string().min(1),
-    bounds: bbDesktopBrowserViewBoundsSchema,
+    bounds: sandyDesktopBrowserViewBoundsSchema,
   })
   .strict();
-export type BbDesktopBrowserSetBoundsRequest = z.infer<
-  typeof bbDesktopBrowserSetBoundsRequestSchema
+export type SandyDesktopBrowserSetBoundsRequest = z.infer<
+  typeof sandyDesktopBrowserSetBoundsRequestSchema
 >;
 
-export const bbDesktopBrowserSetVisibleRequestSchema = z
+export const sandyDesktopBrowserSetVisibleRequestSchema = z
   .object({
     tabId: z.string().min(1),
     visible: z.boolean(),
   })
   .strict();
-export type BbDesktopBrowserSetVisibleRequest = z.infer<
-  typeof bbDesktopBrowserSetVisibleRequestSchema
+export type SandyDesktopBrowserSetVisibleRequest = z.infer<
+  typeof sandyDesktopBrowserSetVisibleRequestSchema
 >;
 
-export const bbDesktopBrowserTabRefSchema = z
+export const sandyDesktopBrowserTabRefSchema = z
   .object({
     tabId: z.string().min(1),
   })
   .strict();
-export type BbDesktopBrowserTabRef = z.infer<
-  typeof bbDesktopBrowserTabRefSchema
+export type SandyDesktopBrowserTabRef = z.infer<
+  typeof sandyDesktopBrowserTabRefSchema
 >;
 
-export const bbDesktopBrowserSetThreadDiscardedRequestSchema = z
+export const sandyDesktopBrowserSetThreadDiscardedRequestSchema = z
   .object({
     threadId: z.string().min(1),
     discarded: z.boolean(),
   })
   .strict();
-export type BbDesktopBrowserSetThreadDiscardedRequest = z.infer<
-  typeof bbDesktopBrowserSetThreadDiscardedRequestSchema
+export type SandyDesktopBrowserSetThreadDiscardedRequest = z.infer<
+  typeof sandyDesktopBrowserSetThreadDiscardedRequestSchema
 >;
 
-export const bbDesktopBrowserStateSchema = z
+export const sandyDesktopBrowserStateSchema = z
   .object({
     tabId: z.string().min(1),
-    url: z.string().max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH),
-    title: z.string().max(BB_DESKTOP_BROWSER_MAX_TITLE_LENGTH).nullable(),
+    url: z.string().max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH),
+    title: z.string().max(SANDY_DESKTOP_BROWSER_MAX_TITLE_LENGTH).nullable(),
     faviconUrl: z
       .string()
-      .max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH)
+      .max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH)
       .nullable()
       .optional(),
     faviconUrls: z
-      .array(z.string().max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH))
+      .array(z.string().max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH))
       .max(8)
       .optional(),
     isLoading: z.boolean(),
     canGoBack: z.boolean(),
     canGoForward: z.boolean(),
-    errorText: z.string().max(BB_DESKTOP_BROWSER_MAX_TITLE_LENGTH).nullable(),
+    errorText: z.string().max(SANDY_DESKTOP_BROWSER_MAX_TITLE_LENGTH).nullable(),
   })
   .strict();
-export type BbDesktopBrowserState = z.infer<typeof bbDesktopBrowserStateSchema>;
+export type SandyDesktopBrowserState = z.infer<typeof sandyDesktopBrowserStateSchema>;
 
-export const bbDesktopBrowserOpenTabRequestSchema = z
+export const sandyDesktopBrowserOpenTabRequestSchema = z
   .object({
-    url: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH),
+    url: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH),
   })
   .strict();
-export type BbDesktopBrowserOpenTabRequest = z.infer<
-  typeof bbDesktopBrowserOpenTabRequestSchema
+export type SandyDesktopBrowserOpenTabRequest = z.infer<
+  typeof sandyDesktopBrowserOpenTabRequestSchema
 >;
 
-export const bbDesktopBrowserScopedOpenTabRequestSchema = z
+export const sandyDesktopBrowserScopedOpenTabRequestSchema = z
   .object({
     tabId: z.string().min(1),
-    url: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_URL_LENGTH),
+    url: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_URL_LENGTH),
   })
   .strict();
-export type BbDesktopBrowserScopedOpenTabRequest = z.infer<
-  typeof bbDesktopBrowserScopedOpenTabRequestSchema
+export type SandyDesktopBrowserScopedOpenTabRequest = z.infer<
+  typeof sandyDesktopBrowserScopedOpenTabRequestSchema
 >;
 
-const BB_DESKTOP_BROWSER_MAX_SNAPSHOT_DATA_URL_LENGTH = 8_388_608;
+const SANDY_DESKTOP_BROWSER_MAX_SNAPSHOT_DATA_URL_LENGTH = 8_388_608;
 
-export const bbDesktopBrowserSnapshotSchema = z
+export const sandyDesktopBrowserSnapshotSchema = z
   .object({
     tabId: z.string().min(1),
     dataUrl: z
       .string()
-      .max(BB_DESKTOP_BROWSER_MAX_SNAPSHOT_DATA_URL_LENGTH)
+      .max(SANDY_DESKTOP_BROWSER_MAX_SNAPSHOT_DATA_URL_LENGTH)
       .nullable(),
   })
   .strict();
-export type BbDesktopBrowserSnapshot = z.infer<
-  typeof bbDesktopBrowserSnapshotSchema
+export type SandyDesktopBrowserSnapshot = z.infer<
+  typeof sandyDesktopBrowserSnapshotSchema
 >;
 
-export const BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH = 1024;
+export const SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH = 1024;
 
-export const bbDesktopBrowserFindInPageRequestSchema = z
+export const sandyDesktopBrowserFindInPageRequestSchema = z
   .object({
     tabId: z.string().min(1),
-    text: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH),
+    text: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH),
     forward: z.boolean(),
     newSession: z.boolean(),
   })
   .strict();
-export type BbDesktopBrowserFindInPageRequest = z.infer<
-  typeof bbDesktopBrowserFindInPageRequestSchema
+export type SandyDesktopBrowserFindInPageRequest = z.infer<
+  typeof sandyDesktopBrowserFindInPageRequestSchema
 >;
 
-export const bbDesktopBrowserStopFindInPageRequestSchema = z
+export const sandyDesktopBrowserStopFindInPageRequestSchema = z
   .object({
     tabId: z.string().min(1),
     action: z.enum(["clearSelection", "keepSelection", "activateSelection"]),
   })
   .strict();
-export type BbDesktopBrowserStopFindInPageRequest = z.infer<
-  typeof bbDesktopBrowserStopFindInPageRequestSchema
+export type SandyDesktopBrowserStopFindInPageRequest = z.infer<
+  typeof sandyDesktopBrowserStopFindInPageRequestSchema
 >;
 
-export const bbDesktopBrowserFindResultSchema = z
+export const sandyDesktopBrowserFindResultSchema = z
   .object({
     tabId: z.string().min(1),
     requestId: z.number().int(),
@@ -269,128 +269,128 @@ export const bbDesktopBrowserFindResultSchema = z
     finalUpdate: z.boolean(),
   })
   .strict();
-export type BbDesktopBrowserFindResult = z.infer<
-  typeof bbDesktopBrowserFindResultSchema
+export type SandyDesktopBrowserFindResult = z.infer<
+  typeof sandyDesktopBrowserFindResultSchema
 >;
 
-export const BB_DESKTOP_BROWSER_MAX_PAGE_EXPRESSION_LENGTH = 4_000_000;
-export const BB_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH = 256;
+export const SANDY_DESKTOP_BROWSER_MAX_PAGE_EXPRESSION_LENGTH = 4_000_000;
+export const SANDY_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH = 256;
 
-export const bbDesktopBrowserPageWorldSchema = z.enum(["main", "isolated"]);
+export const sandyDesktopBrowserPageWorldSchema = z.enum(["main", "isolated"]);
 
-export const bbDesktopBrowserEvaluateRequestSchema = z
+export const sandyDesktopBrowserEvaluateRequestSchema = z
   .object({
     tabId: z.string().min(1),
     expression: z
       .string()
       .min(1)
-      .max(BB_DESKTOP_BROWSER_MAX_PAGE_EXPRESSION_LENGTH),
-    world: bbDesktopBrowserPageWorldSchema,
-    channel: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH),
+      .max(SANDY_DESKTOP_BROWSER_MAX_PAGE_EXPRESSION_LENGTH),
+    world: sandyDesktopBrowserPageWorldSchema,
+    channel: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH),
   })
   .strict();
-export type BbDesktopBrowserEvaluateRequest = z.infer<
-  typeof bbDesktopBrowserEvaluateRequestSchema
+export type SandyDesktopBrowserEvaluateRequest = z.infer<
+  typeof sandyDesktopBrowserEvaluateRequestSchema
 >;
 
-export const bbDesktopBrowserEvaluateResultSchema = z.discriminatedUnion("ok", [
+export const sandyDesktopBrowserEvaluateResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(true), value: jsonValueSchema }).strict(),
   z.object({ ok: z.literal(false), error: z.string() }).strict(),
 ]);
-export type BbDesktopBrowserEvaluateResult = z.infer<
-  typeof bbDesktopBrowserEvaluateResultSchema
+export type SandyDesktopBrowserEvaluateResult = z.infer<
+  typeof sandyDesktopBrowserEvaluateResultSchema
 >;
 
-export const bbDesktopBrowserPageMessageSchema = z
+export const sandyDesktopBrowserPageMessageSchema = z
   .object({
     tabId: z.string().min(1),
-    channel: z.string().min(1).max(BB_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH),
+    channel: z.string().min(1).max(SANDY_DESKTOP_BROWSER_MAX_PAGE_CHANNEL_LENGTH),
     data: jsonValueSchema,
   })
   .strict();
-export type BbDesktopBrowserPageMessage = z.infer<
-  typeof bbDesktopBrowserPageMessageSchema
+export type SandyDesktopBrowserPageMessage = z.infer<
+  typeof sandyDesktopBrowserPageMessageSchema
 >;
-export type BbDesktopBrowserPageMessageHandler = (
-  message: BbDesktopBrowserPageMessage,
+export type SandyDesktopBrowserPageMessageHandler = (
+  message: SandyDesktopBrowserPageMessage,
 ) => void;
 
-export type BbDesktopBrowserStateHandler = (
-  state: BbDesktopBrowserState,
+export type SandyDesktopBrowserStateHandler = (
+  state: SandyDesktopBrowserState,
 ) => void;
-export type BbDesktopBrowserOpenTabHandler = (
-  request: BbDesktopBrowserOpenTabRequest,
+export type SandyDesktopBrowserOpenTabHandler = (
+  request: SandyDesktopBrowserOpenTabRequest,
 ) => void;
-export type BbDesktopBrowserScopedOpenTabHandler = (
-  request: BbDesktopBrowserScopedOpenTabRequest,
+export type SandyDesktopBrowserScopedOpenTabHandler = (
+  request: SandyDesktopBrowserScopedOpenTabRequest,
 ) => void;
-export type BbDesktopBrowserSnapshotHandler = (
-  snapshot: BbDesktopBrowserSnapshot,
+export type SandyDesktopBrowserSnapshotHandler = (
+  snapshot: SandyDesktopBrowserSnapshot,
 ) => void;
-export type BbDesktopBrowserFocusHandler = (tabId: string) => void;
-export type BbDesktopBrowserFindResultHandler = (
-  result: BbDesktopBrowserFindResult,
+export type SandyDesktopBrowserFocusHandler = (tabId: string) => void;
+export type SandyDesktopBrowserFindResultHandler = (
+  result: SandyDesktopBrowserFindResult,
 ) => void;
-export type BbDesktopBrowserUnsubscribe = () => void;
+export type SandyDesktopBrowserUnsubscribe = () => void;
 
-export const bbDesktopBrowserImportCookiesRequestSchema =
+export const sandyDesktopBrowserImportCookiesRequestSchema =
   desktopBrowserImportSelectionSchema;
-export type BbDesktopBrowserImportCookiesRequest = z.infer<
-  typeof bbDesktopBrowserImportCookiesRequestSchema
+export type SandyDesktopBrowserImportCookiesRequest = z.infer<
+  typeof sandyDesktopBrowserImportCookiesRequestSchema
 >;
-export type BbDesktopBrowserImportSourcesResult = {
+export type SandyDesktopBrowserImportSourcesResult = {
   sources: DesktopBrowserImportSource[];
 };
-export type BbDesktopBrowserImportCookiesResult = DesktopBrowserImportOutcome;
+export type SandyDesktopBrowserImportCookiesResult = DesktopBrowserImportOutcome;
 
-export interface BbDesktopBrowserApi {
-  listImportSources?(): Promise<BbDesktopBrowserImportSourcesResult>;
+export interface SandyDesktopBrowserApi {
+  listImportSources?(): Promise<SandyDesktopBrowserImportSourcesResult>;
   importCookies?(
-    request: BbDesktopBrowserImportCookiesRequest,
-  ): Promise<BbDesktopBrowserImportCookiesResult>;
+    request: SandyDesktopBrowserImportCookiesRequest,
+  ): Promise<SandyDesktopBrowserImportCookiesResult>;
   openFullDiskAccessSettings?(): void;
-  getTarget?(): Promise<BbDesktopBrowserTarget | null>;
-  getControl?(tabId: string): Promise<BbDesktopBrowserControlState | null>;
+  getTarget?(): Promise<SandyDesktopBrowserTarget | null>;
+  getControl?(tabId: string): Promise<SandyDesktopBrowserControlState | null>;
   releaseControl?(tabId: string): void;
   onControl?(
-    listener: (state: BbDesktopBrowserControlState) => void,
-  ): BbDesktopBrowserUnsubscribe;
+    listener: (state: SandyDesktopBrowserControlState) => void,
+  ): SandyDesktopBrowserUnsubscribe;
   onReveal?(
-    listener: (request: BbDesktopBrowserRevealRequest) => void,
-  ): BbDesktopBrowserUnsubscribe;
-  attach(request: BbDesktopBrowserAttachRequest): void;
+    listener: (request: SandyDesktopBrowserRevealRequest) => void,
+  ): SandyDesktopBrowserUnsubscribe;
+  attach(request: SandyDesktopBrowserAttachRequest): void;
   detach(tabId: string): void;
-  setThreadDiscarded?(request: BbDesktopBrowserSetThreadDiscardedRequest): void;
+  setThreadDiscarded?(request: SandyDesktopBrowserSetThreadDiscardedRequest): void;
   listThreadIdsWithTabs?(): Promise<string[]>;
-  navigate(request: BbDesktopBrowserNavigateRequest): void;
+  navigate(request: SandyDesktopBrowserNavigateRequest): void;
   goBack(tabId: string): void;
   goForward(tabId: string): void;
   reload(tabId: string): void;
   stop(tabId: string): void;
   focus?(tabId: string): void;
-  setBounds(request: BbDesktopBrowserSetBoundsRequest): void;
-  setVisible(request: BbDesktopBrowserSetVisibleRequest): void;
-  setVisibleWithoutFocus?(request: BbDesktopBrowserSetVisibleRequest): void;
-  onState(listener: BbDesktopBrowserStateHandler): BbDesktopBrowserUnsubscribe;
+  setBounds(request: SandyDesktopBrowserSetBoundsRequest): void;
+  setVisible(request: SandyDesktopBrowserSetVisibleRequest): void;
+  setVisibleWithoutFocus?(request: SandyDesktopBrowserSetVisibleRequest): void;
+  onState(listener: SandyDesktopBrowserStateHandler): SandyDesktopBrowserUnsubscribe;
   onOpenTab(
-    listener: BbDesktopBrowserOpenTabHandler,
-  ): BbDesktopBrowserUnsubscribe;
+    listener: SandyDesktopBrowserOpenTabHandler,
+  ): SandyDesktopBrowserUnsubscribe;
   onScopedOpenTab?(
-    listener: BbDesktopBrowserScopedOpenTabHandler,
-  ): BbDesktopBrowserUnsubscribe;
-  onFocus?(listener: BbDesktopBrowserFocusHandler): BbDesktopBrowserUnsubscribe;
+    listener: SandyDesktopBrowserScopedOpenTabHandler,
+  ): SandyDesktopBrowserUnsubscribe;
+  onFocus?(listener: SandyDesktopBrowserFocusHandler): SandyDesktopBrowserUnsubscribe;
   onSnapshot?(
-    listener: BbDesktopBrowserSnapshotHandler,
-  ): BbDesktopBrowserUnsubscribe;
-  findInPage?(request: BbDesktopBrowserFindInPageRequest): void;
-  stopFindInPage?(request: BbDesktopBrowserStopFindInPageRequest): void;
+    listener: SandyDesktopBrowserSnapshotHandler,
+  ): SandyDesktopBrowserUnsubscribe;
+  findInPage?(request: SandyDesktopBrowserFindInPageRequest): void;
+  stopFindInPage?(request: SandyDesktopBrowserStopFindInPageRequest): void;
   onFindResult?(
-    listener: BbDesktopBrowserFindResultHandler,
-  ): BbDesktopBrowserUnsubscribe;
+    listener: SandyDesktopBrowserFindResultHandler,
+  ): SandyDesktopBrowserUnsubscribe;
   evaluate?(
-    request: BbDesktopBrowserEvaluateRequest,
-  ): Promise<BbDesktopBrowserEvaluateResult>;
+    request: SandyDesktopBrowserEvaluateRequest,
+  ): Promise<SandyDesktopBrowserEvaluateResult>;
   onPageMessage?(
-    listener: BbDesktopBrowserPageMessageHandler,
-  ): BbDesktopBrowserUnsubscribe;
+    listener: SandyDesktopBrowserPageMessageHandler,
+  ): SandyDesktopBrowserUnsubscribe;
 }

@@ -7,11 +7,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
-import { QuestionForm } from "@bb/shared-ui/question-form";
+import { QuestionForm } from "@sandy/shared-ui/question-form";
 import type {
   Question,
   QuestionAnswer,
-} from "@bb/shared-ui/question-form-state";
+} from "@sandy/shared-ui/question-form-state";
 import { ThreadQuestionFormHost } from "./ThreadQuestionFormHost";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 type InteractionPayload = { questions: Question[] };
@@ -23,7 +23,7 @@ vi.mock(
   "@/hooks/queries/system-queries",
   () => import("@/test/question-shortcuts-system-queries-mock"),
 );
-vi.mock("@/lib/bb-desktop", () => ({ getBbDesktopInfo: () => null }));
+vi.mock("@/lib/sandy-desktop", () => ({ getSandyDesktopInfo: () => null }));
 const pane = vi.hoisted(() => ({ isFocused: true }));
 vi.mock("@/views/thread-detail/PaneContext", () => ({
   useOptionalPaneContext: () => pane,
@@ -164,7 +164,7 @@ describe("answering a single-select question", () => {
       ).toBe("false");
       changed.unmount();
       window.localStorage.setItem(
-        `bb.question-draft.v1:${firstKey}`,
+        `sandy.question-draft.v1:${firstKey}`,
         "not JSON",
       );
       const corrupt = render(singleSelect, { draftKey: firstKey });
@@ -179,8 +179,8 @@ describe("answering a single-select question", () => {
       ).toBe("true");
       repaired.unmount();
     } finally {
-      window.localStorage.removeItem(`bb.question-draft.v1:${firstKey}`);
-      window.localStorage.removeItem(`bb.question-draft.v1:${secondKey}`);
+      window.localStorage.removeItem(`sandy.question-draft.v1:${firstKey}`);
+      window.localStorage.removeItem(`sandy.question-draft.v1:${secondKey}`);
     }
   });
 
@@ -206,7 +206,7 @@ describe("answering a single-select question", () => {
       restored.unmount();
     } finally {
       storage.mockRestore();
-      window.localStorage.removeItem(`bb.question-draft.v1:${draftKey}`);
+      window.localStorage.removeItem(`sandy.question-draft.v1:${draftKey}`);
     }
   });
 
@@ -450,7 +450,7 @@ describe("multi-select and multi-question flows", () => {
 
   it("restores partial selections, free text, and the current question after navigation and from saved storage", () => {
     const draftKey = "thr_draft:pint_draft";
-    const storageKey = `bb.question-draft.v1:${draftKey}`;
+    const storageKey = `sandy.question-draft.v1:${draftKey}`;
     const original = window.localStorage.getItem(storageKey);
     try {
       const slot = render(multi, { draftKey });
@@ -481,7 +481,7 @@ describe("multi-select and multi-question flows", () => {
       const saved = window.localStorage.getItem(storageKey);
       expect(saved).not.toBeNull();
       const freshKey = "thr_draft:pint_reloaded";
-      window.localStorage.setItem(`bb.question-draft.v1:${freshKey}`, saved!);
+      window.localStorage.setItem(`sandy.question-draft.v1:${freshKey}`, saved!);
       const reloaded = render(multi, { draftKey: freshKey });
       expect(
         getButtonByText(reloaded, "Metrics").getAttribute("aria-pressed"),
@@ -492,7 +492,7 @@ describe("multi-select and multi-question flows", () => {
         "  DuckDB\nwith extensions  ",
       );
       reloaded.unmount();
-      window.localStorage.removeItem(`bb.question-draft.v1:${freshKey}`);
+      window.localStorage.removeItem(`sandy.question-draft.v1:${freshKey}`);
     } finally {
       if (original === null) window.localStorage.removeItem(storageKey);
       else window.localStorage.setItem(storageKey, original);
@@ -503,7 +503,7 @@ describe("multi-select and multi-question flows", () => {
     "retains drafts on failed %s and clears them only after success",
     async (action) => {
       const draftKey = `thr_draft:pint_${action}`;
-      const storageKey = `bb.question-draft.v1:${draftKey}`;
+      const storageKey = `sandy.question-draft.v1:${draftKey}`;
       const original = window.localStorage.getItem(storageKey);
       try {
         const handler = vi.fn<() => Promise<void>>(async () => {
@@ -548,7 +548,7 @@ describe("multi-select and multi-question flows", () => {
     "keeps answers on screen and locks the form after a successful %s",
     async (action) => {
       const draftKey = `thr_draft:pint_settled_${action}`;
-      const storageKey = `bb.question-draft.v1:${draftKey}`;
+      const storageKey = `sandy.question-draft.v1:${draftKey}`;
       try {
         const slot = render(singleSelect, {
           draftKey,

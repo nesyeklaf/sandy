@@ -3,13 +3,13 @@ import {
   type HostDaemonCommand,
   type HostDaemonOnlineRpcRequestMessage,
   type HostDaemonOnlineRpcResponseMessage,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   encodeClientTurnRequestIdNumber,
   type ClientTurnRequestId,
   type PromptInput,
-} from "@bb/domain";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/domain";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -29,7 +29,7 @@ import {
   fetchDispatchTestArtifact,
 } from "./dispatch-helpers.js";
 import { RuntimeManager } from "../../src/runtime-manager.js";
-import { WorkspaceError } from "bb-environment-provider-host/workspace-git";
+import { WorkspaceError } from "sandy-environment-provider-host/workspace-git";
 
 type EnvironmentProvisionCommand = Extract<
   HostDaemonCommand,
@@ -80,7 +80,7 @@ function createRouter(
   args: CreateRouterArgs = {},
 ): CommandRouter {
   return new CommandRouter({
-    dataDir: "/tmp/bb-router-test-data",
+    dataDir: "/tmp/sandy-router-test-data",
     eventSink: noopEventSink,
     fetchProjectAttachment: unexpectedProjectAttachmentFetch,
     fetchPluginHostArtifact: fetchDispatchTestArtifact,
@@ -92,7 +92,7 @@ function createRouter(
     },
     resolveInteractiveRequest: args.resolveInteractiveRequest,
     runtimeManager: args.runtimeManager ?? harness.manager,
-    threadStorageRootPath: "/tmp/bb-router-test-thread-storage",
+    threadStorageRootPath: "/tmp/sandy-router-test-thread-storage",
   });
 }
 
@@ -252,7 +252,7 @@ describe("CommandRouter", () => {
       warn: vi.fn(),
     };
     const router = createRouter(harness, { logger });
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bb-router-paths-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-router-paths-"));
     try {
       await fs.writeFile(path.join(root, "alpha.md"), "");
 
@@ -290,7 +290,7 @@ describe("CommandRouter", () => {
   it("ignores cancellation for a different path search request", async () => {
     const harness = createHarness({ workspacePath: "/tmp/env-router" });
     const router = createRouter(harness);
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "bb-router-paths-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-router-paths-"));
     try {
       await fs.writeFile(path.join(root, "alpha.md"), "");
 

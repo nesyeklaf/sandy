@@ -1,4 +1,4 @@
-import type { JsonValue, ThreadEventPlanStep } from "@bb/domain";
+import type { JsonValue, ThreadEventPlanStep } from "@sandy/domain";
 import type {
   TimelineActivityIntent,
   TimelineApprovalStatus,
@@ -31,12 +31,12 @@ import type {
   TimelineWebFetchWorkRow,
   TimelineWebSearchWorkRow,
   TimelineWorkflowWorkRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   SystemMessageKind,
   SystemMessageSubject,
   ThreadTurnInitiator,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 interface RowBaseOverrideArgs {
   createdAt?: number;
@@ -515,7 +515,7 @@ export function commandRow({
   callId,
   command,
   createdAt,
-  cwd = "/workspace/bb",
+  cwd = "/workspace/sandy",
   durationMs = 2_300,
   exitCode,
   id = DEFAULT_COMMAND_ID,

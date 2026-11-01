@@ -5,7 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { makeWorkspaceStatus } from "../testing.js";
 import { gitRpcContract } from "../rpc-contract.js";
 import { gitStatusTag } from "../contract.js";
@@ -45,7 +45,7 @@ it("keeps the last known status when a refresh fails", async () => {
           ),
       } as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
     },
   );
   const status = () => screen.getByRole("status", { name: "status" }).textContent;

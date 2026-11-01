@@ -12,11 +12,11 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { upsertInstalledPlugin, type DbConnection } from "@bb/db";
-import { buildPluginServer } from "@bb/plugin-build";
-import { createMigratedConnection } from "@bb/db/testing";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
-import type { Logger } from "@bb/logger";
+import { upsertInstalledPlugin, type DbConnection } from "@sandy/db";
+import { buildPluginServer } from "@sandy/plugin-build";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -24,8 +24,8 @@ import {
 } from "../../../src/services/plugins/plugin-service.js";
 import { testLogger } from "../../helpers/test-app.js";
 
-vi.mock("@bb/plugin-build", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@bb/plugin-build")>();
+vi.mock("@sandy/plugin-build", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@sandy/plugin-build")>();
   return { ...actual, buildPluginServer: vi.fn(actual.buildPluginServer) };
 });
 
@@ -61,8 +61,8 @@ function gitPersistence(url: string, requestedRef: string) {
 
 const THROWING_SERVER_TS = `throw new Error("source must not load");\n`;
 
-const PREBUILT_SERVER_JS = `export default async function plugin(bb) {
-  bb.log.info("dist");
+const PREBUILT_SERVER_JS = `export default async function plugin(sandy) {
+  sandy.log.info("dist");
   globalThis.__prebuiltDistLoads = (globalThis.__prebuiltDistLoads ?? 0) + 1;
 }
 `;
@@ -92,7 +92,7 @@ describe("prebuilt server bundle loading", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-prebuilt-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-prebuilt-"));
     service = createService();
   });
 
@@ -113,7 +113,7 @@ describe("prebuilt server bundle loading", () => {
         name,
         version: "0.1.0",
         type: "commonjs",
-        bb: {
+        sandy: {
           name: "Prebuilt server fixture",
           description: "Prebuilt plugin server fixture.",
           branding: { icon: "Zap" },
@@ -134,11 +134,11 @@ describe("prebuilt server bundle loading", () => {
   }
 
   it("loads a compatible ESM prebuild from a CommonJS plugin package", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-gitdist");
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-gitdist");
     upsertInstalledPlugin(db, {
-      ...gitPersistence("https://github.com/acme/bb-plugin-gitdist", "v1"),
+      ...gitPersistence("https://github.com/acme/sandy-plugin-gitdist", "v1"),
       id: "gitdist",
-      source: "git:github.com/acme/bb-plugin-gitdist@v1",
+      source: "git:github.com/acme/sandy-plugin-gitdist@v1",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -164,7 +164,7 @@ describe("prebuilt server bundle loading", () => {
   });
 
   it("compiles path source into a reusable cache and rebuilds after edits", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-pathcache");
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-pathcache");
     const sourcePath = join(rootDir, "server.ts");
     await writeFile(
       sourcePath,
@@ -216,7 +216,7 @@ export default function plugin() {
   });
 
   it("bounds compiled artifacts and evicts loaded source modules", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-reload-retention");
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-reload-retention");
     const sourcePath = join(rootDir, "server.ts");
     const cacheRoot = join(workDir, "data", "plugins", "runtime", "server");
     for (let generation = 0; generation < 8; generation += 1) {
@@ -266,7 +266,7 @@ export default function plugin() {
     const state = globalThis as Record<string, unknown>;
     state.__symlinkEvaluations = 0;
     try {
-      const rootDir = await writePrebuiltPlugin("bb-plugin-symlink-data");
+      const rootDir = await writePrebuiltPlugin("sandy-plugin-symlink-data");
       const sourcePath = join(rootDir, "server.ts");
       await writeFile(
         sourcePath,
@@ -305,14 +305,14 @@ export default function plugin() {
   });
 
   it("pre-1.0: falls back to source when the dist SDK version differs within major 0", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-minordist", {
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-minordist", {
       sdkMajor: PLUGIN_SDK_MAJOR,
       sdkVersion: `${PLUGIN_SDK_MAJOR}.999.0`,
     });
     upsertInstalledPlugin(db, {
-      ...gitPersistence("https://github.com/acme/bb-plugin-minordist", "v1"),
+      ...gitPersistence("https://github.com/acme/sandy-plugin-minordist", "v1"),
       id: "minordist",
-      source: "git:github.com/acme/bb-plugin-minordist@v1",
+      source: "git:github.com/acme/sandy-plugin-minordist@v1",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -325,8 +325,8 @@ export default function plugin() {
     expect(entry?.statusDetail).toContain("source must not load");
   });
 
-  it("pre-1.0: builds an older-SDK prebuild's source once across bb starts", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-olddist", {
+  it("pre-1.0: builds an older-SDK prebuild's source once across sandy starts", async () => {
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-olddist", {
       sdkMajor: PLUGIN_SDK_MAJOR,
       sdkVersion: `${PLUGIN_SDK_MAJOR}.999.0`,
     });
@@ -339,9 +339,9 @@ export default function plugin() {
     );
     await settleTimestamps();
     upsertInstalledPlugin(db, {
-      ...gitPersistence("https://github.com/acme/bb-plugin-olddist", "v1"),
+      ...gitPersistence("https://github.com/acme/sandy-plugin-olddist", "v1"),
       id: "olddist",
-      source: "git:github.com/acme/bb-plugin-olddist@v1",
+      source: "git:github.com/acme/sandy-plugin-olddist@v1",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -363,14 +363,14 @@ export default function plugin() {
   });
 
   it("falls back to source when the dist meta's SDK major mismatches", async () => {
-    const rootDir = await writePrebuiltPlugin("bb-plugin-staledist", {
+    const rootDir = await writePrebuiltPlugin("sandy-plugin-staledist", {
       sdkMajor: 999,
       sdkVersion: "999.0.0",
     });
     upsertInstalledPlugin(db, {
-      ...gitPersistence("https://github.com/acme/bb-plugin-staledist", "v1"),
+      ...gitPersistence("https://github.com/acme/sandy-plugin-staledist", "v1"),
       id: "staledist",
-      source: "git:github.com/acme/bb-plugin-staledist@v1",
+      source: "git:github.com/acme/sandy-plugin-staledist@v1",
       rootDir,
       version: "0.1.0",
       enabled: true,

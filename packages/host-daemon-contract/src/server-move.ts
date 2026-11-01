@@ -1,4 +1,4 @@
-import { lastServerMoveSchema, serverMoveStepIdSchema } from "@bb/domain";
+import { lastServerMoveSchema, serverMoveStepIdSchema } from "@sandy/domain";
 import { z } from "zod";
 import { hostPlatformSchema } from "./local.js";
 
@@ -51,7 +51,7 @@ export const serverMoveCommandSchemas = {
           sizeBytes: z.number().int().nonnegative(),
         })
         .strict(),
-      bbApp: z
+      sandyApp: z
         .object({
           downloadPath: z.string().min(1),
           sha256: sha256HexSchema,
@@ -101,7 +101,7 @@ export const serverMoveResultSchemas = {
       dataDir: z.string().min(1),
       platform: hostPlatformSchema,
       timeZone: z.string().min(1).nullable(),
-      bbAppVersion: z.string().min(1),
+      sandyAppVersion: z.string().min(1),
       serverEntryAvailable: z.boolean(),
       existingServerData: existingServerDataSchema.nullable(),
       dataDirHasServerData: z.boolean(),

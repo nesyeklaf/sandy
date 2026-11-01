@@ -11,8 +11,8 @@ import {
   type StoredEventRow,
   type ThreadClientTurnRequestKey,
   type ThreadWithPendingInteractionState,
-} from "@bb/db";
-import { LEGACY_CODEX_GOAL_EXTENSION_KIND } from "@bb/domain";
+} from "@sandy/db";
+import { LEGACY_CODEX_GOAL_EXTENSION_KIND } from "@sandy/domain";
 import type {
   Thread,
   ThreadActivityState,
@@ -23,18 +23,18 @@ import type {
   ThreadStatus,
   ThreadTimelineGoal,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   extractThreadTimelineActivePlanTurn,
   extractThreadTimelineGoal,
   type ThreadEventWithMeta,
-} from "@bb/thread-view";
-import type { ThreadResponse } from "@bb/server-contract";
+} from "@sandy/thread-view";
+import type { ThreadResponse } from "@sandy/server-contract";
 import type { NotificationHub } from "../../ws/hub.js";
 import { isHostDisconnectHidden } from "../hosts/host-disconnect-display.js";
 import { resolveProviderPlanCommand } from "../providers/provider-plan-command.js";
 import type { ProviderRegistryService } from "../providers/provider-registry.js";
-import { listQueuedThreadMessageCountsByThreadIds } from "@bb/db";
+import { listQueuedThreadMessageCountsByThreadIds } from "@sandy/db";
 import { resolveEnvironmentWorkspaceDisplayKind } from "../environments/environment-response.js";
 import { canThreadSpawnChild } from "./thread-parent.js";
 import { canRestoreThreadEnvironment } from "./thread-environment-restore.js";

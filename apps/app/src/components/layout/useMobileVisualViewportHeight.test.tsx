@@ -162,7 +162,7 @@ describe("useMobileVisualViewportHeight", () => {
         });
         await waitFor(() => expect(currentShell.style.height).toBe(""));
         unmount();
-        expect(document.body.style.getPropertyValue("--bb-shell-height")).toBe("");
+        expect(document.body.style.getPropertyValue("--sandy-shell-height")).toBe("");
       });
     });
   });
@@ -181,16 +181,16 @@ describe("useMobileVisualViewportHeight", () => {
           const shelf = await screen.findByTestId("secondary-panel-shelf");
 
           expect(shelf.parentElement).toBe(document.body);
-          expect(shelf.className).toContain("h-(--bb-shell-height)");
+          expect(shelf.className).toContain("h-(--sandy-shell-height)");
           await waitFor(() =>
             expect(
-              document.body.style.getPropertyValue("--bb-shell-height"),
+              document.body.style.getPropertyValue("--sandy-shell-height"),
             ).toBe("500px"),
           );
 
           unmount();
           expect(
-            document.body.style.getPropertyValue("--bb-shell-height"),
+            document.body.style.getPropertyValue("--sandy-shell-height"),
           ).toBe("");
         });
       },
@@ -206,7 +206,7 @@ describe("useMobileVisualViewportHeight", () => {
       expect(shell.style.top).toBe("20px");
       expect(shell.style.height).toBe("500px");
       expect(
-        viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+        viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
       ).toBe("500px");
 
       act(() => {
@@ -215,14 +215,14 @@ describe("useMobileVisualViewportHeight", () => {
       });
       await waitFor(() => expect(shell.style.height).toBe("300px"));
       expect(
-        viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+        viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
       ).toBe("300px");
 
       unmount();
       expect(shell.style.top).toBe("");
       expect(shell.style.height).toBe("");
       expect(
-        viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+        viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
       ).toBe("");
     });
   });
@@ -251,7 +251,7 @@ describe("useMobileVisualViewportHeight", () => {
               expect(shell.style.top).toBe("");
               expect(shell.style.height).toBe("");
               expect(
-                viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+                viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
               ).toBe("");
 
               act(() => {
@@ -261,7 +261,7 @@ describe("useMobileVisualViewportHeight", () => {
               await waitFor(() => expect(shell.style.height).toBe("500px"));
               expect(shell.style.top).toBe("0px");
               expect(
-                viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+                viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
               ).toBe("500px");
 
               act(() => {
@@ -270,7 +270,7 @@ describe("useMobileVisualViewportHeight", () => {
               });
               await waitFor(() => expect(shell.style.height).toBe(""));
               expect(
-                viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+                viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
               ).toBe("");
 
               act(() => {
@@ -280,7 +280,7 @@ describe("useMobileVisualViewportHeight", () => {
               await waitFor(() => expect(shell.style.height).toBe("300px"));
               expect(shell.style.top).toBe("0px");
               expect(
-                viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+                viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
               ).toBe("300px");
 
               act(() => editor.focus());
@@ -294,7 +294,7 @@ describe("useMobileVisualViewportHeight", () => {
               await waitFor(() => expect(shell.style.height).toBe(""));
               expect(shell.style.top).toBe("");
               expect(
-                viewportStyleRoot.style.getPropertyValue("--bb-shell-height"),
+                viewportStyleRoot.style.getPropertyValue("--sandy-shell-height"),
               ).toBe("");
             }),
         ),

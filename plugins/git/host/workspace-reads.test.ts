@@ -9,18 +9,18 @@ import {
   it,
   type TestContext,
 } from "vitest";
-import { initRepo } from "@bb/test-helpers";
+import { initRepo } from "@sandy/test-helpers";
 import { WorkspaceReads } from "./workspace-reads.js";
 import type { WorkspaceChangeStats } from "../contract.js";
 import {
   runGit,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 let repositoryTemplate: string;
 beforeAll(async () => {
   repositoryTemplate = await fs.mkdtemp(
-    path.join(tmpdir(), "bb-reads-template-"),
+    path.join(tmpdir(), "sandy-reads-template-"),
   );
   await initRepo(repositoryTemplate);
 });
@@ -102,11 +102,11 @@ async function createPrimaryAndFeatureWorktree(
   onTestFinished: TestContext["onTestFinished"],
 ): Promise<PrimaryAndFeatureWorktree> {
   const primaryRepo = await copyRepository(
-    await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+    await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
   );
   const worktreeParent = await makeTempDir(
     onTestFinished,
-    "bb-workspace-squash-worktree-parent-",
+    "sandy-workspace-squash-worktree-parent-",
   );
   const worktreePath = path.join(worktreeParent, "feature");
   await runGit(["worktree", "add", "-b", "feature", worktreePath, "main"], {
@@ -133,7 +133,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     const workspace = new WorkspaceReads(repoPath, tmpdir());
 
@@ -177,7 +177,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     const workspace = new WorkspaceReads(repoPath, tmpdir());
 
@@ -199,7 +199,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     const workspace = new WorkspaceReads(repoPath, tmpdir());
 
@@ -227,7 +227,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     const binaryPath = path.join(repoPath, "data.bin");
     await fs.writeFile(binaryPath, Buffer.from([0, 1, 2, 3, 0xff, 0xfe]));
@@ -266,7 +266,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(path.join(repoPath, "README.md"), "feature\n", "utf8");
@@ -302,7 +302,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(path.join(repoPath, "a.txt"), "a\n", "utf8");
     await fs.writeFile(path.join(repoPath, "z.txt"), "z\n", "utf8");
@@ -354,7 +354,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     for (const name of ["one.txt", "two.txt", "three.txt"]) {
@@ -376,7 +376,7 @@ describe.concurrent("WorkspaceReads", () => {
 
   it("rejects a non-positive status file cap", async ({ onTestFinished }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await expect(
       new WorkspaceReads(repoPath, tmpdir()).getStatus({
@@ -390,7 +390,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(path.join(repoPath, "README.md"), "feature\n", "utf8");
@@ -433,7 +433,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await runGit(["checkout", "main"], { cwd: repoPath });
@@ -635,7 +635,7 @@ describe.concurrent("WorkspaceReads", () => {
   }) => {
     const repoPath = await makeTempDir(
       onTestFinished,
-      "bb-workspace-unborn-repo-",
+      "sandy-workspace-unborn-repo-",
     );
     await runGit(["init", "-b", "main"], { cwd: repoPath });
     await fs.writeFile(
@@ -696,7 +696,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-remote-base-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-remote-base-"),
     );
     await runGit(["update-ref", "refs/remotes/origin/main", "main"], {
       cwd: repoPath,
@@ -758,7 +758,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-missing-base-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-missing-base-"),
     );
     const workspace = new WorkspaceReads(repoPath, tmpdir());
     for (const type of ["all", "branch_committed"] as const) {
@@ -781,7 +781,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(path.join(repoPath, "README.md"), "feature\n", "utf8");
@@ -847,7 +847,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(path.join(repoPath, "README.md"), "feature\n", "utf8");
@@ -886,7 +886,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(
       path.join(repoPath, "README.md"),
@@ -934,7 +934,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(
       path.join(repoPath, "README.md"),
@@ -981,7 +981,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(
       path.join(repoPath, "replacement.txt"),
@@ -1025,7 +1025,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(path.join(repoPath, "notes.txt"), "one\ntwo\n", "utf8");
     const nestedRepoPath = path.join(repoPath, "vendor");
@@ -1064,7 +1064,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(path.join(repoPath, "one.txt"), "one\n", "utf8");
     await fs.writeFile(path.join(repoPath, "two.txt"), "two\n", "utf8");
@@ -1095,7 +1095,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(path.join(repoPath, "README.md"), "feature\n", "utf8");
@@ -1138,7 +1138,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await runGit(["checkout", "-b", "feature"], { cwd: repoPath });
     await fs.writeFile(
@@ -1168,7 +1168,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     const workspace = new WorkspaceReads(repoPath, tmpdir());
 
@@ -1197,7 +1197,7 @@ describe.concurrent("WorkspaceReads", () => {
     onTestFinished,
   }) => {
     const repoPath = await copyRepository(
-      await makeTempDir(onTestFinished, "bb-workspace-repo-"),
+      await makeTempDir(onTestFinished, "sandy-workspace-repo-"),
     );
     await fs.writeFile(path.join(repoPath, "a.txt"), "first\n", "utf8");
     await fs.writeFile(path.join(repoPath, "b.txt"), "second\n", "utf8");

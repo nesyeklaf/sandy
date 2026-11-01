@@ -10,13 +10,13 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import type { AnySQLiteColumn } from "drizzle-orm/sqlite-core";
-import { queuedMessageStateValues } from "@bb/domain/queued-message-lifecycle";
-import { threadStatusValues } from "@bb/domain/thread-status";
-import { startedOnBehalfOfInitiatorValues } from "@bb/domain/started-on-behalf-of";
-import { threadCreateOriginValues } from "@bb/domain/thread-create-origin";
-import { threadOriginKindValues } from "@bb/domain/thread-origin-kind";
-import { threadParentNotificationsValues } from "@bb/domain/thread-parent-notifications";
-import { threadVisibilityValues } from "@bb/domain/thread-visibility";
+import { queuedMessageStateValues } from "@sandy/domain/queued-message-lifecycle";
+import { threadStatusValues } from "@sandy/domain/thread-status";
+import { startedOnBehalfOfInitiatorValues } from "@sandy/domain/started-on-behalf-of";
+import { threadCreateOriginValues } from "@sandy/domain/thread-create-origin";
+import { threadOriginKindValues } from "@sandy/domain/thread-origin-kind";
+import { threadParentNotificationsValues } from "@sandy/domain/thread-parent-notifications";
+import { threadVisibilityValues } from "@sandy/domain/thread-visibility";
 import type {
   EnvironmentProviderSelection,
   JsonValue,
@@ -38,7 +38,7 @@ import type {
   ThreadEventScopeKind,
   ThreadEventType,
   ProjectKind,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { RetainedEventOutputPath } from "./retained-event-output.js";
 
 export const authUsers = sqliteTable(
@@ -417,7 +417,7 @@ export const pluginStateSnapshots = sqliteTable(
     }).notNull(),
     rollbackCandidateVersion: text("rollback_candidate_version"),
     rollbackSourceFingerprint: text("rollback_source_fingerprint"),
-    rollbackBbVersion: text("rollback_bb_version"),
+    rollbackSandyVersion: text("rollback_bb_version"),
     rollbackSdkVersion: text("rollback_sdk_version"),
     rollbackDetail: text("rollback_detail"),
     createdAt: integer("created_at").notNull(),

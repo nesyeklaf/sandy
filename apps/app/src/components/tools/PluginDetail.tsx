@@ -1,5 +1,5 @@
 import { PluginNameTag } from "@/components/plugin/management/PluginNameTag";
-import { splitPluginDisplayName } from "@bb/domain/plugin-display-name";
+import { splitPluginDisplayName } from "@sandy/domain/plugin-display-name";
 import { PluginCardAuthorAvatar } from "@/components/plugin/management/PluginCard";
 import { useSyncExternalStore } from "react";
 import {
@@ -12,16 +12,16 @@ import {
   ResourceListState,
   ResourceOverflowMenu,
   type ResourceOverflowMenuItem,
-} from "@bb/shared-ui/resource-list";
-import { Switch } from "@bb/shared-ui/switch";
+} from "@sandy/shared-ui/resource-list";
+import { Switch } from "@sandy/shared-ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { formatHomePathForDisplay } from "@bb/shared-ui/lib/utils";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/tooltip";
+import { formatHomePathForDisplay } from "@sandy/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
 import { useNavigate } from "react-router-dom";
 import { getPluginConfigurationRoutePath } from "@/lib/route-paths";
 import {
@@ -85,12 +85,12 @@ export function pluginIsLocalSource(plugin: PluginListItem): boolean {
 }
 
 export function pluginRemovalLabel(plugin: PluginListItem): string {
-  return pluginIsLocalSource(plugin) ? "Remove from bb" : "Uninstall";
+  return pluginIsLocalSource(plugin) ? "Remove from sandy" : "Uninstall";
 }
 
 export function pluginRemovalDescription(plugin: PluginListItem): string {
   return pluginIsLocalSource(plugin)
-    ? `Remove "${plugin.id}" from bb and delete its settings, secrets, and schedules? Its source files stay on disk. To move it to another directory, install the new path instead; that keeps its settings.`
+    ? `Remove "${plugin.id}" from sandy and delete its settings, secrets, and schedules? Its source files stay on disk. To move it to another directory, install the new path instead; that keeps its settings.`
     : `Uninstall "${plugin.id}" and delete its managed files, settings, secrets, and schedules?`;
 }
 
@@ -155,8 +155,8 @@ function PluginLocalSource({
 
 const OFFICIAL_BYLINE_ENTRY = {
   author: null,
-  marketplace: "bb-official",
-  publisherLabel: "BB Official",
+  marketplace: "sandy-official",
+  publisherLabel: "SANDY Official",
 } as const;
 
 export function CatalogPluginDetail({
@@ -225,7 +225,7 @@ export function CatalogPluginDetailBanner({
       <PluginBannerBar
         tone="warning"
         icon="AlertTriangle"
-        title="Update bb to install this plugin"
+        title="Update sandy to install this plugin"
         detail={entry.incompatibleReason}
       />
     );
@@ -383,10 +383,10 @@ export function PluginDetail({
 
   const hasUpdateManagement = pluginHasUpdateSurfaces(plugin);
   const canEditSource = pluginIsLocalSource(plugin);
-  const updatesWithBb = plugin.source.startsWith("builtin:");
+  const updatesWithSandy = plugin.source.startsWith("builtin:");
   const installedAt = sourceQuery.data?.installedAt ?? null;
-  const installedValue = updatesWithBb
-    ? "Updates with bb"
+  const installedValue = updatesWithSandy
+    ? "Updates with sandy"
     : installedAt !== null
       ? formatAbsoluteDate(installedAt)
       : sourceQuery.isPending
@@ -423,7 +423,7 @@ export function PluginDetail({
       disabled: pending || plugin.provenance === "builtin",
       disabledReason:
         plugin.provenance === "builtin"
-          ? "Included with BB; disable this plugin instead."
+          ? "Included with SANDY; disable this plugin instead."
           : undefined,
       onSelect: () => onDelete(plugin),
     },
@@ -431,7 +431,7 @@ export function PluginDetail({
   const bylineEntry =
     catalogEntry ??
     (plugin.provenance === "builtin" ||
-    plugin.catalogMarketplaceName === "bb-official"
+    plugin.catalogMarketplaceName === "sandy-official"
       ? OFFICIAL_BYLINE_ENTRY
       : undefined);
   return (
@@ -520,7 +520,7 @@ export function PluginDetail({
               <PluginMarketplaceDetailMetadata entry={catalogEntry} />
             )}
             <PluginDetailMetadataItem
-              label={updatesWithBb ? "Delivery" : "Installed"}
+              label={updatesWithSandy ? "Delivery" : "Installed"}
             >
               {installedValue}
             </PluginDetailMetadataItem>

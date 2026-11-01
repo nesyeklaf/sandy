@@ -1,4 +1,4 @@
-import { getThread, listEvents } from "@bb/db";
+import { getThread, listEvents } from "@sandy/db";
 import { afterEach, expect, it, vi } from "vitest";
 import { dispatchTurnDuringReprovision } from "../../src/services/threads/thread-turn-dispatch.js";
 import { readThreadProvisionContext } from "../../src/services/threads/thread-startup-store.js";
@@ -26,7 +26,7 @@ it("leaves reprovision unstarted when dispatch admission rejects the request", a
       status: "error",
       path: "/tmp/rejected-reprovision",
       environmentProviderId: "personal-workspace",
-      environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+      environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
       isGitRepo: false,
     });
     const thread = seedThread(harness.deps, {

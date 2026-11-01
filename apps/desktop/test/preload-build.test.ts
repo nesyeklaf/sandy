@@ -72,21 +72,21 @@ function writeNotFound(response: ServerResponse): void {
 function renderSmokePage(expectedDesktopVersion: string): string {
   return `<!doctype html>
 <meta charset="utf-8">
-<title>bb desktop smoke</title>
+<title>sandy desktop smoke</title>
 <main>desktop smoke</main>
 <script>
 (async () => {
   let ok = false;
   let reason = "";
   try {
-    if (typeof window.bbDesktop !== "object" || window.bbDesktop === null) {
-      reason = "missing window.bbDesktop";
-    } else if (typeof window.bbDesktop.getInfo !== "function") {
-      reason = "missing window.bbDesktop.getInfo";
+    if (typeof window.sandyDesktop !== "object" || window.sandyDesktop === null) {
+      reason = "missing window.sandyDesktop";
+    } else if (typeof window.sandyDesktop.getInfo !== "function") {
+      reason = "missing window.sandyDesktop.getInfo";
     } else {
-      const info = await window.bbDesktop.getInfo();
+      const info = await window.sandyDesktop.getInfo();
       const expectedVersion = ${JSON.stringify(expectedDesktopVersion)};
-      ok = window.bbDesktop.version === expectedVersion && info.version === expectedVersion;
+      ok = window.sandyDesktop.version === expectedVersion && info.version === expectedVersion;
       reason = ok ? "" : "unexpected desktop version";
     }
   } catch (error) {
@@ -337,7 +337,7 @@ describe("desktop build", () => {
       "utf8",
     );
     const bridgeSource = await readFile(
-      resolve(desktopPackageRoot, "dist", "bb-app-bridge.mjs"),
+      resolve(desktopPackageRoot, "dist", "sandy-app-bridge.mjs"),
       "utf8",
     );
 
@@ -345,16 +345,16 @@ describe("desktop build", () => {
     expect(mainSource).not.toMatch(/^import\s/mu);
 
     expect(preloadSource).toContain(desktopVersion);
-    expect(preloadSource).not.toContain("BB_DESKTOP_VERSION");
+    expect(preloadSource).not.toContain("SANDY_DESKTOP_VERSION");
     expect(preloadSource).not.toContain("getDesktopVersion(process.env");
 
-    expect(bridgeSource).toContain('import "bb-app/dist/bb-app.js"');
+    expect(bridgeSource).toContain('import "sandy-app/dist/sandy-app.js"');
 
     for (const mapPath of [
       "main.js.map",
       "preload.cjs.map",
       "log-viewer-preload.cjs.map",
-      "bb-app-bridge.mjs.map",
+      "sandy-app-bridge.mjs.map",
     ]) {
       await expect(
         access(resolve(desktopPackageRoot, "dist", mapPath)),
@@ -365,7 +365,7 @@ describe("desktop build", () => {
   it.runIf(ELECTRON_DISPLAY_AVAILABLE)(
     "starts Electron with a working preload bridge",
     async () => {
-      const smokeRoot = await mkdtemp(join(tmpdir(), "bb-desktop-smoke-"));
+      const smokeRoot = await mkdtemp(join(tmpdir(), "sandy-desktop-smoke-"));
       const smokeServer = await startDesktopSmokeServer({
         dataDir: join(smokeRoot, "data"),
         expectedDesktopVersion: desktopVersion,
@@ -374,13 +374,13 @@ describe("desktop build", () => {
       const stderr: string[] = [];
       const childEnv: NodeJS.ProcessEnv = {
         ...process.env,
-        BB_DATA_DIR: join(smokeRoot, "data"),
-        BB_DESKTOP_OPEN_DEVTOOLS: "0",
-        BB_DESKTOP_VERSION_CHECK: "0",
-        BB_SERVER_PORT: String(smokeServer.port),
+        SANDY_DATA_DIR: join(smokeRoot, "data"),
+        SANDY_DESKTOP_OPEN_DEVTOOLS: "0",
+        SANDY_DESKTOP_VERSION_CHECK: "0",
+        SANDY_SERVER_PORT: String(smokeServer.port),
       };
-      delete childEnv.BB_DESKTOP_APP_URL;
-      delete childEnv.BB_DESKTOP_NODE_EXEC_PATH;
+      delete childEnv.SANDY_DESKTOP_APP_URL;
+      delete childEnv.SANDY_DESKTOP_NODE_EXEC_PATH;
       delete childEnv.ELECTRON_RUN_AS_NODE;
 
       const child = spawn(
@@ -460,8 +460,8 @@ describe("desktop build", () => {
               cwd: desktopPackageRoot,
               env: {
                 ...childEnv,
-                BB_STARTUP_SMOKE_APP_PATH: desktopPackageRoot,
-                BB_STARTUP_SMOKE_SCENARIO: scenario,
+                SANDY_STARTUP_SMOKE_APP_PATH: desktopPackageRoot,
+                SANDY_STARTUP_SMOKE_SCENARIO: scenario,
               },
             },
           );

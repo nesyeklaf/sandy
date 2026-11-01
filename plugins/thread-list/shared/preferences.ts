@@ -35,13 +35,13 @@ export const environmentGroupingSchema = z.union([
 
 export const THREAD_ROW_ACTION_LIMIT = 3;
 const LEGACY_THREAD_ROW_ACTION_KEYS = {
-  split: "bb--core/split",
-  copyLink: "bb--core/copyLink",
-  read: "bb--core/read",
-  pin: "bb--core/pin",
+  split: "sandy--core/split",
+  copyLink: "sandy--core/copyLink",
+  read: "sandy--core/read",
+  pin: "sandy--core/pin",
   move: "thread-list/move",
-  rename: "bb--core/rename",
-  archive: "bb--core/archive",
+  rename: "sandy--core/rename",
+  archive: "sandy--core/archive",
 } as const;
 type LegacyThreadRowActionId = keyof typeof LEGACY_THREAD_ROW_ACTION_KEYS;
 const LEGACY_CORE_KEY_PREFIX = "core/";
@@ -56,7 +56,7 @@ function migrateThreadRowActionKey(value: string): string {
   if (isLegacyThreadRowActionId(value)) {
     return LEGACY_THREAD_ROW_ACTION_KEYS[value];
   }
-  return value.startsWith(LEGACY_CORE_KEY_PREFIX) ? `bb--${value}` : value;
+  return value.startsWith(LEGACY_CORE_KEY_PREFIX) ? `sandy--${value}` : value;
 }
 
 export const threadRowActionKeySchema = z
@@ -174,8 +174,8 @@ export const preferenceDefinitions = {
       .refine((value) => value.length <= THREAD_ROW_ACTION_LIMIT, {
         message: `Choose at most ${THREAD_ROW_ACTION_LIMIT} row actions`,
       }),
-    ["bb--core/archive"],
-    `Up to ${THREAD_ROW_ACTION_LIMIT} quick actions shown on a thread row's hover, left to right before its actions menu, as thread action keys: bb--core/split, bb--core/copyLink, bb--core/read, bb--core/pin, thread-list/move, bb--core/rename, bb--core/archive, or a plugin's <pluginId>/<actionId>. Bare legacy ids such as archive and core/<id> keys are accepted. An empty list shows only the menu.`,
+    ["sandy--core/archive"],
+    `Up to ${THREAD_ROW_ACTION_LIMIT} quick actions shown on a thread row's hover, left to right before its actions menu, as thread action keys: sandy--core/split, sandy--core/copyLink, sandy--core/read, sandy--core/pin, thread-list/move, sandy--core/rename, sandy--core/archive, or a plugin's <pluginId>/<actionId>. Bare legacy ids such as archive and core/<id> keys are accepted. An empty list shows only the menu.`,
     null,
   ),
   collapsedSections: definePreference(

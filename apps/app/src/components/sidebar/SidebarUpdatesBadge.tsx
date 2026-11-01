@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { Icon } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { SidebarMenuItem } from "@/components/ui/sidebar.js";
 import { useUpdateInventory } from "@/hooks/useUpdateInventory";
 import { useMachineAttention } from "@/hooks/useMachineAttention";

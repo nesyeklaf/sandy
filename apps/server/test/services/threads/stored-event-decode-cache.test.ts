@@ -3,7 +3,7 @@ import {
   THREAD_CONTEXT_CLEAR_OPERATION,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   createProject,
   createThread,
@@ -13,8 +13,8 @@ import {
   upsertHost,
   type DbConnection,
   type StoredEventRow,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import {
   clearStoredEventDecodeCache,
   decodeStoredEventRowCached,

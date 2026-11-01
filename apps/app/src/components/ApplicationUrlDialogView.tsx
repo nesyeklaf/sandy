@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
-import { Checkbox } from "@bb/shared-ui/checkbox";
-import { Button } from "@bb/shared-ui/button";
+import { Checkbox } from "@sandy/shared-ui/checkbox";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
+} from "@sandy/shared-ui/dialog";
 import {
   getApplicationUrlConfirmation,
   resolveApplicationUrlConfirmation,
@@ -50,7 +50,7 @@ export function ApplicationUrlDialogView() {
               setRememberedConfirmation(checked === true ? confirmation : null)
             }
           />
-          Always allow {confirmation?.target.scheme} links for this BB site on
+          Always allow {confirmation?.target.scheme} links for this SANDY site on
           this device
         </label>
         <DialogFooter>

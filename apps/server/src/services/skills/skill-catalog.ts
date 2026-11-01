@@ -1,4 +1,4 @@
-import { getAppSettings } from "@bb/db";
+import { getAppSettings } from "@sandy/db";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { getPluginSkillRootContributions } from "../plugins/plugin-agent-contributions.js";
 import { generatedSkillsRootPath } from "../plugins/plugin-commands-skill.js";
@@ -25,10 +25,10 @@ export async function resolveSkillCatalog(
   const disabledSources = new Set(getAppSettings(deps.db).disabledSkillSources);
   return resolveSkillCatalogEntries(deps.logger, {
     additionalSkillsRootPaths: [
-      ...(disabledSources.has("bb-user")
+      ...(disabledSources.has("sandy-user")
         ? []
         : deps.config.inheritedSkillsRootPaths),
-      ...(disabledSources.has("bb-plugins")
+      ...(disabledSources.has("sandy-plugins")
         ? []
         : [generatedSkillsRootPath(deps.config.dataDir)]),
     ],

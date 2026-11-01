@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { writeServerMovedFile } from "@bb/server-archive";
+import { writeServerMovedFile } from "@sandy/server-archive";
 import { describe, expect, it } from "vitest";
 import type { ServerMovedNotice } from "../server-connection-support.js";
 import {
@@ -15,7 +15,7 @@ import {
 registerServerMoveFixtureCleanup();
 
 const DAEMON_ONLY_EXEC_START =
-  '"/usr/bin/node" "/opt/npm/bin/bb-app" host-daemon --auto-update --host-daemon-port "38887" --server-url "http://old-server:38886"';
+  '"/usr/bin/node" "/opt/npm/bin/sandy-app" host-daemon --auto-update --host-daemon-port "38887" --server-url "http://old-server:38886"';
 
 describe("ServerMoveService.handleServerMoved", () => {
   it("rewrites config.json and the unit's normalized --server-url, then restarts the unit once", async () => {
@@ -27,7 +27,7 @@ describe("ServerMoveService.handleServerMoved", () => {
       join(fixture.dataDir, "config.json"),
       JSON.stringify({
         serverUrl: "http://old-server:38886",
-        machineCredential: "bbcm_old",
+        machineCredential: "sandycm_old",
         connectMachineId: "machine-1",
       }),
     );
@@ -39,7 +39,7 @@ describe("ServerMoveService.handleServerMoved", () => {
     const notice = {
       source: "message" as const,
       serverUrl: "https://studio.example.test/",
-      headers: { "x-bb-machine-access": "bbcm_new" },
+      headers: { "x-sandy-machine-access": "sandycm_new" },
     };
 
     await fixture.service.handleServerMoved(notice);
@@ -47,7 +47,7 @@ describe("ServerMoveService.handleServerMoved", () => {
 
     expect(await readJson(join(fixture.dataDir, "config.json"))).toEqual({
       serverUrl: "https://studio.example.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_new" },
+      serverHeaders: { "x-sandy-machine-access": "sandycm_new" },
     });
     expect(await readFile(unitPath, "utf8")).toContain(
       '"--server-url" "https://studio.example.test"',
@@ -59,7 +59,7 @@ describe("ServerMoveService.handleServerMoved", () => {
         "--user",
         "restart",
         "--no-block",
-        "bb-host-daemon-old-server-studio.service",
+        "sandy-host-daemon-old-server-studio.service",
       ],
     ]);
     expect(fixture.shutdownRequests).toEqual([]);
@@ -70,8 +70,8 @@ describe("ServerMoveService.handleServerMoved", () => {
       serverUrl: "http://127.0.0.1:38886",
     });
     const machineConfig = {
-      serverHeaders: { "x-bb-machine-access": "bbcm_machine" },
-      machineCredential: "bbcm_machine",
+      serverHeaders: { "x-sandy-machine-access": "sandycm_machine" },
+      machineCredential: "sandycm_machine",
       connectMachineId: "machine-1",
     };
     await writeFile(
@@ -125,7 +125,7 @@ describe("ServerMoveService.handleServerMoved", () => {
       notice: {
         source: "message" as const,
         serverUrl: "https://studio.example.test",
-        headers: { "x-bb\r\nExecStart": "value" },
+        headers: { "x-sandy\r\nExecStart": "value" },
       },
     },
   ])(
@@ -157,7 +157,7 @@ describe("ServerMoveService.handleServerMoved", () => {
     },
   );
 
-  it("leaves a bb-app start unit alone and exits so the launcher switches", async () => {
+  it("leaves a sandy-app start unit alone and exits so the launcher switches", async () => {
     const fixture = await createFixture({
       env: {},
       serverUrl: "http://127.0.0.1:38886",
@@ -165,7 +165,7 @@ describe("ServerMoveService.handleServerMoved", () => {
     const unitPath = await writeSystemdUnit({
       homeDir: fixture.homeDir,
       dataDir: fixture.dataDir,
-      execStart: `"/usr/bin/node" "/opt/npm/bin/bb-app" "start" "--data-dir" "${fixture.dataDir}" "--server-port" "38886" "--host-daemon-port" "38887"`,
+      execStart: `"/usr/bin/node" "/opt/npm/bin/sandy-app" "start" "--data-dir" "${fixture.dataDir}" "--server-port" "38886" "--host-daemon-port" "38887"`,
     });
     const unit = await readFile(unitPath, "utf8");
 
@@ -188,8 +188,8 @@ describe("ServerMoveService.handleServerMoved", () => {
     });
     const service = fixture.createService({
       env: {
-        BB_SERVER_MOVE_SERVICE_MANAGER: "none",
-        BB_APP_NPM_PREFIX: fixture.npmPrefix,
+        SANDY_SERVER_MOVE_SERVICE_MANAGER: "none",
+        SANDY_APP_NPM_PREFIX: fixture.npmPrefix,
         INVOCATION_ID: "inherited-from-a-terminal",
       },
     });
@@ -210,7 +210,7 @@ describe("ServerMoveService.handleServerMoved", () => {
       {
         command: process.execPath,
         args: [
-          join(fixture.npmPrefix, "bin", "bb-app"),
+          join(fixture.npmPrefix, "bin", "sandy-app"),
           "host-daemon",
           "--auto-update",
           "--supervise",
@@ -220,8 +220,8 @@ describe("ServerMoveService.handleServerMoved", () => {
           "http://studio.example.test:38886",
         ],
         env: expect.objectContaining({
-          BB_DATA_DIR: fixture.dataDir,
-          BB_APP_NPM_PREFIX: fixture.npmPrefix,
+          SANDY_DATA_DIR: fixture.dataDir,
+          SANDY_APP_NPM_PREFIX: fixture.npmPrefix,
         }),
         logPath: join(fixture.dataDir, "logs", "server-move.log"),
       },
@@ -236,13 +236,13 @@ describe("ServerMoveService.handleServerMoved", () => {
     { name: "systemd", env: { INVOCATION_ID: "0123456789abcdef" } },
     {
       name: "launchd",
-      env: { XPC_SERVICE_NAME: "com.example.custom-bb-daemon" },
+      env: { XPC_SERVICE_NAME: "com.example.custom-sandy-daemon" },
     },
   ])(
     "only rewrites config.json and exits under an unrecognized $name supervisor",
     async ({ env }) => {
       const fixture = await createFixture({
-        env: { BB_SERVER_MOVE_SERVICE_MANAGER: "none", ...env },
+        env: { SANDY_SERVER_MOVE_SERVICE_MANAGER: "none", ...env },
         serverUrl: "http://old-server.example.test:38886",
       });
 
@@ -272,7 +272,7 @@ describe("ServerMoveService.handleServerMoved", () => {
       toHostId: "host-target",
       toHostName: "studio",
       serverUrl: "http://studio.example.test:38886",
-      oldCopyEntries: ["bb.db"],
+      oldCopyEntries: ["sandy.db"],
     });
 
     await fixture.service.handleServerMoved({

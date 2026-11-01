@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  selectBbProjects,
+  selectSandyProjects,
   useFolders,
   useProjects,
   useTasksQuery,
@@ -35,7 +35,7 @@ import {
   derivePrefix,
   Field,
 } from "./shared.js";
-import { BbProjectLinkPicker } from "./bb-project-link.js";
+import { SandyProjectLinkPicker } from "./sandy-project-link.js";
 
 const NO_FOLDER = "__none__";
 const NEW_FOLDER = "__new__";
@@ -61,14 +61,14 @@ export function NewProjectDialog({
   const [folderId, setFolderId] = useState<string | null>(null);
   const [newFolderMode, setNewFolderMode] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [linkedBbProjectId, setLinkedBbProjectId] = useState<string | null>(
+  const [linkedSandyProjectId, setLinkedSandyProjectId] = useState<string | null>(
     null,
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const bbProjects = useTasksQuery("listBbProjects", null, selectBbProjects);
-  const bbProjectList = bbProjects.data ?? [];
+  const sandyProjects = useTasksQuery("listSandyProjects", null, selectSandyProjects);
+  const sandyProjectList = sandyProjects.data ?? [];
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +79,7 @@ export function NewProjectDialog({
     setFolderId(null);
     setNewFolderMode(false);
     setNewFolderName("");
-    setLinkedBbProjectId(null);
+    setLinkedSandyProjectId(null);
     setError(null);
   }, [open]);
 
@@ -137,7 +137,7 @@ export function NewProjectDialog({
         prefix,
         color,
         folderId,
-        linkedBbProjectId,
+        linkedSandyProjectId,
       });
       onOpenChange(false);
       navigation.go({ kind: "project", projectId: project.id, view: null });
@@ -264,13 +264,13 @@ export function NewProjectDialog({
             ) : null}
           </Field>
           <Field
-            label="Linked bb project"
-            hint="Optional. Linking a bb project enables dispatching to agents."
+            label="Linked sandy project"
+            hint="Optional. Linking a sandy project enables dispatching to agents."
           >
-            <BbProjectLinkPicker
-              value={linkedBbProjectId}
-              onChange={setLinkedBbProjectId}
-              bbProjects={bbProjectList}
+            <SandyProjectLinkPicker
+              value={linkedSandyProjectId}
+              onChange={setLinkedSandyProjectId}
+              sandyProjects={sandyProjectList}
             />
           </Field>
         </div>

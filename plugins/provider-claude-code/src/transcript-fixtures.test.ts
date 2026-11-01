@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ThreadEvent } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import type { ThreadEvent } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { describe, expect, it } from "vitest";
 import {
   createClaudeDeltaHarness,
@@ -11,7 +11,7 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TRANSCRIPTS = resolve(__dirname, "./__fixtures__/transcripts");
 const EXPECTED_PATH = resolve(TRANSCRIPTS, "expected.json");
-const THREAD_ID = "bb-thread-transcript";
+const THREAD_ID = "sandy-thread-transcript";
 
 interface FixtureExpectation {
   items: Record<string, number>;

@@ -12,14 +12,14 @@ import { SCENARIOS } from "./scenarios/index.mjs";
 const USAGE = `Usage: node scripts/perf/run.mjs <scenario|all|list> [options]
 
 Options:
-  --url <url>           Attach to a running bb (must serve an isolated, seeded data dir)
-  --data-dir <path>     Start a production bb on this seeded data dir (pnpm seed:perf)
+  --url <url>           Attach to a running sandy (must serve an isolated, seeded data dir)
+  --data-dir <path>     Start a production sandy on this seeded data dir (pnpm seed:perf)
   --server-port <n>     Port for the started server (default: free port)
   --server-match <s>    Substring of the attached server's command line (its --data-dir), used for server CPU sampling
   --perf-diagnostics    Start the server with --perf-diagnostics
-  --out <dir>           Artifact directory (default: <tmp>/bb-perf/<timestamp>)
+  --out <dir>           Artifact directory (default: <tmp>/sandy-perf/<timestamp>)
   --runs <n>            Repeat each scenario n times with a fresh browser (default 1)
-  --chrome <path>       Chrome/Chromium executable (or BB_PERF_CHROME)
+  --chrome <path>       Chrome/Chromium executable (or SANDY_PERF_CHROME)
   --headed              Run a visible browser
   --viewport <w,h>      Browser window size (default 1600,1000)
   --cpu-throttle <n>    Slow the page's CPU n times, 4 for an old laptop (default 1)
@@ -72,13 +72,13 @@ for (const name of selected) {
 const runs = Number(values.runs);
 const outDir = resolve(
   values.out ??
-    join(tmpdir(), "bb-perf", new Date().toISOString().replaceAll(":", "-")),
+    join(tmpdir(), "sandy-perf", new Date().toISOString().replaceAll(":", "-")),
 );
 mkdirSync(outDir, { recursive: true });
 
 if (!values.url && !values["data-dir"]) {
   console.error(
-    "Pass --url <running isolated bb> or --data-dir <seeded data dir>.\n\n" +
+    "Pass --url <running isolated sandy> or --data-dir <seeded data dir>.\n\n" +
       USAGE,
   );
   process.exit(2);

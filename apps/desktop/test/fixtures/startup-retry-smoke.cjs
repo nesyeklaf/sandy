@@ -10,12 +10,12 @@ const {
 const { join } = require("node:path");
 const { app, BrowserWindow, ipcMain, Menu, shell } = require("electron");
 
-app.setName("bb-dev");
+app.setName("sandy-dev");
 
-const desktopRoot = process.env.BB_STARTUP_SMOKE_APP_PATH;
+const desktopRoot = process.env.SANDY_STARTUP_SMOKE_APP_PATH;
 app.setVersion(require(join(desktopRoot, "package.json")).version);
-const scenario = process.env.BB_STARTUP_SMOKE_SCENARIO ?? "custom";
-const channel = "bb-desktop:startup-action";
+const scenario = process.env.SANDY_STARTUP_SMOKE_SCENARIO ?? "custom";
+const channel = "sandy-desktop:startup-action";
 const loads = [];
 let contents;
 let logsWindow;
@@ -57,15 +57,15 @@ async function run() {
     await new Promise((resolve) => server.close(resolve));
   }
   if (scenario === "crashed") {
-    const crashingRuntime = join(app.getPath("userData"), "crashing-bb-app");
+    const crashingRuntime = join(app.getPath("userData"), "crashing-sandy-app");
     await writeFile(
       crashingRuntime,
-      '#!/bin/sh\necho "bb-app native module failed to load" >&2\nexit 3\n',
+      '#!/bin/sh\necho "sandy-app native module failed to load" >&2\nexit 3\n',
     );
     await chmod(crashingRuntime, 0o755);
-    process.env.BB_DESKTOP_NODE_EXEC_PATH = crashingRuntime;
+    process.env.SANDY_DESKTOP_NODE_EXEC_PATH = crashingRuntime;
   }
-  process.env.BB_SERVER_PORT = String(port);
+  process.env.SANDY_SERVER_PORT = String(port);
   await writeFile(
     join(app.getPath("userData"), "server-target.json"),
     JSON.stringify(
@@ -74,7 +74,7 @@ async function run() {
         : { target: "custom", customServerUrl: serverUrl },
     ),
   );
-  if (scenario === "attached") process.env.BB_DESKTOP_APP_URL = serverUrl;
+  if (scenario === "attached") process.env.SANDY_DESKTOP_APP_URL = serverUrl;
   app.setAppPath(desktopRoot);
   app.on("browser-window-created", (_event, window) => {
     contents ??= window.webContents;
@@ -94,11 +94,11 @@ async function run() {
     );
     assert.equal(
       await contents.executeJavaScript(
-        "window.bbDesktop.getInfo().then((info) => info.serverDaemonLogsAvailable)",
+        "window.sandyDesktop.getInfo().then((info) => info.serverDaemonLogsAvailable)",
       ),
       true,
     );
-    await contents.executeJavaScript("window.bbDesktop.openServerDaemonLogs()");
+    await contents.executeJavaScript("window.sandyDesktop.openServerDaemonLogs()");
     await verifyLocalLogs();
     server.close();
     console.log("STARTUP_RETRY_SMOKE_OK");
@@ -106,14 +106,14 @@ async function run() {
     return;
   }
   if (scenario === "crashed") {
-    const desktopLog = join(process.env.BB_DATA_DIR, "logs", "desktop.log");
+    const desktopLog = join(process.env.SANDY_DATA_DIR, "logs", "desktop.log");
     await until(async () =>
-      (await readFile(desktopLog, "utf8")).includes("Could not start bb"),
+      (await readFile(desktopLog, "utf8")).includes("Could not start sandy"),
     );
     const savedLogs = await readFile(desktopLog, "utf8");
     assert.ok(
-      savedLogs.includes("bb-app native module failed to load"),
-      "bb-app output from a failed startup must be persisted",
+      savedLogs.includes("sandy-app native module failed to load"),
+      "sandy-app output from a failed startup must be persisted",
     );
     console.log("STARTUP_RETRY_SMOKE_OK");
     app.exit(0);
@@ -122,7 +122,7 @@ async function run() {
   const errorTitle =
     scenario === "fatal"
       ? "Port conflict"
-      : "Could not reach this bb server";
+      : "Could not reach this sandy server";
   const hasError = () =>
     contents?.getURL().startsWith("data:") &&
     contents.executeJavaScript(
@@ -130,7 +130,7 @@ async function run() {
     );
   await until(hasError);
   const savedLogs = await readFile(
-    join(process.env.BB_DATA_DIR, "logs", "desktop.log"),
+    join(process.env.SANDY_DATA_DIR, "logs", "desktop.log"),
     "utf8",
   );
   assert.ok(
@@ -167,7 +167,7 @@ async function run() {
     return;
   }
   assert.equal(
-    await contents.executeJavaScript("typeof window.bbDesktop"),
+    await contents.executeJavaScript("typeof window.sandyDesktop"),
     "object",
   );
   assert.deepEqual(
@@ -270,11 +270,11 @@ async function run() {
 async function verifyLocalLogs() {
   await until(() => {
     logsWindow = BrowserWindow.getAllWindows().find(
-      (window) => window.getTitle() === "bb - Local Logs",
+      (window) => window.getTitle() === "sandy - Local Logs",
     );
     return logsWindow && !logsWindow.webContents.isLoading();
   });
-  const logDir = join(process.env.BB_DATA_DIR, "logs");
+  const logDir = join(process.env.SANDY_DATA_DIR, "logs");
   const openPath = shell.openPath;
   let openedPath;
   shell.openPath = async (path) => {
@@ -283,7 +283,7 @@ async function verifyLocalLogs() {
   };
   try {
     const result = await logsWindow.webContents.executeJavaScript(
-      "window.bbLogViewer.openLogsFolder()",
+      "window.sandyLogViewer.openLogsFolder()",
     );
     assert.equal(result.path, logDir);
     assert.equal(openedPath, logDir);

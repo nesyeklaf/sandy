@@ -8,8 +8,8 @@ import {
   appSettingsValues,
   environmentVariables,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import {
   setMachineEnvironmentVariable,
@@ -23,7 +23,7 @@ let db: DbConnection;
 let dataDir: string;
 beforeEach(async () => {
   db = createMigratedConnection();
-  dataDir = await mkdtemp(join(tmpdir(), "bb-env-encryption-"));
+  dataDir = await mkdtemp(join(tmpdir(), "sandy-env-encryption-"));
 });
 afterEach(async () => {
   db.$client.close();

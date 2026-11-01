@@ -1,13 +1,13 @@
 import {
   rpcInvalidationTags,
   type ContractTagDeclarations,
-} from "@get-bb/plugin-sdk/internal/rpc-tags";
+} from "@sandy-sdk/plugin-sdk/internal/rpc-tags";
 import {
   environmentCompositionSchema,
   validateServerAccessProviderDeclaration,
   type NormalizedPluginEnvironmentComposition,
   type NormalizedPluginInteractionRequest,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { createMachineBootstrapApi } from "../machines/bootstrap.js";
 import type { MachineEnrollments } from "../machines/enrollments.js";
 import { listServerAccessProviders } from "./plugin-server-access-registry.js";
@@ -24,15 +24,15 @@ import {
   listPluginKvKeys,
   setPluginKvValue,
   type DbConnection,
-} from "@bb/db";
-import type { ThreadEventItemPresentation } from "@bb/domain";
+} from "@sandy/db";
+import type { ThreadEventItemPresentation } from "@sandy/domain";
 import type {
-  BbPluginApi,
+  SandyPluginApi,
   PluginAgentConfiguration,
   PluginAgentConfigurationContext,
   PluginAgentToolContext,
   PluginRowPresentation,
-  PluginBbSdk,
+  PluginSandySdk,
   PluginAgentToolResult,
   PluginAgents,
   PluginBackground,
@@ -80,7 +80,7 @@ import type {
   StandardSchemaV1,
   PluginRpcContract,
   ExperimentalPluginRpcHandlerContext,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   KV_VALUE_MAX_BYTES,
   normalizeAgentToolRegistration,
@@ -111,21 +111,21 @@ import {
   validateSettingsUpdate,
   validatePluginAiServiceDeclaration,
   validatePluginProviderDeclaration,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import type {
   NormalizedPluginAiService,
   NormalizedPluginEnvironmentProvider,
   NormalizedPluginMachineProvider,
   NormalizedPluginProviderDeclaration,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import type {
-  BbSdk,
+  SandySdk,
   ThreadForkArgs,
   PluginThreadMetadataListArgs,
   ThreadPluginMetadataArgs,
   ThreadPluginMetadataUpdateArgs,
   ThreadSpawnArgs,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import { requestEnvironmentProviderRecheck } from "./plugin-environment-provider-registry.js";
 import { requestServerAccessRecheck } from "./plugin-server-access-registry.js";
 import {
@@ -142,7 +142,7 @@ import {
 } from "./plugin-settings.js";
 
 export type {
-  BbPluginApi,
+  SandyPluginApi,
   PluginAgentConfigurationContext,
   PluginAgentToolContext,
   PluginCliCommandInfo,
@@ -150,7 +150,7 @@ export type {
   PluginMentionTrigger,
   PluginThreadEventName,
   PluginThreadEventPayloads,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 
 export class PluginContextStaleError extends Error {
   constructor(readonly pluginId: string) {
@@ -176,7 +176,7 @@ export type PluginHookRecords = {
   [K in PluginHookName]: PluginHookHandler<K> | null;
 };
 
-/** Per-event handler lists recorded by `bb.events.on`; dropped with the handle. */
+/** Per-event handler lists recorded by `sandy.events.on`; dropped with the handle. */
 type PluginThreadEventHandlers = {
   [E in PluginThreadEventName]: Array<PluginThreadEventHandler<E>>;
 };
@@ -261,9 +261,9 @@ type PluginSettingsListener = (
 ) => void;
 
 export interface PluginApiHandle {
-  api: BbPluginApi;
+  api: SandyPluginApi;
   disposeHooks: Array<() => void | Promise<void>>;
-  /** Handlers recorded by `bb.onInstall`; run once after a fresh install. */
+  /** Handlers recorded by `sandy.onInstall`; run once after a fresh install. */
   installHandlers: Array<() => void | Promise<void>>;
   settings: {
     descriptors: PluginSettingDescriptors;
@@ -271,16 +271,16 @@ export interface PluginApiHandle {
   };
   databaseHandles: Database.Database[];
   threadEventHandlers: PluginThreadEventHandlers;
-  /** Hook handlers recorded by `bb.experimental_hooks.on`. */
+  /** Hook handlers recorded by `sandy.experimental_hooks.on`. */
   hooks: PluginHookRecords;
   environmentCompositions: Map<string, NormalizedPluginEnvironmentComposition>;
   environmentProviders: Map<string, NormalizedPluginEnvironmentProvider>;
   machineProviders: Map<string, NormalizedPluginMachineProvider>;
   serverAccessProviders: Map<
     string,
-    import("@get-bb/plugin-sdk").ServerAccessProviderDeclaration
+    import("@sandy-sdk/plugin-sdk").ServerAccessProviderDeclaration
   >;
-  /** HTTP routes recorded by `bb.http.route`; dropped with the handle. */
+  /** HTTP routes recorded by `sandy.http.route`; dropped with the handle. */
   httpRoutes: PluginHttpRouteRecord[];
   websocketRoutes: PluginWebSocketRouteRecord[];
   rpcHandlers: Map<string, PluginRpcHandler>;
@@ -352,10 +352,10 @@ function withPluginThreadAttribution<
 }
 
 function wrapSdkForPlugin(
-  sdk: BbSdk,
+  sdk: SandySdk,
   pluginId: string,
-  rpcCallerSdk: BbSdk,
-): PluginBbSdk {
+  rpcCallerSdk: SandySdk,
+): PluginSandySdk {
   return {
     ...sdk,
     plugins: {
@@ -493,14 +493,14 @@ export function createPluginApi(options: {
   logger: ServerLogger;
   db: DbConnection;
   dataDir: string;
-  getSdk: () => BbSdk | undefined;
+  getSdk: () => SandySdk | undefined;
   getMachineEnrollments: () => MachineEnrollments;
   getAppUrl: () => string | null;
   getLoopbackBaseUrl: () => string | undefined;
   requestPeers: (after: number) => RequestPeerSnapshot;
   /**
    * This load's rpc caller token, attached to the plugin's
-   * `bb.sdk.plugins.callRpc` requests so handlers see it as the caller.
+   * `sandy.sdk.plugins.callRpc` requests so handlers see it as the caller.
    * Revoked when the handle is invalidated.
    */
   rpcCaller: PluginRpcCallerCredential;
@@ -518,13 +518,13 @@ export function createPluginApi(options: {
   reportAgentToolProblem: (message: string) => void;
   /**
    * Schedules a re-attempt of every plugin-queued row
-   * (`bb.experimental_hooks.recheck`). Coalescing, pacing and the walk
+   * (`sandy.experimental_hooks.recheck`). Coalescing, pacing and the walk
    * itself belong to the queue; this only asks for it.
    */
   requestQueueDrain: () => void;
   /**
    * The names this plugin's manifest declares under
-   * `bb.branding.experimental_icons`: what a namespaced glyph
+   * `sandy.branding.experimental_icons`: what a namespaced glyph
    * (`"<pluginId>/<name>"`) in a tool presentation or a provider icon must
    * name. Empty when the manifest declares none.
    */
@@ -581,7 +581,7 @@ export function createPluginApi(options: {
   } = options;
   let invalidated = false;
   let activated = false;
-  let wrappedSdk: PluginBbSdk | undefined;
+  let wrappedSdk: PluginSandySdk | undefined;
   let pendingNeedsConfiguration: string | null = null;
   const pendingAgentToolProblems: string[] = [];
   const disposeHooks: Array<() => void | Promise<void>> = [];
@@ -624,7 +624,7 @@ export function createPluginApi(options: {
   const machineProviders = new Map<string, NormalizedPluginMachineProvider>();
   const serverAccessProviders = new Map<
     string,
-    import("@get-bb/plugin-sdk").ServerAccessProviderDeclaration
+    import("@sandy-sdk/plugin-sdk").ServerAccessProviderDeclaration
   >();
   const httpRoutes: PluginHttpRouteRecord[] = [];
   const websocketRoutes: PluginWebSocketRouteRecord[] = [];
@@ -1040,7 +1040,7 @@ export function createPluginApi(options: {
       const baseUrl = getLoopbackBaseUrl();
       if (baseUrl === undefined) {
         throw new Error(
-          "bb.server.loopbackBaseUrl is not available until the server is listening — " +
+          "sandy.server.loopbackBaseUrl is not available until the server is listening — " +
             "use it inside handlers, services, or timers, not at factory load time",
         );
       }
@@ -1058,7 +1058,7 @@ export function createPluginApi(options: {
         (typeof after !== "number" || !Number.isFinite(after) || after < 0)
       ) {
         throw new Error(
-          "bb.server.internal_DO_NOT_USE_requestPeers needs a non-negative after",
+          "sandy.server.internal_DO_NOT_USE_requestPeers needs a non-negative after",
         );
       }
       return requestPeers(after ?? 0);
@@ -1216,7 +1216,7 @@ export function createPluginApi(options: {
   const experimental_environments: PluginEnvironments = {
     register(
       declaration:
-        | import("@get-bb/plugin-sdk").PluginEnvironmentProviderDeclaration
+        | import("@sandy-sdk/plugin-sdk").PluginEnvironmentProviderDeclaration
         | NormalizedPluginEnvironmentComposition,
     ) {
       assertLive();
@@ -1270,7 +1270,7 @@ export function createPluginApi(options: {
     },
   };
 
-  const experimental_serverAccess: import("@get-bb/plugin-sdk").PluginServerAccess =
+  const experimental_serverAccess: import("@sandy-sdk/plugin-sdk").PluginServerAccess =
     {
       register(declaration) {
         assertLive();
@@ -1349,7 +1349,7 @@ export function createPluginApi(options: {
     register: aiServiceRegistrations.register,
   };
 
-  const api: BbPluginApi = {
+  const api: SandyPluginApi = {
     pluginId,
     log,
     settings,
@@ -1371,13 +1371,13 @@ export function createPluginApi(options: {
     server,
     hosts,
     experimental_aiServices,
-    get sdk(): PluginBbSdk {
+    get sdk(): PluginSandySdk {
       assertLive();
       const sdk = getSdk();
       const loopbackBaseUrl = getLoopbackBaseUrl();
       if (!sdk || loopbackBaseUrl === undefined) {
         throw new Error(
-          "bb.sdk is not available until the server is listening — " +
+          "sandy.sdk is not available until the server is listening — " +
             "use it inside handlers, services, or timers, not at factory load time",
         );
       }

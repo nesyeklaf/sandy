@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from "react";
-import type { ExperimentalPageTitle } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalPageTitle } from "@sandy-sdk/plugin-sdk/app";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { AppBreadcrumbs } from "./AppBreadcrumbs";
 
 export function PageTitleHeader({
@@ -15,7 +15,7 @@ export function PageTitleHeader({
   title: string;
   value: ExperimentalPageTitle | null;
 }) {
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const hasDetail = value?.title || value?.breadcrumbs?.length;
   return (

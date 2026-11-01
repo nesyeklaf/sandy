@@ -174,8 +174,8 @@ const fixtures: readonly Fixture[] = [
   rangeFixture("four segments", "1.2.3.4", false),
   rangeFixture("garbage alternative", "1.0.0 || garbage", false),
 
-  enginesFixture("engines.bb range", { bb: ">=0.30.0" }),
-  enginesFixture("engines.bbPluginSdk range", { bbPluginSdk: "^0.5.0" }),
+  enginesFixture("engines.sandy range", { sandy: ">=0.30.0" }),
+  enginesFixture("engines.sandyPluginSdk range", { sandyPluginSdk: "^0.5.0" }),
   enginesFixture("empty engines object", {}),
 
   {
@@ -465,13 +465,13 @@ describe("published marketplace schema parity", () => {
     const validate = await compilePublishedSchema(2);
     const manifest = {
       ...manifestV2With({ source: { bundled: { plugin: "docs" } } }),
-      name: "bb-official",
-      displayName: "BB Official",
+      name: "sandy-official",
+      displayName: "SANDY Official",
     };
 
     expect(validate(manifest)).toBe(false);
     expect(parseBundledMarketplaceManifest(manifest, "fixture")).toMatchObject({
-      name: "bb-official",
+      name: "sandy-official",
     });
     expect(() => parseMarketplaceManifest(manifest, "fixture")).toThrow(
       /not allowed in fetched or third-party documents/u,

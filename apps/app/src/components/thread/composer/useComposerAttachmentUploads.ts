@@ -6,8 +6,8 @@ import {
 } from "@/components/promptbox/usePendingAttachmentUploads";
 import { useUploadPromptAttachment } from "@/hooks/mutations/project-mutations";
 import { getMutationErrorMessage } from "@/lib/mutation-errors";
-import { BbHttpError } from "@/lib/sdk";
-import type { PromptDraftAttachment } from "@bb/client-core";
+import { SandyHttpError } from "@/lib/sdk";
+import type { PromptDraftAttachment } from "@sandy/client-core";
 import type { InlineComposerDraftSession } from "./useActiveComposerDraft";
 
 interface UseComposerAttachmentUploadsArgs {
@@ -55,7 +55,7 @@ interface UseDraftAttachmentUploadsResult {
 }
 
 function uploadRejectionReason(error: unknown): string | null {
-  return error instanceof BbHttpError
+  return error instanceof SandyHttpError
     ? getMutationErrorMessage({ error, fallbackMessage: "Request failed" })
     : null;
 }

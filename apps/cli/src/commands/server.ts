@@ -3,15 +3,15 @@ import { open, rename, rm, stat } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { Command } from "commander";
-import { formatServerDataSize } from "@bb/domain";
+import { formatServerDataSize } from "@sandy/domain";
 import {
   deleteOldServerCopy,
   readServerMovedFile,
-} from "@bb/server-archive";
-import type { ServerMoveStatus } from "@bb/server-contract";
+} from "@sandy/server-archive";
+import type { ServerMoveStatus } from "@sandy/server-contract";
 import { action, CliExitError } from "../action.js";
-import { createCliBbSdk } from "../client.js";
-import { resolveBbCliVersion } from "../version.js";
+import { createCliSandySdk } from "../client.js";
+import { resolveSandyCliVersion } from "../version.js";
 import { confirmDestructiveAction, outputJson } from "./helpers.js";
 import { resolveMachineHostId } from "./machine.js";
 import {
@@ -74,16 +74,16 @@ interface UnlockCommandOptions extends LocalServerCommandOptions {
 }
 
 const SERVER_EXPORT_UNENCRYPTED_WARNING =
-  "This export is not encrypted and holds the server's credentials and plugin secrets. Keep it private; bb wrote it with mode 0600.";
+  "This export is not encrypted and holds the server's credentials and plugin secrets. Keep it private; sandy wrote it with mode 0600.";
 
 function startServerHint(dataDir: string): string {
   return isDefaultDataDir(dataDir)
-    ? "npx bb-app or the desktop app"
-    : `npx bb-app --data-dir ${dataDir}`;
+    ? "npx sandy-app or the desktop app"
+    : `npx sandy-app --data-dir ${dataDir}`;
 }
 
 const STOPPED_FOLLOWING_MESSAGE =
-  "Stopped following; the move continues. Run bb server move status to check on it or bb server move cancel to cancel it.";
+  "Stopped following; the move continues. Run sandy server move status to check on it or sandy server move cancel to cancel it.";
 
 function parseAddress(address: string | undefined): string | null {
   if (address === undefined) return null;
@@ -177,11 +177,11 @@ async function runServerMove(
 ): Promise<void> {
   if (opts.to === undefined || opts.to.trim().length === 0) {
     throw new Error(
-      "Pass --to <machine> with the ID or name of the machine that should run the server. Run bb server move status to check on a move in progress.",
+      "Pass --to <machine> with the ID or name of the machine that should run the server. Run sandy server move status to check on a move in progress.",
     );
   }
   const serverUrl = parseAddress(opts.address);
-  const sdk = createCliBbSdk(getUrl());
+  const sdk = createCliSandySdk(getUrl());
   const targetHostId = await resolveMachineHostId({
     serverUrl: getUrl(),
     target: opts.to,
@@ -217,7 +217,7 @@ async function runServerMove(
   if (
     !opts.yes &&
     !(await confirmDestructiveAction(
-      `Stop all running work and move the bb server to ${check.targetHostName}?`,
+      `Stop all running work and move the sandy server to ${check.targetHostName}?`,
     ))
   ) {
     return;
@@ -267,11 +267,11 @@ export function registerServerCommands(
 ): void {
   const server = program
     .command("server")
-    .description("Move, export, and import the bb server");
+    .description("Move, export, and import the sandy server");
 
   const move = server
     .command("move")
-    .description("Move the bb server to another machine (experimental)")
+    .description("Move the sandy server to another machine (experimental)")
     .option("--to <machine>", "Machine ID or name that should run the server")
     .option(
       "--address <url>",
@@ -280,7 +280,7 @@ export function registerServerCommands(
     .option("--check", "Print the checklist without moving")
     .option(
       "--archive-existing-data",
-      "Move existing bb server data on the target aside before the move",
+      "Move existing sandy server data on the target aside before the move",
     )
     .option("--yes", "Skip the confirmation prompt")
     .option("--json", "Print machine-readable JSON output")
@@ -297,7 +297,7 @@ export function registerServerCommands(
     .action(
       action(async (opts: JsonCommandOptions) => {
         const response =
-          await createCliBbSdk(getUrl()).experimental_server.moveStatus();
+          await createCliSandySdk(getUrl()).experimental_server.moveStatus();
         if (!outputJson(opts, response)) {
           printServerMoveStatusResponse(response);
         }
@@ -322,7 +322,7 @@ export function registerServerCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: ServerMoveCancelCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const { move: current } = await sdk.experimental_server.moveStatus();
         if (current?.state === "recovery_required") {
           for (const line of serverMoveAbandonWarning(current)) {
@@ -353,7 +353,7 @@ export function registerServerCommands(
 
   server
     .command("export")
-    .description("Export the bb server's data to an archive")
+    .description("Export the sandy server's data to an archive")
     .requiredOption("--out <file>", "Write the archive to this file")
     .option("--json", "Print machine-readable JSON output")
     .action(
@@ -362,7 +362,7 @@ export function registerServerCommands(
         await assertWritableOutPath(outPath);
         const exported = await withSigint(async (signal) => {
           const response = await callServerMoveRoute(() =>
-            createCliBbSdk(getUrl()).experimental_server.export({ signal }),
+            createCliSandySdk(getUrl()).experimental_server.export({ signal }),
           );
           const sizeBytes = await writeExportFile({
             body: response.body,
@@ -379,7 +379,7 @@ export function registerServerCommands(
         };
         if (outputJson(opts, result)) return;
         console.log(
-          `Exported the bb server to ${outPath} (${formatServerDataSize(exported.sizeBytes)})`,
+          `Exported the sandy server to ${outPath} (${formatServerDataSize(exported.sizeBytes)})`,
         );
         console.error(SERVER_EXPORT_UNENCRYPTED_WARNING);
       }),
@@ -392,7 +392,7 @@ export function registerServerCommands(
     )
     .option(
       "--data-dir <dir>",
-      "Data directory to import into (default: BB_DATA_DIR or ~/.bb)",
+      "Data directory to import into (default: SANDY_DATA_DIR or ~/.sandy)",
     )
     .option("--yes", "Skip the confirmation prompt")
     .option("--json", "Print machine-readable JSON output")
@@ -407,7 +407,7 @@ export function registerServerCommands(
               ? Promise.resolve(true)
               : confirmDestructiveAction(message),
           now: () => Date.now(),
-          cliVersion: resolveBbCliVersion(),
+          cliVersion: resolveSandyCliVersion(),
         });
         if (result === null) return;
         if (outputJson(opts, result)) return;
@@ -415,11 +415,11 @@ export function registerServerCommands(
           console.log(`Rolled back an interrupted import in ${dataDir}.`);
         }
         console.log(
-          `Imported the bb server into ${dataDir} (${String(result.importedEntries.length)} files from ${result.sourceDataDir}, exported by bb ${result.bbVersion}).`,
+          `Imported the sandy server into ${dataDir} (${String(result.importedEntries.length)} files from ${result.sourceDataDir}, exported by sandy ${result.sandyVersion}).`,
         );
         console.log("");
         console.log(
-          "Stop the original bb server before you start this one. Two servers running from the same data split your threads, machines, and settings between them.",
+          "Stop the original sandy server before you start this one. Two servers running from the same data split your threads, machines, and settings between them.",
         );
         console.log(`Then start it with ${startServerHint(dataDir)}.`);
       }),
@@ -432,7 +432,7 @@ export function registerServerCommands(
     )
     .option(
       "--data-dir <dir>",
-      "Data directory of the old server copy (default: BB_DATA_DIR or ~/.bb)",
+      "Data directory of the old server copy (default: SANDY_DATA_DIR or ~/.sandy)",
     )
     .option(
       "--force",
@@ -453,7 +453,7 @@ export function registerServerCommands(
         }
         if (lock.oldCopyEntries.length === 0) {
           throw new Error(
-            `The old server copy in ${dataDir} was deleted, so there is nothing to unlock. Unlocking would start an empty bb server.`,
+            `The old server copy in ${dataDir} was deleted, so there is nothing to unlock. Unlocking would start an empty sandy server.`,
           );
         }
         const serviceFile = await findLocalMachineServiceFile(dataDir);
@@ -471,18 +471,18 @@ export function registerServerCommands(
           }
         }
         console.error(
-          `This bb server moved to ${lock.toHostName} (${lock.serverUrl}) on ${new Date(lock.movedAt).toLocaleString()}.`,
+          `This sandy server moved to ${lock.toHostName} (${lock.serverUrl}) on ${new Date(lock.movedAt).toLocaleString()}.`,
         );
         console.error(
           `Unlocking starts this old copy again. Everything since the move is lost here: threads, settings, and plugin data changed on ${lock.toHostName} stay there.`,
         );
         console.error(
-          `Stop the bb server on ${lock.toHostName} first. Two servers running from the same data split your threads, machines, and settings between them.`,
+          `Stop the sandy server on ${lock.toHostName} first. Two servers running from the same data split your threads, machines, and settings between them.`,
         );
         if (
           !opts.yes &&
           !(await confirmDestructiveAction(
-            `Unlock the old bb server copy in ${dataDir}?`,
+            `Unlock the old sandy server copy in ${dataDir}?`,
           ))
         ) {
           return;
@@ -496,7 +496,7 @@ export function registerServerCommands(
           );
         }
         console.log(
-          `Unlocked ${dataDir}. bb on this computer starts the old server again within a few seconds; if bb isn't running, start it with ${startServerHint(dataDir)}.`,
+          `Unlocked ${dataDir}. sandy on this computer starts the old server again within a few seconds; if sandy isn't running, start it with ${startServerHint(dataDir)}.`,
         );
       }),
     );
@@ -508,7 +508,7 @@ export function registerServerCommands(
     )
     .option(
       "--data-dir <dir>",
-      "Data directory the server moved away from (default: BB_DATA_DIR or ~/.bb)",
+      "Data directory the server moved away from (default: SANDY_DATA_DIR or ~/.sandy)",
     )
     .option("--yes", "Skip the confirmation prompt")
     .option("--json", "Print machine-readable JSON output")
@@ -526,7 +526,7 @@ export function registerServerCommands(
         if (result === null) return;
         if (outputJson(opts, result)) return;
         console.log(
-          `This computer now stays connected to ${result.toHostName} as a machine, even when bb is closed. The service updates bb whenever the server does.`,
+          `This computer now stays connected to ${result.toHostName} as a machine, even when sandy is closed. The service updates sandy whenever the server does.`,
         );
       }),
     );
@@ -538,7 +538,7 @@ export function registerServerCommands(
     )
     .option(
       "--data-dir <dir>",
-      "Data directory of the old server copy (default: BB_DATA_DIR or ~/.bb)",
+      "Data directory of the old server copy (default: SANDY_DATA_DIR or ~/.sandy)",
     )
     .option("--yes", "Skip the confirmation prompt")
     .option("--json", "Print machine-readable JSON output")
@@ -560,7 +560,7 @@ export function registerServerCommands(
         if (
           !opts.yes &&
           !(await confirmDestructiveAction(
-            `Delete the old bb server copy in ${dataDir} (${String(lock.oldCopyEntries.length)} entries)? The server now runs on ${lock.toHostName}; this cannot be undone.`,
+            `Delete the old sandy server copy in ${dataDir} (${String(lock.oldCopyEntries.length)} entries)? The server now runs on ${lock.toHostName}; this cannot be undone.`,
           ))
         ) {
           return;
@@ -568,7 +568,7 @@ export function registerServerCommands(
         const result = await deleteOldServerCopy(dataDir, lock);
         if (outputJson(opts, result)) return;
         console.log(
-          `Deleted the old bb server copy from ${dataDir} (${String(result.deletedEntries.length)} entries). This computer keeps running as a regular machine.`,
+          `Deleted the old sandy server copy from ${dataDir} (${String(result.deletedEntries.length)} entries). This computer keeps running as a regular machine.`,
         );
       }),
     );

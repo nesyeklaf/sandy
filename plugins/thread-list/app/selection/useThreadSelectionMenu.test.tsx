@@ -2,17 +2,17 @@
 
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
-import type { PluginThreadActionTarget } from "@get-bb/plugin-sdk/app";
+import type { PluginThreadActionTarget } from "@sandy-sdk/plugin-sdk/app";
 import {
   installTestPluginRuntime,
   renderSlot,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { makePluginProject, makeSidebarThread } from "../model/fixtures.js";
 import { resetPreferencesSyncForTest } from "../preferences/preferences-sync.js";
 
 installTestPluginRuntime();
 const { experimental_ThreadActionsContextMenu: ThreadActionsContextMenu } =
-  await import("@get-bb/plugin-sdk/app");
+  await import("@sandy-sdk/plugin-sdk/app");
 const { useThreadSelectionMenu } = await import("./useThreadSelectionMenu.js");
 const {
   ThreadSelectionProvider,

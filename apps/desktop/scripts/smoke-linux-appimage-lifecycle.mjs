@@ -428,7 +428,7 @@ async function killIsolatedProcesses({ dataDir, userDataDir }) {
     const processInfo = await readProcess(pid);
     if (
       processInfo !== null &&
-      (processInfo.environment.BB_DATA_DIR === dataDir ||
+      (processInfo.environment.SANDY_DATA_DIR === dataDir ||
         processInfo.command.includes(`--user-data-dir=${userDataDir}`))
     ) {
       try {
@@ -454,7 +454,7 @@ async function smokeLinuxAppImageLifecycle() {
 
   const appImage = await resolveAppImage();
   const smokeRoot = await mkdtemp(
-    join(tmpdir(), "bb-appimage-lifecycle-smoke-"),
+    join(tmpdir(), "sandy-appimage-lifecycle-smoke-"),
   );
   const dataDir = join(smokeRoot, "data");
   const userDataDir = join(smokeRoot, "user-data");
@@ -470,15 +470,15 @@ async function smokeLinuxAppImageLifecycle() {
 
     const childEnv = {
       ...process.env,
-      BB_DATA_DIR: dataDir,
-      BB_DESKTOP_OPEN_DEVTOOLS: "0",
-      BB_DESKTOP_VERSION_CHECK: "0",
-      BB_HOST_DAEMON_PORT: String(daemonPort),
-      BB_SERVER_PORT: String(serverPort),
+      SANDY_DATA_DIR: dataDir,
+      SANDY_DESKTOP_OPEN_DEVTOOLS: "0",
+      SANDY_DESKTOP_VERSION_CHECK: "0",
+      SANDY_HOST_DAEMON_PORT: String(daemonPort),
+      SANDY_SERVER_PORT: String(serverPort),
     };
     delete childEnv.APPIMAGE_EXTRACT_AND_RUN;
-    delete childEnv.BB_DESKTOP_APP_URL;
-    delete childEnv.BB_DESKTOP_NODE_EXEC_PATH;
+    delete childEnv.SANDY_DESKTOP_APP_URL;
+    delete childEnv.SANDY_DESKTOP_NODE_EXEC_PATH;
     delete childEnv.ELECTRON_RUN_AS_NODE;
 
     child = spawn(
@@ -521,12 +521,12 @@ async function smokeLinuxAppImageLifecycle() {
       retryErrors: false,
     });
     await waitFor({
-      describe: `bb startup and its host daemon at ${runtime.serverUrl} to settle`,
+      describe: `sandy startup and its host daemon at ${runtime.serverUrl} to settle`,
       predicate: async () => {
         if (child.exitCode !== null || child.signalCode !== null) {
           await Promise.race([childClosed, sleep(outputFlushTimeoutMs)]);
           throw new Error(
-            `AppImage exited before bb became ready: code=${String(
+            `AppImage exited before sandy became ready: code=${String(
               child.exitCode,
             )} signal=${String(child.signalCode)}.\n${formatProcessOutput({
               stdout,
@@ -536,7 +536,7 @@ async function smokeLinuxAppImageLifecycle() {
         }
         if (!(await processIsLive(runtime.pid))) {
           throw new Error(
-            `The owned runtime exited before bb became ready.\n${formatProcessOutput(
+            `The owned runtime exited before sandy became ready.\n${formatProcessOutput(
               { stdout, stderr },
             )}`,
           );
@@ -615,7 +615,7 @@ async function smokeLinuxAppImageLifecycle() {
     }
     for (let attempt = 0; attempt < 3; attempt += 1) {
       if (!(await serverIsHealthy(runtime.serverUrl))) {
-        throw new Error("bb became unhealthy after the GUI mount teardown");
+        throw new Error("sandy became unhealthy after the GUI mount teardown");
       }
       await sleep(250);
     }

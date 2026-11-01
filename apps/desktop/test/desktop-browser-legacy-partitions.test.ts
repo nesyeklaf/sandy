@@ -14,12 +14,12 @@ describe("removeLegacyAutomationPartitions", () => {
   });
 
   it("removes old automation partitions and keeps the Browser partition", async () => {
-    userDataPath = await mkdtemp(join(tmpdir(), "bb-desktop-partitions-"));
+    userDataPath = await mkdtemp(join(tmpdir(), "sandy-desktop-partitions-"));
     const partitions = join(userDataPath, "Partitions");
     for (const name of [
-      "bb-browser",
-      "bb-browser-automation-3f2a",
-      "bb-browser-automation-9c1d",
+      "sandy-browser",
+      "sandy-browser-automation-3f2a",
+      "sandy-browser-automation-9c1d",
       "other-app",
     ])
       await mkdir(join(partitions, name, "Cookies"), { recursive: true });
@@ -27,13 +27,13 @@ describe("removeLegacyAutomationPartitions", () => {
     await removeLegacyAutomationPartitions(userDataPath);
 
     expect((await readdir(partitions)).sort()).toEqual([
-      "bb-browser",
       "other-app",
+      "sandy-browser",
     ]);
   });
 
   it("does nothing when no partitions exist yet", async () => {
-    userDataPath = await mkdtemp(join(tmpdir(), "bb-desktop-partitions-"));
+    userDataPath = await mkdtemp(join(tmpdir(), "sandy-desktop-partitions-"));
     await expect(
       removeLegacyAutomationPartitions(userDataPath),
     ).resolves.toBeUndefined();

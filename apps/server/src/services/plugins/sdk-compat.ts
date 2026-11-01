@@ -1,5 +1,5 @@
 import semver from "semver";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
 
 export function isPluginSdkRangeSatisfied(range: string): boolean {
   if (semver.validRange(range) === null) return false;
@@ -11,5 +11,5 @@ export function isPluginSdkRangeSatisfied(range: string): boolean {
 }
 
 export function pluginSdkRangeProblem(range: string): string {
-  return `requires bb plugin SDK ${range}, running SDK is ${PLUGIN_SDK_VERSION}`;
+  return `requires sandy plugin SDK ${range}, running SDK is ${PLUGIN_SDK_VERSION}`;
 }

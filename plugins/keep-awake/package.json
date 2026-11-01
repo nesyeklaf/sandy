@@ -1,16 +1,16 @@
 {
-  "name": "bb-plugin-keep-awake",
+  "name": "sandy-plugin-keep-awake",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Keeps selected macOS and Windows hosts awake while bb is running.",
+  "description": "Keeps selected macOS and Windows hosts awake while sandy is running.",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.86"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.86"
   },
-  "bb": {
+  "sandy": {
     "name": "Keep Awake",
-    "description": "Keeps selected macOS and Windows hosts awake while bb is running.",
+    "description": "Keeps selected macOS and Windows hosts awake while sandy is running.",
     "branding": {
       "icon": "Coffee"
     },
@@ -22,15 +22,15 @@
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
     "test": "vitest run --config vitest.config.ts",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.12",

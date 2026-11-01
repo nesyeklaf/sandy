@@ -2,13 +2,13 @@ import {
   detectGitRepo,
   runGit,
   WorkspaceError,
-} from "bb-environment-provider-host/git";
-import { tryWithCheckoutMutationLock } from "bb-environment-provider-host/locks";
+} from "sandy-environment-provider-host/git";
+import { tryWithCheckoutMutationLock } from "sandy-environment-provider-host/locks";
 import {
   emitStep,
   throwIfProvisionAborted,
   type ProgressCallback,
-} from "bb-environment-provider-host/transcript";
+} from "sandy-environment-provider-host/transcript";
 import {
   getCheckoutRef,
   getWorkspaceGitOperation,

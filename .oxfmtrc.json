@@ -4,6 +4,7 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     "node_modules/",
+    "extensions/",
     "dist/",
     "build/",
     "coverage/",
@@ -21,7 +22,7 @@
     "packages/plugin-sdk/bundled-types/",
     "packages/plugin-build/src/generated/",
     "packages/plugin-registry/r/",
-    ".bb/skills/verify-bb/inventory.json",
+    ".sandy/skills/verify-sandy/inventory.json",
     "packages/db/drizzle/meta/",
     "packages/connect-db/migrations/meta/",
     "*.snapshot.json",

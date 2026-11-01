@@ -1,15 +1,15 @@
 module.exports = ({ config }) => {
-  const variant = process.env.BB_MOBILE_VARIANT ?? "production";
+  const variant = process.env.SANDY_MOBILE_VARIANT ?? "production";
   if (variant !== "production" && variant !== "dev") {
-    throw new Error("BB_MOBILE_VARIANT must be production or dev");
+    throw new Error("SANDY_MOBILE_VARIANT must be production or dev");
   }
   const isDev = variant === "dev";
   return {
     ...config,
-    extra: { ...config.extra, bbMobileVariant: variant },
+    extra: { ...config.extra, sandyMobileVariant: variant },
     ...(isDev
       ? {
-          name: "bb dev",
+          name: "sandy dev",
           icon: "./assets/icon-dev.png",
           web: { ...config.web, favicon: "./assets/favicon-dev.png" },
           plugins: config.plugins.map((plugin) =>
@@ -33,7 +33,7 @@ module.exports = ({ config }) => {
       ...config.android,
       ...(isDev
         ? {
-            package: "app.getbb.mobile.dev",
+            package: "app.sandy.mobile.dev",
             intentFilters: [],
             adaptiveIcon: {
               ...config.android.adaptiveIcon,

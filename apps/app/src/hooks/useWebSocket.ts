@@ -4,7 +4,7 @@ import { createRealtimeCacheEffects } from "./realtime-cache-effects";
 import { useDeletedResourceRouteOwner } from "./cache-owners/resource-route-owner";
 import { createArchivedThreadBrowserOwner } from "./cache-owners/archived-thread-browser-owner";
 import { wsManager } from "../lib/ws";
-import { getDesktopBrowserApi } from "../lib/bb-desktop";
+import { getDesktopBrowserApi } from "../lib/sandy-desktop";
 import { sdk } from "../lib/sdk";
 import {
   applyThreadTimelineSignal,
@@ -23,7 +23,7 @@ export function useWebSocket(): void {
     const cacheEffects = createRealtimeCacheEffects({
       queryClient,
       refreshSidebarWhileHidden:
-        window.bbDesktop?.setAttentionThreads !== undefined,
+        window.sandyDesktop?.setAttentionThreads !== undefined,
     });
     const handleArchivedThreadBrowsers = createArchivedThreadBrowserOwner({
       desktopBrowser: getDesktopBrowserApi(),

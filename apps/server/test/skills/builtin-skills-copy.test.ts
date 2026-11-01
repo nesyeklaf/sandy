@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import {
   BUILTIN_SKILLS_DIRECTORY_NAME,
@@ -30,8 +30,8 @@ describe("builtin skills copy", () => {
       targetPath,
     );
     await expect(
-      readFile(path.join(targetPath, "bb-cli", "SKILL.md"), "utf8"),
-    ).resolves.toBe(await readBuiltinSkill("bb-cli"));
+      readFile(path.join(targetPath, "sandy-cli", "SKILL.md"), "utf8"),
+    ).resolves.toBe(await readBuiltinSkill("sandy-cli"));
   });
 
   it("throws when the sentinel skill is missing beside the module", async () => {

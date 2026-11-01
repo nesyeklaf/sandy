@@ -1,11 +1,11 @@
-import { execHostFileCallback as execFile } from "@bb/process-utils";
+import { execHostFileCallback as execFile } from "@sandy/process-utils";
 import { readdir, readFile, readlink, stat } from "node:fs/promises";
 import { hostname } from "node:os";
 import { isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import type {
   DesktopBrowserImportSourceId,
   DesktopBrowserImportSourceProfile,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { countRows } from "./cookie-database.js";
 
 export type BrowserImportEngine = "chromium" | "firefox" | "safari";

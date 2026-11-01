@@ -12,7 +12,7 @@ const EVIL_ORIGIN = "https://evil.example";
 const PLUGIN_ID = "review-fixes";
 
 const FIXTURE_SOURCE = `
-  import { defineRpcContract } from "@get-bb/plugin-sdk";
+  import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
   import { z } from "zod";
   const rpcContract = defineRpcContract({
     slowKv: {
@@ -20,20 +20,20 @@ const FIXTURE_SOURCE = `
       output: z.literal("done"),
     },
   });
-  export default function plugin(bb: any) {
+  export default function plugin(sandy: any) {
     const g = globalThis as any;
     g.__rfLoads = (g.__rfLoads ?? 0) + 1;
-    bb.onDispose(() => { g.__rfDisposals = (g.__rfDisposals ?? 0) + 1; });
-    bb.cli.register({
+    sandy.onDispose(() => { g.__rfDisposals = (g.__rfDisposals ?? 0) + 1; });
+    sandy.cli.register({
       name: "rf",
       summary: "review fixes fixture",
       commands: [],
       run: async () => ({ exitCode: 0, stdout: "rf ok" }),
     });
-    bb.rpc.register(rpcContract, {
+    sandy.rpc.register(rpcContract, {
       slowKv: async (input: any) => {
         await new Promise((resolve) => setTimeout(resolve, 150));
-        await bb.storage.kv.set("drained", input);
+        await sandy.storage.kv.set("drained", input);
         return "done";
       },
     });
@@ -47,17 +47,17 @@ describe("review fixes: idempotent enable, cli auth, dispose drain", () => {
 
   beforeEach(async () => {
     harness = await createTestAppHarness();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-review-fixes-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-review-fixes-"));
     delete globals.__rfLoads;
     delete globals.__rfDisposals;
-    const rootDir = join(workDir, "bb-plugin-review-fixes");
+    const rootDir = join(workDir, "sandy-plugin-review-fixes");
     await mkdir(rootDir, { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-review-fixes",
+        name: "sandy-plugin-review-fixes",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Review fixes fixture",
           description: "Plugin review regression fixture.",
           branding: { icon: "Zap" },

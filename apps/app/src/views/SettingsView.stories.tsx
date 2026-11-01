@@ -11,11 +11,11 @@ import {
   type ExperimentUpdates,
   defaultAppSettings,
   type AppSettings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   WorkspaceOpenTarget,
   WorkspaceOpenTargetId,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { VoiceInputSettingsSectionContent } from "@/components/settings/VoiceInputSettingsSection";
 import { AiServicesSettingsSection } from "@/components/settings/AiServicesSettingsSection";
 import { ArchivedThreadsSettingsSection } from "@/components/settings/ArchivedThreadsSettingsSection";

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThreadEnvironmentSummary } from "./ThreadEnvironmentSummary";
 import { focusWithKeyboard } from "@/test/keyboard-focus";
@@ -95,28 +95,28 @@ describe("ThreadEnvironmentSummary", () => {
     render(
       <TooltipProvider delayDuration={0}>
         <ThreadEnvironmentSummary
-          environmentLabel="bb/fix-environment-summary"
-          environmentCompactLabel="bb/fix-environment-summary"
+          environmentLabel="sandy/fix-environment-summary"
+          environmentCompactLabel="sandy/fix-environment-summary"
           environmentIcon="FolderGit"
           environmentProviderName="Worktree"
           environmentCheckout={{
             copyErrorMessage: "Failed to copy branch name",
             copyLabel: "Copy branch name",
             copySuccessMessage: "Branch name copied",
-            copyValue: "bb/fix-environment-summary",
-            label: "bb/fix-environment-summary",
+            copyValue: "sandy/fix-environment-summary",
+            label: "sandy/fix-environment-summary",
             rowLabel: "Branch",
-            title: "Copy branch name: bb/fix-environment-summary",
+            title: "Copy branch name: sandy/fix-environment-summary",
           }}
         />
       </TooltipProvider>,
     );
 
     const copyButton = screen.getByRole("button", {
-      name: "bb/fix-environment-summary",
+      name: "sandy/fix-environment-summary",
     });
-    expect(screen.getAllByText("bb/fix-environment-summary")).toHaveLength(3);
-    expect(copyButton.textContent).toBe("bb/fix-environment-summary");
+    expect(screen.getAllByText("sandy/fix-environment-summary")).toHaveLength(3);
+    expect(copyButton.textContent).toBe("sandy/fix-environment-summary");
     expect(copyButton.querySelector('[data-icon="GitBranch"]')).not.toBeNull();
     expect(copyButton.querySelector('[data-icon="Copy"]')).toBeNull();
   });

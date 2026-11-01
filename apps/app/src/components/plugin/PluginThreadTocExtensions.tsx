@@ -3,7 +3,7 @@ import type {
   ExperimentalThreadTocBand,
   ExperimentalThreadTocInput,
   ExperimentalThreadTocTabProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   usePluginSlots,
   type PluginThreadTocExtensionSlot,

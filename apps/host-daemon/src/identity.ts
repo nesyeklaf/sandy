@@ -1,12 +1,12 @@
 import {
   execHostFile,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { HOST_ID_FILE_NAME } from "@bb/host-daemon-contract";
+import { HOST_ID_FILE_NAME } from "@sandy/host-daemon-contract";
 
 const execFileAsync = execHostFile;
 
@@ -37,7 +37,7 @@ async function resolveHostId(options: ResolveHostIdOptions): Promise<string> {
   if (existing) {
     if (options.providedHostId && existing !== options.providedHostId) {
       throw new Error(
-        `Configured BB_HOST_ID ${options.providedHostId} does not match persisted host ID ${existing}`,
+        `Configured SANDY_HOST_ID ${options.providedHostId} does not match persisted host ID ${existing}`,
       );
     }
     return existing;

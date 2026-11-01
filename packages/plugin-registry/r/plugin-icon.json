@@ -3,10 +3,10 @@
   "name": "plugin-icon",
   "type": "registry:ui",
   "title": "plugin-icon",
-  "description": "BB ui \"plugin-icon\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"plugin-icon\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

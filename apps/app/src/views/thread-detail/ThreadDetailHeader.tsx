@@ -8,14 +8,14 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import { useAtomValue } from "jotai";
 import type {
   PluginThreadActionEntry,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk";
-import { COARSE_POINTER_TOOLBAR_ACTION_BUTTON_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy-sdk/plugin-sdk";
+import { COARSE_POINTER_TOOLBAR_ACTION_BUTTON_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
 import { SplitButton } from "@/components/ui/split-button.js";
 import {
   AppPageHeader,
@@ -23,13 +23,13 @@ import {
   HEADER_PANE_ACTION_ICON_BUTTON_CLASS,
 } from "@/components/layout/AppPageHeader";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_TITLE_BAR_TRAILING_TOGGLE_CLASS,
   MACOS_WINDOW_NO_DRAG_CLASS,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { useIsSidebarFramed } from "@/components/ui/sidebar.js";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   useAppCommandHandler,
   useAppCommandShortcut,
@@ -47,14 +47,14 @@ import {
   RIGHT_PANEL_TOGGLE_SHORTCUT_HINT_CLASS,
 } from "@/components/secondary-panel/panelToggleControlState";
 import { AppCommandShortcutHint } from "@/components/commands/AppCommandShortcutHint";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import { dimInactiveSplitsAtom } from "@/lib/split-layout/atoms";
 import {
   CONTEXT_INACTIVE_TEXT_CLASS,
   CONTEXT_SELECTION_SURFACE_CLASS,
-} from "@bb/shared-ui/context-selection";
+} from "@sandy/shared-ui/context-selection";
 import { usePaneContext } from "./PaneContext";
 import { PaneMaximizeButton } from "./PaneMaximizeButton";
 
@@ -127,7 +127,7 @@ export function ThreadDetailHeader({
     event.preventDefault();
     startEditing();
   };
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const dimsInactiveSplits = useAtomValue(dimInactiveSplitsAtom);
   const panelShortcut = useAppCommandShortcut("panel.toggle");
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);

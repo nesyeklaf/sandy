@@ -8,10 +8,10 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { AvailableModel, ProviderInfo, ReasoningLevel } from "@bb/domain";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
-import type { SystemExecutionOptionsResponse } from "@bb/server-contract";
-import type { ExperimentalProviderModelPickerValue } from "@get-bb/plugin-sdk";
+import type { AvailableModel, ProviderInfo, ReasoningLevel } from "@sandy/domain";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
+import type { SystemExecutionOptionsResponse } from "@sandy/server-contract";
+import type { ExperimentalProviderModelPickerValue } from "@sandy-sdk/plugin-sdk";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { systemExecutionOptionsQueryKey } from "@/hooks/queries/query-keys";
 import {

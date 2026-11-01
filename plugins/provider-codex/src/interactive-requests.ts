@@ -15,7 +15,7 @@ import {
   type ProviderInteractionOutcome,
   type UserQuestionInteractionOutcome,
   type UserQuestionPendingInteractionPayload,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { CodexMacOsPermissionItem } from "./extension-kinds.js";
 import { normalizePendingInteractionRequestedPermissionProfile } from "./pending-interaction-normalization.js";
 import type { CommandExecutionRequestApprovalResponse } from "./generated/codex-app-server/schema/v2/CommandExecutionRequestApprovalResponse.js";
@@ -320,7 +320,7 @@ export function decodeCodexInteractiveRequest(
       }
       if (parsed.data.questions.some((question) => question.isSecret)) {
         throw new ProviderRequestDecodeErrorValue(
-          "Codex secret user input is not supported by the BB question form",
+          "Codex secret user input is not supported by the SANDY question form",
         );
       }
       return {

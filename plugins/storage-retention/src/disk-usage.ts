@@ -1,4 +1,4 @@
-import { experimental_spawnHostProcess as spawn } from "@get-bb/plugin-sdk/process";
+import { experimental_spawnHostProcess as spawn } from "@sandy-sdk/plugin-sdk/process";
 import type { Dirent, Stats } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";

@@ -2,8 +2,8 @@
 
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
-import type { ThreadListEntry } from "@bb/domain";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
+import type { ThreadListEntry } from "@sandy/domain";
 import {
   archivedThreadsListQueryKey,
   sidebarNavigationQueryKey,

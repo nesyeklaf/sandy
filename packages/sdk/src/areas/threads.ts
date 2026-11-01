@@ -11,11 +11,11 @@ import {
   type ThreadQueuedMessage,
   type ThreadStatus,
   validatePluginMetadata,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   DEFAULT_TURN_RETRY_REASON,
   threadTabsResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   CreateQueuedMessageRequest,
   CreateThreadRequest,
@@ -36,6 +36,7 @@ import type {
   ThreadListResponse,
   ThreadMessageResponse,
   ThreadRunningResponse,
+  ThreadEnvironmentDirectoryResponse,
   ThreadOpenResponse,
   ThreadPaneAction,
   ThreadPaneActionResponse,
@@ -84,7 +85,7 @@ import type {
   UpdateThreadTabsRequest,
   UpdateThreadRequest,
   UpdateQueuedMessageRequest,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export const DEFAULT_THREAD_WAIT_TIMEOUT_MS = 20 * 60 * 1000;
@@ -201,6 +202,8 @@ export type ThreadTimelineResult = ThreadTimelineResponse;
 export type ThreadTimelineReadResult = ThreadTimelineReadResponse;
 export type ThreadArchiveResult = ThreadArchiveAllResponse;
 export type ThreadOpenResult = ThreadOpenResponse;
+export type ThreadEnvironmentDirectoryResult =
+  ThreadEnvironmentDirectoryResponse;
 export type ThreadPaneActionResult = ThreadPaneActionResponse;
 export type ThreadDeleteResult = { ok: true };
 export type ThreadSendResult = SendMessageResponse;
@@ -337,6 +340,11 @@ export interface ThreadActionArgs {
   threadId: string;
 }
 
+export interface ThreadEnvironmentDirectoryArgs extends ThreadActionArgs {
+  path: string;
+  projectId?: string;
+}
+
 export interface ThreadStatusArgs extends ThreadActionArgs {
   signal?: AbortSignal;
 }
@@ -379,7 +387,7 @@ export interface ThreadQueuedMessageGroupBoundaryArgs extends SetQueuedMessageGr
 
 /**
  * Both filters are genuinely absent by default: no filter lists every live
- * queued row in the workspace, which is what `bb thread queue list` with no
+ * queued row in the workspace, which is what `sandy thread queue list` with no
  * thread and a limiter plugin's own bookkeeping ask for.
  */
 export interface ThreadQueueListArgs {
@@ -533,7 +541,7 @@ export class ThreadWaitUnreachableError extends Error {
   }) {
     super(
       `Thread ${args.threadId} is in status ${args.currentStatus} and will not reach idle by waiting alone. ` +
-        `Inspect it with 'bb thread show ${args.threadId}' and recover by sending a follow-up.`,
+        `Inspect it with 'sandy thread show ${args.threadId}' and recover by sending a follow-up.`,
     );
     this.name = "ThreadWaitUnreachableError";
     this.currentStatus = args.currentStatus;
@@ -681,6 +689,18 @@ export interface ThreadsArea {
   experimental_regenerateTitle(
     args: ThreadActionArgs,
   ): Promise<ThreadMutationResult>;
+  /**
+   * Move an idle thread to another absolute directory on the host it runs
+   * on, within its own project. Reuses the project's environment for that
+   * path or creates an unmanaged one, stops the thread's loaded runtime so
+   * the next turn starts in the new directory, and records an
+   * environment-directory-update event. Rejects when the thread is starting
+   * or active, archived, or the path is unusable. `changed` is false when the
+   * thread already uses the path. Experimental: see docs/api_to_audit.md.
+   */
+  experimental_updateEnvironmentDirectory(
+    args: ThreadEnvironmentDirectoryArgs,
+  ): Promise<ThreadEnvironmentDirectoryResult>;
   updatePluginMetadata(
     args: ThreadPluginMetadataUpdateArgs,
   ): Promise<ThreadPluginMetadataResult>;
@@ -1380,6 +1400,19 @@ export function createThreadsArea(args: CreateSdkAreaArgs): ThreadsArea {
       return transport.readJson(
         transport.api.v1.threads[":id"].title.regenerate.$post({
           param: { id: input.threadId },
+        }),
+      );
+    },
+    async experimental_updateEnvironmentDirectory(input) {
+      return transport.readJson(
+        transport.api.v1.threads[":id"]["environment-directory"].$put({
+          param: { id: input.threadId },
+          json: {
+            path: input.path,
+            ...(input.projectId === undefined
+              ? {}
+              : { projectId: input.projectId }),
+          },
         }),
       );
     },

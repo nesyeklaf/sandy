@@ -1,4 +1,4 @@
-import type { SendMessageResponse } from "@bb/server-contract";
+import type { SendMessageResponse } from "@sandy/server-contract";
 import type { SendThreadMessageMutationRequest } from "@/hooks/mutations/mutation-request-types";
 
 export interface SendMessageMutationLike {

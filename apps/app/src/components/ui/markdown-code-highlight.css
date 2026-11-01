@@ -1,16 +1,16 @@
 /*
  * Syntax-highlight palette for fenced code blocks (sugar-high output).
  *
- * Scoped to `.bb-code-highlight` so the `--sh-*` token colors never leak past a
+ * Scoped to `.sandy-code-highlight` so the `--sh-*` token colors never leak past a
  * code block. Intentionally NOT in theme.css/app.css: this is a self-contained,
  * code-only palette, not part of the shared neutral ramp guarded by theme.test.
  *
- * Restrained and achromatic-leaning to match bb's calm chroma - identifiers ride
+ * Restrained and achromatic-leaning to match sandy's calm chroma - identifiers ride
  * the neutral foreground and punctuation/comments ride the existing muted/subtle
  * tiers; only keywords, strings, types/numbers, and entities carry a low-chroma
  * hue, lifted in dark mode the same way the app's neutral ramp is.
  */
-.bb-code-highlight {
+.sandy-code-highlight {
   --sh-space: inherit;
   --sh-identifier: var(--foreground);
   --sh-sign: var(--muted-foreground);
@@ -23,7 +23,7 @@
   --sh-jsxliterals: oklch(0.47 0.13 292);
 }
 
-.dark .bb-code-highlight {
+.dark .sandy-code-highlight {
   --sh-keyword: oklch(0.74 0.14 18);
   --sh-string: oklch(0.78 0.12 150);
   --sh-class: oklch(0.76 0.11 250);
@@ -32,20 +32,20 @@
   --sh-jsxliterals: oklch(0.78 0.12 292);
 }
 
-.bb-code-highlight .sh__line {
+.sandy-code-highlight .sh__line {
   display: inline-block;
   min-width: 100%;
 }
 
-.bb-code-highlight .sh__line--diff-add {
+.sandy-code-highlight .sh__line--diff-add {
   background-color: color-mix(in oklab, var(--diff-added) 14%, transparent);
 }
 
-.bb-code-highlight .sh__line--diff-remove {
+.sandy-code-highlight .sh__line--diff-remove {
   background-color: color-mix(in oklab, var(--diff-removed) 14%, transparent);
 }
 
-.bb-code-highlight .sh__line--diff-hunk {
+.sandy-code-highlight .sh__line--diff-hunk {
   background-color: color-mix(
     in oklab,
     var(--muted-foreground) 8%,
@@ -53,7 +53,7 @@
   );
 }
 
-.bb-code-highlight .sh__line--diff-meta {
+.sandy-code-highlight .sh__line--diff-meta {
   background-color: color-mix(
     in oklab,
     var(--muted-foreground) 4%,

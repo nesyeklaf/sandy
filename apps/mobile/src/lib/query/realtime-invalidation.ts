@@ -1,4 +1,4 @@
-import { createDebouncedCallbackScheduler } from "@bb/domain";
+import { createDebouncedCallbackScheduler } from "@sandy/domain";
 import type { QueryClient } from "@tanstack/react-query";
 import type { MobileRealtime } from "../realtime/mobile-realtime";
 import { systemConfigQueryKey } from "./query-keys";

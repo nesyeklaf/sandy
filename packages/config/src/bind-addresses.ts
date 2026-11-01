@@ -1,9 +1,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { BlockList, isIP } from "node:net";
 import { networkInterfaces } from "node:os";
-import { BB_LOOPBACK_HOST } from "./runtime.js";
+import { SANDY_LOOPBACK_HOST } from "./runtime.js";
 
-export const SERVER_BIND_HOST_ENV_NAME = "BB_SERVER_BIND_HOST";
+export const SERVER_BIND_HOST_ENV_NAME = "SANDY_SERVER_BIND_HOST";
 
 export interface WireguardAddressReader {
   addresses: () => ReturnType<typeof networkInterfaces>;
@@ -112,7 +112,7 @@ export function parseServerBindAddresses(
       );
     }
     seen.add(address);
-    if (address === BB_LOOPBACK_HOST) {
+    if (address === SANDY_LOOPBACK_HOST) {
       continue;
     }
     if (isWildcardAddress(address)) {

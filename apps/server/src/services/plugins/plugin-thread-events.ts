@@ -1,7 +1,7 @@
-import type { EnvironmentRemoval } from "@bb/domain";
-import type { ApplyThreadLifecycleEventOutcome, HostRow } from "@bb/db";
-import type { PendingInteraction, Thread } from "@bb/domain";
-import type { ThreadQueuedMessage } from "@bb/domain";
+import type { EnvironmentRemoval } from "@sandy/domain";
+import type { ApplyThreadLifecycleEventOutcome, HostRow } from "@sandy/db";
+import type { PendingInteraction, Thread } from "@sandy/domain";
+import type { ThreadQueuedMessage } from "@sandy/domain";
 import type { PluginThreadEventEmitter } from "./plugin-service.js";
 
 const pendingThreadEvents = new Map<string, ReturnType<typeof setTimeout>>();
@@ -88,7 +88,7 @@ export function emitPluginTurnFailed(threadId: string): void {
  *
  * These, plus archive and delete above, are the fanout a plugin whose waits
  * depend on capacity subscribes to; it answers by calling
- * `bb.experimental_hooks.recheck()`. Core deliberately does not derive
+ * `sandy.experimental_hooks.recheck()`. Core deliberately does not derive
  * "a slot freed" here itself: the wait is the plugin's, and so is the
  * condition that ends it.
  */
@@ -116,7 +116,7 @@ export function emitPluginThreadEvents(threadId: string): void {
 }
 
 export function emitPluginTerminalInput(
-  terminal: import("@bb/server-contract").TerminalSession,
+  terminal: import("@sandy/server-contract").TerminalSession,
 ): void {
   emitter?.emitTerminalInput(terminal);
 }

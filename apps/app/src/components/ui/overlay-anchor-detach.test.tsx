@@ -8,20 +8,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
+} from "@sandy/shared-ui/dropdown-menu";
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
-} from "@bb/shared-ui/popover";
+} from "@sandy/shared-ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@bb/shared-ui/select";
+} from "@sandy/shared-ui/select";
 
 class FakeIntersectionObserver {
   static instances: FakeIntersectionObserver[] = [];

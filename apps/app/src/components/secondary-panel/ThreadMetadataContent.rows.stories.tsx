@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { EnvironmentDisplayHostContext } from "@bb/core-ui";
+import type { EnvironmentDisplayHostContext } from "@sandy/core-ui";
 import {
   ParentSelectorRow,
   ParentNotificationsRow,
@@ -260,7 +260,7 @@ export function WorkspacePath() {
         <RowStage>
           <WorkspacePathRow
             environment={makeEnvironment({
-              path: "/Users/michael/.bb-dev/worktrees/env_demo/bb",
+              path: "/Users/michael/.sandy-dev/worktrees/env_demo/sandy",
             })}
           />
         </RowStage>
@@ -269,7 +269,7 @@ export function WorkspacePath() {
         <RowStage>
           <WorkspacePathRow
             environment={makeEnvironment({
-              path: "/Users/michael/.bb-dev/worktrees/env_7m3cieyz6q/bb/apps/app/src/components/right-panel",
+              path: "/Users/michael/.sandy-dev/worktrees/env_7m3cieyz6q/sandy/apps/app/src/components/right-panel",
             })}
           />
         </RowStage>
@@ -278,7 +278,7 @@ export function WorkspacePath() {
         <RowStage>
           <WorkspacePathRow
             environment={makeEnvironment({
-              path: "/srv/repos/bb-linked-worktree",
+              path: "/srv/repos/sandy-linked-worktree",
             })}
           />
         </RowStage>
@@ -287,7 +287,7 @@ export function WorkspacePath() {
         <RowStage>
           <WorkspacePathRow
             environment={makeEnvironment({
-              path: "/Users/michael/Projects/bb",
+              path: "/Users/michael/Projects/sandy",
             })}
           />
         </RowStage>
@@ -524,7 +524,7 @@ export function GitStatus() {
             workspace={undefined}
             failure={{
               code: "path_not_found",
-              workspacePath: "/Users/michael/Projects/bb",
+              workspacePath: "/Users/michael/Projects/sandy",
               message: "Workspace not found.",
             }}
             errorMessage={null}

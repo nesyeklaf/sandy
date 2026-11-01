@@ -2,9 +2,9 @@ import { nanoid } from "nanoid";
 import { Link } from "react-router-dom";
 import { OptionPicker } from "@/components/pickers/OptionPicker";
 import { useSidebarNavigation } from "@/hooks/queries/sidebar-navigation-query";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { useState, type ReactNode } from "react";
-import { Switch } from "@bb/shared-ui/switch";
+import { Switch } from "@sandy/shared-ui/switch";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useUpdateGeneralSettings } from "@/hooks/mutations/settings-mutations";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,9 +12,9 @@ import {
   machineEnvironmentSetSchema,
   type MachineEnvironmentList,
   type MachineEnvironmentVariable,
-} from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Input } from "@bb/shared-ui/input";
+} from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Input } from "@sandy/shared-ui/input";
 import { sdk } from "@/lib/sdk";
 import { SettingsSection } from "@/components/ui/settings-section";
 import { getSettingsSectionRoutePath } from "@/components/settings/settings-sections";
@@ -269,7 +269,7 @@ export function MachineEnvironmentSettingsContent({
   return (
     <SettingsSection
       title="Environment variables"
-      description="Global variables are available to BB-managed processes on every connected machine. Project variables override them for work in that project."
+      description="Global variables are available to SANDY-managed processes on every connected machine. Project variables override them for work in that project."
       bodyClassName="space-y-8"
     >
       <div className="space-y-5">

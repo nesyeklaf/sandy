@@ -154,7 +154,7 @@ export const uiPreferenceDefinitions = {
   "composer.provider": defineUiPreference(
     uiPreferenceStringSchema,
     "__automatic__",
-    "Plugin that draws the composer's input box: a plugin key such as bb--composer/composer, or __automatic__ for the first composer from a plugin you installed, then the bundled Composer plugin. With no composer plugin enabled, no composer is shown.",
+    "Plugin that draws the composer's input box: a plugin key such as sandy--composer/composer, or __automatic__ for the first composer from a plugin you installed, then the bundled Composer plugin. With no composer plugin enabled, no composer is shown.",
   ),
   "threadContextCard.pinned": defineUiPreference(
     z.boolean(),
@@ -174,7 +174,7 @@ export const uiPreferenceDefinitions = {
       ),
     ]),
     [],
-    "Thread Info panel section ids that are collapsed, such as forks, threadStorage, or <pluginId>/<sectionId> for plugin sections like bb--git/commits and bb--git/uncommitted-changes. Legacy commits and uncommittedChanges resolve to the Git plugin's sections.",
+    "Thread Info panel section ids that are collapsed, such as forks, threadStorage, or <pluginId>/<sectionId> for plugin sections like sandy--git/commits and sandy--git/uncommitted-changes. Legacy commits and uncommittedChanges resolve to the Git plugin's sections.",
   ),
 } as const satisfies Record<UiPreferenceKey, UiPreferenceDefinition>;
 

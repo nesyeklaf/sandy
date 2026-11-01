@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
-import type { VoiceInputTextareaProps } from "@bb/shared-ui/voice-input-textarea";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import type { VoiceInputTextareaProps } from "@sandy/shared-ui/voice-input-textarea";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { transcribeVoiceInput } from "@/lib/api";
 import { WaveformVisualizer } from "./WaveformVisualizer";

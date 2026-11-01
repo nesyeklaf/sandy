@@ -13,13 +13,13 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useImmediateRouteNavigate } from "@/components/ui/app-route-anchor";
-import type { IconName } from "@bb/shared-ui/icon";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import type { IconName } from "@sandy/shared-ui/icon";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import {
   getFollowUpPromptPlaceholder,
   getCompactFollowUpPromptPlaceholder,
 } from "@/components/promptbox/follow-up-placeholder";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import type {
   PermissionMode,
   ReasoningLevel,
@@ -32,16 +32,16 @@ import type {
   ThreadTimelineModelFallback,
   ThreadTimelinePendingTodos,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ProviderCommand,
   ThreadTimelineSessionOption,
   SendMessageRequest,
   ThreadTimelineResponse,
   TimelineWorkflowWorkRow,
-} from "@bb/server-contract";
-import type { ExperimentalComposerSelection } from "@get-bb/plugin-sdk";
-import type { ComposerSubmitExtras } from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy/server-contract";
+import type { ExperimentalComposerSelection } from "@sandy-sdk/plugin-sdk";
+import type { ComposerSubmitExtras } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import {
   readExecutionSelection,
   resolveComposerSelectionDeadline,
@@ -90,7 +90,7 @@ import {
 } from "@/components/promptbox/ThreadEnvironmentSummary";
 import type { MachineLabelHost } from "@/components/machines/MachineLabel";
 import type { MachineProviderPresentation } from "@/components/plugin/MachineProviderIcon";
-import type { WorkspaceCheckoutDisplay } from "@bb/shared-ui/lib/workspace-checkout-display";
+import type { WorkspaceCheckoutDisplay } from "@sandy/shared-ui/lib/workspace-checkout-display";
 import { useComposerTextEffects } from "@/lib/composer-text-effects";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { useThreadCreationOptions } from "@/hooks/useThreadCreationOptions";
@@ -133,13 +133,13 @@ import {
   buildThreadHandoffFollowUpDraft,
   stripThreadHandoffPrefix,
   type ThreadHandoffCreateSeed,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   emptyPromptDraftState,
   promptDraftToInput,
   type PromptDraftAttachment,
   type PromptDraftState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   FollowUpPromptBox,
   type FollowUpComposerProps,
@@ -157,7 +157,7 @@ import {
   resolveDefaultExecutionOptionsState,
   shouldQueueFollowUpMessage,
   type FollowUpExecutionSelection,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 
 const ignoreReportedSubmitError = () => {};
 const ignorePermissionModeChange = () => {};

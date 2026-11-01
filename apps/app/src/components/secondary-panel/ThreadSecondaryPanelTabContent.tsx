@@ -25,13 +25,13 @@ import {
   type EnvironmentFilePreviewSource,
   type FilePreview,
   type FilePreviewLineRange,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { SecondaryPanelFilePreview } from "./ThreadStorageFilePreview";
 import {
   buildMarkdownFileImageRouting,
   buildMarkdownHostFileImageRouting,
 } from "@/components/ui/markdown-file-image-routing";
-import { getAbsoluteDirname } from "@bb/shared-ui/lib/absolute-file-path";
+import { getAbsoluteDirname } from "@sandy/shared-ui/lib/absolute-file-path";
 
 
 interface WorkspaceFilePreviewTabContentProps {

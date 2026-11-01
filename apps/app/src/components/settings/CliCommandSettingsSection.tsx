@@ -1,5 +1,5 @@
-import type { SystemCliCommandStatus } from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
+import type { SystemCliCommandStatus } from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
 import {
   SettingsSection,
   SettingsWithControl,
@@ -7,7 +7,7 @@ import {
 import { useChangeCliCommand } from "@/hooks/mutations/settings-mutations";
 import { useCliCommandStatus } from "@/hooks/queries/system-queries";
 
-const CLI_COMMAND_SETTING_LABEL = "bb CLI";
+const CLI_COMMAND_SETTING_LABEL = "sandy CLI";
 
 interface CliCommandSettingsSectionContentProps {
   onChange: (change: "install" | "remove") => void;
@@ -20,19 +20,19 @@ export function describeCliCommandStatus(
 ): string {
   if (status.installedPath !== null) {
     return status.onPath
-      ? `Installed at ${status.installedPath}. You can control bb from any terminal, and so can agents outside bb, such as Claude Code or Codex.`
-      : `Installed at ${status.installedPath}, but its folder is not on your PATH. Add the folder to your PATH to use bb outside bb.`;
+      ? `Installed at ${status.installedPath}. You can control sandy from any terminal, and so can agents outside sandy, such as Claude Code or Codex.`
+      : `Installed at ${status.installedPath}, but its folder is not on your PATH. Add the folder to your PATH to use sandy outside sandy.`;
   }
   if (status.shadowedBy === null) {
-    return "Install the bb CLI for use outside bb. You can control bb from any terminal, and so can agents outside bb, such as Claude Code or Codex. Threads in bb already have it.";
+    return "Install the sandy CLI for use outside sandy. You can control sandy from any terminal, and so can agents outside sandy, such as Claude Code or Codex. Threads in sandy already have it.";
   }
   if (status.shadowedBy.source === "npm") {
-    return `Already installed for use outside bb at ${status.shadowedBy.path}, by npm.`;
+    return `Already installed for use outside sandy at ${status.shadowedBy.path}, by npm.`;
   }
   if (status.shadowedBy.source === "machine") {
-    return `Already installed for use outside bb at ${status.shadowedBy.path}, with the bb machine on this computer.`;
+    return `Already installed for use outside sandy at ${status.shadowedBy.path}, with the sandy machine on this computer.`;
   }
-  return `Another bb at ${status.shadowedBy.path} comes first on your PATH. Remove it to install this one.`;
+  return `Another sandy at ${status.shadowedBy.path} comes first on your PATH. Remove it to install this one.`;
 }
 
 export function CliCommandSettingsSectionContent({

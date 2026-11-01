@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 
 export interface NormalizeCalibrationEventsOptions {
   internedIdFields?: readonly string[];

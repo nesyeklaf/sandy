@@ -2,7 +2,7 @@ import {
   resolveHostEnvironment,
   mergeHostAndProviderEnvironment,
 } from "../hosts/host-environment.js";
-import { getEnvironment, getHost, getProject } from "@bb/db";
+import { getEnvironment, getHost, getProject } from "@sandy/db";
 import type {
   DynamicTool,
   InstructionMode,
@@ -10,11 +10,11 @@ import type {
   Thread,
   ThreadTurnInitiator,
   EnvironmentStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonContributedEnvEntry,
   HostDaemonInjectedSkillSource,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { ApiError } from "../../errors.js";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { throwEnvironmentNotReady } from "../lib/lifecycle-api-errors.js";
@@ -39,7 +39,7 @@ import { resolveDeprecatedWorkspaceProvisionType } from "../environments/environ
 import { markTurnTraceSpan } from "../system/turn-trace.js";
 
 const UPDATE_ENVIRONMENT_DIRECTORY_INSTRUCTIONS =
-  "If the user asks you to move this thread to another checkout, worktree, or directory, make sure the target directory exists, then call `update_environment_directory` with its absolute path. After it succeeds, end the current turn; bb starts the next turn in the updated environment automatically so you can continue there.";
+  "If the user asks you to move this thread to another checkout, worktree, or directory, make sure the target directory exists, then call `update_environment_directory` with its absolute path. After it succeeds, end the current turn; sandy starts the next turn in the updated environment automatically so you can continue there.";
 
 const PLUGIN_INSTRUCTION_CONTRIBUTION_MAX_CHARS = 4096;
 
@@ -225,7 +225,7 @@ export async function resolveThreadRuntimeCommandConfig(
       instructionSections.push(contribution.instructions);
     } else {
       instructionSections.push(
-        `The following instructions come from the BB plugin "${contribution.pluginId}" for its tool "${contribution.tool.name}":`,
+        `The following instructions come from the SANDY plugin "${contribution.pluginId}" for its tool "${contribution.tool.name}":`,
         contribution.instructions,
       );
     }
@@ -253,13 +253,13 @@ export async function resolveThreadRuntimeCommandConfig(
       text = text.slice(0, PLUGIN_INSTRUCTION_CONTRIBUTION_MAX_CHARS);
     }
     instructionSections.push(
-      `The following instructions come from the BB plugin "${contribution.pluginId}":`,
+      `The following instructions come from the SANDY plugin "${contribution.pluginId}":`,
       text,
     );
   }
   for (const contribution of conditionalConfiguration.dynamicInstructions) {
     instructionSections.push(
-      `The following dynamic instructions come from the BB plugin "${contribution.pluginId}":`,
+      `The following dynamic instructions come from the SANDY plugin "${contribution.pluginId}":`,
       contribution.text,
     );
   }

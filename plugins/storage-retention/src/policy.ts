@@ -1,8 +1,8 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { Policy } from "./contract.js";
 
 type Thread = Awaited<
-  ReturnType<BbPluginApi["sdk"]["threads"]["list"]>
+  ReturnType<SandyPluginApi["sdk"]["threads"]["list"]>
 >[number];
 export type RetentionThread = Pick<
   Thread,

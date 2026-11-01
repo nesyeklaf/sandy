@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import type { JsonValue } from "@bb/domain";
+import type { JsonValue } from "@sandy/domain";
 import type {
   PluginTimelineRendererProps,
   PluginTimelineRendererRow,
-} from "@get-bb/plugin-sdk";
-import type { TimelineViewWorkRow } from "@bb/thread-view";
+} from "@sandy-sdk/plugin-sdk";
+import type { TimelineViewWorkRow } from "@sandy/thread-view";
 import { PluginSlotMount } from "../../plugin/PluginSlotMount.js";
 import {
   EMPTY_PLUGIN_SLOT_SNAPSHOT,

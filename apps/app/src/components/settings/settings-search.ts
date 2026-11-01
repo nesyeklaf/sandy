@@ -1,4 +1,4 @@
-import type { IconName } from "@bb/shared-ui/icon";
+import type { IconName } from "@sandy/shared-ui/icon";
 import { getPluginConfigurationRoutePath } from "@/lib/route-paths";
 import type { PluginSettingsEntry } from "./plugin-settings-entries";
 import {
@@ -86,11 +86,11 @@ export const SETTINGS_SEARCH_INDEX: Record<
         keywords: ["git", "worktree", "branch name"],
       },
       {
-        title: "bb CLI",
+        title: "sandy CLI",
         keywords: ["command line", "terminal", "path", "install"],
         when: "cliCommand",
       },
-      { title: "bb CLI skills", keywords: ["agents", "install"] },
+      { title: "sandy CLI skills", keywords: ["agents", "install"] },
       {
         title: "Microphone",
         keywords: ["voice input", "audio", "dictation", "speech"],

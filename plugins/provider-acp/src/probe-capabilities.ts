@@ -1,5 +1,5 @@
 import type { AcpAgentDefinition } from "./agents.js";
-import type { AcpAgentProbe } from "@get-bb/plugin-sdk/provider-bridge/acp";
+import type { AcpAgentProbe } from "@sandy-sdk/plugin-sdk/provider-bridge/acp";
 
 export interface AcpProbeApplication {
   agent: AcpAgentDefinition;
@@ -19,6 +19,6 @@ export function applyAcpAgentProbe(
   }
   return {
     agent: { ...agent, fork: "none" },
-    reason: `the agent does not advertise session/fork, but bb declared fork "${declaredFork}"`,
+    reason: `the agent does not advertise session/fork, but sandy declared fork "${declaredFork}"`,
   };
 }

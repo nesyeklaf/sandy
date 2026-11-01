@@ -3,8 +3,8 @@
  * Package raw bridge recordings into committed fixtures.
  *
  *   node scripts/provider-recordings/package-cells.mjs \
- *     --raw ~/.bb/provider-recordings/raw \
- *     --cells ~/.bb/provider-recordings/cells.tsv \
+ *     --raw ~/.sandy/provider-recordings/raw \
+ *     --cells ~/.sandy/provider-recordings/cells.tsv \
  *     --out packages/provider-bridge-protocol/recordings \
  *     --versions '{"codex":"codex-cli 0.149.0", ...}' \
  *     [--home <dir>]
@@ -92,7 +92,7 @@ function main() {
       return { provider, cell, threadId, note };
     });
 
-  const staging = mkdtempSync(join(tmpdir(), "bb-recording-cells-"));
+  const staging = mkdtempSync(join(tmpdir(), "sandy-recording-cells-"));
   const summary = [];
   for (const { provider, cell, threadId, note } of cells) {
     const sourceDir = join(args.raw, provider, threadId);

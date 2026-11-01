@@ -1,13 +1,13 @@
-import { GIT_PLUGIN_ID } from "@bb/domain";
+import { GIT_PLUGIN_ID } from "@sandy/domain";
 import {
   type ThreadGitDiffResponse,
   type WorkspaceStatus,
   gitDiffResultSchema,
   gitStatusResultSchema,
-} from "bb-plugin-bb--git/contract";
+} from "sandy-plugin-sandy--git/contract";
 import type {
   WorkspaceResolutionFailure,
-} from "@bb/host-daemon-contract/workspace";
+} from "@sandy/host-daemon-contract/workspace";
 import { ApiError } from "../../errors.js";
 import type { PluginService } from "../plugins/plugin-service.js";
 
@@ -25,7 +25,7 @@ const PLUGIN_STATE_TEXT = {
   disabled: null,
   starting: "still starting",
   error: "failing to load",
-  incompatible: "incompatible with this bb",
+  incompatible: "incompatible with this sandy",
   missing: "missing its files",
   degraded: "degraded",
   "needs-configuration": "waiting for configuration",

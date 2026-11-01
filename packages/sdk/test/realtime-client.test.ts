@@ -1,17 +1,17 @@
 import { expect, it, vi } from "vitest";
-import { createBbSdk } from "../src/core.js";
+import { createSandySdk } from "../src/core.js";
 import { createHttpTransport } from "../src/transport-http.js";
-import type { BbRealtimeSocket } from "../src/transport.js";
+import type { SandyRealtimeSocket } from "../src/transport.js";
 
 it("closes a failing socket once even when close reports another error", () => {
   let closes = 0;
-  const sockets: BbRealtimeSocket[] = [];
-  const sdk = createBbSdk({
+  const sockets: SandyRealtimeSocket[] = [];
+  const sdk = createSandySdk({
     transport: createHttpTransport({
-      baseUrl: "http://bb.test",
+      baseUrl: "http://sandy.test",
       runtime: "node",
       websocket: () => {
-        const socket: BbRealtimeSocket = {
+        const socket: SandyRealtimeSocket = {
           close() {
             closes += 1;
             socket.onerror?.();
@@ -43,13 +43,13 @@ it("closes a failing socket once even when close reports another error", () => {
 it("reconnects after a first connection fails without a close event", async () => {
   vi.useFakeTimers();
   try {
-    const sockets: BbRealtimeSocket[] = [];
-    const sdk = createBbSdk({
+    const sockets: SandyRealtimeSocket[] = [];
+    const sdk = createSandySdk({
       transport: createHttpTransport({
-        baseUrl: "http://bb.test",
+        baseUrl: "http://sandy.test",
         runtime: "node",
         websocket: () => {
-          const socket: BbRealtimeSocket = {
+          const socket: SandyRealtimeSocket = {
             close() {},
             onclose: null,
             onerror: null,

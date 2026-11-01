@@ -45,7 +45,7 @@ export type SecondaryPanelWidthPercentAtom = WritableAtom<
 
 export const secondaryPanelWidthPercentAtom: SecondaryPanelWidthPercentAtom =
   atomWithStorage<number>(
-    "bb.thread.secondaryPanel.widthPercent",
+    "sandy.thread.secondaryPanel.widthPercent",
     DEFAULT_SECONDARY_PANEL_WIDTH_PERCENT,
     secondaryPanelWidthStorage,
     { getOnInit: true },
@@ -54,7 +54,7 @@ export const secondaryPanelWidthPercentAtom: SecondaryPanelWidthPercentAtom =
 const threadSecondaryPanelWidthOverrideAtomFamily = atomFamily(
   (threadId: ResolvedThreadSecondaryPanelThreadId) =>
     atomWithStorage<number | null>(
-      `bb.thread.secondaryPanel.widthPercent-${encodeURIComponent(threadId)}`,
+      `sandy.thread.secondaryPanel.widthPercent-${encodeURIComponent(threadId)}`,
       null,
       threadSecondaryPanelWidthOverrideStorage,
       { getOnInit: true },
@@ -84,7 +84,7 @@ export function getThreadSecondaryPanelWidthPercentAtom(
 }
 
 const PLUGIN_PAGE_SECONDARY_PANEL_WIDTH_STORAGE_PREFIX =
-  "bb.pluginPage.secondaryPanel.widthPercent";
+  "sandy.pluginPage.secondaryPanel.widthPercent";
 
 const pluginPageSecondaryPanelWidthPercentAtomFamily = atomFamily(
   (pageKey: string): SecondaryPanelWidthPercentAtom =>
@@ -112,7 +112,7 @@ export const SecondaryPanelWidthPercentAtomContext =
   createContext<SecondaryPanelWidthPercentAtom>(secondaryPanelWidthPercentAtom);
 
 const THREAD_CONVERSATION_COLLAPSED_STORAGE_PREFIX =
-  "bb.thread.conversation.collapsed";
+  "sandy.thread.conversation.collapsed";
 
 const threadConversationCollapsedAtomFamily = atomFamily(
   (threadId: ResolvedThreadSecondaryPanelThreadId) =>

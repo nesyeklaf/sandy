@@ -1,10 +1,10 @@
 // Generates src/generated/plugin-starter-files.generated.ts: the
-// `bb plugin new` starter component set from the plugin component registry,
+// `sandy plugin new` starter component set from the plugin component registry,
 // plus the npm deps a scaffold needs to build and typecheck them.
 //
 // The output is not committed. turbo runs this as
-// `@bb/templates#generate:plugin-scaffold` before any task that resolves
-// @bb/templates sources (see the `@bb/templates#topo` task in turbo.json).
+// `@sandy/templates#generate:plugin-scaffold` before any task that resolves
+// @sandy/templates sources (see the `@sandy/templates#topo` task in turbo.json).
 //
 //   node packages/templates/scripts/generate-plugin-scaffold.mjs
 import { readFile } from "node:fs/promises";
@@ -21,7 +21,7 @@ const packageRoot = path.resolve(
   "..",
 );
 
-// Embed the `bb plugin new` starter component set from the plugin
+// Embed the `sandy plugin new` starter component set from the plugin
 // component registry (plugin design §5.5): the transitive closure of the
 // starter items, as {target, content} pairs, plus the npm deps a scaffold
 // needs to build (dependencies) and typecheck (devDependencies) them, and
@@ -36,8 +36,8 @@ const STARTER_ITEMS = ["button", "card", "input", "checkbox", "dialog"];
 // Shimmed packages are runtime-provided (devDependencies for types only);
 // everything else a starter component imports must be a real dependency for
 // esbuild to bundle. Both lists come from the build's own shim table,
-// read by file path like the registry (@bb/templates cannot depend on
-// @bb/plugin-build without a workspace cycle).
+// read by file path like the registry (@sandy/templates cannot depend on
+// @sandy/plugin-build without a workspace cycle).
 const SHIMMED_SPECIFIERS = new Set(Object.keys(RUNTIME_SLOT_BY_SPECIFIER));
 const registryDir = path.join(packageRoot, "..", "plugin-registry", "r");
 const appPackageJson = JSON.parse(
@@ -49,7 +49,7 @@ const appPackageJson = JSON.parse(
 const starterFiles = [];
 const starterBundledDeps = new Set();
 // Every shimmed package, not only those the starter components import: the
-// plugin guide tells authors to import any of them freely, and `bb plugin
+// plugin guide tells authors to import any of them freely, and `sandy plugin
 // build` shims them all — but tsc resolves through node_modules, so each one
 // needs its declarations installed for the import to typecheck (#2072).
 const shimmedTypeDeps = new Set(SHIMMED_TYPE_PACKAGES);
@@ -79,7 +79,7 @@ const shimmedTypeDeps = new Set(SHIMMED_TYPE_PACKAGES);
     }
     itemQueue.push(
       ...(item.registryDependencies ?? []).map((name) =>
-        name.replace(/^@bb\//, ""),
+        name.replace(/^@sandy\//, ""),
       ),
     );
   }
@@ -121,11 +121,11 @@ export interface PluginStarterFile {
 
 export const PLUGIN_STARTER_FILES: readonly PluginStarterFile[] = ${JSON.stringify(starterFiles, null, 2)};
 
-/** npm deps \`bb plugin build\` bundles — must be installed to build. */
+/** npm deps \`sandy plugin build\` bundles — must be installed to build. */
 export const PLUGIN_STARTER_DEPENDENCIES: Readonly<Record<string, string>> = ${JSON.stringify(versionedDeps(starterBundledDeps), null, 2)};
 
 /**
- * Every package \`bb plugin build\` shims to the host runtime, at the host's
+ * Every package \`sandy plugin build\` shims to the host runtime, at the host's
  * version — installed for editor/tsc types only, never bundled.
  */
 export const PLUGIN_SHIMMED_TYPE_DEPENDENCIES: Readonly<Record<string, string>> = ${JSON.stringify(versionedDeps(shimmedTypeDeps), null, 2)};

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { delimiter, isAbsolute, join, relative, resolve } from "node:path";
 
-export type BbRuntimeMode = "dev" | "prod";
+export type SandyRuntimeMode = "dev" | "prod";
 
 interface DevPortSet {
   appPort: number;
@@ -52,7 +52,7 @@ interface ResolveProdDataDirArgs {
 interface ResolveRuntimeDataDirArgs {
   env: NodeJS.ProcessEnv;
   homeDir: string;
-  mode: BbRuntimeMode;
+  mode: SandyRuntimeMode;
   repoRoot?: string;
 }
 
@@ -76,12 +76,12 @@ interface ResolvePortFromEnvArgs {
   name: string;
 }
 
-const BB_PROD_DATA_DIR_NAME = ".bb";
-const BB_DEV_DATA_ROOT_DIR = ".bb-dev";
-export const BB_PROD_SERVER_PORT = 38886;
-export const BB_PROD_HOST_DAEMON_PORT = 38887;
-export const BB_LOOPBACK_HOST = "127.0.0.1";
-const BB_SQLITE_DATABASE_FILE_NAME = "bb.db";
+const SANDY_PROD_DATA_DIR_NAME = ".sandy";
+const SANDY_DEV_DATA_ROOT_DIR = ".sandy-dev";
+export const SANDY_PROD_SERVER_PORT = 38886;
+export const SANDY_PROD_HOST_DAEMON_PORT = 38887;
+export const SANDY_LOOPBACK_HOST = "127.0.0.1";
+const SANDY_SQLITE_DATABASE_FILE_NAME = "sandy.db";
 
 const DEV_HASH_LENGTH = 12;
 const DEV_PORT_BUCKETS = 8_000;
@@ -89,9 +89,9 @@ const DEV_APP_PORT_BASE = 11_000;
 const DEV_SERVER_PORT_BASE = 19_000;
 const DEV_HOST_DAEMON_PORT_BASE = 27_000;
 const THREAD_CONTEXT_ENV_KEYS: readonly string[] = [
-  "BB_ENVIRONMENT_ID",
-  "BB_THREAD_ID",
-  "BB_THREAD_STORAGE",
+  "SANDY_ENVIRONMENT_ID",
+  "SANDY_THREAD_ID",
+  "SANDY_THREAD_STORAGE",
 ];
 
 const MANAGED_WORKTREE_DIR_NAME = "worktrees";
@@ -160,18 +160,18 @@ function expandHomeDirectory(pathValue: string, homeDir: string): string {
 
 export function resolveRuntimeMode(
   nodeEnv: string | undefined = process.env.NODE_ENV,
-): BbRuntimeMode {
+): SandyRuntimeMode {
   return nodeEnv === "production" ? "prod" : "dev";
 }
 
 export function resolveProdDataDir(args: ResolveProdDataDirArgs): string {
-  return join(args.homeDir, BB_PROD_DATA_DIR_NAME);
+  return join(args.homeDir, SANDY_PROD_DATA_DIR_NAME);
 }
 
 export function parseDataDirEnvValue(args: ParseDataDirEnvValueArgs): string {
   const trimmedDataDir = args.rawDataDir.trim();
   if (trimmedDataDir.length === 0) {
-    throw new Error("BB_DATA_DIR must not be empty");
+    throw new Error("SANDY_DATA_DIR must not be empty");
   }
 
   return expandHomeDirectory(trimmedDataDir, args.homeDir);
@@ -180,7 +180,7 @@ export function parseDataDirEnvValue(args: ParseDataDirEnvValueArgs): string {
 export function resolveConfiguredDataDir(
   args: ResolveConfiguredDataDirArgs,
 ): string {
-  const rawDataDir = args.env.BB_DATA_DIR;
+  const rawDataDir = args.env.SANDY_DATA_DIR;
   if (rawDataDir === undefined) {
     return args.defaultDataDir;
   }
@@ -195,9 +195,9 @@ export function resolveDevInstanceConfig(
   args: ResolveDevInstanceConfigArgs,
 ): DevInstanceConfig {
   const instanceId = resolveInstanceId(args);
-  const dataDir = join(args.homeDir, BB_DEV_DATA_ROOT_DIR, instanceId);
+  const dataDir = join(args.homeDir, SANDY_DEV_DATA_ROOT_DIR, instanceId);
   const ports = resolvePorts(args.repoRoot);
-  const serverUrl = `http://${BB_LOOPBACK_HOST}:${ports.serverPort}`;
+  const serverUrl = `http://${SANDY_LOOPBACK_HOST}:${ports.serverPort}`;
   return {
     dataDir,
     homeDir: args.homeDir,
@@ -236,10 +236,10 @@ export function resolveInheritedDevSkillsRootPaths(
 }
 
 export function resolveRuntimeDataDir(args: ResolveRuntimeDataDirArgs): string {
-  if (args.env.BB_DATA_DIR !== undefined) {
+  if (args.env.SANDY_DATA_DIR !== undefined) {
     return parseDataDirEnvValue({
       homeDir: args.homeDir,
-      rawDataDir: args.env.BB_DATA_DIR,
+      rawDataDir: args.env.SANDY_DATA_DIR,
     });
   }
 
@@ -248,7 +248,7 @@ export function resolveRuntimeDataDir(args: ResolveRuntimeDataDirArgs): string {
   }
 
   if (args.repoRoot === undefined) {
-    throw new Error("repoRoot is required to resolve development BB_DATA_DIR");
+    throw new Error("repoRoot is required to resolve development SANDY_DATA_DIR");
   }
 
   return resolveDevInstanceConfig({
@@ -260,7 +260,7 @@ export function resolveRuntimeDataDir(args: ResolveRuntimeDataDirArgs): string {
 export function resolveDataDirDatabasePath(
   args: ResolveDataDirDatabasePathArgs,
 ): string {
-  return join(args.dataDir, BB_SQLITE_DATABASE_FILE_NAME);
+  return join(args.dataDir, SANDY_SQLITE_DATABASE_FILE_NAME);
 }
 
 export function parsePortValue(args: ParsePortValueArgs): number {
@@ -313,12 +313,12 @@ export function toDevProcessEnv(args: DevProcessEnvArgs): NodeJS.ProcessEnv {
   });
   return {
     ...env,
-    BB_DATA_DIR: args.config.dataDir,
-    BB_DEV_APP_PORT: String(args.config.ports.appPort),
-    BB_HOST_DAEMON_PORT: String(args.config.ports.hostDaemonPort),
-    BB_INHERITED_SKILLS_ROOTS: inheritedSkillsRootPaths.join(delimiter),
-    BB_SERVER_PORT: String(args.config.ports.serverPort),
-    BB_SERVER_URL: args.config.serverUrl,
+    SANDY_DATA_DIR: args.config.dataDir,
+    SANDY_DEV_APP_PORT: String(args.config.ports.appPort),
+    SANDY_HOST_DAEMON_PORT: String(args.config.ports.hostDaemonPort),
+    SANDY_INHERITED_SKILLS_ROOTS: inheritedSkillsRootPaths.join(delimiter),
+    SANDY_SERVER_PORT: String(args.config.ports.serverPort),
+    SANDY_SERVER_URL: args.config.serverUrl,
     NODE_ENV: "development",
   };
 }

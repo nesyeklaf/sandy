@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
-import { experimental_PluginRpcCallError } from "@get-bb/plugin-sdk";
+import { experimental_PluginRpcCallError } from "@sandy-sdk/plugin-sdk";
 
 export interface GitStatusDisplayStatus {
   workingTree: {

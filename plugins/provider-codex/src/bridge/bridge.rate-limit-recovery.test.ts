@@ -6,8 +6,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   experimental_assembleCapturedThreadEvents as assembleCapturedThreadEvents,
   experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
-import type { BridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
+import type { BridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import {
   FULL_ACCESS_SESSION_OPTIONS,
@@ -19,7 +19,7 @@ let harness: BridgeJsonRpcTestHarness;
 let workspaceDir: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-quota-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-quota-"));
   harness = createBridgeJsonRpcTestHarness(handleLine);
 });
 

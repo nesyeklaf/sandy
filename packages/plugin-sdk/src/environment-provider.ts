@@ -1,12 +1,12 @@
-import type { Environment, Host, Project } from "@bb/domain";
-import type { ThreadResponse } from "@bb/server-contract";
+import type { Environment, Host, Project } from "@sandy/domain";
+import type { ThreadResponse } from "@sandy/server-contract";
 import type {
   JsonValue,
   PluginEnvironmentProviderRequirements,
   PluginEnvironmentValidateDecision,
   StandardSchemaV1,
   StandardSchemaV1InferOutput,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 
 export type PluginEnvironmentProviderInputsSchema =
   | StandardSchemaV1

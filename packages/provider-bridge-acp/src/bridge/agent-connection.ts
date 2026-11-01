@@ -1,10 +1,10 @@
 import {
   spawnManagedProcess,
   isClosedProcessStdinError,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { RequestError } from "@agentclientprotocol/sdk";
 import { createInterface } from "node:readline";
-import { experimental_recordProviderChildIo } from "@bb/provider-bridge-protocol/bridge-kit";
+import { experimental_recordProviderChildIo } from "@sandy/provider-bridge-protocol/bridge-kit";
 import { connectAcpClient, type AcpClient } from "../client/acp-client.js";
 import {
   ACP_CLIENT_PROTOCOL_VERSION,
@@ -388,7 +388,7 @@ export async function requestAcpInitialize(
     method: "initialize",
     params: {
       protocolVersion: ACP_CLIENT_PROTOCOL_VERSION,
-      clientInfo: { name: "bb", version: "1.0.0" },
+      clientInfo: { name: "sandy", version: "1.0.0" },
       clientCapabilities: acpClientCapabilities(
         parameterizedModelPicker,
         fsAccess,

@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { createServer as createNetServer } from "node:net";
 import { delimiter, dirname, join } from "node:path";
-import { killProcessesReferencingPath } from "@bb/test-helpers";
+import { killProcessesReferencingPath } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it } from "vitest";
 
 const SCRIPT_PATH = new URL(
@@ -28,7 +28,7 @@ const FIXTURE_ARTIFACT_DIGEST = createHash("sha256")
   .digest("hex");
 
 function createFixture(): { binDir: string; dataDir: string; homeDir: string } {
-  const root = mkdtempSync(join(tmpdir(), "bb-install-script-test-"));
+  const root = mkdtempSync(join(tmpdir(), "sandy-install-script-test-"));
   createdDirectories.push(root);
   const binDir = join(root, "bin");
   const dataDir = join(root, "data");
@@ -58,8 +58,8 @@ function createScriptEnv(
 ): NodeJS.ProcessEnv {
   return {
     ...process.env,
-    BB_DATA_DIR: fixture.dataDir,
-    BB_ENROLLMENT: bootstrapBundle(),
+    SANDY_DATA_DIR: fixture.dataDir,
+    SANDY_ENROLLMENT: bootstrapBundle(),
     HOME: fixture.homeDir,
     PATH: [fixture.binDir, "/usr/bin", "/bin"].join(delimiter),
     ...env,
@@ -77,7 +77,7 @@ function runScript(
   });
 }
 
-const BOOTSTRAP_ARGS = ["--bootstrap-env", "BB_ENROLLMENT"];
+const BOOTSTRAP_ARGS = ["--bootstrap-env", "SANDY_ENROLLMENT"];
 
 function bootstrapBundle(serverUrl = "https://machine.example.test"): string {
   return JSON.stringify({
@@ -103,7 +103,7 @@ function writeJoinedState(
   );
 }
 
-function createEnrollingBbAppScript(args: {
+function createEnrollingSandyAppScript(args: {
   hostId: string;
   idleDaemon?: boolean;
   invocationPath?: string;
@@ -122,7 +122,7 @@ const option = (name) => {
   const index = cliArgs.indexOf(name);
   return index === -1 ? undefined : cliArgs[index + 1];
 };
-const dataDir = process.env.BB_DATA_DIR;
+const dataDir = process.env.SANDY_DATA_DIR;
 const hostId = ${JSON.stringify(args.hostId)};
 if (cliArgs[0] === "machine" && cliArgs[1] === "enroll") {
   const bundle = JSON.parse(process.env[option("--bootstrap-env")]);
@@ -217,7 +217,7 @@ case "$*" in
       attempt=$((attempt + 1))
     done
     printf '%s\n' '${artifactStatus}' >>"${curlAttemptsLog}"
-    [ -z "$headers" ] || printf '%s\n' 'HTTP/1.1 ${artifactStatus}' 'x-bb-artifact-sha256: ${artifactDigest}' >"$headers"
+    [ -z "$headers" ] || printf '%s\n' 'HTTP/1.1 ${artifactStatus}' 'x-sandy-artifact-sha256: ${artifactDigest}' >"$headers"
     if [ "$unchanged" = yes ] && [ '${artifactStatus}' = 200 ]; then
       printf '%s' 304
     else
@@ -228,10 +228,10 @@ case "$*" in
 esac
 `,
   );
-  const bbAppTemplatePath = join(fixture.dataDir, "bb-app-template");
+  const sandyAppTemplatePath = join(fixture.dataDir, "sandy-app-template");
   writeExecutable(
-    bbAppTemplatePath,
-    createEnrollingBbAppScript({ hostId: "host-test" }),
+    sandyAppTemplatePath,
+    createEnrollingSandyAppScript({ hostId: "host-test" }),
   );
   writeExecutable(
     join(fixture.binDir, "npm"),
@@ -243,38 +243,38 @@ while [ "$#" -gt 0 ]; do
 done
 [ -n "$prefix" ] || exit 2
 mkdir -p "$prefix/bin"
-cp "${bbAppTemplatePath}" "$prefix/bin/bb-app"
-chmod +x "$prefix/bin/bb-app"
-cp "${bbAppTemplatePath}" "$prefix/bin/bb"
-chmod +x "$prefix/bin/bb"
-mkdir -p "$prefix/lib/node_modules/bb-app/host-daemon/dist"
-printf '%s\n' 'fixture' >"$prefix/lib/node_modules/bb-app/host-daemon/dist/daemon-bundle.mjs"
+cp "${sandyAppTemplatePath}" "$prefix/bin/sandy-app"
+chmod +x "$prefix/bin/sandy-app"
+cp "${sandyAppTemplatePath}" "$prefix/bin/sandy"
+chmod +x "$prefix/bin/sandy"
+mkdir -p "$prefix/lib/node_modules/sandy-app/host-daemon/dist"
+printf '%s\n' 'fixture' >"$prefix/lib/node_modules/sandy-app/host-daemon/dist/daemon-bundle.mjs"
 for module in node-pty @parcel/watcher; do
-  mkdir -p "$prefix/lib/node_modules/bb-app/node_modules/$module"
+  mkdir -p "$prefix/lib/node_modules/sandy-app/node_modules/$module"
   if [ -z "$FAKE_NPM_SKIP_NATIVE_MODULES" ]; then
-    printf '%s\n' 'module.exports = {};' >"$prefix/lib/node_modules/bb-app/node_modules/$module/index.js"
+    printf '%s\n' 'module.exports = {};' >"$prefix/lib/node_modules/sandy-app/node_modules/$module/index.js"
   fi
 done
 `,
   );
 }
 
-function writeServerInstalledBbApp(
+function writeServerInstalledSandyApp(
   fixture: Fixture,
-  script: Parameters<typeof createEnrollingBbAppScript>[0] = {
+  script: Parameters<typeof createEnrollingSandyAppScript>[0] = {
     hostId: "host-test",
   },
 ): void {
   writeServerInstallTools(fixture, 200);
   writeExecutable(
-    join(fixture.dataDir, "bb-app-template"),
-    createEnrollingBbAppScript(script),
+    join(fixture.dataDir, "sandy-app-template"),
+    createEnrollingSandyAppScript(script),
   );
 }
 
 function writePathExecutablesRecordingCalls(fixture: Fixture): string {
   const callsLog = join(fixture.dataDir, "path-calls.log");
-  for (const name of ["bb-app", "bb"]) {
+  for (const name of ["sandy-app", "sandy"]) {
     writeExecutable(
       join(fixture.binDir, name),
       `#!/bin/sh\nprintf '%s\\n' "${name} $*" >>"${callsLog}"\nexit 0\n`,
@@ -335,7 +335,7 @@ exec '${process.execPath}' "$@"
       expect(result.status).not.toBe(0);
       expect(result.stderr).not.toContain("HOME");
       expect(existsSync(join(fixture.dataDir, "resolved-home"))).toBe(unset);
-      expect(existsSync(join(fixture.homeDir, ".local/bin/bb"))).toBe(true);
+      expect(existsSync(join(fixture.homeDir, ".local/bin/sandy"))).toBe(true);
       expect(existsSync(join(fixture.dataDir, "auth.json"))).toBe(false);
     },
   );
@@ -352,19 +352,19 @@ exec '${process.execPath}' "$@"
 
   it("starts an owned daemon that has no service under launcher supervision", () => {
     const fixture = createFixture();
-    mkdirSync(join(fixture.homeDir, ".bb-machines", "owned"), {
+    mkdirSync(join(fixture.homeDir, ".sandy-machines", "owned"), {
       recursive: true,
     });
     const dataDir = realpathSync(
-      join(fixture.homeDir, ".bb-machines", "owned"),
+      join(fixture.homeDir, ".sandy-machines", "owned"),
     );
     writeJoinedState({ ...fixture, dataDir });
     writeFileSync(join(dataDir, "host-daemon-port"), "40000\n");
     const invocationPath = join(dataDir, "invocation");
     mkdirSync(join(dataDir, "npm", "bin"), { recursive: true });
     writeExecutable(
-      join(dataDir, "npm", "bin", "bb-app"),
-      createEnrollingBbAppScript({ hostId: "host-test", invocationPath }),
+      join(dataDir, "npm", "bin", "sandy-app"),
+      createEnrollingSandyAppScript({ hostId: "host-test", invocationPath }),
     );
     const daemonPidPath = join(dataDir, "install-daemon.pid");
 
@@ -393,21 +393,21 @@ exec '${process.execPath}' "$@"
 
   it("stops and uninstalls an owned Linux service through installer flags", () => {
     const fixture = createFixture();
-    mkdirSync(join(fixture.homeDir, ".bb-machines", "owned"), {
+    mkdirSync(join(fixture.homeDir, ".sandy-machines", "owned"), {
       recursive: true,
     });
     const dataDir = realpathSync(
-      join(fixture.homeDir, ".bb-machines", "owned"),
+      join(fixture.homeDir, ".sandy-machines", "owned"),
     );
     writeJoinedState({ ...fixture, dataDir });
     writeFileSync(join(dataDir, "host-daemon-port"), "40000\n");
     const serviceDir = join(fixture.homeDir, ".config", "systemd", "user");
-    const serviceName = "bb-host-daemon-machine-example-test-host-test.service";
+    const serviceName = "sandy-host-daemon-machine-example-test-host-test.service";
     const servicePath = join(serviceDir, serviceName);
     mkdirSync(serviceDir, { recursive: true });
     writeFileSync(
       servicePath,
-      `[Service]\nEnvironment="BB_DATA_DIR=${dataDir}"\n`,
+      `[Service]\nEnvironment="SANDY_DATA_DIR=${dataDir}"\n`,
     );
     writeExecutable(
       join(fixture.binDir, "uname"),
@@ -440,11 +440,11 @@ exec '${process.execPath}' "$@"
 
   it("stops and uninstalls a Linux service after a server move rewrote its server URL", () => {
     const fixture = createFixture();
-    mkdirSync(join(fixture.homeDir, ".bb-machines", "machine.example.test"), {
+    mkdirSync(join(fixture.homeDir, ".sandy-machines", "machine.example.test"), {
       recursive: true,
     });
     const dataDir = realpathSync(
-      join(fixture.homeDir, ".bb-machines", "machine.example.test"),
+      join(fixture.homeDir, ".sandy-machines", "machine.example.test"),
     );
     writeJoinedState(
       { ...fixture, dataDir },
@@ -452,17 +452,17 @@ exec '${process.execPath}' "$@"
     );
     writeFileSync(join(dataDir, "host-daemon-port"), "40000\n");
     const serviceDir = join(fixture.homeDir, ".config", "systemd", "user");
-    const serviceName = "bb-host-daemon-machine-example-test-host-test.service";
+    const serviceName = "sandy-host-daemon-machine-example-test-host-test.service";
     const servicePath = join(serviceDir, serviceName);
-    const otherServiceName = "bb-host-daemon-other-example-host-test.service";
+    const otherServiceName = "sandy-host-daemon-other-example-host-test.service";
     mkdirSync(serviceDir, { recursive: true });
     writeFileSync(
       servicePath,
-      `[Service]\nExecStart="node" "bb-app" host-daemon --server-url "https://desk.tailnet.example:38886"\nEnvironment="BB_DATA_DIR=${dataDir}"\n`,
+      `[Service]\nExecStart="node" "sandy-app" host-daemon --server-url "https://desk.tailnet.example:38886"\nEnvironment="SANDY_DATA_DIR=${dataDir}"\n`,
     );
     writeFileSync(
       join(serviceDir, otherServiceName),
-      `[Service]\nEnvironment="BB_DATA_DIR=${dataDir}-other"\n`,
+      `[Service]\nEnvironment="SANDY_DATA_DIR=${dataDir}-other"\n`,
     );
     writeExecutable(
       join(fixture.binDir, "uname"),
@@ -498,23 +498,23 @@ exec '${process.execPath}' "$@"
 
   it("boots out a macOS launch agent after a server move rewrote its server URL", () => {
     const fixture = createFixture();
-    mkdirSync(join(fixture.homeDir, ".bb-machines", "machine.example.test"), {
+    mkdirSync(join(fixture.homeDir, ".sandy-machines", "machine.example.test"), {
       recursive: true,
     });
     const dataDir = realpathSync(
-      join(fixture.homeDir, ".bb-machines", "machine.example.test"),
+      join(fixture.homeDir, ".sandy-machines", "machine.example.test"),
     );
     writeJoinedState({ ...fixture, dataDir }, "https://desk.tailnet.example");
     writeFileSync(join(dataDir, "host-daemon-port"), "40000\n");
     const agentDir = join(fixture.homeDir, "Library", "LaunchAgents");
     const agentPath = join(
       agentDir,
-      "app.getbb.host-daemon.machine-example-test-host-test.plist",
+      "app.sandy.host-daemon.machine-example-test-host-test.plist",
     );
     mkdirSync(agentDir, { recursive: true });
     writeFileSync(
       agentPath,
-      `<plist><dict><key>EnvironmentVariables</key><dict><key>BB_DATA_DIR</key><string>${dataDir}</string></dict></dict></plist>\n`,
+      `<plist><dict><key>EnvironmentVariables</key><dict><key>SANDY_DATA_DIR</key><string>${dataDir}</string></dict></dict></plist>\n`,
     );
     writeExecutable(join(fixture.binDir, "uname"), "#!/bin/sh\necho Darwin\n");
     const launchctlLog = join(fixture.homeDir, "launchctl.log");
@@ -536,23 +536,23 @@ exec '${process.execPath}' "$@"
 
   it("refuses lifecycle actions when several services reference the machine data directory", () => {
     const fixture = createFixture();
-    mkdirSync(join(fixture.homeDir, ".bb-machines", "machine.example.test"), {
+    mkdirSync(join(fixture.homeDir, ".sandy-machines", "machine.example.test"), {
       recursive: true,
     });
     const dataDir = realpathSync(
-      join(fixture.homeDir, ".bb-machines", "machine.example.test"),
+      join(fixture.homeDir, ".sandy-machines", "machine.example.test"),
     );
     writeJoinedState({ ...fixture, dataDir }, "https://desk.tailnet.example");
     writeFileSync(join(dataDir, "host-daemon-port"), "40000\n");
     const serviceDir = join(fixture.homeDir, ".config", "systemd", "user");
     mkdirSync(serviceDir, { recursive: true });
     for (const serviceName of [
-      "bb-host-daemon-machine-example-test-host-test.service",
-      "bb-host-daemon-machine-example-test.service",
+      "sandy-host-daemon-machine-example-test-host-test.service",
+      "sandy-host-daemon-machine-example-test.service",
     ]) {
       writeFileSync(
         join(serviceDir, serviceName),
-        `[Service]\nEnvironment="BB_DATA_DIR=${dataDir}"\n`,
+        `[Service]\nEnvironment="SANDY_DATA_DIR=${dataDir}"\n`,
       );
     }
     writeExecutable(
@@ -594,7 +594,7 @@ exec '${process.execPath}' "$@"
   it("rejects a bootstrap bundle carrying an unusable server URL", () => {
     const fixture = createFixture();
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_ENROLLMENT: bootstrapBundle("not-a-url"),
+      SANDY_ENROLLMENT: bootstrapBundle("not-a-url"),
     });
 
     expect(result.status).toBe(2);
@@ -607,21 +607,21 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
     writeExecutable(join(fixture.binDir, "npm"), "#!/bin/sh\nexit 19\n");
-    runScript(BOOTSTRAP_ARGS, fixture, { BB_INSTALL_SKIP_SERVICE: "1" });
+    runScript(BOOTSTRAP_ARGS, fixture, { SANDY_INSTALL_SKIP_SERVICE: "1" });
     const olderCli = join(
       fixture.homeDir,
-      ".bb-machines",
+      ".sandy-machines",
       "older",
       "npm",
       "bin",
-      "bb",
+      "sandy",
     );
     mkdirSync(dirname(olderCli), { recursive: true });
     writeExecutable(olderCli, "#!/bin/sh\necho wrong-installation\n");
-    const installedCli = join(fixture.dataDir, "npm", "bin", "bb");
+    const installedCli = join(fixture.dataDir, "npm", "bin", "sandy");
     mkdirSync(dirname(installedCli), { recursive: true });
-    writeExecutable(installedCli, '#!/bin/sh\nprintf "%s" "$BB_DATA_DIR"\n');
-    const shim = join(fixture.homeDir, ".local", "bin", "bb");
+    writeExecutable(installedCli, '#!/bin/sh\nprintf "%s" "$SANDY_DATA_DIR"\n');
+    const shim = join(fixture.homeDir, ".local", "bin", "sandy");
     const explicit = spawnSync(
       shim,
       ["machine", "uninstall", "--host-id", "host-test"],
@@ -631,7 +631,7 @@ exec '${process.execPath}' "$@"
     expect(explicit.stdout).toBe(fixture.dataDir);
     writeExecutable(installedCli, "#!/bin/sh\necho current-installation\n");
     const env = createScriptEnv(fixture, {});
-    delete env.BB_DATA_DIR;
+    delete env.SANDY_DATA_DIR;
     const selected = spawnSync(shim, ["machine", "enroll"], {
       env,
       encoding: "utf8",
@@ -645,11 +645,11 @@ exec '${process.execPath}' "$@"
     writeServerInstallTools(fixture, 200);
     writeExecutable(join(fixture.binDir, "npm"), "#!/bin/sh\nexit 19\n");
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("Could not install bb-app");
-    const shim = join(fixture.homeDir, ".local", "bin", "bb");
+    expect(result.stderr).toContain("Could not install sandy-app");
+    const shim = join(fixture.homeDir, ".local", "bin", "sandy");
     expect(existsSync(shim)).toBe(true);
     const cleanup = spawnSync(
       shim,
@@ -665,7 +665,7 @@ exec '${process.execPath}' "$@"
     "enrolls privately with portable service selection (%j)",
     ({ container }) => {
       const fixture = createFixture();
-      writeServerInstalledBbApp(fixture, {
+      writeServerInstalledSandyApp(fixture, {
         hostId: "host-test",
         invocationPath: join(fixture.dataDir, "daemon-invocation"),
       });
@@ -689,7 +689,7 @@ exec '${process.execPath}' "$@"
         );
       }
       const result = runScript(["--bootstrap-env", "TEST_BUNDLE"], fixture, {
-        BB_INSTALL_SKIP_SERVICE: container ? "0" : "1",
+        SANDY_INSTALL_SKIP_SERVICE: container ? "0" : "1",
         TEST_BUNDLE: JSON.stringify({
           hostId: "host-test",
           serverUrl: "https://machine.example.test",
@@ -704,12 +704,12 @@ exec '${process.execPath}' "$@"
           JSON.parse(
             readFileSync(join(fixture.dataDir, "enrollment-argv"), "utf8"),
           ),
-        ).toEqual(["machine", "enroll", "--bootstrap-env", "BB_ENROLLMENT"]);
+        ).toEqual(["machine", "enroll", "--bootstrap-env", "SANDY_ENROLLMENT"]);
         expect(result.stdout + result.stderr).not.toContain(
           "private-bootstrap-test",
         );
         expect(
-          spawnSync("sh", ["-n", join(fixture.homeDir, ".local/bin/bb")])
+          spawnSync("sh", ["-n", join(fixture.homeDir, ".local/bin/sandy")])
             .status,
         ).toBe(0);
       } finally {
@@ -731,12 +731,12 @@ exec '${process.execPath}' "$@"
     },
   );
 
-  it("installs the server's bb-app and enrolls from the private bootstrap bundle", () => {
+  it("installs the server's sandy-app and enrolls from the private bootstrap bundle", () => {
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -748,7 +748,7 @@ exec '${process.execPath}' "$@"
       JSON.parse(
         readFileSync(join(fixture.dataDir, "enrollment-argv"), "utf8"),
       ),
-    ).toEqual(["machine", "enroll", "--bootstrap-env", "BB_ENROLLMENT"]);
+    ).toEqual(["machine", "enroll", "--bootstrap-env", "SANDY_ENROLLMENT"]);
     expect(result.stdout + result.stderr).not.toContain("join-secret");
     expect(readFileSync(invocationPath, "utf8").trim().split("\n")).toEqual([
       "host-daemon",
@@ -772,11 +772,11 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
     const daemonPidPath = join(fixture.dataDir, "install-daemon.pid");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
     writeJoinedState(fixture);
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -803,11 +803,11 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
     const daemonPidPath = join(fixture.dataDir, "install-daemon.pid");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
     const reconnectEnv = {
-      BB_DATA_DIR: "",
-      BB_INSTALL_SKIP_SERVICE: "1",
-      BB_ENROLLMENT: JSON.stringify({
+      SANDY_DATA_DIR: "",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
+      SANDY_ENROLLMENT: JSON.stringify({
         ...JSON.parse(bootstrapBundle()),
         reconnect: true,
         dataDir: fixture.dataDir,
@@ -829,7 +829,7 @@ exec '${process.execPath}' "$@"
     };
     try {
       const installed = runScript(BOOTSTRAP_ARGS, fixture, {
-        BB_INSTALL_SKIP_SERVICE: "1",
+        SANDY_INSTALL_SKIP_SERVICE: "1",
       });
       expect(installed.status, installed.stderr).toBe(0);
       const oldPid = readPid();
@@ -859,14 +859,14 @@ exec '${process.execPath}' "$@"
   it("accepts the daemon's normalized loopback server URL", () => {
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
-    writeServerInstalledBbApp(fixture, {
+    writeServerInstalledSandyApp(fixture, {
       hostId: "host-test",
       invocationPath,
       statusServerUrl: "http://127.0.0.1:20101",
     });
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_ENROLLMENT: bootstrapBundle("http://localhost:20101"),
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_ENROLLMENT: bootstrapBundle("http://localhost:20101"),
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -887,12 +887,12 @@ exec '${process.execPath}' "$@"
     process.kill(daemonPid, "SIGTERM");
   });
 
-  it("installs the server tarball even when a same-version bb-app is on PATH", () => {
+  it("installs the server tarball even when a same-version sandy-app is on PATH", () => {
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
-    writeExecutable(join(fixture.binDir, "bb-app"), "#!/bin/sh\nexit 99\n");
+    writeExecutable(join(fixture.binDir, "sandy-app"), "#!/bin/sh\nexit 99\n");
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -901,7 +901,7 @@ exec '${process.execPath}' "$@"
       "utf8",
     );
     expect(npmInvocation).toMatch(
-      /^install -g --allow-scripts=better-sqlite3,node-pty,@parcel\/watcher --prefix \/.*\/data\/npm \/.*bb-app\..*\.tgz$/mu,
+      /^install -g --allow-scripts=better-sqlite3,node-pty,@parcel\/watcher --prefix \/.*\/data\/npm \/.*sandy-app\..*\.tgz$/mu,
     );
     const daemonPid = Number(
       readFileSync(join(fixture.dataDir, "install-daemon.pid"), "utf8"),
@@ -909,11 +909,11 @@ exec '${process.execPath}' "$@"
     process.kill(daemonPid, "SIGTERM");
   });
 
-  it("prefers the server-matched tarball when bb-app is absent", () => {
+  it("prefers the server-matched tarball when sandy-app is absent", () => {
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -922,29 +922,29 @@ exec '${process.execPath}' "$@"
       "utf8",
     );
     expect(npmInvocation).toMatch(
-      /^install -g --allow-scripts=better-sqlite3,node-pty,@parcel\/watcher --prefix \/.*\/data\/npm \/.*bb-app\..*\.tgz$/mu,
+      /^install -g --allow-scripts=better-sqlite3,node-pty,@parcel\/watcher --prefix \/.*\/data\/npm \/.*sandy-app\..*\.tgz$/mu,
     );
-    expect(npmInvocation).not.toContain("bb-app\n");
+    expect(npmInvocation).not.toContain("sandy-app\n");
     expect(readFileSync(join(fixture.dataDir, "curl.log"), "utf8")).toContain(
       "--silent --show-error --location --connect-timeout 10 --max-time 300 --retry 3",
     );
     expect(result.stdout).toContain(
       "Setting up this machine as host-test for https://machine.example.test",
     );
-    expect(result.stdout).toContain("\n  bb machine setup\n\n");
+    expect(result.stdout).toContain("\n  sandy machine setup\n\n");
     expect(result.stdout).toContain(
       "  ○  Setting up this machine as host-test for https://machine.example.test",
     );
     expect(result.stdout).toContain(
-      "Downloading the server's bb-app package (timeout: 5 minutes)",
+      "Downloading the server's sandy-app package (timeout: 5 minutes)",
     );
     expect(result.stdout).toContain(
-      "  ✓  Downloaded the server's bb-app package",
+      "  ✓  Downloaded the server's sandy-app package",
     );
     expect(result.stdout).toContain(
-      "  ○  Installing the server's bb-app build",
+      "  ○  Installing the server's sandy-app build",
     );
-    expect(result.stdout).toContain("  ✓  Installed the server's bb-app build");
+    expect(result.stdout).toContain("  ✓  Installed the server's sandy-app build");
     expect(result.stdout).toContain("Waiting for the host daemon to connect");
     expect(result.stdout).toContain("Host daemon output is logged to");
     const daemonPid = Number(
@@ -967,7 +967,7 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     writeServerInstallTools(fixture, 500, FIXTURE_ARTIFACT_DIGEST, 0, body);
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("HTTP 500");
@@ -981,7 +981,7 @@ exec '${process.execPath}' "$@"
     writeServerInstallTools(fixture, 200, FIXTURE_ARTIFACT_DIGEST, 1);
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
@@ -990,7 +990,7 @@ exec '${process.execPath}' "$@"
         .trim()
         .split("\n"),
     ).toEqual(["504", "200"]);
-    expect(result.stdout).toContain("Downloaded the server's bb-app package");
+    expect(result.stdout).toContain("Downloaded the server's sandy-app package");
     const daemonPid = Number(
       readFileSync(join(fixture.dataDir, "install-daemon.pid"), "utf8"),
     );
@@ -1001,12 +1001,12 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
     const first = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
     expect(first.status, first.stderr).toBe(0);
 
     const second = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(second.status, second.stderr).toBe(0);
@@ -1033,7 +1033,7 @@ exec '${process.execPath}' "$@"
     writeServerInstallTools(fixture, 200, "a".repeat(64));
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status).toBe(1);
@@ -1045,16 +1045,16 @@ exec '${process.execPath}' "$@"
   });
 
   it.each([
-    [404, "The server does not provide its bb-app package"],
-    [500, "Could not download the server's bb-app package"],
+    [404, "The server does not provide its sandy-app package"],
+    [500, "Could not download the server's sandy-app package"],
   ] as const)(
-    "never runs a bb-app or bb from PATH when the server package download returns %s",
+    "never runs a sandy-app or sandy from PATH when the server package download returns %s",
     (status, message) => {
       const fixture = createFixture();
       writeServerInstallTools(fixture, status);
       const pathCallsLog = writePathExecutablesRecordingCalls(fixture);
       const result = runScript(BOOTSTRAP_ARGS, fixture, {
-        BB_INSTALL_SKIP_SERVICE: "1",
+        SANDY_INSTALL_SKIP_SERVICE: "1",
       });
 
       expect(result.status).toBe(1);
@@ -1072,12 +1072,12 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     writeServerInstallTools(fixture, 404);
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "The server does not provide its bb-app package",
+      "The server does not provide its sandy-app package",
     );
     expect(existsSync(join(fixture.dataDir, "npm.log"))).toBe(false);
     expect(existsSync(join(fixture.dataDir, "install-daemon.pid"))).toBe(false);
@@ -1087,13 +1087,13 @@ exec '${process.execPath}' "$@"
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
       FAKE_NPM_SKIP_NATIVE_MODULES: "1",
     });
 
     expect(result.status, result.stderr).toBe(1);
     expect(result.stderr).toContain(
-      "npm installed bb-app, but its host native add-ons (node-pty, @parcel/watcher) did not load.",
+      "npm installed sandy-app, but its host native add-ons (node-pty, @parcel/watcher) did not load.",
     );
     expect(result.stderr).toContain(
       "npm_config_allow_scripts=better-sqlite3,node-pty,@parcel/watcher",
@@ -1101,18 +1101,18 @@ exec '${process.execPath}' "$@"
     expect(existsSync(join(fixture.dataDir, "install-daemon.pid"))).toBe(false);
   });
 
-  it("defaults the data dir to a per-server directory under ~/.bb-machines", () => {
+  it("defaults the data dir to a per-server directory under ~/.sandy-machines", () => {
     const fixture = createFixture();
     writeServerInstallTools(fixture, 200);
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_DATA_DIR: "",
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_DATA_DIR: "",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status, result.stderr).toBe(0);
     const defaultDataDir = join(
       fixture.homeDir,
-      ".bb-machines/machine.example.test",
+      ".sandy-machines/machine.example.test",
     );
     expect(
       JSON.parse(readFileSync(join(defaultDataDir, "auth.json"), "utf8")),
@@ -1125,10 +1125,10 @@ exec '${process.execPath}' "$@"
 
   it("refuses a data dir enrolled for a different host instead of faking success", () => {
     const fixture = createFixture();
-    writeServerInstalledBbApp(fixture);
+    writeServerInstalledSandyApp(fixture);
     writeJoinedState(fixture, "https://machine.example.test", "host-other");
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status).toBe(1);
@@ -1144,8 +1144,8 @@ exec '${process.execPath}' "$@"
     writeServerInstallTools(fixture, 200);
     const missingDir = join(fixture.homeDir, "elsewhere");
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_DATA_DIR: "",
-      BB_ENROLLMENT: JSON.stringify({
+      SANDY_DATA_DIR: "",
+      SANDY_ENROLLMENT: JSON.stringify({
         ...JSON.parse(bootstrapBundle()),
         reconnect: true,
         dataDir: missingDir,
@@ -1170,7 +1170,7 @@ exec '${process.execPath}' "$@"
       join(fixture.dataDir, "config.json"),
       JSON.stringify({
         serverUrl: "https://machine.example.test/",
-        serverHeaders: { "x-bb-machine-access": "machine-credential" },
+        serverHeaders: { "x-sandy-machine-access": "machine-credential" },
       }),
     );
     writeServerInstallTools(fixture, 200);
@@ -1180,7 +1180,7 @@ exec '${process.execPath}' "$@"
       `#!/bin/sh
 if [ "$1" = bootstrap ]; then
   port=$(sed -n '1p' "${join(fixture.dataDir, "host-daemon-port")}")
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1189,7 +1189,7 @@ fi
     const result = runScript(
       ["--adopt", "--data-dir", fixture.dataDir],
       fixture,
-      { BB_DATA_DIR: undefined, BB_ENROLLMENT: undefined },
+      { SANDY_DATA_DIR: undefined, SANDY_ENROLLMENT: undefined },
     );
 
     expect(result.status, result.stderr).toBe(0);
@@ -1197,20 +1197,20 @@ fi
       "Setting up this machine as host-test for https://machine.example.test",
     );
     expect(result.stdout).toContain("already joined");
-    expect(result.stdout).toContain("  ●  bb machine is ready");
+    expect(result.stdout).toContain("  ●  sandy machine is ready");
     expect(existsSync(join(fixture.dataDir, "enrollment-argv"))).toBe(false);
     expect(
       readFileSync(join(fixture.dataDir, "curl-config.log"), "utf8"),
-    ).toContain('header = "x-bb-machine-access: machine-credential"');
+    ).toContain('header = "x-sandy-machine-access: machine-credential"');
     const plist = readFileSync(
       join(
         fixture.homeDir,
-        "Library/LaunchAgents/app.getbb.host-daemon.machine-example-test-host-test.plist",
+        "Library/LaunchAgents/app.sandy.host-daemon.machine-example-test-host-test.plist",
       ),
       "utf8",
     );
     expect(plist).toContain(
-      `<key>BB_DATA_DIR</key><string>${fixture.dataDir}</string>`,
+      `<key>SANDY_DATA_DIR</key><string>${fixture.dataDir}</string>`,
     );
     expect(plist).toContain("<string>--auto-update</string>");
     expect(plist).toContain("<string>https://machine.example.test</string>");
@@ -1245,7 +1245,7 @@ fi
     const result = runScript(
       ["--adopt", "--data-dir", fixture.dataDir],
       fixture,
-      { BB_ENROLLMENT: undefined },
+      { SANDY_ENROLLMENT: undefined },
     );
 
     expect(result.status).toBe(1);
@@ -1277,11 +1277,11 @@ fi
     });
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
 
     try {
       const result = runScript(BOOTSTRAP_ARGS, fixture, {
-        BB_INSTALL_SKIP_SERVICE: "1",
+        SANDY_INSTALL_SKIP_SERVICE: "1",
       });
 
       expect(result.status, result.stderr).toBe(0);
@@ -1308,14 +1308,14 @@ fi
 
   it("reports periodic progress while a host daemon is still joining", () => {
     const fixture = createFixture();
-    writeServerInstalledBbApp(fixture, {
+    writeServerInstalledSandyApp(fixture, {
       hostId: "host-test",
       idleDaemon: true,
     });
     writeExecutable(join(fixture.binDir, "sleep"), "#!/bin/sh\nexit 0\n");
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
-      BB_INSTALL_SKIP_SERVICE: "1",
+      SANDY_INSTALL_SKIP_SERVICE: "1",
     });
 
     expect(result.status).toBe(1);
@@ -1325,7 +1325,7 @@ fi
     expect(result.stdout).toContain(
       "Still waiting for the host daemon (60/60 checks)",
     );
-    expect(result.stderr).toContain("The bb host daemon did not connect");
+    expect(result.stderr).toContain("The sandy host daemon did not connect");
   });
 
   it("starts a fresh macOS launch agent once and replaces it with one new process", () => {
@@ -1349,7 +1349,7 @@ if [ "$1" = bootout ] && [ -f "${join(fixture.dataDir, "service-daemon.pid")}" ]
 fi
 if [ "$1" = bootstrap ]; then
   port=$(sed -n '1p' "${join(fixture.dataDir, "host-daemon-port")}")
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
   printf 'start\n' >>"${join(fixture.dataDir, "launchctl-starts.log")}"
 fi
@@ -1366,15 +1366,15 @@ fi
     expect(firstResult.status, firstResult.stderr).toBe(0);
     expect(firstResult.stdout).toContain("already joined");
     expect(firstResult.stdout).toContain(
-      "Installing the persistent bb host daemon service",
+      "Installing the persistent sandy host daemon service",
     );
     expect(firstResult.stdout).toContain(
       "Waiting for the launch agent to connect",
     );
-    expect(firstResult.stdout).toContain("  ●  bb machine is ready");
+    expect(firstResult.stdout).toContain("  ●  sandy machine is ready");
     expect(secondResult.status, secondResult.stderr).toBe(0);
     expect(secondResult.stdout).toContain("already joined");
-    expect(secondResult.stdout).toContain("  ●  bb machine is ready");
+    expect(secondResult.stdout).toContain("  ●  sandy machine is ready");
     expect(secondResult.stdout).toContain(
       "server  https://machine.example.test",
     );
@@ -1382,18 +1382,18 @@ fi
       "service " +
         join(
           fixture.homeDir,
-          "Library/LaunchAgents/app.getbb.host-daemon.machine-example-test-host-test.plist",
+          "Library/LaunchAgents/app.sandy.host-daemon.machine-example-test-host-test.plist",
         ),
     );
     const plist = readFileSync(
       join(
         fixture.homeDir,
-        "Library/LaunchAgents/app.getbb.host-daemon.machine-example-test-host-test.plist",
+        "Library/LaunchAgents/app.sandy.host-daemon.machine-example-test-host-test.plist",
       ),
       "utf8",
     );
     expect(plist).toContain(
-      "<string>app.getbb.host-daemon.machine-example-test-host-test</string>",
+      "<string>app.sandy.host-daemon.machine-example-test-host-test</string>",
     );
     expect(plist).toContain("<key>RunAtLoad</key><true/>");
     expect(plist).toContain("<key>KeepAlive</key><true/>");
@@ -1408,11 +1408,11 @@ fi
     );
     expect(plist).toContain("<string>https://machine.example.test</string>");
     expect(plist).toContain(
-      `<key>BB_APP_NPM_PREFIX</key><string>${realpathSync(fixture.dataDir)}/npm</string>`,
+      `<key>SANDY_APP_NPM_PREFIX</key><string>${realpathSync(fixture.dataDir)}/npm</string>`,
     );
     const serviceFile = join(
       fixture.homeDir,
-      "Library/LaunchAgents/app.getbb.host-daemon.machine-example-test-host-test.plist",
+      "Library/LaunchAgents/app.sandy.host-daemon.machine-example-test-host-test.plist",
     );
     const domain = `gui/${process.getuid?.()}`;
     expect(readFileSync(join(fixture.dataDir, "launchctl.log"), "utf8")).toBe(
@@ -1432,23 +1432,23 @@ fi
     mkdirSync(serviceDir, { recursive: true });
     const legacyServiceFile = join(
       serviceDir,
-      "app.getbb.host-daemon.machine-example-test.plist",
+      "app.sandy.host-daemon.machine-example-test.plist",
     );
     const unrelatedServiceFile = join(
       serviceDir,
-      "app.getbb.host-daemon.other-getbb-app.plist",
+      "app.sandy.host-daemon.other-getbb-app.plist",
     );
     writeFileSync(join(fixture.dataDir, "host-daemon-port"), "45123\n");
     writeFileSync(
       unrelatedServiceFile,
-      "<plist><dict><key>BB_DATA_DIR</key><string>/other/machine</string></dict></plist>\n",
+      "<plist><dict><key>SANDY_DATA_DIR</key><string>/other/machine</string></dict></plist>\n",
     );
     writeFileSync(
       legacyServiceFile,
       `<plist><dict>
-<key>Label</key><string>app.getbb.host-daemon.machine-example-test</string>
+<key>Label</key><string>app.sandy.host-daemon.machine-example-test</string>
 <key>ProgramArguments</key><array><string>host-daemon</string><string>--host-daemon-port</string><string>45122</string></array>
-<key>EnvironmentVariables</key><dict><key>BB_DATA_DIR</key><string>${fixture.dataDir}</string></dict>
+<key>EnvironmentVariables</key><dict><key>SANDY_DATA_DIR</key><string>${fixture.dataDir}</string></dict>
 </dict></plist>
 `,
     );
@@ -1458,7 +1458,7 @@ fi
 printf '%s\n' "$*" >>"${join(fixture.dataDir, "launchctl.log")}"
 if [ "$1" = print ]; then exit 1; fi
 if [ "$1" = bootstrap ]; then
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port 45123 --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port 45123 --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1472,16 +1472,16 @@ fi
     expect(
       readdirSync(serviceDir).filter((file) => file.endsWith(".plist")),
     ).toEqual([
-      "app.getbb.host-daemon.machine-example-test-host-test.plist",
-      "app.getbb.host-daemon.other-getbb-app.plist",
+      "app.sandy.host-daemon.machine-example-test-host-test.plist",
+      "app.sandy.host-daemon.other-getbb-app.plist",
     ]);
     const serviceFile = join(
       serviceDir,
-      "app.getbb.host-daemon.machine-example-test-host-test.plist",
+      "app.sandy.host-daemon.machine-example-test-host-test.plist",
     );
     const domain = `gui/${process.getuid?.()}`;
     expect(readFileSync(join(fixture.dataDir, "launchctl.log"), "utf8")).toBe(
-      `bootout ${domain} ${legacyServiceFile}\nprint ${domain}/app.getbb.host-daemon.machine-example-test\nbootout ${domain} ${serviceFile}\nbootstrap ${domain} ${serviceFile}\n`,
+      `bootout ${domain} ${legacyServiceFile}\nprint ${domain}/app.sandy.host-daemon.machine-example-test\nbootout ${domain} ${serviceFile}\nbootstrap ${domain} ${serviceFile}\n`,
     );
   });
 
@@ -1494,13 +1494,13 @@ fi
     mkdirSync(serviceDir, { recursive: true });
     const existingServiceFile = join(
       serviceDir,
-      "app.getbb.host-daemon.machine-example-test.plist",
+      "app.sandy.host-daemon.machine-example-test.plist",
     );
     writeFileSync(
       existingServiceFile,
       `<plist><dict>
-<key>Label</key><string>app.getbb.host-daemon.machine-example-test</string>
-<key>EnvironmentVariables</key><dict><key>BB_DATA_DIR</key><string>${fixture.dataDir}</string></dict>
+<key>Label</key><string>app.sandy.host-daemon.machine-example-test</string>
+<key>EnvironmentVariables</key><dict><key>SANDY_DATA_DIR</key><string>${fixture.dataDir}</string></dict>
 </dict></plist>
 `,
     );
@@ -1513,14 +1513,14 @@ fi
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "Could not stop the existing bb launch agent app.getbb.host-daemon.machine-example-test.",
+      "Could not stop the existing sandy launch agent app.sandy.host-daemon.machine-example-test.",
     );
     expect(existsSync(existingServiceFile)).toBe(true);
     expect(
       existsSync(
         join(
           serviceDir,
-          "app.getbb.host-daemon.machine-example-test-host-test.plist",
+          "app.sandy.host-daemon.machine-example-test-host-test.plist",
         ),
       ),
     ).toBe(false);
@@ -1546,7 +1546,7 @@ fi
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "Could not register the bb host-daemon launch agent app.getbb.host-daemon.machine-example-test-host-test.",
+      "Could not register the sandy host-daemon launch agent app.sandy.host-daemon.machine-example-test-host-test.",
     );
     expect(result.stderr).toContain("launchctl: fixture bootstrap failure");
   });
@@ -1568,7 +1568,7 @@ printf '%s\n' "$*" >>"${join(fixture.dataDir, "launchctl.log")}"
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "The bb host-daemon launch agent started but did not connect to https://machine.example.test.",
+      "The sandy host-daemon launch agent started but did not connect to https://machine.example.test.",
     );
     expect(result.stderr).toContain(
       `See ${fixture.dataDir}/logs/host-daemon-stdio.log for the startup error and ${fixture.dataDir}/logs/launchd.log for launch agent output.`,
@@ -1587,9 +1587,9 @@ printf '%s\n' "$*" >>"${join(fixture.dataDir, "launchctl.log")}"
       join(fixture.binDir, "systemctl"),
       `#!/bin/sh
 printf '%s\n' "$*" >>"${join(fixture.dataDir, "systemctl.log")}"
-if [ "$*" = "--user restart bb-host-daemon-machine-example-test-host-test.service" ]; then
+if [ "$*" = "--user restart sandy-host-daemon-machine-example-test-host-test.service" ]; then
   port=$(sed -n '1p' "${join(fixture.dataDir, "host-daemon-port")}")
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1605,7 +1605,7 @@ fi
     const unit = readFileSync(
       join(
         fixture.homeDir,
-        ".config/systemd/user/bb-host-daemon-machine-example-test-host-test.service",
+        ".config/systemd/user/sandy-host-daemon-machine-example-test-host-test.service",
       ),
       "utf8",
     );
@@ -1617,7 +1617,7 @@ fi
       `host-daemon --auto-update --host-daemon-port "${selectedPort}" --server-url "https://machine.example.test"`,
     );
     expect(unit).toContain(
-      `Environment="BB_APP_NPM_PREFIX=${realpathSync(fixture.dataDir)}/npm"`,
+      `Environment="SANDY_APP_NPM_PREFIX=${realpathSync(fixture.dataDir)}/npm"`,
     );
     expect(unit).toContain("After=network-online.target");
     expect(unit).toContain("Wants=network-online.target");
@@ -1625,7 +1625,7 @@ fi
     expect(unit).toContain("RestartSec=2");
     expect(unit).toContain("WantedBy=default.target");
     expect(readFileSync(join(fixture.dataDir, "systemctl.log"), "utf8")).toBe(
-      "--user show-environment\n--user daemon-reload\n--user enable bb-host-daemon-machine-example-test-host-test.service\n--user restart bb-host-daemon-machine-example-test-host-test.service\n",
+      "--user show-environment\n--user daemon-reload\n--user enable sandy-host-daemon-machine-example-test-host-test.service\n--user restart sandy-host-daemon-machine-example-test-host-test.service\n",
     );
   });
 
@@ -1650,7 +1650,7 @@ printf '%s %s\\n' "$*" "\${XDG_RUNTIME_DIR:-missing}" >>"${join(fixture.dataDir,
 if [ "$2" = show-environment ] && { [ "\${XDG_RUNTIME_DIR:-}" != '${runtimeDir}' ] || [ -n "\${DBUS_SESSION_BUS_ADDRESS:-}" ]; }; then exit 1; fi
 if [ "$2" = restart ]; then
   port=$(sed -n '1p' "${join(fixture.dataDir, "host-daemon-port")}")
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1668,7 +1668,7 @@ fi
     expect(
       readFileSync(join(fixture.dataDir, "systemctl.log"), "utf8"),
     ).toContain(
-      `--user enable bb-host-daemon-machine-example-test-host-test.service ${runtimeDir}`,
+      `--user enable sandy-host-daemon-machine-example-test-host-test.service ${runtimeDir}`,
     );
   });
 
@@ -1698,7 +1698,7 @@ fi
   it("fails before joining when the systemd user bus is unavailable on a systemd host", () => {
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
     writeUnreachableUserBus(fixture, "systemd");
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
@@ -1717,7 +1717,7 @@ fi
   it("runs a detached daemon on Linux without systemd as init", () => {
     const fixture = createFixture();
     const invocationPath = join(fixture.dataDir, "invocation");
-    writeServerInstalledBbApp(fixture, { hostId: "host-test", invocationPath });
+    writeServerInstalledSandyApp(fixture, { hostId: "host-test", invocationPath });
     writeUnreachableUserBus(fixture, "tini");
 
     const result = runScript(BOOTSTRAP_ARGS, fixture, {
@@ -1759,9 +1759,9 @@ fi
         join(fixture.binDir, "systemctl"),
         `#!/bin/sh
 printf '%s\n' "$*" >>"${join(fixture.dataDir, "systemctl.log")}"
-if [ "$*" = "${scope} restart bb-host-daemon-machine-example-test-host-test.service" ]; then
+if [ "$*" = "${scope} restart sandy-host-daemon-machine-example-test-host-test.service" ]; then
   port=$(sed -n '1p' "${join(fixture.dataDir, "host-daemon-port")}")
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port "$port" --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1778,11 +1778,11 @@ fi
         container
           ? join(
               fixture.homeDir,
-              ".config/systemd/user/bb-host-daemon-machine-example-test-host-test.service",
+              ".config/systemd/user/sandy-host-daemon-machine-example-test-host-test.service",
             )
           : join(
               fixture.dataDir,
-              "systemd/bb-host-daemon-machine-example-test-host-test.service",
+              "systemd/sandy-host-daemon-machine-example-test-host-test.service",
             ),
         "utf8",
       );
@@ -1794,19 +1794,19 @@ fi
         `host-daemon --auto-update --host-daemon-port "${selectedPort}" --server-url "https://machine.example.test"`,
       );
       expect(unit).toContain(
-        `Environment="BB_APP_NPM_PREFIX=${realpathSync(fixture.dataDir)}/npm"`,
+        `Environment="SANDY_APP_NPM_PREFIX=${realpathSync(fixture.dataDir)}/npm"`,
       );
       expect(unit).toContain(
         container ? "WantedBy=default.target" : "WantedBy=multi-user.target",
       );
       const enableUnit = container
-        ? "bb-host-daemon-machine-example-test-host-test.service"
+        ? "sandy-host-daemon-machine-example-test-host-test.service"
         : join(
             realpathSync(fixture.dataDir),
-            "systemd/bb-host-daemon-machine-example-test-host-test.service",
+            "systemd/sandy-host-daemon-machine-example-test-host-test.service",
           );
       expect(readFileSync(join(fixture.dataDir, "systemctl.log"), "utf8")).toBe(
-        `${container ? "--user show-environment\n" : ""}${scope} daemon-reload\n${scope} enable ${enableUnit}\n${scope} restart bb-host-daemon-machine-example-test-host-test.service\n`,
+        `${container ? "--user show-environment\n" : ""}${scope} daemon-reload\n${scope} enable ${enableUnit}\n${scope} restart sandy-host-daemon-machine-example-test-host-test.service\n`,
       );
     },
   );
@@ -1820,22 +1820,22 @@ fi
     mkdirSync(serviceDir, { recursive: true });
     const legacyServiceFile = join(
       serviceDir,
-      "bb-host-daemon-machine-example-test.service",
+      "sandy-host-daemon-machine-example-test.service",
     );
     writeFileSync(join(fixture.dataDir, "host-daemon-port"), "45123\n");
     writeFileSync(
       legacyServiceFile,
       `[Service]
-ExecStart="node" "bb-app" host-daemon --auto-update --host-daemon-port "45123" --server-url "https://machine.example.test"
-Environment="BB_DATA_DIR=${fixture.dataDir}"
+ExecStart="node" "sandy-app" host-daemon --auto-update --host-daemon-port "45123" --server-url "https://machine.example.test"
+Environment="SANDY_DATA_DIR=${fixture.dataDir}"
 `,
     );
     writeExecutable(
       join(fixture.binDir, "systemctl"),
       `#!/bin/sh
 printf '%s\n' "$*" >>"${join(fixture.dataDir, "systemctl.log")}"
-if [ "$*" = "--user restart bb-host-daemon-machine-example-test-host-test.service" ]; then
-  BB_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/bb-app")}" host-daemon --host-daemon-port 45123 --server-url https://machine.example.test >/dev/null 2>&1 &
+if [ "$*" = "--user restart sandy-host-daemon-machine-example-test-host-test.service" ]; then
+  SANDY_DATA_DIR="${fixture.dataDir}" "${join(fixture.dataDir, "npm/bin/sandy-app")}" host-daemon --host-daemon-port 45123 --server-url https://machine.example.test >/dev/null 2>&1 &
   echo $! >"${join(fixture.dataDir, "service-daemon.pid")}"
 fi
 `,
@@ -1847,9 +1847,9 @@ fi
     expect(existsSync(legacyServiceFile)).toBe(false);
     expect(
       readdirSync(serviceDir).filter((file) => file.endsWith(".service")),
-    ).toEqual(["bb-host-daemon-machine-example-test-host-test.service"]);
+    ).toEqual(["sandy-host-daemon-machine-example-test-host-test.service"]);
     expect(readFileSync(join(fixture.dataDir, "systemctl.log"), "utf8")).toBe(
-      "--user show-environment\n--user disable --now bb-host-daemon-machine-example-test.service\n--user daemon-reload\n--user enable bb-host-daemon-machine-example-test-host-test.service\n--user restart bb-host-daemon-machine-example-test-host-test.service\n",
+      "--user show-environment\n--user disable --now sandy-host-daemon-machine-example-test.service\n--user daemon-reload\n--user enable sandy-host-daemon-machine-example-test-host-test.service\n--user restart sandy-host-daemon-machine-example-test-host-test.service\n",
     );
   });
 });

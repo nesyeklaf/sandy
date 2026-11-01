@@ -3,14 +3,14 @@ import {
   experimental_THREAD_INFO_ROW_GROUPS,
   experimental_THREAD_INFO_SECTION_GROUPS,
   type ExperimentalThreadContextCardProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   resolveThreadListIndicator,
   threadListIndicatorStateForThread,
-} from "@bb/client-core";
-import { Icon } from "@bb/shared-ui/icon";
-import { InfoRowTime } from "@bb/shared-ui/info-list-row";
-import type { ThreadResponse } from "@bb/server-contract";
+} from "@sandy/client-core";
+import { Icon } from "@sandy/shared-ui/icon";
+import { InfoRowTime } from "@sandy/shared-ui/info-list-row";
+import type { ThreadResponse } from "@sandy/server-contract";
 import { ThreadContextCardRow } from "@/components/plugin/ThreadContextCardRow";
 import type {
   CoreThreadContextCardRow,

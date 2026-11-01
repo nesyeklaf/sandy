@@ -4,13 +4,13 @@ import type {
   ExperimentalDesktopBrowserImportOutcome,
   ExperimentalDesktopBrowserImportSources,
   ExperimentalDesktopBrowserScope,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import {
   DESKTOP_BROWSER_IMPORT_FAILURE_COPY,
   desktopBrowserImportSourceIdSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 
 interface ScopeOptions {
   json?: boolean;
@@ -91,7 +91,7 @@ export function registerBrowserCommands(
   const browser = program
     .command("browser")
     .description("Experimental built-in desktop browser control");
-  const api = () => createCliBbSdk(getUrl()).experimental_desktopBrowsers;
+  const api = () => createCliSandySdk(getUrl()).experimental_desktopBrowsers;
   browser
     .command("instances")
     .description("List connected desktop windows on a host")
@@ -132,7 +132,7 @@ export function registerBrowserCommands(
   scoped(
     browser
       .command("create")
-      .description("Create a tab in the BB browser profile"),
+      .description("Create a tab in the SANDY browser profile"),
   )
     .option("--url <url>", "Initial HTTP(S) URL; defaults to about:blank")
     .option("--reveal", "Show the new native tab")
@@ -293,16 +293,16 @@ export function registerBrowserCommands(
     browser
       .command("import-cookies")
       .description(
-        "Copy signed-in cookies from an installed browser into the BB browser",
+        "Copy signed-in cookies from an installed browser into the SANDY browser",
       ),
   )
     .requiredOption(
       "--from <source>",
-      "Source browser ID from `bb browser import-sources`",
+      "Source browser ID from `sandy browser import-sources`",
     )
     .requiredOption(
       "--profile <directory>",
-      "Source profile directory as printed by `bb browser import-sources`",
+      "Source profile directory as printed by `sandy browser import-sources`",
     )
     .action(
       action(

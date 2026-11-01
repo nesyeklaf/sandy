@@ -1,4 +1,4 @@
-import type { HostDaemonSessionRow } from "@bb/db";
+import type { HostDaemonSessionRow } from "@sandy/db";
 import { HOST_RECONNECT_GRACE_MS } from "../../constants.js";
 
 export function isHostDisconnectHidden(

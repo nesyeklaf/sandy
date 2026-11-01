@@ -6,14 +6,14 @@ import { Hono } from "hono";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { createRequestPeerRecorder } from "../src/services/request-peers.js";
-import type { BbPluginApi } from "../src/services/plugins/plugin-api.js";
+import type { SandyPluginApi } from "../src/services/plugins/plugin-api.js";
 import { startTestServer, type RunningTestServer } from "./helpers/test-app.js";
 
 const PLUGIN_ID = "request-peers-fixture";
 const SOCKET_PATH = `/api/v1/plugins/${PLUGIN_ID}/http/socket`;
 const FIXTURE_SOURCE = `
-  export default function plugin(bb: any) {
-    bb.http.experimental_websocket("/socket", () => ({
+  export default function plugin(sandy: any) {
+    sandy.http.experimental_websocket("/socket", () => ({
       onOpen(socket: any) {
         socket.send("open");
       },
@@ -49,7 +49,7 @@ describe("request peer recorder", () => {
   let server: RunningTestServer;
   let workDir: string;
 
-  function api(): BbPluginApi {
+  function api(): SandyPluginApi {
     const handle = server.pluginService.getApi(PLUGIN_ID);
     if (!handle) throw new Error("fixture plugin is not running");
     return handle;
@@ -65,15 +65,15 @@ describe("request peer recorder", () => {
 
   beforeEach(async () => {
     server = await startTestServer();
-    workDir = await mkdtemp(join(tmpdir(), "bb-request-peers-"));
-    const rootDir = join(workDir, `bb-plugin-${PLUGIN_ID}`);
+    workDir = await mkdtemp(join(tmpdir(), "sandy-request-peers-"));
+    const rootDir = join(workDir, `sandy-plugin-${PLUGIN_ID}`);
     await mkdir(rootDir, { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: `bb-plugin-${PLUGIN_ID}`,
+        name: `sandy-plugin-${PLUGIN_ID}`,
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Request peers fixture",
           description: "Request peers fixture.",
           branding: { icon: "Zap" },

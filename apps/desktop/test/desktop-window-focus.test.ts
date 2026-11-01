@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BB_DESKTOP_FOCUS_WINDOW_CHANNEL } from "../src/desktop-window-command-ipc.js";
+import { SANDY_DESKTOP_FOCUS_WINDOW_CHANNEL } from "../src/desktop-window-command-ipc.js";
 import { registerDesktopWindowFocusIpc } from "../src/desktop-window-focus.js";
 
 const mock = vi.hoisted(() => {
@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 function request(id: number) {
-  mock.listeners.get(BB_DESKTOP_FOCUS_WINDOW_CHANNEL)?.({ sender: { id } });
+  mock.listeners.get(SANDY_DESKTOP_FOCUS_WINDOW_CHANNEL)?.({ sender: { id } });
 }
 
 describe("desktop notification window activation", () => {

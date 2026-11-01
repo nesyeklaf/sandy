@@ -1,13 +1,13 @@
-import { firstPerIdentity, skillRegistrationId } from "@bb/skill-index";
+import { firstPerIdentity, skillRegistrationId } from "@sandy/skill-index";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { resolveDataDirSkillsRootPath } from "@bb/config/skill-storage-paths";
-import { getAppSettings } from "@bb/db";
-import type { BbSkillSourceId } from "@bb/domain";
-import { replaceFile } from "@bb/file-transfer";
-import type { DiscoveredSkill, SkillRootKind } from "@bb/host-daemon-contract";
+import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths";
+import { getAppSettings } from "@sandy/db";
+import type { SandySkillSourceId } from "@sandy/domain";
+import { replaceFile } from "@sandy/file-transfer";
+import type { DiscoveredSkill, SkillRootKind } from "@sandy/host-daemon-contract";
 import type {
   SkillDuplicate,
   SkillDuplicateRelation,
@@ -15,8 +15,8 @@ import type {
   SkillRegistration,
   SkillScope,
   SkillSummary,
-} from "@bb/server-contract";
-import { editableSkillScopeSchema } from "@bb/server-contract";
+} from "@sandy/server-contract";
+import { editableSkillScopeSchema } from "@sandy/server-contract";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import { ApiError } from "../../errors.js";
 import {
@@ -51,9 +51,9 @@ const SERVER_SKILL_FILE_LIMIT = 200;
 const SERVER_SKILL_CONTENT_LIMIT_BYTES = 25 * 1024 * 1024;
 
 const SKILL_SCOPE_ORDER: readonly SkillScope[] = [
-  "bb-project",
-  "bb-user",
-  "bb-builtin",
+  "sandy-project",
+  "sandy-user",
+  "sandy-builtin",
   "shared-project",
   "shared-user",
   "provider-project",
@@ -89,12 +89,12 @@ export function mapSkillScope(
   filePath: string,
 ): MappedScope {
   switch (rootKind) {
-    case "bb-project":
-      return { scope: "bb-project", provider: null, manageable: true };
-    case "bb-data-dir":
-      return { scope: "bb-user", provider: null, manageable: true };
-    case "bb-builtin":
-      return { scope: "bb-builtin", provider: null, manageable: false };
+    case "sandy-project":
+      return { scope: "sandy-project", provider: null, manageable: true };
+    case "sandy-data-dir":
+      return { scope: "sandy-user", provider: null, manageable: true };
+    case "sandy-builtin":
+      return { scope: "sandy-builtin", provider: null, manageable: false };
     case "provider-project":
       return { scope: "provider-project", provider, manageable: true };
     case "provider-user":
@@ -186,11 +186,11 @@ async function listServerOwnedSkills(
       );
       const logicalPath = `${runtimeSource.name}/${runtimeSource.entryPath}`;
       return {
-        id: skillRegistrationId("bb-data-dir", logicalPath),
+        id: skillRegistrationId("sandy-data-dir", logicalPath),
         name: runtimeSource.name,
         description: runtimeSource.description,
         provider: null,
-        scope: "bb-user",
+        scope: "sandy-user",
         pluginId: null,
         filePath: path.join(rootPath, runtimeSource.entryPath),
         manageable: true,
@@ -200,7 +200,7 @@ async function listServerOwnedSkills(
     .sort(compareSkillSummaries);
 }
 
-async function listBbPluginSkills(deps: AppDeps): Promise<SkillRegistration[]> {
+async function listSandyPluginSkills(deps: AppDeps): Promise<SkillRegistration[]> {
   return (await resolveSkillCatalog(deps))
     .map(({ provenance, runtimeSource }): SkillRegistration | null => {
       if (provenance.kind !== "plugin" || runtimeSource.kind !== "tree") {
@@ -211,7 +211,7 @@ async function listBbPluginSkills(deps: AppDeps): Promise<SkillRegistration[]> {
       const logicalPath = `${runtimeSource.name}/${runtimeSource.entryPath}`;
       return {
         id: skillRegistrationId(
-          `bb-plugin:${provenance.pluginId}`,
+          `sandy-plugin:${provenance.pluginId}`,
           logicalPath,
         ),
         name: runtimeSource.name,
@@ -258,7 +258,7 @@ async function projectSkillIndex(
   ]);
   const serverSkills = [
     ...(await listServerOwnedSkills(deps)),
-    ...(await listBbPluginSkills(deps)),
+    ...(await listSandyPluginSkills(deps)),
   ];
   const identities = new Map(sharedSkills.identities);
   for (const { skills } of perProvider) {
@@ -295,7 +295,7 @@ async function projectSkillIndex(
     ...serverSkills,
   ]
     .filter((skill) => {
-      const source = bbSkillSourceOf(skill);
+      const source = sandySkillSourceOf(skill);
       return source === null || !disabledSources.has(source);
     })
     .sort(
@@ -313,19 +313,19 @@ async function projectSkillIndex(
   return { registrations, entries: summarizeSkillRegistrations(registrations) };
 }
 
-export function bbSkillSourceOf(
+export function sandySkillSourceOf(
   skill: Pick<SkillRegistration, "scope" | "provider">,
-): BbSkillSourceId | null {
+): SandySkillSourceId | null {
   switch (skill.scope) {
-    case "bb-user":
-      return "bb-user";
-    case "bb-project":
-      return "bb-project";
+    case "sandy-user":
+      return "sandy-user";
+    case "sandy-project":
+      return "sandy-project";
     case "shared-user":
     case "shared-project":
       return "shared";
     case "plugin":
-      return skill.provider === null ? "bb-plugins" : null;
+      return skill.provider === null ? "sandy-plugins" : null;
     default:
       return null;
   }
@@ -430,14 +430,14 @@ function isServerOwnedSkill(deps: AppDeps, skill: SkillRegistration): boolean {
   ) {
     return true;
   }
-  if (skill.scope === "bb-user") {
+  if (skill.scope === "sandy-user") {
     return (
       path.dirname(skillDirectoryPath) ===
       resolveDataDirSkillsRootPath(deps.config.dataDir)
     );
   }
   return (
-    skill.scope === "bb-builtin" &&
+    skill.scope === "sandy-builtin" &&
     path.dirname(skillDirectoryPath) === deps.config.builtinSkillsRootPath
   );
 }
@@ -652,17 +652,17 @@ export async function writeProjectSkill(
     throw new ApiError(
       403,
       "forbidden",
-      "Bundled skills cannot be edited in bb",
+      "Bundled skills cannot be edited in sandy",
     );
   }
-  if (editableScope.data === "bb-project" && args.workspace.cwd === null) {
+  if (editableScope.data === "sandy-project" && args.workspace.cwd === null) {
     throw new ApiError(
       409,
       "invalid_request",
       "No workspace resolved for this project's skills",
     );
   }
-  if (editableScope.data === "bb-user" && isServerOwnedSkill(deps, skill)) {
+  if (editableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
     const result = await replaceFile({
       contents: Buffer.from(args.content, "utf8"),
@@ -674,7 +674,7 @@ export async function writeProjectSkill(
     }
     return { filePath: skillFilePath, revision: result.sha256 };
   }
-  if (editableScope.data !== "bb-user" && editableScope.data !== "bb-project") {
+  if (editableScope.data !== "sandy-user" && editableScope.data !== "sandy-project") {
     const result = await callHostOnlineRpcForWork(deps, {
       hostId: args.workspace.hostId,
       timeoutMs: COMMAND_TIMEOUT_MS,
@@ -724,17 +724,17 @@ export async function deleteProjectSkill(
     throw new ApiError(
       403,
       "forbidden",
-      "Bundled skills cannot be deleted in bb",
+      "Bundled skills cannot be deleted in sandy",
     );
   }
-  if (editableScope.data === "bb-project" && args.workspace.cwd === null) {
+  if (editableScope.data === "sandy-project" && args.workspace.cwd === null) {
     throw new ApiError(
       409,
       "invalid_request",
       "No workspace resolved for this project's skills",
     );
   }
-  if (editableScope.data === "bb-user" && isServerOwnedSkill(deps, skill)) {
+  if (editableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillsRootPath = resolveDataDirSkillsRootPath(deps.config.dataDir);
     const skillDirectoryPath = path.dirname(skill.filePath);
     const [realRootPath, realSkillPath] = await Promise.all([
@@ -764,7 +764,7 @@ export async function deleteProjectSkill(
   }
   let daemonName = skill.name;
   let rootPath: string | null = null;
-  if (editableScope.data !== "bb-user" && editableScope.data !== "bb-project") {
+  if (editableScope.data !== "sandy-user" && editableScope.data !== "sandy-project") {
     const skillDirPath = hostPathDirname(skill.filePath);
     daemonName = hostPathBasename(skillDirPath);
     rootPath = hostPathDirname(skillDirPath);

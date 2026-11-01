@@ -2,7 +2,7 @@ import type {
   ComposerCustomization,
   ComposerPlusMenuItem,
   PluginComposerScope,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type {
   PluginCodeFenceRendererSlot,
   PluginComposerCustomizationSlot,
@@ -393,6 +393,20 @@ export function resolveComposerPopups(
       ? (customization.experimental_popups ?? []).map((popup) => ({
           ...resolvedComposerContribution(customization, popup.id),
           popup,
+        }))
+      : [],
+  );
+}
+
+export function resolveComposerMenus(
+  customizations: readonly PluginComposerCustomizationSlot[],
+  scopeKind: PluginComposerScope["kind"],
+) {
+  return customizations.flatMap((customization) =>
+    composerCustomizationApplies(customization, scopeKind)
+      ? (customization.experimental_menus ?? []).map((menu) => ({
+          ...resolvedComposerContribution(customization, menu.id),
+          menu,
         }))
       : [],
   );

@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createPortal } from "react-dom";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import {
   PluginDetailRouteNavigationProvider,
   RouteAnchor,
@@ -55,9 +55,9 @@ function PortaledThreadLinkDelegate({
 }) {
   const onRouteAnchorClick = useRouteAnchorDelegate();
   return (
-    <div data-bb-plugin="thread-list" onClick={onRouteAnchorClick}>
+    <div data-sandy-plugin="thread-list" onClick={onRouteAnchorClick}>
       {createPortal(
-        <div data-bb-portaled-overlay="" data-bb-plugin={overlayPluginId}>
+        <div data-sandy-portaled-overlay="" data-sandy-plugin={overlayPluginId}>
           <a href="/threads/thr-next">Open next thread</a>
         </div>,
         document.body,

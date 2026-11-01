@@ -1,4 +1,4 @@
-import { experimental_execHostFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFile } from "@sandy-sdk/plugin-sdk/process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -13,7 +13,7 @@ import {
   experimental_readCliVersion as readCliVersion,
   experimental_resolveExecutablePath as resolveExecutablePath,
   experimental_versionFrom as versionFrom,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { z } from "zod";
 
 const execFileAsync = experimental_execHostFile;
@@ -43,7 +43,7 @@ const claudeAccountSchema = z.object({
 });
 
 async function claudeExecutable(): Promise<string> {
-  const explicit = process.env.BB_CLAUDE_CODE_EXECUTABLE?.trim();
+  const explicit = process.env.SANDY_CLAUDE_CODE_EXECUTABLE?.trim();
   if (explicit) return explicit;
   return (await resolveExecutablePath("claude")) ?? "claude";
 }

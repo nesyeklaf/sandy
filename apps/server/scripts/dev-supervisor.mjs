@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import {
   DEFAULT_UNEXPECTED_RESTART_BACKOFF,
   runDevSupervisor,
-} from "@bb/scripts/lib/run-dev-supervisor";
+} from "@sandy/scripts/lib/run-dev-supervisor";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(scriptDir, "..");
@@ -12,7 +12,7 @@ void runDevSupervisor({
   childArgs: ["--conditions=source", "--import", "tsx", "src/index.ts"],
   childCommand: process.execPath,
   childCwd: packageRoot,
-  childEnv: { BB_MANAGED_DEV_BUILTIN_PLUGIN_HOT_RELOAD: "1" },
+  childEnv: { SANDY_MANAGED_DEV_BUILTIN_PLUGIN_HOT_RELOAD: "1" },
   unexpectedRestartBackoff: DEFAULT_UNEXPECTED_RESTART_BACKOFF,
   serviceName: "server",
 }).catch((error) => {

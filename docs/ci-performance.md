@@ -139,8 +139,8 @@ cache. Runner provisioning and fleet capacity remain external limits.
 Jobs install only the dependency closures their selected work needs, with the
 same frozen lockfile, test commands, and sharding:
 
-- Linux and Windows app shards install the root tools, `@bb/app` and its
-  transitive dependencies, and `@bb/db` with its dependencies so
+- Linux and Windows app shards install the root tools, `@sandy/app` and its
+  transitive dependencies, and `@sandy/db` with its dependencies so
   `ensure-native-modules` can prepare `better-sqlite3`.
 - Windows server shards install the server, host daemon, app, and plugin
   closures; see [windows-ci.md](windows-ci.md#full-test-suite).
@@ -150,11 +150,11 @@ same frozen lockfile, test commands, and sharding:
   exclusions cannot remove another package's dependencies.
 - Demo-server-only Linux test jobs use a scoped install and omit Electron
   runtime setup.
-- Test matrices carry whether their selected packages include `@bb/mobile`.
+- Test matrices carry whether their selected packages include `@sandy/mobile`.
   Other broad test installs omit mobile unless it is tested, so full runs and
   mobile changes keep mobile coverage.
 - Package smokes, Node compatibility smokes, and the Windows app and desktop
-  packaging smokes omit `@bb/mobile`, which is outside the desktop and launcher
+  packaging smokes omit `@sandy/mobile`, which is outside the desktop and launcher
   dependency chain. Desktop and native dependencies and every Turbo build and
   smoke dependency still run.
 
@@ -167,7 +167,7 @@ outside their declared closures.
 
 Server tests split by file into two Vitest shards and app tests into eight. App
 shards keep app-only PR latency low and preserve cache reuse between PRs and
-main. Shard selection uses the `BB_CI_TEST_SHARD` variable, which Turbo hashes
+main. Shard selection uses the `SANDY_CI_TEST_SHARD` variable, which Turbo hashes
 only for those test tasks, so one shard's result cannot satisfy another; see
 [windows-ci.md](windows-ci.md#full-test-suite) for why it is not passed after
 Turbo's `--`.
@@ -176,7 +176,7 @@ Package tests split by package, because some packages use Bun or Node test
 runners that do not accept Vitest's shard arguments:
 
 - `packages-host`: host daemon, CLI, agent runtime, provider parity, and database.
-- `packages-build`: templates, bb-app, demo server, desktop, and plugin build.
+- `packages-build`: templates, sandy-app, demo server, desktop, and plugin build.
 - `packages-other`: every remaining non-plugin package outside app, server, and
   integration. Negative filters automatically include new packages.
 
@@ -186,7 +186,7 @@ All Linux groups run four concurrent
 Turbo tasks. The two server shards and integration group use four Vitest workers each; other groups
 cap Vitest at two workers with `VITEST_MAX_WORKERS`, which Turbo hashes for
 test tasks. Electron's runtime libraries and Xvfb are set up
-only when the selected tests include `@bb/desktop`. Electron setup queries
+only when the selected tests include `@sandy/desktop`. Electron setup queries
 dpkg first and runs apt only for missing packages, then starts Electron to
 verify the runtime.
 
@@ -208,7 +208,7 @@ Vitest workers each and keep process-heavy packages in separate groups. Windows 
 roughly twice as long as Linux, and test files run about half as fast.
 
 Windows server and other-package shards build SDK declarations
-(`@get-bb/plugin-sdk#build:types`) as a prerequisite. The shared declaration
+(`@sandy-sdk/plugin-sdk#build:types`) as a prerequisite. The shared declaration
 emitter in `packages/plugin-sdk/scripts/shared-declaration-emit.mjs` resolves
 TypeScript's forward-slash filenames and the workspace prefix to the same form
 before selecting roots; a separator mismatch selects no roots and rebuilds the
@@ -239,12 +239,12 @@ Both settle before temporary files are removed, including on failure.
 ## Windows dependency-cache measurements
 
 An October 24 investigation sampled six successful CI runs
-([40061197725](https://github.com/get-bb/bb/actions/runs/40061197725),
-[40056664872](https://github.com/get-bb/bb/actions/runs/40056664872),
-[40055907009](https://github.com/get-bb/bb/actions/runs/40055907009),
-[40061385407](https://github.com/get-bb/bb/actions/runs/40061385407),
-[40061017932](https://github.com/get-bb/bb/actions/runs/40061017932), and
-[40060416041](https://github.com/get-bb/bb/actions/runs/40060416041)). Windows
+([40061197725](https://github.com/nesyeklaf/sandy/actions/runs/40061197725),
+[40056664872](https://github.com/nesyeklaf/sandy/actions/runs/40056664872),
+[40055907009](https://github.com/nesyeklaf/sandy/actions/runs/40055907009),
+[40061385407](https://github.com/nesyeklaf/sandy/actions/runs/40061385407),
+[40061017932](https://github.com/nesyeklaf/sandy/actions/runs/40061017932), and
+[40060416041](https://github.com/nesyeklaf/sandy/actions/runs/40060416041)). Windows
 finished last in all six. Across their 75 Windows jobs, dependency installation
 took a median 33 seconds and p90 64 seconds. Scheduling and runner startup,
 measured from job creation to start, added a median 27 seconds and p90 44 seconds.
@@ -252,14 +252,14 @@ The 59 Windows test shards had a median test-step duration of 65 seconds; only
 12 finished that step within three seconds. Installation matters on both warm
 and cold runs, but is not the entire critical path.
 
-[Archive benchmark 40065135842](https://github.com/get-bb/bb/actions/runs/40065135842)
+[Archive benchmark 40065135842](https://github.com/nesyeklaf/sandy/actions/runs/40065135842)
 compared three fresh four-vCPU Windows Server 2025 runners per strategy, with
 the same source, Node 22.23.4, pnpm 9.15.0, lockfile, and app/database install
 filters. Each installation was followed by the same forced, uncached app test
 shard through Turbo. Dependency archives were saved immediately after an
 installation with lifecycle scripts disabled, before any build or native-module
 preparation. The archives came from the seed job in
-[40064989311](https://github.com/get-bb/bb/actions/runs/40064989311); that run's
+[40064989311](https://github.com/nesyeklaf/sandy/actions/runs/40064989311); that run's
 measurement jobs were discarded after a benchmark timer quoting error.
 
 | Strategy                         | Restore seconds | Frozen-install seconds | Restore + install seconds | Verification                               |
@@ -284,7 +284,7 @@ check failed with `EPERM` while accessing the restored `prebuild-install`
 dependency. A successful install or cache-hit message alone does not establish
 a usable dependency tree. Neither archive strategy was adopted.
 
-[Disk benchmark 40065422778](https://github.com/get-bb/bb/actions/runs/40065422778)
+[Disk benchmark 40065422778](https://github.com/nesyeklaf/sandy/actions/runs/40065422778)
 then compared three fresh runners per strategy using the same app dependency
 scope. An NTFS virtual disk held both pnpm's content-addressable store and its
 virtual store. The runner restored one VHDX file and mounted it before running
@@ -305,10 +305,10 @@ archive took three seconds to save after a three-second detach in the seed
 job; consumers did not save it again. Unlike the package-file archive, its
 extraction took about 1.3 seconds in one consumer.
 
-[Broad-install benchmark 40065673929](https://github.com/get-bb/bb/actions/runs/40065673929)
+[Broad-install benchmark 40065673929](https://github.com/nesyeklaf/sandy/actions/runs/40065673929)
 used the normal non-mobile install scope (1,697 packages), with two fresh
 runners per strategy. Each consumer ran the complete Windows `packages-build`
-test group through Turbo with `--force --concurrency=2`: templates, bb-app,
+test group through Turbo with `--force --concurrency=2`: templates, sandy-app,
 demo server, desktop, and plugin build.
 
 | Strategy               | Restore seconds | Mount seconds | Frozen-install seconds | Detach seconds | Total dependency setup/cleanup seconds |
@@ -326,7 +326,7 @@ image. They establish disk reuse as a candidate optimization, without
 claiming that changing dependency setup fixes runner queues or uncached test
 duration.
 
-[Production-action validation](https://github.com/get-bb/bb/actions/runs/40067670163)
+[Production-action validation](https://github.com/nesyeklaf/sandy/actions/runs/40067670163)
 then restored the same non-mobile dependency image across all sixteen Windows
 checks. All passed, including both packaging smokes. Restore/mount plus frozen
 installation took a median 14 seconds, ranging from 10 to 25 seconds. The
@@ -362,10 +362,10 @@ remains responsible for validating dependencies. Mounted consumer images are
 discarded with their ephemeral runners.
 
 The small `diskpart` wrapper is necessary on the current Blacksmith image:
-[the maintained Dev Drive action failed](https://github.com/get-bb/bb/actions/runs/40067279701/job/120793062708)
+[the maintained Dev Drive action failed](https://github.com/nesyeklaf/sandy/actions/runs/40067279701/job/120793062708)
 because `New-VHD` and `Dismount-VHD` are unavailable. A fresh ReFS disk using
 `diskpart` was also measured in
-[40067454032](https://github.com/get-bb/bb/actions/runs/40067454032): disk creation
+[40067454032](https://github.com/nesyeklaf/sandy/actions/runs/40067454032): disk creation
 plus install took 28 and 31 seconds, compared with fresh NTFS installs of 28
 and 30 seconds. That sample gives no reason to add a fresh drive to every cold
 install; the measured benefit comes from reusing installed dependency files.
@@ -417,13 +417,13 @@ use it for Windows ReFS Dev Drives; these workflows do not establish that they
 cache the entire VHDX. Oxc explicitly copies the workspace before installing
 because the copy operation does not preserve pnpm directory links.
 
-Host-only dependency selection was also tested with BB's current pnpm: the
+Host-only dependency selection was also tested with SANDY's current pnpm: the
 installs took 29 and 31 seconds versus 31 and 50 seconds in the controls, but
 failed the desktop contract requiring both x64 and arm64 plugin-build packages.
 CI retains both targets and the current pnpm version. A newer pnpm and
 sharing platform-independent release JavaScript remain separate optimizations.
 Copying T3 Code's or Orca's Linux-first test allocation would change coverage;
-the dependency image preserves BB's existing blocking Windows matrix.
+the dependency image preserves SANDY's existing blocking Windows matrix.
 
 ## Test runtime and parallelism measurements
 
@@ -447,10 +447,10 @@ Controlled runs on the same four-vCPU runner types measured:
 
 | Change                                     | Control | Candidate | Evidence                                                             |
 | ------------------------------------------ | ------- | --------- | -------------------------------------------------------------------- |
-| Windows Pi fixture                         | 61, 62s | 34, 39s   | [40072329816](https://github.com/get-bb/bb/actions/runs/40072329816) |
+| Windows Pi fixture                         | 61, 62s | 34, 39s   | [40072329816](https://github.com/nesyeklaf/sandy/actions/runs/40072329816) |
 | Linux Pi fixture                           | 56, 67s | 41, 38s   | Same run                                                             |
-| Linux fork shard 1, prepared prerequisites | 84, 85s | 60, 72s   | [40072767336](https://github.com/get-bb/bb/actions/runs/40072767336) |
-| Windows app, longest test step             | 90s     | 63s       | [40073326000](https://github.com/get-bb/bb/actions/runs/40073326000) |
+| Linux fork shard 1, prepared prerequisites | 84, 85s | 60, 72s   | [40072767336](https://github.com/nesyeklaf/sandy/actions/runs/40072767336) |
+| Windows app, longest test step             | 90s     | 63s       | [40073326000](https://github.com/nesyeklaf/sandy/actions/runs/40073326000) |
 | Linux plugin group, longest test step      | 131s    | 89s       | Same run                                                             |
 
 The fork candidate combines the fixture change, starting Pi first within its
@@ -470,7 +470,7 @@ pressure increase, and unrelated checks can become the critical path.
 The extra four Windows app shards were subsequently rejected: their second
 comparison saved 19 seconds but used 31% more app runner time. The retained
 configuration keeps four Windows app shards and sets four Vitest workers per
-runner. [Worker comparison](https://github.com/get-bb/bb/actions/runs/40074965277)
+runner. [Worker comparison](https://github.com/nesyeklaf/sandy/actions/runs/40074965277)
 measured the slowest test step at 82 seconds with three workers, 73 seconds
 with four workers, and 137 seconds with only two shards. One 16-vCPU runner
 with twelve workers took 160 seconds for the full app suite, before charging
@@ -493,7 +493,7 @@ avoidable waiting and setup:
 Local measurements: Connect integration file 30.96 to 5.99 seconds (12 tests),
 thread-query file 4.61 to 1.00 seconds (30 tests), and machine-enrollment file
 3.34 to 0.28 seconds (8 tests). Cross-platform measurements are recorded in
-[the wait-removal benchmark](https://github.com/get-bb/bb/actions/runs/40075320364).
+[the wait-removal benchmark](https://github.com/nesyeklaf/sandy/actions/runs/40075320364).
 These are suite measurements, not additive whole-CI savings.
 
 That cross-platform run passed every control and candidate: 143 Connect tests,
@@ -527,7 +527,7 @@ before/after profile produced identical results and reduced supporting-file
 metadata calls from 2,010 to zero; the fixture and its timeout are unchanged.
 The bundled provider-bridge runtime changed, requiring SDK patch 0.6.80.
 
-[Windows timing-fix comparison](https://github.com/get-bb/bb/actions/runs/40076120786)
+[Windows timing-fix comparison](https://github.com/nesyeklaf/sandy/actions/runs/40076120786)
 passed both control and candidate replicas, retaining the complete skill-index
 and Connect Next suites. The full-run failures demonstrate timing sensitivity;
 the controlled baselines passed, so they are not claimed as deterministic
@@ -638,7 +638,7 @@ alive after cleanup.
 ## Per-file test setup
 
 Server tests that need a database copy a migrated template instead of running
-every migration. `@bb/db/testing` builds the template once per run in the
+every migration. `@sandy/db/testing` builds the template once per run in the
 server's Vitest `globalSetup`, and `createMigratedConnection()` copies it. A
 server test rejects new `createConnection(":memory:")` setups. Only the template
 build, on-disk databases, and migration tests run migrations directly.
@@ -658,13 +658,13 @@ DOM tests run isolated.
 
 ## React Compiler cache measurements
 
-App-building jobs preserve `.git/bb-cache/react-compiler` independently of
+App-building jobs preserve `.git/sandy-cache/react-compiler` independently of
 Turbo task outputs. A changed app build can reuse content-addressed transforms
 for unchanged modules. The compiler validates source, configuration, toolchain,
 and environment identity and rebuilds corrupt entries. Cache restoration is
 optional and bounded to one minute.
 
-[Benchmark run 39842305719](https://github.com/get-bb/bb/actions/runs/39842305719)
+[Benchmark run 39842305719](https://github.com/nesyeklaf/sandy/actions/runs/39842305719)
 used the same source, Node 22, pnpm 9.15, and four-vCPU runners for three
 cold/warm pairs per platform, alternating order. Prerequisites were prepared
 once; every timed app build ran through Turbo with `--only --force` to prevent
@@ -692,7 +692,7 @@ unavailable. Planning still determines affected checks, checks source integrity,
 and runs the provider-literal ratchet. The install command, frozen-lockfile
 requirement, and dependency-change detector are unchanged.
 
-[Benchmark run 39844281314](https://github.com/get-bb/bb/actions/runs/39844281314)
+[Benchmark run 39844281314](https://github.com/nesyeklaf/sandy/actions/runs/39844281314)
 ran three copies of each arrangement against identical source on four-vCPU
 Linux runners:
 
@@ -711,7 +711,7 @@ already skip dependency validation do not gain this time.
 
 ## Rejected resolver filter experiment
 
-[Benchmark run 39843306967](https://github.com/get-bb/bb/actions/runs/39843306967)
+[Benchmark run 39843306967](https://github.com/nesyeklaf/sandy/actions/runs/39843306967)
 compared six alternating before/after pairs per platform with both compiler
 cache namespaces warmed and every app build forced through Turbo. All output
 files matched. Median paired improvement was only 0.17 seconds on Linux and
@@ -721,7 +721,7 @@ small and variable.
 
 ## Rejected declaration-bundler cache experiment
 
-[Benchmark run 39845431047](https://github.com/get-bb/bb/actions/runs/39845431047)
+[Benchmark run 39845431047](https://github.com/nesyeklaf/sandy/actions/runs/39845431047)
 tried passing Rollup's module cache between the SDK's declaration bundles. Four
 Linux before/after pairs saved a median 4.4 seconds, with one regression. The
 first two Windows pairs both regressed by about eight seconds (48 to 56 seconds
@@ -732,7 +732,7 @@ passed locally. Correctness alone did not justify retaining this optimization.
 
 ## Verification of retained changes
 
-[Full CI run 39844633490](https://github.com/get-bb/bb/actions/runs/39844633490)
+[Full CI run 39844633490](https://github.com/nesyeklaf/sandy/actions/runs/39844633490)
 passed all 45 jobs with compiler caching and parallel validation retained, and
 no shard or coverage changes. Workflow creation to last completion was six
 minutes. This is an integration result, not a controlled end-to-end speedup
@@ -749,8 +749,8 @@ output, and provider-cell inventory assertions. This removes 22 subprocess
 launches and 77 repeated request-drain gates without changing bridge startup
 throttling or coverage.
 
-[Comparison 40104010818](https://github.com/get-bb/bb/actions/runs/40104010818)
-and [repeat 40104177343](https://github.com/get-bb/bb/actions/runs/40104177343)
+[Comparison 40104010818](https://github.com/nesyeklaf/sandy/actions/runs/40104010818)
+and [repeat 40104177343](https://github.com/nesyeklaf/sandy/actions/runs/40104177343)
 each ran two baseline and candidate replicas on four-vCPU Linux and Windows
 runners. All jobs passed. Windows parity test steps took 31–33 seconds before
 and 25–31 seconds after (medians 32 and 26 seconds); Linux took 25–26 seconds
@@ -777,7 +777,7 @@ prerequisites, so test-file savings are not whole-job or workflow savings.
 
 ## Linux server worker allocation
 
-[Comparison 40104954325](https://github.com/get-bb/bb/actions/runs/40104954325)
+[Comparison 40104954325](https://github.com/nesyeklaf/sandy/actions/runs/40104954325)
 ran both existing server shards with two and four Vitest workers on four-vCPU
 Linux runners, twice per arrangement. The measured step includes SDK prerequisites:
 Turbo hashes the JSON reporter arguments into prerequisite tasks too, so the
@@ -808,7 +808,7 @@ the real migrations, then initialize the personal project separately. The script
 echo provider bundle is built once per worker. Each harness still creates its own
 database, registry, server, daemon, provider processes, and sessions.
 
-[Repeated Linux and Windows measurements](https://github.com/get-bb/bb/actions/runs/40137507494)
+[Repeated Linux and Windows measurements](https://github.com/nesyeklaf/sandy/actions/runs/40137507494)
 passed all 77 tests in all 12 jobs on four-vCPU runners with empty Turbo caches.
 On Linux, integration task time fell from 39.2–46.5 seconds to 33.1–34.4 seconds
 with fixture reuse, then to 24.8–27.1 seconds with four workers. Windows keeps its
@@ -833,7 +833,7 @@ is immutable; downloads added by that job are not saved over it. Restore has a
 one-minute budget and failure falls back to normal npm fetching. npm verifies
 cached data when reading it; see [npm cache documentation](https://docs.npmjs.com/cli/cache/).
 
-[Windows comparison 40106037278](https://github.com/get-bb/bb/actions/runs/40106037278)
+[Windows comparison 40106037278](https://github.com/nesyeklaf/sandy/actions/runs/40106037278)
 ran cold, archived-download, and cold-again smokes on each of two runners,
 clearing installed npx trees before reuse. Both runners passed every smoke:
 
@@ -863,7 +863,7 @@ Vitest workers per fork stay the same. In two Linux repetitions of the full
 standalone fork check, shard 2 took 86.47/95.05 seconds before and 69.74/83.11
 seconds after (means 90.76 to 76.43 seconds, 16%). These measurements include
 fresh dependency resolution, install, typecheck, tests, and build after preparing
-the SDK and CLI. See [the scheduling experiment](https://github.com/get-bb/bb/actions/runs/40139306094).
+the SDK and CLI. See [the scheduling experiment](https://github.com/nesyeklaf/sandy/actions/runs/40139306094).
 Giving Codex early priority instead regressed shard 3 from 59.49/64.15 seconds
 to 80.59/82.45 seconds, so that change was discarded. These are fork-command
 measurements, not end-to-end CI gains.
@@ -874,7 +874,7 @@ from 8.13 to 0.22 seconds and the hanging refresh from 5.21 to 0.26 seconds.
 
 ## Linux packaging critical path
 
-Linux runs the bb-app tarball smoke and AppImage packaging in one Turbo graph.
+Linux runs the sandy-app tarball smoke and AppImage packaging in one Turbo graph.
 Their shared build prerequisites complete once, then the two checks can overlap.
 `--continue=dependencies-successful` lets an independent successful branch finish
 when the other fails, while still failing CI and blocking tasks with failed
@@ -902,7 +902,7 @@ closures preserves dependencies even when their own tests belong to another
 shard. At the measured lockfile this reduces Windows dependency snapshots from
 1,708 to 1,309, without changing the frozen lockfile or cache rules.
 
-[Cold-install comparison 40410136756](https://github.com/get-bb/bb/actions/runs/40410136756)
+[Cold-install comparison 40410136756](https://github.com/nesyeklaf/sandy/actions/runs/40410136756)
 used two four-vCPU Windows runners, each with four alternating baseline/candidate
 installs into fresh checkouts and stores. Selection-query time is included.
 All eight installs passed; both candidate checkouts then passed the complete
@@ -918,7 +918,7 @@ assertions. Seven old/new fixture comparisons produced identical commit graphs,
 subjects, and working-tree state with fixed Git dates, including Unicode paths,
 embedded newlines, same-file divergence, and a large payload.
 
-[Fixture comparison 40408582544](https://github.com/get-bb/bb/actions/runs/40408582544)
+[Fixture comparison 40408582544](https://github.com/nesyeklaf/sandy/actions/runs/40408582544)
 ran the complete plugin test step after common prerequisite preparation, forcing
 all test tasks to execute. The two fixture-only runners each used four alternating
 baseline/candidate trials; all eight passed with identical inventories of 2,493

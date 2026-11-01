@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ExperimentalPanelTabDetail } from "@get-bb/plugin-sdk";
+import type { ExperimentalPanelTabDetail } from "@sandy-sdk/plugin-sdk";
 import type { SecondaryPanelFixedTab } from "@/components/secondary-panel/ThreadSecondaryPanel";
 import type { SecondaryPanelRenderableTab } from "@/components/secondary-panel/secondaryPanelTab";
 import { createAppPanelController } from "./app-fixed-tab-navigation";
@@ -66,7 +66,7 @@ describe("panel tab details", () => {
       ExperimentalPanelTabDetail,
     ]
   >([
-    ["bb's Info tab", fixed(createThreadInfoFixedPanelTab()), { kind: "info" }],
+    ["sandy's Info tab", fixed(createThreadInfoFixedPanelTab()), { kind: "info" }],
     [
       "a plugin's thread fixed tab",
       fixed(createPluginFixedPanelTab({ pluginId: "git", tabId: "diff" })),

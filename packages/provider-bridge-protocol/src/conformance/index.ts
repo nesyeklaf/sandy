@@ -56,8 +56,8 @@ export async function runBridgeConformance(
     ...(await runSessionLifecycleScenarios({
       client,
       fixture: options.session,
-      resolveProviderTurnId: (threadId, bbTurnId) =>
-        collector.assembler.getProviderTurnId(threadId, bbTurnId),
+      resolveProviderTurnId: (threadId, sandyTurnId) =>
+        collector.assembler.getProviderTurnId(threadId, sandyTurnId),
       fork: handshake.capabilities?.fork ?? "none",
     })),
   );

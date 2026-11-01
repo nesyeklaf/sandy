@@ -1,30 +1,30 @@
 import { registerClaudeAiService } from "./src/ai-service.js";
 import { registerUsageSource } from "./src/usage-source.js";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { CLAUDE_NATIVE_ROOTS_DECLARATION } from "./src/native-roots.js";
 
-export default function plugin(bb: BbPluginApi) {
-  registerUsageSource(bb);
-  registerClaudeAiService(bb);
-  bb.settings.define({
+export default function plugin(sandy: SandyPluginApi) {
+  registerUsageSource(sandy);
+  registerClaudeAiService(sandy);
+  sandy.settings.define({
     memoryEnabled: {
       type: "boolean",
       label: "Claude Code memory",
       description:
-        "Allow Claude Code to read and write its native auto-memory for bb threads.",
+        "Allow Claude Code to read and write its native auto-memory for sandy threads.",
       default: true,
     },
     subagentsDisabled: {
       type: "boolean",
       label: "Disable provider subagents",
       description:
-        "Hide Claude Code's native subagent tools so agents use bb for delegation. Changes restart Claude before the next turn, preserving the conversation.",
+        "Hide Claude Code's native subagent tools so agents use sandy for delegation. Changes restart Claude before the next turn, preserving the conversation.",
       default: false,
     },
     workflowsDisabled: {
       type: "boolean",
       label: "Disable Workflow tool",
-      description: "Hide Claude Code's native Workflow tool for bb threads.",
+      description: "Hide Claude Code's native Workflow tool for sandy threads.",
       default: false,
     },
     disable1MContext: {
@@ -64,7 +64,7 @@ export default function plugin(bb: BbPluginApi) {
     },
   });
 
-  bb.providers.register({
+  sandy.providers.register({
     id: "claude-code",
     displayName: "Claude Code",
     icon: "./icons/claude-code.svg",
@@ -113,7 +113,7 @@ export default function plugin(bb: BbPluginApi) {
     composerActions: ["plan"],
     completedTurnDisplay: "flat",
     env: {
-      passthrough: ["BB_CLAUDE_CODE_EXECUTABLE", "CLAUDE_CODE_OAUTH_TOKEN"],
+      passthrough: ["SANDY_CLAUDE_CODE_EXECUTABLE", "CLAUDE_CODE_OAUTH_TOKEN"],
     },
     models: { scope: "host" },
     deriveProviderOptions(context) {

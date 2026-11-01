@@ -1,0 +1,29 @@
+{
+  "name": "sandy-plugin-codex-voice",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-strip-types *.test.ts",
+    "typecheck": "tsc -p ."
+  },
+  "engines": {
+    "sandy": ">=0.47",
+    "sandyPluginSdk": ">=0.6.49"
+  },
+  "sandy": {
+    "name": "Codex Voice",
+    "description": "Voice input through your ChatGPT login (Codex), sent with curl because chatgpt.com answers Node's HTTP clients with a Cloudflare challenge.",
+    "branding": {
+      "icon": "Mic"
+    },
+    "server": "./server.ts",
+    "skills": [
+      "skills"
+    ]
+  },
+  "devDependencies": {
+    "@sandy-sdk/plugin-sdk": "file:../../../packages/plugin-sdk",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

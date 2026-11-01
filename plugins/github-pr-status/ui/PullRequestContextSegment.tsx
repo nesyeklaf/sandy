@@ -6,28 +6,28 @@ import {
 } from "react";
 import {
   experimental_useThreadContextKind,
-  useBbNavigate,
+  useSandyNavigate,
   useSettings,
   type ExperimentalThreadContextSegmentInput,
   type ExperimentalThreadContextSegmentProps,
   type ExperimentalThreadContextSegmentReference,
-} from "@get-bb/plugin-sdk/app";
-import { CONTEXT_CARD_SEGMENT_CLASS } from "@bb/shared-ui/chrome-style-tokens";
+} from "@sandy-sdk/plugin-sdk/app";
+import { CONTEXT_CARD_SEGMENT_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   BannerActionSlot,
   PROMPT_BANNER_ACTION_FILL_CLASS,
   PROMPT_BANNER_ACTION_SEGMENT_CLASS,
   PromptBannerActionButton,
-} from "@bb/shared-ui/prompt-banner-actions";
+} from "@sandy/shared-ui/prompt-banner-actions";
 import {
   SHOW_PULL_REQUEST_SETTING,
   type PullRequest,
@@ -44,12 +44,12 @@ import { PullRequestNextStepLabel } from "./PullRequestNextStepLabel";
 import { PullRequestStatusPill } from "./PullRequestStatusPill";
 import { useEnvironmentPullRequest, usePullRequestActions } from "./queries";
 
-const CHANGED_FILES_SEGMENT_KEY = "bb--git/changed-files";
+const CHANGED_FILES_SEGMENT_KEY = "sandy--git/changed-files";
 
 export function useOpenUrlClick(
   url: string,
 ): (event: MouseEvent<HTMLAnchorElement>) => void {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   return (event) => {
     if (event.defaultPrevented || event.button !== 0) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {

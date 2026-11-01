@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { createPullRequestPersistence } from "./persistence.js";
 import type { EnvironmentPullRequest, PullRequest } from "./contract.js";
 import { createPullRequestStore } from "./store.js";
@@ -11,9 +11,9 @@ function pullRequest(overrides: Partial<PullRequest> = {}): PullRequest {
     number: 42,
     title: "Watch the PR",
     state: "open",
-    url: "https://github.com/acme/bb/pull/42",
+    url: "https://github.com/acme/sandy/pull/42",
     baseRefName: "main",
-    headRefName: "bb/pr-watch",
+    headRefName: "sandy/pr-watch",
     updatedAt: "2026-06-16T12:30:00Z",
     autoMerge: false,
     inMergeQueue: false,
@@ -51,10 +51,10 @@ const stores: ReturnType<typeof createPullRequestStore>[] = [];
 
 function setup(
   results: EnvironmentPullRequest[],
-  owner = createFakePluginHost({ pluginId: "bb--github-pr-status" }),
+  owner = createFakePluginHost({ pluginId: "sandy--github-pr-status" }),
 ) {
   owners.push(owner);
-  const persistence = createPullRequestPersistence(owner.bb.storage);
+  const persistence = createPullRequestPersistence(owner.sandy.storage);
   const load = vi.fn(async (_id: string, _url: string | null) =>
     results.length > 1 ? results.shift()! : results[0]!,
   );
@@ -63,7 +63,7 @@ function setup(
     load,
     publish,
     persistence,
-    branch: () => "bb/pr-watch",
+    branch: () => "sandy/pr-watch",
     onCheckFailed: (id, error) => {
       throw new Error(`${id}: ${error}`);
     },
@@ -142,7 +142,7 @@ describe("shared pull request refresh", () => {
     vi.useFakeTimers();
     const first = setup([available(pending)]);
     await first.store.read("a", { viewer: true });
-    const changes = first.owner.bb.storage
+    const changes = first.owner.sandy.storage
       .database()
       .prepare("SELECT total_changes() AS n")
       .get();
@@ -151,7 +151,7 @@ describe("shared pull request refresh", () => {
     await flush();
     expect(first.load).toHaveBeenCalledTimes(2);
     expect(
-      first.owner.bb.storage
+      first.owner.sandy.storage
         .database()
         .prepare("SELECT total_changes() AS n")
         .get(),
@@ -204,7 +204,7 @@ describe("shared pull request refresh", () => {
     vi.useFakeTimers();
     const next = pullRequest({
       number: 43,
-      url: "https://github.com/acme/bb/pull/43",
+      url: "https://github.com/acme/sandy/pull/43",
       headRefName: "next",
     });
     const { store, persistence, publish } = setup([
@@ -235,8 +235,8 @@ describe("shared pull request refresh", () => {
   it("discards rows saved by another persistence version", async () => {
     const { store, owner } = setup([available(pullRequest())]);
     await store.read("a", { viewer: true });
-    owner.bb.storage.database().pragma("user_version = 0");
-    const reopened = createPullRequestPersistence(owner.bb.storage);
+    owner.sandy.storage.database().pragma("user_version = 0");
+    const reopened = createPullRequestPersistence(owner.sandy.storage);
     expect(reopened.snapshots()).toEqual([]);
     expect(reopened.links()).toEqual([]);
   });
@@ -263,10 +263,10 @@ describe("shared pull request refresh", () => {
     vi.useFakeTimers();
     const { store, load } = setup([]);
     const byEnvironment: Record<string, PullRequest> = {
-      a: pullRequest({ url: "https://github.com/acme/bb/pull/1" }),
-      b: pullRequest({ url: "https://github.com/acme/bb/pull/2" }),
+      a: pullRequest({ url: "https://github.com/acme/sandy/pull/1" }),
+      b: pullRequest({ url: "https://github.com/acme/sandy/pull/2" }),
       c: pullRequest({
-        url: "https://github.com/acme/bb/pull/3",
+        url: "https://github.com/acme/sandy/pull/3",
         state: "merged",
       }),
     };
@@ -413,7 +413,7 @@ describe("aligned refresh ticks", () => {
     return {
       ...pending,
       number,
-      url: `https://github.com/acme/bb/pull/${number}`,
+      url: `https://github.com/acme/sandy/pull/${number}`,
     };
   }
 

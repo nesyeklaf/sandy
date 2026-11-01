@@ -166,7 +166,7 @@ export function serverHostSlug(serverUrl) {
 
 export function serviceName(serverUrl, hostId) {
   const hostSlug = hostId.replace(/[^a-zA-Z0-9_.-]/gu, "-");
-  return `bb-host-daemon-${`${serverHostSlug(serverUrl)}-${hostSlug}`.replaceAll(".", "-")}`;
+  return `sandy-host-daemon-${`${serverHostSlug(serverUrl)}-${hostSlug}`.replaceAll(".", "-")}`;
 }
 
 function quotePowerShell(value) {
@@ -356,28 +356,28 @@ async function installPackage({ dataDir, npmPrefix, source }) {
   });
   if (code !== 0) {
     throw new InstallError(
-      "Could not install bb-app for this machine. Check the npm error above, then run this command again.",
+      "Could not install sandy-app for this machine. Check the npm error above, then run this command again.",
     );
   }
 }
 
 export function packageRoot(npmPrefix) {
-  return join(npmPrefix, "node_modules", "bb-app");
+  return join(npmPrefix, "node_modules", "sandy-app");
 }
 
 async function downloadPackage({ bootstrap, dataDir, npmPrefix }) {
   const root = packageRoot(npmPrefix);
   const digestFile = join(dataDir, "host-artifact.sha256");
   const installedDigest =
-    existsSync(join(root, "dist", "bb-app.js")) &&
+    existsSync(join(root, "dist", "sandy-app.js")) &&
     existsSync(join(root, "host-daemon", "dist", "daemon-bundle.mjs"))
       ? readText(digestFile).trim()
       : "";
   const knownDigest = /^[a-f0-9]{64}$/u.test(installedDigest)
     ? installedDigest
     : "";
-  const packageUrl = `${bootstrap.serverUrl}/install/bb-app.tgz`;
-  step("Downloading the server's bb-app package (timeout: 5 minutes)");
+  const packageUrl = `${bootstrap.serverUrl}/install/sandy-app.tgz`;
+  step("Downloading the server's sandy-app package (timeout: 5 minutes)");
   let response;
   try {
     response = await fetch(packageUrl, {
@@ -391,7 +391,7 @@ async function downloadPackage({ bootstrap, dataDir, npmPrefix }) {
     });
   } catch (error) {
     throw new InstallError(
-      `Could not download the server's bb-app package from ${packageUrl}.`,
+      `Could not download the server's sandy-app package from ${packageUrl}.`,
       [error instanceof Error ? error.message : String(error)],
     );
   }
@@ -401,9 +401,9 @@ async function downloadPackage({ bootstrap, dataDir, npmPrefix }) {
   }
   if (response.status === 404) {
     throw new InstallError(
-      "The server does not provide its bb-app package, so this machine cannot be installed from it.",
+      "The server does not provide its sandy-app package, so this machine cannot be installed from it.",
       [
-        "Install the bb-app package of this server on the machine, or use a server build that ships it.",
+        "Install the sandy-app package of this server on the machine, or use a server build that ships it.",
       ],
     );
   }
@@ -418,28 +418,28 @@ async function downloadPackage({ bootstrap, dataDir, npmPrefix }) {
       }
     } catch {}
     throw new InstallError(
-      `Could not download the server's bb-app package from ${packageUrl} (HTTP ${response.status}).`,
+      `Could not download the server's sandy-app package from ${packageUrl} (HTTP ${response.status}).`,
       details,
     );
   }
   const tarball = Buffer.from(await response.arrayBuffer());
-  const expectedDigest = response.headers.get("x-bb-artifact-sha256") ?? "";
+  const expectedDigest = response.headers.get("x-sandy-artifact-sha256") ?? "";
   const downloadedDigest = createHash("sha256").update(tarball).digest("hex");
   if (
     /^[a-f0-9]{64}$/u.test(expectedDigest) &&
     expectedDigest !== downloadedDigest
   ) {
     throw new InstallError(
-      "The downloaded bb host artifact failed SHA-256 verification.",
+      "The downloaded sandy host artifact failed SHA-256 verification.",
       [`Expected ${expectedDigest} but received ${downloadedDigest}.`],
     );
   }
-  done("Downloaded the server's bb-app package");
-  const packageDir = mkdtempSync(join(tmpdir(), "bb-app-"));
-  const packageFile = join(packageDir, "bb-app.tgz");
+  done("Downloaded the server's sandy-app package");
+  const packageDir = mkdtempSync(join(tmpdir(), "sandy-app-"));
+  const packageFile = join(packageDir, "sandy-app.tgz");
   try {
     writeFileSync(packageFile, tarball);
-    step("Installing the server's bb-app build");
+    step("Installing the server's sandy-app build");
     await installPackage({ dataDir, npmPrefix, source: packageFile });
   } finally {
     rmSync(packageDir, { force: true, recursive: true });
@@ -447,7 +447,7 @@ async function downloadPackage({ bootstrap, dataDir, npmPrefix }) {
   if (/^[a-f0-9]{64}$/u.test(expectedDigest)) {
     writeFileAtomic(digestFile, `${expectedDigest}\n`);
   }
-  done("Installed the server's bb-app build");
+  done("Installed the server's sandy-app build");
 }
 
 async function verifyNativeModules(root) {
@@ -459,7 +459,7 @@ async function verifyNativeModules(root) {
     ]);
   } catch {
     throw new InstallError(
-      "npm installed bb-app, but its host native add-ons (node-pty, @parcel/watcher) did not load.",
+      "npm installed sandy-app, but its host native add-ons (node-pty, @parcel/watcher) did not load.",
       [
         "npm did not run their install scripts. Check the npm warnings above. If they mention allowScripts or ignore-scripts, set npm_config_allow_scripts and run this command again.",
         `npm_config_allow_scripts=${NATIVE_MODULES}`,
@@ -469,7 +469,7 @@ async function verifyNativeModules(root) {
 }
 
 function daemonEnvironment({ dataDir, npmPrefix }) {
-  return { ...process.env, BB_APP_NPM_PREFIX: npmPrefix, BB_DATA_DIR: dataDir };
+  return { ...process.env, SANDY_APP_NPM_PREFIX: npmPrefix, SANDY_DATA_DIR: dataDir };
 }
 
 function spawnDaemon({ args, dataDir, logFile, npmPrefix, root }) {
@@ -477,7 +477,7 @@ function spawnDaemon({ args, dataDir, logFile, npmPrefix, root }) {
   try {
     const child = spawn(
       process.execPath,
-      [join(root, "dist", "bb-app.js"), "host-daemon", ...args],
+      [join(root, "dist", "sandy-app.js"), "host-daemon", ...args],
       {
         cwd: dataDir,
         detached: true,
@@ -631,7 +631,7 @@ async function joinServer({ bootstrap, dataDir, npmPrefix, port, root }) {
     }
     if (exited) {
       throw new InstallError(
-        `bb host daemon exited before it connected to ${bootstrap.serverUrl}.`,
+        `sandy host daemon exited before it connected to ${bootstrap.serverUrl}.`,
         [`See ${joinLog}`],
       );
     }
@@ -684,7 +684,7 @@ function removeRetiredPackages(npmPrefix) {
     names = readdirSync(modulesDir);
   } catch {}
   for (const name of names) {
-    if (name.startsWith(".bb-app-")) {
+    if (name.startsWith(".sandy-app-")) {
       try {
         rmSync(join(modulesDir, name), { force: true, recursive: true });
       } catch {}
@@ -710,7 +710,7 @@ function runDaemon(dataDir, service) {
     root: packageRoot(service.npmPrefix),
   });
   if (child.pid === undefined) {
-    throw new InstallError("Could not start the bb host daemon.");
+    throw new InstallError("Could not start the sandy host daemon.");
   }
   writeFileAtomic(join(dataDir, PID_FILE_NAME), `${child.pid}\n`);
 }
@@ -775,13 +775,13 @@ async function startService(dataDir, service) {
       },
     );
   } catch {
-    throw new InstallError("Could not start the bb host daemon.", [
+    throw new InstallError("Could not start the sandy host daemon.", [
       "Windows refused to create the daemon process through WMI.",
     ]);
   }
   if (!(await waitForConnection({ ...status, subject: "the host daemon" }))) {
     throw new InstallError(
-      `The bb host daemon did not connect to ${service.serverUrl}.`,
+      `The sandy host daemon did not connect to ${service.serverUrl}.`,
       [`See ${join(dataDir, "logs", "machine-service.log")}`],
     );
   }
@@ -819,7 +819,7 @@ async function stopService(dataDir, service) {
     await delay(500);
   }
   throw new InstallError(
-    "A bb host daemon that this installer did not start is still running on this machine's port.",
+    "A sandy host daemon that this installer did not start is still running on this machine's port.",
     [
       `Stop the process listening on port ${service.hostDaemonPort}, then run this command again.`,
     ],
@@ -867,7 +867,7 @@ function findInstallation(hostId, requestedDataDir) {
     requestedDataDir !== null
       ? [requestedDataDir]
       : (() => {
-          const machinesDir = join(homedir(), ".bb-machines");
+          const machinesDir = join(homedir(), ".sandy-machines");
           try {
             return readdirSync(machinesDir).map((name) =>
               join(machinesDir, name),
@@ -920,7 +920,7 @@ async function runInstall(options) {
     throw new InstallError(`${options.bootstrapEnv} is not set.`);
   }
   const bootstrap = parseBootstrap(rawBootstrap);
-  process.stdout.write("\n  bb machine setup\n\n");
+  process.stdout.write("\n  sandy machine setup\n\n");
   step(
     `Setting up this machine as ${bootstrap.hostId} for ${bootstrap.serverUrl}`,
   );
@@ -928,18 +928,18 @@ async function runInstall(options) {
   const [major, minor] = process.versions.node.split(".").map(Number);
   if (major < 22 || (major === 22 && minor < 19)) {
     throw new InstallError(
-      `Node.js ${process.versions.node} is too old; bb-app requires Node.js 22.19 or newer (22.19, 24, and 26 are tested).`,
+      `Node.js ${process.versions.node} is too old; sandy-app requires Node.js 22.19 or newer (22.19, 24, and 26 are tested).`,
     );
   }
 
-  const configuredDataDir = process.env.BB_DATA_DIR?.trim();
+  const configuredDataDir = process.env.SANDY_DATA_DIR?.trim();
   const dataDir =
     configuredDataDir !== undefined && configuredDataDir.length > 0
       ? configuredDataDir
       : (bootstrap.dataDir ??
-        join(homedir(), ".bb-machines", serverHostSlug(bootstrap.serverUrl)));
+        join(homedir(), ".sandy-machines", serverHostSlug(bootstrap.serverUrl)));
   if (!isAbsolute(dataDir)) {
-    throw new InstallError("BB_DATA_DIR must be an absolute path.");
+    throw new InstallError("SANDY_DATA_DIR must be an absolute path.");
   }
   const existingHostId = installedHostId(dataDir);
   if (existingHostId !== "" && existingHostId !== bootstrap.hostId) {
@@ -948,7 +948,7 @@ async function runInstall(options) {
       [
         bootstrap.reconnect
           ? `Run this command on the computer where machine ${bootstrap.hostId} runs.`
-          : "To add another machine on this computer, set BB_DATA_DIR to a new directory and run the command again.",
+          : "To add another machine on this computer, set SANDY_DATA_DIR to a new directory and run the command again.",
       ],
     );
   }
@@ -980,9 +980,9 @@ async function runInstall(options) {
     serverUrl: bootstrap.serverUrl,
   });
   await downloadPackage({ bootstrap, dataDir: canonicalDataDir, npmPrefix });
-  if (!existsSync(join(root, "dist", "bb-app.js"))) {
+  if (!existsSync(join(root, "dist", "sandy-app.js"))) {
     throw new InstallError(
-      `npm installed bb-app, but did not create the expected package at ${root}.`,
+      `npm installed sandy-app, but did not create the expected package at ${root}.`,
     );
   }
   await verifyNativeModules(root);
@@ -990,17 +990,17 @@ async function runInstall(options) {
   const enrollCode = await runInherited(
     process.execPath,
     [
-      join(root, "dist", "bb.js"),
+      join(root, "dist", "sandy.js"),
       "machine",
       "enroll",
       "--bootstrap-env",
-      "BB_ENROLLMENT",
+      "SANDY_ENROLLMENT",
     ],
     {
       env: {
         ...process.env,
-        BB_DATA_DIR: canonicalDataDir,
-        BB_ENROLLMENT: rawBootstrap,
+        SANDY_DATA_DIR: canonicalDataDir,
+        SANDY_ENROLLMENT: rawBootstrap,
       },
     },
   );
@@ -1035,7 +1035,7 @@ async function runInstall(options) {
   await startService(canonicalDataDir, service);
   await registerStartup(canonicalDataDir, service);
   done("The host daemon starts when you sign in to Windows");
-  detail(`bb CLI for this machine: ${join(npmPrefix, "bb.cmd")}`);
+  detail(`sandy CLI for this machine: ${join(npmPrefix, "sandy.cmd")}`);
   detail(
     `To remove this machine: node "${installerCopy}" --uninstall --host-id ${bootstrap.hostId}`,
   );

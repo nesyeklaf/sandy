@@ -1,17 +1,17 @@
 import { ScopedMachineEnvironmentSettings } from "@/components/settings/MachineEnvironmentSettings";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import "@bb/shared-ui/icon-extended";
+import "@sandy/shared-ui/icon-extended";
 import {
   findLocalPathProjectSourceForHost,
   type Host,
   type LocalPathProjectSource,
-} from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Pill } from "@bb/shared-ui/pill";
-import { ResourceOverflowMenu } from "@bb/shared-ui/resource-list";
+} from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Pill } from "@sandy/shared-ui/pill";
+import { ResourceOverflowMenu } from "@sandy/shared-ui/resource-list";
 import { ProjectPathDialog } from "@/components/dialogs/ProjectPathDialog";
 import {
   ProjectDeleteDialog,
@@ -72,7 +72,7 @@ const CHECKOUTS_DESCRIPTION =
   "Where this project lives on each machine. A machine needs a checkout before it can run threads for this project.";
 
 const DEFAULTS_DESCRIPTION =
-  "What new threads in this project start with. bb remembers the last options you used here.";
+  "What new threads in this project start with. sandy remembers the last options you used here.";
 
 interface CheckoutRowProps {
   host: Host;

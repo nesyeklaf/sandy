@@ -15,7 +15,7 @@ import { CompactViewportOverrideProvider } from "@/components/ui/hooks/use-compa
 import {
   installTestPluginRuntime,
   renderSlot,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { SIDEBAR_CONTROL_STATE_CLASS } from "@/components/ui/sidebar-row-classes";
 import {
   sidebarThreadLifecyclesAtom,

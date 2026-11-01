@@ -6,7 +6,7 @@ import {
   ThreadEventItemApprovalStatus,
   ThreadEventItemPresentation,
   ThreadEventItemStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { getEventParentToolCallId, type EventMeta } from "./event-decode.js";
 import type {
   EventProjectionApprovalLifecycleStatus,

@@ -24,7 +24,7 @@ jobs:
   android:
     name: Android emulator smoke
     if: >-
-      github.repository == 'get-bb/bb'
+      github.repository == 'nesyeklaf/sandy'
       && (github.event_name != 'pull_request'
       || contains(github.event.pull_request.labels.*.name, 'mobile-e2e'))
     runs-on: ubuntu-latest
@@ -58,11 +58,11 @@ jobs:
       - name: Build test APK
         env:
           CI: "1"
-          EXPO_PUBLIC_BB_E2E: "0"
+          EXPO_PUBLIC_SANDY_E2E: "0"
         run: bash apps/mobile/scripts/build-android-local.sh x86_64
 
       - name: Build the web app
-        run: pnpm exec turbo run build --filter=@bb/app
+        run: pnpm exec turbo run build --filter=@sandy/app
 
       - name: Enable emulator acceleration
         run: |

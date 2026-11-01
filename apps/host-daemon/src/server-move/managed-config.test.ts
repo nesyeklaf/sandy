@@ -11,7 +11,7 @@ import {
 const roots: string[] = [];
 
 async function createDataDir(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "bb-managed-config-test-"));
+  const root = await mkdtemp(join(tmpdir(), "sandy-managed-config-test-"));
   roots.push(root);
   return root;
 }
@@ -28,11 +28,11 @@ describe("rewriteManagedConfigServer", () => {
     await writeFile(
       join(dataDir, "config.json"),
       JSON.stringify({
-        config: { BB_LOG_LEVEL: "debug" },
+        config: { SANDY_LOG_LEVEL: "debug" },
         customModels: [{ providerId: "codex", model: "gpt-custom" }],
         serverUrl: "https://old.example.test",
-        serverHeaders: { "x-bb-machine-access": "bbcm_old" },
-        machineCredential: "bbcm_old",
+        serverHeaders: { "x-sandy-machine-access": "sandycm_old" },
+        machineCredential: "sandycm_old",
         connectMachineId: "machine-1",
       }),
       { mode: 0o644 },
@@ -41,16 +41,16 @@ describe("rewriteManagedConfigServer", () => {
     await rewriteManagedConfigServer({
       dataDir,
       serverUrl: "https://new.example.test",
-      headers: { "x-bb-machine-access": "bbcm_new" },
+      headers: { "x-sandy-machine-access": "sandycm_new" },
     });
 
     expect(
       JSON.parse(await readFile(join(dataDir, "config.json"), "utf8")),
     ).toEqual({
-      config: { BB_LOG_LEVEL: "debug" },
+      config: { SANDY_LOG_LEVEL: "debug" },
       customModels: [{ providerId: "codex", model: "gpt-custom" }],
       serverUrl: "https://new.example.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_new" },
+      serverHeaders: { "x-sandy-machine-access": "sandycm_new" },
     });
     if (process.platform !== "win32") {
       expect((await stat(join(dataDir, "config.json"))).mode & 0o777).toBe(
@@ -87,7 +87,7 @@ describe("move import config handling", () => {
     await writeFile(
       join(dataDir, "config.json"),
       JSON.stringify({
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
         serverUrl: "http://127.0.0.1:38886",
         connectMachineId: "imported-server-machine",
       }),
@@ -96,10 +96,10 @@ describe("move import config handling", () => {
     await writeFile(
       backupPath,
       JSON.stringify({
-        config: { BB_LOG_LEVEL: "debug" },
+        config: { SANDY_LOG_LEVEL: "debug" },
         serverUrl: "https://old.example.test",
-        serverHeaders: { "x-bb-machine-access": "bbcm_target" },
-        machineCredential: "bbcm_target",
+        serverHeaders: { "x-sandy-machine-access": "sandycm_target" },
+        machineCredential: "sandycm_target",
       }),
     );
 
@@ -111,10 +111,10 @@ describe("move import config handling", () => {
     expect(
       JSON.parse(await readFile(join(dataDir, "config.json"), "utf8")),
     ).toEqual({
-      config: { BB_LOG_LEVEL: "info" },
+      config: { SANDY_LOG_LEVEL: "info" },
       serverUrl: "https://old.example.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_target" },
-      machineCredential: "bbcm_target",
+      serverHeaders: { "x-sandy-machine-access": "sandycm_target" },
+      machineCredential: "sandycm_target",
     });
 
     await switchConfigToLocalServer({
@@ -125,7 +125,7 @@ describe("move import config handling", () => {
     expect(
       JSON.parse(await readFile(join(dataDir, "config.json"), "utf8")),
     ).toEqual({
-      config: { BB_LOG_LEVEL: "info" },
+      config: { SANDY_LOG_LEVEL: "info" },
       serverUrl: "http://127.0.0.1:38886",
     });
   });

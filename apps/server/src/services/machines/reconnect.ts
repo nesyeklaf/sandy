@@ -1,5 +1,5 @@
-import { getHost, getLatestSessionForHost } from "@bb/db";
-import type { HostReconnectResponse } from "@bb/server-contract";
+import { getHost, getLatestSessionForHost } from "@sandy/db";
+import type { HostReconnectResponse } from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import {

@@ -55,7 +55,7 @@ describe("sampler on a captured host-daemon /proc", () => {
     );
     const bridges = Object.entries(procs)
       .filter(([, proc]) =>
-        proc.cmdline?.includes("bb-provider-bridge-worker.mjs"),
+        proc.cmdline?.includes("sandy-provider-bridge-worker.mjs"),
       )
       .map(([pid]) => Number(pid));
     expect(zombies.length).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe("sampler on a captured host-daemon /proc", () => {
     const rows = sampler.read({ generation: null, cursor: 0, gapCursor: 0 }).rows;
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) {
-      if (bridges.includes(row.pid)) expect(row.comm).toBe("bb-provider-bridge");
+      if (bridges.includes(row.pid)) expect(row.comm).toBe("sandy-provider-bridge");
       else expect(row.comm).toBe(commOf(String(row.pid)));
     }
   });
@@ -98,7 +98,7 @@ describe("sampler on a captured host-daemon /proc", () => {
       now: 1_000,
     };
     const bridgeStates = rows
-      .filter((row) => row.comm === "bb-provider-bridge")
+      .filter((row) => row.comm === "sandy-provider-bridge")
       .map((row) => classify(row, null, context).state);
     expect(bridgeStates.length).toBeGreaterThan(0);
     expect(bridgeStates).not.toContain("red");

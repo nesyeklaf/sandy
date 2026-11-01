@@ -1,0 +1,10 @@
+appId: app.sandy.mobile
+---
+- openLink: "${LINK}"
+- runFlow:
+    when:
+      platform: iOS
+      visible: "Open in.*sandy.*"
+    commands:
+      - tapOn: "Open"
+- assertNotVisible: "Open in.*sandy.*"

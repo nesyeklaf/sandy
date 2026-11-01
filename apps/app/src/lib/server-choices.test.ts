@@ -2,27 +2,27 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, renderHook } from "@testing-library/react";
-import type { BbDesktopServerChoice } from "@bb/desktop-contract";
+import type { SandyDesktopServerChoice } from "@sandy/desktop-contract";
 import {
   buildBridgeEventScript,
   buildBridgeInjectionScript,
   parsePageToShellMessage,
   type BridgeServer,
   type NativeShellHandshake,
-} from "@bb/mobile-bridge";
-import { createBbDesktopApi } from "../test/bb-desktop-test-utils";
+} from "@sandy/mobile-bridge";
+import { createSandyDesktopApi } from "../test/sandy-desktop-test-utils";
 import { getNativeShell, resetNativeShellForTests } from "./native-shell";
 import { getServerChoices, resetServerChoicesForTests } from "./server-choices";
 import { useServerChoices } from "../hooks/useServerChoices";
 
-const local: BbDesktopServerChoice = {
+const local: SandyDesktopServerChoice = {
   id: "builtin",
   name: "This Mac",
   origin: "http://127.0.0.1:38886",
   kind: "local",
   active: true,
 };
-const studio: BbDesktopServerChoice = {
+const studio: SandyDesktopServerChoice = {
   id: "connect:studio",
   name: "Studio",
   origin: "https://studio.example.test",
@@ -31,17 +31,17 @@ const studio: BbDesktopServerChoice = {
 };
 
 function createDesktopApi() {
-  return createBbDesktopApi({
+  return createSandyDesktopApi({
     platform: "macos",
     version: "test",
   });
 }
 
 function installDesktop() {
-  const listeners = new Set<(choices: BbDesktopServerChoice[]) => void>();
-  const responses: ((choices: BbDesktopServerChoice[]) => void)[] = [];
+  const listeners = new Set<(choices: SandyDesktopServerChoice[]) => void>();
+  const responses: ((choices: SandyDesktopServerChoice[]) => void)[] = [];
   const selectServer = vi.fn();
-  window.bbDesktop = {
+  window.sandyDesktop = {
     ...createDesktopApi(),
     listServerChoices: () =>
       new Promise((resolve) => {
@@ -58,11 +58,11 @@ function installDesktop() {
   return {
     selectServer,
     requests: () => responses.length,
-    async respond(index: number, choices: BbDesktopServerChoice[]) {
+    async respond(index: number, choices: SandyDesktopServerChoice[]) {
       responses[index]?.(choices);
       await Promise.resolve();
     },
-    change(next: BbDesktopServerChoice[]) {
+    change(next: SandyDesktopServerChoice[]) {
       for (const listener of listeners) listener(next);
     },
   };
@@ -99,8 +99,8 @@ function installMobile(servers?: readonly BridgeServer[]) {
 
 afterEach(() => {
   cleanup();
-  Reflect.deleteProperty(window, "bbDesktop");
-  Reflect.deleteProperty(window, "bb");
+  Reflect.deleteProperty(window, "sandyDesktop");
+  Reflect.deleteProperty(window, "sandy");
   Reflect.deleteProperty(window, "ReactNativeWebView");
   resetNativeShellForTests();
   resetServerChoicesForTests();
@@ -111,7 +111,7 @@ describe("server choices", () => {
     "offers no servers in a %s",
     (client) => {
       if (client === "older desktop") {
-        window.bbDesktop = {
+        window.sandyDesktop = {
           ...createDesktopApi(),
           getServerChoices: async () => [local],
           onServerChoicesChange: () => () => {},
@@ -197,7 +197,7 @@ describe("server choices", () => {
 
   it("keeps the mobile bridge usable when the app's list is one this page cannot read", () => {
     installMobile([]);
-    Reflect.set(Reflect.get(Reflect.get(window, "bb"), "native"), "servers", [
+    Reflect.set(Reflect.get(Reflect.get(window, "sandy"), "native"), "servers", [
       { ...studio, kind: "teleport" },
     ]);
     expect(getServerChoices()).toBeNull();

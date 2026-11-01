@@ -8,7 +8,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "@bb/file-transfer",
+      name: "@sandy/file-transfer",
       include: ["test/**/*.test.ts"],
     }),
   },

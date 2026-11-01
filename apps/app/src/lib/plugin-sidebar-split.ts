@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useAtomValue } from "jotai";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import type {
   PluginSidebarSplitLayout,
   PluginSidebarSplitPane,
   PluginSidebarThreadSplit,
   PluginSidebarThreadSplitOptions,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { usePaneContentSplitIndicator } from "@/components/sidebar/paneContentSplitIndicator";
 import { useThreadRowSplitDrag } from "@/components/sidebar/useThreadRowSplitDrag";
 import { useThreadTitleDisplayText } from "@/components/thread/ThreadTitleMentions";

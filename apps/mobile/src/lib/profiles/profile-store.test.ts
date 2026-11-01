@@ -122,7 +122,7 @@ describe("profile store", () => {
     );
   });
 
-  it("skips corrupt, missing or retired bb connect profile records on load and heals the index", async () => {
+  it("skips corrupt, missing or retired sandy connect profile records on load and heals the index", async () => {
     const storage = createMemorySecureStorage({
       [PROFILE_INDEX_STORAGE_KEY]: JSON.stringify({
         ids: ["good", "missing", "corrupt", "legacy-connect"],
@@ -140,7 +140,7 @@ describe("profile store", () => {
         serverUrl: "https://bee.example.test",
         label: "bee",
         handle: "bee",
-        credential: "bbcm_secret",
+        credential: "sandycm_secret",
         createdAt: 1,
       }),
     });

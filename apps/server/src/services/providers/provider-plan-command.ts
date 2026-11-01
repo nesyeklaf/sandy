@@ -1,4 +1,4 @@
-import type { PromptInput, ProviderComposerCommand } from "@bb/domain";
+import type { PromptInput, ProviderComposerCommand } from "@sandy/domain";
 import { ApiError } from "../../errors.js";
 import type { ProviderRegistryService } from "./provider-registry.js";
 

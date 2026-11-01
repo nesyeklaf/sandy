@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import {
   collectLogPayloads,
@@ -45,17 +45,17 @@ function exportResponse(
     status: 200,
     headers: {
       "content-disposition":
-        'attachment; filename="bb-server-2026-09-15.tar.gz"',
+        'attachment; filename="sandy-server-2026-09-15.tar.gz"',
       "content-type": "application/gzip",
-      ...(sha256 === null ? {} : { "x-bb-archive-sha256": sha256 }),
+      ...(sha256 === null ? {} : { "x-sandy-archive-sha256": sha256 }),
     },
   });
 }
 
 const UNENCRYPTED_EXPORT_WARNING =
-  "This export is not encrypted and holds the server's credentials and plugin secrets. Keep it private; bb wrote it with mode 0600.";
+  "This export is not encrypted and holds the server's credentials and plugin secrets. Keep it private; sandy wrote it with mode 0600.";
 
-describe("bb server export", () => {
+describe("sandy server export", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -106,7 +106,7 @@ describe("bb server export", () => {
     await runCommand(["server", "export", "--out", outPath], register);
 
     expect(collectLogPayloads(vi.mocked(console.log))).toEqual([
-      `Exported the bb server to ${outPath} (1.0 MB)`,
+      `Exported the sandy server to ${outPath} (1.0 MB)`,
     ]);
     expect(collectLogPayloads(vi.mocked(console.error))).toEqual([
       UNENCRYPTED_EXPORT_WARNING,
@@ -178,7 +178,7 @@ describe("bb server export", () => {
             JSON.stringify({
               code: "server_move_experiment_disabled",
               message:
-                'Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run bb settings experiment serverMove true, then try again.',
+                'Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run sandy settings experiment serverMove true, then try again.',
             }),
             { status: 403, headers: { "Content-Type": "application/json" } },
           ),
@@ -193,7 +193,7 @@ describe("bb server export", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))).toEqual([
-      'Error: Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run bb settings experiment serverMove true, then try again.',
+      'Error: Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run sandy settings experiment serverMove true, then try again.',
     ]);
     expect(await readdir(dir)).toEqual([]);
   });

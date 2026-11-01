@@ -1,7 +1,7 @@
 import {
   definePluginApp,
   type PluginThreadListProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { CompactViewportOverrideProvider } from "@/components/ui/hooks/use-compact-viewport";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesSync } from "./app/preferences/PreferencesSync.js";

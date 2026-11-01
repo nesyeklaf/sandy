@@ -8,7 +8,7 @@ import {
   stat,
 } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { DevInstanceConfig } from "@bb/config/runtime";
+import type { DevInstanceConfig } from "@sandy/config/runtime";
 
 export interface LegacyDevDataMigrationResult {
   migratedEntries: string[];
@@ -42,7 +42,7 @@ interface RollbackMigratedEntriesArgs {
   targetDataDir: string;
 }
 
-const LEGACY_DEV_DATA_DIR_NAME = ".bb-dev";
+const LEGACY_DEV_DATA_DIR_NAME = ".sandy-dev";
 const LEGACY_DEV_SUPERVISOR_DIR_NAME = "dev-supervisors";
 const LEGACY_DEV_SUPERVISOR_PID_FILE_NAMES = [
   "host-daemon.pid",
@@ -52,9 +52,9 @@ const MIGRATABLE_LEGACY_ENTRY_NAMES = new Set([
   "attachments",
   "auth-secret",
   "auth.json",
-  "bb.db",
-  "bb.db-shm",
-  "bb.db-wal",
+  "sandy.db",
+  "sandy.db-shm",
+  "sandy.db-wal",
   "host-id",
   "logs",
   "replays",
@@ -86,7 +86,7 @@ async function isDirectoryEmpty(pathToCheck: string): Promise<boolean> {
 
 function isMigratableLegacyEntryName(entryName: string): boolean {
   return (
-    MIGRATABLE_LEGACY_ENTRY_NAMES.has(entryName) || /^bb\.db\./u.test(entryName)
+    MIGRATABLE_LEGACY_ENTRY_NAMES.has(entryName) || /^sandy\.db\./u.test(entryName)
   );
 }
 

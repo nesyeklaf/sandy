@@ -36,7 +36,7 @@ function readPackageVersion(packageJsonText, label) {
  */
 function readBuildCommit(env) {
   const injected =
-    env.BB_DESKTOP_COMMIT?.trim() ?? env.GITHUB_SHA?.trim() ?? "";
+    env.SANDY_DESKTOP_COMMIT?.trim() ?? env.GITHUB_SHA?.trim() ?? "";
   if (injected.length > 0) {
     return injected;
   }
@@ -52,7 +52,7 @@ function readBuildCommit(env) {
 }
 
 function readBuildDate(env) {
-  const injected = env.BB_DESKTOP_BUILD_DATE?.trim() ?? "";
+  const injected = env.SANDY_DESKTOP_BUILD_DATE?.trim() ?? "";
   if (injected.length > 0) {
     return injected;
   }
@@ -76,14 +76,14 @@ const desktopBuildDate = readBuildDate(process.env);
 const commonOptions = {
   bundle: true,
   define: {
-    "process.env.BB_DESKTOP_BUILD_DATE": JSON.stringify(desktopBuildDate),
-    "process.env.BB_DESKTOP_COMMIT": JSON.stringify(desktopCommit),
-    "process.env.BB_DESKTOP_PLUGIN_SDK_VERSION":
+    "process.env.SANDY_DESKTOP_BUILD_DATE": JSON.stringify(desktopBuildDate),
+    "process.env.SANDY_DESKTOP_COMMIT": JSON.stringify(desktopCommit),
+    "process.env.SANDY_DESKTOP_PLUGIN_SDK_VERSION":
       JSON.stringify(pluginSdkVersion),
-    "process.env.BB_DESKTOP_RELEASE_CHANNEL": JSON.stringify(
+    "process.env.SANDY_DESKTOP_RELEASE_CHANNEL": JSON.stringify(
       desktopReleaseChannel,
     ),
-    "process.env.BB_DESKTOP_VERSION": JSON.stringify(desktopVersion),
+    "process.env.SANDY_DESKTOP_VERSION": JSON.stringify(desktopVersion),
   },
   legalComments: "none",
   platform: "node",
@@ -145,11 +145,11 @@ await Promise.all([
   }),
   build({
     ...commonOptions,
-    entryPoints: [resolve(packageRoot, "src", "bb-app-bridge.ts")],
-    external: ["bb-app", "bb-app/*"],
+    entryPoints: [resolve(packageRoot, "src", "sandy-app-bridge.ts")],
+    external: ["sandy-app", "sandy-app/*"],
     format: "esm",
-    outfile: resolve(distDir, "bb-app-bridge.mjs"),
+    outfile: resolve(distDir, "sandy-app-bridge.mjs"),
   }),
 ]);
 
-process.stdout.write("@bb/desktop: built Electron entries\n");
+process.stdout.write("@sandy/desktop: built Electron entries\n");

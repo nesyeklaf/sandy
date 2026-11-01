@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { experimental_copyToClipboard } from "@get-bb/plugin-sdk/app";
+import { experimental_copyToClipboard } from "@sandy-sdk/plugin-sdk/app";
 import { useCopiedFeedback } from "./copy-button";
 
 export function useSdkClipboardCopy({

@@ -4,9 +4,9 @@ import type {
   WatchThreadStorageArgs,
   WatchWorkspaceArgs,
   WorkspaceWatchError,
-} from "@bb/host-watcher";
-import type { HostWorkspace } from "@bb/host-workspace";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/host-watcher";
+import type { HostWorkspace } from "@sandy/host-workspace";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import { WatchManager, type WatchManagerOptions } from "./watch-manager.js";
 
@@ -989,7 +989,7 @@ describe("WatchManager", () => {
     const manager = new WatchManager({
       hostWatcher,
       onThreadStorageChanged,
-      threadStorageRootPath: "/tmp/bb-data/thread-storage",
+      threadStorageRootPath: "/tmp/sandy-data/thread-storage",
     });
 
     await manager.replaceWatchSet({
@@ -1016,7 +1016,7 @@ describe("WatchManager", () => {
 
     expect(watchThreadStorage).toHaveBeenCalledTimes(1);
     expect(watchThreadStorageArgs?.threadStoragePath).toBe(
-      path.resolve("/tmp/bb-data/thread-storage", "thread-1"),
+      path.resolve("/tmp/sandy-data/thread-storage", "thread-1"),
     );
     expect(onThreadStorageChanged).toHaveBeenCalledWith({
       environmentId: "env-moved",
@@ -1045,7 +1045,7 @@ describe("WatchManager", () => {
     });
     const manager = new WatchManager({
       hostWatcher,
-      threadStorageRootPath: "/tmp/bb-data/thread-storage",
+      threadStorageRootPath: "/tmp/sandy-data/thread-storage",
     });
 
     await manager.replaceWatchSet({
@@ -1075,12 +1075,12 @@ describe("WatchManager", () => {
 
     expect(
       stopWatchingByPath.get(
-        path.resolve("/tmp/bb-data/thread-storage", "thread-a"),
+        path.resolve("/tmp/sandy-data/thread-storage", "thread-a"),
       ),
     ).toHaveBeenCalledTimes(1);
     expect(
       stopWatchingByPath.get(
-        path.resolve("/tmp/bb-data/thread-storage", "thread-b"),
+        path.resolve("/tmp/sandy-data/thread-storage", "thread-b"),
       ),
     ).not.toHaveBeenCalled();
     expect(manager.threadStorageWatchTargetCount()).toBe(1);
@@ -1090,7 +1090,7 @@ describe("WatchManager", () => {
     const { hostWatcher, watchThreadStorage } = createFakeHostWatcher();
     const manager = new WatchManager({
       hostWatcher,
-      threadStorageRootPath: "/tmp/bb-data/thread-storage",
+      threadStorageRootPath: "/tmp/sandy-data/thread-storage",
     });
 
     await manager.replaceWatchSet({

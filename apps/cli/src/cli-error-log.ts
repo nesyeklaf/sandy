@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { parseDataDirEnvValue, resolveProdDataDir } from "@bb/config/runtime";
+import { parseDataDirEnvValue, resolveProdDataDir } from "@sandy/config/runtime";
 import { z } from "zod";
 
 export const CLI_ERROR_LOG_FILE_NAME = "cli-errors.jsonl";
@@ -34,7 +34,7 @@ export function resolveCliErrorLogLocation(
   env: NodeJS.ProcessEnv = process.env,
 ): CliErrorLogLocation {
   const homeDir = homedir();
-  const configured = env.BB_DATA_DIR;
+  const configured = env.SANDY_DATA_DIR;
   return {
     dataDir: resolve(
       configured === undefined || configured.trim().length === 0
@@ -51,7 +51,7 @@ export function formatCliErrorLogPath(location: CliErrorLogLocation): string {
 export function isCliErrorLogEnabled(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  const raw = env.BB_CLI_ERROR_LOG;
+  const raw = env.SANDY_CLI_ERROR_LOG;
   if (raw === undefined) return true;
   return !CLI_ERROR_LOG_DISABLE_VALUES.has(raw.trim().toLowerCase());
 }

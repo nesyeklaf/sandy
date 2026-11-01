@@ -2,10 +2,10 @@ import {
   hasRef,
   readBranchRelation,
   readDefaultBranchRefs,
-} from "bb-environment-provider-host/git";
+} from "sandy-environment-provider-host/git";
 import type {
   DefaultBranchRelation,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 import type { WorktreeBaseBranch } from "../contract.js";
 
 interface ResolveDefaultWorktreeBaseBranchArgs {

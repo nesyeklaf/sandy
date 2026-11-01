@@ -5,9 +5,9 @@ import {
   listCorpusThreads,
   loadCorpusThread,
   resolveProviderCorpusDir,
-} from "@bb/test-helpers";
-import type { CorpusThread } from "@bb/test-helpers";
-import type { TimelineRow } from "@bb/server-contract";
+} from "@sandy/test-helpers";
+import type { CorpusThread } from "@sandy/test-helpers";
+import type { TimelineRow } from "@sandy/server-contract";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ProviderRegistryService } from "../../src/services/providers/provider-registry.js";
 import { createTestProviderRegistry } from "../helpers/provider-registry.js";
@@ -174,7 +174,7 @@ describe.skipIf(!available)("provider corpus row snapshots", () => {
 
         if (!fs.existsSync(filePath)) {
           throw new Error(
-            `No row snapshot for ${threadId} at ${filePath}; run the suite once with BB_PROVIDER_CORPUS_SNAPSHOT=write`,
+            `No row snapshot for ${threadId} at ${filePath}; run the suite once with SANDY_PROVIDER_CORPUS_SNAPSHOT=write`,
           );
         }
         const expected = normalizeJson(

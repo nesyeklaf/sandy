@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build a release of this fork from a clean checkout of main: run the checks, build the artifacts.
 # Usage: scripts/fork/release.sh [test|build|all]   (default: all)
-# Artifacts go to $BB_FORK_DIST/<short-sha>/ (default ~/bb-fork-dist).
+# Artifacts go to $SANDY_FORK_DIST/<short-sha>/ (default ~/sandy-fork-dist).
 set -euo pipefail
 
 case "${1:-all}" in
@@ -10,7 +10,7 @@ esac
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 cd "$root"
-dist_root="${BB_FORK_DIST:-$HOME/bb-fork-dist}"
+dist_root="${SANDY_FORK_DIST:-$HOME/sandy-fork-dist}"
 
 require_clean_main() {
   [ -z "$(git status --porcelain)" ] || { echo "Working tree not clean" >&2; exit 1; }
@@ -39,11 +39,11 @@ build() {
   out="$dist_root/$sha"
   mkdir -p "$out"
 
-  pnpm --filter @bb/desktop run prepare-runtime
-  pnpm --filter @bb/desktop run desktop:build:linux
+  pnpm --filter @sandy/desktop run prepare-runtime
+  pnpm --filter @sandy/desktop run desktop:build:linux
   cp apps/desktop/release/*.AppImage "$out/"
 
-  (cd packages/bb-app && npm pack --pack-destination "$out")
+  (cd packages/sandy-app && npm pack --pack-destination "$out")
 
   (
     export JAVA_HOME; JAVA_HOME=$(find_jdk17)
@@ -51,7 +51,7 @@ build() {
     export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
     cd apps/mobile && bash scripts/build-android-local.sh arm64-v8a production
   )
-  cp apps/mobile/build-output/bb-android-local.apk "$out/bb-android-$sha.apk"
+  cp apps/mobile/build-output/sandy-android-local.apk "$out/sandy-android-$sha.apk"
 
   (cd "$out" && sha256sum -- * > SHA256SUMS)
   echo "Artifacts in $out"

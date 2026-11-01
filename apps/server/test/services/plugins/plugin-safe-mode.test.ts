@@ -3,9 +3,9 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { Logger } from "@bb/logger";
+import { type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -20,19 +20,19 @@ const fixtureRoot = resolve(
   "..",
   "fixtures",
   "plugins",
-  "bb-plugin-builtin-fixture",
+  "sandy-plugin-builtin-fixture",
 );
 const globals = globalThis as Record<string, unknown>;
 
 async function writePathPlugin(dir: string, name: string): Promise<string> {
-  const rootDir = join(dir, `bb-plugin-${name}`);
+  const rootDir = join(dir, `sandy-plugin-${name}`);
   await mkdir(rootDir, { recursive: true });
   await writeFile(
     join(rootDir, "package.json"),
     JSON.stringify({
-      name: `bb-plugin-${name}`,
+      name: `sandy-plugin-${name}`,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Safe mode fixture",
         description: "Safe mode fixture.",
         branding: { icon: "Zap" },
@@ -42,11 +42,11 @@ async function writePathPlugin(dir: string, name: string): Promise<string> {
   );
   await writeFile(
     join(rootDir, "server.ts"),
-    `export default function plugin(bb: any) {
+    `export default function plugin(sandy: any) {
       const g = globalThis as any;
       if (g.__safeModeFailing === ${JSON.stringify(name)}) throw new Error("boom");
       g.__safeModeLoads = { ...g.__safeModeLoads, ${JSON.stringify(name)}: (g.__safeModeLoads?.[${JSON.stringify(name)}] ?? 0) + 1 };
-      bb.onDispose(() => {
+      sandy.onDispose(() => {
         g.__safeModeDisposed = [...(g.__safeModeDisposed ?? []), ${JSON.stringify(name)}];
       });
     }`,
@@ -92,7 +92,7 @@ describe("plugin safe mode", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-safe-mode-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-safe-mode-"));
     service = createService();
     await service.start();
   });
@@ -182,13 +182,13 @@ describe("plugin safe mode", () => {
     await expect(
       service.installPath(await writePathPlugin(workDir, "beta")),
     ).rejects.toThrow(
-      'plugin safe mode is on; turn it off with `bb plugin safe-mode off` before you install "beta"',
+      'plugin safe mode is on; turn it off with `sandy plugin safe-mode off` before you install "beta"',
     );
     expect(entry("beta")).toBeUndefined();
     await expect(service.applyUpdate("alpha")).resolves.toEqual({
       ok: false,
       error:
-        'plugin safe mode is on; turn it off with `bb plugin safe-mode off` before you update "alpha"',
+        'plugin safe mode is on; turn it off with `sandy plugin safe-mode off` before you update "alpha"',
     });
 
     await service.setSafeMode(false);

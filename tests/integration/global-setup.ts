@@ -1,16 +1,16 @@
 import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { setupMigratedConnectionTemplate } from "@bb/db/testing";
+import { setupMigratedConnectionTemplate } from "@sandy/db/testing";
 import {
   killProcessesReferencingPath,
   listOpenFilePids,
   readPositivePidFile,
-} from "@bb/test-helpers";
+} from "@sandy/test-helpers";
 import { isNodeError, removePathWithRetry } from "./helpers/remove-path.js";
 import { setupBuiltinHostBuildRecords } from "./helpers/builtin-plugin-fixture.js";
 
-const INTEGRATION_TMP_PREFIX = "bb-integration-";
+const INTEGRATION_TMP_PREFIX = "sandy-integration-";
 const STALE_TMP_ROOT_AGE_MS = 60 * 60_000;
 
 function isProcessAlive(pid: number): boolean {

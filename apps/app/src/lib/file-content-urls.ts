@@ -1,7 +1,7 @@
 import {
   getEnvironmentFilePreviewSourceRef,
   type EnvironmentFilePreviewSource,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { apiClient, toRelativeUrl } from "./api-server";
 
 function encodePathSegments(path: string): string {

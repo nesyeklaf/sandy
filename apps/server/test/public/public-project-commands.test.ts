@@ -1,13 +1,13 @@
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type {
   DiscoveredSkill,
   HostProviderCommand,
   HostDaemonOnlineRpcRequestMessage,
-} from "@bb/host-daemon-contract";
-import { commandListResponseSchema } from "@bb/server-contract";
-import type { ExperimentalNativeRootsResolveAnswer } from "@get-bb/plugin-sdk/host";
+} from "@sandy/host-daemon-contract";
+import { commandListResponseSchema } from "@sandy/server-contract";
+import type { ExperimentalNativeRootsResolveAnswer } from "@sandy-sdk/plugin-sdk/host";
 import { describe, expect, it, vi } from "vitest";
 import { COMMAND_TIMEOUT_MS } from "../../src/constants.js";
 import { PROVIDER_LIVE_COMMANDS_FRESH_MS } from "../../src/services/providers/provider-live-commands.js";
@@ -26,7 +26,7 @@ import {
   seedProjectWithSource,
 } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 
 const NO_RESOLVED_ROOTS = { skills: [], commands: [] };
 
@@ -639,10 +639,10 @@ describe("public project command typeahead route", () => {
     });
   });
 
-  it("keeps inherited bb skill roots out of provider-native discovery", async () => {
+  it("keeps inherited sandy skill roots out of provider-native discovery", async () => {
     await withTestHarness(
       {
-        inheritedSkillsRootPaths: ["/tmp/bb-parent-skills"],
+        inheritedSkillsRootPaths: ["/tmp/sandy-parent-skills"],
       },
       async (harness) => {
         const { host, session } = seedHostSession(harness.deps, {

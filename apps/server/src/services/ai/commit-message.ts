@@ -1,5 +1,5 @@
-import { renderTemplate } from "@bb/templates";
-import { truncateToWidthAtWordBoundary } from "@bb/text-utils";
+import { renderTemplate } from "@sandy/templates";
+import { truncateToWidthAtWordBoundary } from "@sandy/text-utils";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { preferredAiPluginId, runTextAiTask } from "./ai-tasks.js";
 

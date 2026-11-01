@@ -1,12 +1,12 @@
 # path prefix	owning slice	reason
 apps/server/src/services/plugins	keep	git-plugin-dependencies.ts runs npm install for the dependencies of a plugin installed from a git source; the other hits are git clone through runInstallCommand
 apps/server/src/services/plugin-catalog	keep	marketplace git sources are cloned with git through runInstallCommand; no package manager runs here
-apps/server/src/services/install/bb-app-artifact.ts	keep	npm pack of the server's own host package, so the host daemon can install the same bb-app build as the server
+apps/server/src/services/install/sandy-app-artifact.ts	keep	npm pack of the server's own host package, so the host daemon can install the same sandy-app build as the server
 apps/server/src/assets/install-machine.sh	keep	npm install -g of the server's own tarball when a machine joins; its dependencies resolve through the npm registry
 apps/server/src/assets/install-machine-windows.mjs	keep	same install on Windows
 apps/host-daemon/src/protocol-self-update.ts	keep	npm install -g of the server's own tarball on a protocol mismatch
 apps/connect-next/Dockerfile	keep	image build of the connect-next service, not part of the fork runtime
 packages/plugin-build/src/toolchain.ts	keep	plugin build resolves the bundled npm to install the build tools of the plugin SDK
 packages/process-utils/src/host-toolchain.ts	keep	defines the npm launchers that the kept callers use
-scripts/fork/release.sh	fork	npm pack of the local bb-app package, no registry access
+scripts/fork/release.sh	fork	npm pack of the local sandy-app package, no registry access
 scripts/fork/remote.sh	fork	deploy installs the fork tarball with npm install -g; its dependencies resolve through the npm registry

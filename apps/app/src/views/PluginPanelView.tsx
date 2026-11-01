@@ -1,5 +1,5 @@
 import { PageShell } from "@/components/ui/page-shell.js";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount";
 import { usePluginFrontendsSettled } from "@/lib/plugin-frontend-boot-state";
 import { usePluginSlots } from "@/lib/plugin-slots";
@@ -26,13 +26,13 @@ export function PluginPanelView({
   if (panel === null) {
     if (!pluginsSettled) {
       return (
-        <PageShell contentClassName="pt-[calc(var(--bb-app-chrome-row-height)+1rem)] md:pt-[calc(var(--bb-app-chrome-row-height)+1.25rem)]">
+        <PageShell contentClassName="pt-[calc(var(--sandy-app-chrome-row-height)+1rem)] md:pt-[calc(var(--sandy-app-chrome-row-height)+1.25rem)]">
           {null}
         </PageShell>
       );
     }
     return (
-      <PageShell contentClassName="pt-[calc(var(--bb-app-chrome-row-height)+1rem)] md:pt-[calc(var(--bb-app-chrome-row-height)+1.25rem)]">
+      <PageShell contentClassName="pt-[calc(var(--sandy-app-chrome-row-height)+1rem)] md:pt-[calc(var(--sandy-app-chrome-row-height)+1.25rem)]">
         <EmptyStatePanel className="rounded-lg p-6 text-sm">
           This plugin panel is not available. The plugin may have been disabled
           or removed.

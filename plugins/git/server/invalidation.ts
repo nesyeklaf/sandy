@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import {
   gitFilesTag,
   gitRefsTag,
@@ -6,7 +6,7 @@ import {
   gitViewedTag,
 } from "../contract.js";
 
-type SubscribeArgs = Parameters<BbPluginApi["sdk"]["subscribe"]>[0];
+type SubscribeArgs = Parameters<SandyPluginApi["sdk"]["subscribe"]>[0];
 type EnvironmentChangedEvent = Parameters<
   Extract<SubscribeArgs, { event: "environment:changed" }>["callback"]
 >[0];

@@ -1,9 +1,9 @@
-import { getThread } from "@bb/db";
-import type { ThreadEvent, ThreadEventWithItem } from "@bb/domain";
-import { isThreadEventWithItem, parseNamespacedGlyph } from "@bb/domain";
-import type { HostDaemonEventEnvelope } from "@bb/host-daemon-contract";
+import { getThread } from "@sandy/db";
+import type { ThreadEvent, ThreadEventWithItem } from "@sandy/domain";
+import { isThreadEventWithItem, parseNamespacedGlyph } from "@sandy/domain";
+import type { HostDaemonEventEnvelope } from "@sandy/host-daemon-contract";
 import { findPluginAgentTool } from "../services/plugins/plugin-agent-contributions.js";
-import { undeclaredIconProblem } from "@get-bb/plugin-sdk/internal/host-policy";
+import { undeclaredIconProblem } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import type { AppDeps } from "../types.js";
 
 export type PresentationIconValidationDeps = Pick<
@@ -11,7 +11,7 @@ export type PresentationIconValidationDeps = Pick<
   "db" | "logger" | "providerRegistry"
 >;
 
-const BB_TOOL_SERVER = "bb";
+const SANDY_TOOL_SERVER = "sandy";
 
 interface PresentationIconSite {
   glyph: string;
@@ -36,9 +36,9 @@ function presentationIconSiteOf(
   return { glyph, glyphPluginId: parsed.pluginId, event };
 }
 
-function isRegisteredBbToolIcon(site: PresentationIconSite): boolean {
+function isRegisteredSandyToolIcon(site: PresentationIconSite): boolean {
   const { item } = site.event;
-  if (item.type !== "toolCall" || item.server !== BB_TOOL_SERVER) {
+  if (item.type !== "toolCall" || item.server !== SANDY_TOOL_SERVER) {
     return false;
   }
   const tool = findPluginAgentTool(item.tool);
@@ -54,7 +54,7 @@ function presentationIconProblem(
   site: PresentationIconSite,
   providerId: string | null,
 ): string | null {
-  if (isRegisteredBbToolIcon(site)) {
+  if (isRegisteredSandyToolIcon(site)) {
     return null;
   }
   const registration =

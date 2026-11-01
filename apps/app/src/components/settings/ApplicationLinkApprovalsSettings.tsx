@@ -2,8 +2,8 @@ import { appQueryClient } from "@/lib/app-query-client";
 import { applicationLinkApprovalsQueryKey } from "@/hooks/cache-owners/application-link-approvals-cache-owner";
 import { useQuery } from "@tanstack/react-query";
 import { useId } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 import { applicationLinkApprovals } from "@/lib/application-url";
 import { appToast } from "@/components/ui/app-toast";
 import { SettingsWithControl } from "@/components/ui/settings-section";
@@ -32,7 +32,7 @@ export function ApplicationLinkApprovalsSettings() {
     <div className="border-border not-first:border-t not-first:pt-5">
       <SettingsWithControl
         label="App links"
-        description="BB asks before opening links like linear:// in another app. Approvals stay on this device and aren't synced."
+        description="SANDY asks before opening links like linear:// in another app. Approvals stay on this device and aren't synced."
         controlPlacement="below"
       >
         {approvals.isPending ? (

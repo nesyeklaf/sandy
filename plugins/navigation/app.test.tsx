@@ -6,8 +6,8 @@ import type {
   ExperimentalBadge,
   ExperimentalSidebarNavigationItem,
   ExperimentalSidebarNavigationProps,
-} from "@get-bb/plugin-sdk/app";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 
 const app = await loadPluginApp(() => import("./app"));
 const rail = app.experimentalSidebarNavigations.find(
@@ -63,18 +63,18 @@ function panelItem(
 }
 
 const NEW_THREAD = hostItem(
-  "__bb__/new-thread",
+  "__sandy__/new-thread",
   "New thread",
   { kind: "new-thread" },
   { shortcut: { label: "⌘N", ariaKeyShortcuts: "Meta+N" } },
 );
 const SEARCH = hostItem(
-  "__bb__/search-threads",
+  "__sandy__/search-threads",
   "Search threads",
   { kind: "search-threads" },
   { isVisible: false },
 );
-const PLUGINS = hostItem("__bb__/extensions", "Plugins", {
+const PLUGINS = hostItem("__sandy__/extensions", "Plugins", {
   kind: "open-extensions",
 });
 const DOCS = panelItem("garden", "docs", "Docs");

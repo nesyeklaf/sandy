@@ -45,7 +45,7 @@ export default {
           perCharDelayMs: 0,
         });
         await browser.evaluate(
-          "window.__bbperf.arm(" +
+          "window.__sandyperf.arm(" +
             JSON.stringify(occurrences(FIRST_MARKER) + " > " + baseline.first) +
             ", 20000)",
         );
@@ -54,10 +54,10 @@ export default {
           windowsVirtualKeyCode: 13,
         });
         phases.firstToken = await browser.evaluate(
-          "window.__bbperf.collectArmed()",
+          "window.__sandyperf.collectArmed()",
         );
         await browser.evaluate(
-          "window.__bbperf.arm(" +
+          "window.__sandyperf.arm(" +
             JSON.stringify(occurrences(LAST_MARKER) + " > " + baseline.last) +
             ", 30000)",
         );
@@ -66,7 +66,7 @@ export default {
           perCharDelayMs: 40,
         });
         phases.lastToken = await browser.evaluate(
-          "window.__bbperf.collectArmed()",
+          "window.__sandyperf.collectArmed()",
         );
       },
     });

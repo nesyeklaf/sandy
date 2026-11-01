@@ -117,7 +117,7 @@ describe("classify, first match wins", () => {
     });
   });
 
-  it("infers a provider bridge socket like a provider CLI and keeps it bb's own", () => {
+  it("infers a provider bridge socket like a provider CLI and keeps it sandy's own", () => {
     const fresh = {
       "2a06:98c1:3101::6812:202f": [
         {
@@ -129,14 +129,14 @@ describe("classify, first match wins", () => {
     };
     expect(
       classify(
-        out("2a06:98c1:3101::6812:202f", 443, "bb-provider-bridge"),
+        out("2a06:98c1:3101::6812:202f", 443, "sandy-provider-bridge"),
         null,
         context(fresh),
       ),
     ).toMatchObject({ state: "inferred", reason: "resolves to chatgpt.com" });
     expect(
       classify(
-        out("2a00:1450:4001:c13::65", 443, "bb-provider-bridge"),
+        out("2a00:1450:4001:c13::65", 443, "sandy-provider-bridge"),
         null,
         context(),
       ),
@@ -182,7 +182,7 @@ describe("classify, first match wins", () => {
       classify(out("104.18.2.2", 443, "codex"), null, context(shared)),
     ).toMatchObject({
       state: "third-party",
-      reason: "codex is not bb: shared by listed and unlisted names",
+      reason: "codex is not sandy: shared by listed and unlisted names",
     });
     const stale = {
       "1.2.3.4": [
@@ -267,18 +267,18 @@ describe("allowlist settings", () => {
   });
 });
 
-describe("third-party programs bb launches", () => {
+describe("third-party programs sandy launches", () => {
   it("marks a browser or agent CLI socket to an unknown address third-party, not red", () => {
     for (const comm of ["chromium", "opencode", "hermes", "claude"])
       expect(
         classify(out("2a00:1450:4001:c13::65", 443, comm), null, context()),
       ).toMatchObject({
         state: "third-party",
-        reason: `${comm} is not bb: unknown address`,
+        reason: `${comm} is not sandy: unknown address`,
       });
   });
 
-  it("keeps bb's own node processes red for the same address", () => {
+  it("keeps sandy's own node processes red for the same address", () => {
     expect(
       classify(
         out("2a00:1450:4001:c13::65", 443, "node-MainThread"),

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createFakePluginHost,
   makeThreadResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { selectCandidates, type RetentionThread } from "./policy.js";
 import plugin from "./server.js";
 
@@ -119,7 +119,7 @@ describe("retention plugin", () => {
       },
     });
     try {
-      plugin(host.bb);
+      plugin(host.sandy);
       await host.harness.runSchedule("retention");
       expect(host.harness.sdk.callsTo("threads.list")).toHaveLength(0);
       const preview = await host.harness.callRpc("preview", {
@@ -179,7 +179,7 @@ describe("retention plugin", () => {
       },
     });
     try {
-      plugin(host.bb);
+      plugin(host.sandy);
       await host.harness.callRpc("configure", {
         archiveAfterDays: 30,
         deleteAfterDays: null,
@@ -215,7 +215,7 @@ describe("retention plugin", () => {
       },
     });
     try {
-      plugin(host.bb);
+      plugin(host.sandy);
       await host.harness.callRpc("configure", {
         archiveAfterDays: null,
         deleteAfterDays: 30,
@@ -258,7 +258,7 @@ describe("retention plugin", () => {
       },
     });
     try {
-      plugin(host.bb);
+      plugin(host.sandy);
       await host.harness.callRpc("configure", {
         archiveAfterDays: null,
         deleteAfterDays: 30,
@@ -300,7 +300,7 @@ describe("retention plugin", () => {
         },
       },
     });
-    plugin(host.bb);
+    plugin(host.sandy);
     await host.harness.callRpc("configure", {
       archiveAfterDays: 30,
       deleteAfterDays: null,

@@ -1,16 +1,16 @@
 {
-  "name": "bb-plugin-plugin-api-docs",
+  "name": "sandy-plugin-plugin-api-docs",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Browse the bb plugin API as an annotated map of the product.",
+  "description": "Browse the sandy plugin API as an annotated map of the product.",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.3"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Plugin Guide",
-    "description": "Browse the bb plugin API as an annotated map of the product.",
+    "description": "Browse the sandy plugin API as an annotated map of the product.",
     "branding": {
       "icon": "./icons/ai-generative.svg",
       "experimental_icons": {
@@ -22,23 +22,23 @@
     "skills": []
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled",
+    "prepare:bundled": "sandy-plugin-build prepare-bundled",
     "scaffold:surface-entry": "node scripts/scaffold-surface-entry.mjs"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
     "@hugeicons/core-free-icons": "^4.3.4",
     "@hugeicons/react": "^1.1.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.0.0",

@@ -1,17 +1,17 @@
 import { memo, useMemo } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { CoreGitDiffRendererProvider } from "./CoreGitDiffRendererProvider";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 import {
   GitDiffCardBody,
   useGitDiffCardBody,
-} from "@bb/shared-ui/git-diff/card-body";
+} from "@sandy/shared-ui/git-diff/card-body";
 import {
   GitDiffCardHeader,
   gitDiffCardHeaderWrapperClass,
   type GitDiffCardHeaderModel,
-} from "@bb/shared-ui/git-diff/card-header";
+} from "@sandy/shared-ui/git-diff/card-header";
 import {
   formatGitDiffFileLabel,
   getGitDiffFileChangeKind,
@@ -19,7 +19,7 @@ import {
   normalizeGitDiffPath,
   summarizeGitDiffFile,
   type ParsedGitDiffFile,
-} from "@bb/shared-ui/git-diff/parsing";
+} from "@sandy/shared-ui/git-diff/parsing";
 
 interface GitDiffCardProps {
   fileDiff: ParsedGitDiffFile;

@@ -6,8 +6,8 @@ import {
   workspaceDiffTargetSchema,
   type WorkspaceDiffTarget,
   GIT_PLUGIN_ID,
-} from "@bb/domain";
-import { BbHttpError } from "../response.js";
+} from "@sandy/domain";
+import { SandyHttpError } from "../response.js";
 import type { PluginsArea } from "./plugins.js";
 
 
@@ -62,12 +62,12 @@ const RETIRED_ERRORS: Readonly<
   invalid_input: { status: 400, code: "invalid_request" },
 };
 
-function httpError(status: number, code: string, message: string): BbHttpError {
-  return new BbHttpError({ body: { code, message }, code, message, status });
+function httpError(status: number, code: string, message: string): SandyHttpError {
+  return new SandyHttpError({ body: { code, message }, code, message, status });
 }
 
 function retiredError(error: unknown): never {
-  if (!(error instanceof BbHttpError) || error.code === null) throw error;
+  if (!(error instanceof SandyHttpError) || error.code === null) throw error;
   const mapped = RETIRED_ERRORS[error.code];
   if (mapped === undefined) throw error;
   const body: unknown = error.body;

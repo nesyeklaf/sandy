@@ -3,7 +3,7 @@
   "name": "overlay-anchor",
   "type": "registry:ui",
   "title": "overlay-anchor",
-  "description": "BB ui \"overlay-anchor\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"overlay-anchor\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "files": [
     {
       "path": "registry/components/ui/overlay-anchor.ts",

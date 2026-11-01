@@ -1,4 +1,4 @@
-import type { ThreadEventPlanStep } from "@get-bb/plugin-sdk/provider-bridge";
+import type { ThreadEventPlanStep } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { z } from "zod";
 
 const taskStatusSchema = z.enum(["pending", "in_progress", "completed"]);

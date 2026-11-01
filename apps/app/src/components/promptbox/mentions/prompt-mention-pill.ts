@@ -1,4 +1,4 @@
-import type { PromptMentionResource } from "@bb/domain";
+import type { PromptMentionResource } from "@sandy/domain";
 import {
   composerMentionTargetFromResource,
   parsePromptMentionClipboardElement,
@@ -8,7 +8,7 @@ import {
   promptMentionResourceFromComposerMention,
   promptMentionTooltipLabel,
   type ComposerMentionTargetShape,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 
 export interface PromptMentionPresentation {
   className: string;

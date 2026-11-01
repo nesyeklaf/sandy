@@ -1,7 +1,7 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { ConnectionState, Direction } from "./classify.js";
 
-type Database = ReturnType<BbPluginApi["storage"]["database"]>;
+type Database = ReturnType<SandyPluginApi["storage"]["database"]>;
 
 export const KEY_LIMIT = 100_000;
 export const RETENTION_MS = 7 * 24 * 60 * 60_000;
@@ -297,7 +297,7 @@ export function createStore(
             comms.every((comm) => options.thirdPartyProcesses.has(comm))
           ) {
             state = "third-party";
-            reason = comms.join(",") + " is not bb: " + reason;
+            reason = comms.join(",") + " is not sandy: " + reason;
           }
           if (state !== row.state || reason !== row.reason)
             set.run(state, reason, row.key);

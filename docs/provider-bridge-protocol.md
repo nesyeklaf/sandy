@@ -1,8 +1,8 @@
-# The bb Provider Bridge Protocol
+# The sandy Provider Bridge Protocol
 
 The one JSON-RPC contract between the agent runtime and every provider
-bridge process. Message schemas live in `@bb/provider-bridge-protocol`
-(published to plugins as `@get-bb/plugin-sdk/provider-bridge`) and are the
+bridge process. Message schemas live in `@sandy/provider-bridge-protocol`
+(published to plugins as `@sandy-sdk/plugin-sdk/provider-bridge`) and are the
 source of truth for both sides; this document adds what schemas cannot
 express — the division of labor and the grammar: **the bridge knows the
 dialect, the runtime knows the timeline.** A bridge parses its provider's
@@ -13,18 +13,18 @@ The conformance kit enforces the testable rules against every bridge in CI.
 
 The provider declaration, handshake summary, vocabulary, and presentation
 contract are in [provider-plugin-api.md](provider-plugin-api.md); building,
-packaging, and testing a bridge is in the bb-plugin-authoring skill
-(`plugins/bb-guide/skills/bb-plugin-authoring/references/providers.md`).
+packaging, and testing a bridge is in the sandy-plugin-authoring skill
+(`plugins/sandy-guide/skills/sandy-plugin-authoring/references/providers.md`).
 
 ## Where a bridge lives
 
 A bridge is the `experimental_providerBridge` export of its plugin's
-**`bb.host` artifact** ([provider-plugin-api.md](provider-plugin-api.md) §2),
+**`sandy.host` artifact** ([provider-plugin-api.md](provider-plugin-api.md) §2),
 not a program. The daemon runs it through a bootstrap that owns everything
 outside the protocol: argv, the plugin-scoped `dataDir`/`tempDir`, the
 bounded stdin framing, and the signals. The bundle is self-contained (only
 node builtins stay external) and compiles only against the published
-`@get-bb/plugin-sdk/provider-bridge` (plus `/testing` for its tests).
+`@sandy-sdk/plugin-sdk/provider-bridge` (plus `/testing` for its tests).
 First-party bridges use exactly this path —
 `plugins/provider-codex/src/bridge/bridge.ts` is the largest worked example,
 and `examples/plugins/echo-provider` the smallest.
@@ -81,7 +81,7 @@ hint whatever the mode.
 The sessionless `provider/health`, `provider/usage` and
 `provider/installation/status` methods are
 different: their support is declared by each provider through
-`bb.providers.register` (`maintenance`), so the server can skip an
+`sandy.providers.register` (`maintenance`), so the server can skip an
 unsupported host probe and clients can omit providers that never expose usage
 or installation management before a bridge has started. A shared bridge may
 declare health or usage for every provider it owns and still return
@@ -95,7 +95,7 @@ manager or provider release feed. A status request may include a typed
 operation requirement such as `thread_rewind`; the bridge owns the minimum
 provider version that operation needs and reports it through the ordinary
 status, and `versionUnsupported` identifies a known unsupported local
-version. bb does not install or update provider CLIs. When the daemon gates a
+version. sandy does not install or update provider CLIs. When the daemon gates a
 thread start or rewind on that status, it remembers a passing answer for a
 few minutes (until the shell environment changes). It never remembers
 `versionUnsupported: true`, nor `installed: false` from a bridge that reports a
@@ -116,7 +116,7 @@ shape, streamed text (`item.textDelta`/`item.textClose`), `usage`,
 `contextWindow`, errors/warnings, `unhandled` diagnostics, session lifecycle
 (`session.reset`, `session.ended`) — never a raw provider event and never a
 finished `ThreadEvent`. The schemas in
-`@bb/provider-bridge-protocol/src/thread-delta.ts` are the source of truth
+`@sandy/provider-bridge-protocol/src/thread-delta.ts` are the source of truth
 for the grammar.
 
 The runtime's **delta assembler** (one per bridge adapter) consumes the
@@ -125,12 +125,12 @@ deltas and owns every timeline invariant:
 - **Id minting.** Turn and item ids are assembler-minted (reset per
   `session.reset`). Deltas carry provider-native join keys (tool-call ids,
   stream keys, parent refs, optional provider turn ids) and the assembler
-  holds the bidirectional provider↔bb maps — both for scoping incoming
-  deltas and for reverse-mapping bb ids on the command plane
+  holds the bidirectional provider↔sandy maps — both for scoping incoming
+  deltas and for reverse-mapping sandy ids on the command plane
   (`turn/steer.expectedTurnId`, `thread/stop.activeTurnId`). Bridges
   send `interaction/request` and `item/tool/call` with the ids they put
   on deltas: when the request names its `threadId`, the runtime maps its
-  `turnId`, approval subject `itemId`, and tool `callId` to the bb ids
+  `turnId`, approval subject `itemId`, and tool `callId` to the sandy ids
   minted for them, and passes through any id the assembler has not seen. An
   `interaction/request` carries an approval, a user question, or a
   plugin-defined request (`"<pluginId>/<name>"`); the resolution pairs with
@@ -151,7 +151,7 @@ deltas and owns every timeline invariant:
   `item.close` always carries the full terminal item shape and is applied
   uniformly (paired close, reclassifying dual-settle, or bare
   close-without-open); repeated closes for a settled provider-identified
-  key are deduped and an explicit reopen reuses the same bb id. A failed
+  key are deduped and an explicit reopen reuses the same sandy id. A failed
   `fileChange` close keeps its non-blank `resultText` as the item's
   `error`, which the timeline shows before any proposed diff.
 - **Accumulation.** Streamed text, cumulative output snapshots (diffed into
@@ -238,13 +238,13 @@ The current grammar (`grammarVersions: [3, 3]`) includes:
   after the plugin is gone. Optional for core shapes, required when the shape
   is `extension`. Conformance rule `presentation/icon-namespaced-declared`
   checks the namespaced glyph form for bridges that opt in with an
-  `icons: { pluginId, names }` fixture field; a `server: "bb"` tool row is
+  `icons: { pluginId, names }` fixture field; a `server: "sandy"` tool row is
   exempt, its glyph being checked against the tool's own plugin.
-- **bb-injected tools carry their presentation.** Every `dynamicTools[]`
+- **sandy-injected tools carry their presentation.** Every `dynamicTools[]`
   definition on `thread/start`, `thread/resume` and `thread/fork` may carry
   the `presentation` the server resolved for it (from the owning plugin's
   `presentation`, or a generic label and the plugin's glyph). A bridge stamps
-  that presentation, beside `server: "bb"`, on the `item.open`/`item.close`
+  that presentation, beside `server: "sandy"`, on the `item.open`/`item.close`
   of every call to the tool; a definition without one presents generically.
 - **Extension kinds** `"<pluginId>/<name>"`: the `extension` item shape
   (opaque JSON `payload`; its lifecycle delta must carry a `presentation`)
@@ -256,26 +256,26 @@ The current grammar (`grammarVersions: [3, 3]`) includes:
   plugin owns, an undeclared kind, or a schema miss is persisted as a
   `provider/unhandled` in the same batch slot, never dropped and never
   stored unvalidated.
-- **bb thread state kinds** `"bb/<name>"`: `extension.state` kinds owned by
-  bb, which any bridge may emit and the server validates against
-  `packages/domain/src/thread-provider-state.ts`. `bb/provider-commands`
+- **sandy thread state kinds** `"sandy/<name>"`: `extension.state` kinds owned by
+  sandy, which any bridge may emit and the server validates against
+  `packages/domain/src/thread-provider-state.ts`. `sandy/provider-commands`
   carries `{ commands: [{ name, description, inputHint? }] }`, the slash
   commands the provider offers in the thread now (the composer's `/` menu,
-  `bb thread commands`). `bb/session-options` carries `{ options }`, the
+  `sandy thread commands`). `sandy/session-options` carries `{ options }`, the
   per-session settings other than model and reasoning level, each a `select`
   (`value`, `values`) or a `boolean`, with an optional `category` such as
-  `mode` (the model picker, `bb thread options`; `mode` shows in the composer
-  footer). `bb/provider-model-catalog` carries
+  `mode` (the model picker, `sandy thread options`; `mode` shows in the composer
+  footer). `sandy/provider-model-catalog` carries
   `{ models, selectedOnlyModels }` using the `model/list` result shape. A
   bridge can publish the catalog its session just received, without another
   discovery request. The server accepts it only for the current provider
   thread identity, updates that provider's host/workspace catalog, and
   invalidates connected model pickers immediately. Latest snapshot wins:
   re-emit the whole list when it changes. The
-  server alone writes `bb/session-option-selections` (choices the provider
+  server alone writes `sandy/session-option-selections` (choices the provider
   has not applied yet) and refuses it from a bridge.
 - **`sessionOptions`** (`{ [optionId]: string | boolean }`) on `thread/start`
-  and `turn/start`. Before the bridge publishes `bb/session-options` for the
+  and `turn/start`. Before the bridge publishes `sandy/session-options` for the
   thread it carries every choice made at creation; afterwards only choices
   that differ from the last published value. The bridge applies each entry
   before the prompt, skips options or values it does not offer, and
@@ -316,14 +316,14 @@ the request must succeed; undeclared → the request must be refused.
 ### Command catalog
 
 `commands/list { cwd }` returns `{ commands: [{ name, description, inputHint? }] }`,
-the same shape as the `bb/provider-commands` thread state: the slash commands
+the same shape as the `sandy/provider-commands` thread state: the slash commands
 the provider offers in `cwd` before any thread runs there. The server merges
 them into the project command catalog (the new-thread composer's `/` menu,
-`bb project commands`), adding only names the native-root scan does not
+`sandy project commands`), adding only names the native-root scan does not
 already list. The runtime sends it **only to a bridge whose handshake declares
 `commands: { list: true }`** and answers an empty list for any other bridge.
 Answer from the provider's own report without starting a model turn, and
-filter it with the same rules the bridge applies to `bb/provider-commands`, so
+filter it with the same rules the bridge applies to `sandy/provider-commands`, so
 a thread's menu does not change when its first turn starts. Conformance rule
 `commands/list-declared` pins both directions, as for `skills/configure`.
 
@@ -400,18 +400,18 @@ Three identifier families, three owners:
 
 | Identifier                              | Minted by                   | Notes                                                                                                                                                                                                |
 | --------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `threadId`                              | bb server                   | Opaque to the provider; echoed verbatim.                                                                                                                                                             |
-| `providerThreadId`                      | the provider                | Its session handle (rollout id, session id). Returned on the `thread/start`/`thread/resume`/`thread/fork` result (required) and echoed by `thread/identity`; never used to scope bb events directly. |
+| `threadId`                              | sandy server                   | Opaque to the provider; echoed verbatim.                                                                                                                                                             |
+| `providerThreadId`                      | the provider                | Its session handle (rollout id, session id). Returned on the `thread/start`/`thread/resume`/`thread/fork` result (required) and echoed by `thread/identity`; never used to scope sandy events directly. |
 | turn ids and item ids on `ThreadEvent`s | **the runtime's assembler** | Never the provider, never the bridge.                                                                                                                                                                |
 
-A `providerThreadId` is a durable handle: bb persists it and sends it to a new
+A `providerThreadId` is a durable handle: sandy persists it and sends it to a new
 bridge process to resume the session after a restart. It must name exactly one
 provider session among all of that provider's sessions on the host, so never
-mint it from a per-process counter. bb refuses to resume a handle that another
+mint it from a per-process counter. sandy refuses to resume a handle that another
 thread announced first, or announced in the same millisecond.
 
 A provider can inject arbitrary identifiers on its own wire, but the ids that
-reach bb's persistence are always minted by bb-owned assembler code. Bridges
+reach sandy's persistence are always minted by sandy-owned assembler code. Bridges
 forward provider-native ids as vouched join keys on deltas; the assembler
 translates in both directions, so a bridge does zero id translation —
 including for a provider that mints its own turn ids (codex).
@@ -467,7 +467,7 @@ it:
    active turn as interrupted (the bridge emits the settling deltas —
    `turn.boundary { interrupted }` plus explicit closes for provider-owned
    open items); `release` detaches an idle session and must not fabricate an
-   interruption. The bb turn ids these commands carry are reverse-mapped to
+   interruption. The sandy turn ids these commands carry are reverse-mapped to
    the bridge's provider-native turn ids, so the bridge compares its own ids.
 6. **After `thread/stop` the bridge holds nothing for the thread.** The
    runtime detaches the thread the moment the stop is answered, whichever
@@ -500,7 +500,7 @@ Assembler-owned invariants over the assembled timeline:
 3. Item ids are unique across the life of a thread, including resumes: the
    assembler's maps survive within a session and `session.reset` (mandatory
    at every provider session construction) starts a fresh provider id space
-   so reused provider-native ids mint fresh bb ids.
+   so reused provider-native ids mint fresh sandy ids.
 4. Completion follows content from the bridge's perspective: if the provider
    emits completion before the content it refers to (codex `item.close`
    before the stdout record), the bridge holds the close delta and flushes
@@ -539,7 +539,7 @@ content.
    a fresh agent session.
 4. Fork: absent `sourceProviderCheckpointId` means fork at the tip. A
    `fork: "tip"` bridge rejects checkpoint forks with
-   `FORK_CHECKPOINT_UNSUPPORTED` rather than cloning history the bb timeline
+   `FORK_CHECKPOINT_UNSUPPORTED` rather than cloning history the sandy timeline
    does not show.
 5. Open work is what the timeline says it is. A `backgroundTask` item and a
    `delegation` item that are still pending are live provider work, and the
@@ -565,7 +565,7 @@ Consumers must NOT assume:
 - That a request's response arrives before notifications caused by the
   request (`turn/started` may precede the `turn/start` response).
 - Anything about `provider/raw` — it is droppable at any pressure point and
-  carries no ids the runtime treats as bb identifiers.
+  carries no ids the runtime treats as sandy identifiers.
 
 ## Parsing discipline
 
@@ -574,7 +574,7 @@ fields (forward skew between plugin and daemon versions is normal). One
 malformed entry degrades to one missing entry — a bad model in `model/list`
 drops that model, not the listing; a malformed notification is logged and
 dropped without poisoning the stream. But a `thread/delta` payload must be
-a valid delta: what it assembles into enters bb's persistence, so the core
+a valid delta: what it assembles into enters sandy's persistence, so the core
 stays strict.
 
 ## Child processes
@@ -590,7 +590,7 @@ the same way and must not leak their own inherited env downward.
 
 ## Record mode
 
-Set `BB_PROVIDER_BRIDGE_RECORD_DIR` to a directory in the host daemon's
+Set `SANDY_PROVIDER_BRIDGE_RECORD_DIR` to a directory in the host daemon's
 environment and every bridge process tees the lines that cross its two
 boundaries into NDJSON files. The bootstrap records the runtime wire for
 every bridge, first- or third-party. A bridge that spawns its provider child
@@ -601,7 +601,7 @@ provider pipe belongs to an SDK checks
 `experimental_isProviderBridgeRecording()` and takes the spawn over (the
 Claude bridge does this through the Agent SDK's `spawnClaudeCodeProcess`
 seam). Extra provider channels may be recorded on the same two provider
-lanes, each message wrapped as `{ "bbChannel": <message> }`, so a replay can
+lanes, each message wrapped as `{ "sandyChannel": <message> }`, so a replay can
 route it back (the pi bridge does this for its extension fds).
 
 Layout: `<dir>/<providerId>/<threadId>/<direction>.ndjson`, with `_process`
@@ -617,7 +617,7 @@ crosses. Provider children never inherit the variable, so a recorded provider
 never records itself.
 
 Recordings are the input of the replay and parity kit published in
-`@get-bb/plugin-sdk/provider-bridge/testing` (how a plugin uses it: the
+`@sandy-sdk/plugin-sdk/provider-bridge/testing` (how a plugin uses it: the
 authoring skill's providers.md, "Testing a bridge"). In this repository,
 redacted first-party recordings live under
 `packages/provider-bridge-protocol/recordings`, one `<provider>/<cell>`
@@ -632,7 +632,7 @@ pins deliberately. `pnpm parity` compares two checkouts
 intends go in `recordings/parity-allowlist.json` with the PR and reason, and
 an entry that masks nothing fails the run. A recording is never rewritten:
 when a bridge change alters its output,
-`pnpm --filter @bb/provider-parity rerecord [--plan-with <checkout>]` writes
+`pnpm --filter @sandy/provider-parity rerecord [--plan-with <checkout>]` writes
 `bridge→runtime.current.ndjson` beside the recorded lane, and the self-suite
 compares against that file when it exists. `pnpm parity --dump-dir <dir>`
 writes both legs' normalized event and row lists per cell.

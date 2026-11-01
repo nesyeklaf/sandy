@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { createMigratedConnection } from "@bb/db/testing";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { serverTiming } from "../../src/server-timing.js";
@@ -124,7 +124,7 @@ describe("Server-Timing", () => {
   });
 
   it("names the API route even when the static shell catch-all is registered", async () => {
-    const staticDir = await mkdtemp(join(tmpdir(), "bb-server-timing-"));
+    const staticDir = await mkdtemp(join(tmpdir(), "sandy-server-timing-"));
     await writeFile(join(staticDir, "index.html"), "<!doctype html>");
     const harness = await createTestAppHarness();
     const serverApp = createApp(harness.deps, { staticDir });

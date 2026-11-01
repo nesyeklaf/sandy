@@ -1,7 +1,7 @@
 import {
   experimental_InfoSection as InfoSection,
   type ExperimentalThreadInfoProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   ChangedFilesList,
   ChangedFilesTally,

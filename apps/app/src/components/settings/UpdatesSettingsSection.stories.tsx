@@ -1,5 +1,5 @@
-import type { Host } from "@bb/domain";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import type { Host } from "@sandy/domain";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import {
   buildUpdateInventoryPlugins,
   type UpdateInventoryMachine,
@@ -116,7 +116,7 @@ export function RowVariations() {
       </StoryRow>
 
       <StoryRow
-        label="Machine updating bb"
+        label="Machine updating sandy"
         hint="The enrolled daemon is applying its required update automatically."
       >
         <StoryMachineRow machine={daemonUpdating} />
@@ -131,7 +131,7 @@ export function RowVariations() {
 
       <StoryRow
         label="Machine offline"
-        hint="Shown only after Show all; bb cannot currently reach this machine."
+        hint="Shown only after Show all; sandy cannot currently reach this machine."
       >
         <StoryMachineRow machine={daemonOffline} />
       </StoryRow>
@@ -228,7 +228,7 @@ const STORY_PLUGINS = buildUpdateInventoryPlugins([
       outcome: "incompatible",
       blockedVersion: "3.0.0",
       blockedLabel: "3.0.0",
-      blockedReasons: ["engines.bb requires >=0.40.0 (running 0.38.0)"],
+      blockedReasons: ["engines.sandy requires >=0.40.0 (running 0.38.0)"],
     },
   }),
   makePluginListItem({

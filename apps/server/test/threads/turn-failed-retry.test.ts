@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   claimQueuedThreadMessageGroup,
@@ -11,9 +11,9 @@ import {
   listEvents,
   listQueuedThreadMessages,
   setThreadExecutionOverride,
-} from "@bb/db";
-import type { ThreadQueuedMessage } from "@bb/domain";
-import type { PluginHookName } from "@get-bb/plugin-sdk";
+} from "@sandy/db";
+import type { ThreadQueuedMessage } from "@sandy/domain";
+import type { PluginHookName } from "@sandy-sdk/plugin-sdk";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   invokePluginInline,
@@ -773,13 +773,13 @@ describe("pooled provider retry integration", () => {
         now: () => number;
         env: NodeJS.ProcessEnv;
         fetch: typeof fetch;
-      }) => (bb: BbPluginApi) => Promise<void> =
+      }) => (sandy: SandyPluginApi) => Promise<void> =
         poolModule.createAccountPoolPlugin;
       const retryModule = await import(
         new URL("../../../../plugins/provider-retry/server.ts", import.meta.url)
           .href
       );
-      const providerRetryPlugin: (bb: BbPluginApi) => Promise<void> =
+      const providerRetryPlugin: (sandy: SandyPluginApi) => Promise<void> =
         retryModule.default;
       const retryAvailabilityMethod = "provider-retry.v1.availability";
       const retryAvailabilitySchema = z.object({
@@ -788,7 +788,7 @@ describe("pooled provider retry integration", () => {
       });
       const now = Date.now();
       const resetAt = now + 3_600_000;
-      const dataDir = await mkdtemp(path.join(tmpdir(), "bb-pool-retry-"));
+      const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-pool-retry-"));
       const pool = createFakePluginHost({
         pluginId: "account-pool",
         dataDir,
@@ -848,7 +848,7 @@ describe("pooled provider retry integration", () => {
                 },
               },
             ),
-        })(pool.bb);
+        })(pool.sandy);
         await pool.harness.behavior.callRpc("account.add", {
           provider: "claude",
           source: { kind: "api-key", apiKey: "test-account" },
@@ -895,7 +895,7 @@ describe("pooled provider retry integration", () => {
         const failed = buildTurnFailedEvent(harness.db, thread.id);
         if (failed === null) throw new Error("Expected a failed turn");
         expect(failed.rateLimits).toBeNull();
-        await providerRetryPlugin(retry.bb);
+        await providerRetryPlugin(retry.sandy);
         expect(
           (await retry.harness.behavior.emitThreadEvent("turn.failed", failed))
             .errors,

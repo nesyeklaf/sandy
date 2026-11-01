@@ -1,7 +1,7 @@
 import { chunkLabel } from "./sourcemap.mjs";
 
 export const MAX_SAMPLE_WEIGHT_MS = 10;
-export const SWITCH_PREFIX = "bb:switch";
+export const SWITCH_PREFIX = "sandy:switch";
 export const LAB_SWITCH = "lab:switch";
 
 const JS_FUNCTION = /^(.*) \((.+):(\d+):(\d+)\)(?:\[\d+\])?$/;

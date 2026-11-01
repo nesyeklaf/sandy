@@ -51,7 +51,7 @@ describe("toast history", () => {
     expect(title.dataset.testid).toBe("app-toast-title");
     expect(
       title
-        .closest(".bb-app-toast")
+        .closest(".sandy-app-toast")
         ?.querySelector('[aria-label="Dismiss notification"]'),
     ).not.toBeNull();
     expect(getNotifications()[0]).toMatchObject({

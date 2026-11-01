@@ -1,7 +1,7 @@
 import { Command } from "commander";
-import type { PromptHistoryListEntry } from "@bb/domain";
+import type { PromptHistoryListEntry } from "@sandy/domain";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { columnWidths, printBorderlessTable, truncateCell } from "../table.js";
 import { outputJson } from "./helpers.js";
 
@@ -61,7 +61,7 @@ export function registerPromptHistoryCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: PromptHistoryListOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const result = await sdk.experimental_promptHistory.list({
           cursor: opts.cursor,
           limit: opts.limit,
@@ -76,7 +76,7 @@ export function registerPromptHistoryCommands(
           const limit =
             opts.limit === undefined ? "" : ` --limit ${opts.limit}`;
           console.log(
-            `Next page: bb prompt-history list --cursor ${result.nextCursor}${limit}`,
+            `Next page: sandy prompt-history list --cursor ${result.nextCursor}${limit}`,
           );
         }
       }),

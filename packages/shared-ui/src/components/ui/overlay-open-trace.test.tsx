@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "./dialog";
 
-const CLOCK_KEY = Symbol.for("bb.perf-trace.clock.v1");
+const CLOCK_KEY = Symbol.for("sandy.perf-trace.clock.v1");
 
 function recordMeasureNames(): string[] {
   const names: string[] = [];
@@ -35,7 +35,7 @@ function recordMeasureNames(): string[] {
 }
 
 async function settleTrace(names: string[]): Promise<void> {
-  await vi.waitFor(() => expect(names).toContain("bb:open"));
+  await vi.waitFor(() => expect(names).toContain("sandy:open"));
 }
 
 function DialogHarness({ open }: { open: boolean }) {
@@ -68,7 +68,7 @@ describe("overlay open trace", () => {
     view.rerender(<DialogHarness open />);
     await settleTrace(names);
 
-    expect(names).toEqual(["bb:open:render", "bb:open:paint", "bb:open"]);
+    expect(names).toEqual(["sandy:open:render", "sandy:open:paint", "sandy:open"]);
   });
 
   it("records one open when a dialog mounts already open", async () => {
@@ -76,7 +76,7 @@ describe("overlay open trace", () => {
     render(<DialogHarness open />);
     await settleTrace(names);
 
-    expect(names.filter((name) => name === "bb:open")).toHaveLength(1);
+    expect(names.filter((name) => name === "sandy:open")).toHaveLength(1);
   });
 
   it("records one render and paint phase when an alert dialog opens", async () => {
@@ -99,7 +99,7 @@ describe("overlay open trace", () => {
     );
     await settleTrace(names);
 
-    expect(names).toEqual(["bb:open:render", "bb:open:paint", "bb:open"]);
+    expect(names).toEqual(["sandy:open:render", "sandy:open:paint", "sandy:open"]);
   });
 
   it("records one render and paint phase when a context menu opens", async () => {
@@ -129,6 +129,6 @@ describe("overlay open trace", () => {
     });
     await settleTrace(names);
 
-    expect(names).toEqual(["bb:open:render", "bb:open:paint", "bb:open"]);
+    expect(names).toEqual(["sandy:open:render", "sandy:open:paint", "sandy:open"]);
   });
 });

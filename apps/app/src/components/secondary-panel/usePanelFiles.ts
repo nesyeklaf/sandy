@@ -4,7 +4,7 @@ import {
   type HostFileTabState,
   type ThreadStorageFileTabState,
   type WorkspaceFileTabState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type { AppFilePreviewIntent } from "@/lib/app-navigation-host";
 import {
   normalizeExperimentalFileOpenOptions,

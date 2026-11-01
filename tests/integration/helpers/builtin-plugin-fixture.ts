@@ -13,7 +13,7 @@ export const INTEGRATION_BUILTIN_PLUGINS = [
   "git",
 ];
 
-const TEMPLATE_PATH_ENV = "BB_TEST_BUILTIN_HOST_RECORDS";
+const TEMPLATE_PATH_ENV = "SANDY_TEST_BUILTIN_HOST_RECORDS";
 
 export async function copyBuiltinHostBuildRecords(
   dataDir: string,
@@ -29,7 +29,7 @@ export async function setupBuiltinHostBuildRecords(): Promise<
   () => Promise<void>
 > {
   const dataDir = await fs.mkdtemp(
-    path.join(tmpdir(), "bb-builtin-host-fixture-"),
+    path.join(tmpdir(), "sandy-builtin-host-fixture-"),
   );
   const recordsPath = path.join(dataDir, "plugins", "runtime", "host");
   const previousTemplatePath = process.env[TEMPLATE_PATH_ENV];
@@ -51,7 +51,7 @@ export async function setupBuiltinHostBuildRecords(): Promise<
         dataDir,
         pluginId: manifest.id,
         rootDir,
-        bbVersion: INTEGRATION_APP_VERSION,
+        sandyVersion: INTEGRATION_APP_VERSION,
         toolchain,
       });
     }

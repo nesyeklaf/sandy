@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Pill } from "@bb/shared-ui/pill";
+import { Pill } from "@sandy/shared-ui/pill";
 import { useRouteAnchorDelegate } from "@/components/ui/app-route-anchor";
 import { usePluginCss } from "@/lib/plugin-css";
 import {
@@ -231,8 +231,8 @@ export function PluginSlotMount({
       >
         {wrapRoot ? (
           <div
-            data-bb-plugin-root=""
-            data-bb-plugin={pluginId}
+            data-sandy-plugin-root=""
+            data-sandy-plugin={pluginId}
             className="contents"
             onClick={onRouteAnchorClick}
           >

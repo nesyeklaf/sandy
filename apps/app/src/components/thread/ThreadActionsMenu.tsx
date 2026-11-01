@@ -14,22 +14,22 @@ import type {
   PluginThreadActionsMenuProps,
   PluginThreadActionsTriggerProps,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuLabel,
   ContextMenuTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { ActionMenuSeparator } from "@bb/shared-ui/action-menu-items";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { CompactLongPressMenu } from "@bb/shared-ui/compact-long-press-menu";
+} from "@sandy/shared-ui/dropdown-menu";
+import { ActionMenuSeparator } from "@sandy/shared-ui/action-menu-items";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { CompactLongPressMenu } from "@sandy/shared-ui/compact-long-press-menu";
 import {
   ThreadActionMenuRows,
   useThreadActionMenuGroups,

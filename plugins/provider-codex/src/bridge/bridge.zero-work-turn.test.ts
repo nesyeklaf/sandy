@@ -2,15 +2,15 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { PromptInput } from "@get-bb/plugin-sdk/provider-bridge";
+import type { PromptInput } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   experimental_assembleCapturedThreadEvents as assembleCapturedThreadEvents,
   experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type {
   BridgeJsonRpcTestHarness,
   ThreadEvent,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 
 import { handleLine } from "./bridge.js";
 import {
@@ -81,7 +81,7 @@ async function startSession(): Promise<string> {
 }
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-zero-work-ws-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-zero-work-ws-"));
   stubFakeCodexAppServer();
   harness = createBridgeJsonRpcTestHarness(handleLine);
 });

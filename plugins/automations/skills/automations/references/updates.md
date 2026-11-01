@@ -5,7 +5,7 @@ where the user can add its prompt while reviewing the other settings. It can
 also be repaired directly:
 
 ```bash
-bb automation update <automationId> --project <id> --prompt "<prompt>"
+sandy automation update <automationId> --project <id> --prompt "<prompt>"
 ```
 
 Writes remain strict. Run, pause, and resume reject damaged records; update
@@ -22,11 +22,11 @@ Choose one of three execution update forms:
   reasoning, tier, and permission selection together:
 
 ```bash
-bb automation update <automationId> --project <id> \
+sandy automation update <automationId> --project <id> \
   --environment <environment-id-or-path>
-bb automation update <automationId> --project <id> \
+sandy automation update <automationId> --project <id> \
   --target-thread <thread-id>
-bb automation update <automationId> --project <id> \
+sandy automation update <automationId> --project <id> \
   --new-environment worktree [--base-branch <branch>]
 ```
 
@@ -42,9 +42,9 @@ no execution environment.
   interpreter, so pass `--interpreter` when the new file needs another one:
 
 ```bash
-bb automation update <automationId> --project <id> --script-file ./check.sh
-bb automation update <automationId> --project <id> --env-json '{"CHANNEL":"qa"}'
-bb automation update <automationId> --project <id> \
+sandy automation update <automationId> --project <id> --script-file ./check.sh
+sandy automation update <automationId> --project <id> --env-json '{"CHANNEL":"qa"}'
+sandy automation update <automationId> --project <id> \
   --working-directory automation-storage|project|<absolute-server-path>
 ```
 

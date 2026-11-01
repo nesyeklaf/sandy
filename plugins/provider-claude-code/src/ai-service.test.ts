@@ -1,7 +1,7 @@
 import {
   createFakePluginHost,
   type ExperimentalFakeHostRpcCall,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import { registerClaudeAiService } from "./ai-service.js";
 import type { ClaudeAiStatus, ClaudeAiTextResult } from "./ai/host-contract.js";
@@ -12,11 +12,11 @@ function setup(
   ) => ClaudeAiTextResult | ClaudeAiStatus,
   primaryHostId: string | null = "host-1",
 ) {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: { system: { config: async () => ({ primaryHostId }) } },
     experimental_callHostRpc: answer,
   });
-  registerClaudeAiService(bb);
+  registerClaudeAiService(sandy);
   const [service] = harness.registrations.aiServiceRegistrations;
   if (service?.complete === undefined || service.status === undefined) {
     throw new Error(

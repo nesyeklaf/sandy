@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ClientErrorReport } from "@bb/server-contract";
+import type { ClientErrorReport } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   createClientErrorReporter,

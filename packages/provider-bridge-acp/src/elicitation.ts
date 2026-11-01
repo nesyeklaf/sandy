@@ -6,7 +6,7 @@ import {
   type PendingInteractionUserQuestionQuestion,
   type UserQuestionPendingInteractionPayload,
   type UserQuestionPendingInteractionResolution,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { isJsonObject, readString } from "./session/decode.js";
 import type { AcpJsonObject } from "./session/session-types.js";
 
@@ -372,7 +372,7 @@ export function planAcpElicitation(params: unknown): AcpElicitationPlan {
   if (mode !== "form") {
     return {
       kind: "unsupported",
-      reason: `bb does not offer the "${mode ?? "unknown"}" elicitation mode`,
+      reason: `sandy does not offer the "${mode ?? "unknown"}" elicitation mode`,
     };
   }
   const message = readString(params, "message")?.trim() || undefined;
@@ -390,7 +390,7 @@ export function planAcpElicitation(params: unknown): AcpElicitationPlan {
     if (name.trim() === "" || !isJsonObject(fieldSchema) || !field) {
       return {
         kind: "unsupported",
-        reason: `bb cannot show the field "${name}"`,
+        reason: `sandy cannot show the field "${name}"`,
       };
     }
     fields.push({
@@ -418,7 +418,7 @@ export function planAcpElicitation(params: unknown): AcpElicitationPlan {
   if (shown.length > USER_QUESTION_MAX_QUESTIONS) {
     return {
       kind: "unsupported",
-      reason: `bb shows at most ${USER_QUESTION_MAX_QUESTIONS} questions and this form has ${shown.length}`,
+      reason: `sandy shows at most ${USER_QUESTION_MAX_QUESTIONS} questions and this form has ${shown.length}`,
     };
   }
 
@@ -429,7 +429,7 @@ export function planAcpElicitation(params: unknown): AcpElicitationPlan {
     if (!field) {
       return {
         kind: "unsupported",
-        reason: `bb cannot show the field "${entry.name}"`,
+        reason: `sandy cannot show the field "${entry.name}"`,
       };
     }
     planned.push({

@@ -10,15 +10,15 @@ import { useLayoutEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   experimental_useAppPanel,
-  useBbNavigate,
+  useSandyNavigate,
   useSdk,
   type PluginThreadAction,
   type PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { gitRpcContract } from "../../rpc-contract.js";
 import type { WorkspaceStatus } from "../../contract.js";
 import {
@@ -85,7 +85,7 @@ type ItemFor = (thread: PluginThreadActionTarget) => PluginThreadAction | null;
 function Probe({ onItem }: { onItem(item: ItemFor): void }) {
   const data = commitThreadAction.useData!({ threadIds: ["thr-1"] });
   const sdk = useSdk();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const experimental_panel = experimental_useAppPanel();
   useLayoutEffect(() => {
     onItem((thread) =>
@@ -119,7 +119,7 @@ function renderAction({
     {
       rpc: statusFor(workspace) as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
       settings,
       sdk: {
         threads: { get: async () => ({ environmentId: "env-1" }) },
@@ -278,7 +278,7 @@ describe("commit dialog", () => {
       {
         rpc: statusFor(DIRTY) as PluginRpcTestHandlers<typeof gitRpcContract>,
         experimental_rpcContract: gitRpcContract,
-        pluginId: "bb--git",
+        pluginId: "sandy--git",
         sdk: { environments: { commit: commitEnvironment } } as never,
       },
     );

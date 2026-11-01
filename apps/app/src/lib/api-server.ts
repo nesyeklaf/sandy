@@ -1,4 +1,4 @@
-import { createApiClient } from "@bb/server-contract";
+import { createApiClient } from "@sandy/server-contract";
 import { fetchWithAppSurface } from "./app-surface";
 
 const BASE_URL =

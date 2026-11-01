@@ -1,10 +1,10 @@
-import type { BbPluginApi, ComposerMention } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, ComposerMention } from "@sandy-sdk/plugin-sdk";
 
 import { z } from "zod";
 import { attachmentSchema, promptSchema } from "./contract.js";
 
 export type HistoryEntry = Awaited<
-  ReturnType<BbPluginApi["sdk"]["experimental_promptHistory"]["list"]>
+  ReturnType<SandyPluginApi["sdk"]["experimental_promptHistory"]["list"]>
 >["entries"][number];
 type HistoryInput = HistoryEntry["input"][number];
 type HistoryMention = Extract<

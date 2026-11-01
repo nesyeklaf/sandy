@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   definePluginApp,
   experimental_useExperiment,
-  useBbNavigate,
-  useBbContext,
+  useSandyNavigate,
+  useSandyContext,
   useRealtime,
   useRpc,
   useSettings,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   CLIENT_NOTIFICATION_CHANNEL,
   type pushNotificationsRpcContract,
@@ -20,9 +20,9 @@ import {
 import { notificationsThreadAction } from "./notificationsAction.js";
 
 function NotificationDelivery() {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const { values } = useSettings();
-  const { threadId } = useBbContext();
+  const { threadId } = useSandyContext();
   const skipFocused = experimental_useExperiment(
     "skipFocusedThreadNotifications",
   );
@@ -146,7 +146,7 @@ function NotificationSettings() {
         </p>
       ) : null}
       <p className="text-xs text-muted-foreground">
-        Channel settings apply to this bb server. Each browser needs permission.
+        Channel settings apply to this sandy server. Each browser needs permission.
         Click a notification to open its thread.
       </p>
     </div>

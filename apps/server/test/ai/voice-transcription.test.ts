@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { setAiServiceSelection } from "@bb/db";
+import { setAiServiceSelection } from "@sandy/db";
 import { describe, expect, it, vi } from "vitest";
 import {
   resolveVoiceTranscriptionEnabled,
@@ -61,12 +61,12 @@ describe("voice transcription", () => {
     await withTestHarness({}, async (harness) => {
       const codex = registerCodexVoice(harness, async () => "  hello there \n");
 
-      const response = await postVoice(harness, voiceFile(), "  bb, Codex  ");
+      const response = await postVoice(harness, voiceFile(), "  sandy, Codex  ");
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({ text: "hello there" });
       expect(codex.transcribeCalls).toHaveLength(1);
       expect(codex.transcribeCalls[0]?.audio.name).toBe("prompt.webm");
-      expect(codex.transcribeCalls[0]?.options.hint).toBe("bb, Codex");
+      expect(codex.transcribeCalls[0]?.options.hint).toBe("sandy, Codex");
     });
   });
 

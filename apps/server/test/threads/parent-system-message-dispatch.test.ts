@@ -1,7 +1,7 @@
-import { getThread, listEvents, listQueuedThreadMessages } from "@bb/db";
-import { turnRequestEventDataSchema, turnScope } from "@bb/domain";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { getThread, listEvents, listQueuedThreadMessages } from "@sandy/db";
+import { turnRequestEventDataSchema, turnScope } from "@sandy/domain";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as commands from "../../src/services/threads/thread-commands.js";
 import { queueParentSystemMessage } from "../../src/services/threads/parent-system-messages.js";

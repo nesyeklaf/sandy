@@ -10,12 +10,12 @@ import {
   listThreadEnvironmentAssignmentsOnHost,
   MissingStoredTurnStartedError,
   events as storedEvents,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   AcceptedDaemonEvent,
   AppendDaemonEventInput,
   AppendDaemonEventsResult,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   hostDaemonEventBatchRequestSchema,
   ungroupHostDaemonEvents,
@@ -24,7 +24,7 @@ import {
   type HostDaemonEventEnvelope,
   type HostDaemonInternalSchema,
   type HostDaemonRejectedEvent,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   THREAD_SESSION_OPTIONS_STATE_KIND,
   THREAD_PROVIDER_MODEL_CATALOG_STATE_KIND,
@@ -33,7 +33,7 @@ import {
   type ChildThreadOutcome,
   type ThreadEventType,
   type ThreadEventTurnStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { Hono } from "hono";
 import { ApiError } from "../errors.js";
 import type {

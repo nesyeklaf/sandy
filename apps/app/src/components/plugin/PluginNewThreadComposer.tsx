@@ -2,8 +2,8 @@ import { useContext, useState } from "react";
 import type {
   NewThreadComposerProps as PluginComposerProps,
   NewThreadRequest,
-} from "@get-bb/plugin-sdk";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy-sdk/plugin-sdk";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   NewThreadComposer,
   type NewThreadComposerSeed,

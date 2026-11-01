@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import type { AnnotationRecord } from "./annotations.js";
 import plugin from "./server.js";
 
@@ -24,10 +24,10 @@ const record: AnnotationRecord = {
 };
 
 async function setup() {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "agent-annotations",
   });
-  await plugin(bb);
+  await plugin(sandy);
   const provider = harness.registrations.mentionProviders.find(
     (candidate) => candidate.id === "annotation",
   );

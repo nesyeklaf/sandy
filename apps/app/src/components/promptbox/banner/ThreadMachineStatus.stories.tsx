@@ -1,4 +1,4 @@
-import type { SystemMachineProvider } from "@bb/server-contract";
+import type { SystemMachineProvider } from "@sandy/server-contract";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
 import { ResponsiveStage } from "./banner-story-stages";
 import { ThreadMachineStatusBanner } from "./ThreadMachineStatus";

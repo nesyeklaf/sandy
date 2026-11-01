@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import {
   definePluginApp,
   UrlLink,
-  useBbNavigate,
+  useSandyNavigate,
   type PluginPendingInteractionProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { QuestionForm } from "@/components/ui/question-form";
@@ -76,7 +76,7 @@ function CodexMcpElicitation({
   submit,
   cancel,
 }: PluginPendingInteractionProps) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const parsed = useMemo(
     () => codexMcpElicitationSchema.safeParse(interaction.payload),
     [interaction.payload],

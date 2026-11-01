@@ -6,14 +6,14 @@ import { printFirefoxLabReport, runFirefoxLab } from "./lib/firefox-run.mjs";
 
 const USAGE = `Usage: node scripts/perf/firefox-lab.mjs --url <url> [options]
 
-Thread switches in headless Firefox against a running bb server, timed from pointerdown until the
-thread is usable, with the app's own bb:switch phases and the thread request's network and server time.
+Thread switches in headless Firefox against a running sandy server, timed from pointerdown until the
+thread is usable, with the app's own sandy:switch phases and the thread request's network and server time.
 Each round opens the start thread in a fresh browser, then switches through the sidebar threads twice
 (first visit, then revisit). With --profile, extra rounds run under the Gecko profiler and the render
 and paint phases are broken down by category, JS function (mapped through source maps) and Stylo time.
 
 Options:
-  --url <url>             bb server
+  --url <url>             sandy server
   --start <thread id>     Thread to open first (default: the first idle sidebar thread)
   --threads <n>           Sidebar threads to switch between (default 4)
   --rounds <n>            Unprofiled rounds (default 5)
@@ -25,10 +25,10 @@ Options:
   --compare-chrome        Also run every round in headless Chrome with the same input, alternating the order
   --profile               Add profiled Firefox rounds and write their Gecko profiles as .json.gz
   --profile-rounds <n>    Profiled rounds with --profile (default 1)
-  --firefox <path>        Firefox executable (default $BB_PERF_FIREFOX or ~/bb-perf/firefox/firefox/firefox)
+  --firefox <path>        Firefox executable (default $SANDY_PERF_FIREFOX or ~/sandy-perf/firefox/firefox/firefox)
   --chrome <path>         Chrome executable for --compare-chrome
   --sourcemaps <dir>      Read <chunk>.map from this directory before fetching <chunk url>.map from the server
-  --out <dir>             Output directory (default: <tmp>/bb-perf-firefox/<timestamp>)
+  --out <dir>             Output directory (default: <tmp>/sandy-perf-firefox/<timestamp>)
 `;
 
 const { values } = parseArgs({
@@ -60,7 +60,7 @@ const outDir = resolve(
   values.out ??
     join(
       tmpdir(),
-      "bb-perf-firefox",
+      "sandy-perf-firefox",
       new Date().toISOString().replaceAll(":", "-"),
     ),
 );

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import * as domain from "@bb/domain";
+import * as domain from "@sandy/domain";
 import {
   workspaceResolutionFailureSchema as coreResolutionFailureSchema,
-} from "@bb/host-daemon-contract/workspace";
+} from "@sandy/host-daemon-contract/workspace";
 import {
   workspaceResolutionFailureSchema,
   BRANCH_LIST_LIMIT_MAX,
   BRANCH_LIST_QUERY_MAX_LENGTH,
   gitBranchOptionsSchema,
   gitCheckoutRefSchema,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 import { workspaceDiffTargetSchema } from "./contract.js";
 
 describe("git schemas defined both in core and outside it", () => {

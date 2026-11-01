@@ -3,9 +3,9 @@ import {
   deleteThread,
   listPendingInteractionsByThread,
   markHostEnvironmentsDestroyed,
-} from "@bb/db";
-import type { HostDaemonInteractiveRequest } from "@bb/host-daemon-contract";
-import { renderTemplate } from "@bb/templates";
+} from "@sandy/db";
+import type { HostDaemonInteractiveRequest } from "@sandy/host-daemon-contract";
+import { renderTemplate } from "@sandy/templates";
 import { describe, expect, it } from "vitest";
 import { toPendingInteraction } from "../../src/services/interactions/pending-interaction-serialization.js";
 import {

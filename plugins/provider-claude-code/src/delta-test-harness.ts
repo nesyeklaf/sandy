@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ClientTurnRequestId } from "@get-bb/plugin-sdk/provider-bridge";
+import type { ClientTurnRequestId } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   experimental_createDeltaAssembler as createDeltaAssembler,
   type ThreadEvent,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import {
   createClaudeDeltaTranslator,
   type ClaudeDeltaTranslationContext,
@@ -167,7 +167,7 @@ export function createClaudeDeltaHarness(
       });
     },
     itemId(providerItemId, threadId = "") {
-      return assembler.getBbItemId(threadId, providerItemId) ?? "";
+      return assembler.getSandyItemId(threadId, providerItemId) ?? "";
     },
   };
 }

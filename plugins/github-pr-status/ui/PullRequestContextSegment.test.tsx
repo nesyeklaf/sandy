@@ -7,7 +7,7 @@ import {
   renderHook,
   screen,
 } from "@testing-library/react";
-import type { ExperimentalThreadContextSegmentReference } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalThreadContextSegmentReference } from "@sandy-sdk/plugin-sdk/app";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EnvironmentPullRequest, PullRequest } from "../contract";
 import {
@@ -24,7 +24,7 @@ const sdk = vi.hoisted(() => ({
   threadContextKind: "banner" as "banner" | "card",
 }));
 
-vi.mock("@get-bb/plugin-sdk/app", () => ({
+vi.mock("@sandy-sdk/plugin-sdk/app", () => ({
   experimental_useRpcKeyedQuery: () => ({
     data: sdk.rows,
     error: null,
@@ -34,7 +34,7 @@ vi.mock("@get-bb/plugin-sdk/app", () => ({
     mutate: sdk.mutate,
     isPending: sdk.isPending,
   }),
-  useBbNavigate: () => ({ openUrl: () => false }),
+  useSandyNavigate: () => ({ openUrl: () => false }),
   useSettings: () => ({ values: sdk.settings, isLoading: false }),
   experimental_useThreadContextKind: () => sdk.threadContextKind,
 }));
@@ -47,9 +47,9 @@ const PULL_REQUEST: PullRequest = {
   number: 128,
   title: "Show pull request status in the prompt context banner",
   state: "open",
-  url: "https://github.com/acme/bb/pull/128",
+  url: "https://github.com/acme/sandy/pull/128",
   baseRefName: "main",
-  headRefName: "bb/pr-context-banner",
+  headRefName: "sandy/pr-context-banner",
   updatedAt: "2026-06-16T12:30:00Z",
   autoMerge: false,
   inMergeQueue: false,
@@ -70,11 +70,11 @@ const PULL_REQUEST: PullRequest = {
 };
 
 const SELF = {
-  key: "bb--github-pr-status/pull-request",
-  pluginId: "bb--github-pr-status",
+  key: "sandy--github-pr-status/pull-request",
+  pluginId: "sandy--github-pr-status",
 };
-const CHANGED_FILES = { key: "bb--git/changed-files", pluginId: "bb--git" };
-const PARENT = { key: "bb--core/parent-thread", pluginId: "bb--core" };
+const CHANGED_FILES = { key: "sandy--git/changed-files", pluginId: "sandy--git" };
+const PARENT = { key: "sandy--core/parent-thread", pluginId: "sandy--core" };
 
 function show(pullRequest: PullRequest) {
   sdk.rows = { env_1: { outcome: "available", pullRequest } };
@@ -295,7 +295,7 @@ describe("pull request context segment", () => {
   });
 
   it("merges with the remembered method and remembers a new one", () => {
-    window.localStorage.setItem("bb.pullRequest.mergeMethod", "squash");
+    window.localStorage.setItem("sandy.pullRequest.mergeMethod", "squash");
     show(PULL_REQUEST);
     renderPart("action", [SELF, CHANGED_FILES]);
     fireEvent.click(screen.getByRole("button", { name: "Squash merge" }));

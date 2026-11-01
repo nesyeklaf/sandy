@@ -1,16 +1,16 @@
 name: Feature request
-description: A workflow you could not complete, or behavior bb should have. Open the issue before a PR for features and UI changes.
+description: A workflow you could not complete, or behavior sandy should have. Open the issue before a PR for features and UI changes.
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
-        See [docs/filing-issues.md](https://github.com/get-bb/bb/blob/main/docs/filing-issues.md) and [CONTRIBUTING.md](https://github.com/get-bb/bb/blob/main/CONTRIBUTING.md). Prototype links from a fork are welcome; please get sign-off here before opening a PR.
+        See [docs/filing-issues.md](https://github.com/nesyeklaf/sandy/blob/main/docs/filing-issues.md) and [CONTRIBUTING.md](https://github.com/nesyeklaf/sandy/blob/main/CONTRIBUTING.md). Prototype links from a fork are welcome; please get sign-off here before opening a PR.
   - type: textarea
     id: workflow
     attributes:
       label: The workflow
-      description: What were you trying to do, step by step, and where did bb stop you or make it awkward?
+      description: What were you trying to do, step by step, and where did sandy stop you or make it awkward?
     validations:
       required: true
   - type: textarea

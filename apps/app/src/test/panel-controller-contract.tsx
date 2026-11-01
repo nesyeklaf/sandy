@@ -7,7 +7,7 @@ import type {
   ExperimentalPanelTabs,
   ExperimentalTabReference,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   experimental_useAppPanel,
   experimental_useFixedTabTarget,

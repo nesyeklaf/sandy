@@ -19,14 +19,14 @@ import {
   setQueuedThreadMessageGroupBoundary,
   setThreadExecutionOverride,
   threads as threadRows,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   threadQueuedMessageSchema,
   threadScope,
   threadSchema,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   type TimelineRow,
   sidebarBootstrapResponseSchema,
@@ -39,8 +39,8 @@ import {
   threadWithIncludesResponseSchema,
   timelineTurnSummaryDetailsResponseSchema,
   uploadedPromptAttachmentSchema,
-} from "@bb/server-contract";
-import { renderTemplate } from "@bb/templates";
+} from "@sandy/server-contract";
+import { renderTemplate } from "@sandy/templates";
 import { z } from "zod";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -3730,7 +3730,7 @@ describe("public thread data routes", () => {
         path: "/tmp/queued-message-reprovision",
         status: "error",
         environmentProviderId: "personal-workspace",
-        environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+        environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
         isGitRepo: false,
       });
       const thread = seedThread(harness.deps, {
@@ -3739,7 +3739,7 @@ describe("public thread data routes", () => {
       });
       installFakeEnvironmentProvider({
         id: "personal-workspace",
-        pluginId: "bb-plugin-environment-personal-workspace",
+        pluginId: "sandy-plugin-environment-personal-workspace",
         displayName: "Personal workspace",
         requires: {
           projectCheckout: false,
@@ -3907,7 +3907,7 @@ describe("public thread data routes", () => {
         path: "/tmp/queued-message-immediate-reprovision",
         status: "error",
         environmentProviderId: "personal-workspace",
-        environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+        environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
         isGitRepo: false,
       });
       const thread = seedThread(harness.deps, {
@@ -3920,7 +3920,7 @@ describe("public thread data routes", () => {
       });
       installFakeEnvironmentProvider({
         id: "personal-workspace",
-        pluginId: "bb-plugin-environment-personal-workspace",
+        pluginId: "sandy-plugin-environment-personal-workspace",
         displayName: "Personal workspace",
         requires: {
           projectCheckout: false,
@@ -3977,7 +3977,7 @@ describe("public thread data routes", () => {
                 path: request.command.path,
                 isGitRepo: true,
                 isWorktree: false,
-                branchName: `bb/${thread.id}`,
+                branchName: `sandy/${thread.id}`,
                 defaultBranch: "main",
                 transcript: [],
               },
@@ -4039,7 +4039,7 @@ describe("public thread data routes", () => {
         path: "/tmp/grouped-queued-message-reprovision",
         status: "error",
         environmentProviderId: "personal-workspace",
-        environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+        environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
         isGitRepo: false,
       });
       const thread = seedThread(harness.deps, {
@@ -4056,7 +4056,7 @@ describe("public thread data routes", () => {
       });
       installFakeEnvironmentProvider({
         id: "personal-workspace",
-        pluginId: "bb-plugin-environment-personal-workspace",
+        pluginId: "sandy-plugin-environment-personal-workspace",
         displayName: "Personal workspace",
         requires: {
           projectCheckout: false,
@@ -4392,7 +4392,7 @@ describe("public thread data routes", () => {
         projectId: project.id,
         environmentId: environment.id,
       });
-      const threadStoragePath = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const threadStoragePath = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
 
       const filesPromise = harness.app.request(
         `/api/v1/threads/${thread.id}/thread-storage/files?query=notes`,
@@ -4454,7 +4454,7 @@ describe("public thread data routes", () => {
         threadStorageLocationResponseSchema.parse(await readJson(response)),
       ).toEqual({
         hostId: host.id,
-        storageRootPath: `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`,
+        storageRootPath: `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`,
       });
     });
   });
@@ -4475,7 +4475,7 @@ describe("public thread data routes", () => {
         projectId: project.id,
         environmentId: environment.id,
       });
-      const threadStoragePath = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const threadStoragePath = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
 
       const pathsPromise = harness.app.request(
         `/api/v1/threads/${thread.id}/thread-storage/paths?query=notes&includeFiles=true&includeDirectories=true`,
@@ -4566,7 +4566,7 @@ describe("public thread data routes", () => {
         environmentId: environment.id,
         status: "starting",
       });
-      const threadStoragePath = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const threadStoragePath = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
 
       const filesPromise = harness.app.request(
         `/api/v1/threads/${thread.id}/thread-storage/files`,
@@ -4595,7 +4595,7 @@ describe("public thread data routes", () => {
   it("returns an empty thread storage file list when the durable storage is absent", async () => {
     await withTestHarness(async (harness) => {
       const { host, thread } = seedThreadFixture(harness);
-      const threadStoragePath = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const threadStoragePath = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
 
       const filesPromise = harness.app.request(
         `/api/v1/threads/${thread.id}/thread-storage/files`,

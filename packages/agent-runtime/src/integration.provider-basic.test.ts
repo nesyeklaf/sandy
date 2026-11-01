@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { requireThreadEventScopeTurnId } from "@bb/domain";
+import { requireThreadEventScopeTurnId } from "@sandy/domain";
 import {
   cleanup,
   createTestRuntime,
@@ -452,7 +452,7 @@ for (const providerId of providers) {
       let toolCalled = false;
       const ctx = createTestRuntime(providerId, {
         onToolCall: async (req) => {
-          if (req.tool === "bb_test_ping") {
+          if (req.tool === "sandy_test_ping") {
             toolCalled = true;
             return {
               contentItems: [
@@ -485,7 +485,7 @@ for (const providerId of providers) {
           options,
           dynamicTools: [
             {
-              name: "bb_test_ping",
+              name: "sandy_test_ping",
               description:
                 "Returns a test ping response. Always call this tool when asked to use it.",
               inputSchema: {
@@ -501,7 +501,7 @@ for (const providerId of providers) {
           threadId,
           input: [
             promptTextInput({
-              text: "Call the bb_test_ping tool right now and report what it returns.",
+              text: "Call the sandy_test_ping tool right now and report what it returns.",
             }),
           ],
           options,
@@ -510,7 +510,7 @@ for (const providerId of providers) {
         await waitForToolCallBeforeTurnCompletion({
           ctx,
           threadId,
-          toolName: "bb_test_ping",
+          toolName: "sandy_test_ping",
           timeoutMs: 30_000,
           label: "tool call",
         });

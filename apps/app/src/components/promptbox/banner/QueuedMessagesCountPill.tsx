@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PROMPT_STACK_COUNT_PILL_CLASS,
   PROMPT_STACK_TRAILING_SLOT_CLASS,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 
 export function QueuedMessagesCountPill({
   arrivals,
@@ -36,14 +36,14 @@ export function QueuedMessagesCountPill({
         className={cn(
           PROMPT_STACK_COUNT_PILL_CLASS,
           "relative overflow-hidden",
-          bumped && "bb-count-flash",
+          bumped && "sandy-count-flash",
         )}
       >
         {display.previousCount === null ? null : (
           <span
             aria-hidden
             data-queued-messages-previous-count=""
-            className="bb-count-roll-out absolute inset-0 flex items-center justify-center"
+            className="sandy-count-roll-out absolute inset-0 flex items-center justify-center"
             onAnimationEnd={() =>
               setDisplay((current) => ({ ...current, previousCount: null }))
             }
@@ -51,7 +51,7 @@ export function QueuedMessagesCountPill({
             {display.previousCount}
           </span>
         )}
-        <span className={cn(bumped && "bb-count-roll-in")}>{count}</span>
+        <span className={cn(bumped && "sandy-count-roll-in")}>{count}</span>
       </span>
     </span>
   );

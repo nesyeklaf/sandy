@@ -3,10 +3,10 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { BbDesktopInfo } from "@bb/desktop-contract";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import type { SandyDesktopInfo } from "@sandy/desktop-contract";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import {
   MACOS_DRAWER_HEADER_RESERVE_CLASS,
   SidebarTopReserveRow,
@@ -20,7 +20,7 @@ vi.mock("./sidebarNavigationProvider", () => ({
   useSidebarNavigationPlacement: () => navigationState.placement,
 }));
 
-const macosDesktopInfo: BbDesktopInfo = {
+const macosDesktopInfo: SandyDesktopInfo = {
   platform: "macos",
   version: "0.0.0-test",
 };
@@ -52,13 +52,13 @@ async function renderReservesTrafficLights({
 
 afterEach(() => {
   cleanup();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
   navigationState.placement = "rail";
 });
 
 describe("SidebarTopReserveRow macOS traffic lights", () => {
   it("clears the traffic lights and sidebar toggle in the compact drawer", async () => {
-    window.bbDesktop = createBbDesktopApi(macosDesktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(macosDesktopInfo);
 
     expect(await renderReservesTrafficLights({ isCompactViewport: true })).toBe(
       true,
@@ -69,7 +69,7 @@ describe("SidebarTopReserveRow macOS traffic lights", () => {
     "keeps the framed %s header beside its content without a window-control gutter",
     async (placement) => {
       navigationState.placement = placement;
-      window.bbDesktop = createBbDesktopApi(macosDesktopInfo);
+      window.sandyDesktop = createSandyDesktopApi(macosDesktopInfo);
 
       expect(
         await renderReservesTrafficLights({ isCompactViewport: false }),

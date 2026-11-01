@@ -28,7 +28,7 @@ const rpcErrorCodes = [
 /** RPC categories may grow. Handle unknown_error as a fallback for newer server codes. */
 export type PluginRpcErrorCode = (typeof rpcErrorCodes)[number];
 
-const callErrorBrand = Symbol.for("@get-bb/plugin-sdk/rpc-call-error");
+const callErrorBrand = Symbol.for("@sandy-sdk/plugin-sdk/rpc-call-error");
 
 /** A client RPC failure. Unknown server codes become unknown_error and remain in serverCode. */
 export class experimental_PluginRpcCallError extends Error {
@@ -118,7 +118,7 @@ export interface PluginRpcError {
   issues?: PluginRpcValidationIssue[];
 }
 
-const refusalBrand = Symbol.for("@get-bb/plugin-sdk/rpc-refusal");
+const refusalBrand = Symbol.for("@sandy-sdk/plugin-sdk/rpc-refusal");
 
 /** Expected handler refusal; reaches callers without recording a plugin crash. */
 export class experimental_PluginRpcRefusal extends Error {
@@ -141,7 +141,7 @@ export class experimental_PluginRpcRefusal extends Error {
 /**
  * The validator-neutral subset of Standard Schema v1 used by plugin contracts.
  * Zod 4 schemas implement this interface directly; other validators can do
- * the same without becoming part of BB's public protocol.
+ * the same without becoming part of SANDY's public protocol.
  */
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
   readonly "~standard": {
@@ -193,7 +193,7 @@ export interface PluginRpcMethodContract<
   readonly experimental_description?: string;
   /**
    * Host contracts only. When true and the daemon's response has not arrived
-   * within half of the call's transport timeout, bb cancels the call and sends
+   * within half of the call's transport timeout, sandy cancels the call and sends
    * it once more, the retry core uses for its own read-only daemon commands.
    * Declare it only for reads that are safe to run twice.
    */
@@ -257,7 +257,7 @@ type PluginRpcContractDefinition<
  * `tags` and `keyTags` receive each method's parsed input and output types.
  * A method declaring keyTags must accept parsed keys: string[] and return a
  * string-indexed record. Writes do not declare what they change: the server
- * calls `bb.rpc.experimental_invalidate` where the data changes, so RPC, CLI,
+ * calls `sandy.rpc.experimental_invalidate` where the data changes, so RPC, CLI,
  * agent-tool and background writes each refresh matching reads once.
  */
 export function defineRpcContract<
@@ -276,9 +276,9 @@ export function defineRpcContract<
 
 /**
  * Who invoked an rpc method. `plugin` means another loaded plugin (or this
- * one) called through its own `bb.sdk.plugins.callRpc`; the host verifies
+ * one) called through its own `sandy.sdk.plugins.callRpc`; the host verifies
  * that with a per-load token only the server knows. Every other caller — the
- * app, the `bb` CLI, agents, and bb itself — is `client`.
+ * app, the `sandy` CLI, agents, and sandy itself — is `client`.
  */
 export type ExperimentalPluginRpcCaller =
   | { readonly kind: "plugin"; readonly pluginId: string }
@@ -305,7 +305,7 @@ export type PluginRpcHandlers<Contract extends PluginRpcContract> = {
 };
 
 /**
- * Handlers as `bb.rpc.register` calls them: the validated input, then the
+ * Handlers as `sandy.rpc.register` calls them: the validated input, then the
  * call's context. A `PluginRpcHandlers` map is assignable to this type, so
  * handlers that ignore the context keep their one-argument signature.
  */

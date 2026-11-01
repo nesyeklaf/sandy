@@ -1,4 +1,4 @@
-import { Skeleton } from "@bb/shared-ui/skeleton";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 
 export function TimelineRowBodyPlaceholder() {
   return (

@@ -11,6 +11,7 @@ import {
   appKeybindingOverridesSchema,
   appKeybindingsSchema,
   appThemeSchema,
+  customThemeNameSchema,
   availableModelSchema,
   experimentsSchema,
   featureFlagsSchema,
@@ -18,9 +19,10 @@ import {
   permissionModeSchema,
   pluginThemeMetaSchema,
   providerInfoSchema,
-} from "@bb/domain";
-import { providerHealthSchema as providerHealthSchema } from "@bb/provider-bridge-protocol/provider-maintenance";
-import { hostPlatformSchema } from "@bb/host-daemon-contract/local";
+  themeKitInputSchema,
+} from "@sandy/domain";
+import { providerHealthSchema as providerHealthSchema } from "@sandy/provider-bridge-protocol/provider-maintenance";
+import { hostPlatformSchema } from "@sandy/host-daemon-contract/local";
 import { machineEnvironmentSetSchema } from "./machine-environment.js";
 import { systemVoiceTranscriptionResponseSchema } from "./system-voice.js";
 import {
@@ -138,8 +140,8 @@ export interface SystemVoiceTranscriptionForm {
   [key: string]: string | Blob;
 }
 
-export { providerInfoSchema as systemProviderInfoSchema } from "@bb/domain";
-export type { ProviderInfo as SystemProviderInfo } from "@bb/domain";
+export { providerInfoSchema as systemProviderInfoSchema } from "@sandy/domain";
+export type { ProviderInfo as SystemProviderInfo } from "@sandy/domain";
 
 export type SystemVoiceTranscriptionResponse = z.infer<
   typeof systemVoiceTranscriptionResponseSchema
@@ -254,7 +256,7 @@ export const serverAccessStatusSchema = z.object({
   ),
   defaultProviderId: z.string(),
   effectiveUrl: z.string().nullable(),
-  urlSource: z.enum(["setting", "BB_EXTERNAL_URL"]).nullable(),
+  urlSource: z.enum(["setting", "SANDY_EXTERNAL_URL"]).nullable(),
 });
 export type ServerAccessStatus = z.infer<typeof serverAccessStatusSchema>;
 
@@ -296,6 +298,28 @@ export const themeCatalogResponseSchema = z.object({
   active: appThemeSchema,
 });
 export type ThemeCatalogResponse = z.infer<typeof themeCatalogResponseSchema>;
+
+export const createThemeRequestSchema = z.object({
+  name: customThemeNameSchema,
+  kit: themeKitInputSchema,
+  overwrite: z.boolean().default(false),
+});
+export type CreateThemeRequest = z.input<typeof createThemeRequestSchema>;
+
+export const createThemeResponseSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  css: z.string(),
+  issues: z.array(
+    z.object({
+      severity: z.enum(["error", "warning"]),
+      mode: z.enum(["light", "dark", "both"]),
+      token: z.string(),
+      message: z.string(),
+    }),
+  ),
+});
+export type CreateThemeResponse = z.infer<typeof createThemeResponseSchema>;
 
 export const systemCliCommandShadowSchema = z.object({
   path: z.string().min(1),

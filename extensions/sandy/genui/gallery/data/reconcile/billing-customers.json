@@ -1,0 +1,55 @@
+{
+  "universe": {
+    "name": "CRM export",
+    "asOf": "2026-10-05 06:00"
+  },
+  "parts": [
+    {
+      "id": "newOnly",
+      "label": "New billing only",
+      "value": 825
+    },
+    {
+      "id": "both",
+      "label": "Both systems",
+      "value": 87
+    },
+    {
+      "id": "legacyOnly",
+      "label": "Legacy billing only",
+      "value": 264
+    },
+    {
+      "id": "neither",
+      "label": "Neither system",
+      "value": 24
+    }
+  ],
+  "sources": [
+    {
+      "name": "CRM export",
+      "counts": "every customer",
+      "asOf": "2026-10-05 06:00",
+      "own": "1,200 customers",
+      "distinct": 1200
+    },
+    {
+      "name": "New billing (Stripe)",
+      "counts": "customers with an active subscription",
+      "asOf": "2026-10-05 08:00",
+      "own": "940 subscriptions",
+      "distinct": 912
+    },
+    {
+      "name": "Legacy billing",
+      "counts": "customers with an open invoice cycle",
+      "asOf": "2026-10-04 23:00",
+      "own": "351 accounts",
+      "distinct": 351
+    }
+  ],
+  "caveats": [
+    "Stripe's 940 counts subscriptions; 912 customers hold them. Compare the distinct customers column only.",
+    "The legacy export is from the evening before the other two, so a customer moved overnight may be counted in both."
+  ]
+}

@@ -24,8 +24,8 @@ describe.runIf(posix)("createCliRunner", () => {
   let binary: string;
 
   beforeEach(async () => {
-    directory = await mkdtemp(join(tmpdir(), "bb-mcp-cli-"));
-    binary = join(directory, "bb");
+    directory = await mkdtemp(join(tmpdir(), "sandy-mcp-cli-"));
+    binary = join(directory, "sandy");
   });
 
   afterEach(async () => {
@@ -41,8 +41,8 @@ describe.runIf(posix)("createCliRunner", () => {
     return createCliRunner({
       env: {
         PATH: process.env.PATH,
-        BB_THREAD_ID: "thr_parent",
-        BB_SERVER_HEADERS: '{"x":"y"}',
+        SANDY_THREAD_ID: "thr_parent",
+        SANDY_SERVER_HEADERS: '{"x":"y"}',
       },
       serverUrl: () => "http://127.0.0.1:1",
       resolveBinary: async () => binary,
@@ -58,7 +58,7 @@ describe.runIf(posix)("createCliRunner", () => {
 
   it("passes arguments verbatim, the server URL, and stdin, and strips thread context", async () => {
     await script(
-      `printf '%s|' "$@"; printf '\\n%s|%s|%s\\n' "$BB_SERVER_URL" "\${BB_THREAD_ID:-unset}" "\${BB_SERVER_HEADERS:-unset}"; cat; exit 3`,
+      `printf '%s|' "$@"; printf '\\n%s|%s|%s\\n' "$SANDY_SERVER_URL" "\${SANDY_THREAD_ID:-unset}" "\${SANDY_SERVER_HEADERS:-unset}"; cat; exit 3`,
     );
     const result = await runner()(
       ["thread", "tell", "a b", "$(touch x); `id`", "--flag=;rm"],
@@ -149,20 +149,20 @@ describe("cliEnvironment", () => {
     const env = cliEnvironment(
       {
         HOME: "/home/me",
-        BB_SERVER_URL: "http://elsewhere",
-        BB_PROJECT_ID: "prj",
-        BB_ENVIRONMENT_ID: "env",
-        BB_THREAD_STORAGE: "/tmp/x",
+        SANDY_SERVER_URL: "http://elsewhere",
+        SANDY_PROJECT_ID: "prj",
+        SANDY_ENVIRONMENT_ID: "env",
+        SANDY_THREAD_STORAGE: "/tmp/x",
       },
       "http://127.0.0.1:9",
     );
     expect(env).toMatchObject({
       HOME: "/home/me",
-      BB_SERVER_URL: "http://127.0.0.1:9",
+      SANDY_SERVER_URL: "http://127.0.0.1:9",
       NO_COLOR: "1",
     });
-    expect(env.BB_PROJECT_ID).toBeUndefined();
-    expect(env.BB_ENVIRONMENT_ID).toBeUndefined();
-    expect(env.BB_THREAD_STORAGE).toBeUndefined();
+    expect(env.SANDY_PROJECT_ID).toBeUndefined();
+    expect(env.SANDY_ENVIRONMENT_ID).toBeUndefined();
+    expect(env.SANDY_THREAD_STORAGE).toBeUndefined();
   });
 });

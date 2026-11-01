@@ -4,7 +4,7 @@ import {
   execPortableFile,
   pathExists,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -14,7 +14,7 @@ import {
   type WorkspaceOpenTarget,
   type WorkspaceOpenTargetIcon,
   type WorkspaceOpenTargetId,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   BASIC_FILE_OPEN_CAPABILITIES,
   FILE_MANAGER_OPEN_CAPABILITIES,
@@ -658,7 +658,7 @@ async function resolveMacApplicationIconDataUrl(
     path.extname(iconFile) === "" ? `${iconFile}.icns` : iconFile;
   const iconPath = path.join(appPath, "Contents", "Resources", iconFileName);
   const tempDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), "bb-open-target-icon-"),
+    path.join(os.tmpdir(), "sandy-open-target-icon-"),
   );
   const pngPath = path.join(tempDir, `${path.basename(iconPath)}.png`);
   try {

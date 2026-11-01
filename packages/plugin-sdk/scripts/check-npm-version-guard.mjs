@@ -1,7 +1,7 @@
 // Keeps npm from lagging the plugin SDK.
 //
-// The publish job (.github/workflows/publish-bb-app.yml, job publish-plugin-sdk)
-// only publishes @get-bb/plugin-sdk when PLUGIN_SDK_VERSION is absent from npm.
+// The publish job (.github/workflows/publish-sandy-app.yml, job publish-plugin-sdk)
+// only publishes @sandy-sdk/plugin-sdk when PLUGIN_SDK_VERSION is absent from npm.
 // That is safe exactly as long as a released version's *published content* never
 // changes underneath it. Declarations alone are not enough: a runtime-only change
 // (dist/ output, an exports map entry, a peer range) leaves bundled-types
@@ -41,8 +41,8 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pkgRoot = path.resolve(here, "..");
 const repoRoot = path.resolve(pkgRoot, "..", "..");
-const PACKAGE_NAME = "@get-bb/plugin-sdk";
-const REGISTRY_URL = "https://registry.npmjs.org/@get-bb%2Fplugin-sdk";
+const PACKAGE_NAME = "@sandy-sdk/plugin-sdk";
+const REGISTRY_URL = "https://registry.npmjs.org/@sandy-sdk%2Fplugin-sdk";
 
 /**
  * Manifest fields whose value is part of what consumers resolve against. A
@@ -235,7 +235,7 @@ function extractTarball(tarballPath, workDir) {
  *
  * The build runs through turbo so upstream `^build` dependencies are honored. In
  * CI it is a cache hit: ci.yml already runs `turbo run build typecheck lint`
- * before this guard, and publish-bb-app.yml builds the SDK before publishing.
+ * before this guard, and publish-sandy-app.yml builds the SDK before publishing.
  * `npm pack --ignore-scripts` then packs that freshly built tree without
  * re-running prepack.
  */

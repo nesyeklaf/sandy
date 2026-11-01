@@ -1,9 +1,9 @@
 import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildPluginHost, resolvePluginBuildToolchain } from "@bb/plugin-build";
-import { ensurePluginProcessDataDir } from "@bb/process-utils";
-import type { NormalizedPluginProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+import { buildPluginHost, resolvePluginBuildToolchain } from "@sandy/plugin-build";
+import { ensurePluginProcessDataDir } from "@sandy/process-utils";
+import type { NormalizedPluginProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   captureFirstPartyProviderDeclarations,
   firstPartyPluginRootDir,
@@ -35,9 +35,9 @@ function wireCapabilities(
 }
 
 export async function setup(): Promise<void> {
-  const bridgeDataRoot = join(tmpdir(), "bb-agent-runtime-integration-daemon");
+  const bridgeDataRoot = join(tmpdir(), "sandy-agent-runtime-integration-daemon");
   const toolchain = await resolvePluginBuildToolchain(
-    join(tmpdir(), "bb-plugin-build-toolchain"),
+    join(tmpdir(), "sandy-plugin-build-toolchain"),
   );
   const manifest: IntegrationProviderBridgeManifest = {};
   for (const pluginId of PROVIDER_BRIDGE_PLUGIN_IDS) {

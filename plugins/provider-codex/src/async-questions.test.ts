@@ -3,7 +3,7 @@ import {
   createFakePluginHost,
   makeThreadResponse,
   type FakePluginHost,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { registerAsyncQuestions } from "./async-questions.js";
 import { CODEX_ASYNC_QUESTION_RENDERER_ID } from "./async-question-form.js";
 
@@ -36,7 +36,7 @@ function createHost(rows: ReturnType<typeof questionRow>[]): FakePluginHost {
   );
   host.harness.sdk.stub("threads.send", async () => ({}));
   registerAsyncQuestions(
-    host.bb as unknown as Parameters<typeof registerAsyncQuestions>[0],
+    host.sandy as unknown as Parameters<typeof registerAsyncQuestions>[0],
   );
   return host;
 }

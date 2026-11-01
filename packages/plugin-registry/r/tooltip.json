@@ -3,14 +3,14 @@
   "name": "tooltip",
   "type": "registry:ui",
   "title": "tooltip",
-  "description": "BB ui \"tooltip\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"tooltip\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-tooltip"
   ],
   "registryDependencies": [
-    "@bb/overlay-trigger",
-    "@bb/portal-scope",
-    "@bb/utils"
+    "@sandy/overlay-trigger",
+    "@sandy/portal-scope",
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -1,13 +1,13 @@
 import { useState } from "react";
-import type { Host, LastServerMove } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Host, LastServerMove } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { ConfirmDeleteDialog } from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/dialog";
+import { ConfirmDeleteDialog } from "@sandy/shared-ui/confirm-delete-dialog";
 import { appToast } from "@/components/ui/app-toast";
 import {
   SettingsRow,
@@ -32,7 +32,7 @@ export function oldServerCopyDescription(
   host: Host,
   lastMove: LastServerMove,
 ): string {
-  const base = `The server moved from ${host.name} to ${lastMove.toHostName}. The old server data is still on ${host.name}, locked so bb won't start a server from it. Keep it as a backup, or delete it once the new server works.`;
+  const base = `The server moved from ${host.name} to ${lastMove.toHostName}. The old server data is still on ${host.name}, locked so sandy won't start a server from it. Keep it as a backup, or delete it once the new server works.`;
   return host.status === "connected"
     ? base
     : `${base} ${host.name} has to be online to delete it.`;

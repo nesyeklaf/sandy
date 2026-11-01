@@ -3,19 +3,19 @@
   "name": "select",
   "type": "registry:ui",
   "title": "select",
-  "description": "BB ui \"select\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"select\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-select"
   ],
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/icon",
-    "@bb/motion",
-    "@bb/overlay-anchor",
-    "@bb/overlay-trigger",
-    "@bb/portal-scope",
-    "@bb/responsive-overlay",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/icon",
+    "@sandy/motion",
+    "@sandy/overlay-anchor",
+    "@sandy/overlay-trigger",
+    "@sandy/portal-scope",
+    "@sandy/responsive-overlay",
+    "@sandy/utils"
   ],
   "files": [
     {

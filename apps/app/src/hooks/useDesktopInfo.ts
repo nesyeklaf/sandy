@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import type { BbDesktopApi, BbDesktopInfo } from "@bb/desktop-contract";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import type { SandyDesktopApi, SandyDesktopInfo } from "@sandy/desktop-contract";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 
 interface DesktopInfo {
-  desktopApi: BbDesktopApi | null;
-  desktopInfo: BbDesktopInfo | null;
+  desktopApi: SandyDesktopApi | null;
+  desktopInfo: SandyDesktopInfo | null;
   isDesktop: boolean;
 }
 
 export function useDesktopInfo(): DesktopInfo {
-  const [desktopApi] = useState<BbDesktopApi | null>(() => getBbDesktopInfo());
-  const [desktopInfo, setDesktopInfo] = useState<BbDesktopInfo | null>(null);
+  const [desktopApi] = useState<SandyDesktopApi | null>(() => getSandyDesktopInfo());
+  const [desktopInfo, setDesktopInfo] = useState<SandyDesktopInfo | null>(null);
 
   useEffect(() => {
-    const api = getBbDesktopInfo();
+    const api = getSandyDesktopInfo();
     if (api === null) {
       return;
     }

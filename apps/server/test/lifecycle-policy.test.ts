@@ -1,6 +1,6 @@
-import { getHost, updateHost } from "@bb/db";
-import type { HostDaemonOnlineRpcRequestMessage } from "@bb/host-daemon-contract";
-import { validatePluginMachineProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+import { getHost, updateHost } from "@sandy/db";
+import type { HostDaemonOnlineRpcRequestMessage } from "@sandy/host-daemon-contract";
+import { validatePluginMachineProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setPluginMachineProviderBridge } from "../src/services/plugins/plugin-machine-provider-registry.js";
 import { registerHostRpcResponder } from "./helpers/host-rpc.js";
@@ -128,7 +128,7 @@ describe.sequential("suspended machine lifecycle policy", () => {
       expect(response.status).toBe(200);
       expect(await readJson(response)).toEqual({
         hostId: host.id,
-        storageRootPath: `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`,
+        storageRootPath: `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`,
       });
       expect(machine.resume).not.toHaveBeenCalled();
       expect(rpc).not.toHaveBeenCalled();

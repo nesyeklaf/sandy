@@ -8,13 +8,13 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     testTimeout: 15_000,
     env: {
-      BB_SERVER_URL: "http://127.0.0.1:49161",
-      BB_HOST_DAEMON_PORT: "49162",
-      BB_CLI_ERROR_LOG: "0",
+      SANDY_SERVER_URL: "http://127.0.0.1:49161",
+      SANDY_HOST_DAEMON_PORT: "49162",
+      SANDY_CLI_ERROR_LOG: "0",
     },
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "@bb/cli",
+      name: "@sandy/cli",
       include: ["src/**/*.test.ts"],
     }),
   },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RuntimePermissionPolicy } from "@get-bb/plugin-sdk/provider-bridge";
+import type { RuntimePermissionPolicy } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   buildClaudeSessionParams,
   buildClaudeTurnParams,
@@ -19,7 +19,7 @@ const EXECUTION_CONTEXT = {
   memoryEnabled: false,
   providerSubagentsEnabled: false,
   instructions: "Session instructions",
-  envVars: { BB_TEST: "1" },
+  envVars: { SANDY_TEST: "1" },
   permissionMode: "accept-edits",
   permissionScope: "workspace",
   approvalReviewer: "user",
@@ -102,7 +102,7 @@ describe("buildClaudeSessionParams", () => {
       model: "claude-sonnet-5",
       reasoningLevel: "high",
       serviceTier: "default",
-      config: { envVars: { BB_TEST: "1" } },
+      config: { envVars: { SANDY_TEST: "1" } },
     });
     expect(params.baseInstructions).toContain("Session instructions");
   });
@@ -172,7 +172,7 @@ describe("claude session workspace-write roots", () => {
   it("omits empty workspace-write roots", () => {
     expect(
       buildClaudeSessionParams({
-        threadId: "bb-thread-1",
+        threadId: "sandy-thread-1",
         cwd: "/tmp/worktree",
         instructionMode: "append",
         options: toWireOptionsWithRoots({
@@ -190,7 +190,7 @@ describe("claude session workspace-write roots", () => {
     };
     const autoParams = buildClaudeSessionParams({
       ...shared,
-      threadId: "bb-thread-readonly",
+      threadId: "sandy-thread-readonly",
       options: toWireOptionsWithRoots({
         policy: WORKSPACE_AUTO_POLICY,
         additionalWorkspaceWriteRoots: EXTRA_WORKSPACE_WRITE_ROOTS,
@@ -198,7 +198,7 @@ describe("claude session workspace-write roots", () => {
     });
     const fullParams = buildClaudeSessionParams({
       ...shared,
-      threadId: "bb-thread-full",
+      threadId: "sandy-thread-full",
       options: toWireOptionsWithRoots({
         policy: FULL_POLICY,
         additionalWorkspaceWriteRoots: EXTRA_WORKSPACE_WRITE_ROOTS,
@@ -216,7 +216,7 @@ describe("claude session workspace-write roots", () => {
 describe("claude session option passthrough", () => {
   it("passes through model, env vars, instructions, max reasoning level, and dynamic tools", () => {
     const params = buildClaudeSessionParams({
-      threadId: "bb-thread-1",
+      threadId: "sandy-thread-1",
       cwd: "/tmp/worktree",
       instructionMode: "append",
       options: {
@@ -235,7 +235,7 @@ describe("claude session option passthrough", () => {
       },
       dynamicTools: [
         {
-          name: "bb_test_ping",
+          name: "sandy_test_ping",
           description: "Ping the host",
           inputSchema: {
             type: "object",
@@ -249,7 +249,7 @@ describe("claude session option passthrough", () => {
     });
 
     expect(params).toMatchObject({
-      threadId: "bb-thread-1",
+      threadId: "sandy-thread-1",
       model: "claude-opus-4-7",
       reasoningLevel: "max",
       permissionMode: "acceptEdits",
@@ -259,7 +259,7 @@ describe("claude session option passthrough", () => {
       ),
       dynamicTools: [
         {
-          name: "bb_test_ping",
+          name: "sandy_test_ping",
           description: "Ping the host",
           inputSchema: {
             type: "object",

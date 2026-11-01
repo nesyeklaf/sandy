@@ -4,9 +4,9 @@ import {
   type MachineEnrollmentOptions,
 } from "./machine-enrollment.js";
 import { Command } from "commander";
-import { jsonValueSchema, type Host, type JsonValue } from "@bb/domain";
+import { jsonValueSchema, type Host, type JsonValue } from "@sandy/domain";
 import { action, CliExitError } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { columnWidths, printBorderlessTable } from "../table.js";
 import { outputJson } from "./helpers.js";
 import { confirmDestructiveAction } from "./helpers.js";
@@ -178,7 +178,7 @@ export async function resolveMachineHostId(args: {
   serverUrl: string;
   target: string;
 }): Promise<string> {
-  const hosts = await createCliBbSdk(args.serverUrl).hosts.list({
+  const hosts = await createCliSandySdk(args.serverUrl).hosts.list({
     includeCreating: true,
   });
   const hostId = resolveMachineId(hosts, args.target);
@@ -224,9 +224,9 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async () => {
-        throw new CliExitError("bb machine join-code has been removed.", 1, {
+        throw new CliExitError("sandy machine join-code has been removed.", 1, {
           code: "removed_command",
-          hint: "Use `bb machine create --provider manual` and run the printed enrollment command.",
+          hint: "Use `sandy machine create --provider manual` and run the printed enrollment command.",
         });
       }),
     );
@@ -259,7 +259,7 @@ export function registerMachineCommands(
         const cancel = () => controller.abort();
         process.once("SIGINT", cancel);
         try {
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           controller.signal.throwIfAborted();
           let host = await sdk.hosts.experimental_create({
             machineProviderId,
@@ -314,7 +314,7 @@ export function registerMachineCommands(
         } catch (error) {
           if (controller.signal.aborted) {
             throw new CliExitError(
-              "Stopped following; creation continues. Use bb machine remove <host-id> to cancel.",
+              "Stopped following; creation continues. Use sandy machine remove <host-id> to cancel.",
               130,
             );
           }
@@ -332,7 +332,7 @@ export function registerMachineCommands(
     .action(
       action(async (opts: MachineListCommandOptions) => {
         const providers =
-          await createCliBbSdk(getUrl()).hosts.experimental_listProviders();
+          await createCliSandySdk(getUrl()).hosts.experimental_listProviders();
         if (outputJson(opts, providers)) return;
         if (providers.length === 0) {
           console.log("No machine providers found");
@@ -356,7 +356,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: MachineEnumerationOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hosts = await sdk.hosts.list({
           includeCreating: true,
           ...(opts.all ? {} : { type: "persistent" }),
@@ -377,7 +377,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -398,7 +398,7 @@ export function registerMachineCommands(
           serverUrl: getUrl(),
           target,
         });
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const reconnect = await sdk.hosts.experimental_reconnect({ hostId });
         if (opts.json) {
           outputJson(opts, reconnect);
@@ -437,7 +437,7 @@ export function registerMachineCommands(
           name: string,
           opts: MachineListCommandOptions,
         ) => {
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const hostId = await resolveMachineHostId({
             serverUrl: getUrl(),
             target,
@@ -460,7 +460,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineRemoveCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -489,7 +489,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -506,7 +506,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -531,7 +531,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -553,7 +553,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -575,7 +575,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,
@@ -595,7 +595,7 @@ export function registerMachineCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (target: string, opts: MachineListCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId = await resolveMachineHostId({
           serverUrl: getUrl(),
           target,

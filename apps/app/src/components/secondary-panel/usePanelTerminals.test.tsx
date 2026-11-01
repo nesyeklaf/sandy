@@ -4,9 +4,9 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type {
   TerminalCreateTarget,
   TerminalSession,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BbHttpError, sdk } from "@/lib/sdk";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 import {
   createNewTabFixedPanelTab,
   createTerminalFixedPanelTab,
@@ -130,8 +130,8 @@ function deferred<T>(): Deferred<T> {
   return { promise, reject, resolve };
 }
 
-function hostUnavailableError(): BbHttpError {
-  return new BbHttpError({
+function hostUnavailableError(): SandyHttpError {
+  return new SandyHttpError({
     status: 503,
     code: "host_unavailable",
     message: "Host is not connected",
@@ -401,7 +401,7 @@ describe.each(SURFACES)("panel terminals on the $name", (surface) => {
       Promise.reject(
         terminalId === surface.own.id
           ? hostUnavailableError()
-          : new BbHttpError({
+          : new SandyHttpError({
               status: 404,
               code: "terminal_not_found",
               message: "Terminal session not found",

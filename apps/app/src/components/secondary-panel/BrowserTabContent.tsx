@@ -11,25 +11,25 @@ import {
   type ReactNode,
 } from "react";
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserControl,
-  BbDesktopBrowserFindInPageRequest,
-  BbDesktopBrowserState,
-  BbDesktopBrowserTarget,
-  BbDesktopBrowserViewportBounds,
-  BbDesktopBrowserViewBounds,
-} from "@bb/desktop-contract";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserControl,
+  SandyDesktopBrowserFindInPageRequest,
+  SandyDesktopBrowserState,
+  SandyDesktopBrowserTarget,
+  SandyDesktopBrowserViewportBounds,
+  SandyDesktopBrowserViewBounds,
+} from "@sandy/desktop-contract";
 import {
-  BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH,
-  clampBbDesktopBrowserViewBounds,
-} from "@bb/desktop-contract";
+  SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH,
+  clampSandyDesktopBrowserViewBounds,
+} from "@sandy/desktop-contract";
 import {
   COARSE_POINTER_COMPACT_ICON_SIZE_SHRINK_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { getBbDesktopInfo, getDesktopBrowserApi } from "@/lib/bb-desktop";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { getSandyDesktopInfo, getDesktopBrowserApi } from "@/lib/sandy-desktop";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   getBrowserUrlSecurity,
   getBrowserUrlHost,
@@ -38,8 +38,8 @@ import {
 import { useBrowserHistory } from "@/lib/browser-history";
 import { BROWSER_VIEW_BOUNDS_SYNC_EVENT } from "@/lib/browser-view-bounds-sync";
 import { useIsBrowserDimmingModalOpen } from "@/hooks/useBrowserDimmingModal";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   BrowserChromeIconButton,
   BrowserFindBar,
@@ -58,7 +58,7 @@ import {
   useAppCommandHandler,
   useAppCommandShortcut,
 } from "@/components/commands/AppCommandProvider";
-import { isMacKeyboardPlatform } from "@bb/domain";
+import { isMacKeyboardPlatform } from "@sandy/domain";
 import {
   browserPlatform,
   type AppShortcutPresentation,
@@ -68,7 +68,7 @@ import { PluginBrowserToolbarActions } from "@/components/plugin/PluginBrowserTo
 
 interface BrowserTabContentProps {
   tabId: string;
-  desktopTarget?: BbDesktopBrowserTarget;
+  desktopTarget?: SandyDesktopBrowserTarget;
   existingOnly?: true;
   initialUrl: string;
   addressFocusRequest: BrowserAddressFocusRequest | null;
@@ -91,7 +91,7 @@ export interface BrowserAddressFocusRequest {
 interface BrowserChromeProps {
   addressDraft: string;
   isEditing: boolean;
-  state: BbDesktopBrowserState | null;
+  state: SandyDesktopBrowserState | null;
   currentUrl: string;
   addressInputRef: RefObject<HTMLInputElement | null>;
   onAddressChange: (value: string) => void;
@@ -113,8 +113,8 @@ interface BrowserViewBoundsFromElementArgs {
 }
 
 interface BrowserViewBoundsEqualArgs {
-  a: BbDesktopBrowserViewBounds;
-  b: BbDesktopBrowserViewBounds;
+  a: SandyDesktopBrowserViewBounds;
+  b: SandyDesktopBrowserViewBounds;
 }
 
 interface SyncBrowserViewPlacementArgs {
@@ -134,14 +134,14 @@ interface BrowserPageLoadErrorProps {
   url: string;
 }
 
-const EMPTY_BROWSER_VIEW_BOUNDS: BbDesktopBrowserViewBounds = {
+const EMPTY_BROWSER_VIEW_BOUNDS: SandyDesktopBrowserViewBounds = {
   x: 0,
   y: 0,
   width: 0,
   height: 0,
 };
 
-function roundedBoundsFromRect(rect: DOMRect): BbDesktopBrowserViewBounds {
+function roundedBoundsFromRect(rect: DOMRect): SandyDesktopBrowserViewBounds {
   return {
     x: Math.round(rect.left),
     y: Math.round(rect.top),
@@ -150,7 +150,7 @@ function roundedBoundsFromRect(rect: DOMRect): BbDesktopBrowserViewBounds {
   };
 }
 
-function browserViewportBounds(): BbDesktopBrowserViewportBounds {
+function browserViewportBounds(): SandyDesktopBrowserViewportBounds {
   return {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -159,8 +159,8 @@ function browserViewportBounds(): BbDesktopBrowserViewportBounds {
 
 function browserViewBoundsFromElement(
   args: BrowserViewBoundsFromElementArgs,
-): BbDesktopBrowserViewBounds {
-  return clampBbDesktopBrowserViewBounds({
+): SandyDesktopBrowserViewBounds {
+  return clampSandyDesktopBrowserViewBounds({
     bounds: roundedBoundsFromRect(args.element.getBoundingClientRect()),
     viewport: browserViewportBounds(),
   });
@@ -329,7 +329,7 @@ function BrowserUnavailable() {
           COARSE_POINTER_TEXT_SM_CLASS,
         )}
       >
-        The in-app web browser runs in the bb desktop app. Open this thread
+        The in-app web browser runs in the sandy desktop app. Open this thread
         there to browse the web.
       </p>
     </div>
@@ -410,7 +410,7 @@ export function BrowserTabContent({
   const locationShortcut = useAppCommandShortcut("browser.focusLocation");
   const reloadShortcut = useAppCommandShortcut("browser.reload");
   const findShortcut = useAppCommandShortcut("browser.find");
-  const desktopBrowser = useMemo<BbDesktopBrowserApi | null>(
+  const desktopBrowser = useMemo<SandyDesktopBrowserApi | null>(
     () => getDesktopBrowserApi(),
     [],
   );
@@ -425,8 +425,8 @@ export function BrowserTabContent({
     clear: clearRecent,
   } = useBrowserHistory(threadId);
 
-  const [state, setState] = useState<BbDesktopBrowserState | null>(null);
-  const [control, setControl] = useState<BbDesktopBrowserControl | null>(null);
+  const [state, setState] = useState<SandyDesktopBrowserState | null>(null);
+  const [control, setControl] = useState<SandyDesktopBrowserControl | null>(null);
   useEffect(() => {
     let current = true;
     let receivedEvent = false;
@@ -434,7 +434,7 @@ export function BrowserTabContent({
     const accept = (next: {
       tabId: string;
       threadId: string;
-      control: BbDesktopBrowserControl | null;
+      control: SandyDesktopBrowserControl | null;
     }) => {
       if (current && next.tabId === tabId && next.threadId === threadId)
         setControl(next.control);
@@ -493,7 +493,7 @@ export function BrowserTabContent({
   const pageLoadErrorText = state?.errorText ?? null;
   const hasPageLoadError = pageLoadErrorText !== null && hasPage;
   const isBrowserDimmingModalOpen = useIsBrowserDimmingModalOpen();
-  const lastSentBoundsRef = useRef<BbDesktopBrowserViewBounds | null>(null);
+  const lastSentBoundsRef = useRef<SandyDesktopBrowserViewBounds | null>(null);
 
   const readBounds = useCallback(() => {
     const element = contentRef.current;
@@ -504,7 +504,7 @@ export function BrowserTabContent({
   }, []);
 
   const sendBounds = useCallback(
-    (bounds: BbDesktopBrowserViewBounds) => {
+    (bounds: SandyDesktopBrowserViewBounds) => {
       if (desktopBrowser === null) {
         return;
       }
@@ -568,7 +568,7 @@ export function BrowserTabContent({
     });
     setAttachedBrowserViewIdentity({ environmentId, tabId, threadId });
 
-    let lastSeenState: BbDesktopBrowserState | null = null;
+    let lastSeenState: SandyDesktopBrowserState | null = null;
     const unsubscribe = desktopBrowser.onState((nextState) => {
       if (nextState.tabId !== tabId) {
         return;
@@ -869,7 +869,7 @@ export function BrowserTabContent({
     hasPage;
 
   const runFind = useCallback(
-    (args: Omit<BbDesktopBrowserFindInPageRequest, "tabId">) => {
+    (args: Omit<SandyDesktopBrowserFindInPageRequest, "tabId">) => {
       desktopBrowser?.findInPage?.({ tabId, ...args });
     },
     [desktopBrowser, tabId],
@@ -890,7 +890,7 @@ export function BrowserTabContent({
 
   const handleFindQueryChange = useCallback(
     (rawQuery: string) => {
-      const query = rawQuery.slice(0, BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
+      const query = rawQuery.slice(0, SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
       setFindQuery(query);
       if (query.length === 0) {
         clearFind();
@@ -947,7 +947,7 @@ export function BrowserTabContent({
   );
 
   const handleOpenExternal = useCallback(() => {
-    getBbDesktopInfo()?.openExternalUrl(currentUrl);
+    getSandyDesktopInfo()?.openExternalUrl(currentUrl);
   }, [currentUrl]);
 
   if (desktopBrowser === null) {

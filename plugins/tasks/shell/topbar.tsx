@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   experimental_useRpcRefresh,
   useRealtimeConnectionState,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import type { Project, Task } from "../shared/contract.js";
 import { groupTasksByStatus } from "../views/list/lib.js";
 import { selectTasks, useTasksQuery } from "./data.js";

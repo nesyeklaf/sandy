@@ -1,5 +1,5 @@
-import { getThread } from "@bb/db";
-import { threadOpenResponseSchema } from "@bb/server-contract";
+import { getThread } from "@sandy/db";
+import { threadOpenResponseSchema } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { readJson } from "../helpers/json.js";
 import { createMockHubSocket } from "../helpers/mock-hub-socket.js";

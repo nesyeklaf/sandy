@@ -1,6 +1,6 @@
-import { type LocalPathProjectSource, PERSONAL_PROJECT_ID } from "@bb/domain";
-import type { EnvironmentRow } from "@bb/db";
-import type { EnvironmentArgs } from "@bb/server-contract";
+import { type LocalPathProjectSource, PERSONAL_PROJECT_ID } from "@sandy/domain";
+import type { EnvironmentRow } from "@sandy/db";
+import type { EnvironmentArgs } from "@sandy/server-contract";
 import { ApiError } from "../../errors.js";
 import type { AppDeps } from "../../types.js";
 import { assertEnvironmentPathAvailable } from "../environments/path-admission.js";

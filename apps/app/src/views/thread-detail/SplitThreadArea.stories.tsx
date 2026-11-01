@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import type {
   ThreadResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
-import type { ThreadTimelineGoal } from "@bb/domain";
+} from "@sandy/server-contract";
+import type { ThreadTimelineGoal } from "@sandy/domain";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import { makeThread } from "../../../.ladle/story-fixtures";
@@ -27,7 +27,7 @@ export default {
   title: "thread/splits/Split Workspace",
 };
 
-const PROJECT_ID = "proj_bb";
+const PROJECT_ID = "proj_sandy";
 const IDLE_THREAD_ID = "thr_split_idle";
 const ACTIVE_THREAD_ID = "thr_split_active";
 const MENTIONED_THREAD_ID = "thr_dcwivn5n8w";

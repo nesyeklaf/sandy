@@ -14,7 +14,7 @@ afterEach(async () => {
 
 describe("readIncomingMoveState", () => {
   it("reads a state written before the bind host left server moves", async () => {
-    const dataDir = await mkdtemp(join(tmpdir(), "bb-move-state-"));
+    const dataDir = await mkdtemp(join(tmpdir(), "sandy-move-state-"));
     dirs.push(dataDir);
     const moveId = "move-legacy";
     await mkdir(incomingMoveDir(dataDir, moveId), { recursive: true });

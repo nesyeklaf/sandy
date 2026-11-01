@@ -10,15 +10,15 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useAtom, useAtomValue, useStore } from "jotai";
-import { isMacKeyboardPlatform } from "@bb/domain";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { Icon } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { isMacKeyboardPlatform } from "@sandy/domain";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   resolveThreadListIndicator,
   threadListIndicatorStateForThread,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { usePromptDraftHasInput } from "@/hooks/usePromptDraftStorage";
 import {
   highlightedText,
@@ -49,7 +49,7 @@ import { useRouteNavigate } from "@/components/ui/app-route-anchor";
 import {
   NO_THREADS_MESSAGE,
   ThreadListEmptyState,
-} from "@bb/shared-ui/thread-list-empty-state";
+} from "@sandy/shared-ui/thread-list-empty-state";
 import { getThreadRoutePath } from "@/lib/route-paths";
 import { openThreadInSplit } from "@/lib/split-layout/openThreadInSplit";
 import { splitLayoutAtom } from "@/lib/split-layout/atoms";

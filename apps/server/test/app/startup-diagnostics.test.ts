@@ -2,7 +2,7 @@ import { once } from "node:events";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadServerConfig } from "@bb/config/server";
+import { loadServerConfig } from "@sandy/config/server";
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
 import {
@@ -64,15 +64,15 @@ describe("server startup diagnostics", () => {
   it("binds only IPv4 loopback by default", async () => {
     const serverConfig = loadServerConfig({
       env: {
-        BB_DATA_DIR: "/tmp/bb-server-listener-test",
-        BB_HOST_DAEMON_PORT: "49162",
-        BB_SERVER_PORT: "49161",
+        SANDY_DATA_DIR: "/tmp/sandy-server-listener-test",
+        SANDY_HOST_DAEMON_PORT: "49162",
+        SANDY_SERVER_PORT: "49161",
         NODE_ENV: "development",
       },
     });
     const servers = startHttpListeners({
       fetch: () => new Response("ok"),
-      serverConfig: { ...serverConfig, BB_SERVER_PORT: 0 },
+      serverConfig: { ...serverConfig, SANDY_SERVER_PORT: 0 },
       logger,
     });
 
@@ -90,7 +90,7 @@ describe("server startup diagnostics", () => {
     async () => {
       const servers = startHttpListeners({
         fetch: () => new Response("ok"),
-        serverConfig: { BB_SERVER_BIND_HOST: ["127.0.0.2"], BB_SERVER_PORT: 0 },
+        serverConfig: { SANDY_SERVER_BIND_HOST: ["127.0.0.2"], SANDY_SERVER_PORT: 0 },
         logger,
       });
 
@@ -112,8 +112,8 @@ describe("server startup diagnostics", () => {
       const servers = startHttpListeners({
         fetch: () => new Response("ok"),
         serverConfig: {
-          BB_SERVER_BIND_HOST: ["100.64.0.99"],
-          BB_SERVER_PORT: 0,
+          SANDY_SERVER_BIND_HOST: ["100.64.0.99"],
+          SANDY_SERVER_PORT: 0,
         },
         logger: { warn },
         extraListenerRetryMs: 20,

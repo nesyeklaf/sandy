@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UPDATE_ACTION_ICON } from "@bb/domain/update-state";
-import { Button } from "@bb/shared-ui/button";
+import { UPDATE_ACTION_ICON } from "@sandy/domain/update-state";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/dialog";
+import { Icon } from "@sandy/shared-ui/icon";
 import { usePluginNotificationAction } from "@/components/plugin/PluginNotificationDescription";
 import { appToast } from "@/components/ui/app-toast";
 import { pluginAdminErrorMessage } from "@/lib/plugin-admin-error";
@@ -98,7 +98,7 @@ function UpdatePluginDialogContent({
               aria-hidden
             />
             <span>
-              bb couldn&rsquo;t activate {failure.label}. It restored{" "}
+              sandy couldn&rsquo;t activate {failure.label}. It restored{" "}
               {plugin.version} and its data.
             </span>
           </div>
@@ -161,7 +161,7 @@ function UpdatePluginDialogContent({
             <span className="font-medium" style={SUCCESS_TEXT_STYLE}>
               ✓
             </span>
-            <span>Compatible with your bb and plugin SDK</span>
+            <span>Compatible with your sandy and plugin SDK</span>
           </div>
           <DetailsDisclosure summary="Details — source, versions">
             <KeyValueGrid
@@ -218,7 +218,7 @@ function UpdatePluginDialogContent({
               className="size-4 shrink-0 text-warning"
               aria-hidden
             />
-            <span>{blocked} isn&rsquo;t compatible with this bb</span>
+            <span>{blocked} isn&rsquo;t compatible with this sandy</span>
           </div>
           <DetailsDisclosure summary="Details" defaultExpanded>
             <div className="space-y-1.5">

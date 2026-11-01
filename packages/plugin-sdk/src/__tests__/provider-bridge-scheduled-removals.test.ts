@@ -4,7 +4,7 @@ import * as providerBridgeSdk from "../provider-bridge.js";
 
 const DOC_URL = new URL("../../../../docs/api_to_audit.md", import.meta.url);
 const DECLARATIONS_URL = new URL(
-  "../../bundled-types/bb-plugin-sdk-provider-bridge.d.ts",
+  "../../bundled-types/sandy-plugin-sdk-provider-bridge.d.ts",
   import.meta.url,
 );
 
@@ -37,7 +37,7 @@ function exportedNames(
   return names;
 }
 
-describe("scheduled removals on @get-bb/plugin-sdk/provider-bridge", () => {
+describe("scheduled removals on @sandy-sdk/plugin-sdk/provider-bridge", () => {
   it("keeps every name the audit doc schedules for removal exported until the next major", async () => {
     const [doc, declarations] = await Promise.all([
       readFile(DOC_URL, "utf8"),

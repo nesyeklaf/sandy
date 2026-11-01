@@ -9,7 +9,7 @@ import {
   defaultAppSettings,
   type AppCommandId,
   type AppDefaultKeybinding,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandRunner,

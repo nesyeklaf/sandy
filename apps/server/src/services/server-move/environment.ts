@@ -1,5 +1,5 @@
 import { statfs } from "node:fs/promises";
-import type { AppSurface } from "@bb/config/app-surface";
+import type { AppSurface } from "@sandy/config/app-surface";
 import type {
   AppDeps,
   LoggedPendingInteractionWorkSessionDeps,
@@ -12,12 +12,12 @@ import type {
   ServerMoveTimings,
 } from "./coordinator.js";
 import { exportServerArchive } from "./export.js";
-import { createFullBbAppArtifactService } from "./full-artifact.js";
+import { createFullSandyAppArtifactService } from "./full-artifact.js";
 import { stopRunningServerWork } from "./stop-work.js";
 
 export const SERVER_MOVE_ALLOW_LOOPBACK_URL_ENV =
-  "BB_SERVER_MOVE_ALLOW_LOOPBACK_URL";
-export const SERVER_MOVE_TARGET_PORT_ENV = "BB_SERVER_MOVE_TARGET_PORT";
+  "SANDY_SERVER_MOVE_ALLOW_LOOPBACK_URL";
+export const SERVER_MOVE_TARGET_PORT_ENV = "SANDY_SERVER_MOVE_TARGET_PORT";
 const SERVER_MOVE_ARCHIVE_FILE_NAME = "server.tar.gz";
 
 export const SERVER_MOVE_TIMINGS: ServerMoveTimings = {
@@ -115,7 +115,7 @@ export function createDefaultServerMoveEnvironment(
         sourceServerHostId: exportArgs.sourceServerHostId,
         workDir: exportArgs.workDir,
       }),
-    fullArtifact: createFullBbAppArtifactService({
+    fullArtifact: createFullSandyAppArtifactService({
       dataDir: deps.config.dataDir,
       serverEntryUrl: args.serverEntryUrl,
     }),

@@ -1,15 +1,15 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import {
   createFakePluginHost,
   type ExperimentalFakeHostRpcCall,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { makeWorkspaceStatus } from "./testing.js";
 import { describe, expect, it } from "vitest";
 import { gitPatchKey } from "./contract.js";
 import plugin from "./server.js";
 
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["get"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["get"]>
 >;
 
 function environment(overrides: Partial<Environment> = {}): Environment {
@@ -74,7 +74,7 @@ function hostResult(call: ExperimentalFakeHostRpcCall): unknown {
 async function setup(environments: Record<string, Environment>) {
   const updates: unknown[] = [];
   const fake = createFakePluginHost({
-    pluginId: "bb--git",
+    pluginId: "sandy--git",
     sdk: {
       subscribe: () => () => {},
       files: {
@@ -107,7 +107,7 @@ async function setup(environments: Record<string, Environment>) {
     },
     experimental_callHostRpc: hostResult,
   });
-  plugin(fake.bb);
+  plugin(fake.sandy);
   return { fake, updates };
 }
 
@@ -144,11 +144,11 @@ describe("Git plugin server", () => {
 
   function turnEndHarness() {
     const subscriptions = new Set<
-      Parameters<BbPluginApi["sdk"]["subscribe"]>[0]
+      Parameters<SandyPluginApi["sdk"]["subscribe"]>[0]
     >();
     const state = { branch: "before-edit", threadReads: 0 };
     const fake = createFakePluginHost({
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
       sdk: {
         environments: { get: async () => environment() },
         threads: {
@@ -157,7 +157,7 @@ describe("Git plugin server", () => {
             return { id: "thread-1", environmentId: "env-1" };
           },
         },
-        subscribe: (args: Parameters<BbPluginApi["sdk"]["subscribe"]>[0]) => {
+        subscribe: (args: Parameters<SandyPluginApi["sdk"]["subscribe"]>[0]) => {
           subscriptions.add(args);
           return () => subscriptions.delete(args);
         },
@@ -167,7 +167,7 @@ describe("Git plugin server", () => {
           ? { outcome: "available", value: statusOnBranch(state.branch) }
           : hostResult(call),
     });
-    plugin(fake.bb);
+    plugin(fake.sandy);
     const readBranch = async () =>
       (
         (await fake.harness.callRpc("status", { keys: ["env-1"] })) as Record<
@@ -321,7 +321,7 @@ describe("Git plugin server", () => {
 
   it("asks the host again for patches it deferred to stay under its result cap", async () => {
     const fake = createFakePluginHost({
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
       sdk: {
         subscribe: () => () => {},
         environments: { get: async () => environment() },
@@ -338,7 +338,7 @@ describe("Git plugin server", () => {
         };
       },
     });
-    plugin(fake.bb);
+    plugin(fake.sandy);
     const keys = ["a.ts", "b.ts", "c.ts"].map((path) =>
       gitPatchKey({
         environmentId: "env-1",

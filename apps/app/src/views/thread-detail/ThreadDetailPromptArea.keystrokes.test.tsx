@@ -5,11 +5,11 @@ import type {
   PendingInteraction,
   ThreadQueuedMessage,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   makeThreadQueuedMessage,
   makeThreadWithRuntime,
-} from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/test-helpers/domain-fixtures";
 import {
   act,
   cleanup,

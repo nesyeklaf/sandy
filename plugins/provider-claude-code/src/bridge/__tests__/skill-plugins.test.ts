@@ -20,7 +20,7 @@ describe("claude skill plugins", () => {
   let baseDir: string;
 
   beforeEach(() => {
-    baseDir = mkdtempSync(join(tmpdir(), "bb-claude-skill-plugins-test-"));
+    baseDir = mkdtempSync(join(tmpdir(), "sandy-claude-skill-plugins-test-"));
   });
 
   afterEach(() => {
@@ -127,6 +127,6 @@ describe("claude skill plugins", () => {
       takenNames,
     });
     expect(nameOf(a)).toBe(CLAUDE_SKILL_PLUGIN_NAME);
-    expect(nameOf(b)).toMatch(/^bb-global-skills-[0-9a-f]{8}$/u);
+    expect(nameOf(b)).toMatch(/^sandy-global-skills-[0-9a-f]{8}$/u);
   });
 });

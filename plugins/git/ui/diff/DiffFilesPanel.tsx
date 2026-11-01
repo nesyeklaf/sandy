@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { experimental_useCanOpenFileExternally as useCanOpenFileExternally } from "@get-bb/plugin-sdk/app";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
-import type { RequestDiffFileContents } from "@bb/shared-ui/git-diff/card-body";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { experimental_useCanOpenFileExternally as useCanOpenFileExternally } from "@sandy-sdk/plugin-sdk/app";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
+import type { RequestDiffFileContents } from "@sandy/shared-ui/git-diff/card-body";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type {
   DiffFileEntry,
   DiffPatchEntry,

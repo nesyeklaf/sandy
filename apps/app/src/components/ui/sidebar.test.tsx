@@ -11,7 +11,7 @@ import { memo, startTransition, useState } from "react";
 import { flushSync } from "react-dom";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   Sidebar,
   SidebarCollapsibleBody,
@@ -25,7 +25,7 @@ import {
   useSidebar,
   useSidebarKeepsCollapsedRail,
 } from "./sidebar";
-import { buildBridgeInjectionScript } from "@bb/mobile-bridge";
+import { buildBridgeInjectionScript } from "@sandy/mobile-bridge";
 import { resetNativeShellForTests } from "@/lib/native-shell/native-shell";
 
 function installNativeShell() {
@@ -52,7 +52,7 @@ function installNativeShell() {
 
 function uninstallNativeShell() {
   Reflect.deleteProperty(window, "ReactNativeWebView");
-  Reflect.deleteProperty(window, "bb");
+  Reflect.deleteProperty(window, "sandy");
   resetNativeShellForTests();
 }
 
@@ -384,33 +384,33 @@ describe("framed desktop sidebar", () => {
     expect(
       screen
         .getByTestId("wrapper")
-        .classList.contains("pl-(--bb-window-frame-leading-lip)"),
+        .classList.contains("pl-(--sandy-window-frame-leading-lip)"),
     ).toBe(false);
     expect(
       screen
         .getByTestId("wrapper")
-        .style.getPropertyValue("--bb-window-card-collapsed-left"),
+        .style.getPropertyValue("--sandy-window-card-collapsed-left"),
     ).toBe("52px");
-    expect(body.classList.contains("rounded-tl-(--bb-frame-card-radius)")).toBe(
+    expect(body.classList.contains("rounded-tl-(--sandy-frame-card-radius)")).toBe(
       true,
     );
-    expect(body.classList.contains("rounded-bl-(--bb-frame-card-radius)")).toBe(
+    expect(body.classList.contains("rounded-bl-(--sandy-frame-card-radius)")).toBe(
       true,
     );
     expect(
-      inset.classList.contains("before:rounded-tl-(--bb-frame-card-radius)"),
+      inset.classList.contains("before:rounded-tl-(--sandy-frame-card-radius)"),
     ).toBe(false);
     expect(
-      inset.classList.contains("before:rounded-bl-(--bb-frame-card-radius)"),
+      inset.classList.contains("before:rounded-bl-(--sandy-frame-card-radius)"),
     ).toBe(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
 
     expect(
-      inset.classList.contains("before:rounded-tl-(--bb-frame-card-radius)"),
+      inset.classList.contains("before:rounded-tl-(--sandy-frame-card-radius)"),
     ).toBe(true);
     expect(
-      inset.classList.contains("before:rounded-bl-(--bb-frame-card-radius)"),
+      inset.classList.contains("before:rounded-bl-(--sandy-frame-card-radius)"),
     ).toBe(true);
   });
 
@@ -426,30 +426,30 @@ describe("framed desktop sidebar", () => {
 
     const wrapper = screen.getByTestId("wrapper");
     const inset = screen.getByTestId("inset");
-    expect(wrapper.classList.contains("pr-(--bb-window-frame-lip)")).toBe(true);
-    expect(wrapper.classList.contains("pb-(--bb-window-frame-lip)")).toBe(true);
+    expect(wrapper.classList.contains("pr-(--sandy-window-frame-lip)")).toBe(true);
+    expect(wrapper.classList.contains("pb-(--sandy-window-frame-lip)")).toBe(true);
     expect(
-      wrapper.classList.contains("pl-(--bb-window-frame-leading-lip)"),
+      wrapper.classList.contains("pl-(--sandy-window-frame-leading-lip)"),
     ).toBe(true);
     expect(
-      wrapper.style.getPropertyValue("--bb-window-card-collapsed-left"),
-    ).toBe("var(--bb-window-frame-leading-lip)");
+      wrapper.style.getPropertyValue("--sandy-window-card-collapsed-left"),
+    ).toBe("var(--sandy-window-frame-leading-lip)");
     expect(screen.getByTestId("panel").className).toContain(
-      "left-(--bb-window-frame-leading-lip)",
+      "left-(--sandy-window-frame-leading-lip)",
     );
     expect(screen.getByTestId("panel").className).toContain(
-      "var(--bb-shell-height)_-_var(--bb-window-frame-top)_-_var(--bb-window-frame-lip)",
+      "var(--sandy-shell-height)_-_var(--sandy-window-frame-top)_-_var(--sandy-window-frame-lip)",
     );
     for (const edge of [
-      "before:rounded-tr-(--bb-frame-card-radius)",
-      "before:rounded-br-(--bb-frame-card-radius)",
+      "before:rounded-tr-(--sandy-frame-card-radius)",
+      "before:rounded-br-(--sandy-frame-card-radius)",
       "before:border-r",
       "px-px",
       "pb-px",
     ]) {
       expect(inset.classList.contains(edge)).toBe(true);
     }
-    expect(inset.classList.contains("-mt-(--bb-window-title-bar-height)")).toBe(
+    expect(inset.classList.contains("-mt-(--sandy-window-title-bar-height)")).toBe(
       true,
     );
     expect(screen.getByTestId("window-title-bar-drag-region")).toBeTruthy();
@@ -529,7 +529,7 @@ describe("SidebarContent", () => {
 
     render(<SidebarContent data-testid="content">Rows</SidebarContent>);
     const content = screen.getByTestId("content");
-    expect(content.style.getPropertyValue("--bb-sidebar-scrollbar-lane")).toBe(
+    expect(content.style.getPropertyValue("--sandy-sidebar-scrollbar-lane")).toBe(
       "10px",
     );
 
@@ -541,7 +541,7 @@ describe("SidebarContent", () => {
         }
       }
     });
-    expect(content.style.getPropertyValue("--bb-sidebar-scrollbar-lane")).toBe(
+    expect(content.style.getPropertyValue("--sandy-sidebar-scrollbar-lane")).toBe(
       "0px",
     );
   });

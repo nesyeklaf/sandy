@@ -1,0 +1,4 @@
+TASK [kernel : Install linux-image-6.8.0-47-generic] ****************************
+fatal: [db-01.prod]: FAILED! => {"changed": false, "msg": "Could not get lock /var/lib/dpkg/lock-frontend. It is held by process 1873 (unattended-upgr)"}
+PLAY RECAP *********************************************************************
+db-01.prod                 : ok=3    changed=0    unreachable=0    failed=1    skipped=0

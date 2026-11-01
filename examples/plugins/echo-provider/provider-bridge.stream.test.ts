@@ -3,18 +3,18 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   BRIDGE_JSON_RPC_ERRORS,
   providerHealthResultSchema,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   experimental_createBridgeDeltaEventCollector as createBridgeDeltaEventCollector,
   experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type {
   BridgeDeltaEventCollector,
   BridgeJsonRpcObject,
   BridgeJsonRpcOutputMessage,
   BridgeJsonRpcTestHarness,
   ThreadEvent,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 
 import { handleLine } from "./src/provider-bridge.js";
 import {
@@ -124,7 +124,7 @@ function answerToolCall(
   const call = harness.messages.find(
     (message) => message.method === "item/tool/call",
   );
-  expect(call, "the bridge called its bb tool").toBeDefined();
+  expect(call, "the bridge called its sandy tool").toBeDefined();
   const params = call?.params as Record<string, unknown>;
   handleLine(
     JSON.stringify({ jsonrpc: "2.0", id: call?.id, result: answer(params) }),
@@ -325,14 +325,14 @@ describe("the echo bridge's grammar v3 stream", () => {
     expect(tools[0]).not.toHaveProperty("server");
     expect(tools[1]).toMatchObject({
       tool: ECHO_STAMP_TOOL_NAME,
-      server: "bb",
+      server: "sandy",
       arguments: { text: PROMPT },
       result: `stamped: ${PROMPT}`,
       status: "completed",
       presentation: ECHO_STAMP_TOOL_PRESENTATION,
     });
     expect(
-      collector.assembler.getBbItemId(THREAD_ID, String(callParams.callId)),
+      collector.assembler.getSandyItemId(THREAD_ID, String(callParams.callId)),
     ).toBe(tools[1]?.id);
 
     expect(completedItem(events, "extension")).toMatchObject({

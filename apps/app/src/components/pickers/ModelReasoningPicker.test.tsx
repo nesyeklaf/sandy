@@ -13,19 +13,19 @@ import type {
   ProviderOptionDescriptor,
   ReasoningLevel,
   ServiceTier,
-} from "@bb/domain";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/domain";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
 import type {
   SystemExecutionOptionsModelLoadError,
   SystemExecutionOptionsResponse,
   SystemProvidersQuery,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { systemExecutionOptionsQueryKey } from "@/hooks/queries/query-keys";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { setPluginAssetIcons } from "@bb/shared-ui/icon-registry";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { setPluginAssetIcons } from "@sandy/shared-ui/icon-registry";
 import {
   PaneContext,
   type PaneContextValue,
@@ -437,7 +437,7 @@ describe("ModelReasoningPicker", () => {
         providerId: "codex",
         code: "missing_executable",
         detail:
-          "bb could not find the Codex CLI on this machine. Install Codex (https://developers.openai.com/codex/cli) or put `codex` on PATH, then retry.",
+          "sandy could not find the Codex CLI on this machine. Install Codex (https://developers.openai.com/codex/cli) or put `codex` on PATH, then retry.",
       },
     });
 
@@ -483,7 +483,7 @@ describe("ModelReasoningPicker", () => {
       modelLoadError: {
         providerId: "codex",
         code: "failed",
-        detail: "bb could not find the Codex CLI on this machine.",
+        detail: "sandy could not find the Codex CLI on this machine.",
       },
     });
 
@@ -493,11 +493,11 @@ describe("ModelReasoningPicker", () => {
 
     expect(screen.getByText("Could not load models for Codex.")).not.toBeNull();
     expect(
-      screen.getByText("bb could not find the Codex CLI on this machine."),
+      screen.getByText("sandy could not find the Codex CLI on this machine."),
     ).not.toBeNull();
     expect(
       screen.getByTitle(
-        "Could not load models for Codex. bb could not find the Codex CLI on this machine.",
+        "Could not load models for Codex. sandy could not find the Codex CLI on this machine.",
       ),
     ).not.toBeNull();
   });
@@ -728,7 +728,7 @@ describe("ModelReasoningPicker", () => {
     );
 
     expect(
-      screen.getByRole("dialog").getAttribute("data-bb-portaled-overlay"),
+      screen.getByRole("dialog").getAttribute("data-sandy-portaled-overlay"),
     ).toBe("");
   });
 

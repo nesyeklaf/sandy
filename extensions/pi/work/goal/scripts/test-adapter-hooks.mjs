@@ -1,0 +1,18 @@
+import * as nodeModule from "node:module";
+
+if (typeof nodeModule.registerHooks !== "function") {
+	throw new Error("Tests require Node 22.19 or newer.");
+}
+
+const adapters = new Map([
+	["@earendil-works/pi-ai", new URL("../tests/stubs/pi-ai.ts", import.meta.url).href],
+	["@earendil-works/pi-coding-agent", new URL("../tests/stubs/pi-coding-agent.ts", import.meta.url).href],
+	["@earendil-works/pi-tui", new URL("../tests/stubs/pi-tui.ts", import.meta.url).href],
+]);
+
+nodeModule.registerHooks({
+	resolve(specifier, context, nextResolve) {
+		const url = adapters.get(specifier);
+		return url ? { url, shortCircuit: true } : nextResolve(specifier, context);
+	},
+});

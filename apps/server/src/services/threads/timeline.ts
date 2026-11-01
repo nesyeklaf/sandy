@@ -30,14 +30,14 @@ import {
   MIN_AGENT_MESSAGE_DELTAS_FOR_SUMMARY_COMPACTION,
   type AcceptedClientRequestContext,
   type ThreadEventWithMeta,
-} from "@bb/thread-view";
+} from "@sandy/thread-view";
 import {
   LEGACY_CODEX_GOAL_EXTENSION_KIND,
   THREAD_PROVIDER_COMMANDS_STATE_KIND,
   THREAD_SESSION_OPTIONS_STATE_KIND,
   THREAD_SESSION_OPTION_SELECTIONS_STATE_KIND,
-} from "@bb/domain";
-import { sliceUtf16Head } from "@bb/text-utils";
+} from "@sandy/domain";
+import { sliceUtf16Head } from "@sandy/text-utils";
 import type {
   ClientTurnRequestId,
   CompletedTurnDisplay,
@@ -45,7 +45,7 @@ import type {
   Thread,
   ThreadEvent,
   ThreadEventItemType,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ThreadConversationOutlineItem,
   ThreadConversationOutlineResponse,
@@ -57,12 +57,12 @@ import type {
   TimelineOutputPreview,
   ThreadTimelineResponse,
   TimelineTurnSummaryDetailsResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   mapTimelineRowTree,
   threadConversationOutlineItemSchema,
   timelineRowChildren,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   findStoredTimelineWindowByteBudgetFloor,
   findTimelineWindowBudgetFloorSequence,
@@ -101,15 +101,15 @@ import {
   listTimelineWindowHintsDescending,
   scopedItemRefKey,
   upsertThreadConversationOutlineRecord,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   DbConnection,
   InlineOutputCharLimit,
   ScopedItemRef,
   StoredEventRow,
-} from "@bb/db";
+} from "@sandy/db";
 import { ApiError } from "../../errors.js";
-import { roundDurationMs } from "@bb/process-utils";
+import { roundDurationMs } from "@sandy/process-utils";
 import { runEventLoopWorkSync } from "../system/event-loop-work.js";
 import { parseStoredEvent } from "./thread-data.js";
 import { withCompactionOffer } from "./compaction-offer.js";

@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { AppShortcutPresentation } from "@/lib/app-keybindings";
 import {
   SIDEBAR_ROW_BASE_CLASS,
   SIDEBAR_ROW_INTERACTIVE_STATE_CLASS,
   SIDEBAR_STANDARD_ROW_PADDING_CLASS,
-} from "@bb/shared-ui/sidebar-row-classes";
+} from "@sandy/shared-ui/sidebar-row-classes";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
-import { ShortcutPill } from "@bb/shared-ui/shortcut-pill";
+import { ShortcutPill } from "@sandy/shared-ui/shortcut-pill";
 
 export default {
   title: "commands/Shortcut Hint",

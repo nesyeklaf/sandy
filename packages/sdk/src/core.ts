@@ -2,7 +2,7 @@ import {
   createDesktopBrowsersArea,
   type ExperimentalDesktopBrowsersArea,
 } from "./areas/desktop-browsers.js";
-import type { BbSdkContext, BbSdkTransport } from "./transport.js";
+import type { SandySdkContext, SandySdkTransport } from "./transport.js";
 import {
   createEnvironmentsArea,
   type EnvironmentsArea,
@@ -21,8 +21,8 @@ import {
   createPromptHistoryArea,
   type ExperimentalPromptHistoryArea,
 } from "./areas/prompt-history.js";
-import { createBbRealtimeClient } from "./realtime-client.js";
-import type { BbRealtime } from "./realtime-types.js";
+import { createSandyRealtimeClient } from "./realtime-client.js";
+import type { SandyRealtime } from "./realtime-types.js";
 import { createStatusArea, type StatusArea } from "./areas/status.js";
 import { createSkillsArea, type SkillsArea } from "./areas/skills.js";
 import { createThemeArea, type ThemeArea } from "./areas/theme.js";
@@ -35,18 +35,18 @@ import {
 } from "./areas/thread-sections.js";
 
 export type * from "./public-types.js";
-export { createBuiltinPlanCommandTextInput } from "@bb/domain";
+export { createBuiltinPlanCommandTextInput } from "@sandy/domain";
 
-export interface CreateBbSdkArgs {
-  context?: BbSdkContext;
-  transport: BbSdkTransport;
+export interface CreateSandySdkArgs {
+  context?: SandySdkContext;
+  transport: SandySdkTransport;
 }
 
-export interface CreateBbSdkWithGuideArgs extends CreateBbSdkArgs {
+export interface CreateSandySdkWithGuideArgs extends CreateSandySdkArgs {
   guide: GuideArea;
 }
 
-export interface BbSdkAreas extends BbRealtime {
+export interface SandySdkAreas extends SandyRealtime {
   experimental_desktopBrowsers: ExperimentalDesktopBrowsersArea;
   experimental_promptHistory: ExperimentalPromptHistoryArea;
   experimental_server: ExperimentalServerArea;
@@ -65,20 +65,20 @@ export interface BbSdkAreas extends BbRealtime {
   threads: ThreadsArea;
 }
 
-export interface BbSdk extends BbSdkAreas {
+export interface SandySdk extends SandySdkAreas {
   guide: GuideArea;
 }
 
-export function createBbSdk(args: CreateBbSdkWithGuideArgs): BbSdk;
-export function createBbSdk(args: CreateBbSdkArgs): BbSdkAreas;
-export function createBbSdk(
-  args: CreateBbSdkArgs | CreateBbSdkWithGuideArgs,
-): BbSdkAreas | BbSdk {
+export function createSandySdk(args: CreateSandySdkWithGuideArgs): SandySdk;
+export function createSandySdk(args: CreateSandySdkArgs): SandySdkAreas;
+export function createSandySdk(
+  args: CreateSandySdkArgs | CreateSandySdkWithGuideArgs,
+): SandySdkAreas | SandySdk {
   const sdkContext = { transport: args.transport };
-  const realtime = createBbRealtimeClient({
+  const realtime = createSandyRealtimeClient({
     transport: args.transport,
   });
-  const areas: BbSdkAreas = {
+  const areas: SandySdkAreas = {
     experimental_desktopBrowsers: createDesktopBrowsersArea(sdkContext),
     experimental_promptHistory: createPromptHistoryArea(sdkContext),
     experimental_server: createServerArea(sdkContext),

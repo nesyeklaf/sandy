@@ -1,9 +1,9 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { piProviderDeclaration } from "./src/declaration.js";
 
-export default function plugin(bb: BbPluginApi): void {
-  const registered = bb.providers.register(piProviderDeclaration());
-  bb.onDispose(() => {
+export default function plugin(sandy: SandyPluginApi): void {
+  const registered = sandy.providers.register(piProviderDeclaration());
+  sandy.onDispose(() => {
     registered.dispose();
   });
 }

@@ -10,7 +10,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PendingInteraction } from "@bb/domain";
+import type { PendingInteraction } from "@sandy/domain";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import { ThreadPendingInteractionBanners } from "./ThreadPendingInteractionBanner";
 
@@ -19,8 +19,8 @@ vi.mock(
   () => import("@/test/question-shortcuts-system-queries-mock"),
 );
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("@/hooks/mutations/thread-runtime-mutations", () => ({

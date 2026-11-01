@@ -17,11 +17,11 @@ runs:
       id: identity
       shell: node {0}
       env:
-        DEPENDENCY_INPUTS: ${{ hashFiles('packages/bb-app/package.json', 'pnpm-lock.yaml', '.github/actions/cache-npm-downloads/**') }}
+        DEPENDENCY_INPUTS: ${{ hashFiles('packages/sandy-app/package.json', 'pnpm-lock.yaml', '.github/actions/cache-npm-downloads/**') }}
       run: |
         const { appendFileSync } = require('node:fs');
         const { join } = require('node:path');
-        const cache = join(process.env.RUNNER_TEMP, 'bb-npm-downloads');
+        const cache = join(process.env.RUNNER_TEMP, 'sandy-npm-downloads');
         const key = `npm-downloads-v1-${process.platform}-${process.arch}-${process.version}-${process.env.DEPENDENCY_INPUTS}`;
         appendFileSync(process.env.GITHUB_OUTPUT, `path=${cache}\nkey=${key}\n`);
     - name: Restore npm downloads

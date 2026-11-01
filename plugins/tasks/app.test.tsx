@@ -2,7 +2,7 @@
 
 import { cleanup, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { projectTasksChangedTags, taskChangedTags } from "./shared/tags";
 
 const app = await loadPluginApp(() => import("./app"));

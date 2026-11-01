@@ -6,10 +6,10 @@ import {
   stubServerApi,
   type CommandRegistrar,
 } from "../helpers/command-output-harness.js";
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import { registerSkillCommands } from "../../commands/skill.js";
 
-describe("bb skill commands", () => {
+describe("sandy skill commands", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -48,14 +48,14 @@ describe("bb skill commands", () => {
     );
   });
 
-  it("turns one bb skill source off and keeps the other settings", async () => {
+  it("turns one sandy skill source off and keeps the other settings", async () => {
     const put = vi.fn(async ({ json }) => json);
     stubServerApi({
       "v1.system.config.$get": vi.fn(async () => ({
         generalSettings: {
           ...defaultAppSettings,
           streamerMode: true,
-          disabledSkillSources: ["bb-user"],
+          disabledSkillSources: ["sandy-user"],
         },
       })),
       "v1.settings.general.$put": put,
@@ -67,7 +67,7 @@ describe("bb skill commands", () => {
       json: {
         ...defaultAppSettings,
         streamerMode: true,
-        disabledSkillSources: ["bb-user", "shared"],
+        disabledSkillSources: ["sandy-user", "shared"],
       },
     });
     const printed = JSON.parse(
@@ -79,9 +79,9 @@ describe("bb skill commands", () => {
         source.enabled,
       ]),
     ).toEqual([
-      ["bb-plugins", true],
-      ["bb-user", false],
-      ["bb-project", true],
+      ["sandy-plugins", true],
+      ["sandy-user", false],
+      ["sandy-project", true],
       ["shared", false],
     ]);
   });

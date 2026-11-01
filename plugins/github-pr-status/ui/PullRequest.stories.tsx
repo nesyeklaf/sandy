@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import {
   CONTEXT_CARD_CLASS,
   CONTEXT_CARD_INSET_CLASS,
-} from "@bb/shared-ui/chrome-style-tokens";
-import { cn } from "@bb/shared-ui/lib/utils";
-import type { ExperimentalThreadContextSegmentReference } from "@get-bb/plugin-sdk/app";
+} from "@sandy/shared-ui/chrome-style-tokens";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import type { ExperimentalThreadContextSegmentReference } from "@sandy-sdk/plugin-sdk/app";
 import type { PullRequest } from "../contract";
 import {
   PullRequestActionButtons,
@@ -24,9 +24,9 @@ function makePullRequest(overrides: Partial<PullRequest> = {}): PullRequest {
     number: 128,
     title: "Show the branch's GitHub pull request in the Info tab",
     state: "open",
-    url: "https://github.com/acme/bb/pull/128",
+    url: "https://github.com/acme/sandy/pull/128",
     baseRefName: "main",
-    headRefName: "bb/pr-info-panel",
+    headRefName: "sandy/pr-info-panel",
     updatedAt: "2026-06-16T12:30:00Z",
     autoMerge: false,
     inMergeQueue: false,
@@ -70,11 +70,11 @@ function RowStage({ children }: { children: ReactNode }) {
 }
 
 const SELF = {
-  key: "bb--github-pr-status/pull-request",
-  pluginId: "bb--github-pr-status",
+  key: "sandy--github-pr-status/pull-request",
+  pluginId: "sandy--github-pr-status",
 };
-const CHANGED_FILES = { key: "bb--git/changed-files", pluginId: "bb--git" };
-const PARENT = { key: "bb--core/parent-thread", pluginId: "bb--core" };
+const CHANGED_FILES = { key: "sandy--git/changed-files", pluginId: "sandy--git" };
+const PARENT = { key: "sandy--core/parent-thread", pluginId: "sandy--core" };
 
 function SegmentStage({
   pullRequest,

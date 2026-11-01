@@ -1,6 +1,6 @@
-import { Button } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   SettingsSection,
   SettingsWithControl,
@@ -8,7 +8,7 @@ import {
 import { openUrlInExternalBrowser } from "@/lib/url-open-routing";
 
 const DISCORD_INVITE_URL = "https://discord.gg/kvBU6tJhcJ";
-const GITHUB_REPO_URL = "https://github.com/get-bb/bb";
+const GITHUB_REPO_URL = "https://github.com/nesyeklaf/sandy";
 
 interface CommunityLinkRowProps {
   description: string;
@@ -54,7 +54,7 @@ export function CommunitySettingsSection() {
   return (
     <SettingsSection
       title="Community"
-      description="Chat with other bb users and follow development on GitHub."
+      description="Chat with other sandy users and follow development on GitHub."
     >
       <div className="space-y-5">
         <CommunityLinkRow
@@ -67,7 +67,7 @@ export function CommunitySettingsSection() {
         />
         <CommunityLinkRow
           label="GitHub"
-          description="Source code, issues, and releases for the bb project."
+          description="Source code, issues, and releases for the sandy project."
           href={GITHUB_REPO_URL}
           icon="GithubLogo"
           openLabel="View on GitHub"

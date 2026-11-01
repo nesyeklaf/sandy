@@ -2,8 +2,8 @@ import {
   getEnvironment,
   getThread,
   requireThreadLifecycleEventApplied,
-} from "@bb/db";
-import type { DbConnection, DbTransaction, EnvironmentRow } from "@bb/db";
+} from "@sandy/db";
+import type { DbConnection, DbTransaction, EnvironmentRow } from "@sandy/db";
 import type {
   ClientTurnRequestId,
   PromptInput,
@@ -11,13 +11,13 @@ import type {
   Thread,
   ThreadTurnInitiator,
   TurnRequestTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   flattenPromptInputGroups,
   isStandaloneBuiltinClearCommand,
-} from "@bb/domain";
-import type { SendMessageRequest } from "@bb/server-contract";
-import { renderTemplate } from "@bb/templates";
+} from "@sandy/domain";
+import type { SendMessageRequest } from "@sandy/server-contract";
+import { renderTemplate } from "@sandy/templates";
 import type {
   AppDeps,
   LoggedPendingInteractionWorkSessionDeps,

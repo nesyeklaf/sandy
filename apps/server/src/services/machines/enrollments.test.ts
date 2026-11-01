@@ -2,13 +2,13 @@ import { eq } from "drizzle-orm";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { hosts } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+import { hosts } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMachineAuthService } from "../machine-auth.js";
 import { createMachineEnrollmentService } from "./enrollments.js";
 import { setPluginMachineProviderBridge } from "../plugins/plugin-machine-provider-registry.js";
-import { validatePluginMachineProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+import { validatePluginMachineProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => {
@@ -17,7 +17,7 @@ afterEach(async () => {
 });
 
 async function harness() {
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-enrollments-test-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-enrollments-test-"));
   const db = createMigratedConnection();
   cleanup.push(async () => {
     db.$client.close();

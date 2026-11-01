@@ -9,13 +9,13 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { APPLICATION_LINK_APPROVALS_STORAGE_KEY } from "@bb/domain/application-link-approvals";
+import { APPLICATION_LINK_APPROVALS_STORAGE_KEY } from "@sandy/domain/application-link-approvals";
 import {
   getApplicationUrlConfirmation,
   resolveApplicationUrlConfirmation,
   applicationLinkApprovals,
 } from "./application-url";
-import { defaultExperiments } from "@bb/domain";
+import { defaultExperiments } from "@sandy/domain";
 import { appToast } from "@/components/ui/app-toast";
 import { appQueryClient } from "./app-query-client";
 import { systemConfigQueryKey } from "@/hooks/queries/query-keys";
@@ -52,7 +52,7 @@ afterEach(() => {
 
 it("gates plugin navigation and direct external opening as the experiment changes", async () => {
   const openApplicationUrl = vi.fn(async () => {});
-  vi.stubGlobal("bbDesktop", { openApplicationUrl });
+  vi.stubGlobal("sandyDesktop", { openApplicationUrl });
   render(
     <AppNavigationUrlHost>
       <PluginLink />
@@ -93,13 +93,13 @@ it("asks to update an older desktop client instead of falling back to browser na
     experiments: { ...defaultExperiments, applicationLinks: true },
   });
   const external = vi.fn();
-  vi.stubGlobal("bbDesktop", { openExternalUrl: external });
+  vi.stubGlobal("sandyDesktop", { openExternalUrl: external });
   const error = vi.spyOn(appToast, "error").mockImplementation(() => "toast");
   openUrlInExternalBrowser("linear://issue/123");
   resolveApplicationUrlConfirmation("open");
   await waitFor(() =>
     expect(error).toHaveBeenCalledWith("Couldn't open application link", {
-      description: "Update the BB desktop app to open application links.",
+      description: "Update the SANDY desktop app to open application links.",
     }),
   );
   expect(external).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ it("owns desktop consent and saved approvals in the web store, including failed 
     experiments: { ...defaultExperiments, applicationLinks: true },
   });
   const open = vi.fn(async () => {});
-  vi.stubGlobal("bbDesktop", { openApplicationUrl: open });
+  vi.stubGlobal("sandyDesktop", { openApplicationUrl: open });
   const error = vi.spyOn(appToast, "error").mockImplementation(() => "toast");
   openUrlInExternalBrowser("linear://issue/1");
   resolveApplicationUrlConfirmation("cancel");

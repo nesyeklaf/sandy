@@ -4,16 +4,16 @@ import type { Metafile } from "esbuild";
 
 const GIT_READS_REPLACEMENT: Readonly<Record<string, string>> = {
   status:
-    'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "workspaceStatus", input: { environmentId, mergeBaseBranch } })',
-  diff: 'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "diff", input: { environmentId, target } })',
+    'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "workspaceStatus", input: { environmentId, mergeBaseBranch } })',
+  diff: 'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "diff", input: { environmentId, target } })',
   diffFiles:
-    'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "files", input: { environmentId, target, ignoreWhitespace } })',
+    'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "files", input: { environmentId, target, ignoreWhitespace } })',
   diffPatch:
-    'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "patches", input: { keys } })',
+    'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "patches", input: { keys } })',
   diffFile:
-    'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "fileSide", input: { environmentId, query } })',
+    'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "fileSide", input: { environmentId, query } })',
   diffBranches:
-    'bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "branches", input: { environmentId, query, limit } })',
+    'sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "branches", input: { environmentId, query, limit } })',
 };
 
 const RETIRED_NAMES = "status|diff|diffFiles|diffPatch|diffFile|diffBranches";
@@ -34,7 +34,7 @@ const PANEL_MEMBER_REPLACEMENTS: Readonly<Record<string, string>> = {
   openPanel:
     'ctx.openPanel is retired. Use ctx.experimental_panel.openTab({ tab: { id, context: { kind: "thread" }, availability: "action" }, params, title })',
   openThreadPanel:
-    'useBbNavigate().openThreadPanel is retired. Use experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })',
+    'useSandyNavigate().openThreadPanel is retired. Use experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })',
   experimental_openTab:
     "experimental_useAppPanel().experimental_openTab is retired. Use experimental_useAppPanel().openTab({ tab, target, params, title }) without surface",
   openFixedTab:
@@ -60,7 +60,7 @@ function retiredPanelMemberWarnings(source: string): string[] {
   }
   return [...found].map(
     (name) =>
-      `${PANEL_MEMBER_REPLACEMENTS[name]}. It keeps working only for existing plugins. See bb-plugin-authoring, frontend-hooks-and-ui.md#panel-controller.`,
+      `${PANEL_MEMBER_REPLACEMENTS[name]}. It keeps working only for existing plugins. See sandy-plugin-authoring, frontend-hooks-and-ui.md#panel-controller.`,
   );
 }
 
@@ -70,7 +70,7 @@ const RETIRED_RPC_INVALIDATES =
 export function retiredRpcInvalidatesWarnings(source: string): string[] {
   return RETIRED_RPC_INVALIDATES.test(source)
     ? [
-        "invalidates on RPC contract methods is retired from the bb SDK typings and keeps working only for existing plugins. Delete it and call bb.rpc.experimental_invalidate(tags) in the server code that changes the data, so writes from RPC, the CLI, agent tools and background work each refresh matching reads once. See bb-plugin-authoring, frontend-hooks-and-ui.md#tags-and-invalidation.",
+        "invalidates on RPC contract methods is retired from the sandy SDK typings and keeps working only for existing plugins. Delete it and call sandy.rpc.experimental_invalidate(tags) in the server code that changes the data, so writes from RPC, the CLI, agent tools and background work each refresh matching reads once. See sandy-plugin-authoring, frontend-hooks-and-ui.md#tags-and-invalidation.",
       ]
     : [];
 }
@@ -91,7 +91,7 @@ export function retiredSdkMemberWarnings(source: string): string[] {
   return [
     ...[...found].map(
       (name) =>
-        `environments.${name} is retired from the bb SDK typings and keeps working only for existing plugins. Read through the Git plugin instead: ${GIT_READS_REPLACEMENT[name]}. See bb-plugin-authoring, git-reads.md.`,
+        `environments.${name} is retired from the sandy SDK typings and keeps working only for existing plugins. Read through the Git plugin instead: ${GIT_READS_REPLACEMENT[name]}. See sandy-plugin-authoring, git-reads.md.`,
     ),
     ...retiredPanelMemberWarnings(source),
   ];

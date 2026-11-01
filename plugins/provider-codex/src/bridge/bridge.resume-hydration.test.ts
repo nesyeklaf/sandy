@@ -7,7 +7,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import {
   FULL_ACCESS_SESSION_OPTIONS,
@@ -22,7 +22,7 @@ let workspaceDir: string;
 let requestLogPath: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-resume-hydration-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-resume-hydration-"));
   requestLogPath = join(workspaceDir, "requests.jsonl");
   const scriptPath = join(workspaceDir, "script.json");
   writeFileSync(scriptPath, JSON.stringify({ requestLogPath }), "utf8");

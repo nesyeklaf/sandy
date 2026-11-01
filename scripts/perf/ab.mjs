@@ -5,7 +5,7 @@ import { AB_SCENARIOS, printAbReport, runAb } from "./lib/ab-run.mjs";
 
 const USAGE = `Usage: node scripts/perf/ab.mjs --a <url> --b <url> [options]
 
-Interleaved A/B between two running bb servers on the same data.
+Interleaved A/B between two running sandy servers on the same data.
 Each round runs both variants in a fresh browser, in the order AB BA BA AB, so drift hits both alike.
 
 Scenarios:
@@ -32,7 +32,7 @@ Options:
   --react-components    With --attribute, also list the React components that rendered inside each wait.
                         Needs a React profiling build (scripts/perf/profiling-proxy.mjs) and slows renders down
   --sourcemaps <dir>    Read <chunk>.map from this directory before fetching <chunk url>.map from the server
-  --out <dir>           Output directory (default: <tmp>/bb-perf-ab/<timestamp>)
+  --out <dir>           Output directory (default: <tmp>/sandy-perf-ab/<timestamp>)
 `;
 
 const { values } = parseArgs({
@@ -67,7 +67,7 @@ if (!AB_SCENARIOS.includes(values.scenario)) {
 
 const outDir = resolve(
   values.out ??
-    join(tmpdir(), "bb-perf-ab", new Date().toISOString().replaceAll(":", "-")),
+    join(tmpdir(), "sandy-perf-ab", new Date().toISOString().replaceAll(":", "-")),
 );
 
 const report = await runAb({

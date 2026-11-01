@@ -23,7 +23,7 @@ import { dropHostProvidedTailwind } from "./scope-plugin-utilities.js";
 import { resolvePluginBuildToolchain } from "./toolchain.js";
 
 function testToolchain() {
-  return resolvePluginBuildToolchain(join(tmpdir(), "bb-toolchain-unused"));
+  return resolvePluginBuildToolchain(join(tmpdir(), "sandy-toolchain-unused"));
 }
 
 describe("plugin app runtime shim", () => {
@@ -37,8 +37,8 @@ describe("plugin app runtime shim", () => {
     );
   });
 
-  it("re-derives @get-bb/plugin-sdk/app exports for every rebuild", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-shim-"));
+  it("re-derives @sandy-sdk/plugin-sdk/app exports for every rebuild", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-shim-"));
     tempDirs.push(dir);
     const facadePath = join(dir, "app-facade.mjs");
     const facadeUrl = pathToFileURL(facadePath).href;
@@ -46,7 +46,7 @@ describe("plugin app runtime shim", () => {
     async function bundle(importName: string): Promise<string> {
       const result = await build({
         stdin: {
-          contents: `import { ${importName} } from "@get-bb/plugin-sdk/app"; export { ${importName} };`,
+          contents: `import { ${importName} } from "@sandy-sdk/plugin-sdk/app"; export { ${importName} };`,
           loader: "js",
           resolveDir: dir,
         },
@@ -71,14 +71,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("still builds a plugin that imports a retired SDK hook and warns with the replacement", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-retired-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-retired-"));
     tempDirs.push(dir);
     const facadePath = join(dir, "app-facade.mjs");
     await writeFile(facadePath, "export const first = 1;\n");
     const entry = join(dir, "app.tsx");
     await writeFile(
       entry,
-      `import {\n  first,\n  experimental_useSidebarThreadPullRequest as useRowPullRequest,\n} from "@get-bb/plugin-sdk/app";\nexport { first, useRowPullRequest };\n`,
+      `import {\n  first,\n  experimental_useSidebarThreadPullRequest as useRowPullRequest,\n} from "@sandy-sdk/plugin-sdk/app";\nexport { first, useRowPullRequest };\n`,
     );
 
     const result = await build({
@@ -97,10 +97,10 @@ describe("plugin app runtime shim", () => {
     );
     expect(result.warnings).toMatchObject([
       {
-        pluginName: "bb-plugin-runtime-shims",
+        pluginName: "sandy-plugin-runtime-shims",
         location: expect.objectContaining({ line: 4 }),
         text: expect.stringMatching(
-          /^experimental_useSidebarThreadPullRequest is retired from @get-bb\/plugin-sdk\/app\. Existing plugins remain supported\. Render <experimental_ThreadRowMetadata thread=\{thread\} \/> in the row to draw bb's pull request badge, or read pull requests from the GitHub PR Status plugin: experimental_useRpcKeyedQuery\(\{ pluginId: "bb--github-pr-status"/,
+          /^experimental_useSidebarThreadPullRequest is retired from @sandy-sdk\/plugin-sdk\/app\. Existing plugins remain supported\. Render <experimental_ThreadRowMetadata thread=\{thread\} \/> in the row to draw sandy's pull request badge, or read pull requests from the GitHub PR Status plugin: experimental_useRpcKeyedQuery\(\{ pluginId: "sandy--github-pr-status"/,
         ),
       },
     ]);
@@ -114,7 +114,7 @@ describe("plugin app runtime shim", () => {
   });
 
   it("routes host-resident libraries to runtime slots and forwards real default exports", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-libs-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-libs-"));
     tempDirs.push(dir);
     const result = await build({
       stdin: {
@@ -122,8 +122,8 @@ describe("plugin app runtime shim", () => {
           `import clsx from "clsx";`,
           `import { twMerge } from "tailwind-merge";`,
           `import { cva } from "class-variance-authority";`,
-          `import { Icon } from "@bb/shared-ui/icon";`,
-          `import { useQuestionFormHost } from "@bb/shared-ui/question-form-host";`,
+          `import { Icon } from "@sandy/shared-ui/icon";`,
+          `import { useQuestionFormHost } from "@sandy/shared-ui/question-form-host";`,
           `export { clsx, twMerge, cva, Icon, useQuestionFormHost };`,
         ].join("\n"),
         loader: "js",
@@ -152,7 +152,7 @@ describe("plugin app runtime shim", () => {
     const cvaFn = () => "cva";
     const IconComponent = () => null;
     const useQuestionFormHost = () => null;
-    (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime = {
+    (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime = {
       clsx: { default: clsxFn, clsx: clsxFn },
       tailwindMerge: { twMerge: twMergeFn },
       classVarianceAuthority: { cva: cvaFn },
@@ -172,17 +172,17 @@ describe("plugin app runtime shim", () => {
       expect(loaded.Icon).toBe(IconComponent);
       expect(loaded.useQuestionFormHost).toBe(useQuestionFormHost);
     } finally {
-      delete (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime;
+      delete (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime;
     }
   });
 
   it("shims shared-ui's relative ./icon import but bundles a plugin's own icon module", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-icon-rel-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-icon-rel-"));
     tempDirs.push(dir);
-    const sharedUiDir = join(dir, "node_modules", "@bb", "shared-ui");
+    const sharedUiDir = join(dir, "node_modules", "@sandy", "shared-ui");
     const files: Record<string, string> = {
       [join(sharedUiDir, "package.json")]: JSON.stringify({
-        name: "@bb/shared-ui",
+        name: "@sandy/shared-ui",
         type: "module",
         exports: {
           "./empty-state": "./src/components/ui/empty-state.tsx",
@@ -198,7 +198,7 @@ describe("plugin app runtime shim", () => {
       [join(dir, "components", "ui", "button.tsx")]:
         `import { Icon } from "./icon";\nexport function Button() { return Icon; }\n`,
       [join(dir, "app.tsx")]:
-        `import { EmptyState } from "@bb/shared-ui/empty-state";\nimport { Button } from "./components/ui/button";\nexport { EmptyState, Button };\n`,
+        `import { EmptyState } from "@sandy/shared-ui/empty-state";\nimport { Button } from "./components/ui/button";\nexport { EmptyState, Button };\n`,
     };
     for (const [filePath, contents] of Object.entries(files)) {
       await mkdir(dirname(filePath), { recursive: true });
@@ -221,12 +221,12 @@ describe("plugin app runtime shim", () => {
   });
 
   it("shims shared-ui's relative ./question-form-host import to the host's context", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-question-host-rel-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-question-host-rel-"));
     tempDirs.push(dir);
-    const sharedUiDir = join(dir, "node_modules", "@bb", "shared-ui");
+    const sharedUiDir = join(dir, "node_modules", "@sandy", "shared-ui");
     const files: Record<string, string> = {
       [join(sharedUiDir, "package.json")]: JSON.stringify({
-        name: "@bb/shared-ui",
+        name: "@sandy/shared-ui",
         type: "module",
         exports: {
           "./question-form": "./src/components/ui/question-form.tsx",
@@ -237,7 +237,7 @@ describe("plugin app runtime shim", () => {
       [join(sharedUiDir, "src", "components", "ui", "question-form.tsx")]:
         `import { useQuestionFormHost } from "./question-form-host";\nexport function QuestionForm() { return useQuestionFormHost(); }\n`,
       [join(dir, "app.tsx")]:
-        `import { QuestionForm } from "@bb/shared-ui/question-form";\nexport { QuestionForm };\n`,
+        `import { QuestionForm } from "@sandy/shared-ui/question-form";\nexport { QuestionForm };\n`,
     };
     for (const [filePath, contents] of Object.entries(files)) {
       await mkdir(dirname(filePath), { recursive: true });
@@ -262,29 +262,29 @@ describe("plugin app runtime shim", () => {
     const sharedUiComponent =
       "/repo/packages/shared-ui/src/components/ui/empty-state.tsx";
     expect(sharedUiRuntimeModuleFor("./icon", sharedUiComponent)).toBe(
-      "@bb/shared-ui/icon",
+      "@sandy/shared-ui/icon",
     );
     expect(sharedUiRuntimeModuleFor("./icon.js", sharedUiComponent)).toBe(
-      "@bb/shared-ui/icon",
+      "@sandy/shared-ui/icon",
     );
     expect(
       sharedUiRuntimeModuleFor(
         "../components/ui/icon",
         "/repo/packages/shared-ui/src/hooks/use-thing.ts",
       ),
-    ).toBe("@bb/shared-ui/icon");
+    ).toBe("@sandy/shared-ui/icon");
     expect(
       sharedUiRuntimeModuleFor(
         "./question-form-host",
         "/repo/packages/shared-ui/src/components/ui/question-form.tsx",
       ),
-    ).toBe("@bb/shared-ui/question-form-host");
+    ).toBe("@sandy/shared-ui/question-form-host");
     expect(
       sharedUiRuntimeModuleFor(
         "./voice-input-textarea",
         "/repo/packages/shared-ui/src/components/ui/question-form.tsx",
       ),
-    ).toBe("@bb/shared-ui/voice-input-textarea");
+    ).toBe("@sandy/shared-ui/voice-input-textarea");
     expect(sharedUiRuntimeModuleFor("./button", sharedUiComponent)).toBe(null);
     expect(
       sharedUiRuntimeModuleFor(
@@ -301,14 +301,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("scopes Tailwind utilities while preserving imported CSS unscoped", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-css-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-css-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-css-fixture",
+        name: "sandy-plugin-css-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "CSS fixture",
           description: "Verifies plugin CSS emission.",
           branding: { icon: "Paintbrush" },
@@ -340,10 +340,10 @@ describe("plugin app runtime shim", () => {
     );
     const css = await readFile(result.cssPath, "utf8");
 
-    const scope = ":where([data-bb-plugin=css-fixture])";
-    expect(css).not.toContain(",[data-bb-plugin-root]");
+    const scope = ":where([data-sandy-plugin=css-fixture])";
+    expect(css).not.toContain(",[data-sandy-plugin-root]");
     expect(css).toContain(
-      ":where([data-bb-plugin-root]:not([data-bb-plugin]))",
+      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
     );
     expect(css).toContain(`${scope} .flex-col`);
     expect(css).toContain(`${scope}.flex-col`);
@@ -378,14 +378,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("builds retired tab registrations alongside retired hooks and returns migration warnings", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-legacy-tabs-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-legacy-tabs-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-legacy-tabs-fixture",
+        name: "sandy-plugin-legacy-tabs-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Legacy tabs",
           description: "Published API compatibility",
           branding: { icon: "Info" },
@@ -400,7 +400,7 @@ describe("plugin app runtime shim", () => {
     );
     await writeFile(
       join(dir, "app.ts"),
-      `import { definePluginApp, experimental_useSidebarThreadPullRequest } from "@get-bb/plugin-sdk/app";
+      `import { definePluginApp, experimental_useSidebarThreadPullRequest } from "@sandy-sdk/plugin-sdk/app";
       const component = () => experimental_useSidebarThreadPullRequest("thread").pullRequest;
       export default definePluginApp((app) => {
         app.slots.threadPanelAction({ id: "legacy", title: "Legacy", component });
@@ -437,14 +437,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("builds app and server code that still calls retired environment reads and warns with the Git plugin replacement", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-retired-git-reads-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-retired-git-reads-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-retired-git-reads-fixture",
+        name: "sandy-plugin-retired-git-reads-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Retired git reads",
           description: "Published API compatibility",
           branding: { icon: "Info" },
@@ -455,13 +455,13 @@ describe("plugin app runtime shim", () => {
     );
     await writeFile(
       join(dir, "server.ts"),
-      `export default function plugin(bb: any) {
-        void bb.sdk.environments.status({ environmentId: "env_1" });
+      `export default function plugin(sandy: any) {
+        void sandy.sdk.environments.status({ environmentId: "env_1" });
       }\n`,
     );
     await writeFile(
       join(dir, "app.ts"),
-      `import { definePluginApp, useSdk } from "@get-bb/plugin-sdk/app";
+      `import { definePluginApp, useSdk } from "@sandy-sdk/plugin-sdk/app";
       export function useFiles() {
         const sdk: any = useSdk();
         return sdk.environments.diffFiles({ environmentId: "env_1", target: "uncommitted" });
@@ -474,19 +474,19 @@ describe("plugin app runtime shim", () => {
 
     expect(app.migrationWarnings).toEqual([
       expect.stringContaining(
-        'environments.diffFiles is retired from the bb SDK typings and keeps working only for existing plugins. Read through the Git plugin instead: bb.sdk.plugins.callRpc({ pluginId: "bb--git", method: "files"',
+        'environments.diffFiles is retired from the sandy SDK typings and keeps working only for existing plugins. Read through the Git plugin instead: sandy.sdk.plugins.callRpc({ pluginId: "sandy--git", method: "files"',
       ),
     ]);
     expect(server.migrationWarnings).toEqual([
       expect.stringContaining(
-        "server.ts: environments.status is retired from the bb SDK typings",
+        "server.ts: environments.status is retired from the sandy SDK typings",
       ),
     ]);
   });
 
   it("builds a server whose RPC contract still declares invalidates and warns only for the plugin's own files", async () => {
-    const shared = await mkdtemp(join(tmpdir(), "bb-plugin-shared-routes-"));
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-retired-invalidates-"));
+    const shared = await mkdtemp(join(tmpdir(), "sandy-plugin-shared-routes-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-retired-invalidates-"));
     tempDirs.push(shared, dir);
     await writeFile(
       join(shared, "routes.ts"),
@@ -495,9 +495,9 @@ describe("plugin app runtime shim", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-retired-invalidates-fixture",
+        name: "sandy-plugin-retired-invalidates-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Retired invalidates",
           description: "Published API compatibility",
           branding: { icon: "Info" },
@@ -520,8 +520,8 @@ describe("plugin app runtime shim", () => {
       join(dir, "server.ts"),
       `import { TAGS } from "./tags";
       import { route } from ${JSON.stringify(join(shared, "routes.ts"))};
-      export default function plugin(bb: any) {
-        bb.log.info(JSON.stringify(Object.keys(TAGS)), route);
+      export default function plugin(sandy: any) {
+        sandy.log.info(JSON.stringify(Object.keys(TAGS)), route);
       }\n`,
     );
     const server = await buildPluginServer(
@@ -533,20 +533,20 @@ describe("plugin app runtime shim", () => {
     expect(await readFile(server.jsPath, "utf8")).toContain("invalidates");
     expect(server.migrationWarnings).toEqual([
       expect.stringMatching(
-        /\/tags\.ts: invalidates on RPC contract methods is retired .*bb\.rpc\.experimental_invalidate\(tags\)/u,
+        /\/tags\.ts: invalidates on RPC contract methods is retired .*sandy\.rpc\.experimental_invalidate\(tags\)/u,
       ),
     ]);
   });
 
   it("records in app.meta.json the runtime slots the bundle imports", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-runtime-slots-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-runtime-slots-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-runtime-slots-fixture",
+        name: "sandy-plugin-runtime-slots-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Runtime slots fixture",
           description: "Records the host runtime slots a bundle imports.",
           branding: { icon: "Zap" },
@@ -586,14 +586,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("emits Tailwind rules the host provides, which dropHostProvidedTailwind removes", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-properties-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-properties-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-properties-fixture",
+        name: "sandy-plugin-properties-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Properties fixture",
           description:
             "Verifies plugin CSS leaves property registration to the host.",
@@ -631,14 +631,14 @@ describe("plugin app runtime shim", () => {
   });
 
   it("minifies app.js and app.css unless the caller asks for readable output", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-minify-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-minify-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-minify-fixture",
+        name: "sandy-plugin-minify-fixture",
         version: "0.0.0",
-        bb: {
+        sandy: {
           name: "Minify fixture",
           description: "Verifies artifact minification.",
           branding: { icon: "Zap" },
@@ -660,7 +660,7 @@ describe("plugin app runtime shim", () => {
         '  const fixtureLocalResult = [fixtureInputValue, "flex-col"].join(" ");',
         "  return fixtureLocalResult;",
         "}",
-        'export default computeFixtureLabel("bb-minify");',
+        'export default computeFixtureLabel("sandy-minify");',
         "",
       ].join("\n"),
     );
@@ -675,7 +675,7 @@ describe("plugin app runtime shim", () => {
     const minifiedCss = await readFile(minified.cssPath, "utf8");
     expect(minifiedJs).not.toContain("fixtureLocalResult");
     expect(minifiedJs).not.toContain("fixture-legal-comment");
-    expect(minifiedJs).toContain("bb-minify");
+    expect(minifiedJs).toContain("sandy-minify");
     expect(minifiedCss).toContain(".flex-col{flex-direction:column}");
     expect(minifiedCss).toContain(".bb71-authored{color:#ff69b4;margin:0}");
     expect(minifiedCss).not.toContain("\n  ");
@@ -693,7 +693,7 @@ describe("plugin app runtime shim", () => {
   });
 
   it("scans bundled Tailwind content from a symlinked workspace dependency by filesystem identity", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-plugin-scan-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-scan-"));
     tempDirs.push(dir);
     const uiPackageDir = join(dir, "packages", "fixture-ui");
     await mkdir(join(uiPackageDir, "src", "excluded"), { recursive: true });
@@ -704,7 +704,7 @@ describe("plugin app runtime shim", () => {
         name: "fixture-ui",
         version: "0.0.0",
         type: "module",
-        bb: { pluginTailwindContent: ["src/**/*", "!src/excluded/**/*"] },
+        sandy: { pluginTailwindContent: ["src/**/*", "!src/excluded/**/*"] },
       }),
     );
     await writeFile(
@@ -729,10 +729,10 @@ describe("plugin app runtime shim", () => {
     await writeFile(
       join(pluginDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-scan-fixture",
+        name: "sandy-plugin-scan-fixture",
         version: "0.0.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Scan fixture",
           description: "Verifies dependency content scanning.",
           branding: { icon: "Zap" },
@@ -761,7 +761,7 @@ describe("plugin app runtime shim", () => {
     );
 
     const aliasContainer = await mkdtemp(
-      join(tmpdir(), "bb-plugin-scan-alias-"),
+      join(tmpdir(), "sandy-plugin-scan-alias-"),
     );
     tempDirs.push(aliasContainer);
     const aliasedRoot = join(aliasContainer, "fixture");
@@ -792,14 +792,14 @@ describe("plugin app runtime shim", () => {
   ])(
     "rejects %s in a path-shaped branding.icon before building",
     async (_case, icon, expectedError) => {
-      const dir = await mkdtemp(join(tmpdir(), "bb-plugin-icon-"));
+      const dir = await mkdtemp(join(tmpdir(), "sandy-plugin-icon-"));
       tempDirs.push(dir);
       await writeFile(
         join(dir, "package.json"),
         JSON.stringify({
-          name: "bb-plugin-icon-fixture",
+          name: "sandy-plugin-icon-fixture",
           version: "0.0.0",
-          bb: {
+          sandy: {
             name: "Icon fixture",
             description: "Verifies compact icon validation.",
             branding: { icon: "./icon.svg" },

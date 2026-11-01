@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { COMPACT_VIEWPORT_QUERY } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { getMediaQuerySnapshot } from "@bb/shared-ui/hooks/use-media-query";
+import { COMPACT_VIEWPORT_QUERY } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { getMediaQuerySnapshot } from "@sandy/shared-ui/hooks/use-media-query";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
@@ -8,7 +8,7 @@ import {
   type SystemConfigResponse,
   type ThreadTimelineReadResponse,
   type ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { markStreamTrace } from "@/lib/stream-trace";
 import { wsManager } from "@/lib/ws";
 import {
@@ -131,7 +131,7 @@ export function applyThreadTimelineSignal(
     target.threadId,
     timeline.maxSeq,
   );
-  markStreamTrace("bb:timeline-applied", {
+  markStreamTrace("sandy:timeline-applied", {
     threadId: target.threadId,
     maxSeq: timeline.maxSeq,
     source:

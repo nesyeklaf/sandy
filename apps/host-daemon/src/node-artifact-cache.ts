@@ -6,8 +6,8 @@ import {
   FileTransferVerificationError,
   hashFile,
   writeVerifiedFile,
-} from "@bb/file-transfer";
-import { HOST_ARTIFACT_MAX_BYTES } from "@bb/host-daemon-contract";
+} from "@sandy/file-transfer";
+import { HOST_ARTIFACT_MAX_BYTES } from "@sandy/host-daemon-contract";
 import type { HostDaemonLogger } from "./logger.js";
 
 const DIGEST_PATTERN = /^[a-f0-9]{64}$/u;

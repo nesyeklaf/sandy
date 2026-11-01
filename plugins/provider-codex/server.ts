@@ -1,33 +1,33 @@
 import { registerCodexAiService } from "./src/ai-service.js";
 import { registerAsyncQuestions } from "./src/async-questions.js";
 import { registerUsageSource } from "./src/usage-source.js";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { codexExtensionKinds } from "./src/extension-kinds.js";
 import { CODEX_NATIVE_ROOTS_DECLARATION } from "./src/native-roots.js";
 
-export default function plugin(bb: BbPluginApi) {
-  registerUsageSource(bb);
-  registerCodexAiService(bb);
-  registerAsyncQuestions(bb);
+export default function plugin(sandy: SandyPluginApi) {
+  registerUsageSource(sandy);
+  registerCodexAiService(sandy);
+  registerAsyncQuestions(sandy);
 
-  bb.settings.define({
+  sandy.settings.define({
     memoryEnabled: {
       type: "boolean",
       label: "Codex memory",
       description:
-        "Allow Codex to recall existing memories and generate new memories from bb threads.",
+        "Allow Codex to recall existing memories and generate new memories from sandy threads.",
       default: true,
     },
     subagentsDisabled: {
       type: "boolean",
       label: "Disable provider subagents",
       description:
-        "Prevent Codex from starting native subagents so agents use bb for delegation.",
+        "Prevent Codex from starting native subagents so agents use sandy for delegation.",
       default: false,
     },
   });
 
-  bb.providers.register({
+  sandy.providers.register({
     id: "codex",
     displayName: "Codex",
     icon: "./icons/codex.svg",

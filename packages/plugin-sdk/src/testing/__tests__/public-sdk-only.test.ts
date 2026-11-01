@@ -7,7 +7,7 @@ import { experimental_scanPublicSdkOnly as scanPublicSdkOnly } from "../index.js
 let packageRoot: string;
 
 function plant(files: Record<string, string>, manifest: object = {}): void {
-  packageRoot = mkdtempSync(join(tmpdir(), "bb-public-sdk-only-"));
+  packageRoot = mkdtempSync(join(tmpdir(), "sandy-public-sdk-only-"));
   writeFileSync(
     join(packageRoot, "package.json"),
     JSON.stringify({ name: "planted", ...manifest }),
@@ -25,12 +25,12 @@ afterEach(() => {
 describe("experimental_scanPublicSdkOnly", () => {
   it("walks the package, skipping node_modules and dist, and accepts the published SDK surface", () => {
     plant({
-      "server.ts": `import { z } from "zod";\nimport type { BbPluginApi } from "@get-bb/plugin-sdk";\nimport { join } from "node:path";\nimport { helper } from "./src/helper.js";\n`,
-      "src/helper.ts": `import "@get-bb/plugin-sdk/provider-bridge";\nimport "@get-bb/plugin-sdk/provider-bridge/acp";\nimport "@get-bb/plugin-sdk/host";\nexport const helper = 1;\n`,
-      "app.tsx": `import "@get-bb/plugin-sdk/app";\n`,
-      "server.test.ts": `import { it } from "vitest";\nimport "@get-bb/plugin-sdk/testing";\nimport "@get-bb/plugin-sdk/provider-bridge/testing";\n`,
-      "node_modules/dep/index.js": `require("@bb/domain");\n`,
-      "dist/server.js": `import "@bb/domain";\n`,
+      "server.ts": `import { z } from "zod";\nimport type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";\nimport { join } from "node:path";\nimport { helper } from "./src/helper.js";\n`,
+      "src/helper.ts": `import "@sandy-sdk/plugin-sdk/provider-bridge";\nimport "@sandy-sdk/plugin-sdk/provider-bridge/acp";\nimport "@sandy-sdk/plugin-sdk/host";\nexport const helper = 1;\n`,
+      "app.tsx": `import "@sandy-sdk/plugin-sdk/app";\n`,
+      "server.test.ts": `import { it } from "vitest";\nimport "@sandy-sdk/plugin-sdk/testing";\nimport "@sandy-sdk/plugin-sdk/provider-bridge/testing";\n`,
+      "node_modules/dep/index.js": `require("@sandy/domain");\n`,
+      "dist/server.js": `import "@sandy/domain";\n`,
     });
     const scan = scanPublicSdkOnly(packageRoot);
     expect(scan.files.sort()).toEqual([
@@ -45,15 +45,15 @@ describe("experimental_scanPublicSdkOnly", () => {
 
   it("reports a private workspace import, a specifier outside the allowlist, and a testing subpath in plugin code", () => {
     plant({
-      "server.ts": `import { events } from "@bb/db";\nimport yaml from "yaml";\nimport "@get-bb/plugin-sdk/testing";\n`,
-      "server.test.ts": `import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";\nimport { describe } from "vitest";\n`,
+      "server.ts": `import { events } from "@sandy/db";\nimport yaml from "yaml";\nimport "@sandy-sdk/plugin-sdk/testing";\n`,
+      "server.test.ts": `import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";\nimport { describe } from "vitest";\n`,
     });
     expect(scanPublicSdkOnly(packageRoot).violations).toEqual([
-      { file: "server.ts", specifier: "@bb/db", reason: "private-package" },
+      { file: "server.ts", specifier: "@sandy/db", reason: "private-package" },
       { file: "server.ts", specifier: "yaml", reason: "outside-allowlist" },
       {
         file: "server.ts",
-        specifier: "@get-bb/plugin-sdk/testing",
+        specifier: "@sandy-sdk/plugin-sdk/testing",
         reason: "outside-allowlist",
       },
     ]);
@@ -100,9 +100,9 @@ describe("experimental_scanPublicSdkOnly", () => {
     plant({
       "server.ts": [
         `const name = "domain";`,
-        `const spec = "@bb/" + name;`,
+        `const spec = "@sandy/" + name;`,
         `const a = await import(spec);`,
-        "const b = await import(`@bb/${name}`);",
+        "const b = await import(`@sandy/${name}`);",
         `const c = require(spec);`,
         `const d = await import("./literal.js");`,
         "",
@@ -113,7 +113,7 @@ describe("experimental_scanPublicSdkOnly", () => {
       { file: "server.ts", specifier: "spec", reason: "dynamic-specifier" },
       {
         file: "server.ts",
-        specifier: "`@bb/${name}`",
+        specifier: "`@sandy/${name}`",
         reason: "dynamic-specifier",
       },
       { file: "server.ts", specifier: "spec", reason: "dynamic-specifier" },
@@ -127,14 +127,14 @@ describe("experimental_scanPublicSdkOnly", () => {
         "class Store { async require(path: string): Promise<void> {} }",
         "interface Importer { import(estimate: number): void; }",
         "f.import(estimate);",
-        'f.import("@bb/db");',
+        'f.import("@sandy/db");',
         "store?.require(path);",
-        'const label = { import: "@bb/db", export: 1 };',
-        "const pattern = /from [\"']@bb\\/db[\"']/u;",
-        '// import("@bb/db") or require(name)',
-        '/* export * from "@bb/db"; */',
-        "const text = \"import('@bb/db')\";",
-        'const doc = `require(name) from "@bb/db"`;',
+        'const label = { import: "@sandy/db", export: 1 };',
+        "const pattern = /from [\"']@sandy\\/db[\"']/u;",
+        '// import("@sandy/db") or require(name)',
+        '/* export * from "@sandy/db"; */',
+        "const text = \"import('@sandy/db')\";",
+        'const doc = `require(name) from "@sandy/db"`;',
         "const url = import.meta.url;",
         "",
       ].join("\n"),
@@ -145,11 +145,11 @@ describe("experimental_scanPublicSdkOnly", () => {
         "",
       ].join("\n"),
       "app.tsx": [
-        'import "@get-bb/plugin-sdk/app";',
+        'import "@sandy-sdk/plugin-sdk/app";',
         "export function Panel<T,>(props: { items: T[] }) {",
         "  return (",
         '    <section title="don\'t import">',
-        '      <p>Can\'t import (beta) from "@bb/db" // or require(it)</p>',
+        '      <p>Can\'t import (beta) from "@sandy/db" // or require(it)</p>',
         "      {props.items.length > 0 ? <List items={props.items} /> : null}",
         "      <>{/* import(name) */}</>",
         "    </section>",
@@ -164,23 +164,23 @@ describe("experimental_scanPublicSdkOnly", () => {
   it("still reports every real import form, including ones the old text scan read", () => {
     plant({
       "server.ts": [
-        'import type { Event } from "@bb/domain";',
+        'import type { Event } from "@sandy/domain";',
         'import defaultThing, { named } from "yaml";',
-        'import * as ns from "@bb/sdk";',
+        'import * as ns from "@sandy/sdk";',
         'import "side-effect";',
-        'import legacy = require("@bb/legacy");',
-        'export { thing } from "@bb/reexport";',
-        'export * as all from "@bb/star";',
-        'export type { Shape } from "@bb/types";',
-        'type Lazy = typeof import("@bb/lazy-type");',
+        'import legacy = require("@sandy/legacy");',
+        'export { thing } from "@sandy/reexport";',
+        'export * as all from "@sandy/star";',
+        'export type { Shape } from "@sandy/types";',
+        'type Lazy = typeof import("@sandy/lazy-type");',
         "const lazy = cond ? import(spec) : null;",
-        'const nested = `${await import("@bb/in-template")}`;',
-        'const viaRequire = [require("@bb/required")];',
+        'const nested = `${await import("@sandy/in-template")}`;',
+        'const viaRequire = [require("@sandy/required")];',
         "",
       ].join("\n"),
       "app.tsx": [
         "export const View = () => (",
-        '  <div onClick={() => import("@bb/from-jsx")}>{require(name)}</div>',
+        '  <div onClick={() => import("@sandy/from-jsx")}>{require(name)}</div>',
         ");",
         "",
       ].join("\n"),
@@ -191,36 +191,36 @@ describe("experimental_scanPublicSdkOnly", () => {
         .filter((violation) => violation.file === file)
         .map(({ specifier, reason }) => `${reason} ${specifier}`);
     expect(reported("app.tsx")).toEqual([
-      "private-package @bb/from-jsx",
+      "private-package @sandy/from-jsx",
       "dynamic-specifier name",
     ]);
     expect(reported("server.ts")).toEqual([
-      "private-package @bb/domain",
+      "private-package @sandy/domain",
       "outside-allowlist yaml",
-      "private-package @bb/sdk",
+      "private-package @sandy/sdk",
       "outside-allowlist side-effect",
-      "private-package @bb/legacy",
-      "private-package @bb/reexport",
-      "private-package @bb/star",
-      "private-package @bb/types",
-      "private-package @bb/lazy-type",
+      "private-package @sandy/legacy",
+      "private-package @sandy/reexport",
+      "private-package @sandy/star",
+      "private-package @sandy/types",
+      "private-package @sandy/lazy-type",
       "dynamic-specifier spec",
-      "private-package @bb/in-template",
-      "private-package @bb/required",
+      "private-package @sandy/in-template",
+      "private-package @sandy/required",
     ]);
   });
 
-  it("lists @bb/* names from both dependency blocks of package.json", () => {
+  it("lists @sandy/* names from both dependency blocks of package.json", () => {
     plant(
       { "server.ts": "" },
       {
-        dependencies: { "@get-bb/plugin-sdk": "^0.4.0", "@bb/domain": "*" },
-        devDependencies: { vitest: "^4", "@bb/test-helpers": "*" },
+        dependencies: { "@sandy-sdk/plugin-sdk": "^0.4.0", "@sandy/domain": "*" },
+        devDependencies: { vitest: "^4", "@sandy/test-helpers": "*" },
       },
     );
     expect(scanPublicSdkOnly(packageRoot).privateDependencies).toEqual([
-      "@bb/domain",
-      "@bb/test-helpers",
+      "@sandy/domain",
+      "@sandy/test-helpers",
     ]);
   });
 });

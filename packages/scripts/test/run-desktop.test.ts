@@ -1,6 +1,6 @@
 import { join, resolve, sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { resolveDevInstanceConfig } from "@bb/config/runtime";
+import { resolveDevInstanceConfig } from "@sandy/config/runtime";
 import {
   createDesktopPackageCommand,
   createDesktopRunCommand,
@@ -12,7 +12,7 @@ import {
 
 const config = resolveDevInstanceConfig({
   homeDir: "/Users/tester",
-  repoRoot: "/Users/tester/checkouts/bb",
+  repoRoot: "/Users/tester/checkouts/sandy",
 });
 
 describe("desktop launch mode", () => {
@@ -37,7 +37,7 @@ describe("desktop packaging task", () => {
       /supported on macOS, Linux, and Windows/u,
     );
     expect(createDesktopPackageCommand("darwin").args).toEqual(
-      expect.arrayContaining(["run", "package", "--filter=@bb/desktop"]),
+      expect.arrayContaining(["run", "package", "--filter=@sandy/desktop"]),
     );
   });
 
@@ -56,8 +56,8 @@ describe("desktop launch environment", () => {
   it("isolates the worktree launch onto this checkout's data directory and ports", () => {
     const env = toDesktopLaunchProcessEnv({
       baseEnv: {
-        BB_DATA_DIR: "/Users/tester/.bb",
-        BB_DEV_APP_PORT: "5173",
+        SANDY_DATA_DIR: "/Users/tester/.sandy",
+        SANDY_DEV_APP_PORT: "5173",
         NODE_ENV: "development",
         OPENAI_API_KEY: "test-key",
       },
@@ -66,33 +66,33 @@ describe("desktop launch environment", () => {
     });
 
     expect(env).toMatchObject({
-      BB_DATA_DIR: config.dataDir,
-      BB_DESKTOP_DEV_ICON: "1",
-      BB_DESKTOP_OPEN_DEVTOOLS: "0",
-      BB_DESKTOP_USER_DATA_DIR: join(config.dataDir, "desktop"),
-      BB_HOST_DAEMON_PORT: String(config.ports.hostDaemonPort),
-      BB_SERVER_PORT: String(config.ports.serverPort),
-      BB_SKIP_ONBOARDING: "1",
+      SANDY_DATA_DIR: config.dataDir,
+      SANDY_DESKTOP_DEV_ICON: "1",
+      SANDY_DESKTOP_OPEN_DEVTOOLS: "0",
+      SANDY_DESKTOP_USER_DATA_DIR: join(config.dataDir, "desktop"),
+      SANDY_HOST_DAEMON_PORT: String(config.ports.hostDaemonPort),
+      SANDY_SERVER_PORT: String(config.ports.serverPort),
+      SANDY_SKIP_ONBOARDING: "1",
       NODE_ENV: "production",
       OPENAI_API_KEY: "test-key",
     });
-    expect(env.BB_DATA_DIR).not.toBe("/Users/tester/.bb");
-    expect(env.BB_SERVER_PORT).not.toBe("38886");
-    expect(env.BB_DEV_APP_PORT).toBeUndefined();
+    expect(env.SANDY_DATA_DIR).not.toBe("/Users/tester/.sandy");
+    expect(env.SANDY_SERVER_PORT).not.toBe("38886");
+    expect(env.SANDY_DEV_APP_PORT).toBeUndefined();
   });
 
   it("preserves an explicit Electron user data directory", () => {
-    const userDataDir = "/tmp/bb-desktop-profile";
+    const userDataDir = "/tmp/sandy-desktop-profile";
     const env = toDesktopLaunchProcessEnv({
-      baseEnv: { BB_DESKTOP_USER_DATA_DIR: ` ${userDataDir} ` },
+      baseEnv: { SANDY_DESKTOP_USER_DATA_DIR: ` ${userDataDir} ` },
       config,
       mode: "worktree",
     });
 
-    expect(env.BB_DESKTOP_USER_DATA_DIR).toBe(resolve(userDataDir));
+    expect(env.SANDY_DESKTOP_USER_DATA_DIR).toBe(resolve(userDataDir));
     expect(
       resolveDesktopUserDataDir(
-        { BB_DESKTOP_USER_DATA_DIR: "relative-profile" },
+        { SANDY_DESKTOP_USER_DATA_DIR: "relative-profile" },
         config,
       ),
     ).toBe(join(process.cwd(), "relative-profile"));
@@ -100,22 +100,22 @@ describe("desktop launch environment", () => {
 
   it("lets an explicit onboarding choice survive the worktree default", () => {
     const env = toDesktopLaunchProcessEnv({
-      baseEnv: { BB_SKIP_ONBOARDING: "0" },
+      baseEnv: { SANDY_SKIP_ONBOARDING: "0" },
       config,
       mode: "worktree",
     });
 
-    expect(env.BB_SKIP_ONBOARDING).toBe("0");
+    expect(env.SANDY_SKIP_ONBOARDING).toBe("0");
   });
 
   it("lets an explicit devtools choice survive the worktree default", () => {
     const env = toDesktopLaunchProcessEnv({
-      baseEnv: { BB_DESKTOP_OPEN_DEVTOOLS: "1" },
+      baseEnv: { SANDY_DESKTOP_OPEN_DEVTOOLS: "1" },
       config,
       mode: "worktree",
     });
 
-    expect(env.BB_DESKTOP_OPEN_DEVTOOLS).toBe("1");
+    expect(env.SANDY_DESKTOP_OPEN_DEVTOOLS).toBe("1");
   });
 
   it("leaves the installed data directory and ports alone without --worktree", () => {
@@ -125,13 +125,13 @@ describe("desktop launch environment", () => {
       mode: "prod",
     });
 
-    expect(env.BB_DATA_DIR).toBeUndefined();
-    expect(env.BB_SERVER_PORT).toBeUndefined();
-    expect(env.BB_HOST_DAEMON_PORT).toBeUndefined();
-    expect(env.BB_DESKTOP_USER_DATA_DIR).toBeUndefined();
-    expect(env.BB_SKIP_ONBOARDING).toBeUndefined();
+    expect(env.SANDY_DATA_DIR).toBeUndefined();
+    expect(env.SANDY_SERVER_PORT).toBeUndefined();
+    expect(env.SANDY_HOST_DAEMON_PORT).toBeUndefined();
+    expect(env.SANDY_DESKTOP_USER_DATA_DIR).toBeUndefined();
+    expect(env.SANDY_SKIP_ONBOARDING).toBeUndefined();
     expect(env).toMatchObject({
-      BB_DESKTOP_OPEN_DEVTOOLS: "0",
+      SANDY_DESKTOP_OPEN_DEVTOOLS: "0",
       NODE_ENV: "production",
       OPENAI_API_KEY: "test-key",
     });

@@ -18,23 +18,27 @@ import {
   setAppKeybindingOverrides,
   setExperiments,
   setStoredAppearance,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   applyAppKeybindingOverrides,
   appSettingsSchema,
+  checkThemeCss,
+  CUSTOM_THEME_CSS_MAX_LENGTH,
   customThemeNameSchema,
+  generateThemeCss,
   isBuiltInThemeId,
   PERSONAL_PROJECT_ID,
   resolveCodeTheme,
+  ThemeKitError,
   type AppKeybindingOverrides,
   type AppTheme,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
   type SystemEnvironmentProvider,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import {
   hashedAssetCacheControl,
@@ -73,6 +77,8 @@ import {
 import { getProviderStates } from "../services/system/provider-states.js";
 import { getProviderUsageLimits } from "../services/system/usage-limits.js";
 import {
+  customThemeExists,
+  writeCustomThemeCss,
   listCustomThemeNames,
   readCustomThemeCss,
   resolveAppTheme,
@@ -374,9 +380,46 @@ export function registerSystemRoutes(
     }),
   );
 
+  post(routes.createTheme, async (context, payload) => {
+    if (isBuiltInThemeId(payload.name)) {
+      throw new ApiError(
+        400,
+        "invalid_request",
+        `'${payload.name}' is a built-in theme id; pick another name.`,
+      );
+    }
+    if (!payload.overwrite && customThemeExists(themeRoot, payload.name)) {
+      throw new ApiError(
+        409,
+        "theme_exists",
+        `Custom theme '${payload.name}' already exists. Pass overwrite to replace it.`,
+      );
+    }
+    let css: string;
+    try {
+      css = generateThemeCss(payload.kit);
+    } catch (error) {
+      if (error instanceof ThemeKitError) {
+        throw new ApiError(400, "invalid_request", error.message);
+      }
+      throw error;
+    }
+    if (css.length > CUSTOM_THEME_CSS_MAX_LENGTH) {
+      throw new ApiError(400, "invalid_request", "Generated theme is too large.");
+    }
+    const path = writeCustomThemeCss(themeRoot, payload.name, css);
+    deps.hub.notifySystem(["config-changed"]);
+    return context.json({
+      name: payload.name,
+      path,
+      css,
+      issues: checkThemeCss(css),
+    });
+  });
+
   post(routes.reloadConfig, async (context) => {
     try {
-      await deps.bbAppManagedConfig.reload({ notify: true });
+      await deps.sandyAppManagedConfig.reload({ notify: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new ApiError(422, "invalid_config", message);

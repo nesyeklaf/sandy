@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppKeybindingOverrides } from "@bb/domain";
+import type { AppKeybindingOverrides } from "@sandy/domain";
 import {
   createConnection,
   getAppKeybindingOverrides,

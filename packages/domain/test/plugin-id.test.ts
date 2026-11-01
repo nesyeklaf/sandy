@@ -4,8 +4,8 @@ import { derivePluginId } from "../src/plugin-id.js";
 
 describe("derivePluginId", () => {
   it.each([
-    ["bb-plugin-hello", "hello"],
-    ["@acme/bb-plugin-hello", "hello"],
+    ["sandy-plugin-hello", "hello"],
+    ["@acme/sandy-plugin-hello", "hello"],
   ])("derives %s as %s", (packageName, expectedId) => {
     expect(derivePluginId(packageName)).toBe(expectedId);
   });

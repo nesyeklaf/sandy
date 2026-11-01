@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { connectionOverviewContract } from "./contract.js";
 import type { SourceHealth } from "./coverage.js";
 import {
@@ -10,11 +10,11 @@ import { parseSince } from "./since.js";
 import type { Store } from "./store.js";
 
 export function registerOverviewRpc(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   deps: { store: Store; health: () => SourceHealth[]; now?: () => number },
 ) {
   const now = deps.now ?? Date.now;
-  bb.rpc.register(connectionOverviewContract, {
+  sandy.rpc.register(connectionOverviewContract, {
     "overview.get": ({ window }) => {
       const current = now();
       const since = parseSince(window, current);

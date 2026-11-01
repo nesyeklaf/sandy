@@ -13,12 +13,12 @@ import {
   markThreadDeleted,
   threads,
   reserveEnvironment,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   type ResolvedThreadExecutionOptions,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { describe, expect, it, vi } from "vitest";
 import {
   runThreadLifecycleSweep,
@@ -63,7 +63,7 @@ import { installFakeEnvironmentProvider } from "../helpers/environment-provider.
 import { withTestHarness } from "../helpers/test-app.js";
 import { handleDaemonSocketClosed } from "../../src/internal/session-owner-side-effects.js";
 import { onDaemonSocketOpen } from "../../src/ws/daemon-protocol.js";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import { advanceEnvironmentProvisioning } from "../../src/services/environments/environment-engine.js";
 
 const THREAD_START_EXECUTION = {
@@ -430,7 +430,7 @@ describe("thread provisioning recovery", () => {
         path: "/tmp/ready-retry-after-lost-provision",
         status: "ready",
         environmentProviderId: "personal-workspace",
-        environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+        environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
         isGitRepo: false,
       });
       const thread = seedThread(harness.deps, {
@@ -511,7 +511,7 @@ describe("thread provisioning recovery", () => {
         path: "/tmp/error-retry-before-late-ready",
         status: "error",
         environmentProviderId: "personal-workspace",
-        environmentProviderPluginId: "bb-plugin-environment-personal-workspace",
+        environmentProviderPluginId: "sandy-plugin-environment-personal-workspace",
         isGitRepo: false,
       });
       harness.db
@@ -521,7 +521,7 @@ describe("thread provisioning recovery", () => {
         .run();
       installFakeEnvironmentProvider({
         id: "personal-workspace",
-        pluginId: "bb-plugin-environment-personal-workspace",
+        pluginId: "sandy-plugin-environment-personal-workspace",
         displayName: "Personal workspace",
         requires: {
           projectCheckout: false,

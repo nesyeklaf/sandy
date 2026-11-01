@@ -29,7 +29,7 @@ afterEach(async () => {
 
 describe("git update resolution", () => {
   it("classifies tags and branches, detects a moved branch, and reports current", async () => {
-    const repo = await mkdtemp(join(tmpdir(), "bb-update-resolver-git-"));
+    const repo = await mkdtemp(join(tmpdir(), "sandy-update-resolver-git-"));
     cleanup.push(repo);
     await mkdir(repo, { recursive: true });
     await run("git", ["init", "-q", "-b", "main"], { cwd: repo });
@@ -109,7 +109,7 @@ describe("git semver tag resolution", () => {
   const commitOf = new Map<string, string>();
 
   beforeAll(async () => {
-    template = await mkdtemp(join(tmpdir(), "bb-git-tags-template-"));
+    template = await mkdtemp(join(tmpdir(), "sandy-git-tags-template-"));
     const repo = template;
     await run("git", ["init", "-q", "-b", "main"], { cwd: repo });
     await run("git", ["config", "user.email", "test@example.com"], {
@@ -149,7 +149,7 @@ describe("git semver tag resolution", () => {
   });
 
   async function tagRepo() {
-    const repo = await mkdtemp(join(tmpdir(), "bb-git-tags-"));
+    const repo = await mkdtemp(join(tmpdir(), "sandy-git-tags-"));
     cleanup.push(repo);
     await cp(template, repo, { recursive: true });
     return { repo, commitOf: new Map(commitOf) };
@@ -189,7 +189,7 @@ describe("git semver tag resolution", () => {
   });
 
   it("asks the remote for release tags only, so unrelated tags cost nothing", async () => {
-    const repo = await mkdtemp(join(tmpdir(), "bb-git-many-tags-"));
+    const repo = await mkdtemp(join(tmpdir(), "sandy-git-many-tags-"));
     cleanup.push(repo);
     await run("git", ["init", "-q", "-b", "main"], { cwd: repo });
     await run("git", ["config", "user.email", "test@example.com"], {
@@ -329,7 +329,7 @@ describe("git semver tag resolution", () => {
     }
   });
 
-  it("walks down to the newest release this bb can run", async () => {
+  it("walks down to the newest release this sandy can run", async () => {
     const { repo, commitOf } = await tagRepo();
     const probed: string[] = [];
 
@@ -350,10 +350,10 @@ describe("git semver tag resolution", () => {
               devMode: false,
               reasons: [
                 {
-                  engine: "bb",
+                  engine: "sandy",
                   required: ">=99.0.0",
                   actual: "1.0.0",
-                  message: "requires bb >=99.0.0, running bb is 1.0.0",
+                  message: "requires sandy >=99.0.0, running sandy is 1.0.0",
                 },
               ],
             }
@@ -372,7 +372,7 @@ describe("git semver tag resolution", () => {
       candidate: { version: commitOf.get("v1.1.0") },
       blocked: {
         version: { version: commitOf.get("v2.0.0") },
-        reasons: [{ engine: "bb" }],
+        reasons: [{ engine: "sandy" }],
       },
     });
   });
@@ -395,10 +395,10 @@ describe("git semver tag resolution", () => {
           devMode: false,
           reasons: [
             {
-              engine: "bb",
+              engine: "sandy",
               required: ">=99.0.0",
               actual: "1.0.0",
-              message: "requires bb >=99.0.0, running bb is 1.0.0",
+              message: "requires sandy >=99.0.0, running sandy is 1.0.0",
             },
           ],
         }),
@@ -407,7 +407,7 @@ describe("git semver tag resolution", () => {
       outcome: "current",
       blocked: {
         version: { version: commitOf.get("v1.1.0") },
-        reasons: [{ engine: "bb" }],
+        reasons: [{ engine: "sandy" }],
       },
     });
   });

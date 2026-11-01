@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Environment } from "@bb/domain";
-import type { UpdateEnvironmentRequest } from "@bb/server-contract";
+import type { Environment } from "@sandy/domain";
+import type { UpdateEnvironmentRequest } from "@sandy/server-contract";
 import { sdk } from "@/lib/sdk";
 import {
   beginEnvironmentNameUpdateTransaction,

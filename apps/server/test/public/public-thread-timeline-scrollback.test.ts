@@ -6,14 +6,14 @@ import {
   recoverLoadedTimelineAfterStaleCursor,
   resolveLoadedTimelineSurfaceKey,
   type LoadedTimelineState,
-} from "@bb/client-core";
-import { updateThread } from "@bb/db";
+} from "@sandy/client-core";
+import { updateThread } from "@sandy/db";
 import {
   defaultFeatureFlags,
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
@@ -22,7 +22,7 @@ import {
   type ThreadTimelineResponse,
   type TimelinePaginationCursor,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { createMockHubSocket } from "../helpers/mock-hub-socket.js";
 import { seedEvent, seedThreadFixture } from "../helpers/seed.js";

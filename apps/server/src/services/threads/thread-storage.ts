@@ -1,4 +1,4 @@
-import { getLatestSessionForHost } from "@bb/db";
+import { getLatestSessionForHost } from "@sandy/db";
 import { ApiError } from "../../errors.js";
 import { joinHostPathSegments } from "../lib/host-path.js";
 import type { WorkSessionDeps } from "../../types.js";

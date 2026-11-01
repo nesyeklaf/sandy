@@ -3,12 +3,12 @@ import {
   installSafeProcessDiagnostics,
   installSocketTypeOfServiceGuard,
   writeSafeProcessDiagnosticReport,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { join } from "node:path";
-import { loadServerConfig } from "@bb/config/server";
+import { loadServerConfig } from "@sandy/config/server";
 
 const serverConfig = loadServerConfig();
-const diagnosticsLogsDir = join(serverConfig.BB_DATA_DIR, "logs");
+const diagnosticsLogsDir = join(serverConfig.SANDY_DATA_DIR, "logs");
 
 installSafeProcessDiagnostics({
   logsDir: diagnosticsLogsDir,

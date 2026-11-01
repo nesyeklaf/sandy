@@ -19,14 +19,15 @@
 
 - The server owns product policy: defaults, instructions, manager behavior, tool lists, and thread behavior. The host daemon owns host-local primitives, provider translation, runtime/session management, and workspace execution.
 - Return raw host-local data from the daemon; assemble product behavior on the server. Move responsibility across this boundary only when the change requires it.
+- Deploy only with `scripts/fork/deploy.sh` or `scripts/fork/remote.sh deploy` under `systemd-run --user` (see FORK.md, Deploy). A script started with `nohup` or `setsid` from a Sandy thread stays in the server unit's cgroup and dies with the `systemctl stop` it issues.
 - Increment `HOST_DAEMON_PROTOCOL_VERSION` for changes to server/daemon wire fields, including their types, requiredness, defaults, or meaning, unless compatibility with the previously shipped daemon is deliberately preserved and tested. This covers session payloads, WebSocket messages, and host RPC commands/results. Shared TypeScript builds do not verify compatibility with enrolled machines; the version bump triggers their update.
 
 ## CLI And Plugin API
 
-- Every end-user feature must also be usable through the SDK and `bb` CLI; ship and document these surfaces with the UI.
-- For changes to CLI commands/flags or user-facing configuration (env vars, `.bb/` workspace files, settings), update the discoverable surfaces listed in [docs/cli-guide-and-skill.md](docs/cli-guide-and-skill.md).
-- New public plugin API members (`@get-bb/plugin-sdk/app` exports, `app.slots.*` methods, or `BbPluginApi` properties) require an `experimental_` prefix and an entry in [docs/api_to_audit.md](docs/api_to_audit.md) describing behavior, stabilization criteria, and the core callers that use the same path. Stabilization includes the audit, a project-wide rename, and removal of the entry.
-- Plumbing only bb's own first-party plugins may call, and that is not meant to become public API, uses an `internal_DO_NOT_USE_` prefix instead of `experimental_`, with an entry in [docs/api_to_audit.md](docs/api_to_audit.md) that names its only callers.
+- Every end-user feature must also be usable through the SDK and `sandy` CLI; ship and document these surfaces with the UI.
+- For changes to CLI commands/flags or user-facing configuration (env vars, `.sandy/` workspace files, settings), update the discoverable surfaces listed in [docs/cli-guide-and-skill.md](docs/cli-guide-and-skill.md).
+- New public plugin API members (`@sandy-sdk/plugin-sdk/app` exports, `app.slots.*` methods, or `SandyPluginApi` properties) require an `experimental_` prefix and an entry in [docs/api_to_audit.md](docs/api_to_audit.md) describing behavior, stabilization criteria, and the core callers that use the same path. Stabilization includes the audit, a project-wide rename, and removal of the entry.
+- Plumbing only sandy's own first-party plugins may call, and that is not meant to become public API, uses an `internal_DO_NOT_USE_` prefix instead of `experimental_`, with an entry in [docs/api_to_audit.md](docs/api_to_audit.md) that names its only callers.
 - A plugin API that performs a core action must be the path core uses for that action. Extract core's implementation and route core's controls, shortcuts, and the API through it; never add a parallel plugin-only path. When several surfaces host the action, they share that implementation and one contract test table run against every surface. If core cannot use the API, it is not ready to ship.
 - The Plugin Guide is the only plugin API documentation. Add new surfaces to `plugins/plugin-api-docs/src/surfaces.ts` with their SDK symbols.
 
@@ -34,7 +35,7 @@
 
 - Use targeted `WHERE`/`JOIN` queries instead of loading all rows and filtering in JavaScript. Add indexes only when required by the query.
 - Change Drizzle schemas and regenerate migrations/snapshots; never edit snapshot JSON manually.
-- Never mock the database in tests. Use `createMigratedConnection()` from `@bb/db/testing`, a real SQLite database copied from a template built once by the real migrations. Call `migrate(db)` directly only when testing migrations or an on-disk database.
+- Never mock the database in tests. Use `createMigratedConnection()` from `@sandy/db/testing`, a real SQLite database copied from a template built once by the real migrations. Call `migrate(db)` directly only when testing migrations or an on-disk database.
 
 ## UI
 
@@ -45,10 +46,10 @@
 
 ## Build And Test
 
-- Use Turbo for builds, typechecks, and tests so upstream dependencies run first: `pnpm exec turbo run <task> --filter=@bb/<pkg>`. Use the package's actual name for other scopes. Bypass orchestration only for deliberate investigation; do not invoke package scripts or raw `tsc` routinely.
+- Use Turbo for builds, typechecks, and tests so upstream dependencies run first: `pnpm exec turbo run <task> --filter=@sandy/<pkg>`. Use the package's actual name for other scopes. Bypass orchestration only for deliberate investigation; do not invoke package scripts or raw `tsc` routinely.
 - Run builds and tests on the Node version in `.nvmrc`, the one CI uses. On Node 25 and later the built-in Web Storage shadows jsdom's `localStorage`, so many DOM tests fail locally while CI passes; check `node --version` before you call a red test a regression.
 - Generated modules are gitignored: `packages/templates/src/generated/`, `packages/plugin-build/src/generated/`, and `packages/plugin-sdk/bundled-types/`. Never commit them or add a `--check` mode. New generated modules need Turbo tasks with explicit inputs, outputs, and consumer dependencies.
-- If a plugin cannot resolve `@get-bb/plugin-sdk`, run `pnpm exec turbo run build:types --filter=@get-bb/plugin-sdk`.
+- If a plugin cannot resolve `@sandy-sdk/plugin-sdk`, run `pnpm exec turbo run build:types --filter=@sandy-sdk/plugin-sdk`.
 - Test plausible failure modes; avoid trivial getters/setters and framework wiring. Pipe slow test output to a file and inspect it.
 - Build Vitest projects with `sharedWorkerProjects` from `vitest.shared.ts`. Node tests share workers (`isolate: false`); DOM tests and files/helpers that mutate worker-global state receive isolated workers. Restore any global state a test changes.
 
@@ -58,4 +59,4 @@
 - Use [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): root cause, change, verification that demonstrates the fix, and `Fixes #N` when applicable.
 - End every agent-created issue and PR body with `> AGENT GENERATED`.
 - Ground debugging in observed state: logs, database queries, server APIs, or CLI output. For dev ports, data directories, entity IDs, and the local QA launcher, see [docs/debugging-and-qa.md](docs/debugging-and-qa.md).
-- Never tail the production bb connect gate (`bb-connect`) with `wrangler tail` or the dashboard's live logs. Attaching or detaching a tail resets its Durable Objects and drops every connected tunnel. Instead, query stored Workers Logs or the Cloudflare GraphQL Analytics API (`httpRequestsAdaptiveGroups`, `durableObjectsInvocationsAdaptiveGroups`), and reproduce with `wrangler tail --env staging` against `bb-connect-staging`.
+- Never tail the production sandy connect gate (`sandy-connect`) with `wrangler tail` or the dashboard's live logs. Attaching or detaching a tail resets its Durable Objects and drops every connected tunnel. Instead, query stored Workers Logs or the Cloudflare GraphQL Analytics API (`httpRequestsAdaptiveGroups`, `durableObjectsInvocationsAdaptiveGroups`), and reproduce with `wrangler tail --env staging` against `sandy-connect-staging`.

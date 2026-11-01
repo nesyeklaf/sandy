@@ -1,7 +1,7 @@
 import {
   experimental_hostToolchain as hostToolchain,
   experimental_spawnHostProcess as spawn,
-} from "@get-bb/plugin-sdk/process";
+} from "@sandy-sdk/plugin-sdk/process";
 
 const supervisor = `
 const { spawn } = require('node:child_process');

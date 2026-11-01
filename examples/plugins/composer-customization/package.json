@@ -1,13 +1,13 @@
 {
-  "name": "bb-plugin-composer-customization",
+  "name": "sandy-plugin-composer-customization",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.6.0"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.6.0"
   },
-  "bb": {
+  "sandy": {
     "name": "Composer customization",
     "description": "Reference implementation for every composer customization region.",
     "branding": {
@@ -17,13 +17,13 @@
     "app": "./app.tsx"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "typecheck": "tsrs --noEmit"
   },
   "devDependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",

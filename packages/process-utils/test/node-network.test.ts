@@ -114,7 +114,7 @@ describe("nodeNetworkLaunch", () => {
 });
 
 describe.skipIf(!supportsEnvProxy || process.platform === "win32")(
-  "bb Node launches with proxies",
+  "sandy Node launches with proxies",
   () => {
     it("starts a Node process whose proxy has no scheme", async () => {
       const result = await execHostFile(
@@ -132,7 +132,7 @@ describe.skipIf(!supportsEnvProxy || process.platform === "win32")(
     });
 
     it("starts a forked worker that inherits --use-env-proxy into a scheme-less proxy", async () => {
-      const root = await mkdtemp(join(tmpdir(), "bb-node-network-"));
+      const root = await mkdtemp(join(tmpdir(), "sandy-node-network-"));
       cleanups.push(() => rm(root, { recursive: true, force: true }));
       const worker = join(root, "worker.cjs");
       await writeFile(

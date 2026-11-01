@@ -4,11 +4,11 @@ import {
   experimental_useAppPanel,
   experimental_useFixedTabTarget,
   ThreadChat,
-  useBbContext,
-  useBbNavigate,
+  useSandyContext,
+  useSandyNavigate,
   type ExperimentalTabRegistration,
   type JsonValue,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 type DemoThreadTarget = { kind: "thread"; threadId: string };
 
@@ -25,12 +25,12 @@ function isDemoThreadTarget(value: JsonValue): value is DemoThreadTarget {
 }
 
 function ThreadChatDemoPanel({ subPath }: { subPath: string }) {
-  const { threadId: routeThreadId } = useBbContext();
+  const { threadId: routeThreadId } = useSandyContext();
   const [threadId, setThreadId] = useState(subPath);
   const [focusRequest, setFocusRequest] = useState(0);
   const activeThreadId = threadId || routeThreadId || "";
   const panel = experimental_useAppPanel();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b p-2">
@@ -65,7 +65,7 @@ function ThreadChatDemoPanel({ subPath }: { subPath: string }) {
           className="h-8 cursor-pointer rounded-md border px-2 text-sm hover:bg-surface-recessed"
           onClick={() =>
             navigate.openUrl(
-              "https://github.com/get-bb/bb/tree/main/examples/plugins/thread-chat-demo",
+              "https://github.com/nesyeklaf/sandy/tree/main/examples/plugins/thread-chat-demo",
             )
           }
         >

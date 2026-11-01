@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { BbRequestTimeoutError, DEFAULT_BB_REQUEST_TIMEOUT_MS } from "@bb/sdk";
+import { SandyRequestTimeoutError, DEFAULT_SANDY_REQUEST_TIMEOUT_MS } from "@sandy/sdk";
 import { createPluginRpcCallerSdk } from "../../../src/services/plugins/plugin-rpc-caller.js";
 
 afterEach(() => {
@@ -37,9 +37,9 @@ it("keeps the request timeout when a callRpc caller passes its own signal", asyn
     signal: new AbortController().signal,
   });
   await vi.waitFor(() =>
-    expect(timeout).toHaveBeenCalledWith(DEFAULT_BB_REQUEST_TIMEOUT_MS),
+    expect(timeout).toHaveBeenCalledWith(DEFAULT_SANDY_REQUEST_TIMEOUT_MS),
   );
   elapsed.abort(new DOMException("The operation timed out.", "TimeoutError"));
 
-  await expect(call).rejects.toBeInstanceOf(BbRequestTimeoutError);
+  await expect(call).rejects.toBeInstanceOf(SandyRequestTimeoutError);
 });

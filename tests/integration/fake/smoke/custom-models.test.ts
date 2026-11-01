@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { registerConfiguredAcpProvider } from "../../../../apps/server/test/helpers/provider-registry.js";
-import { formatBbAppConfigPath } from "@bb/config/bb-app-managed-config";
+import { formatSandyAppConfigPath } from "@sandy/config/sandy-app-managed-config";
 import { describe, expect, it } from "vitest";
 import { getAvailableModels } from "../../helpers/api.js";
 import { waitForHostConnected } from "../../helpers/assertions.js";
@@ -25,7 +25,7 @@ describe.sequential("custom provider models integration", () => {
       });
 
       await fs.writeFile(
-        formatBbAppConfigPath(harness.server.config.dataDir),
+        formatSandyAppConfigPath(harness.server.config.dataDir),
         `${JSON.stringify({
           customModels: [
             {

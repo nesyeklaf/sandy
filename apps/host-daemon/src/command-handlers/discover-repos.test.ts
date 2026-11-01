@@ -30,7 +30,7 @@ describe("discoverRepos", () => {
   };
 
   beforeEach(async () => {
-    home = await mkdtemp(join(tmpdir(), "bb-discover-"));
+    home = await mkdtemp(join(tmpdir(), "sandy-discover-"));
   });
 
   afterEach(async () => {

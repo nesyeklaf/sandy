@@ -11,6 +11,8 @@ const builtInThemeIdSchema = z.enum([
   "solarized",
   "gruvbox",
   "catppuccin",
+  "sandy",
+  "sand",
 ]);
 export type BuiltInThemeId = z.infer<typeof builtInThemeIdSchema>;
 
@@ -21,7 +23,7 @@ interface BuiltInThemeMeta {
 }
 
 export const builtInThemes: readonly BuiltInThemeMeta[] = [
-  { id: "default", name: "Default", description: "The standard bb look" },
+  { id: "default", name: "Default", description: "The standard sandy look" },
   { id: "nord", name: "Nord", description: "Cool, muted arctic blues" },
   {
     id: "dracula",
@@ -38,6 +40,16 @@ export const builtInThemes: readonly BuiltInThemeMeta[] = [
     id: "catppuccin",
     name: "Catppuccin",
     description: "Soothing pastel — Latte light, Mocha dark",
+  },
+  {
+    id: "sandy",
+    name: "Sandy",
+    description: "Warm sand and ink with the logo's amber as the accent",
+  },
+  {
+    id: "sand",
+    name: "Sand",
+    description: "Warm sand and ink, no accent color",
   },
 ];
 

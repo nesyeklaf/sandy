@@ -10,30 +10,30 @@ import {
 import type {
   SystemExecutionOptionsModelLoadError,
   SystemProvidersQuery,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   resolveServiceTierOptions,
   type ProviderOptionDescriptor,
   type ReasoningLevel,
   type ServiceTier,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   stripModelBrandPrefix,
   type ProviderPickerOption,
 } from "./model-brand-prefix";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
 import {
   COARSE_POINTER_ICON_SIZE_CLASS,
   COARSE_POINTER_PROVIDER_TAB_SIZE_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
-import { Skeleton } from "@bb/shared-ui/skeleton";
-import { LIST_HOVER_TRANSITION } from "@bb/shared-ui/motion";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
+import { LIST_HOVER_TRANSITION } from "@sandy/shared-ui/motion";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   prefetchSystemExecutionOptions,
   useProviderPreviewExecutionOptions,
@@ -41,13 +41,13 @@ import {
 import { resolveModelCatalogSelection } from "@/hooks/thread-creation-options/model-catalog-selection";
 import { formatModelLabel as formatFallbackModelLabel } from "@/hooks/thread-creation-options/selection-state";
 import { reasoningLevelLabel } from "@/lib/reasoning-labels";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   OPTION_BASE_CLASS_NAME,
   OPTION_INTERACTIVE_CLASS_NAME,
   OPTION_MUTED_CLASS_NAME,
   OPTION_TRIGGER_CONTENT_CLASS_NAME,
-} from "@bb/shared-ui/option-display";
+} from "@sandy/shared-ui/option-display";
 import type { PickerOption } from "./OptionPicker";
 import type { ModelPickerOption } from "./model-picker-option";
 import {
@@ -55,10 +55,10 @@ import {
   splitModelLabelTag,
 } from "./model-picker-menu";
 import { ModelReasoningMenu } from "./ModelReasoningMenuSplit";
-import { searchPickerOptions } from "@bb/shared-ui/picker-search";
+import { searchPickerOptions } from "@sandy/shared-ui/picker-search";
 import {
   useResetPickerScroll,
-} from "@bb/shared-ui/hooks/use-reset-picker-scroll";
+} from "@sandy/shared-ui/hooks/use-reset-picker-scroll";
 import { formatModelLoadErrorText } from "./model-load-error-message";
 import {
   useAppCommandContext,

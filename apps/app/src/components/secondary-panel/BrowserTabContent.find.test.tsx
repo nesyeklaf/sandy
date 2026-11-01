@@ -7,20 +7,20 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH } from "@bb/desktop-contract";
+import { SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH } from "@sandy/desktop-contract";
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserFindInPageRequest,
-  BbDesktopBrowserFindResult,
-  BbDesktopBrowserState,
-  BbDesktopBrowserStopFindInPageRequest,
-} from "@bb/desktop-contract";
-import { defaultAppSettings } from "@bb/domain";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserFindInPageRequest,
+  SandyDesktopBrowserFindResult,
+  SandyDesktopBrowserState,
+  SandyDesktopBrowserStopFindInPageRequest,
+} from "@sandy/desktop-contract";
+import { defaultAppSettings } from "@sandy/domain";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  createBbDesktopApi,
+  createSandyDesktopApi,
   createNoopDesktopBrowserApi,
-} from "@/test/bb-desktop-test-utils";
+} from "@/test/sandy-desktop-test-utils";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import { BrowserTabContent } from "./BrowserTabContent";
 
@@ -60,24 +60,24 @@ const desktopInfo = {
 };
 
 interface FindHarness {
-  api: BbDesktopBrowserApi;
-  emitFindResult: (result: BbDesktopBrowserFindResult) => void;
-  emitState: (state: BbDesktopBrowserState) => void;
+  api: SandyDesktopBrowserApi;
+  emitFindResult: (result: SandyDesktopBrowserFindResult) => void;
+  emitState: (state: SandyDesktopBrowserState) => void;
   findInPage: ReturnType<
-    typeof vi.fn<(r: BbDesktopBrowserFindInPageRequest) => void>
+    typeof vi.fn<(r: SandyDesktopBrowserFindInPageRequest) => void>
   >;
   stopFindInPage: ReturnType<
-    typeof vi.fn<(r: BbDesktopBrowserStopFindInPageRequest) => void>
+    typeof vi.fn<(r: SandyDesktopBrowserStopFindInPageRequest) => void>
   >;
 }
 
 function createFindHarness(): FindHarness {
-  const stateListeners = new Set<(state: BbDesktopBrowserState) => void>();
-  const findListeners = new Set<(result: BbDesktopBrowserFindResult) => void>();
-  const findInPage = vi.fn<(r: BbDesktopBrowserFindInPageRequest) => void>();
+  const stateListeners = new Set<(state: SandyDesktopBrowserState) => void>();
+  const findListeners = new Set<(result: SandyDesktopBrowserFindResult) => void>();
+  const findInPage = vi.fn<(r: SandyDesktopBrowserFindInPageRequest) => void>();
   const stopFindInPage =
-    vi.fn<(r: BbDesktopBrowserStopFindInPageRequest) => void>();
-  const api: BbDesktopBrowserApi = {
+    vi.fn<(r: SandyDesktopBrowserStopFindInPageRequest) => void>();
+  const api: SandyDesktopBrowserApi = {
     ...createNoopDesktopBrowserApi(),
     onState(listener) {
       stateListeners.add(listener);
@@ -104,8 +104,8 @@ function createFindHarness(): FindHarness {
 }
 
 function findResult(
-  overrides: Partial<BbDesktopBrowserFindResult> = {},
-): BbDesktopBrowserFindResult {
+  overrides: Partial<SandyDesktopBrowserFindResult> = {},
+): SandyDesktopBrowserFindResult {
   return {
     tabId: "browser:test",
     requestId: 1,
@@ -117,8 +117,8 @@ function findResult(
 }
 
 function browserState(
-  overrides: Partial<BbDesktopBrowserState> = {},
-): BbDesktopBrowserState {
+  overrides: Partial<SandyDesktopBrowserState> = {},
+): SandyDesktopBrowserState {
   return {
     tabId: "browser:test",
     url: "https://example.com/docs",
@@ -132,7 +132,7 @@ function browserState(
 }
 
 function renderBrowser(harness: FindHarness, initialUrl: string) {
-  window.bbDesktop = createBbDesktopApi(desktopInfo, harness.api);
+  window.sandyDesktop = createSandyDesktopApi(desktopInfo, harness.api);
   return render(
     <AppCommandProvider>
       <BrowserTabContent
@@ -164,7 +164,7 @@ describe("BrowserTabContent find in page", () => {
     cleanup();
     vi.restoreAllMocks();
     window.localStorage.clear();
-    delete window.bbDesktop;
+    delete window.sandyDesktop;
   });
 
   it("opens the find bar from the chord only while the browser pane has focus", () => {
@@ -299,14 +299,14 @@ describe("BrowserTabContent find in page", () => {
     const harness = createFindHarness();
     renderBrowser(harness, "https://example.com/docs");
     pressFindChord(screen.getByLabelText(/Address and search bar/));
-    expect(findInput().maxLength).toBe(BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
+    expect(findInput().maxLength).toBe(SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
 
-    const oversized = "a".repeat(BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH + 10);
+    const oversized = "a".repeat(SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH + 10);
     fireEvent.change(findInput(), { target: { value: oversized } });
     const sent = harness.findInPage.mock.lastCall?.[0];
-    expect(sent?.text).toHaveLength(BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
+    expect(sent?.text).toHaveLength(SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH);
     expect(findInput().value).toHaveLength(
-      BB_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH,
+      SANDY_DESKTOP_BROWSER_MAX_FIND_TEXT_LENGTH,
     );
   });
 

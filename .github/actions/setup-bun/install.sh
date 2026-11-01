@@ -24,7 +24,7 @@ checksum() {
     shasum -a 256 < "$1" | awk '{ print $1 }'
   fi
 }
-install_dir="${RUNNER_TEMP:?RUNNER_TEMP is required}/bb-bun-${version}"
+install_dir="${RUNNER_TEMP:?RUNNER_TEMP is required}/sandy-bun-${version}"
 mkdir -p "${install_dir}"
 archive="${install_dir}/archive.zip"
 if [[ -f "${archive}" && "$(checksum "${archive}")" == "${expected}" ]]; then
@@ -49,8 +49,8 @@ extract_dir="${install_dir}/extracted"
 rm -rf "${extract_dir}"
 mkdir -p "${extract_dir}"
 if [[ "${asset}" == bun-windows-* ]]; then
-  export BB_BUN_ARCHIVE="${archive}" BB_BUN_EXTRACT_DIR="${extract_dir}"
-  powershell -NoProfile -NonInteractive -Command 'Expand-Archive -LiteralPath $env:BB_BUN_ARCHIVE -DestinationPath $env:BB_BUN_EXTRACT_DIR -Force'
+  export SANDY_BUN_ARCHIVE="${archive}" SANDY_BUN_EXTRACT_DIR="${extract_dir}"
+  powershell -NoProfile -NonInteractive -Command 'Expand-Archive -LiteralPath $env:SANDY_BUN_ARCHIVE -DestinationPath $env:SANDY_BUN_EXTRACT_DIR -Force'
   binary="${extract_dir}/${asset%.zip}/bun.exe"
 else
   unzip -q "${archive}" -d "${extract_dir}"

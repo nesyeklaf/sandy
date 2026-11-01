@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { experimental_useRpcQuery as useRpcQuery } from "@get-bb/plugin-sdk/app";
+import { experimental_useRpcQuery as useRpcQuery } from "@sandy-sdk/plugin-sdk/app";
 import {
   OVERVIEW_WINDOWS,
   connectionOverviewContract,
@@ -292,7 +292,7 @@ export function OverviewPage() {
             {overview.totalRows > overview.rows.length ? (
               <p className="text-xs text-muted-foreground">
                 Showing the {overview.rows.length} most urgent of{" "}
-                {overview.totalRows} rows; use bb connections list for all.
+                {overview.totalRows} rows; use sandy connections list for all.
               </p>
             ) : null}
             <RowsTable

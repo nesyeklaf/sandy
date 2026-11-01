@@ -1,6 +1,6 @@
 import { readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import {
   LAST_SERVER_MOVE_FILE_NAME,
@@ -23,8 +23,8 @@ const MOVED_FILE: ServerMovedFile = {
   fromHostId: "host-old",
   toHostId: "host-new",
   toHostName: "desktop",
-  serverUrl: "https://bb.example",
-  oldCopyEntries: ["bb.db", "attachments", "plugins/docs/data.db"],
+  serverUrl: "https://sandy.example",
+  oldCopyEntries: ["sandy.db", "attachments", "plugins/docs/data.db"],
 };
 
 const IMPORT_FILE: ServerImportFile = {
@@ -32,11 +32,11 @@ const IMPORT_FILE: ServerImportFile = {
   kind: "move",
   moveId: "move-1",
   activationToken: "activation-token-0123456789",
-  sourceDataDir: "/home/old/.bb",
+  sourceDataDir: "/home/old/.sandy",
   sourceServerHostId: "host-old",
   targetHostId: "host-new",
   serverUrl: null,
-  importedEntries: ["bb.db", "config.json"],
+  importedEntries: ["sandy.db", "config.json"],
   createdAt: 1_757_000_000_000,
   fixupsAppliedAt: null,
 };

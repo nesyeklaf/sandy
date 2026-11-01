@@ -3,15 +3,15 @@
   "name": "resource-list",
   "type": "registry:ui",
   "title": "resource-list",
-  "description": "BB ui \"resource-list\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-list\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/resource-atoms",
-    "@bb/resource-collection",
-    "@bb/resource-detail-controls",
-    "@bb/resource-detail-sections",
-    "@bb/resource-detail-shell",
-    "@bb/resource-row",
-    "@bb/resource-toolbar"
+    "@sandy/resource-atoms",
+    "@sandy/resource-collection",
+    "@sandy/resource-detail-controls",
+    "@sandy/resource-detail-sections",
+    "@sandy/resource-detail-shell",
+    "@sandy/resource-row",
+    "@sandy/resource-toolbar"
   ],
   "files": [
     {

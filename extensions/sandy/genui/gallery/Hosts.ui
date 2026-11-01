@@ -1,0 +1,9 @@
+Card("Kernel patch run", [Hosts([
+  {host: "web-01.prod", status: "changed", detail: "6.8.0-45 → 6.8.0-47", sources: ["AWX", "CMDB"]},
+  {host: "web-02.prod", status: "changed", detail: "6.8.0-45 → 6.8.0-47", sources: ["AWX", "CMDB"]},
+  {host: "web-03.prod", status: "ok", detail: "Already current", sources: ["AWX", "CMDB"]},
+  {host: "db-01.prod", status: "failed", detail: "apt lock held by unattended-upgrades", log: "data/logs/db-01.txt", sources: ["AWX", "CMDB"]},
+  {host: "db-02.prod", status: "unreachable", detail: "ssh: connect timed out", sources: ["AWX", "CMDB"]},
+  {host: "cache-01.prod", status: "skipped", detail: "Excluded by --limit", sources: ["AWX"]},
+  {host: "legacy-07", status: "failed", detail: "Unsupported release 18.04", sources: ["Ticket OPS-311"]}
+], title: "Kernel patch · 2026-10-21")])

@@ -1,21 +1,21 @@
-import { renderTemplate } from "@bb/templates";
+import { renderTemplate } from "@sandy/templates";
 import {
   getThread,
   listStoredTaskTurnRequestEvents,
   updateThread,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   removeCommandMentionsFromPromptInput,
   type PromptInput,
   type PromptMentionCommandTrigger,
   type Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   countWords,
   displayWidth,
   truncateToWidth,
   truncateToWidthAtWordBoundary,
-} from "@bb/text-utils";
+} from "@sandy/text-utils";
 import type { AppDeps, LoggedWorkSessionDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import {

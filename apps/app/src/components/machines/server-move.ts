@@ -1,12 +1,12 @@
-import { toRecord } from "@bb/core-ui";
-import type { Host, LastServerMove, ServerMoveStepId } from "@bb/domain";
+import { toRecord } from "@sandy/core-ui";
+import type { Host, LastServerMove, ServerMoveStepId } from "@sandy/domain";
 import {
   SERVER_MOVED_ERROR_CODE,
   serverMovedErrorDetailsSchema,
   type ServerMoveHealth,
   type ServerMoveHealthState,
-} from "@bb/host-daemon-contract";
-import { BbHttpError } from "@bb/sdk/browser";
+} from "@sandy/host-daemon-contract";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import {
   serverMoveCheckItemSchema,
   type ServerMoveCheckItem,
@@ -14,10 +14,10 @@ import {
   type ServerMoveCheckSeverity,
   type ServerMoveStatus,
   type ServerMoveStatusResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 export const SERVER_MOVE_POLL_INTERVAL_MS = 1_000;
-export const SERVER_MOVE_ARRIVAL_PARAM = "bbServerMove";
+export const SERVER_MOVE_ARRIVAL_PARAM = "sandyServerMove";
 
 const SERVER_MOVE_BLOCKED_ERROR_CODE = "server_move_blocked";
 
@@ -68,7 +68,7 @@ export function serverMoveStepLabel(
     case "stop-work":
       return "Stopping running work";
     case "update-target":
-      return `Updating bb on ${targetHostName}`;
+      return `Updating sandy on ${targetHostName}`;
     case "export":
       return "Exporting server data";
     case "transfer":
@@ -129,7 +129,7 @@ export function serverMoveBlockedItems(
   error: unknown,
 ): ServerMoveCheckItem[] | null {
   if (
-    !(error instanceof BbHttpError) ||
+    !(error instanceof SandyHttpError) ||
     error.code !== SERVER_MOVE_BLOCKED_ERROR_CODE
   ) {
     return null;
@@ -141,7 +141,7 @@ export function serverMoveBlockedItems(
 
 export function movedServerUrlFromError(error: unknown): string | null {
   if (
-    !(error instanceof BbHttpError) ||
+    !(error instanceof SandyHttpError) ||
     error.status !== 410 ||
     error.code !== SERVER_MOVED_ERROR_CODE
   ) {

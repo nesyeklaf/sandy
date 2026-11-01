@@ -25,7 +25,7 @@ import { MemoryRouter, useNavigate } from "react-router-dom";
 import { AppRoutes } from "./App";
 
 const downloads = await vi.hoisted(async () => {
-  const { createDeferredPromise } = await import("@bb/test-helpers");
+  const { createDeferredPromise } = await import("@sandy/test-helpers");
   return {
     workspace: createDeferredPromise<void>(),
     compose: vi.fn(),

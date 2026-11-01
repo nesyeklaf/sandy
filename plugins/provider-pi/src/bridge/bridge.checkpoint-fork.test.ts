@@ -13,7 +13,7 @@ let sessionDir: string;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-checkpoint-fork-",
+    prefix: "sandy-pi-checkpoint-fork-",
     initialize: true,
   });
   sessionDir = harness.sessionDir;

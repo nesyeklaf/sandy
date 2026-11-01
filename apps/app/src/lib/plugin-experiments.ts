@@ -1,4 +1,4 @@
-import { experimentKeySchema } from "@bb/domain";
+import { experimentKeySchema } from "@sandy/domain";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 
 export function useExperiment(key: string): boolean {

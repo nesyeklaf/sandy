@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { ThreadListEntry } from "@bb/domain";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
+import type { ThreadListEntry } from "@sandy/domain";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
 import { useArchivedThreads } from "@/hooks/queries/thread-queries";
 
 const EMPTY_ENTRIES: ReadonlyMap<string, ThreadListEntry> = new Map();

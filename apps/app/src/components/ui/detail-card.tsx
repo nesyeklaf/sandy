@@ -1,9 +1,9 @@
 import { type CSSProperties, type ReactNode, type UIEventHandler } from "react";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 export const DETAIL_ROW_ICON_CLASS =
-  "size-(--bb-detail-row-icon-size) min-h-0 min-w-0 shrink-0 text-subtle-foreground";
+  "size-(--sandy-detail-row-icon-size) min-h-0 min-w-0 shrink-0 text-subtle-foreground";
 
 function DetailRowIconLabel({
   icon,

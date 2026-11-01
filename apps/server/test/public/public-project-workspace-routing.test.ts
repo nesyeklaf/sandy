@@ -1,5 +1,5 @@
-import { createProjectSource } from "@bb/db";
-import type { HostProviderCommand } from "@bb/host-daemon-contract";
+import { createProjectSource } from "@sandy/db";
+import type { HostProviderCommand } from "@sandy/host-daemon-contract";
 import { describe, expect, it, vi } from "vitest";
 import {
   registerHostRpcResponder,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { experimental_PluginRpcCallError } from "@get-bb/plugin-sdk";
+import { experimental_PluginRpcCallError } from "@sandy-sdk/plugin-sdk";
 import {
   makeWorkspaceMergeBase,
   makeWorkspaceStatus,
@@ -211,7 +211,7 @@ describe("gitStatusErrorMessage", () => {
       gitStatusErrorMessage(
         new experimental_PluginRpcCallError({
           code: "transport_error",
-          message: "bb connect hit a temporary problem",
+          message: "sandy connect hit a temporary problem",
         }),
       ),
     ).toBe("Workspace status unavailable.");

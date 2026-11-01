@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type {
-  BbPluginApi,
+  SandyPluginApi,
   ExperimentalPluginRpcCaller,
   PluginThreadEventPayloads,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   CLIENT_NOTIFICATION_CHANNEL,
   NOTIFICATION_BODY_MAX_LENGTH,
@@ -74,7 +74,7 @@ export interface PushSender {
 }
 
 export interface CreatePushSenderArgs {
-  bb: BbPluginApi;
+  sandy: SandyPluginApi;
   getNotificationLevel(thread: {
     id: string;
     parentThreadId: string | null;
@@ -141,7 +141,7 @@ function describeCaller(caller: ExperimentalPluginRpcCaller): string {
 
 export function createPushSender(args: CreatePushSenderArgs): PushSender {
   const {
-    bb,
+    sandy,
     coalesceMs = DEFAULT_COALESCE_MS,
     now = Date.now,
   } = args;
@@ -175,7 +175,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
       pending.delete(threadId);
       if (!entry || !running) return;
       const flush = flushThread(threadId, entry).catch((error: unknown) => {
-        bb.log.error(
+        sandy.log.error(
           `Push notification flush failed for thread ${threadId}: ${error instanceof Error ? error.message : String(error)}`,
         );
       });
@@ -202,7 +202,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
     if (kinds.size === 0) return null;
     let interaction: PendingInteraction | null = null;
     if (kinds.has("pending-interaction")) {
-      const interactions = await bb.sdk.threads.interactions.list({
+      const interactions = await sandy.sdk.threads.interactions.list({
         threadId: thread.id,
       });
       interaction =
@@ -231,7 +231,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
     threadId: string,
   ): Promise<string | null> {
     try {
-      return threadDisplayTitle(await bb.sdk.threads.get({ threadId }));
+      return threadDisplayTitle(await sandy.sdk.threads.get({ threadId }));
     } catch {
       return null;
     }
@@ -243,7 +243,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
   ): Promise<void> {
     let thread: ThreadResponse;
     try {
-      thread = await bb.sdk.threads.get({ threadId });
+      thread = await sandy.sdk.threads.get({ threadId });
     } catch {
       return;
     }
@@ -286,7 +286,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
     if (config.webEnabled) channels.push("web");
     if (config.desktopEnabled) channels.push("desktop");
     if (channels.length > 0) {
-      bb.realtime.publish(CLIENT_NOTIFICATION_CHANNEL, {
+      sandy.realtime.publish(CLIENT_NOTIFICATION_CHANNEL, {
         id: randomUUID(),
         title,
         body,
@@ -310,7 +310,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
     let thread: OutgoingNotification["thread"] = null;
     if (input.threadId !== undefined) {
       const threadId = input.threadId;
-      const found = await bb.sdk.threads.get({ threadId }).catch(() => null);
+      const found = await sandy.sdk.threads.get({ threadId }).catch(() => null);
       if (found === null || found.deletedAt !== null) {
         throw new SendNotificationError(
           "thread_not_found",
@@ -331,7 +331,7 @@ export function createPushSender(args: CreatePushSenderArgs): PushSender {
     inFlight.add(tracked);
     void tracked.finally(() => inFlight.delete(tracked));
     const channels = await delivery;
-    bb.log.info(
+    sandy.log.info(
       `Sent a notification from ${describeCaller(caller)} to ${channels.length === 0 ? "no channel" : channels.join(", ")}`,
     );
     return channels;

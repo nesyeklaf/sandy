@@ -28,29 +28,29 @@ it("passes the exact bootstrap and arguments to the installer without shell expa
     "the enrollment command is a POSIX sh pipeline",
   );
   const script = enrolledInstallerScript(
-    'printf "%s\\n%s\\n%s" "$1" "$2" "$BB_ENROLLMENT"',
+    'printf "%s\\n%s\\n%s" "$1" "$2" "$SANDY_ENROLLMENT"',
     bootstrap,
   );
   const result = spawnSync("sh", ["-c", script], { encoding: "utf8" });
   expect(result.status).toBe(0);
   expect(result.stdout).toBe(
-    `--bootstrap-env\nBB_ENROLLMENT\n${JSON.stringify(bootstrap)}`,
+    `--bootstrap-env\nSANDY_ENROLLMENT\n${JSON.stringify(bootstrap)}`,
   );
 });
 
 it("builds the transient curl command from the enrollment bootstrap", () => {
   expect(manualEnrollmentCommand(bootstrap)).toBe(
-    "curl -sSL --fail-with-body -H 'X-BB-Enrollment: short-lived-code' 'https://test.example.test/install.sh' | sh",
+    "curl -sSL --fail-with-body -H 'X-SANDY-Enrollment: short-lived-code' 'https://test.example.test/install.sh' | sh",
   );
 });
 
 it("builds the transient PowerShell command from the enrollment bootstrap", () => {
   expect(manualEnrollmentPowerShellCommand(bootstrap)).toBe(
-    "irm -Headers @{ 'X-BB-Enrollment' = 'short-lived-code' } 'https://test.example.test/install.ps1' | iex",
+    "irm -Headers @{ 'X-SANDY-Enrollment' = 'short-lived-code' } 'https://test.example.test/install.ps1' | iex",
   );
   expect(
     manualEnrollmentPowerShellCommand({ ...bootstrap, credential: "it's" }),
-  ).toContain("'X-BB-Enrollment' = 'it''s'");
+  ).toContain("'X-SANDY-Enrollment' = 'it''s'");
 });
 
 it("wraps the Windows installer and its bootstrap in literal PowerShell strings", () => {
@@ -59,16 +59,16 @@ it("wraps the Windows installer and its bootstrap in literal PowerShell strings"
     bootstrap,
   );
   const lines = script.split("\n");
-  const start = lines.indexOf("[IO.File]::WriteAllText($bbInstaller, @'");
+  const start = lines.indexOf("[IO.File]::WriteAllText($sandyInstaller, @'");
   expect(lines[start + 1]).toBe("console.log('$env:USERNAME `n');");
   expect(lines[start + 2]).toBe("'@, (New-Object Text.UTF8Encoding $false))");
   expect(lines[start + 3]).toBe(
-    `$env:BB_ENROLLMENT = '${JSON.stringify(bootstrap).replaceAll("'", "''")}'`,
+    `$env:SANDY_ENROLLMENT = '${JSON.stringify(bootstrap).replaceAll("'", "''")}'`,
   );
   expect(script).toContain(
-    "& $bbNode.Source $bbInstaller --bootstrap-env BB_ENROLLMENT",
+    "& $sandyNode.Source $sandyInstaller --bootstrap-env SANDY_ENROLLMENT",
   );
-  expect(script).toContain("Remove-Item Env:BB_ENROLLMENT");
+  expect(script).toContain("Remove-Item Env:SANDY_ENROLLMENT");
 });
 
 it("refuses a Windows installer that would end the PowerShell here-string early", () => {
@@ -90,7 +90,7 @@ it("prints the server's enrollment error and stops before running the installer"
     process.platform === "win32",
     "the enrollment command is a POSIX sh pipeline",
   );
-  const directory = mkdtempSync(join(tmpdir(), "bb-enrollment-command-"));
+  const directory = mkdtempSync(join(tmpdir(), "sandy-enrollment-command-"));
   try {
     const curl = join(directory, "curl");
     writeFileSync(

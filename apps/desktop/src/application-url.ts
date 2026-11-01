@@ -1,4 +1,4 @@
-import { parseApplicationUrl } from "@bb/domain/application-url";
+import { parseApplicationUrl } from "@sandy/domain/application-url";
 import { shell } from "electron";
 
 export async function openApplicationUrl(value: unknown): Promise<void> {

@@ -4,8 +4,8 @@ import { sql } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { authApiKeys, authUsers, type DbConnection } from "@bb/db";
-import { readOrCreateSecretFile } from "@bb/secret-storage";
+import { authApiKeys, authUsers, type DbConnection } from "@sandy/db";
+import { readOrCreateSecretFile } from "@sandy/secret-storage";
 import { z } from "zod";
 import type { ServerLogger } from "../types.js";
 import { runSerialized } from "./lib/async-deduper.js";
@@ -16,8 +16,8 @@ export const DAEMON_HOST_CONFIG_ID = "daemon-host";
 const ENROLL_KEY_TTL_SECONDS = 60 * 15;
 const DAEMON_KEY_CACHE_TTL_MS = 30_000;
 const DAEMON_KEY_CACHE_MAX_ENTRIES = 1024;
-const MACHINE_AUTH_SYSTEM_USER_ID = "bb-machine-auth-system-user";
-const MACHINE_AUTH_SYSTEM_USER_EMAIL = "machine-auth@bb.internal";
+const MACHINE_AUTH_SYSTEM_USER_ID = "sandy-machine-auth-system-user";
+const MACHINE_AUTH_SYSTEM_USER_EMAIL = "machine-auth@sandy.internal";
 const MACHINE_AUTH_SYSTEM_USER_NAME = "Machine Auth System";
 
 const machineAuthSchema = {
@@ -155,7 +155,7 @@ export async function createMachineAuthService(
       apiKey([
         {
           configId: DAEMON_ENROLL_CONFIG_ID,
-          defaultPrefix: "bbde_",
+          defaultPrefix: "sandyde_",
           enableMetadata: true,
           keyExpiration: {
             defaultExpiresIn: ENROLL_KEY_TTL_SECONDS,
@@ -165,7 +165,7 @@ export async function createMachineAuthService(
         },
         {
           configId: DAEMON_HOST_CONFIG_ID,
-          defaultPrefix: "bbdh_",
+          defaultPrefix: "sandydh_",
           enableMetadata: true,
           references: "user",
           requireName: false,

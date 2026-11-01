@@ -1,5 +1,5 @@
 {
-  "name": "@bb/config",
+  "name": "@sandy/config",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -83,10 +83,10 @@
       "types": "./src/public-url.ts",
       "default": "./src/public-url.ts"
     },
-    "./bb-app-managed-config": {
-      "source": "./src/bb-app-managed-config.ts",
-      "types": "./src/bb-app-managed-config.ts",
-      "default": "./src/bb-app-managed-config.ts"
+    "./sandy-app-managed-config": {
+      "source": "./src/sandy-app-managed-config.ts",
+      "types": "./src/sandy-app-managed-config.ts",
+      "default": "./src/sandy-app-managed-config.ts"
     },
     "./managed-json-file": {
       "source": "./src/managed-json-file.ts",
@@ -151,13 +151,13 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
-    "@bb/process-utils": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/process-utils": "workspace:*",
     "fs-native-extensions": "1.5.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2"

@@ -1,6 +1,6 @@
 import { createStore } from "jotai";
 import { QueryObserver } from "@tanstack/react-query";
-import type { ChangedMessage } from "@bb/domain";
+import type { ChangedMessage } from "@sandy/domain";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -51,8 +51,8 @@ vi.mock("./sdk", () => ({
   },
 }));
 
-vi.mock("./bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("./sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("./ws", () => ({

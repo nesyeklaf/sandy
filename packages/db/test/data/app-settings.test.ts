@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import {
   getAppKeybindingOverrides,
   getAppSettings,

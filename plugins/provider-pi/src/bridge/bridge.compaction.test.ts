@@ -11,7 +11,7 @@ let harness: FakePiBridgeHarness;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-compaction-",
+    prefix: "sandy-pi-compaction-",
     initialize: true,
   });
 });

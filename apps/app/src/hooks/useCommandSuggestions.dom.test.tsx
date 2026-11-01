@@ -2,9 +2,9 @@
 
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PromptMentionCommandTrigger } from "@bb/domain";
-import type { CommandListResponse } from "@bb/server-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+import type { PromptMentionCommandTrigger } from "@sandy/domain";
+import type { CommandListResponse } from "@sandy/server-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { useCommandSuggestions } from "./useCommandSuggestions";

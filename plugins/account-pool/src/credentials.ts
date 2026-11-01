@@ -1,8 +1,8 @@
-import { experimental_execHostFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFile } from "@sandy-sdk/plugin-sdk/process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { JsonValue } from "@get-bb/plugin-sdk";
+import type { JsonValue } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 const execFileAsync = experimental_execHostFile;
@@ -152,7 +152,7 @@ export async function importCodexCredentials(): Promise<ImportedCodexCredentials
     if (error instanceof Error && error.message.includes("ChatGPT account id"))
       throw error;
     throw new Error(
-      "Codex OAuth credentials were not found or usable. Run `codex login` on the bb server host, then retry.",
+      "Codex OAuth credentials were not found or usable. Run `codex login` on the sandy server host, then retry.",
     );
   }
 }
@@ -232,7 +232,7 @@ export async function importClaudeCredentials(): Promise<ImportedClaudeCredentia
   }
   if (credentials === null) {
     throw new Error(
-      "Claude Code OAuth credentials were not found. Run `claude /login` on the bb server host, then retry.",
+      "Claude Code OAuth credentials were not found. Run `claude /login` on the sandy server host, then retry.",
     );
   }
   return { ...credentials, ...(await readAccountIdentity()) };

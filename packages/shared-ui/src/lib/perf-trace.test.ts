@@ -6,7 +6,7 @@ import {
   traceOverlayOpen,
 } from "./perf-trace";
 
-const CLOCK_KEY = Symbol.for("bb.perf-trace.clock.v1");
+const CLOCK_KEY = Symbol.for("sandy.perf-trace.clock.v1");
 
 interface RecordedMeasure {
   name: string;
@@ -22,14 +22,14 @@ function recordMeasures(): RecordedMeasure[] {
   vi.spyOn(performance, "measure").mockImplementation((name, options) => {
     if (typeof options === "object" && options !== null) {
       const detail = options.detail as {
-        bb: { phase: string };
+        sandy: { phase: string };
         devtools: { track: string };
       };
       recorded.push({
         name,
         start: Number(options.start),
         end: Number(options.end),
-        phase: detail.bb.phase,
+        phase: detail.sandy.phase,
         track: detail.devtools.track,
       });
     }
@@ -61,16 +61,16 @@ describe("perf trace spans", () => {
     span.end("paint");
 
     expect(measures.map((m) => [m.name, m.phase])).toEqual([
-      ["bb:switch:input", "input"],
-      ["bb:switch:render", "render"],
-      ["bb:switch:paint", "paint"],
-      ["bb:switch", "total"],
+      ["sandy:switch:input", "input"],
+      ["sandy:switch:render", "render"],
+      ["sandy:switch:paint", "paint"],
+      ["sandy:switch", "total"],
     ]);
     expect(measures[1]?.start).toBe(measures[0]?.end);
     expect(measures[3]?.start).toBe(span.startedAt);
     expect(measures[3]?.end).toBe(measures[2]?.end);
     expect(measures[3]?.track).toBe("Interactions");
-    expect(performance.getEntriesByName("bb:switch")).toHaveLength(0);
+    expect(performance.getEntriesByName("sandy:switch")).toHaveLength(0);
   });
 
   it("emits nothing after a span is abandoned", () => {
@@ -81,7 +81,7 @@ describe("perf trace spans", () => {
     span.mark("render");
     span.end("paint");
 
-    expect(measures.map((m) => m.name)).toEqual(["bb:switch:input"]);
+    expect(measures.map((m) => m.name)).toEqual(["sandy:switch:input"]);
   });
 
   it("starts an interaction at the last input only while that input is recent", () => {
@@ -103,9 +103,9 @@ describe("perf trace spans", () => {
     await vi.waitFor(() => expect(measures).toHaveLength(3));
 
     expect(measures.map((m) => m.name)).toEqual([
-      "bb:open:render",
-      "bb:open:paint",
-      "bb:open",
+      "sandy:open:render",
+      "sandy:open:paint",
+      "sandy:open",
     ]);
     expect(measures[0]?.start).toBe(inputAt);
     expect(measures[2]?.start).toBe(inputAt);

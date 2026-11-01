@@ -1,4 +1,4 @@
-import { findSkillFiles } from "@bb/skill-index";
+import { findSkillFiles } from "@sandy/skill-index";
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import semver from "semver";
@@ -8,7 +8,7 @@ import {
   isPluginOwnedIconPath,
   pluginPackageJsonSchema,
   type UiCodeThemeDeclaration,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { resolvePluginCodeThemePath } from "../system/code-themes.js";
 import {
   readPluginPackageJsonFile,
@@ -17,7 +17,7 @@ import {
   resolveManifestPath,
   assertValidPluginCompactIconSvg,
   assertValidPluginIconSvg,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 
 export interface PluginManifest {
   id: string;
@@ -34,8 +34,8 @@ export interface PluginManifest {
     };
     icons: ReadonlyMap<string, string>;
   };
-  bbEngineRange: string | undefined;
-  bbPluginSdkRange: string | undefined;
+  sandyEngineRange: string | undefined;
+  sandyPluginSdkRange: string | undefined;
   providerCatalog: Array<{ id: string; displayName: string }>;
   serverEntry: string;
   appEntry: string | undefined;
@@ -80,25 +80,25 @@ export async function readPluginManifest(
       `invalid plugin package.json${path ? ` (${path})` : ""}: ${issue?.message ?? "unknown error"}`,
     );
   }
-  const { name: packageName, version, engines, bb } = parsed.data;
+  const { name: packageName, version, engines, sandy } = parsed.data;
   if (
-    engines?.bbPluginSdk !== undefined &&
-    semver.validRange(engines.bbPluginSdk) === null
+    engines?.sandyPluginSdk !== undefined &&
+    semver.validRange(engines.sandyPluginSdk) === null
   ) {
     throw new Error(
-      "invalid plugin package.json (engines.bbPluginSdk): must be a valid semver range",
+      "invalid plugin package.json (engines.sandyPluginSdk): must be a valid semver range",
     );
   }
   const serverEntry = await resolveManifestEntryFile(
     rootDir,
-    bb.server,
-    "bb.server",
+    sandy.server,
+    "sandy.server",
   );
-  const hostEntry = bb.host
-    ? await resolveManifestEntryFile(rootDir, bb.host, "bb.host")
+  const hostEntry = sandy.host
+    ? await resolveManifestEntryFile(rootDir, sandy.host, "sandy.host")
     : undefined;
-  const skillsRootPaths = (bb.skills ?? ["skills"]).map((entry) =>
-    resolveManifestPath(rootDir, entry.replace(/\/\*$/, ""), "bb.skills"),
+  const skillsRootPaths = (sandy.skills ?? ["skills"]).map((entry) =>
+    resolveManifestPath(rootDir, entry.replace(/\/\*$/, ""), "sandy.skills"),
   );
   const resolveBrandingAsset = (entry: string, label: string): string => {
     if (!/\.(svg|png|webp)$/i.test(entry)) {
@@ -109,42 +109,42 @@ export async function readPluginManifest(
     return resolveManifestPath(rootDir, entry, label);
   };
   const brandingLogo =
-    bb.branding.logo === undefined
+    sandy.branding.logo === undefined
       ? undefined
       : {
           lightPath: resolveBrandingAsset(
-            bb.branding.logo.light,
-            "bb.branding.logo.light",
+            sandy.branding.logo.light,
+            "sandy.branding.logo.light",
           ),
-          ...(bb.branding.logo.dark === undefined
+          ...(sandy.branding.logo.dark === undefined
             ? {}
             : {
                 darkPath: resolveBrandingAsset(
-                  bb.branding.logo.dark,
-                  "bb.branding.logo.dark",
+                  sandy.branding.logo.dark,
+                  "sandy.branding.logo.dark",
                 ),
               }),
         };
   const brandingCompactIconPath =
-    bb.branding.icon !== undefined && isPluginOwnedIconPath(bb.branding.icon)
-      ? resolveBrandingAsset(bb.branding.icon, "bb.branding.icon")
+    sandy.branding.icon !== undefined && isPluginOwnedIconPath(sandy.branding.icon)
+      ? resolveBrandingAsset(sandy.branding.icon, "sandy.branding.icon")
       : undefined;
   for (const [label, assetPath] of [
-    ["bb.branding.icon", brandingCompactIconPath],
-    ["bb.branding.logo.light", brandingLogo?.lightPath],
-    ["bb.branding.logo.dark", brandingLogo?.darkPath],
+    ["sandy.branding.icon", brandingCompactIconPath],
+    ["sandy.branding.logo.light", brandingLogo?.lightPath],
+    ["sandy.branding.logo.dark", brandingLogo?.darkPath],
   ] as const) {
     if (assetPath === undefined) continue;
     const realAsset = await resolveManifestAssetFile(rootDir, assetPath, label);
-    if (label === "bb.branding.icon") {
+    if (label === "sandy.branding.icon") {
       assertValidPluginCompactIconSvg(await readFile(realAsset), label);
     }
   }
   const brandingIcons = new Map<string, string>();
   for (const [name, entry] of Object.entries(
-    bb.branding.experimental_icons ?? {},
+    sandy.branding.experimental_icons ?? {},
   )) {
-    const label = `bb.branding.experimental_icons["${name}"]`;
+    const label = `sandy.branding.experimental_icons["${name}"]`;
     const realAsset = await resolveManifestAssetFile(
       rootDir,
       resolveManifestPath(rootDir, entry, label),
@@ -154,14 +154,14 @@ export async function readPluginManifest(
     brandingIcons.set(name, realAsset);
   }
   const themeIds = new Set<string>();
-  const themes = (bb.themes ?? []).map((theme) => {
+  const themes = (sandy.themes ?? []).map((theme) => {
     if (themeIds.has(theme.id)) {
-      throw new Error(`manifest bb.themes contains duplicate id "${theme.id}"`);
+      throw new Error(`manifest sandy.themes contains duplicate id "${theme.id}"`);
     }
     themeIds.add(theme.id);
     if (!theme.css.toLowerCase().endsWith(".css")) {
       throw new Error(
-        `manifest bb.themes theme "${theme.id}" must point at a .css file`,
+        `manifest sandy.themes theme "${theme.id}" must point at a .css file`,
       );
     }
     const codeTheme = theme.codeTheme ?? null;
@@ -192,7 +192,7 @@ export async function readPluginManifest(
       cssPath: resolveManifestPath(
         rootDir,
         theme.css,
-        `bb.themes.${theme.id}.css`,
+        `sandy.themes.${theme.id}.css`,
       ),
       codeTheme,
       codeThemePaths,
@@ -203,7 +203,7 @@ export async function readPluginManifest(
       await stat(theme.cssPath);
     } catch {
       throw new Error(
-        `manifest bb.themes theme "${theme.id}" points at a missing file`,
+        `manifest sandy.themes theme "${theme.id}" points at a missing file`,
       );
     }
     for (const [side, path] of Object.entries(theme.codeThemePaths)) {
@@ -211,7 +211,7 @@ export async function readPluginManifest(
         await stat(path);
       } catch {
         throw new Error(
-          `manifest bb.themes theme "${theme.id}" codeTheme.${side} points at a missing file`,
+          `manifest sandy.themes theme "${theme.id}" codeTheme.${side} points at a missing file`,
         );
       }
     }
@@ -220,24 +220,24 @@ export async function readPluginManifest(
     id: derivePluginId(packageName),
     packageName,
     version,
-    name: bb.name,
-    description: bb.description,
+    name: sandy.name,
+    description: sandy.description,
     branding: {
-      ...(bb.branding.icon === undefined ? {} : { icon: bb.branding.icon }),
+      ...(sandy.branding.icon === undefined ? {} : { icon: sandy.branding.icon }),
       ...(brandingCompactIconPath === undefined
         ? {}
         : { compactIconPath: brandingCompactIconPath }),
       ...(brandingLogo === undefined ? {} : { logo: brandingLogo }),
       icons: brandingIcons,
     },
-    bbEngineRange: engines?.bb,
-    bbPluginSdkRange: engines?.bbPluginSdk,
-    providerCatalog: (bb.experimental_providers ?? []).map(
+    sandyEngineRange: engines?.sandy,
+    sandyPluginSdkRange: engines?.sandyPluginSdk,
+    providerCatalog: (sandy.experimental_providers ?? []).map(
       ({ id, displayName }) => ({ id, displayName }),
     ),
     serverEntry,
-    appEntry: bb.app
-      ? resolveManifestPath(rootDir, bb.app, "bb.app")
+    appEntry: sandy.app
+      ? resolveManifestPath(rootDir, sandy.app, "sandy.app")
       : undefined,
     hostEntry,
     themes,

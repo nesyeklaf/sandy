@@ -2,8 +2,8 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { installTestPluginRuntime } from "@get-bb/plugin-sdk/testing/app";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { installTestPluginRuntime } from "@sandy-sdk/plugin-sdk/testing/app";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { makeWorkspaceMergeBase, makeWorkspaceStatus } from "../../testing.js";
 import { formatBranchComparison, GitStatusRowView } from "./GitInfoRows.js";
 

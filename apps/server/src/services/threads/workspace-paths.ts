@@ -2,8 +2,8 @@ import {
   getHostPathSegments,
   isHostPathWithin,
   joinHostPath,
-} from "@bb/domain";
-import { PLUGIN_PROCESS_DATA_KINDS } from "@bb/process-utils";
+} from "@sandy/domain";
+import { PLUGIN_PROCESS_DATA_KINDS } from "@sandy/process-utils";
 
 const LEGACY_WORKSPACE_ROOT_NAMES = ["worktrees", "personal-workspaces"];
 
@@ -22,7 +22,7 @@ function isInsideDataDirChild(args: {
   );
 }
 
-export function isBbManagedWorkspacePath(args: {
+export function isSandyManagedWorkspacePath(args: {
   dataDir: string;
   path: string;
 }): boolean {

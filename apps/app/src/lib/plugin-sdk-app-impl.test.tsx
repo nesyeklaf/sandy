@@ -3,7 +3,7 @@
 import {
   createApplicationLinkApprovals,
   APPLICATION_LINK_APPROVALS_STORAGE_KEY,
-} from "@bb/domain/application-link-approvals";
+} from "@sandy/domain/application-link-approvals";
 import { ApplicationLinkApprovalsSettings } from "@/components/settings/ApplicationLinkApprovalsSettings";
 import { appQueryClient as approvalQueryClient } from "./app-query-client";
 
@@ -270,7 +270,7 @@ describe("plugin SDK navigation components", () => {
     const openUrl = vi.fn(() => true);
     const results: boolean[] = [];
     function Probe() {
-      const navigate = pluginSdkAppImplementation.useBbNavigate();
+      const navigate = pluginSdkAppImplementation.useSandyNavigate();
       return (
         <button
           type="button"
@@ -305,7 +305,7 @@ describe("plugin SDK navigation components", () => {
       makeThreadResponse({ id: "thr_main", projectId: "proj_demo" }),
     );
     function Probe() {
-      const navigate = pluginSdkAppImplementation.useBbNavigate();
+      const navigate = pluginSdkAppImplementation.useSandyNavigate();
       const location = useLocation();
       return (
         <>

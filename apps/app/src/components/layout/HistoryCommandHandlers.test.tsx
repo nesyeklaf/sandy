@@ -20,7 +20,7 @@ import {
   defaultAppSettings,
   type AppDefaultKeybinding,
   type KeyboardCommandId,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandRunner,
@@ -67,8 +67,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("@/components/ui/sidebar.js", () => ({

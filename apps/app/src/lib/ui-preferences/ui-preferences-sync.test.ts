@@ -1,13 +1,13 @@
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { createStore } from "jotai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BbHttpError } from "@bb/sdk/browser";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import {
   defaultUiPreferences,
   type UiPreferenceKey,
   type UiPreferenceValue,
-} from "@bb/domain";
-import type { UiPreferencesResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { UiPreferencesResponse } from "@sandy/server-contract";
 import { invalidateUiPreferences } from "@/hooks/cache-owners/system-cache-effects";
 import { uiPreferencesQueryOptions } from "@/hooks/queries/system-queries";
 import { createSyncedPreferenceAtom } from "./synced-preference-atom";
@@ -26,9 +26,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/sdk", async () => {
-  const actual = await import("@bb/sdk/browser");
+  const actual = await import("@sandy/sdk/browser");
   return {
-    BbHttpError: actual.BbHttpError,
+    SandyHttpError: actual.SandyHttpError,
     sdk: {
       system: {
         uiPreferences: {
@@ -73,8 +73,8 @@ function getCachedUiPreferences(
   return client.getQueryData(uiPreferencesQueryOptions().queryKey);
 }
 
-function conflict(currentRevision: number): BbHttpError {
-  return new BbHttpError({
+function conflict(currentRevision: number): SandyHttpError {
+  return new SandyHttpError({
     body: { code: "ui_preference_conflict", details: { currentRevision } },
     code: "ui_preference_conflict",
     message: "UI preference changed on another client",

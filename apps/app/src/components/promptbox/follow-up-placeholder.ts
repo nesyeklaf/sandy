@@ -1,5 +1,5 @@
-import type { ThreadRuntimeDisplayStatus } from "@bb/domain";
-import { assertNever } from "@bb/core-ui";
+import type { ThreadRuntimeDisplayStatus } from "@sandy/domain";
+import { assertNever } from "@sandy/core-ui";
 
 export function getFollowUpPromptPlaceholder(
   displayStatus: ThreadRuntimeDisplayStatus,

@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { AgentRuntime } from "@bb/agent-runtime";
-import type { HostDaemonDaemonWsMessage } from "@bb/host-daemon-contract";
-import type { HostWorkspace } from "@bb/host-workspace";
-import { createDeferredPromise, makeTempDir } from "@bb/test-helpers";
+import type { AgentRuntime } from "@sandy/agent-runtime";
+import type { HostDaemonDaemonWsMessage } from "@sandy/host-daemon-contract";
+import type { HostWorkspace } from "@sandy/host-workspace";
+import { createDeferredPromise, makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HostDaemonLogger } from "../logger.js";
 import { RuntimeManager } from "../runtime-manager.js";
@@ -297,7 +297,7 @@ function createHarnessWithOptions(
     createRuntime: () => runtime,
     provisionWorkspace: async () => workspace,
     shellEnv: {
-      BB_BASE_ENV: "1",
+      SANDY_BASE_ENV: "1",
     },
   });
   const manager = new TerminalManager({
@@ -354,7 +354,7 @@ function shellQuote(value: string): string {
 
 async function openTerminal(
   harness: TerminalManagerHarness,
-  contributedEnv: import("@bb/host-daemon-contract").HostDaemonContributedEnvEntry[] = [],
+  contributedEnv: import("@sandy/host-daemon-contract").HostDaemonContributedEnvEntry[] = [],
 ): Promise<FakeTerminalPty> {
   await harness.manager.handleMessage({
     type: "terminal.open",
@@ -459,8 +459,8 @@ describe("TerminalManager", () => {
       rows: 30,
     });
     expect(harness.adapter.spawned[0]?.args.env).toMatchObject({
-      BB_BASE_ENV: "1",
-      BB_TERMINAL_SESSION_ID: "term-1",
+      SANDY_BASE_ENV: "1",
+      SANDY_TERMINAL_SESSION_ID: "term-1",
       COLORTERM: "truecolor",
       DISABLE_AUTO_TITLE: "true",
       FORCE_HYPERLINK: "1",
@@ -478,7 +478,7 @@ describe("TerminalManager", () => {
     expect(harness.runtimeManager.get("env-1")?.terminals.has("term-1")).toBe(
       true,
     );
-    await harness.runtimeManager.replaceBaseShellEnv({ BB_BASE_ENV: "2" });
+    await harness.runtimeManager.replaceBaseShellEnv({ SANDY_BASE_ENV: "2" });
     expect(harness.runtimeManager.get("env-1")).toBeDefined();
     expect(harness.runtime.shutdown).not.toHaveBeenCalled();
   });
@@ -568,13 +568,13 @@ describe("TerminalManager", () => {
       }),
     );
 
-    await harness.runtimeManager.replaceBaseShellEnv({ BB_BASE_ENV: "2" });
+    await harness.runtimeManager.replaceBaseShellEnv({ SANDY_BASE_ENV: "2" });
     expect(harness.runtimeManager.get("env-1")).toBeDefined();
     expect(harness.runtime.shutdown).not.toHaveBeenCalled();
   });
 
   it("opens a PTY in a host path without an environment", async () => {
-    const cwd = await makeTempDir("bb-terminal-host-path-");
+    const cwd = await makeTempDir("sandy-terminal-host-path-");
     const harness = createHarness();
 
     await harness.manager.handleMessage({
@@ -887,9 +887,9 @@ describe("TerminalManager", () => {
     ]);
   });
 
-  it("scrubs inherited bb runtime env vars before spawning a terminal", async () => {
-    vi.stubEnv("BB_DATA_DIR", "/tmp/leaked-bb-data");
-    vi.stubEnv("BB_HOST_DAEMON_PORT", "38887");
+  it("scrubs inherited sandy runtime env vars before spawning a terminal", async () => {
+    vi.stubEnv("SANDY_DATA_DIR", "/tmp/leaked-sandy-data");
+    vi.stubEnv("SANDY_HOST_DAEMON_PORT", "38887");
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("OPENAI_API_KEY", "external-secret");
 
@@ -898,18 +898,18 @@ describe("TerminalManager", () => {
 
     const env = harness.adapter.spawned[0]?.args.env;
     expect(env).toMatchObject({
-      BB_BASE_ENV: "1",
-      BB_TERMINAL_SESSION_ID: "term-1",
+      SANDY_BASE_ENV: "1",
+      SANDY_TERMINAL_SESSION_ID: "term-1",
       OPENAI_API_KEY: "external-secret",
     });
-    expect(env?.BB_DATA_DIR).toBeUndefined();
-    expect(env?.BB_HOST_DAEMON_PORT).toBeUndefined();
+    expect(env?.SANDY_DATA_DIR).toBeUndefined();
+    expect(env?.SANDY_HOST_DAEMON_PORT).toBeUndefined();
     expect(env?.NODE_ENV).toBeUndefined();
   });
 
   it("makes every available node-pty spawn-helper executable", async () => {
     const logger = createFakeLogger();
-    const packageDirectory = await makeTempDir("bb-node-pty-package-");
+    const packageDirectory = await makeTempDir("sandy-node-pty-package-");
     const buildNativePath = path.join(
       packageDirectory,
       "build",
@@ -963,7 +963,7 @@ describe("TerminalManager", () => {
 
   it("logs and skips when no node-pty spawn-helper is present", async () => {
     const logger = createFakeLogger();
-    const packageDirectory = await makeTempDir("bb-node-pty-package-");
+    const packageDirectory = await makeTempDir("sandy-node-pty-package-");
     const buildHelperPath = path.join(
       packageDirectory,
       "build",
@@ -1506,7 +1506,7 @@ describe("TerminalManager", () => {
         closeReason: "user",
       },
     ]);
-    await harness.runtimeManager.replaceBaseShellEnv({ BB_BASE_ENV: "2" });
+    await harness.runtimeManager.replaceBaseShellEnv({ SANDY_BASE_ENV: "2" });
     expect(harness.runtimeManager.get("env-1")).toBeUndefined();
     expect(harness.runtime.shutdown).toHaveBeenCalledTimes(1);
   });
@@ -1558,7 +1558,7 @@ describe("TerminalManager", () => {
         closeReason: "user",
       },
     ]);
-    await harness.runtimeManager.replaceBaseShellEnv({ BB_BASE_ENV: "2" });
+    await harness.runtimeManager.replaceBaseShellEnv({ SANDY_BASE_ENV: "2" });
     expect(harness.runtimeManager.get("env-1")).toBeUndefined();
   });
 
@@ -1633,8 +1633,8 @@ describe("TerminalManager", () => {
       return;
     }
 
-    const workspacePath = await makeTempDir("bb-terminal-manager-real-");
-    const targetPath = await makeTempDir("bb-terminal-manager-target-");
+    const workspacePath = await makeTempDir("sandy-terminal-manager-real-");
+    const targetPath = await makeTempDir("sandy-terminal-manager-target-");
     const expectedWorkspacePath = await fs.realpath(workspacePath);
     const expectedTargetPath = await fs.realpath(targetPath);
     const messages: HostDaemonDaemonWsMessage[] = [];

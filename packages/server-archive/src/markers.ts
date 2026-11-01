@@ -1,6 +1,6 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import { lastServerMoveSchema } from "@bb/domain";
+import { lastServerMoveSchema } from "@sandy/domain";
 import { z } from "zod";
 import { readJsonFile, writeJsonFileAtomically } from "./json-file.js";
 import { isServerOwnedPath } from "./server-owned-paths.js";

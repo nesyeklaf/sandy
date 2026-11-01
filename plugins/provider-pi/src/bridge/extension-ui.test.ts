@@ -13,7 +13,7 @@ let nextId = 2000;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-ext-ui-",
+    prefix: "sandy-pi-ext-ui-",
     initialize: true,
     processLog: true,
   });

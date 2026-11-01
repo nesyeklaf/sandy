@@ -1,4 +1,4 @@
-import { getMessageLinkPath } from "@bb/client-core";
+import { getMessageLinkPath } from "@sandy/client-core";
 import { getThreadRoutePath } from "@/lib/route-paths";
 import { decideThreadDrop } from "@/lib/split-drag";
 import { splitLayoutAtom } from "./atoms";

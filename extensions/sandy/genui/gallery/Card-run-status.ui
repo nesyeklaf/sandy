@@ -1,0 +1,20 @@
+$openOnly = false
+slices = Load("data/run/slices.json")
+done = slices.filter(s => s.status == "done").length
+failed = slices.filter(s => s.status == "failed")
+shown = $openOnly ? slices.filter(s => s.status != "done") : slices
+Card("Run: rate limiting for lookups", [
+  Steps([
+    {title: "Plan", detail: "Approved", status: "done"},
+    {title: "Implement", detail: `${done} of ${slices.length} slices done, ${failed.length} failed`, status: "current"},
+    {title: "Verify"},
+    {title: "Review"},
+    {title: "Ship"}
+  ]),
+  Progress(done, max: slices.length, label: "Slices done"),
+  Toggle($openOnly, "Hide finished slices"),
+  Table(["#", "Slice", "State"], shown.map(s => [s.n, s.title, Badge(s.status, tone: s.status == "failed" ? "bad" : s.status == "running" ? "info" : "neutral")])),
+  Threads(),
+  failed.length > 0 ? Callout(failed.map(s => `Slice ${s.n}: ${s.note}`).join(" "), tone: "warn", title: "Waiting for you") : null,
+  failed.length > 0 ? Row([Button("Retry the failed slice with a stronger model"), Button("Skip the failed slice and continue"), Button("Stop the run", variant: "destructive")]) : null
+])

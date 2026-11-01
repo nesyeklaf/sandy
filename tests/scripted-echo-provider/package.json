@@ -1,15 +1,15 @@
 {
-  "name": "bb-plugin-scripted-echo-provider",
+  "name": "sandy-plugin-scripted-echo-provider",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.3"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Scripted echo provider (test harness)",
-    "description": "The echo bridge plus the scripted directives bb's runtime and integration suites drive. Not a product plugin.",
+    "description": "The echo bridge plus the scripted directives sandy's runtime and integration suites drive. Not a product plugin.",
     "branding": {
       "icon": "Zap"
     },
@@ -21,7 +21,7 @@
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {

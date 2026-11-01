@@ -50,7 +50,7 @@ it.each(
 )(
   "reaps $connection agents on $shutdown and refuses new agents during shutdown",
   async ({ connection, shutdown }) => {
-    const dir = mkdtempSync(join(tmpdir(), "bb-acp-shutdown-"));
+    const dir = mkdtempSync(join(tmpdir(), "sandy-acp-shutdown-"));
     const readyFile = join(dir, "ready");
     const stoppingFile = join(dir, "stopping");
     const lateFile = join(dir, "late");
@@ -202,7 +202,7 @@ input.on("line", (line) => {
 it.each(shutdowns)(
   "cancels an active turn on %s so the agent ends the commands it started",
   async (shutdown) => {
-    const dir = mkdtempSync(join(tmpdir(), "bb-acp-shutdown-turn-"));
+    const dir = mkdtempSync(join(tmpdir(), "sandy-acp-shutdown-turn-"));
     const childFile = join(dir, "child");
     const agentFile = join(dir, "agent.mjs");
     writeFileSync(

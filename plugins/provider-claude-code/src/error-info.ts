@@ -1,7 +1,7 @@
 import {
   type ProviderErrorCategory,
   type ProviderErrorInfo,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type {
   ClaudeAssistantMessageError,
   ClaudeResultSubtype,

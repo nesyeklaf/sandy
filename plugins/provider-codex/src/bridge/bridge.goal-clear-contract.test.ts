@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import { cleanupBridgeProcessTest } from "./bridge-process.test-support.js";
 import { stubFakeCodexAppServer } from "./fake-codex-app-server-harness.js";
@@ -33,7 +33,7 @@ it.each([
 ])(
   "returns the goal-clear contract for $name",
   async (scenario) => {
-    workspaceDir = mkdtempSync(join(tmpdir(), "bb-goal-contract-"));
+    workspaceDir = mkdtempSync(join(tmpdir(), "sandy-goal-contract-"));
     processLogPath = join(workspaceDir, "process.log");
     const requestLogPath = join(workspaceDir, "requests.ndjson");
     const scriptPath = join(workspaceDir, "scenario.json");

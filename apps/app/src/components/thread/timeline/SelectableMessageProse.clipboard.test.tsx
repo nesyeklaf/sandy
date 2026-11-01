@@ -507,8 +507,8 @@ it.each([
 
 it.each([
   [
-    "/Users/michael/.bb/thread-storage/thr_v5h7wv4b4f/sanity-check.sh",
-    "file:///Users/michael/.bb/thread-storage/thr_v5h7wv4b4f/sanity-check.sh",
+    "/Users/michael/.sandy/thread-storage/thr_v5h7wv4b4f/sanity-check.sh",
+    "file:///Users/michael/.sandy/thread-storage/thr_v5h7wv4b4f/sanity-check.sh",
     "sanity-check.sh",
   ],
   [

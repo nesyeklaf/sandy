@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Paragraph, PhrasingContent, Root } from "mdast";
-import type { PromptMentionResource } from "@bb/domain";
+import type { PromptMentionResource } from "@sandy/domain";
 import {
   remarkPromptMentions,
   substitutePromptMentions,
@@ -117,7 +117,7 @@ describe("substitutePromptMentions", () => {
 describe("remarkPromptMentions", () => {
   function mentionNodes(children: readonly PhrasingContent[]) {
     return children.filter(
-      (child) => child.data?.hName === "bb-prompt-mention",
+      (child) => child.data?.hName === "sandy-prompt-mention",
     );
   }
 

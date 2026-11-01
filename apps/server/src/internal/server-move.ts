@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
-import { isLoopbackAddress } from "@bb/config/loopback";
+import { isLoopbackAddress } from "@sandy/config/loopback";
 import type { Context, Hono } from "hono";
 import type { AppDeps } from "../types.js";
 import { ApiError } from "../errors.js";
@@ -26,7 +26,7 @@ export interface RegisterInternalServerMoveRoutesArgs {
 
 const DOWNLOAD_CONTENT_TYPES: Record<ServerMoveDownloadKind, string> = {
   archive: "application/octet-stream",
-  "bb-app": "application/gzip",
+  "sandy-app": "application/gzip",
 };
 
 async function serverMoveDownloadResponse(
@@ -67,7 +67,7 @@ async function serverMoveDownloadResponse(
       "cache-control": "no-store",
       "content-length": String(stats.size),
       "content-type": DOWNLOAD_CONTENT_TYPES[kind],
-      "x-bb-artifact-sha256": lookup.download.sha256,
+      "x-sandy-artifact-sha256": lookup.download.sha256,
     },
   });
 }
@@ -100,7 +100,7 @@ export function registerInternalServerMoveRoutes(
     serverMoveDownloadResponse(context, args.serverMove, "archive"),
   );
 
-  app.get("/server-move/:moveId/bb-app.tgz", (context) =>
-    serverMoveDownloadResponse(context, args.serverMove, "bb-app"),
+  app.get("/server-move/:moveId/sandy-app.tgz", (context) =>
+    serverMoveDownloadResponse(context, args.serverMove, "sandy-app"),
   );
 }

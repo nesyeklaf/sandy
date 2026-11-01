@@ -15,7 +15,7 @@ import {
   closePanesForThreadsAtom,
   type ClosePanesForThreadsResult,
 } from "@/lib/split-layout/atoms";
-import type { Thread } from "@bb/domain";
+import type { Thread } from "@sandy/domain";
 import {
   useArchiveThreadAndChildren,
   useDeleteThread,
@@ -30,7 +30,7 @@ import { sdk } from "@/lib/sdk";
 import { getPluginBoundSdk } from "@/lib/plugin-bound-sdk";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useRouteState } from "@/hooks/useRouteState";
-import { useDialogState } from "@bb/shared-ui/use-dialog-state";
+import { useDialogState } from "@sandy/shared-ui/use-dialog-state";
 import { showMutationErrorToast } from "@/lib/mutation-errors";
 import { getThreadDisplayTitle } from "@/lib/thread-title";
 import {
@@ -48,15 +48,15 @@ import {
 } from "@/components/dialogs/ThreadArchiveDialog";
 import { ArchivedThreadToastDescription } from "@/components/thread/ArchivedThreadToastDescription";
 import { destroyPersistedBrowserViewsForThread } from "@/components/secondary-panel/browserViewVisibilityCoordinator";
-import { getThreadReadToggleAction } from "@bb/client-core";
+import { getThreadReadToggleAction } from "@sandy/client-core";
 import { getRootComposeRoutePath, getThreadRoutePath } from "@/lib/route-paths";
-import { getDesktopBrowserApi } from "@/lib/bb-desktop";
+import { getDesktopBrowserApi } from "@/lib/sandy-desktop";
 import { useRouteNavigate } from "@/components/ui/app-route-anchor";
 import { resolveThread } from "@/lib/cached-thread";
 import { CORE_THREAD_ACTIONS } from "@/lib/thread-actions/core-thread-actions";
 import { ThreadActionCollectors } from "@/lib/thread-actions/thread-action-registry";
 import { planThreadSelection } from "@/lib/thread-selection-plan";
-import type { ThreadCascadeAction } from "@bb/server-contract";
+import type { ThreadCascadeAction } from "@sandy/server-contract";
 
 export interface ThreadActionsContextValue {
   archiveEnvironmentThreads: (environmentId: string) => Promise<void>;

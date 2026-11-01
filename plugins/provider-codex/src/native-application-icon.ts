@@ -1,8 +1,8 @@
-import { experimental_execHostFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFile } from "@sandy-sdk/plugin-sdk/process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { sanitizeInheritedChildProcessEnv } from "@get-bb/plugin-sdk/provider-bridge";
+import { sanitizeInheritedChildProcessEnv } from "@sandy-sdk/plugin-sdk/provider-bridge";
 
 const execFileAsync = experimental_execHostFile;
 
@@ -46,7 +46,7 @@ export async function resolveNativeApplicationIconDataUrl(
     if (!iconFile || path.posix.basename(iconFile) !== iconFile) return null;
     const iconFileName =
       path.posix.extname(iconFile) === "" ? `${iconFile}.icns` : iconFile;
-    tempDirectory = await mkdtemp(path.join(tmpdir(), "bb-codex-app-icon-"));
+    tempDirectory = await mkdtemp(path.join(tmpdir(), "sandy-codex-app-icon-"));
     await execFileAsync(
       "/usr/bin/qlmanage",
       [

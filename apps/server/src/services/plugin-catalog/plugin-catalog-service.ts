@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import {
   PLUGIN_CATALOG_CATEGORIES as BUILTIN_DISCOVERY_CATEGORIES,
   type PluginMarketplaceCategory,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   deletePluginMarketplace,
   getInstalledPlugin,
@@ -20,7 +20,7 @@ import {
   type DbConnection,
   type InstalledPluginRow,
   type PluginMarketplaceRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   type InstalledPlugin,
   type PluginCatalogAuthor,
@@ -32,7 +32,7 @@ import {
   type PluginCatalogStatus,
   type PluginMarketplace,
   type PluginMarketplaceRefreshResult,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { brandingAssetHash } from "../plugins/app-bundle.js";
 import {
   builtinPluginSource,
@@ -293,11 +293,11 @@ export function createPluginCatalogService(deps: {
   }
 
   function compatibilityProblem(ranges: {
-    bbRange: string | undefined;
+    sandyRange: string | undefined;
     sdkRange: string | undefined;
   }): string | null {
     const compatibility = evaluateCompatibility({
-      bbRange: ranges.bbRange,
+      sandyRange: ranges.sandyRange,
       sdkRange: ranges.sdkRange,
       appVersion: deps.appVersion,
     });
@@ -331,8 +331,8 @@ export function createPluginCatalogService(deps: {
     return {
       manifest,
       problem: compatibilityProblem({
-        bbRange: manifest.bbEngineRange,
-        sdkRange: manifest.bbPluginSdkRange,
+        sandyRange: manifest.sandyEngineRange,
+        sdkRange: manifest.sandyPluginSdkRange,
       }),
     };
   }
@@ -410,8 +410,8 @@ export function createPluginCatalogService(deps: {
       manifest === null
         ? null
         : compatibilityProblem({
-            bbRange: manifest.bbEngineRange,
-            sdkRange: manifest.bbPluginSdkRange,
+            sandyRange: manifest.sandyEngineRange,
+            sdkRange: manifest.sandyPluginSdkRange,
           });
     const metadata = catalogEntryMetadata({
       manifest: catalog,
@@ -855,7 +855,7 @@ export function createPluginCatalogService(deps: {
           const name = materialized.catalog.name;
           if (isReservedMarketplace(name)) {
             throw new Error(
-              `marketplace name "${name}" is reserved for a marketplace that ships with bb`,
+              `marketplace name "${name}" is reserved for a marketplace that ships with sandy`,
             );
           }
           if (getPluginMarketplace(deps.db, name) !== undefined) {

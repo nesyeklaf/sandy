@@ -5,7 +5,7 @@ import {
   environmentSchema,
   type Environment,
   type EnvironmentStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   commitActionResponseSchema,
   updateEnvironmentRequestSchema,
@@ -19,7 +19,7 @@ import {
   type UpdateEnvironmentRequest,
   type WorkspacePathListResponse,
   type SystemEnvironmentProvider,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export interface EnvironmentActionArgs {

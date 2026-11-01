@@ -3,7 +3,7 @@ import { getLocalStorage } from "@/lib/browser-storage";
 
 export const PLUGINS_BROWSE_PANEL_STATE_ID = "plugins-browse";
 
-const LEGACY_PLUGIN_WORKSPACE_STORAGE_KEY = "bb.plugins.workspace.tabs";
+const LEGACY_PLUGIN_WORKSPACE_STORAGE_KEY = "sandy.plugins.workspace.tabs";
 
 const legacyPluginWorkspaceSchema = z.object({
   tabs: z.array(z.string().min(1)).max(100),

@@ -1,12 +1,12 @@
 import {
   isAbsoluteFilePathWithinRoot,
   normalizeAbsoluteFilePath,
-} from "@bb/shared-ui/lib/absolute-file-path";
+} from "@sandy/shared-ui/lib/absolute-file-path";
 import {
   createFilePreviewLineRange,
   type FilePreviewLineRange,
-} from "@bb/client-core";
-import type { WorkspaceOpenTargetId } from "@bb/host-daemon-contract";
+} from "@sandy/client-core";
+import type { WorkspaceOpenTargetId } from "@sandy/host-daemon-contract";
 
 export interface MarkdownPreviewLocalFileLink {
   lineRange: FilePreviewLineRange | null;

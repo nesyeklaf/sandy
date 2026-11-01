@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 type BridgeProcessArgs = string[];
 
-const BRIDGE_WORKER_BUNDLE_FILE_NAME = "bb-provider-bridge-worker.mjs";
+const BRIDGE_WORKER_BUNDLE_FILE_NAME = "sandy-provider-bridge-worker.mjs";
 
 function sourceTypeScriptProcessArgs(sourcePath: string): BridgeProcessArgs {
   return [
@@ -21,7 +21,7 @@ export function resolveBridgeWorkerProcessArgs(args: {
     return [resolve(args.bridgeBundleDir, BRIDGE_WORKER_BUNDLE_FILE_NAME)];
   }
   const sourceEntry = fileURLToPath(
-    import.meta.resolve("@bb/provider-bridge-protocol/bridge-worker-entry"),
+    import.meta.resolve("@sandy/provider-bridge-protocol/bridge-worker-entry"),
   );
   return sourceEntry.endsWith(".ts")
     ? sourceTypeScriptProcessArgs(sourceEntry)

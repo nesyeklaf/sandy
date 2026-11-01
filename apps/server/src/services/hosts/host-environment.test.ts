@@ -1,4 +1,4 @@
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import {
   createConnection,
   migrate,
@@ -6,8 +6,8 @@ import {
   noopNotifier,
   getHost,
   setAppSettings,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import {
   copyFile,
   mkdtemp,
@@ -47,7 +47,7 @@ process.exit(0);
 
 it("gives every host user environment while forwarding automatic gh credentials only to non-primary hosts", async () => {
   const db = createConnection(":memory:");
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-backfilled-env-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-backfilled-env-"));
   try {
     migrate(db);
     upsertHost(db, noopNotifier, { id: "legacy-remote", name: "Remote" });
@@ -155,7 +155,7 @@ it("gives every host user environment while forwarding automatic gh credentials 
 
 it("forwards automatic gh credentials to every machine when the server has no local host daemon", async () => {
   const db = createMigratedConnection();
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-serverless-env-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-serverless-env-"));
   try {
     upsertHost(db, noopNotifier, { id: "remote", name: "Remote" });
     const bin = join(dataDir, "bin");

@@ -1,4 +1,4 @@
-import { parseApplicationUrl } from "@bb/domain/application-url";
+import { parseApplicationUrl } from "@sandy/domain/application-url";
 import { openApplicationUrl, applicationLinksEnabled } from "./application-url";
 import {
   createContext,
@@ -8,7 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
-import { getBbDesktopInfo, isDesktopBrowserAvailable } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo, isDesktopBrowserAvailable } from "@/lib/sandy-desktop";
 import { shellOpenExternal } from "@/lib/native-shell";
 import {
   openUrlByPreference,
@@ -36,7 +36,7 @@ export function openUrlInExternalBrowser(url: string): void {
     openApplicationUrl(url);
     return;
   }
-  const desktopInfo = getBbDesktopInfo();
+  const desktopInfo = getSandyDesktopInfo();
   if (desktopInfo !== null) {
     desktopInfo.openExternalUrl(url);
     return;

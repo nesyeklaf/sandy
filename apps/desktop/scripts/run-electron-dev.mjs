@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   resolveCurrentDevInstanceConfig,
   toDevProcessEnv,
-} from "@bb/config/runtime";
+} from "@sandy/config/runtime";
 import { forwardSignalsAndMirrorExit } from "./child-process-helpers.mjs";
 
 const require = createRequire(import.meta.url);
@@ -14,7 +14,7 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDirectory, "..", "..", "..");
 
 function resolveDesktopUserDataDir(env, dataDir) {
-  const rawUserDataDir = env.BB_DESKTOP_USER_DATA_DIR?.trim();
+  const rawUserDataDir = env.SANDY_DESKTOP_USER_DATA_DIR?.trim();
   if (rawUserDataDir === undefined || rawUserDataDir.length === 0) {
     return join(dataDir, "desktop");
   }
@@ -28,14 +28,14 @@ function createElectronAppEnv(env, config) {
     baseEnv: env,
     config,
   });
-  childEnv.BB_DESKTOP_NODE_EXEC_PATH = process.execPath;
+  childEnv.SANDY_DESKTOP_NODE_EXEC_PATH = process.execPath;
   delete childEnv.ELECTRON_RUN_AS_NODE;
   return childEnv;
 }
 
 // Detect whether `pnpm dev` is already serving the Vite app on its port. When it
 // is, the desktop shell loads that URL (live source + HMR) instead of the built
-// UI; when it is not, the desktop falls back to starting its own bb-app runtime.
+// UI; when it is not, the desktop falls back to starting its own sandy-app runtime.
 async function isViteDevServerReachable(appUrl) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), VITE_PROBE_TIMEOUT_MS);
@@ -59,27 +59,27 @@ const desktopUserDataDir = resolveDesktopUserDataDir(childEnv, dataDir);
 const appUrl = `http://localhost:${devConfig.ports.appPort}`;
 const viteReachable = await isViteDevServerReachable(appUrl);
 if (viteReachable) {
-  childEnv.BB_DESKTOP_APP_URL = appUrl;
+  childEnv.SANDY_DESKTOP_APP_URL = appUrl;
 }
 
-process.stdout.write(`@bb/desktop: instance ${devConfig.instanceId}\n`);
-process.stdout.write(`@bb/desktop: data ${dataDir}\n`);
+process.stdout.write(`@sandy/desktop: instance ${devConfig.instanceId}\n`);
+process.stdout.write(`@sandy/desktop: data ${dataDir}\n`);
 process.stdout.write(
-  `@bb/desktop: server http://127.0.0.1:${devConfig.ports.serverPort}\n`,
+  `@sandy/desktop: server http://127.0.0.1:${devConfig.ports.serverPort}\n`,
 );
 process.stdout.write(
-  `@bb/desktop: daemon http://127.0.0.1:${devConfig.ports.hostDaemonPort}\n`,
+  `@sandy/desktop: daemon http://127.0.0.1:${devConfig.ports.hostDaemonPort}\n`,
 );
 process.stdout.write(
   viteReachable
-    ? `@bb/desktop: app ${appUrl} (Vite dev server — live reload)\n`
-    : `@bb/desktop: app (own bb-app runtime — no Vite dev server on ${appUrl})\n`,
+    ? `@sandy/desktop: app ${appUrl} (Vite dev server — live reload)\n`
+    : `@sandy/desktop: app (own sandy-app runtime — no Vite dev server on ${appUrl})\n`,
 );
-process.stdout.write(`@bb/desktop: user-data ${desktopUserDataDir}\n`);
+process.stdout.write(`@sandy/desktop: user-data ${desktopUserDataDir}\n`);
 
 // Extra Chromium/Electron switches for dev automation (e.g.
-// BB_DESKTOP_ELECTRON_ARGS="--remote-debugging-port=9223" for CDP-driven QA).
-const extraElectronArgs = (process.env.BB_DESKTOP_ELECTRON_ARGS ?? "")
+// SANDY_DESKTOP_ELECTRON_ARGS="--remote-debugging-port=9223" for CDP-driven QA).
+const extraElectronArgs = (process.env.SANDY_DESKTOP_ELECTRON_ARGS ?? "")
   .split(" ")
   .map((arg) => arg.trim())
   .filter((arg) => arg.length > 0);

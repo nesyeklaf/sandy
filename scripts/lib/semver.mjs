@@ -1,6 +1,6 @@
 // Semver parsing, comparison, and bump derivation shared by the repo's version
-// bump scripts (scripts/bump-version.mjs for bb-app/@bb/desktop,
-// scripts/bump-plugin-sdk.mjs for @get-bb/plugin-sdk). Kept dependency-free so
+// bump scripts (scripts/bump-version.mjs for sandy-app/@sandy/desktop,
+// scripts/bump-plugin-sdk.mjs for @sandy-sdk/plugin-sdk). Kept dependency-free so
 // the release workflow can run it without an install step.
 const semverPattern =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u;

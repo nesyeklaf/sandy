@@ -7,9 +7,9 @@ import {
   type PluginThreadActionItemInput,
   type PluginThreadActionRegistration,
   type PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk";
-import { threadParentNotificationsSchema } from "@bb/domain";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy-sdk/plugin-sdk";
+import { threadParentNotificationsSchema } from "@sandy/domain";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { useThreadActions } from "@/components/thread/ThreadActionsProvider";
 import { useRouteState } from "@/hooks/useRouteState";
 import { copyToClipboardWithToast } from "@/lib/clipboard";

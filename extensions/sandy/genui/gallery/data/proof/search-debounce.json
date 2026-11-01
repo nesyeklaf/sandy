@@ -1,0 +1,39 @@
+{
+  "title": "PR 214: debounce the search box",
+  "limitations": [
+    "Safari on iOS was not run; the typing timer is assumed to behave as in Chrome."
+  ],
+  "criteria": [
+    {
+      "name": "Typing “quarterly invoice” sends 3 requests instead of 17",
+      "status": "passed",
+      "basis": "observed",
+      "by": "builder",
+      "method": "Dev server, network panel, typed at normal speed"
+    },
+    {
+      "name": "The results always match the last text typed",
+      "status": "passed",
+      "basis": "tested",
+      "run": "vitest run search-box.test.ts: 12 passed"
+    },
+    {
+      "name": "Enter searches at once, without waiting for the timer",
+      "status": "passed",
+      "basis": "read",
+      "note": "SearchBox.tsx line 58 clears the timer and calls search() directly"
+    },
+    {
+      "name": "A slow response never overwrites a newer one",
+      "status": "claimed",
+      "basis": "reported",
+      "by": "worker",
+      "note": "The worker says it added a request counter; not run or read"
+    },
+    {
+      "name": "Search feels responsive on an iPhone",
+      "status": "untested",
+      "basis": "assumed"
+    }
+  ]
+}

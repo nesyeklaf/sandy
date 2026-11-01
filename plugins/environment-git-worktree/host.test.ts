@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { promisify } from "node:util";
-import { experimental_createHostEntryHarness } from "@get-bb/plugin-sdk/testing/host";
+import { experimental_createHostEntryHarness } from "@sandy-sdk/plugin-sdk/testing/host";
 import {
   afterAll,
   beforeAll,
@@ -29,7 +29,7 @@ const execFileAsync = promisify(execFile);
 let repositoryTemplate: string;
 
 beforeAll(async () => {
-  repositoryTemplate = await mkdtemp(join(tmpdir(), "bb-worktree-template-"));
+  repositoryTemplate = await mkdtemp(join(tmpdir(), "sandy-worktree-template-"));
   await git(repositoryTemplate, "init", "--initial-branch=main");
   await writeFile(join(repositoryTemplate, "README.md"), "hello\n");
   await git(repositoryTemplate, "add", ".");
@@ -56,10 +56,10 @@ async function git(cwd: string, ...args: string[]): Promise<string> {
     cwd,
     env: {
       ...process.env,
-      GIT_AUTHOR_NAME: "bb",
-      GIT_AUTHOR_EMAIL: "bb@example.com",
-      GIT_COMMITTER_NAME: "bb",
-      GIT_COMMITTER_EMAIL: "bb@example.com",
+      GIT_AUTHOR_NAME: "sandy",
+      GIT_AUTHOR_EMAIL: "sandy@example.com",
+      GIT_COMMITTER_NAME: "sandy",
+      GIT_COMMITTER_EMAIL: "sandy@example.com",
     },
   });
   return result.stdout;
@@ -73,7 +73,7 @@ async function createSourceRepository(
   sourcePath: string;
   dataDir: string;
 }> {
-  const root = await mkdtemp(join(tmpdir(), "bb-worktree-plugin-"));
+  const root = await mkdtemp(join(tmpdir(), "sandy-worktree-plugin-"));
   onTestFinished(() => rm(root, { recursive: true, force: true }));
   const sourcePath = join(root, repositoryName);
   const dataDir = join(root, "plugin-data");
@@ -90,7 +90,7 @@ async function createDetachedSingleBranchRepository(
   sourcePath: string;
   dataDir: string;
 }> {
-  const root = await mkdtemp(join(tmpdir(), "bb-worktree-plugin-detached-"));
+  const root = await mkdtemp(join(tmpdir(), "sandy-worktree-plugin-detached-"));
   onTestFinished(() => rm(root, { recursive: true, force: true }));
   const originPath = join(root, "origin");
   const sourcePath = join(root, "repo");
@@ -160,7 +160,7 @@ describe.concurrent("worktree host entry", () => {
           operationId: "stale-base",
           sourcePath: clone,
           pathKey: "stale-base",
-          branchName: "bb/child",
+          branchName: "sandy/child",
         }),
         baseBranch: { kind: "named", name: base },
       });
@@ -210,7 +210,7 @@ describe.concurrent("worktree host entry", () => {
             operationId: "local-work",
             sourcePath: clone,
             pathKey: "local-work",
-            branchName: "bb/child",
+            branchName: "sandy/child",
           }),
           baseBranch:
             base === "default"
@@ -261,7 +261,7 @@ describe.concurrent("worktree host entry", () => {
             operationId: "offline",
             sourcePath: clone,
             pathKey: "offline",
-            branchName: "bb/offline",
+            branchName: "sandy/offline",
           }),
           baseBranch:
             base === "default"
@@ -307,7 +307,7 @@ describe.concurrent("worktree host entry", () => {
             operationId: "offline-ahead",
             sourcePath: clone,
             pathKey: "offline-ahead",
-            branchName: "bb/offline-ahead",
+            branchName: "sandy/offline-ahead",
           }),
           baseBranch:
             base === "default"
@@ -341,7 +341,7 @@ describe.concurrent("worktree host entry", () => {
           operationId: "offline-explicit",
           sourcePath: clone,
           pathKey: "offline-explicit",
-          branchName: "bb/offline-explicit",
+          branchName: "sandy/offline-explicit",
         }),
         baseBranch: { kind: "named", name: "origin/main" },
       });
@@ -373,7 +373,7 @@ describe.concurrent("worktree host entry", () => {
         { mode: 0o755 },
       );
       await git(clone, "config", "core.sshCommand", sshPath);
-      await git(clone, "remote", "set-url", "origin", "ssh://bb.invalid/repo");
+      await git(clone, "remote", "set-url", "origin", "ssh://sandy.invalid/repo");
       const harness = createHarness(dataDir);
       const controller = new AbortController();
       const created = harness
@@ -384,7 +384,7 @@ describe.concurrent("worktree host entry", () => {
               operationId: "cancelled-fetch",
               sourcePath: clone,
               pathKey: "cancelled-fetch",
-              branchName: "bb/cancelled-fetch",
+              branchName: "sandy/cancelled-fetch",
             }),
             baseBranch: { kind: "named", name: "main" },
           },
@@ -418,7 +418,7 @@ describe.concurrent("worktree host entry", () => {
       await git(sourcePath, "fetch", "origin");
       await git(sourcePath, "config", "branch.autoSetupMerge", "always");
       await git(sourcePath, "config", "core.autocrlf", "true");
-      const branchName = "bb/config-lock";
+      const branchName = "sandy/config-lock";
       if (existingBranch) {
         await git(
           sourcePath,
@@ -605,7 +605,7 @@ describe.concurrent("worktree host entry", () => {
           operationId: "create-special",
           sourcePath,
           pathKey,
-          branchName: "bb/special-name",
+          branchName: "sandy/special-name",
         }),
       );
       expect(result).toMatchObject({
@@ -646,7 +646,7 @@ describe.concurrent("worktree host entry", () => {
         operationId: "long-name",
         sourcePath,
         pathKey: "long-name",
-        branchName: "bb/long-name",
+        branchName: "sandy/long-name",
       }),
     );
     expect(result.status).toBe("created");
@@ -672,7 +672,7 @@ describe.concurrent("worktree host entry", () => {
           operationId: "concurrent-first",
           sourcePath,
           pathKey: "concurrent-1",
-          branchName: "bb/concurrent-1",
+          branchName: "sandy/concurrent-1",
         }),
       ),
       harness.experimental_call(
@@ -681,7 +681,7 @@ describe.concurrent("worktree host entry", () => {
           operationId: "concurrent-second",
           sourcePath,
           pathKey: "concurrent-2",
-          branchName: "bb/concurrent-2",
+          branchName: "sandy/concurrent-2",
         }),
       ),
     ]);
@@ -717,7 +717,7 @@ describe.concurrent("worktree host entry", () => {
             operationId: "cancelled-create",
             sourcePath,
             pathKey: "cancelled",
-            branchName: "bb/cancelled",
+            branchName: "sandy/cancelled",
           }),
           { signal: controller.signal },
         )
@@ -751,7 +751,7 @@ describe.concurrent("worktree host entry", () => {
       operationId: "named",
       sourcePath,
       pathKey: "thr_1",
-      branchName: "bb/named-thr_1",
+      branchName: "sandy/named-thr_1",
       baseBranch: { kind: "named", name: "release" },
       branchMode: "reset",
     });
@@ -764,7 +764,7 @@ describe.concurrent("worktree host entry", () => {
     expect(existsSync(join(result.path, "release.txt"))).toBe(true);
     expect(
       (await git(result.path, "rev-parse", "--abbrev-ref", "HEAD")).trim(),
-    ).toBe("bb/named-thr_1");
+    ).toBe("sandy/named-thr_1");
     await harness.experimental_dispose();
   });
 
@@ -778,7 +778,7 @@ describe.concurrent("worktree host entry", () => {
       operationId: "detached",
       sourcePath,
       pathKey: "thr_detached",
-      branchName: "bb/detached-thr",
+      branchName: "sandy/detached-thr",
       baseBranch: { kind: "named", name: "v1.0" },
       branchMode: "reset",
     });
@@ -803,7 +803,7 @@ describe.concurrent("worktree host entry", () => {
       operationId: "first",
       sourcePath,
       pathKey: "same-path-key",
-      branchName: "bb/restart",
+      branchName: "sandy/restart",
     });
     const firstHarness = createHarness(dataDir);
     const first = await firstHarness.experimental_call("create", input);
@@ -828,13 +828,13 @@ describe.concurrent("worktree host entry", () => {
       await createSourceRepository(onTestFinished);
     const setupMarker = join(root, "setup.marker");
     await writeFile(
-      join(sourcePath, ".bb-env-setup.sh"),
+      join(sourcePath, ".sandy-env-setup.sh"),
       `#!/usr/bin/env bash\necho resumed > ${setupMarker}\n`,
     );
     await git(sourcePath, "add", ".");
     await git(sourcePath, "commit", "-m", "add setup script");
     const pathKey = "interrupted";
-    const branchName = "bb/interrupted";
+    const branchName = "sandy/interrupted";
     const targetPath = join(dataDir, "worktrees", pathKey, "repo");
     await mkdir(join(dataDir, "worktrees", pathKey), { recursive: true });
     await git(
@@ -860,7 +860,7 @@ describe.concurrent("worktree host entry", () => {
 
     expect(resumed).toMatchObject({ status: "created", path: targetPath });
     expect(existsSync(setupMarker)).toBe(false);
-    expect(progressText(harness)).not.toContain("Running .bb-env-setup.sh");
+    expect(progressText(harness)).not.toContain("Running .sandy-env-setup.sh");
     await harness.experimental_dispose();
   });
 
@@ -874,7 +874,7 @@ describe.concurrent("worktree host entry", () => {
       operationId: "first",
       sourcePath,
       pathKey: "replace",
-      branchName: "bb/expected",
+      branchName: "sandy/expected",
     });
     const first = await harness.experimental_call("create", input);
     if (first.status !== "created") throw new Error(first.message);
@@ -886,7 +886,7 @@ describe.concurrent("worktree host entry", () => {
     expect(replaced.status).toBe("created");
     expect(
       (await git(first.path, "rev-parse", "--abbrev-ref", "HEAD")).trim(),
-    ).toBe("bb/expected");
+    ).toBe("sandy/expected");
     await harness.experimental_dispose();
   });
 
@@ -894,7 +894,7 @@ describe.concurrent("worktree host entry", () => {
     const { sourcePath, dataDir } =
       await createSourceRepository(onTestFinished);
     await writeFile(
-      join(sourcePath, ".bb-env-setup.sh"),
+      join(sourcePath, ".sandy-env-setup.sh"),
       "#!/usr/bin/env bash\necho setup-line-one\necho setup-line-two\n",
     );
     await git(sourcePath, "add", ".");
@@ -907,11 +907,11 @@ describe.concurrent("worktree host entry", () => {
           operationId: "setup",
           sourcePath,
           pathKey: "thr_3",
-          branchName: "bb/setup-thr_3",
+          branchName: "sandy/setup-thr_3",
         }),
       ),
     ).toMatchObject({ status: "created" });
-    expect(progressText(harness)).not.toContain("Running .bb-env-setup.sh");
+    expect(progressText(harness)).not.toContain("Running .sandy-env-setup.sh");
     expect(progressText(harness)).not.toContain("setup-line-one");
     expect(progressText(harness)).not.toContain("setup-line-two");
     expect(
@@ -934,7 +934,7 @@ describe.concurrent("worktree host entry", () => {
         operationId: "first",
         sourcePath,
         pathKey: "thr_7",
-        branchName: "bb/dirty-thr_7",
+        branchName: "sandy/dirty-thr_7",
       }),
     );
     if (first.status !== "created") throw new Error(first.message);
@@ -945,7 +945,7 @@ describe.concurrent("worktree host entry", () => {
         operationId: "retry",
         sourcePath,
         pathKey: "thr_7-2",
-        branchName: "bb/dirty-thr_7",
+        branchName: "sandy/dirty-thr_7",
       }),
     );
     expect(retry).toMatchObject({
@@ -967,7 +967,7 @@ describe.concurrent("worktree host entry", () => {
     const { root, sourcePath, dataDir } =
       await createSourceRepository(onTestFinished);
     await writeFile(
-      join(sourcePath, ".bb-env-teardown.sh"),
+      join(sourcePath, ".sandy-env-teardown.sh"),
       `#!/usr/bin/env bash\necho teardown-ran > ${join(root, "teardown.marker")}\necho tearing-down\n`,
     );
     await git(sourcePath, "add", ".");
@@ -979,7 +979,7 @@ describe.concurrent("worktree host entry", () => {
         operationId: "create",
         sourcePath,
         pathKey: "thr_6",
-        branchName: "bb/teardown-thr_6",
+        branchName: "sandy/teardown-thr_6",
       }),
     );
     if (created.status !== "created") throw new Error(created.message);

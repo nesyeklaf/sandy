@@ -5,7 +5,7 @@ import {
   THREAD_PROVIDER_COMMANDS_STATE_KIND,
   THREAD_SESSION_OPTIONS_STATE_KIND,
   userQuestionPendingInteractionResolutionSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   AvailableModel,
   ExtensionKind,
@@ -14,7 +14,7 @@ import type {
   ReasoningLevel,
   SessionOptionSelections,
   ThreadSessionOption,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { acpLaunchSpecSchema, type AcpLaunchSpec } from "../launch-spec.js";
 import {
   BRIDGE_INBOUND_REQUEST_METHODS,
@@ -23,12 +23,12 @@ import {
   PROVIDER_BRIDGE_PROTOCOL_VERSION,
   THREAD_DELTA_GRAMMAR_V3,
   THREAD_DELTA_NOTIFICATION_METHOD,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import type {
   BridgeExecutionOptions,
   InitializeResult,
   ThreadDelta,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import {
   PROVIDER_TOOL_CALL_CANCELLED_METHOD,
   BridgeRecoveryError,
@@ -41,13 +41,13 @@ import {
   mimeTypeFromExtension,
   runBridgeRequest,
   withoutBridgeRuntimeEnv,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import type {
   BridgeJsonRpcResponse,
   BridgeToolCallContent,
   BridgeToolCallImage,
-} from "@bb/provider-bridge-protocol/bridge-kit";
-import { execPortableFile } from "@bb/process-utils";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
+import { execPortableFile } from "@sandy/process-utils";
 import { randomBytes } from "node:crypto";
 import { promises as fs, readFileSync, statSync } from "node:fs";
 import { createServer, type Server, type Socket } from "node:net";
@@ -195,7 +195,7 @@ interface AcpNativeConfigState {
 }
 
 interface AcpThreadSession {
-  bbThreadId: string;
+  sandyThreadId: string;
   construction: AcpSessionParams;
   nativeConfig: AcpNativeConfigState;
   providerThreadId: string;
@@ -242,7 +242,7 @@ type AcpDeferredStartEmitter = (
   rawUpdate?: unknown,
 ) => void;
 
-const sessionsByBbThreadId = new Map<string, AcpThreadSession>();
+const sessionsBySandyThreadId = new Map<string, AcpThreadSession>();
 const agentConnections = new Set<AcpAgentConnection>();
 let shuttingDown = false;
 
@@ -263,7 +263,7 @@ function createBridgeAgentConnection(
   return connection;
 }
 
-const bbThreadIdByProviderThreadId = new Map<string, string>();
+const sandyThreadIdByProviderThreadId = new Map<string, string>();
 const pendingRuntimeRequests = new Map<
   number,
   (response: BridgeJsonRpcResponse) => void
@@ -383,7 +383,7 @@ function emitGrokContextWindow(session: AcpThreadSession, used: number): void {
     return;
   }
   const cost = session.model.snapshot().usage?.cost ?? undefined;
-  sendThreadDeltas(session.bbThreadId, [
+  sendThreadDeltas(session.sandyThreadId, [
     {
       kind: "contextWindow",
       used,
@@ -401,10 +401,10 @@ function emitForSession(
   params: Record<string, unknown>,
 ): void {
   sendThreadDeltas(
-    session.bbThreadId,
+    session.sandyThreadId,
     session.translator.translateAcpEvent(
       { jsonrpc: "2.0", method, params },
-      { threadId: session.bbThreadId },
+      { threadId: session.sandyThreadId },
     ),
   );
 }
@@ -413,12 +413,12 @@ function emitSessionError(session: AcpThreadSession, message: string): void {
   for (const controller of session.pendingToolCalls) controller.abort();
   if (session.activePromptKind !== null) {
     emitForSession(session, "error", {
-      threadId: session.bbThreadId,
+      threadId: session.sandyThreadId,
       message,
     });
   }
   sendNotification(BRIDGE_NOTIFICATION_METHODS.error, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     ...(session.providerThreadId !== ""
       ? { providerThreadId: session.providerThreadId }
       : {}),
@@ -457,7 +457,7 @@ async function forwardDynamicToolCall(
     }
   | { ok: false; error: string }
 > {
-  const session = sessionsByBbThreadId.get(args.threadId);
+  const session = sessionsBySandyThreadId.get(args.threadId);
   if (
     !session ||
     !session.providerThreadId ||
@@ -469,13 +469,13 @@ async function forwardDynamicToolCall(
 
   const controller = new AbortController();
   session.pendingToolCalls.add(controller);
-  session.translator.noteInjectedToolCall(session.bbThreadId, args.tool);
+  session.translator.noteInjectedToolCall(session.sandyThreadId, args.tool);
   try {
     const result = await sendRuntimeRequest(
       "item/tool/call",
       {
         providerThreadId: session.providerThreadId,
-        threadId: session.bbThreadId,
+        threadId: session.sandyThreadId,
         turnId: null,
         callId: args.callId,
         tool: args.tool,
@@ -1177,7 +1177,7 @@ async function loadSessionDiscoveredModels(
       connection.kill();
       reject(
         new Error(
-          `The agent did not answer within ${MODEL_LIST_TIMEOUT_MS / 1000} seconds while bb asked it for its models`,
+          `The agent did not answer within ${MODEL_LIST_TIMEOUT_MS / 1000} seconds while sandy asked it for its models`,
         ),
       );
     }, MODEL_LIST_TIMEOUT_MS);
@@ -1740,16 +1740,16 @@ async function selectAcpNativeServiceTier(args: {
   recordAcpConfigValue(args.session, configState, fastOption.id, value);
 }
 
-function textWithBbSkillCommandsSpelledOut(
+function textWithSandySkillCommandsSpelledOut(
   session: AcpThreadSession,
   item: Extract<PromptInput, { type: "text" }>,
 ): string {
-  const bbSkillNames = new Set(
+  const sandySkillNames = new Set(
     (configuredSkillRoots ?? []).flatMap((root) =>
       root.skills.map((skill) => skill.name),
     ),
   );
-  if (bbSkillNames.size === 0) {
+  if (sandySkillNames.size === 0) {
     return item.text;
   }
   const advertised = new Set(
@@ -1760,7 +1760,7 @@ function textWithBbSkillCommandsSpelledOut(
       mention.resource.kind === "command" &&
       mention.resource.source === "skill" &&
       mention.resource.trigger === "/" &&
-      bbSkillNames.has(mention.resource.name) &&
+      sandySkillNames.has(mention.resource.name) &&
       !advertised.has(mention.resource.name) &&
       item.text.slice(mention.start, mention.end) ===
         `/${mention.resource.name}`
@@ -1784,7 +1784,7 @@ function textWithBbSkillCommandsSpelledOut(
     const leadsText =
       mention.start === firstCharacter &&
       text.slice(mention.end).trim().length > 0;
-    text = `${text.slice(0, mention.start)}Use the bb skill "${mention.name}"${leadsText ? ":" : ""}${text.slice(mention.end)}`;
+    text = `${text.slice(0, mention.start)}Use the sandy skill "${mention.name}"${leadsText ? ":" : ""}${text.slice(mention.end)}`;
     nextStart = mention.start;
   }
   return text;
@@ -1810,7 +1810,7 @@ function buildPromptContentBlocks(
       case "text":
         blocks.push({
           type: "text",
-          text: textWithBbSkillCommandsSpelledOut(session, item),
+          text: textWithSandySkillCommandsSpelledOut(session, item),
         });
         break;
       case "image":
@@ -1922,11 +1922,11 @@ function handleElicitationRequest(
   const plan = planAcpElicitation(params);
   if (plan.kind === "unsupported") {
     emitForSession(session, ACP_WARNING_METHOD, {
-      threadId: session.bbThreadId,
-      summary: "The agent asked a question bb could not show",
-      details: `bb answered the agent with an error because ${plan.reason}.`,
+      threadId: session.sandyThreadId,
+      summary: "The agent asked a question sandy could not show",
+      details: `sandy answered the agent with an error because ${plan.reason}.`,
     });
-    responder.error(-32602, `bb cannot show this form: ${plan.reason}`);
+    responder.error(-32602, `sandy cannot show this form: ${plan.reason}`);
     return;
   }
   if (session.activePromptKind === null) {
@@ -1935,7 +1935,7 @@ function handleElicitationRequest(
   session.pendingElicitations.add(responder);
   void sendRuntimeRequest(BRIDGE_INBOUND_REQUEST_METHODS.interactionRequest, {
     providerThreadId: session.providerThreadId,
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     turnId: null,
     payload: plan.payload,
   })
@@ -1982,7 +1982,7 @@ function handlePermissionRequest(
   const toolCall = parsed.data.toolCall;
   const bound =
     toolCall?.toolCallId !== undefined
-      ? session.translator.notePermissionToolCall(session.bbThreadId, {
+      ? session.translator.notePermissionToolCall(session.sandyThreadId, {
           toolCallId: toolCall.toolCallId,
           ...(toolCall.title !== undefined ? { title: toolCall.title } : {}),
           ...(toolCall.kind !== undefined ? { kind: toolCall.kind } : {}),
@@ -2035,7 +2035,7 @@ function handlePermissionRequest(
             : {}),
           startedToolCall: bound.event,
           injectedTool: session.translator.getInjectedToolBinding(
-            session.bbThreadId,
+            session.sandyThreadId,
             bound.toolCallId,
           ),
         }
@@ -2049,7 +2049,7 @@ function handlePermissionRequest(
   });
   void sendRuntimeRequest(BRIDGE_INBOUND_REQUEST_METHODS.interactionRequest, {
     providerThreadId: session.providerThreadId,
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     turnId: null,
     payload,
   })
@@ -2138,7 +2138,7 @@ async function handleFsWriteTextFile(
   ) {
     responder.error(
       -32000,
-      `File writes outside the workspace are denied by BB's accept-edits permission mode: ${parsed.data.path}`,
+      `File writes outside the workspace are denied by SANDY's accept-edits permission mode: ${parsed.data.path}`,
     );
     return;
   }
@@ -2154,7 +2154,7 @@ async function handleFsWriteTextFile(
     await fs.writeFile(parsed.data.path, parsed.data.content, "utf8");
 
     emitForSession(session, ACP_FS_WRITE_METHOD, {
-      threadId: session.bbThreadId,
+      threadId: session.sandyThreadId,
       path: parsed.data.path,
       kind: oldText === undefined ? "add" : "update",
       ...(oldText === undefined ? {} : { oldText }),
@@ -2170,9 +2170,9 @@ async function handleFsWriteTextFile(
 }
 
 function liveSessionForThread(
-  bbThreadId: string,
+  sandyThreadId: string,
 ): AcpThreadSession | undefined {
-  const session = sessionsByBbThreadId.get(bbThreadId);
+  const session = sessionsBySandyThreadId.get(sandyThreadId);
   if (!session || session.stopping || session.providerThreadId === "") {
     return undefined;
   }
@@ -2181,14 +2181,14 @@ function liveSessionForThread(
 
 function removeSession(session: AcpThreadSession): void {
   for (const controller of session.pendingToolCalls) controller.abort();
-  if (sessionsByBbThreadId.get(session.bbThreadId) === session) {
-    sessionsByBbThreadId.delete(session.bbThreadId);
+  if (sessionsBySandyThreadId.get(session.sandyThreadId) === session) {
+    sessionsBySandyThreadId.delete(session.sandyThreadId);
   }
   if (
-    bbThreadIdByProviderThreadId.get(session.providerThreadId) ===
-    session.bbThreadId
+    sandyThreadIdByProviderThreadId.get(session.providerThreadId) ===
+    session.sandyThreadId
   ) {
-    bbThreadIdByProviderThreadId.delete(session.providerThreadId);
+    sandyThreadIdByProviderThreadId.delete(session.providerThreadId);
   }
 }
 
@@ -2204,7 +2204,7 @@ async function releaseCursorMcpApproval(
     await revokeCursorSessionMcpServer(approval);
   } catch (error) {
     process.stderr.write(
-      `acp bridge: failed to remove Cursor session MCP approval for thread "${session.bbThreadId}": ${
+      `acp bridge: failed to remove Cursor session MCP approval for thread "${session.sandyThreadId}": ${
         error instanceof Error ? error.message : String(error)
       }\n`,
     );
@@ -2214,8 +2214,8 @@ async function releaseCursorMcpApproval(
 function getSessionByProviderThreadId(
   providerThreadId: string,
 ): AcpThreadSession | undefined {
-  const bbThreadId = bbThreadIdByProviderThreadId.get(providerThreadId);
-  return bbThreadId ? sessionsByBbThreadId.get(bbThreadId) : undefined;
+  const sandyThreadId = sandyThreadIdByProviderThreadId.get(providerThreadId);
+  return sandyThreadId ? sessionsBySandyThreadId.get(sandyThreadId) : undefined;
 }
 
 type AcpSessionStartRequest =
@@ -2283,9 +2283,9 @@ async function startAgentSession(
   request: AcpSessionStartRequest,
 ): Promise<AcpThreadSession> {
   const params = request.params;
-  const bbThreadId = params.threadId;
+  const sandyThreadId = params.threadId;
 
-  const existing = sessionsByBbThreadId.get(bbThreadId);
+  const existing = sessionsBySandyThreadId.get(sandyThreadId);
   if (existing) {
     await stopSession(existing);
   }
@@ -2331,7 +2331,7 @@ async function startAgentSession(
   const launch = await resolveAgentLaunchArgs(params);
   if (launch.warning) {
     emitStartNotification(ACP_WARNING_METHOD, {
-      threadId: bbThreadId,
+      threadId: sandyThreadId,
       summary: launch.warning,
     });
   }
@@ -2347,7 +2347,7 @@ async function startAgentSession(
     args: launch.args,
     cwd: params.cwd,
     env: childEnv,
-    recordThreadId: bbThreadId,
+    recordThreadId: sandyThreadId,
     requestMethods: [
       ...ACP_CORE_CLIENT_REQUEST_METHODS,
       ...(dialect.clientRequestMethods ?? []),
@@ -2358,7 +2358,7 @@ async function startAgentSession(
     onRequest: (method, requestParams, responder) =>
       handleAgentRequest(session, method, requestParams, responder),
     onExit: (info) => {
-      const wasCurrent = sessionsByBbThreadId.get(bbThreadId) === session;
+      const wasCurrent = sessionsBySandyThreadId.get(sandyThreadId) === session;
       cancelPendingPermissions(session);
       if (!wasCurrent || session.stopping || session.providerThreadId === "") {
         removeSession(session);
@@ -2375,7 +2375,7 @@ async function startAgentSession(
     },
   });
   session = {
-    bbThreadId,
+    sandyThreadId,
     construction: params,
     nativeConfig: { configOptions: undefined, models: undefined },
     providerThreadId: "",
@@ -2417,7 +2417,7 @@ async function startAgentSession(
     deferStartEmit: emitStartNotification,
     awaitingFirstPrompt: true,
   };
-  sessionsByBbThreadId.set(bbThreadId, session);
+  sessionsBySandyThreadId.set(sandyThreadId, session);
 
   try {
     const capabilities = await requestAcpInitialize(connection, {
@@ -2450,9 +2450,9 @@ async function startAgentSession(
         cwd: params.cwd,
         env: childEnv,
       });
-      if (session.cursorMcpApproval?.installedByBb) {
+      if (session.cursorMcpApproval?.installedBySandy) {
         process.stderr.write(
-          `acp bridge: installed Cursor session MCP approval for thread "${bbThreadId}"\n`,
+          `acp bridge: installed Cursor session MCP approval for thread "${sandyThreadId}"\n`,
         );
       }
     }
@@ -2554,7 +2554,7 @@ async function startAgentSession(
       });
       if (request.kind === "resume") {
         emitStartNotification(ACP_WARNING_METHOD, {
-          threadId: bbThreadId,
+          threadId: sandyThreadId,
           summary: `${agentLabel} could not restore the previous session; continuing in a fresh session without in-agent history.`,
         });
       }
@@ -2576,7 +2576,7 @@ async function startAgentSession(
       session.pendingLoadUsageUpdate = undefined;
       if (loadUsageUpdate) {
         emitStartNotification(ACP_UPDATE_METHOD, {
-          threadId: session.bbThreadId,
+          threadId: session.sandyThreadId,
           update: loadUsageUpdate,
         });
       }
@@ -2584,18 +2584,18 @@ async function startAgentSession(
 
     if (session.stopping) {
       throw new Error(
-        `ACP session for thread "${bbThreadId}" was released during construction`,
+        `ACP session for thread "${sandyThreadId}" was released during construction`,
       );
     }
     session.providerThreadId = sessionId;
-    bbThreadIdByProviderThreadId.set(sessionId, bbThreadId);
+    sandyThreadIdByProviderThreadId.set(sessionId, sandyThreadId);
     sendNotification(BRIDGE_NOTIFICATION_METHODS.threadIdentity, {
-      threadId: bbThreadId,
+      threadId: sandyThreadId,
       providerThreadId: sessionId,
       sessionRestorable: session.supportsLoadSession,
     });
     if (request.kind !== "resume" || !request.continuesTurn) {
-      sendThreadDeltas(bbThreadId, [{ kind: "session.reset" }]);
+      sendThreadDeltas(sandyThreadId, [{ kind: "session.reset" }]);
     }
     publishSessionSnapshot(session);
     if (createdFreshSession) {
@@ -2747,7 +2747,7 @@ function armAgentTurnQuietTimer(session: AcpThreadSession): void {
 function openAgentTurn(session: AcpThreadSession): void {
   setActivePromptKind(session, "agent");
   emitForSession(session, ACP_TURN_STARTED_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
   });
   armAgentTurnQuietTimer(session);
 }
@@ -2762,7 +2762,7 @@ function finishAgentTurn(
   for (const controller of session.pendingToolCalls) controller.abort();
   setActivePromptKind(session, null);
   emitForSession(session, ACP_TURN_COMPLETED_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     stopReason,
   });
 }
@@ -2791,7 +2791,7 @@ function publishThreadState(
     return;
   }
   session.publishedThreadState.set(kind, serialized);
-  sendThreadDeltas(session.bbThreadId, [
+  sendThreadDeltas(session.sandyThreadId, [
     { kind: "extension.state", extensionKind: kind, payload },
   ]);
 }
@@ -2843,7 +2843,7 @@ async function applySessionOptionSelections(
       }
     } catch (error) {
       emitForSession(session, ACP_WARNING_METHOD, {
-        threadId: session.bbThreadId,
+        threadId: session.sandyThreadId,
         summary: `The agent did not apply ${option.name.trim() === "" ? option.id : option.name}`,
         details: error instanceof Error ? error.message : String(error),
       });
@@ -2944,7 +2944,7 @@ function emitSessionUpdate(
     armAgentTurnQuietTimer(session);
   }
   emitForSession(session, ACP_UPDATE_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     update,
   });
 }
@@ -2985,12 +2985,12 @@ function acceptTurnInput(
   session: AcpThreadSession,
   pending: AcpPendingTurnInput,
 ): void {
-  sendThreadDeltas(session.bbThreadId, [
+  sendThreadDeltas(session.sandyThreadId, [
     { kind: "input.accepted", clientRequestId: pending.clientRequestId },
   ]);
   const requestId = takeTurnInputRequestId(pending);
   if (requestId !== null) {
-    sendResult(requestId, { threadId: session.bbThreadId });
+    sendResult(requestId, { threadId: session.sandyThreadId });
   }
 }
 
@@ -3029,7 +3029,7 @@ function finishTurn(
   session.promptRequestPending = false;
   session.cancelRequested = false;
   emitForSession(session, ACP_TURN_COMPLETED_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     stopReason,
   });
 }
@@ -3087,7 +3087,7 @@ function runTurn(
   setActivePromptKind(session, "turn");
   if (!turnAlreadyOpen) {
     emitForSession(session, ACP_TURN_STARTED_METHOD, {
-      threadId: session.bbThreadId,
+      threadId: session.sandyThreadId,
     });
   }
   session.awaitingFirstPrompt = false;
@@ -3174,7 +3174,7 @@ function runTurn(
             emitSessionError(session, message);
           } else if (session.activePromptKind === "turn") {
             emitForSession(session, "error", {
-              threadId: session.bbThreadId,
+              threadId: session.sandyThreadId,
               message,
             });
           }
@@ -3189,7 +3189,7 @@ function runTurn(
         if (next) {
           if (stopReason === "cancelled") {
             emitForSession(session, ACP_PROMPT_INTERRUPTED_METHOD, {
-              threadId: session.bbThreadId,
+              threadId: session.sandyThreadId,
             });
           }
           pending = next;
@@ -3203,7 +3203,7 @@ function runTurn(
         session.turnOutputCount === outputBeforeTurn
       ) {
         emitForSession(session, ACP_WARNING_METHOD, {
-          threadId: session.bbThreadId,
+          threadId: session.sandyThreadId,
           summary: "The agent ended the turn without replying",
           details:
             "The agent reported no error and sent nothing back. If this keeps happening, check that the agent runs and is signed in on the machine that hosts the thread.",
@@ -3347,7 +3347,7 @@ async function rebuildAgentSession(
   const continuingTurn = session.activePromptKind === "turn";
   if (continuingTurn) {
     emitForSession(session, ACP_PROMPT_INTERRUPTED_METHOD, {
-      threadId: session.bbThreadId,
+      threadId: session.sandyThreadId,
     });
     for (const controller of session.pendingToolCalls) controller.abort();
     setActivePromptKind(session, null);
@@ -3366,7 +3366,7 @@ async function rebuildAgentSession(
     if (continuingTurn) {
       const message = error instanceof Error ? error.message : String(error);
       emitForSession(session, "error", {
-        threadId: session.bbThreadId,
+        threadId: session.sandyThreadId,
         message,
       });
       emitSessionError(session, message);
@@ -3375,7 +3375,7 @@ async function rebuildAgentSession(
   }
   replacement.queuedInputs.push(...queuedInputs);
   sendNotification(BRIDGE_NOTIFICATION_METHODS.sessionReplaced, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     providerThreadId: replacement.providerThreadId,
     reason,
     contextLost: replacement.providerThreadId !== previousProviderThreadId,
@@ -3391,7 +3391,7 @@ function startCompaction(
   session.awaitingFirstPrompt = false;
   session.compactionAgentMessage = "";
   emitForSession(session, ACP_COMPACTION_STARTED_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
   });
 
   const finish = (outcome: Record<string, unknown>): void => {
@@ -3444,7 +3444,7 @@ function finishCompaction(
     return;
   }
   emitForSession(session, ACP_COMPACTION_COMPLETED_METHOD, {
-    threadId: session.bbThreadId,
+    threadId: session.sandyThreadId,
     ...outcome,
   });
   setActivePromptKind(session, null);
@@ -3488,9 +3488,9 @@ function handleDialectRequest(
   }
   if (outcome.delegation !== undefined) {
     sendThreadDeltas(
-      session.bbThreadId,
+      session.sandyThreadId,
       session.translator.noteDelegationReport(
-        session.bbThreadId,
+        session.sandyThreadId,
         outcome.delegation,
       ),
     );
@@ -3529,7 +3529,7 @@ function handleAgentNotification(
   if (session.providerThreadId === "") {
     session.deferStartEmit?.(
       ACP_UPDATE_METHOD,
-      { threadId: session.bbThreadId, update: parsed.data.update },
+      { threadId: session.sandyThreadId, update: parsed.data.update },
       parsed.data.sessionId,
       rawUpdate,
     );
@@ -3988,7 +3988,7 @@ async function handleRequest(
     }
 
     case "thread/stop": {
-      const session = sessionsByBbThreadId.get(request.params.threadId);
+      const session = sessionsBySandyThreadId.get(request.params.threadId);
       if (session) {
         if (request.params.intent === "release") {
           await releaseSession(session);
@@ -4062,7 +4062,7 @@ function handleParsedMessage(parsed: unknown): void {
 export const handleLine = createBridgeLineHandler({ handleParsedMessage });
 
 async function stopAllSessions(): Promise<void> {
-  const sessions = Array.from(sessionsByBbThreadId.values());
+  const sessions = Array.from(sessionsBySandyThreadId.values());
   const sessionConnections = new Set(
     sessions.map((session) => session.connection),
   );

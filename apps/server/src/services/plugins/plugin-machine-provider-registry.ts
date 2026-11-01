@@ -1,4 +1,4 @@
-import type { NormalizedPluginMachineProvider } from "@get-bb/plugin-sdk/internal/host-policy";
+import type { NormalizedPluginMachineProvider } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   DEFAULT_PLUGIN_HOOK_TIMEOUT_MS,
   invokeBridgedProvider,

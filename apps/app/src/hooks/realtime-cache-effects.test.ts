@@ -2,7 +2,7 @@ import {
   pluginTagScope,
   runTaggedRead,
   taggedQueryOptions,
-} from "@bb/query-tags";
+} from "@sandy/query-tags";
 import {
   machineEnvironmentQueryKey,
   archivedThreadsListQueryKey,
@@ -49,8 +49,8 @@ import {
   SYSTEM_CHANGE_KINDS,
   THREAD_CHANGE_KINDS,
   defaultExperiments,
-} from "@bb/domain";
-import { makeEnvironment } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/domain";
+import { makeEnvironment } from "@sandy/test-helpers/domain-fixtures";
 import { createAppQueryClient } from "@/lib/query-client";
 import { makeSystemConfig } from "@/test/fixtures/system-config";
 import { hasThreadTimelineUnseenEvents } from "./cache-owners/thread-timeline-unseen-events";

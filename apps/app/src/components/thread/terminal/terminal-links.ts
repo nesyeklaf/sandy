@@ -1,5 +1,5 @@
 import type { ILinkHandler } from "@xterm/xterm";
-import { isMacKeyboardPlatform } from "@bb/domain";
+import { isMacKeyboardPlatform } from "@sandy/domain";
 import { browserPlatform } from "@/lib/app-keybindings";
 
 export interface TerminalLinkTarget {

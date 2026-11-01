@@ -3,11 +3,11 @@
   "name": "input",
   "type": "registry:ui",
   "title": "input",
-  "description": "BB ui \"input\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"input\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

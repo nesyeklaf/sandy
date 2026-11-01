@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import type { BbDesktopWindowState } from "@bb/desktop-contract";
+import type { SandyDesktopWindowState } from "@sandy/desktop-contract";
 import {
   DEFAULT_DESKTOP_WINDOW_STATE,
-  getBbDesktopInfo,
-} from "@/lib/bb-desktop";
+  getSandyDesktopInfo,
+} from "@/lib/sandy-desktop";
 
-export function useDesktopWindowState(): BbDesktopWindowState {
-  const [windowState, setWindowState] = useState<BbDesktopWindowState>(
+export function useDesktopWindowState(): SandyDesktopWindowState {
+  const [windowState, setWindowState] = useState<SandyDesktopWindowState>(
     DEFAULT_DESKTOP_WINDOW_STATE,
   );
 
   useEffect(() => {
-    const desktopApi = getBbDesktopInfo();
+    const desktopApi = getSandyDesktopInfo();
     let cancelled = false;
 
     const unsubscribe = desktopApi?.onWindowStateChange?.((nextState) => {

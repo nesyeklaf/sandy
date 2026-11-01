@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PluginRpcMethodContract } from "@get-bb/plugin-sdk";
+import type { PluginRpcMethodContract } from "@sandy-sdk/plugin-sdk";
 import {
   createFakePluginHost,
   makeThreadResponse,
   type FakePluginHarness,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { registerAttachments } from "../attachments";
 import { registerTasksCli } from "../cli";
 import { registerDelegation } from "../delegate";
@@ -20,7 +20,7 @@ afterEach(async () => {
 });
 
 function setup() {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "tasks",
     sdk: {
       threads: {
@@ -30,11 +30,11 @@ function setup() {
     },
   });
   harnesses.push(harness);
-  const store = createStore(bb);
-  registerTasksApi(bb, store);
-  registerAttachments(bb, store.tasks);
-  registerDelegation(bb, store);
-  registerTasksCli(bb, store, { name: "tasks", version: "test" });
+  const store = createStore(sandy);
+  registerTasksApi(sandy, store);
+  registerAttachments(sandy, store.tasks);
+  registerDelegation(sandy, store);
+  registerTasksCli(sandy, store, { name: "tasks", version: "test" });
   const project = store.tasks.createProject({
     name: "Review",
     prefix: "REV",

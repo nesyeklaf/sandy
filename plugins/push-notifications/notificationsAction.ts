@@ -7,7 +7,7 @@ import {
   useSettings,
   type PluginThreadActionDataInput,
   type PluginThreadActionRegistration,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { pushNotificationsRpcContract } from "./contract.js";
 import {
   NOTIFICATION_LEVEL_LABELS,

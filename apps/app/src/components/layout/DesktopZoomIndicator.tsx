@@ -1,22 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BB_DESKTOP_MAX_ZOOM_PERCENT,
-  BB_DESKTOP_MIN_ZOOM_PERCENT,
-} from "@bb/desktop-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+  SANDY_DESKTOP_MAX_ZOOM_PERCENT,
+  SANDY_DESKTOP_MIN_ZOOM_PERCENT,
+} from "@sandy/desktop-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { APP_OVERLAY_LAYER } from "@/components/ui/app-overlay-layers";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_APP_REGION_NO_DRAG_CLASS,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 
 const HIDE_DELAY_MS = 2000;
 const FADE_OUT_MS = 150;
 
 export function DesktopZoomIndicator() {
-  const desktop = getBbDesktopInfo();
+  const desktop = getSandyDesktopInfo();
   const onZoomChange = desktop?.onZoomChange;
   const zoom = desktop?.zoom;
   const [zoomFactor, setZoomFactor] = useState<number | null>(null);
@@ -53,7 +53,7 @@ export function DesktopZoomIndicator() {
 
   return (
     <div
-      className={`fixed right-0 top-(--bb-app-chrome-row-height) ${MACOS_APP_REGION_NO_DRAG_CLASS}`}
+      className={`fixed right-0 top-(--sandy-app-chrome-row-height) ${MACOS_APP_REGION_NO_DRAG_CLASS}`}
       style={{ zIndex: APP_OVERLAY_LAYER.sharedPortaledOverlay }}
     >
       <div
@@ -86,7 +86,7 @@ export function DesktopZoomIndicator() {
           size="icon"
           className="size-7"
           aria-label="Zoom out"
-          disabled={zoomPercent <= BB_DESKTOP_MIN_ZOOM_PERCENT}
+          disabled={zoomPercent <= SANDY_DESKTOP_MIN_ZOOM_PERCENT}
           onClick={() => zoom?.("out")}
         >
           <Icon name="Minus" />
@@ -97,7 +97,7 @@ export function DesktopZoomIndicator() {
           size="icon"
           className="size-7"
           aria-label="Zoom in"
-          disabled={zoomPercent >= BB_DESKTOP_MAX_ZOOM_PERCENT}
+          disabled={zoomPercent >= SANDY_DESKTOP_MAX_ZOOM_PERCENT}
           onClick={() => zoom?.("in")}
         >
           <Icon name="Plus" />

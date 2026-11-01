@@ -2,8 +2,8 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type {
   ExperimentalFileOpenOptions,
   JsonValue,
-} from "@get-bb/plugin-sdk";
-import type { TerminalSession } from "@bb/server-contract";
+} from "@sandy-sdk/plugin-sdk";
+import type { TerminalSession } from "@sandy/server-contract";
 import type { FileOpenerOverride } from "@/lib/plugin-slot-resolvers";
 import {
   UNAVAILABLE_APP_PANEL_CONTROLLER,

@@ -12,7 +12,7 @@ import {
   vi,
   type Mock,
 } from "vitest";
-import type { PluginMessageDirectiveProps } from "@get-bb/plugin-sdk";
+import type { PluginMessageDirectiveProps } from "@sandy-sdk/plugin-sdk";
 import { experimental_useAppPanel } from "@/lib/plugin-sdk-hooks";
 import { AppNavigationHostProvider } from "@/lib/app-navigation-host";
 import { MarkdownPreview } from "./markdown-preview";

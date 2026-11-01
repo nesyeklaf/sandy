@@ -1,6 +1,6 @@
 ---
 name: github-pr-status
-description: "Inspect an environment's GitHub pull request, mark it ready or draft, or merge it from the bb CLI; read PR status from another plugin."
+description: "Inspect an environment's GitHub pull request, mark it ready or draft, or merge it from the sandy CLI; read PR status from another plugin."
 ---
 
 # GitHub PR Status
@@ -13,10 +13,10 @@ sidebars read their PR status from it. Pending checks re-check about every 30
 seconds in one batched GitHub request per machine.
 
 ```sh
-bb pull-request show <environment-id> [--json]
-bb pull-request ready <environment-id> [--json]
-bb pull-request draft <environment-id> [--json]
-bb pull-request merge <environment-id> [--method merge|squash|rebase] [--json]
+sandy pull-request show <environment-id> [--json]
+sandy pull-request ready <environment-id> [--json]
+sandy pull-request draft <environment-id> [--json]
+sandy pull-request merge <environment-id> [--method merge|squash|rebase] [--json]
 ```
 
 - `show` prints the PR number, state, branch, attention, checks, review and
@@ -25,14 +25,14 @@ bb pull-request merge <environment-id> [--method merge|squash|rebase] [--json]
 - `ready` needs a draft PR, `draft` needs an open PR and `merge` needs an open
   PR GitHub reports as mergeable. Each re-reads the PR first and fails with
   the reason otherwise.
-- bb never wakes a machine for PR work. When the environment's machine is
+- sandy never wakes a machine for PR work. When the environment's machine is
   suspended or offline, `show` reports `unavailable` and the actions fail
   with a message naming the machine.
 - `gh` must be installed and logged in on that machine.
 
 The `showPullRequest` setting (default true) shows the pull request segment
 above the composer. Turn it off with
-`bb plugin config bb--github-pr-status set showPullRequest false`; the Info
+`sandy plugin config sandy--github-pr-status set showPullRequest false`; the Info
 panel's Pull request row stays.
 
 Other plugins read the same data through RPC. `pullRequests` is a keyed read:
@@ -42,12 +42,12 @@ auto-merge is on, the PR is queued or mergeability is unknown, and about every 5
 
 ```ts
 experimental_useRpcKeyedQuery({
-  pluginId: "bb--github-pr-status",
+  pluginId: "sandy--github-pr-status",
   contract,
   method: "pullRequests",
   keys: [environmentId],
 });
 ```
 
-`bb plugin rpc inspect bb--github-pr-status` prints the input and output schemas
+`sandy plugin rpc inspect sandy--github-pr-status` prints the input and output schemas
 for `pullRequests`, `markReady`, `markDraft` and `merge`.

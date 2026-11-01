@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
 import { Command } from "commander";
-import type { PluginMarketplace } from "@bb/server-contract";
+import type { PluginMarketplace } from "@sandy/server-contract";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { renderBorderlessTable } from "../table.js";
 import { outputJson, type JsonOutputOptions } from "./helpers.js";
 
@@ -41,7 +41,7 @@ export function registerMarketplaceCommands(
 ): void {
   const marketplace = program
     .command("marketplace")
-    .description("Manage the plugin marketplaces bb reads catalogs from");
+    .description("Manage the plugin marketplaces sandy reads catalogs from");
 
   marketplace
     .command("add <source>")
@@ -59,7 +59,7 @@ export function registerMarketplaceCommands(
           source: string,
           opts: JsonOutputOptions & { subdirectory?: string },
         ) => {
-          const added = await createCliBbSdk(getUrl()).plugins.marketplaces.add(
+          const added = await createCliSandySdk(getUrl()).plugins.marketplaces.add(
             {
               source: normalizeSource(source),
               ...(opts.subdirectory === undefined
@@ -74,7 +74,7 @@ export function registerMarketplaceCommands(
           console.log(`Added marketplace ${added.name}:`);
           printMarketplace(added);
           console.log(
-            `Adding a marketplace installs nothing. Install an entry with \`bb plugin install <id>@${added.name}\`.`,
+            `Adding a marketplace installs nothing. Install an entry with \`sandy plugin install <id>@${added.name}\`.`,
           );
         },
       ),
@@ -82,12 +82,12 @@ export function registerMarketplaceCommands(
 
   marketplace
     .command("list")
-    .description("List the marketplaces bb reads catalogs from")
+    .description("List the marketplaces sandy reads catalogs from")
     .option("--json", "Output JSON")
     .action(
       action(async (opts: JsonOutputOptions) => {
         const marketplaces =
-          await createCliBbSdk(getUrl()).plugins.marketplaces.list();
+          await createCliSandySdk(getUrl()).plugins.marketplaces.list();
         if (opts.json) {
           outputJson(opts, marketplaces);
           return;
@@ -136,7 +136,7 @@ export function registerMarketplaceCommands(
     .option("--json", "Output JSON")
     .action(
       action(async (name: string | undefined, opts: JsonOutputOptions) => {
-        const results = await createCliBbSdk(
+        const results = await createCliSandySdk(
           getUrl(),
         ).plugins.marketplaces.refresh(name === undefined ? {} : { name });
         if (opts.json) {
@@ -157,12 +157,12 @@ export function registerMarketplaceCommands(
   marketplace
     .command("remove <name>")
     .description(
-      "Forget a marketplace. bb-official cannot be removed. Installed plugins keep their direct sources",
+      "Forget a marketplace. sandy-official cannot be removed. Installed plugins keep their direct sources",
     )
     .option("--json", "Output JSON")
     .action(
       action(async (name: string, opts: JsonOutputOptions) => {
-        const removed = await createCliBbSdk(
+        const removed = await createCliSandySdk(
           getUrl(),
         ).plugins.marketplaces.remove({ name });
         if (opts.json) {

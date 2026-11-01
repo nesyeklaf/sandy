@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { delimiter, join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BRIDGE_JSON_RPC_ERRORS } from "@get-bb/plugin-sdk/provider-bridge";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PI_BRIDGE_ARGS_ENV, PI_BRIDGE_COMMAND_ENV } from "./rpc-child.js";
 import { npmNodeShim } from "./npm-shim.test-support.js";
@@ -22,7 +22,7 @@ function nextRequestId(): number {
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-install-gate-",
+    prefix: "sandy-pi-install-gate-",
     initialize: true,
   });
 });

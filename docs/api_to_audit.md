@@ -9,12 +9,12 @@ that stays experimental after an audit says so with the date and the open
 question.
 
 "Docs:" names a file in
-`plugins/bb-guide/skills/bb-plugin-authoring/references/`, or
+`plugins/sandy-guide/skills/sandy-plugin-authoring/references/`, or
 [provider-plugin-api.md](provider-plugin-api.md) /
 [provider-bridge-protocol.md](provider-bridge-protocol.md). An entry without
 a "Docs:" line has no owning doc, so it keeps the essential contract itself.
 
-## Application link approvals (`@get-bb/plugin-sdk/app`)
+## Application link approvals (`@sandy-sdk/plugin-sdk/app`)
 
 `experimental_getApplicationLinkApprovals()` lists approved URL schemes on the
 viewing client. `experimental_revokeApplicationLinkApproval(scheme)` removes one;
@@ -29,9 +29,9 @@ Before stabilization, verify consent and revoke flows on all supported native
 platforms, per-origin scope, old-client launch errors, and storage recovery. Core
 callers are `ApplicationLinkApprovalsSettings` and the URL confirmation dispatcher.
 
-## Server list (`experimental_useServers`, `@get-bb/plugin-sdk/app`)
+## Server list (`experimental_useServers`, `@sandy-sdk/plugin-sdk/app`)
 
-`experimental_useServers()` returns `{ status, servers, switchTo }` on bb Desktop and
+`experimental_useServers()` returns `{ status, servers, switchTo }` on sandy Desktop and
 the mobile app, and null in a web browser, whose server list would be scoped to
 one origin. Each `ExperimentalServer` has an `id`, `name`, `origin` (scheme,
 host and port only; desktop custom URLs can embed login details and paths),
@@ -44,7 +44,7 @@ server switcher uses the same `useServerChoices` implementation, so the mobile
 app now offers the switcher too. Desktop pages served by an older desktop
 release get null until it updates. Plugins can't add, edit, rename or remove
 servers, and can't call another server. The list lives in the client, so the
-`bb` CLI has no server list to reach and no command.
+`sandy` CLI has no server list to reach and no command.
 
 Docs: Plugin Guide, Sidebar footer items (`plugins/plugin-api-docs/src/surfaces.ts`).
 Before stabilization, find a plugin caller beyond core's palette, decide
@@ -66,13 +66,30 @@ reload and crash recovery, scope suppression, and compact Safari
 keyboard/drawer behavior. Verify multiple popups in one customization and
 popup-id uniqueness across customizations.
 
-## `app.slots.experimental_composer`, `experimental_useComposerRenderer`, `experimental_ComposerRoot`, `experimental_useComposerContributions`, the composer search hooks, the prompt mention pill functions and the composer host components (`@get-bb/plugin-sdk/app`)
+## Composer menus
 
-`experimental_composer({ id, title, description?, component })` draws bb's
-composer input box everywhere bb shows a composer. It is exclusive, chosen by
+`ComposerCustomization.experimental_menus` registers `{ id, trigger, label, items(query) }`
+typeahead menus. Rows may nest (`items`) to form submenus; leaf rows run
+`run({ composer })` after the trigger text is removed from the draft. Trigger `/`
+adds a group to the command menu; `#`, `!` and `~` extend the mention triggers and
+open on a bare trigger. The composer plugin renders them through the same menu
+as `/` and `@` (`mentions/plugin-menu.ts`), and
+`ExperimentalComposerContributions.menus`/`runMenuItem` let other composers do the same.
+
+Docs: `frontend-hooks-and-ui.md`.
+
+Before stabilization, verify keyboard navigation (right arrow, left arrow,
+Backspace, Escape) and drawer behavior on compact Safari, menu items that
+change between keystrokes, several plugins on one trigger, and whether
+`items` should become asynchronous.
+
+## `app.slots.experimental_composer`, `experimental_useComposerRenderer`, `experimental_ComposerRoot`, `experimental_useComposerContributions`, the composer search hooks, the prompt mention pill functions and the composer host components (`@sandy-sdk/plugin-sdk/app`)
+
+`experimental_composer({ id, title, description?, component })` draws sandy's
+composer input box everywhere sandy shows a composer. It is exclusive, chosen by
 the synced `composer.provider` UI preference (Settings → Appearance →
-Composer), and with no composer plugin enabled no composer is shown. bb's own
-composer is the bundled `plugins/composer` plugin (`bb--composer`), built on
+Composer), and with no composer plugin enabled no composer is shown. sandy's own
+composer is the bundled `plugins/composer` plugin (`sandy--composer`), built on
 this slot: core renders every composer through `ComposerBox`
 (`apps/app/src/components/promptbox/ComposerBox.tsx`), which resolves the
 slot and provides the hooks below.
@@ -85,7 +102,7 @@ submit steers a running thread exactly as Enter does. The host runs other plugin
 highlight rule into `decorationSources`.
 
 `experimental_useComposerRenderer()` carries `input` (the surface, submission,
-typeahead, attachments, history, voice, sizing and collapse state, and bb's
+typeahead, attachments, history, voice, sizing and collapse state, and sandy's
 execution controls, handoff banner and compact-before-send chip, named so the
 composer chooses where they go), the composer `view`, and host services
 (`threadLinks`, `clipboard`, `attachmentSrc`, app key dispatch, toasts).
@@ -95,12 +112,12 @@ says what it does now (`send`, `queue` or `steer`), whether it needs a
 draft, and its shortcut, and `run()` runs it. The box only gates and draws
 them; which key queues and which steers, and that an empty steer sends the
 next queued message, stay with the host. `input.resolveMentionLink` says what clicking a
-pill does, opening attachment mentions and tiles in bb's viewer; core's
+pill does, opening attachment mentions and tiles in sandy's viewer; core's
 timeline, the thread view's attachment opener and the composer share that
 opener. `input.maxHeight` caps the box where the host has limited room (the
 compact New thread home), so the host no longer measures the composer's DOM. `experimental_ComposerRoot` takes the composer's
 root element and its editor and does the wiring core used to ask each
-composer for: it publishes the editor to `useComposer()`, routes bb's and
+composer for: it publishes the editor to `useComposer()`, routes sandy's and
 other plugins' composer commands, and registers pane focus and thread drops.
 `experimental_useComposerContributions()` returns other plugins' popups, `+`
 and send menu items and inline actions with their host renderers, applying
@@ -111,9 +128,9 @@ plugin icons and thread-title text.
 Docs: `frontend-renderer-slots.md`.
 
 `experimental_useComposerMentionSearch()` and
-`experimental_useComposerCommandSearch()` search bb's @-mention sources and
+`experimental_useComposerCommandSearch()` search sandy's @-mention sources and
 the provider's commands for the composer's open menu, and both return ranked
-groups under their headings, so relevance and grouping stay with bb. The
+groups under their headings, so relevance and grouping stay with sandy. The
 composer reports the menu's query with `search(query)` from the event that
 changed it. Each composer box runs its searches in its own memoized provider,
 which the surface configures with what to search (project, environment,
@@ -121,28 +138,28 @@ provider, triggers): a keystroke in an open menu renders the provider and the
 composer once, and plain typing never runs the search. A query passed during
 render would have to reach the provider from an effect, a second render.
 Both report `refreshing` while earlier results show. The command search has
-no paging, since bb returns every match, and no prefetch: commands load when
+no paging, since sandy returns every match, and no prefetch: commands load when
 the first command query arrives and report `loading` until they do, so
 focusing a composer costs no request. A character is a mention trigger or a command trigger, never both;
 when a plugin mention provider claims `$`, `$` opens the mention menu.
 Every type in the contract is public: mentions, attachments and history use
 the `useComposer()` shapes, and suggestions carry the mention to insert plus
-per-kind display fields. bb's composer works in these types throughout. bb
+per-kind display fields. sandy's composer works in these types throughout. sandy
 reaches a composer only through the editor it hands to
 `experimental_ComposerRoot`.
 
 `experimental_describePromptMention(mention)`,
 `experimental_promptMentionClipboardAttributes(mention, text)` and
 `experimental_readPromptMentionClipboard(element)` give a composer's pills
-bb's classes, tooltip and text and its copy format, so pills copied between
-any composer and bb's messages paste back as pills. The timeline's pills use
+sandy's classes, tooltip and text and its copy format, so pills copied between
+any composer and sandy's messages paste back as pills. The timeline's pills use
 the same implementation. `threadLinks.parse`, `.cached` and `.resolve` turn
-pasted bb thread links into thread pills; bb owns
+pasted sandy thread links into thread pills; sandy owns
 its route shapes, id format and lookup batching, and core's initial-draft
 mention resolution shares the batching.
 
 The bundled composer is on the forkable list (`scripts/forkable-plugins.json`):
-it imports only `@get-bb/plugin-sdk`, npm packages and registry UI, and
+it imports only `@sandy-sdk/plugin-sdk`, npm packages and registry UI, and
 `pnpm check:plugin-forks plugins/composer` builds a copy outside this
 repository.
 
@@ -152,11 +169,11 @@ collapse with it; the attachment, clipboard, toast and thread-link services
 stay composer-scoped until another caller needs them; voice keeps its config
 and host components; `+` menu items show on surfaces that hide other plugin
 customizations, as before the move; @-mentions of the draft's own
-attachments are the composer's, since it holds the draft, so bb's mention
+attachments are the composer's, since it holds the draft, so sandy's mention
 search returns none.
 
 `apps/app/src/components/promptbox/composer-contract.test.tsx` is the
-contract table: bb's composer and a minimal textarea composer
+contract table: sandy's composer and a minimal textarea composer
 (`apps/app/src/test/fixtures/minimal-composer.tsx`, public SDK only) each run
 on the thread composer, a running thread that steers on Enter, embedded
 thread chat, the queued and sent message editors and the New thread
@@ -168,16 +185,16 @@ editor and republishes only when the editor's state changes, so a composer
 can build its editor inline on every render.
 
 Styling the composer needs lives in the plugin (`plugins/composer/src/composer.css`).
-bb keeps the pill surface its timeline shares and the highlight classes of
-its own decorations. bb's controls inside the box size their labels against
-bb's own `[data-composer-box]` wrapper, so a composer declares no CSS
+sandy keeps the pill surface its timeline shares and the highlight classes of
+its own decorations. sandy's controls inside the box size their labels against
+sandy's own `[data-composer-box]` wrapper, so a composer declares no CSS
 container. `input.compact` says when to show the one-line form: `"always"`
-when the host collapsed the box, `"narrow"` when bb's CSS container signal
+when the host collapsed the box, `"narrow"` when sandy's CSS container signal
 says the pane is short or the column narrow. The box reports the form it
 shows in `editor.state.layout`, which becomes `view.layout`; the host asks
 for the caret at the end with `editor.focusEnd()`, and measures the menu
 `experimental_ComposerRoot` is given on surfaces that make room for it, so
-the input carries no change counters or layout callbacks. bb releases
+the input carries no change counters or layout callbacks. sandy releases
 local attachment previews when attachments leave the draft.
 
 Before stabilization:
@@ -209,7 +226,7 @@ Stabilization requires verifying placement isolation, plugin
 disable/uninstall, loading and failure states, and pairing lifecycle on
 Mobile.
 
-## `app.slots.experimental_messageMetadata` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_messageMetadata` (`@sandy-sdk/plugin-sdk/app`)
 
 Requires SDK 0.6.98.
 
@@ -222,7 +239,7 @@ action row and shows and hides with the actions: on hover or focus where the
 device can hover, and always where it cannot. It sits before the actions on
 user messages and after the overflow menu on assistant messages, and extends
 into the space beside the message rather than narrowing the actions. Device
-policy belongs to the component: bb's own inline time returns null on touch
+policy belongs to the component: sandy's own inline time returns null on touch
 devices, which keep the time in the overflow menu footer. The component
 receives `{ message }` with `id`, `threadId`, `role`, exact `createdAt` in Unix
 milliseconds, and `turnId` (null outside a turn). User messages also expose
@@ -234,13 +251,13 @@ invalidate metadata props. Types: `ExperimentalMessageMetadataRegistration`,
 
 Components inspect `message.role` and return null to skip a message.
 
-BB supplies plugin context, CSS, muted typography, alignment, and ordering: bb's
+SANDY supplies plugin context, CSS, muted typography, alignment, and ordering: sandy's
 own contributions first, then plugin id, then registration order. Each plugin
 contribution has its own error boundary and empty suspense fallback. Plugin
 hooks can fetch or subscribe to data; use shared query caches rather than one
 request per message. Components unmount when their messages are no longer
 realized or the registration is removed. Plugin effects own their cleanup
-and time-based refreshes; BB adds no timer, text length limits, or server calls.
+and time-based refreshes; SANDY adds no timer, text length limits, or server calls.
 
 Core caller: the inline message time in the hover action row
 (`apps/app/src/components/thread/timeline/core-message-metadata.tsx`) registers
@@ -267,33 +284,33 @@ extending the context model or default binding policy.
 
 ## Discoverable RPC
 
-`bb.rpc.register` accepts `experimental_discoverable` and
+`sandy.rpc.register` accepts `experimental_discoverable` and
 `experimental_description` options, and method definitions accept
 `experimental_description`. A discoverable method publishes its wire schemas
 (Standard JSON Schema) and description. Discovery does not change RPC
 authorization or dispatch.
-`bb.sdk.plugins.experimental_discoverRpc({ pluginId?, method?, signal? })`
+`sandy.sdk.plugins.experimental_discoverRpc({ pluginId?, method?, signal? })`
 lists the published methods of loaded plugins. Methods disappear on unload, so
 callers handle the race between discovery and invocation. The fake host
 exposes `experimental_publishedRpcMethods`.
 
 Before stabilization, audit schema export fidelity (especially refinements and
 transforms), descriptor size and reference limits, lifecycle races, and
-cross-plugin copied-schema compatibility. Verify `bb plugin rpc list|inspect`
+cross-plugin copied-schema compatibility. Verify `sandy plugin rpc list|inspect`
 is sufficient to implement a consumer without a shared contract package.
 Method names carry optional versions; there is no negotiation.
 
 ## Plugin safe mode
 
-`bb.sdk.plugins.experimental_getSafeMode()` returns `{ enabled }`.
+`sandy.sdk.plugins.experimental_getSafeMode()` returns `{ enabled }`.
 `experimental_setSafeMode({ enabled })` returns `{ enabled, problems }`, where
 `problems` names each plugin that did not start when safe mode ended. While
-safe mode is on, only plugins included with bb run: `builtin` provenance, or
+safe mode is on, only plugins included with sandy run: `builtin` provenance, or
 an auto-installed bundled source. Every other plugin stays unloaded with
 status `disabled`. Each plugin's own `enabled` flag is untouched. Enable keeps
 an affected plugin unloaded, reload reports a failure, and install and update
 are refused. The flag persists on the server and backs
-`bb plugin safe-mode [on|off]`.
+`sandy plugin safe-mode [on|off]`.
 
 Before stabilization, audit whether official store plugins should count as
 included, whether a plugin calling `experimental_setSafeMode` should be
@@ -304,7 +321,7 @@ before the toggle is reachable.
 
 ## Queued message edit holds
 
-`bb.sdk.threads.queuedMessages.experimental_holdForEdit({ threadId, queuedMessageId })`
+`sandy.sdk.threads.queuedMessages.experimental_holdForEdit({ threadId, queuedMessageId })`
 (`POST /threads/:id/queued-messages/:queuedMessageId/edit-hold`) holds a
 queued row while someone edits it and returns `{ leaseMs }`. While the hold
 is live, no automatic dispatch (idle drain, schedule, plugin recheck, host
@@ -323,12 +340,12 @@ release a hold.
 
 Before stabilization, audit whether holds need an owner token so two clients
 editing the same row cannot release each other's hold, whether queue DTOs and
-`bb thread queue list` should show that a row is being edited, and whether
+`sandy thread queue list` should show that a row is being edited, and whether
 the lease length suits throttled background tabs.
 
 ## Plugin cache pruning
 
-`bb.sdk.plugins.experimental_pruneCache({ dryRun? })`
+`sandy.sdk.plugins.experimental_pruneCache({ dryRun? })`
 (`POST /plugins/cache/prune`) deletes cached git plugin versions and
 leftover npm-era cache entries under `<data>/plugins/cache` that no installed plugin uses and returns
 `{ dryRun, removed, bytes }`; each removed entry has `pluginId` (null for an
@@ -339,7 +356,7 @@ needs, directories containing or inside an installed plugin's root, and
 in-flight staging directories. It runs under the plugin registration lock.
 Removing a plugin deletes its cached versions at once, and a successful update
 deletes replaced versions once activation stabilizes (its state snapshot
-stays for the 7-day retention window). It backs `bb plugin prune [--dry-run]`
+stays for the 7-day retention window). It backs `sandy plugin prune [--dry-run]`
 and the palette's Clean up plugin cache.
 
 Before stabilization, audit whether the response should report
@@ -349,9 +366,9 @@ left by crashes should be collected too.
 
 ## RPC caller identity (`ExperimentalPluginRpcHandlerContext.experimental_caller`)
 
-Every `bb.rpc.register` handler receives a context whose `experimental_caller`
+Every `sandy.rpc.register` handler receives a context whose `experimental_caller`
 is `{ kind: "plugin", pluginId }` for a loaded plugin's
-`bb.sdk.plugins.callRpc` and `{ kind: "client" }` for everyone else. A
+`sandy.sdk.plugins.callRpc` and `{ kind: "client" }` for everyone else. A
 per-load token makes the identity unforgeable by clients.
 
 Docs: `backend-events.md`, `backend-sdk.md`.
@@ -360,13 +377,13 @@ Before stabilizing, audit whether other surfaces (HTTP routes, agent tools,
 CLI commands) need the same identity, whether a plugin needs to know the
 calling app window or thread, and whether in-process plugins that read other
 plugins' memory make the token a meaningful boundary for third-party plugins.
-bb account relies on it to keep `/api/connect/` requests, credential reads,
+sandy account relies on it to keep `/api/connect/` requests, credential reads,
 refused-credential reports, and credential adoption to the connect plugin.
 
 ## RPC cancellation (`ExperimentalPluginRpcHandlerContext.experimental_signal`)
 
-Every `bb.rpc.register` handler receives an `experimental_signal` that aborts
-when the HTTP request disconnects (including a `bb.sdk.plugins.callRpc` caller
+Every `sandy.rpc.register` handler receives an `experimental_signal` that aborts
+when the HTTP request disconnects (including a `sandy.sdk.plugins.callRpc` caller
 giving up after its 75 s timeout) or when the plugin instance that registered
 the handler is reloaded, disabled or removed. Callers of a disposing instance
 still waiting when the dispose drain ends are released with an error; the
@@ -375,7 +392,7 @@ handle throws a contained stale-handle error.
 
 Core path: the same per-instance lifetime drives CLI `ctx.signal` and the
 release of disposed instances' route, RPC, CLI and event-handler callers.
-bb's own RPC callers (connect revoke and status, git reads) pass no request
+sandy's own RPC callers (connect revoke and status, git reads) pass no request
 signal and get only the lifetime part.
 
 Docs: `backend-sdk.md`, `backend-ui-lifecycle.md`.
@@ -384,7 +401,7 @@ Before stabilizing, audit whether HTTP route and thread event handlers need
 the same signal in a typed context, and whether a deadline (not only
 cancellation) belongs in the context.
 
-## `bb.http.experimental_websocket`
+## `sandy.http.experimental_websocket`
 
 Registers an exact-path WebSocket upgrade in the plugin's
 `/api/v1/plugins/<id>/http/` namespace. It shares HTTP route auth modes.
@@ -405,7 +422,7 @@ Docs: `backend-events.md`, `testing.md`.
 5. Confirm the callback error policy should keep the socket open after an
    isolated message-handler failure.
 
-## `bb.providers.experimental_contributeEnvHealth`
+## `sandy.providers.experimental_contributeEnvHealth`
 
 Registers one host-scoped readiness resolver beside a provider environment
 contribution. When the bridge reports `unauthenticated` or `expired`, a
@@ -425,7 +442,7 @@ Docs: `providers.md`.
 4. Confirm a five-second timeout is appropriate for host-scoped credential
    availability checks.
 
-## `bb.providers.experimental_contributeEnv`
+## `sandy.providers.experimental_contributeEnv`
 
 Registers one resolver per provider per plugin that returns up to 32
 environment entries for each session and turn, and for model catalog listing
@@ -451,14 +468,14 @@ Docs: `providers.md`.
 
 ## Compatibility windows
 
-Open windows left by the SDK 0.4.16 stabilization renames. The bb-app
+Open windows left by the SDK 0.4.16 stabilization renames. The sandy-app
 CHANGELOG records the renames themselves.
 
 - Renamed declaration, tool and navPanel fields (`experimental_strings`,
   `experimental_presentation`, `experimental_fixedTabs`, …) are rejected at
   registration with a message naming the new field.
 - Presentation-less `toolCall` rows pass through the legacy-data adapter
-  (`upgradeLegacyToolItem` in `@bb/domain`). It renders Read/Grep/Glob and
+  (`upgradeLegacyToolItem` in `@sandy/domain`). It renders Read/Grep/Glob and
   read/grep/find/ls as `fileRead`/`search` rows and suppresses
   Task*/Todo*/ToolSearch bookkeeping calls. The pi bridge's live generic
   `tool` rows still take this path. To close the window, pi stamps
@@ -468,13 +485,13 @@ CHANGELOG records the renames themselves.
 
 ## Scheduled removals (next major)
 
-Unprefixed exports of `@get-bb/plugin-sdk/provider-bridge` with no consumer in
+Unprefixed exports of `@sandy-sdk/plugin-sdk/provider-bridge` with no consumer in
 this repository. They stay because a third-party bridge compiled against an
 SDK before 0.4.16 may import them, and dropping a published name is a
 breaking change. Remove them at the next major version. The
 `provider-bridge-scheduled-removals` SDK test holds the facade to this list.
 
-Re-exported from `@bb/domain`, where each still has core consumers:
+Re-exported from `@sandy/domain`, where each still has core consumers:
 
 - `acpNativeReasoningSchema`
 - `acpPermissionCliSchema`
@@ -490,7 +507,7 @@ Re-exported from `@bb/domain`, where each still has core consumers:
 
 Aliases of moved definitions. The ACP pair aliases the ACP kit's
 `experimental_acpLaunchSpecSchema` / `AcpLaunchSpec` and normalizer
-(`@get-bb/plugin-sdk/provider-bridge/acp`). The task-tool pair has no
+(`@sandy-sdk/plugin-sdk/provider-bridge/acp`). The task-tool pair has no
 replacement.
 
 - `hostDaemonAcpLaunchSpecSchema`
@@ -502,9 +519,9 @@ replacement.
 
 Also kept only until the next major:
 
-- On `@get-bb/plugin-sdk/provider-bridge/acp`, `AcpAgentProfile`, a deprecated
+- On `@sandy-sdk/plugin-sdk/provider-bridge/acp`, `AcpAgentProfile`, a deprecated
   alias of `AcpLaunchSpec`.
-- On `@get-bb/plugin-sdk/provider-bridge/testing`,
+- On `@sandy-sdk/plugin-sdk/provider-bridge/testing`,
   `CONFORMANCE_ASSEMBLED_EVENT_METHOD`. The conformance kit assembles
   `thread/delta` itself and reads nothing under that method.
 - The `disallowedTools` field of `threadStartParamsSchema`,
@@ -512,9 +529,9 @@ Also kept only until the next major:
   populates it.
 
 `experimental_useSidebarThreadActions` and `PluginSidebarThreadActions`
-(`@get-bb/plugin-sdk/app`), with the testing harness's `SidebarActionCall` /
+(`@sandy-sdk/plugin-sdk/app`), with the testing harness's `SidebarActionCall` /
 `inspection.sidebarActionCalls`, are superseded by the thread action
-registry, `useSdk().threads`, and `useBbNavigate().toThread` / `toCompose`;
+registry, `useSdk().threads`, and `useSandyNavigate().toThread` / `toCompose`;
 `experimental_archiveEnvironmentThreads` moved to
 `experimental_useArchiveEnvironmentThreads`. Like `useComposerView` they are
 `@internal`: published declarations drop them, while the runtime keeps
@@ -526,7 +543,7 @@ them.
 `PluginSettingDescriptor.experimental_schema` is a synchronous,
 non-transforming Standard Schema validator. The server runs it on every
 proposed value. `PluginSettingsHandle.experimental_set` validates and persists
-the plugin's own fields, like a settings route or `bb plugin config` write.
+the plugin's own fields, like a settings route or `sandy plugin config` write.
 
 Docs: `backend-foundation.md`.
 
@@ -555,7 +572,7 @@ Docs: `backend-foundation.md`.
 - Decide how long legacy stored numeric strings should be coerced on read.
 - Exercise decimal and exponent input across browser engines and the CLI.
 
-## `bb.experimental_hooks` (`on`, `recheck`)
+## `sandy.experimental_hooks` (`on`, `recheck`)
 
 `on("message.dispatch", handler)` answers core's admission checkpoint before
 every message reaches a provider. A handler returns `proceed`, `wait` (queue
@@ -612,7 +629,7 @@ Docs: `backend-events.md`.
 - **The single server-wide lock.** One slow handler delays every dispatch in
   the server, up to its 10 s box.
 
-## `interaction.pending` (`bb.events.on`)
+## `interaction.pending` (`sandy.events.on`)
 
 Fires after core commits a pending interaction. It carries the public thread
 and pending interaction DTOs and is observe-only.
@@ -624,7 +641,7 @@ and plugin interaction details. Confirm that the full interaction DTO remains
 the correct payload instead of an id that requires a fresh SDK read. Decide
 whether this event needs matching resolved, cancelled, or interrupted events.
 
-## `message.queued` / `message.dispatched` / `message.cancelled` / `turn.failed` (`bb.events.on`)
+## `message.queued` / `message.dispatched` / `message.cancelled` / `turn.failed` (`sandy.events.on`)
 
 These are observe-only announcements. `message.queued` (on first queue and on
 every rewritten wait) and `message.dispatched` carry the `ThreadQueuedMessage`
@@ -634,7 +651,7 @@ DTO. `message.cancelled` fires when a queued row is deleted before dispatch.
 Docs: `backend-events.md`.
 
 **Audit before stabilizing.** These are the only non-thread events on
-`bb.events.on`, so renaming `PluginThreadEventPayloads` and
+`sandy.events.on`, so renaming `PluginThreadEventPayloads` and
 `PluginThreadEventHandler` project-wide is part of stabilizing. Decide whether
 every plugin should see every queued row (today it does, and filtering on
 `entry.waitingOn` is the documented pattern) or only rows whose wait it owns.
@@ -648,7 +665,7 @@ policy asks without replaying the event log. Attempt caps are entirely the
 plugin's; core enforces no ceiling beyond one live retry row per original
 request.
 
-## `bb.experimental_environments` (`register`, `recheck`)
+## `sandy.experimental_environments` (`register`, `recheck`)
 
 Registers an environment provider: a named place threads run. Ids are flat
 and first-wins, and the persisted owner plugin is the only one that can
@@ -689,10 +706,10 @@ Docs: `backend-events.md`.
 5. **Compatibility fields.** Retain the deprecated `managed`, `isWorktree`,
    `workspaceProvisionType` and display-kind fields for the agreed cycle.
 
-## `@get-bb/plugin-sdk/environment-provider`
+## `@sandy-sdk/plugin-sdk/environment-provider`
 
 Exports the resource-operation contract for
-`bb.experimental_environments.register`. It also exports optional
+`sandy.experimental_environments.register`. It also exports optional
 `availability(context)` and `restore(context)`. `availability` is cached per
 project and machine, re-checked at thread creation, and reported to pickers
 as `machineAvailability`. `restore` is the only way core rebuilds a destroyed
@@ -719,7 +736,7 @@ the current decision timeout is appropriate. Stabilize `experimental_claimPath`
 after auditing restart, cancellation, competing checkout, and
 path-reservation behavior.
 
-## `app.slots.experimental_environmentProviderInputs`, `experimental_BranchPicker`, `experimental_useBranches` and `experimental_useCheckoutState` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_environmentProviderInputs`, `experimental_BranchPicker`, `experimental_useBranches` and `experimental_useCheckoutState` (`@sandy-sdk/plugin-sdk/app`)
 
 The slot registers `{ environmentProviderId, component }`, the control the
 New Thread environment picker renders beside that provider. Its props are
@@ -752,7 +769,7 @@ primitives). Only the API index names the slot registration itself.
    reports ready from an effect on mount. Decide whether the registration
    should instead declare a default value.
 
-## `app.slots.experimental_machineProviderInputs` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_machineProviderInputs` (`@sandy-sdk/plugin-sdk/app`)
 
 Registers `{ machineProviderId, component }`, a compact control for one
 machine provider's inputs. It renders in the New Thread toolbar when a
@@ -766,7 +783,7 @@ Docs: `frontend-components.md`.
 shape works across machine providers, that ready/blocked is sufficient, and
 that provider changes and crashed controls cannot retain stale launch inputs.
 
-## `bb.experimental_machines` (`register`)
+## `sandy.experimental_machines` (`register`)
 
 Registers a project-independent machine provider: required id, displayName,
 description, icon, `create`, `reconcileCleanup` and `remove`; optional
@@ -787,7 +804,7 @@ bootstrap, competing lifecycle operations, wrong-owner rejection and no
 duplicate enrollment. Standalone SDK submit/launch/follow/cancel must match
 CLI create/status/cancel.
 
-## `@get-bb/plugin-sdk/machine-provider`
+## `@sandy-sdk/plugin-sdk/machine-provider`
 
 Exports the machine provider's definition, input, availability/validation,
 create and lifecycle context, progress, and resource/removal types. These
@@ -796,14 +813,14 @@ their unprefixed names do not mean they are stable.
 
 Docs: `backend-machines.md`.
 
-Stabilization follows `bb.experimental_machines` above.
+Stabilization follows `sandy.experimental_machines` above.
 
-## `bb.branding.experimental_icons` (manifest) and namespaced presentation glyphs
+## `sandy.branding.experimental_icons` (manifest) and namespaced presentation glyphs
 
 A manifest map from names to plugin SVG files. Timeline presentation glyphs
 and provider `icon` may reference an entry as `"<pluginId>/<name>"`. The map
 is validated at build and load. Ingest rejects a glyph that is not the
-emitting plugin's own declared icon. `bb.branding.icon` refuses the namespaced
+emitting plugin's own declared icon. `sandy.branding.icon` refuses the namespaced
 form.
 
 Docs: `quickstart.md` (manifest and SVG rules), `providers.md` (provider
@@ -811,7 +828,7 @@ icons), `backend-cli-agents.md` (tool presentation).
 
 **Audit before stabilizing.** Decide whether the key becomes `icons`. The
 strict manifest schema makes that rename breaking, so the stabilization
-release must accept both for one release. Decide whether `bb.branding.icon`
+release must accept both for one release. Decide whether `sandy.branding.icon`
 should resolve a self-referencing namespaced glyph through the map instead of
 refusing it. **Open question for a major release:** whether to tighten logos
 and provider icons at install and load, to the build rules or to the full
@@ -831,7 +848,7 @@ the icon; today it simply falls back.
 **Kept experimental (2026-08-22).** Drop the legacy input and settle the image
 policy, then stabilize.
 
-Converts a decoded bb tool-call response into the ordered text and
+Converts a decoded sandy tool-call response into the ordered text and
 inline-image content blocks that MCP and Pi tool results accept. It takes
 ordered `contentBlocks` or the legacy aggregate `{ content, images }`.
 
@@ -840,7 +857,7 @@ content-block vocabulary; decide whether legacy aggregate fields still need to
 be accepted; and define any image MIME validation, decoding, or payload-size
 policy at the server boundary.
 
-## The ACP bridge kit (`@get-bb/plugin-sdk/provider-bridge/acp`)
+## The ACP bridge kit (`@sandy-sdk/plugin-sdk/provider-bridge/acp`)
 
 **Kept experimental (2026-08-22).** Five members remain, each with an open
 question below. The kit grows with a consumer, not ahead of one.
@@ -848,7 +865,7 @@ question below. The kit grows with a consumer, not ahead of one.
 `experimental_acpProviderBridge` is the generic Agent Client Protocol bridge a
 plugin re-exports, backed by `packages/provider-bridge-acp` (the official
 `@agentclientprotocol/sdk` transport, turns for agent-started work, slash
-commands and session options as bb thread state, elicitation forms as
+commands and session options as sandy thread state, elicitation forms as
 question cards, sign-in guidance from advertised auth methods). It launches
 the agent named by `providerOptions.acpLaunchSpec` with the dialect named by
 `acpDialect` in bridge options. `experimental_probeAcpAgent` asks an installed
@@ -858,13 +875,13 @@ validates the answer across a host RPC boundary.
 bridge parses.
 
 `experimental_registerAcpDialect` adds a dialect. A plugin calls it at module
-load in its `bb.host` artifact with an `AcpDialect` and names the id as
+load in its `sandy.host` artifact with an `AcpDialect` and names the id as
 `acpDialect` in its registration. Empty and built-in ids (`acp`, `cursor`,
 `grok`, `omp`, `opencode`) throw, re-registering an id replaces it, and an
-unregistered id resolves to the generic dialect. bb's own dialects resolve
+unregistered id resolves to the generic dialect. sandy's own dialects resolve
 through the same registry (`resolveAcpDialect`).
 
-`@get-bb/plugin-sdk/provider-bridge/acp-next`, the subpath the kit was
+`@sandy-sdk/plugin-sdk/provider-bridge/acp-next`, the subpath the kit was
 previewed under (2026-10-09), re-exports this kit unchanged and is
 deprecated. Each subpath is bundled with its own dialect registry, so a
 plugin must import every member from one of them. Remove it at the next
@@ -894,7 +911,7 @@ relative-path / 32-root rule or the per-root options, and the split from the
 per-workspace resolver is new.
 
 Names the directories a provider's agent reads skills from: `user` relative
-to the host home, and `project` relative to the workspace. bb lists those
+to the host home, and `project` relative to the workspace. sandy lists those
 skills beside its own.
 
 Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1.
@@ -925,8 +942,8 @@ two declarations or become one list of typed roots; confirm that a flat
 
 ## `PluginProviderDeclaration.experimental_resolvesNativeRoots`
 
-Declares that the plugin's `bb.host` entry serves
-`resolveNativeRoots({ providerId, cwd })`. bb scans the answer beside the
+Declares that the plugin's `sandy.host` entry serves
+`resolveNativeRoots({ providerId, cwd })`. sandy scans the answer beside the
 declared roots (cached ten seconds). A failed answer yields no resolved roots
 and never fails the listing.
 
@@ -936,7 +953,7 @@ Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1.
 whether the server should detect the method on the host entry; and settle
 the cache TTL and the invalidation set against a real multi-host setup.
 
-## `experimental_nativeRootsHostContract` (`@get-bb/plugin-sdk/host`)
+## `experimental_nativeRootsHostContract` (`@sandy-sdk/plugin-sdk/host`)
 
 The one-method host RPC contract (`resolveNativeRoots`). Input is
 `{ providerId, cwd: string | null }`. Output is `{ skills, commands }`, each a
@@ -950,7 +967,7 @@ third-party agent's layouts; decide whether the contract should accept a
 relative path the daemon resolves (so a plugin need not know the host home)
 and whether the 256-root cap per side is right.
 
-## `experimental_filterResolvedNativeRoots` (`@get-bb/plugin-sdk/host`)
+## `experimental_filterResolvedNativeRoots` (`@sandy-sdk/plugin-sdk/host`)
 
 Checks a `resolveNativeRoots` answer root by root against the contract. It
 drops each failing root with a warning, and truncates a side past 256 roots,
@@ -964,7 +981,7 @@ in the answer) so a plugin cannot forget to call the helper, and whether
 `dropped[].reason` is a contract a resolver's test may pin or free text for
 the log.
 
-## Vendor plugin roots (`experimental_resolveClaudePluginRoots` and `experimental_resolveVendorPluginRoots`, `@get-bb/plugin-sdk/host`)
+## Vendor plugin roots (`experimental_resolveClaudePluginRoots` and `experimental_resolveVendorPluginRoots`, `@sandy-sdk/plugin-sdk/host`)
 
 `experimental_resolveVendorPluginRoots({ plugins, layout })` walks vendor
 plugin directories into native roots with `namePrefix: "<plugin>:"`.
@@ -1012,7 +1029,7 @@ Docs: `backend-foundation.md`.
    should tolerate unknown fields so a hint degrades to the one-line input on
    an older client instead of failing the whole settings view.
 
-## `bb.sdk.threads.experimental_listPluginMetadata`
+## `sandy.sdk.threads.experimental_listPluginMetadata`
 
 `POST /threads/plugin-metadata` with `{ pluginId, threadIds }` (1–200 ids)
 returns `{ threads: { threadId, metadata }[] }` for each thread holding that
@@ -1031,22 +1048,22 @@ Docs: `backend-sdk.md`.
 2. **Batch size.** 200 ids per request; callers chunk. Revisit if the
    attributes layer replaces per-registration reads.
 
-## `experimental_useExperiment` (`@get-bb/plugin-sdk/app`)
+## `experimental_useExperiment` (`@sandy-sdk/plugin-sdk/app`)
 
-`experimental_useExperiment(key)` returns whether the bb experiment `key` is
+`experimental_useExperiment(key)` returns whether the sandy experiment `key` is
 on, from the same live system config core reads (Settings → Experiments,
-`bb settings experiment`). It is false while config loads and for unknown
+`sandy settings experiment`). It is false while config loads and for unknown
 keys. First caller: the built-in thread list, which gates multi-row selection
 on `sidebarMultiSelect`.
 
 **Audit before stabilizing.**
 
-1. **Key type.** Keys are plain strings so the SDK does not ship bb's
+1. **Key type.** Keys are plain strings so the SDK does not ship sandy's
    experiment list; decide whether to export a typed key union instead.
 2. **Plugin-owned experiments.** Decide whether plugins should declare their
-   own experiments in Settings → Experiments rather than only read bb's.
+   own experiments in Settings → Experiments rather than only read sandy's.
 
-## `bb.sdk.threads.experimental_listAncestors`
+## `sandy.sdk.threads.experimental_listAncestors`
 
 `POST /threads/ancestors` with `{ threadIds }` (1–200 ids) returns
 `{ threads: { threadId, ancestorIds }[] }`, parent first up to the root,
@@ -1066,7 +1083,7 @@ Docs: `backend-sdk.md`.
 2. **Batch size.** 200 ids per request; callers chunk, like
    `experimental_listPluginMetadata`.
 
-## `bb.sdk.threads.experimental_listDescendants`
+## `sandy.sdk.threads.experimental_listDescendants`
 
 `POST /threads/descendants` with `{ threadIds, includeArchived?,
 includeHidden? }` (1–200 ids) returns `{ threads: { threadId, descendantIds
@@ -1093,7 +1110,7 @@ Docs: `backend-sdk.md`.
    becoming visible, so a caller that skips hidden threads cannot refresh
    one when it appears; decide whether visibility changes need an event.
 
-## `bb.sdk.threads.experimental_listCascade`
+## `sandy.sdk.threads.experimental_listCascade`
 
 `POST /threads/cascade` with `{ threadIds, action }` (1–200 ids, `action`
 `"archive"` or `"delete"`) returns `{ threads: { threadId, cascadeThreadIds
@@ -1120,7 +1137,30 @@ Docs: `backend-sdk.md`.
 3. **Actions.** Confirm `archive` and `delete` are the only cascading
    actions worth previewing.
 
-## `bb.sdk.threads.experimental_regenerateTitle`
+## `sandy.sdk.threads.experimental_updateEnvironmentDirectory`
+
+`PUT /threads/:id/environment-directory` with `{ path, projectId? }` moves an
+idle thread to another absolute directory on the host it runs on. It stops the
+thread's loaded runtime, reuses the target project's environment for the path
+or provisions an unmanaged one, points the thread at it and appends an
+`environment_directory_update` event. With `projectId` the thread also changes
+project: its prompt history follows, its attachments are copied into the
+target project, and the old environment stays with the old project. Plugin
+state keyed by project or environment id (workflows, automations) is not
+rewritten. It answers `{ changed, path, projectId }`, and rejects a starting or
+active thread, an archived or deleted thread, an unknown project, a path that
+is not absolute or is a filesystem root, and a worktree owned by another
+project. Core callers: the agent tool `update_environment_directory` (same
+project only) and `sandy thread move-directory`; all three
+run `updateThreadEnvironmentDirectory` in
+`apps/server/src/services/threads/thread-environment-directory.ts`.
+
+Docs: `backend-sdk.md`, `sandy guide thread-lifecycle`.
+Before stabilization, decide whether a running thread may move after its turn
+ends, whether plugin state keyed by project id needs a move hook, and whether
+the app needs a thread menu action as a third caller.
+
+## `sandy.sdk.threads.experimental_regenerateTitle`
 
 `POST /threads/:id/title/regenerate` asks the thread-title AI service for a new
 title built from the thread's first task message, up to eight of its latest
@@ -1131,9 +1171,9 @@ one and syncs to providers that support renaming, like a manual rename. When
 no title service is available, generation fails, or the thread has no task
 message, the call fails with the reason and the title is unchanged. Core
 callers: the thread menu's Regenerate title action and
-`bb thread regenerate-title`.
+`sandy thread regenerate-title`.
 
-Docs: `backend-sdk.md`, `bb guide thread-messaging`.
+Docs: `backend-sdk.md`, `sandy guide thread-messaging`.
 
 **Audit before stabilizing.**
 
@@ -1146,7 +1186,7 @@ Docs: `backend-sdk.md`, `bb guide thread-messaging`.
 
 A `type: "select"` descriptor record from option value to display label,
 shown in the settings form. Stored values, defaults, `settings.get()` and
-`bb plugin config` keep the option values, and labels for values outside
+`sandy plugin config` keep the option values, and labels for values outside
 `options` are refused at define time. First consumer: push-notifications'
 level settings.
 
@@ -1159,10 +1199,10 @@ Docs: `backend-foundation.md`.
    beside their values and makes per-option descriptions possible, but every
    reader of `options` (host policy, server contract, CLI, settings form) has
    to handle both forms.
-2. **CLI.** `bb plugin config <id>` still lists raw option values, which is
+2. **CLI.** `sandy plugin config <id>` still lists raw option values, which is
    what `set` accepts; decide whether it should also print labels.
 
-## `bb.server.experimental_dataDir`
+## `sandy.server.experimental_dataDir`
 
 **Kept experimental (2026-08-22).** A bare data-directory path does not
 stabilize.
@@ -1175,40 +1215,40 @@ Docs: `backend-foundation.md`.
 **Audit before stabilizing.** Decide whether the Account Pool plugin's secret
 files can move to a plugin-scoped primitive so the member can go. If it stays,
 decide whether a bare path is the right shape or whether a plugin should get
-named accessors for the bb-managed locations it may use. A path invites
-writes into bb's directory, which `bb.storage` exists to prevent.
+named accessors for the sandy-managed locations it may use. A path invites
+writes into sandy's directory, which `sandy.storage` exists to prevent.
 
-## `bb.server.experimental_appUrl`
+## `sandy.server.experimental_appUrl`
 
-The operator-configured public app URL from `BB_APP_URL`, or `null`.
+The operator-configured public app URL from `SANDY_APP_URL`, or `null`.
 
 Docs: `backend-foundation.md`.
 
-**Audit before stabilizing.** Decide whether `BB_EXTERNAL_URL` or the bb
-connect URL should supply this value when `BB_APP_URL` is empty. Confirm that
+**Audit before stabilizing.** Decide whether `SANDY_EXTERNAL_URL` or the sandy
+connect URL should supply this value when `SANDY_APP_URL` is empty. Confirm that
 one public URL has clear behavior when a server has several access paths.
 
-## `bb.server.internal_DO_NOT_USE_openTunnelIngress`
+## `sandy.server.internal_DO_NOT_USE_openTunnelIngress`
 
-Internal to bb's own connect plugins (`connect`, `bb--connect-next`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
+Internal to sandy's own connect plugins (`connect`, `sandy--connect-next`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
 
 `internal_DO_NOT_USE_openTunnelIngress({ audience })` resolves to
 `{ baseUrl, close() }` for a listener on `127.0.0.1` with an ephemeral port.
 Every HTTP request and WebSocket upgrade on it must carry an
-`x-bb-gate-assertion` (`@bb/tunnel-contract/next`) signed by the bb connect
+`x-sandy-gate-assertion` (`@sandy/tunnel-contract/next`) signed by the sandy connect
 next gate for `audience`, the request method and the exact path and query;
 anything else gets a 401 JSON body `{ code: "gate_assertion_invalid", reason }`
 and never reaches the app. A verified request loses every inbound
-`x-bb-gate-*` header, gets `x-bb-gate-auth` (and the machine id or OAuth
+`x-sandy-gate-*` header, gets `x-sandy-gate-auth` (and the machine id or OAuth
 grant headers) from the claims only, has Host and the public Origin rewritten
 to the server's loopback origin, and is dispatched in-process into the same
 app as `loopbackBaseUrl` (HTTP, `/ws`, plugin WebSockets). The ingress never
-counts as a loopback caller. Gate keys come from `BB_CONNECT_GATE_KEYS_URL`.
+counts as a loopback caller. Gate keys come from `SANDY_CONNECT_GATE_KEYS_URL`.
 Opening an audience again shares its listener; it stops, and drops its
 WebSockets, when every handle closes. Handles close when the plugin is
 disabled or unloaded.
 
-Core callers: none. The Cloudflare bb connect path still replays requests to
+Core callers: none. The Cloudflare sandy connect path still replays requests to
 the main loopback port; the `connect-next` plugin is the only caller.
 
 Docs: `backend-foundation.md`; the request rules are in [connect-next.md](connect-next.md) (Server ingress).
@@ -1219,9 +1259,9 @@ Decide whether `target` (share ports) belongs here or stays refused. Confirm
 the audience should stay free-form or become a typed server id, and whether a
 plugin may open audiences for servers other than its own.
 
-## `bb.server.internal_DO_NOT_USE_requestPeers`
+## `sandy.server.internal_DO_NOT_USE_requestPeers`
 
-Internal to bb's own connection overview plugin (`bb--connection-overview`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
+Internal to sandy's own connection overview plugin (`sandy--connection-overview`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
 
 `internal_DO_NOT_USE_requestPeers({ after? })` returns
 `{ generation, capacity, oldestSeq, latestSeq, peers }` from a ring of 8192
@@ -1236,25 +1276,25 @@ changes when the server restarts; `oldestSeq` above `after + 1` means unread
 entries were overwritten. Recording observes only and changes no access
 decision.
 
-Core callers: none. The `bb--connection-overview` plugin is the only caller.
+Core callers: none. The `sandy--connection-overview` plugin is the only caller.
 
 **Audit before stabilizing.** Decide whether core should show incoming peers
 itself, whether the ring size should be configurable, and whether a typed
 per-request access decision (for example the host check result) belongs in
 the entry.
 
-## `bb.hosts.internal_DO_NOT_USE_setNextTunnels`, `internal_DO_NOT_USE_nextTunnelStatuses`, `internal_DO_NOT_USE_onNextTunnelStatusChange`
+## `sandy.hosts.internal_DO_NOT_USE_setNextTunnels`, `internal_DO_NOT_USE_nextTunnelStatuses`, `internal_DO_NOT_USE_onNextTunnelStatusChange`
 
-Internal to bb's own connect plugins (`connect`, `bb--connect-next`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
+Internal to sandy's own connect plugins (`connect`, `sandy--connect-next`): the `internal_DO_NOT_USE_` prefix marks members that are not part of the plugin API, are not offered to third-party plugins, and may change or disappear in any release.
 
-`internal_DO_NOT_USE_setNextTunnels(config | null)` turns bb connect next machine
+`internal_DO_NOT_USE_setNextTunnels(config | null)` turns sandy connect next machine
 tunnels on (an `InternalDoNotUsePluginNextTunnelConfig`,
 `{ domain, server: { protocol, host, port } }`) or off. The server keeps one
 config owned by the calling plugin (another plugin's non-null call throws
 while it is set; a null call from a non-owner is a no-op), clears it when the
 owner is disabled or uninstalled, and sends it as `connect-next.replace` (and
 `connectNext` in the session-open response) to every connected daemon that
-holds a bb connect machine credential and opened its session with protocol
+holds a sandy connect machine credential and opened its session with protocol
 247 or newer. A protocol-246 daemon is still accepted and only gets its
 Cloudflare shares. Each daemon runs frpc with one proxy per port declared
 through `declareSharedPorts` at `<label>--<port>.<domain>` while it shares at
@@ -1276,7 +1316,7 @@ Docs: `backend-foundation.md`; the wire and daemon behavior are in
 [connect-next.md](connect-next.md) (Machine tunnels).
 
 **Audit before stabilizing.** Decide whether the config should be per host
-instead of global, whether the status should be pushed through `bb.realtime`
+instead of global, whether the status should be pushed through `sandy.realtime`
 instead of a listener, and whether the compatibility window for protocol 246
 can close (then `HOST_DAEMON_COMPATIBLE_PROTOCOL_VERSIONS` goes back to the
 current version only). Decide whether the Cloudflare machine tunnel should
@@ -1302,7 +1342,7 @@ hook; confirm the `{ threadId | null }` scope is the right key once bridges
 multiplex several threads over one child; and settle the recording entry
 shape (`{ ts, run, seq, dir, line }`) as a documented fixture format.
 
-## Portable provider spawn (`experimental_spawnPortableProcess`, `experimental_killPortableProcess`) (`@get-bb/plugin-sdk/provider-bridge`)
+## Portable provider spawn (`experimental_spawnPortableProcess`, `experimental_killPortableProcess`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
 
 `experimental_spawnPortableProcess({ command, args, cwd?, env?, stdio?, detached? })`
 returns a `ChildProcess` launched the way the daemon launches one. On Windows
@@ -1336,7 +1376,7 @@ bridges need to say about a rejection (installation was deliberately left to
 runtime should bound the `rateLimited` ladder from the hint rather than from
 a constant.
 
-## Provider maintenance toolkit (`experimental_resolveExecutablePath`, `experimental_readCliVersion`, `experimental_commandOutput`, `experimental_versionFrom`, `experimental_compareVersions`, `experimental_formatCommand`, `experimental_clampPercent`) (`@get-bb/plugin-sdk/provider-bridge`)
+## Provider maintenance toolkit (`experimental_resolveExecutablePath`, `experimental_readCliVersion`, `experimental_commandOutput`, `experimental_versionFrom`, `experimental_compareVersions`, `experimental_formatCommand`, `experimental_clampPercent`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
 
 These are the host-local probes behind a bridge's `provider/health`,
 `provider/usage` and `provider/installation/status` answers for a
@@ -1361,7 +1401,7 @@ installs anything.
 2. **`compareVersions` throws.** Confirm the throwing contract for invalid
    inputs before stabilization.
 
-## Presentation builders (`experimental_presentationTitle`, `experimental_presentationDetail`, `experimental_withTitle`, `experimental_presentationFileName`, `experimental_COMPACTION_PRESENTATION`, `experimental_REASONING_PRESENTATION`, `experimental_fileReadPresentation`, `experimental_searchPresentation`, `experimental_webSearchPresentation`, `experimental_webFetchPresentation`, `experimental_planStepsPresentation`, `experimental_toolPresentation`) (`@get-bb/plugin-sdk/provider-bridge`)
+## Presentation builders (`experimental_presentationTitle`, `experimental_presentationDetail`, `experimental_withTitle`, `experimental_presentationFileName`, `experimental_COMPACTION_PRESENTATION`, `experimental_REASONING_PRESENTATION`, `experimental_fileReadPresentation`, `experimental_searchPresentation`, `experimental_webSearchPresentation`, `experimental_webFetchPresentation`, `experimental_planStepsPresentation`, `experimental_toolPresentation`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
 
 These build the grammar-v3 `presentation` a bridge stamps on every item
 ([provider-plugin-api.md](provider-plugin-api.md) §3 owns the vocabulary).
@@ -1369,14 +1409,14 @@ These build the grammar-v3 `presentation` a bridge stamps on every item
 or undefined. `presentationDetail` caps a detail at the persisted schema's 280
 characters. `withTitle` stamps a title only when there is one, and
 `presentationFileName` returns the last path segment. The two constants carry
-bb's fixed wording for compaction and reasoning rows. The five builders shape
+sandy's fixed wording for compaction and reasoning rows. The five builders shape
 file read, search, web search, web fetch and plan-steps rows, and
 `toolPresentation` is the generic "Running/Ran <tool>" row.
 
 **Audit before stabilizing.**
 
 1. **The wording is a product decision.** A bridge that adopts the constants
-   inherits bb's English labels and glyph names. Decide whether the labels
+   inherits sandy's English labels and glyph names. Decide whether the labels
    should come from the host (localized, themed) rather than be persisted from
    the bridge before the constants are a promise.
 2. **The caps are the schema's.** Stabilizing the helpers freezes the
@@ -1387,7 +1427,7 @@ file read, search, web search, web fetch and plan-steps rows, and
    own uncollapsed variant. Decide which default a third-party bridge should
    get.
 
-## `experimental_readBoundedLines` (`@get-bb/plugin-sdk/provider-bridge`)
+## `experimental_readBoundedLines` (`@sandy-sdk/plugin-sdk/provider-bridge`)
 
 A newline-delimited line reader. It frames on LF only (never `readline`, which
 also splits on U+2028/U+2029) and strips a trailing CR. A line over
@@ -1405,7 +1445,7 @@ fires after a final unterminated line is emitted.
    session instead of logging the drop. Decide whether the reader should offer
    a fail-closed mode before the signature is a promise.
 
-## Live-file navigation (`experimental_FileLink`, `BbNavigate.experimental_openFilePreview`, `BbNavigate.experimental_openFileExternally`, and `experimental_useCanOpenFileExternally`)
+## Live-file navigation (`experimental_FileLink`, `SandyNavigate.experimental_openFilePreview`, `SandyNavigate.experimental_openFileExternally`, and `experimental_useCanOpenFileExternally`)
 
 **Kept experimental (2026-08-22).** Windows/UNC paths were never verified.
 
@@ -1480,7 +1520,7 @@ with this field.
    and confirm error states for unknown SHAs and paths missing at the
    revision.
 
-## Terminal navigation (`BbNavigate.experimental_openTerminal`)
+## Terminal navigation (`SandyNavigate.experimental_openTerminal`)
 
 Shows a terminal the plugin created with `useSdk().terminals.create` in the
 current surface's terminal panel. A thread surface accepts only that thread's
@@ -1510,7 +1550,7 @@ Docs: `frontend-hooks-and-ui.md`.
 4. Decide whether a nav panel should also declare a default terminal scope so
    the native "+ Terminal" button follows the page's worktree.
 
-## Host plugin foundation (`bb.hosts.experimental_client`, `ExperimentalHostClient.experimental_onWorkerExit`, `ExperimentalHostClient.experimental_onSignal`, `ExperimentalHostRpcContext.experimental_retainWorker`, `experimental_defineHostEntry`, `experimental_killProcessesWithCwdUnder`, `experimental_readProcessIdentity`, and `experimental_createHostEntryHarness`)
+## Host plugin foundation (`sandy.hosts.experimental_client`, `ExperimentalHostClient.experimental_onWorkerExit`, `ExperimentalHostClient.experimental_onSignal`, `ExperimentalHostRpcContext.experimental_retainWorker`, `experimental_defineHostEntry`, `experimental_killProcessesWithCwdUnder`, `experimental_readProcessIdentity`, and `experimental_createHostEntryHarness`)
 
 **Kept experimental (2026-08-22).** Signals and watches have no consumer
 (decide whether to delete them or keep them experimental separately from
@@ -1520,10 +1560,10 @@ other than keep-awake. The artifact-contract names (`experimental_apiVersion`,
 from installed artifacts, so renaming them needs a dual-name window plus a
 protocol bump.
 
-A plugin declares one `bb.host` Node entry with
+A plugin declares one `sandy.host` Node entry with
 `experimental_defineHostEntry`, shares a Standard Schema contract with its
 server, and calls methods on an explicit enrolled host through
-`bb.hosts.experimental_client`. The client can observe unexpected worker exits
+`sandy.hosts.experimental_client`. The client can observe unexpected worker exits
 and ephemeral host signals. Handlers can hold retention leases, and idle
 workers are evicted after five minutes. `experimental_killProcessesWithCwdUnder`
 reaps processes working under any of the given directories before they are
@@ -1570,16 +1610,16 @@ Docs: `backend-foundation.md`, `testing.md`.
    retaining only the most recently materialized artifact digest per plugin is
    sufficient.
 9. **Environment.** Confirm executable discovery through normalized `PATH`
-   and stripping all daemon-owned `BB_*` variables.
+   and stripping all daemon-owned `SANDY_*` variables.
 10. **Trust and dependencies.** V1 host plugins are trusted Node programs that
     may use `child_process`, filesystem, and network APIs. Decide whether later
     permissions, native artifacts, or an explicit dependency installer can be
     layered on without changing the RPC contract. Confirm rejecting all private
-    `@bb/*` imports from host bundles is the correct permanent boundary, and
+    `@sandy/*` imports from host bundles is the correct permanent boundary, and
     audit the builder-supplied public SDK runtime against future host exports.
 11. **Composition boundary.** Confirm host RPC methods and signals should remain
     private to the owning plugin while allowing another daemon subsystem to
-    consume the same `bb.host` artifact through its own bootstrap and lifecycle.
+    consume the same `sandy.host` artifact through its own bootstrap and lifecycle.
 12. **Test harness.** Audit both layers. The server harness has the
     `experimental_callHostRpc`, `experimental_hostEntry` and
     `experimental_declaredIconNames` options, the `experimental_hostRpcCalls`
@@ -1613,7 +1653,7 @@ registrations ignore the field.
 Callers: the Git plugin's host `status`, `diff`, `files`, `patches` and
 `branches` (base marked `workspace.status`, `workspace.diff`,
 `workspace.diffFiles`, `workspace.diffPatch` and `host.list_branch_options`
-retryable; its `fileSide` reads through `bb.sdk.files.read`, which still uses
+retryable; its `fileSide` reads through `sandy.sdk.files.read`, which still uses
 the retryable `host.read_file`), and the GitHub PR Status plugin's batched
 `views` read (core marked `workspace.pull_request` retryable; `act` is not).
 
@@ -1663,7 +1703,7 @@ One consumer: the Tasks plugin's open-task count.
 A nav panel hook returning `ExperimentalBadge`
 (`{ count?, text?, tone?, label }`) or `null`. `count` and `text` are
 exclusive; `text` is at most 8 characters; `tone` is `neutral` (the default),
-`warning`, or `critical`, and bb owns the colors. The sidebar navigation model
+`warning`, or `critical`, and sandy owns the colors. The sidebar navigation model
 runs the hook once per registered panel in the plugin's slot scope and crash
 boundary and hands the value to every navigation provider as `item.badge`.
 The bundled Navigation plugin's Rail draws a count (capped at `9+`) or a dot
@@ -1672,7 +1712,7 @@ on the icon, and does not draw `text`; its Top list and More menu draw the count
 and put a dot on More, in the strongest hidden tone, while a badged panel is
 hidden there.
 
-The fields follow the 30 bb-community plugins that drew
+The fields follow the 30 sandy-community plugins that drew
 `experimental_sidebarAccessory` (October 2026): 12 drew one count, 8 several
 numbers or a fraction, 5 a short status word, 3 a percentage, and 18 used
 red, amber, or an accent color for state. A plugin that still passes
@@ -1695,7 +1735,7 @@ Docs: `frontend-core-slots.md`.
 4. **More summary.** The More button's accessible name lists every hidden
    badge. Check that this stays usable with many badged hidden panels.
 
-## `app.slots.experimental_sidebarNavigation` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_sidebarNavigation` (`@sandy-sdk/plugin-sdk/app`)
 
 **Restored 2026-10-15 (SDK 0.6.53) with `placement`.** It was removed in
 #5229 (0.46.0); the names are unchanged so plugins built before 0.46, such as
@@ -1710,7 +1750,7 @@ plugin's key, or `__automatic__` (the default: the first registered provider
 from another plugin, else `navigation/rail`). Legacy `__builtin__` and
 `navigation/navigation` read as `__automatic__`.
 
-The registration declares `placement`, `rail` or `list` (the default). bb lays
+The registration declares `placement`, `rail` or `list` (the default). sandy lays
 the sidebar out from the placement before the provider renders, and keeps the
 layout around it: for `rail`, a fixed-width column that stays when the sidebar
 collapses and Settings at the bottom of the column; for `list`, the area
@@ -1726,7 +1766,7 @@ plugin is disabled.
 
 The optional `headerComponent` renders in the sidebar header row while the
 navigation is active. On wide macOS desktop windows, this row sits below the
-window title bar; elsewhere it sits between the sidebar toggle and bb's back
+window title bar; elsewhere it sits between the sidebar toggle and sandy's back
 and forward buttons. It receives `width`, `controlSize`,
 and `isCompactViewport`. The host clips it to the row, keeps the macOS drag
 region for non-interactive space, aligns it with the macOS window controls,
@@ -1745,7 +1785,7 @@ with no provider at all the sidebar uses the list placement and says no
 navigation plugin is enabled. A crashing provider is replaced by the
 Navigation plugin's provider for its placement, with one toast.
 
-**Core callers on the same path.** bb's Rail and Top list are the bundled,
+**Core callers on the same path.** sandy's Rail and Top list are the bundled,
 default-enabled Navigation plugin (`plugins/navigation`), which is on the
 forkable list. It registers both through this slot with no host-only API:
 the host owns only the placement layout, Settings, the customize editor, and
@@ -1768,7 +1808,7 @@ the navigation model. Rail's header is its New thread button, registered as
 6. **Header alias.** Remove the `experimental_sidebarHeader` alias once
    released plugins pass `headerComponent`.
 
-## `experimental_useSidebarNavigation`, `experimental_useSidebarNavigationSplit`, `experimental_SidebarNavigationIcon` (`@get-bb/plugin-sdk/app`)
+## `experimental_useSidebarNavigation`, `experimental_useSidebarNavigationSplit`, `experimental_SidebarNavigationIcon` (`@sandy-sdk/plugin-sdk/app`)
 
 **Restored 2026-10-15 (SDK 0.6.53).**
 
@@ -1784,7 +1824,7 @@ their identity while unchanged. `actions` covers
 `activate(id, { target })`, `goHome({ target })`, `setVisible`,
 `setOrder` (unknown
 ids are dropped and omitted ids keep their relative order at the end),
-`openCustomize()` (bb's editor in a popover beside the navigation, after open
+`openCustomize()` (sandy's editor in a popover beside the navigation, after open
 menus close, returning focus to the opener), `openDetails`, and
 `disablePlugin`. `target` is `current`, `split`, or `tab` and the host handles
 the navigation: `split` opens or focuses a pane, replacing the focused pane
@@ -1806,7 +1846,7 @@ sidebar the hook returns no items and inert actions.
 `experimental_useSidebarNavigationSplit(id, options?)` mirrors
 `experimental_useSidebarThreadSplit` and accepts `activation: "distance"` and
 `onDragStart` for rows in menus. `experimental_SidebarNavigationIcon` renders
-bb's glyphs and panel icons with plugin branding as fallback.
+sandy's glyphs and panel icons with plugin branding as fallback.
 
 **Core callers on the same path.** The bundled Navigation plugin's Rail, Top
 list, and header New thread button use these hooks; the app's Settings →
@@ -1852,9 +1892,9 @@ Before stabilization, audit:
   under `plugins/*` sets a status today, so the rename is free until the
   prefix drops.
 
-## `bb.providers.register` (`experimental_bridgeOptions`, `experimental_visibility`, and the `experimental_providerBridge` artifact export)
+## `sandy.providers.register` (`experimental_bridgeOptions`, `experimental_visibility`, and the `experimental_providerBridge` artifact export)
 
-**Kept experimental (2026-08-22).** `bb.providers.register` and the
+**Kept experimental (2026-08-22).** `sandy.providers.register` and the
 declaration's target-state fields are stable. `experimental_bridgeOptions` and
 `experimental_visibility` have one consumer (the ACP plugin); decide whether
 static options survive beside `deriveProviderOptions` before naming them. The
@@ -1867,7 +1907,7 @@ policy exists.
 every bridge launch as provider-scoped static options.
 `experimental_visibility: "installed"` withholds a provider from unscoped
 listings until its `provider/health` is not `not_installed`. The bridge is the
-`experimental_providerBridge` export of the plugin's `bb.host` artifact.
+`experimental_providerBridge` export of the plugin's `sandy.host` artifact.
 
 Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1–2.
 
@@ -1894,7 +1934,7 @@ Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1–2.
    namespace rule (plugin-scoped id prefixes) is wanted before third-party ids
    proliferate.
 4. **Bridge delivery.** Every provider bridge arrives as the plugin's one
-   `bb.host` artifact. Confirm one artifact per plugin survives (a plugin
+   `sandy.host` artifact. Confirm one artifact per plugin survives (a plugin
    declaring several providers ships one bridge for all of them, and there is
    no way to name a second), confirm the single-bundle shape survives
    per-platform needs, and decide whether a router-kind declaration (a picker
@@ -1903,7 +1943,7 @@ Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1–2.
 5. **What a capability may be.** Apply this test to every remaining
    capability before stabilizing: a declaration may assert what the provider
    itself implements and an external consumer needs pre-session, never what
-   bb or its daemon can do with it.
+   sandy or its daemon can do with it.
 6. **Static bridge options and visibility.** Confirm 64 KiB remains a suitable
    declaration-time limit, that opaque options should continue to be shared by
    every host rather than resolved per host, and whether deep-frozen plain JSON
@@ -1912,7 +1952,7 @@ Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §1–2.
    installed-only provider, and that targeted requests may continue resolving
    a registered provider even while discovery says it is absent.
 
-## `@get-bb/plugin-sdk/provider-bridge` (the provider-bridge authoring surface)
+## `@sandy-sdk/plugin-sdk/provider-bridge` (the provider-bridge authoring surface)
 
 **Kept experimental (2026-08-22).** `experimental_defineProviderBridge` /
 `experimental_apiVersion` are an artifact↔daemon contract (the bootstrap
@@ -1922,7 +1962,7 @@ independently-updating artifacts and daemons (item 2) is undecided.
 The published module a provider bridge compiles against. It holds
 `experimental_defineProviderBridge`, the Provider Bridge Protocol's methods,
 the `thread/delta` grammar and param schemas, the bridge kit's helpers, and
-the `@bb/domain` command-plane vocabulary those params reference. It is
+the `@sandy/domain` command-plane vocabulary those params reference. It is
 curated by hand with named exports only, and bundled into the plugin's
 artifact rather than stubbed at runtime.
 
@@ -1930,7 +1970,7 @@ Docs: `providers.md`, [provider-plugin-api.md](provider-plugin-api.md) §2,
 [provider-bridge-protocol.md](provider-bridge-protocol.md).
 
 Decided (Aug 2026): bridges emit the protocol's own `thread/delta` grammar,
-and the `@bb/domain` command-plane, interaction and enum types they reference
+and the `@sandy/domain` command-plane, interaction and enum types they reference
 stay re-exported through the facade permanently.
 
 **Audit before stabilizing.**
@@ -1942,13 +1982,13 @@ stay re-exported through the facade permanently.
    bump (a plugin's artifact and the daemon update independently) before the
    first third-party bridge ships.
 
-## `@get-bb/plugin-sdk/provider-bridge/testing` (the provider-bridge testing kit)
+## `@sandy-sdk/plugin-sdk/provider-bridge/testing` (the provider-bridge testing kit)
 
 **Kept experimental (2026-08-22).** Items 2 and 5 below change the public
 shape (a pluggable replay child, pinning a grammar version in the exports).
 
 The published kit a bridge author proves a bridge with, with no private
-`@bb/*` package in reach. It contains the conformance runner
+`@sandy/*` package in reach. It contains the conformance runner
 (`experimental_runBridgeConformance`), the real delta assembler, the
 delta→event collector, the in-process JSON-RPC harness, the calibration
 normalizer, and the recorded-replay harness and readers. It is
@@ -1988,18 +2028,18 @@ Docs: `providers.md`.
    its exports (the assembler already names `ASSEMBLER_GRAMMAR_VERSIONS`)
    before stabilizing.
 
-## `experimental_scanPublicSdkOnly` (`@get-bb/plugin-sdk/testing`)
+## `experimental_scanPublicSdkOnly` (`@sandy-sdk/plugin-sdk/testing`)
 
 Scans a plugin package for imports outside the public SDK and an allowlist.
-It returns the files read and each offending specifier: a private `@bb/*`
-package, `outside-package`, `dynamic-specifier`, and `@bb/*` package.json
+It returns the files read and each offending specifier: a private `@sandy/*`
+package, `outside-package`, `dynamic-specifier`, and `@sandy/*` package.json
 dependencies. The suite asserts on the result.
 
 Docs: `testing.md`.
 
 **Audit before stabilizing.**
 
-1. **The allowlist is bb's.** The default admits every published SDK subpath
+1. **The allowlist is sandy's.** The default admits every published SDK subpath
    and `vitest`; a plugin on another runner or another schema library must
    name it in `allow`. Decide whether the defaults should read the plugin's
    own package.json dependencies instead of a fixed list.
@@ -2012,7 +2052,7 @@ Docs: `testing.md`.
    falls back when no closing tag matches. Decide whether a full parser is
    owed before the scan is a promise.
 
-## `app.experimental_useProviders` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_useProviders` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** The hook returns `ProviderInfo`, which
 carries the unresolved `icon` / `logoUrl` pair and `maintenance`. Stabilizing
@@ -2036,10 +2076,10 @@ Docs: `frontend-registration.md`,
    field when `ProviderInfo` stabilizes, and whether the monochrome mask
    rendering is the contract or a full-color logo path is owed.
 
-## `app.experimental_useCodeTheme` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_useCodeTheme` (`@sandy-sdk/plugin-sdk/app`)
 
 Returns `{ mode, name, theme }`: the active light/dark mode, the code theme
-name bb renders it with, and the resolved VS Code theme document, for plugins
+name sandy renders it with, and the resolved VS Code theme document, for plugins
 that render code with their own engine.
 
 Docs: `frontend-hooks-and-ui.md`.
@@ -2047,9 +2087,9 @@ Docs: `frontend-hooks-and-ui.md`.
 **Audit before stabilizing.**
 
 1. **Shape of the document.** `PluginCodeThemeData` mirrors Shiki's
-   `ThemeRegistrationResolved` minus the fields bb does not promise. Decide
+   `ThemeRegistrationResolved` minus the fields sandy does not promise. Decide
    whether freezing a Shiki-shaped payload is right, or whether the contract
-   should be bb's own normalized token model; a Shiki major that changes
+   should be sandy's own normalized token model; a Shiki major that changes
    `settings` normalization changes what plugins receive.
 2. **Both modes at once.** The hook serves only the active mode. Decide
    whether the state should carry the light/dark pair.
@@ -2060,10 +2100,10 @@ Docs: `frontend-hooks-and-ui.md`.
 4. **Consumer count.** One consumer today. Confirm a second engine (CodeMirror,
    xterm) needs the same payload before the prefix drops.
 
-## `app.experimental_copyToClipboard` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_copyToClipboard` (`@sandy-sdk/plugin-sdk/app`)
 
 A plain function, `({ text, html? }) => Promise<boolean>`, over the writer
-bb's own copy actions use: bb Desktop's native clipboard, then the Clipboard
+sandy's own copy actions use: sandy Desktop's native clipboard, then the Clipboard
 API, then `execCommand("copy")`. It resolves true only once a path wrote the
 content and never rejects. The test harness records writes in the most
 recently rendered slot's `inspection.experimental_clipboardWrites` and
@@ -2079,7 +2119,7 @@ Docs: `frontend-hooks-and-ui.md`.
 
 **Audit before stabilizing.**
 
-1. **Content shape.** Only plain text and HTML are supported. bb's message
+1. **Content shape.** Only plain text and HTML are supported. sandy's message
    copy also writes an image, through its own path with Android and browser
    variants. Decide whether images belong in this contract or stay core-only.
 2. **Harness scoping.** The clipboard is global, so the harness routes writes
@@ -2092,11 +2132,11 @@ Docs: `frontend-hooks-and-ui.md`.
 4. **Feedback.** Every caller pairs the result with a toast or a manual-copy
    fallback. Decide whether a shared toast helper belongs in the SDK.
 
-## `app.experimental_saveFile` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_saveFile` (`@sandy-sdk/plugin-sdk/app`)
 
 `experimental_saveFile({ fileName, url } | { fileName, blob })` starts a
-download through the same function bb's own downloads use. It clicks a
-temporary download anchor, using an object URL for a blob. The bb iOS shell
+download through the same function sandy's own downloads use. It clicks a
+temporary download anchor, using an object URL for a blob. The sandy iOS shell
 downloads through `WKDownload`, keeping the WebView's request context, then
 presents the share sheet; file bytes and cookies do not cross the JavaScript
 bridge. The promise resolves `started` once the link is clicked or `failed`,
@@ -2122,10 +2162,10 @@ Docs: `frontend-hooks-and-ui.md`.
 4. **Link helper.** Decide whether the repeated click handler belongs in a
    shared link component.
 
-## `app.experimental_usePluginId` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_usePluginId` (`@sandy-sdk/plugin-sdk/app`)
 
 Returns the id of the plugin that owns the calling component, the same value
-as `bb.pluginId`.
+as `sandy.pluginId`.
 
 Docs: `frontend-hooks-and-ui.md`.
 
@@ -2140,9 +2180,9 @@ Docs: `frontend-hooks-and-ui.md`.
 3. **Consumer count.** One consumer today. Confirm a second plugin needs it
    before the prefix drops.
 
-## `app.experimental_useQuestionFormHost` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_useQuestionFormHost` (`@sandy-sdk/plugin-sdk/app`)
 
-Returns the remappable answer shortcuts bb binds while a pending interaction is
+Returns the remappable answer shortcuts sandy binds while a pending interaction is
 open, keyed by option index, and `registerChoiceHandler` for a chosen index.
 `actionShortcuts` and `registerActionHandler` do the same for the form actions
 `submit`, `previous`, `next`, and `cancel` (`question.submit`,
@@ -2150,7 +2190,7 @@ open, keyed by option index, and `registerChoiceHandler` for a chosen index.
 fire from text fields inside an element marked `data-question-form`. Core's
 card uses `actionShortcuts` only for `aria-keyshortcuts` and shows no action
 shortcut labels.
-Core's own question card (`@bb/shared-ui/question-form`, rendered by
+Core's own question card (`@sandy/shared-ui/question-form`, rendered by
 `UserQuestionAnswerForm`) reads the same host through `ThreadQuestionFormHost`.
 Outside a pending interaction the maps are empty and handlers never run.
 
@@ -2169,7 +2209,7 @@ Docs: `frontend-hooks-and-ui.md`.
    extension dialogs). Confirm a third-party form needs it before the prefix
    drops.
 
-## `app.slots.experimental_providerIcon` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_providerIcon` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no shipped registrations, because
 declared glyphs and SVG assets cover every first-party provider without a
@@ -2205,9 +2245,9 @@ Docs: `frontend-renderer-slots.md`, `frontend-components.md`.
    the accessible label story: the host derives `ariaLabel` from its own
    provider data, falling back to the provider id, and the slot supplies none.
 
-## `experimental_ProviderModelPicker` (`@get-bb/plugin-sdk/app`)
+## `experimental_ProviderModelPicker` (`@sandy-sdk/plugin-sdk/app`)
 
-bb's execution picker as a controlled
+sandy's execution picker as a controlled
 `{ providerId, model, reasoningLevel, serviceTier? }` component. It has
 optional host/environment `routing`, `allowProviderChange`, `align` and
 `disabled`, and the composer's catalog and normalization policy.
@@ -2236,9 +2276,9 @@ Docs: `frontend-components.md`.
    especially whether they need an explicit loading/error callback. Tasks and
    Automations currently rely on the picker-owned loading/error UI.
 
-## `experimental_PermissionModePicker` (`@get-bb/plugin-sdk/app`)
+## `experimental_PermissionModePicker` (`@sandy-sdk/plugin-sdk/app`)
 
-bb's permission picker as a controlled
+sandy's permission picker as a controlled
 `{ providerId, value, onChange, routing?, align?, disabled?, className? }`
 component. It applies the composer's supported modes, fallback order and the
 routed machine's permission ceiling.
@@ -2262,7 +2302,7 @@ Docs: `frontend-components.md`.
    mode a provider supports and decide whether the picker should render an
    explicit unavailable state instead of the controller's existing fallback.
 
-## `app.slots.experimental_timelineRenderer` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_timelineRenderer` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no extension-row consumers.
 Every item is about the prop shape, so the first real renderer must precede
@@ -2302,7 +2342,7 @@ Docs: `frontend-renderer-slots.md`, `backend-cli-agents.md` (form rows),
 6. **Form rows.** Decide whether form and extension rows need distinct `kind`
    values.
 
-## `experimental_NewThreadComposer` (`@get-bb/plugin-sdk/app`)
+## `experimental_NewThreadComposer` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no consumers, and items 1 (a
 newly required create-thread field going missing silently) and 6
@@ -2311,7 +2351,7 @@ newly required create-thread field going missing silently) and 6
 The host-owned new-thread compose surface. It calls `onSubmit` with a
 `NewThreadRequest` carrying every resolved selection (including
 `sessionOptions` when the user changed a provider's agent option), and the plugin then
-creates the thread with `bb.sdk.threads.spawn`, which owns filing and
+creates the thread with `sandy.sdk.threads.spawn`, which owns filing and
 attribution.
 
 **Core callers.** The New thread screen (`RootComposeView`) renders the same
@@ -2325,7 +2365,7 @@ Docs: `frontend-components.md`.
 **Audit before stabilizing.**
 
 1. **`NewThreadRequest` vs. what `threads.spawn` accepts.** Confirm every
-   field still round-trips through `bb.sdk.threads.spawn` unchanged, that
+   field still round-trips through `sandy.sdk.threads.spawn` unchanged, that
    `executionInputSources` still means the same thing to the server, and that
    no newly required create-thread field is silently missing. The composer
    never reports a `providerId` provenance source even though it always sends
@@ -2359,7 +2399,7 @@ Docs: `frontend-components.md`.
    project switching is right for embedded plugin workflows, rather than
    adding an explicit project-locking policy.
 
-## `app.slots.experimental_appOverlay` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_appOverlay` (`@sandy-sdk/plugin-sdk/app`)
 
 Mounts a no-props plugin component once per app window, outside route-owned
 layout, with app-level SDK hook context. A crash hides only that overlay.
@@ -2375,7 +2415,7 @@ Docs: `frontend-core-slots.md`.
    layouts and document which pane-local capabilities remain unavailable to a
    once-per-window owner, including composer and side-panel hosts.
 3. **Host-owned layer.** Decide whether arbitrary fixed/portalled content is
-   sufficient or bb should provide a named overlay root, z-index band,
+   sufficient or sandy should provide a named overlay root, z-index band,
    collision area, docking, or drag persistence.
 4. **Responsive and accessibility policy.** Audit keyboard access, focus
    restoration, escape behavior, compact drawers, reduced motion, and whether
@@ -2390,7 +2430,7 @@ Docs: `frontend-core-slots.md`.
    standard slot-owned CSS retention are the right failure semantics for UI
    that may have no in-layout representation.
 
-## `app.slots.experimental_newThreadPanelAction` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_newThreadPanelAction` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no consumers, and item 5 is
 deferred until an external plugin adopts it.
@@ -2423,7 +2463,7 @@ Before stabilization, audit:
    action reference resolves against this slot on the New thread screen. Audit
    only whether the two contexts should merge.
 
-## `app.experimental_sidebarFooter` (`@get-bb/plugin-sdk/app`)
+## `app.experimental_sidebarFooter` (`@sandy-sdk/plugin-sdk/app`)
 
 Registers host-rendered icon items in the sidebar footer: an `action` with
 `onActivate`, or a `disclosure` whose component is revealed above the row and
@@ -2456,12 +2496,12 @@ Docs: `frontend-core-slots.md`.
    disclosure replacement, plugin reload, crash isolation, and removal while
    open across desktop and compact sidebar layouts.
 
-## `app.slots.experimental_threadList` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_threadList` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** Only examples use it. No shipped consumer
 has tested the arbitration/fallback model or the accessibility contract.
 
-An exclusive slot that replaces the sidebar's scrolling thread list. bb's own
+An exclusive slot that replaces the sidebar's scrolling thread list. sandy's own
 list is the bundled `thread-list` plugin. Automatic selection prefers another
 registered list, and the user can pin one with `sidebar.threadListProvider`.
 
@@ -2487,7 +2527,7 @@ Docs: `frontend-registration.md`.
    focus order, and the mobile close behavior when a plugin owns the markup;
    `onNavigate` is currently the plugin's responsibility to call.
 
-## AI services (`bb.experimental_aiServices.register`)
+## AI services (`sandy.experimental_aiServices.register`)
 
 Registers `{ id, displayName, complete?, transcribe?, status? }`. `complete`
 serves thread titles and commit messages, `transcribe` serves voice input,
@@ -2514,7 +2554,7 @@ Docs: `backend-cli-agents.md`, [provider-plugin-api.md](provider-plugin-api.md) 
 5. **Several services per plugin.** Confirm the id-per-registration shape and
    the per-plugin id scope (plugin id plus service id).
 
-## `PluginFileOpenerSource.experimental_hostId` (`@get-bb/plugin-sdk/app`)
+## `PluginFileOpenerSource.experimental_hostId` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** It is persisted in opener-tab `paramsJson`,
 so a rename needs a read-compat shim. Items 3–4 decide whether the stable name
@@ -2539,9 +2579,9 @@ Docs: `frontend-core-slots.md`.
    existed, and whether it can become a stable required `hostId` without
    breaking older opener implementations.
 
-## `experimental_VoiceInputTextarea` (`@get-bb/plugin-sdk/app`)
+## `experimental_VoiceInputTextarea` (`@sandy-sdk/plugin-sdk/app`)
 
-**What it does.** A host-owned controlled textarea with bb's voice input. It
+**What it does.** A host-owned controlled textarea with sandy's voice input. It
 takes `value`, `onValueChange`, and an optional `onVoiceInputActiveChange`;
 every other textarea attribute, including `ref` and `className`, reaches the
 underlying `<textarea>`. The caller styles the textarea; the host wraps it in
@@ -2556,9 +2596,9 @@ and error handling as the prompt box. Without voice support it renders the
 plain textarea; the test harness renders that plain textarea too.
 
 The registry's `voice-input-textarea` item re-exports it, and the registry's
-`question-form` renders its free-text answer with it. Inside bb, the built-in
-Ask User Question and pi plugins and bb's own question form reach the same
-component through the `@bb/shared-ui/voice-input-textarea` module the build
+`question-form` renders its free-text answer with it. Inside sandy, the built-in
+Ask User Question and pi plugins and sandy's own question form reach the same
+component through the `@sandy/shared-ui/voice-input-textarea` module the build
 shims.
 
 **Audit before stabilizing.**
@@ -2574,10 +2614,10 @@ shims.
    unsupported, with no reason shown. Decide whether callers need the
    unsupported reason or a way to hide the controls.
 4. **Consumer count.** One form (the shared question form, used by Ask User
-   Question, pi, and bb's own questions). Confirm a third-party consumer before
+   Question, pi, and sandy's own questions). Confirm a third-party consumer before
    the prefix drops.
 
-## `experimental_SourceCode` / `experimental_Diff` (`@get-bb/plugin-sdk/app`)
+## `experimental_SourceCode` / `experimental_Diff` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** It has one consumer (the github plugin's
 `Diff`), and items 2–4 all change the prop surface.
@@ -2585,7 +2625,7 @@ shims.
 Host-owned renderers for supplied code. `experimental_SourceCode` takes text
 and a path. `experimental_Diff` takes a single-file patch, a path and
 optional `experimental_fullFileContents` (`{ old, new }`). They are the same
-components bb's own surfaces use, so an active renderer replacement covers
+components sandy's own surfaces use, so an active renderer replacement covers
 both.
 
 Docs: `frontend-components.md`.
@@ -2598,38 +2638,38 @@ loader callback.
 1. **Prop surface.** Confirm content + path + presentation plus optional full
    diff sides is the right minimal contract, and decide whether `className`
    belongs in it at all. A replacement never receives it, so a `className`
-   that only styles bb's renderer is a quiet inconsistency.
+   that only styles sandy's renderer is a quiet inconsistency.
 2. **Diff input shape.** Confirm single-file patch text is the right currency.
    Multi-file patches, pre-parsed input, and per-hunk rendering are all things
    callers have wanted; none are expressible now.
 3. **Language selection.** Highlighting is inferred from `path` only. Confirm
    an explicit language override is not needed before the names freeze, and
    that no implementation-library language union leaks in when it is added.
-4. **Worker pool.** Thread panes and plugin nav panels provide bb's
+4. **Worker pool.** Thread panes and plugin nav panels provide sandy's
    highlighting worker pool; homepage and settings sections do not, so a diff
    rendered there is unhighlighted. Decide whether the host should provide the
    pool at the component instead of the surface.
-5. **Selection to chat.** bb's own surfaces pass a selection-to-composer
+5. **Selection to chat.** sandy's own surfaces pass a selection-to-composer
    handler that the public component withholds. Confirm plugins should reach
    that through `useComposer()` rather than a renderer prop.
 6. **Size and virtualization.** Neither component caps input size or
    virtualizes. Audit against a plugin that renders a very large file or patch.
 
-## `app.slots.experimental_sourceCodeRenderer` / `app.slots.experimental_diffRenderer` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_sourceCodeRenderer` / `app.slots.experimental_diffRenderer` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no registrations, and "two slots
 or one" changes the registration shape.
 
-Exclusive slots that replace bb's source or diff renderer everywhere it draws
+Exclusive slots that replace sandy's source or diff renderer everywhere it draws
 supplied content, including other plugins' calls to the public components.
 Automatic selection prefers a registration from a plugin the user installed
-over one bundled with bb (such as Monaco), then the first in slot order, and
-the user can pin bb's renderer or a provider per client. A crash falls back to bb's
+over one bundled with sandy (such as Monaco), then the first in slot order, and
+the user can pin sandy's renderer or a provider per client. A crash falls back to sandy's
 renderer.
 
 Docs: `frontend-renderer-slots.md`.
 
-Decided (Aug 2026): the pin stays per client; a crash swaps back to bb's
+Decided (Aug 2026): the pin stays per client; a crash swaps back to sandy's
 renderer silently and disables the slot for the session; the replacement is
 global, other plugins' surfaces included; replacements receive
 `experimental_fullFileContents` like the public component.
@@ -2647,7 +2687,7 @@ global, other plugins' surfaces included; replacements receive
 4. **Two slots or one.** Confirm source and diff should stay separately
    replaceable rather than one "code renderer" registration.
 
-## `app.slots.experimental_codeFenceRenderer` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_codeFenceRenderer` (`@sandy-sdk/plugin-sdk/app`)
 
 Renders fenced code blocks of the claimed `languages` in assistant and
 nested-agent message Markdown, where `messageDirective` activates. The
@@ -2661,7 +2701,7 @@ exposes `loadPluginApp(...).codeFenceRenderers`.
 **Core callers.** `MarkdownPreview`'s code renderer
 (`markdown-code-fence-renderers.tsx`), the pipeline that also resolves
 `messageDirective`, hosts every claimed fence; the built-in `inline-vis`
-plugin renders through it. BB's `mermaid` diagram stays a core special case
+plugin renders through it. SANDY's `mermaid` diagram stays a core special case
 inside `Original`, because it renders on every Markdown surface and this slot
 is scoped to messages.
 
@@ -2670,21 +2710,21 @@ Docs: `frontend-renderer-slots.md`, `testing.md`.
 **Audit before stabilizing.**
 
 1. **Collision model.** Confirm that a contested language falling back to
-   BB's code block is enough, or whether users need a per-language picker
+   SANDY's code block is enough, or whether users need a per-language picker
    like the source/diff renderer pin.
 2. **Streaming contract.** Confirm `code`/`status`/`index` cover real
    generative-UI renderers (partial JSON/DSL parsing), and whether the rest
    of the info string should be exposed as `meta`.
 3. **Scope.** Confirm the slot should stay limited to assistant and
    nested-agent Markdown, whether common languages (`json`, `ts`) should be
-   claimable, and whether `mermaid` should be claimable or reserved for BB.
+   claimable, and whether `mermaid` should be claimable or reserved for SANDY.
 4. **Identity.** Confirm keying a fence by source offset holds for every
    path that rewrites a message's text, and decide whether iframes must
    survive the tail-to-settled move in browsers without `moveBefore`.
-5. **Source visibility.** Decide whether BB should offer its own "view
+5. **Source visibility.** Decide whether SANDY should offer its own "view
    source" control for claimed fences instead of leaving it to each plugin.
 
-## `experimental_useSidebarThreads` / `experimental_useSidebarThreadActions` (`@get-bb/plugin-sdk/app`)
+## `experimental_useSidebarThreads` / `experimental_useSidebarThreadActions` (`@sandy-sdk/plugin-sdk/app`)
 
 **Kept experimental (2026-08-22).** There are no consumers. Items 4 (a
 paged/windowed read at 10k threads) and 5 (the draft indicator gap) cannot be
@@ -2717,7 +2757,7 @@ Docs: `frontend-registration.md`.
    rule. `host` is resolved to `{ id, name }`; confirm resolution belongs here
    rather than in a separate hosts hook, and that falling back to the id for an
    unknown host is the right failure.
-2. **Indicator coupling.** `indicator` freezes bb's precedence into the
+2. **Indicator coupling.** `indicator` freezes sandy's precedence into the
    contract. Confirm new kinds can ship without breaking plugins, and that the
    documented "treat unknown as none" rule is enough.
 3. **Unread semantics.** `isUnread` is plain read state, so it is true for
@@ -2739,7 +2779,7 @@ Docs: `frontend-registration.md`.
    `hostId` ride on router state; confirm that stays the right transport, and
    audit the `hostId` selection semantics.
 7. **Pull requests on a row.** `experimental_useSidebarThreadPullRequest` was
-   removed; rows render `experimental_ThreadRowMetadata` for bb's badge or read
+   removed; rows render `experimental_ThreadRowMetadata` for sandy's badge or read
    the GitHub PR Status plugin's keyed `pullRequests` method. See
    "Retired `experimental_useSidebarThreadPullRequest` runtime member".
 8. **`experimental_useSidebarThreadSplit`.** Gives a custom row the built-in
@@ -2758,7 +2798,7 @@ Docs: `frontend-registration.md`.
    actions. Audit empty machine sections, machine removal, rename updates, and
    loading behavior for `experimental_hosts`.
 
-## `app.slots.experimental_threadInfoRow` / `app.slots.experimental_threadInfoSection` / `experimental_THREAD_INFO_ROW_GROUPS` / `experimental_THREAD_INFO_SECTION_GROUPS` / `experimental_InfoSection` / `experimental_DetailRow` / `experimental_InfoList` / `experimental_InfoListRow` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_threadInfoRow` / `app.slots.experimental_threadInfoSection` / `experimental_THREAD_INFO_ROW_GROUPS` / `experimental_THREAD_INFO_SECTION_GROUPS` / `experimental_InfoSection` / `experimental_DetailRow` / `experimental_InfoList` / `experimental_InfoListRow` (`@sandy-sdk/plugin-sdk/app`)
 
 A registration is `{ id, group, order?, component }`. The component receives
 `{ threadId, projectId, environment }` and mounts once per visible thread's Info
@@ -2767,7 +2807,7 @@ has no environment; components read its state themselves (the Git plugin's
 status row shows "Workspace not found" for a missing folder). Rows
 render in the details block, sections below it, each sorted the way thread
 actions are: by `group` (string compare), then `order` within the group (unset
-last), then registration order with core first on a tie. bb's groups are the
+last), then registration order with core first on a tie. sandy's groups are the
 two exported tables; core uses orders 10, 20, 30 within each. Groups draw no
 separator. Each plugin
 entry mounts in its own crash boundary keyed by thread, so a crash drops only
@@ -2783,7 +2823,7 @@ stored in the `infoPanel.collapsedSections` preference under the core id or
 `ThreadInfoRows` and `ThreadInfoSections`
 (`apps/app/src/components/secondary-panel/info/ThreadInfoSlots.tsx`), which
 merge `CORE_THREAD_INFO_ROWS` and `CORE_THREAD_INFO_SECTIONS` with plugin
-registrations. `experimental_DetailRow` is bb's only label/value row
+registrations. `experimental_DetailRow` is sandy's only label/value row
 (`DetailRow` in `apps/app/src/components/ui/detail-card.tsx`): all ten core
 rows and the commit dialog draw with it, and core's five sections draw with
 `InfoSection` and `InfoList`. The
@@ -2813,7 +2853,7 @@ Docs: `frontend-registration.md`, `frontend-components.md`.
    `[data-info-section]`, so a section that renders without
    `experimental_InfoSection` gets no separator. Confirm that is acceptable.
 
-## `app.slots.experimental_threadContextCardRow` / `app.slots.experimental_threadContextCardSection` / `experimental_ThreadContextCardRow` / `experimental_useThreadContextKind` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_threadContextCardRow` / `app.slots.experimental_threadContextCardSection` / `experimental_ThreadContextCardRow` / `experimental_useThreadContextKind` (`@sandy-sdk/plugin-sdk/app`)
 
 A thread pane shows its thread context one of two ways, its
 `ExperimentalThreadContextKind`: `banner`, the context row above the composer,
@@ -2839,7 +2879,7 @@ as a menu.
 `ThreadDetailView` wraps each thread page and split pane in
 `ThreadContextCardProvider`
 (`apps/app/src/components/plugin/PluginThreadContextCard.tsx`), enabled only
-where the pane's kind is `card`. Rows and sections each merge bb's with plugin
+where the pane's kind is `card`. Rows and sections each merge sandy's with plugin
 registrations and sort by `group`, `order` (unset last), then
 registration order with core first on a tie. Rows share one block with no
 heading; sections follow, each under its title and a divider. Every plugin
@@ -2860,12 +2900,12 @@ Context segments render in both kinds, so a plugin that has not added a card
 row or section keeps its segment above the composer. A segment whose content is also a
 card row or section hides itself in `useVisible` while the kind is `card`.
 
-**Core callers.** bb's parent row (thread group) and its Child threads section
+**Core callers.** sandy's parent row (thread group) and its Child threads section
 (related group) are `CORE_THREAD_CONTEXT_CARD_ROWS` and
 `CORE_THREAD_CONTEXT_CARD_SECTIONS` in
 `apps/app/src/views/thread-detail/ThreadContextCardCore.tsx`, drawn with
 `ThreadContextCardRow`, the component behind `experimental_ThreadContextCardRow`.
-bb's parent segment hides through `useThreadContextKind`, the function behind
+sandy's parent segment hides through `useThreadContextKind`, the function behind
 `experimental_useThreadContextKind`. The Git plugin registers its `changes`
 row (full `+N −M` counts; it opens the Diff tab, where the merge base is
 picked) and GitHub PR Status its `pull-request` row (the banner's own label,
@@ -2884,7 +2924,7 @@ Docs: `frontend-thread-context-card.md`, `frontend-registration.md`,
 
 **Audit before stabilizing.**
 
-1. **Kinds.** Confirm `banner | card` covers the presentations bb plans, and
+1. **Kinds.** Confirm `banner | card` covers the presentations sandy plans, and
    that a pane's kind should not follow the pin or the popover.
 2. **Context segments.** Decide whether `experimental_threadContextSegment`
    becomes the banner's slot under a matching name once the card stabilizes,
@@ -2892,7 +2932,7 @@ Docs: `frontend-thread-context-card.md`, `frontend-registration.md`,
 3. **Shift.** Pinning or unpinning in a medium pane moves the transcript
    sideways. Confirm that is acceptable or reserve the space permanently.
 4. **Row actions.** `action` takes any node; GitHub PR Status builds its own
-   `…` menu from shared tokens. Decide whether bb ships the menu as a
+   `…` menu from shared tokens. Decide whether sandy ships the menu as a
    component, and whether menus should open beside the card instead of below.
 5. **Emptiness.** When every row and section renders nothing for a thread, the card
    shows an empty state ("Nothing to show yet") instead of hiding, so the
@@ -2900,11 +2940,11 @@ Docs: `frontend-thread-context-card.md`, `frontend-registration.md`,
 6. **Groups.** Rows and sections reuse the Info tab's groups. Confirm the two surfaces
    should share one group vocabulary.
 
-## `app.slots.experimental_threadRowMetadata` / `experimental_ThreadRowMetadata` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_threadRowMetadata` / `experimental_ThreadRowMetadata` (`@sandy-sdk/plugin-sdk/app`)
 
 A registration is `{ id, order?, useData?, component }`. `useData` is a React
 hook the host calls once for the whole app, never per row, with
-`{ threads }`: bb's active sidebar threads in sidebar order, then any other
+`{ threads }`: sandy's active sidebar threads in sidebar order, then any other
 thread whose line is mounted, deduplicated. Rows a windowed list has not
 rendered are included. The component receives `{ thread, data }`, where
 `data` is what `useData` last returned (undefined without `useData`), and
@@ -2927,7 +2967,7 @@ environment in one `experimental_useRpcKeyedQuery`. The plugin answers app
 reads from what it has and refreshes stale rows in the background, so rows
 draw without waiting.
 
-**Core callers.** bb's sidebar (`plugins/thread-list`, `ThreadRow.tsx`) renders
+**Core callers.** sandy's sidebar (`plugins/thread-list`, `ThreadRow.tsx`) renders
 `experimental_ThreadRowMetadata` on a line under each row's title, the same call a
 plugin-built list makes, only while the `threadRowMetadata` experiment is on
 and the user turns on Organize → Rows → Metadata (`showRowMetadata`); both are
@@ -2962,7 +3002,7 @@ Docs: `frontend-registration.md`, `frontend-pull-requests.md`.
 4. **Shape.** `useData` mirrors `experimental_threadAction`'s, but receives
    threads rather than ids. Decide whether the two should match.
 
-## `app.slots.experimental_threadAction` / `PluginThreadActionRegistration.experimental_bulkItem` / `PluginThreadActionRegistration.placement` / `experimental_useThreadActions` / `experimental_useThreadActionRegistrations` / `experimental_ThreadActionsMenu` / `experimental_ThreadActionsContextMenu` (with `experimental_bulkThreads`) / `experimental_THREAD_ACTION_GROUPS` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_threadAction` / `PluginThreadActionRegistration.experimental_bulkItem` / `PluginThreadActionRegistration.placement` / `experimental_useThreadActions` / `experimental_useThreadActionRegistrations` / `experimental_ThreadActionsMenu` / `experimental_ThreadActionsContextMenu` (with `experimental_bulkThreads`) / `experimental_THREAD_ACTION_GROUPS` (`@sandy-sdk/plugin-sdk/app`)
 
 A registration is `{ id, title, icon, group, order?, placement?, useData?, item }`.
 `useData` runs once per registration for the whole app and receives
@@ -2998,9 +3038,9 @@ thread menu, then `inline`, with every selected id retained in `useData`'s
 a row joining or leaving a selection does not remount. The SDK test fake
 takes `threadBulkActions` for the entries it lists.
 
-**Core callers.** bb's own actions are `CORE_THREAD_ACTIONS`
+**Core callers.** sandy's own actions are `CORE_THREAD_ACTIONS`
 (`apps/app/src/lib/thread-actions/core-thread-actions.ts`), registered under
-the reserved `bb--core` owner. The header menu (`ThreadDetailView` →
+the reserved `sandy--core` owner. The header menu (`ThreadDetailView` →
 `ThreadDetailHeader`), `RootComposeMobileRecents`, and
 `PaneThreadActionCommandHandler` read the same registry, and the thread list's
 row menus and quick actions use the SDK exports. The contract table in
@@ -3048,7 +3088,7 @@ Docs: `frontend-registration.md`.
    variant beyond right-click and long-press, and whether a bulk item
    should be able to report per-thread failures instead of one toast.
 
-## `experimental_useArchiveEnvironmentThreads` (`@get-bb/plugin-sdk/app`)
+## `experimental_useArchiveEnvironmentThreads` (`@sandy-sdk/plugin-sdk/app`)
 
 Returns `(environmentId) => Promise<void>`, core's environment-group archive:
 the optimistic `environments.archiveThreads`, split-pane cleanup, route
@@ -3059,7 +3099,7 @@ toast, and archive failures reject. It replaces
 harness records calls in `inspection.experimental_environmentArchiveCalls`.
 
 **Core callers.** The hook returns `ThreadActionsProvider`'s
-`archiveEnvironmentThreads`, bb's only environment-group archive, which the
+`archiveEnvironmentThreads`, sandy's only environment-group archive, which the
 deprecated sidebar-actions shim also calls. Its one caller is the built-in
 thread list's environment group menu.
 
@@ -3077,7 +3117,7 @@ Docs: `frontend-registration.md`.
    archived threads, split panes, navigation during the Undo window, and
    failure rollback across sidebar organization modes.
 
-## `app.slots.experimental_browserToolbarAction` (`@get-bb/plugin-sdk/app`)
+## `app.slots.experimental_browserToolbarAction` (`@sandy-sdk/plugin-sdk/app`)
 
 Renders a plugin component beside the address bar in each Browser tab. It
 receives `threadId`, `tabId`, `url` and a compact-viewport hint, with a crash
@@ -3090,11 +3130,11 @@ controls without crowding the address field, whether ordering needs a user
 preference, and whether plugins need browser instance or environment identity
 instead of resolving it server-side from the thread and tab ids.
 
-## `ExperimentalPluginBrowserToolbarActionProps.experimental_page` (`@get-bb/plugin-sdk/app`)
+## `ExperimentalPluginBrowserToolbarActionProps.experimental_page` (`@sandy-sdk/plugin-sdk/app`)
 
 Gives a Browser toolbar action script access to its tab's top-level document
 without a CDP lease. `evaluate(expression, { world })` runs in the main world
-or bb's isolated world, where `bb.postMessage` reaches the calling plugin's
+or sandy's isolated world, where `sandy.postMessage` reaches the calling plugin's
 `onMessage` listeners. The value is `null` outside the desktop app.
 
 Docs: `frontend-registration.md`.
@@ -3105,10 +3145,10 @@ or origin allowlist. Plugins share one isolated world, so a plugin can post on
 another plugin's channel; decide whether per-plugin worlds are required.
 Confirm message size and rate bounds, subframe support, behavior during
 navigation and renderer crashes, whether `evaluate` should time out while a
-page is still loading, and whether an SDK or `bb` CLI surface is needed for
+page is still loading, and whether an SDK or `sandy` CLI surface is needed for
 automation outside the toolbar component.
 
-## `PluginMentionProviderRegistration.resolve().experimental_images` (`@get-bb/plugin-sdk`)
+## `PluginMentionProviderRegistration.resolve().experimental_images` (`@sandy-sdk/plugin-sdk`)
 
 Lets a mention provider resolve a picked mention to agent-only image inputs,
 each optionally preceded by a short agent-only text input. The images are
@@ -3178,7 +3218,7 @@ with a user-presentable reason when it cannot. It requires a draft: where the
 shortcut would steer the next queued message from an empty draft, `submit`
 rejects instead. Without a mode it runs whichever one
 Enter runs for this user; `"queue-if-active"` and `"steer-if-active"`, the
-names `bb.sdk.threads.send` uses, pick one explicitly, and
+names `sandy.sdk.threads.send` uses, pick one explicitly, and
 `"steer-if-active"` starts a turn where the composer has nothing to steer. The
 options combine: `sendAt` and the plugin data travel into the same send,
 queue or steer request the shortcuts build, so a scheduled steer steers the
@@ -3280,19 +3320,19 @@ Docs: `frontend-hooks-and-ui.md` (`setSelection`). No doc covers the
 
 ## Desktop browser control
 
-`bb.sdk.experimental_desktopBrowsers` (`ExperimentalDesktopBrowsersArea` and
+`sandy.sdk.experimental_desktopBrowsers` (`ExperimentalDesktopBrowsersArea` and
 its `ExperimentalDesktopBrowser*` types) drives the desktop app's browser. It
-provides explicit host/window/thread discovery, tab creation in the single bb
+provides explicit host/window/thread discovery, tab creation in the single sandy
 browser profile, and expiring control leases with scoped CDP connections. It
 also provides capture, reveal, close and release, plus `subscribe`, which
 polls tab state every two seconds and is not a lossless event log. Cookie
 import from an installed browser uses `listImportSources` and `importCookies`.
 Connection credentials stay private to workers on the browser host. The core
-CLI is `bb browser`.
+CLI is `sandy browser`.
 
 Before stabilization, audit control and cookie import authorization. Any
 caller with server access can control tabs carrying the user's logins and copy
-the desktop user's browser sessions into the bb profile. OS consent applies
+the desktop user's browser sessions into the sandy profile. OS consent applies
 only where the platform demands it: macOS Keychain for Chromium, Full Disk
 Access for Safari, and none for Firefox or keyring-free Linux Chromium.
 Decide whether control or import should require a desktop-side confirmation.
@@ -3304,14 +3344,14 @@ registration are outside this surface.
 
 ## Machine paths and environment cleanup
 
-`bb.sdk.hosts.get({ hostId })` includes nullable `threadStorageRootPath` from
+`sandy.sdk.hosts.get({ hostId })` includes nullable `threadStorageRootPath` from
 the machine's latest daemon session, without waking the machine (CLI:
-`bb machine show`). `bb.sdk.environments.experimental_cleanup({ environmentId })`
+`sandy machine show`). `sandy.sdk.environments.experimental_cleanup({ environmentId })`
 requests removal of an unused provider-managed environment, overriding
 retention and bypassing cleanup backoff. It rejects live threads and unmanaged
 environments and succeeds for already-removed ones. Acceptance is not
 completion: read the environment lifecycle fields for progress (CLI:
-`bb environment cleanup`). After five failed attempts, automatic removal stops
+`sandy environment cleanup`). After five failed attempts, automatic removal stops
 with a "Needs recovery" message in the existing lifecycle fields.
 The additive `recover: true` option acknowledges interrupted hooks and retries
 failed cleanup after an explicit inspection. Core's cleanup route and the CLI
@@ -3326,7 +3366,7 @@ machine re-enrollment, and cleanup retry behavior across unavailable
 providers, concurrent attempts, and environments shared by archived and live
 threads.
 
-## Workspace diff Viewed state (`bb.sdk.environments.experimental_diffViewed`, `experimental_markDiffViewed`, `experimental_clearDiffViewed`)
+## Workspace diff Viewed state (`sandy.sdk.environments.experimental_diffViewed`, `experimental_markDiffViewed`, `experimental_clearDiffViewed`)
 
 `GET /environments/:id/diff/viewed` (diff target in the query) lists
 `{ files: { path, revision }[] }` for one environment and diff target.
@@ -3350,7 +3390,7 @@ Callers: the workspace diff panel's Viewed checkbox
 (`DiffFilesPanel` through `useSetDiffFileViewed` and
 `useEnvironmentDiffViewed`) and the bundled Git plugin
 (`plugins/git/server/viewed.ts`), which serves
-`bb git viewed list|mark|unmark|clear` through its `viewed`, `markViewed` and
+`sandy git viewed list|mark|unmark|clear` through its `viewed`, `markViewed` and
 `clearViewed` RPCs.
 
 **Audit before stabilizing.**
@@ -3363,16 +3403,16 @@ Callers: the workspace diff panel's Viewed checkbox
 3. **Shape.** Decide whether the file list should carry `viewed` itself so
    callers do not join two reads.
 
-## Host process primitives (`@get-bb/plugin-sdk/host`)
+## Host process primitives (`@sandy-sdk/plugin-sdk/host`)
 
 `experimental_spawnPortableOutputProcess` spawns an output-only child process,
 and `experimental_sanitizeInheritedChildProcessEnv`
 (`ExperimentalSanitizeInheritedChildProcessEnvArgs`) filters the inherited
 environment, for host-local plugin commands.
 
-Callers: the one git runner in `bb-environment-provider-host/workspace-git`,
-which the daemon (`@bb/host-workspace`, `apps/host-daemon`), environment
-providers (`bb-environment-provider-host/git`) and the Git plugin host all call.
+Callers: the one git runner in `sandy-environment-provider-host/workspace-git`,
+which the daemon (`@sandy/host-workspace`, `apps/host-daemon`), environment
+providers (`sandy-environment-provider-host/git`) and the Git plugin host all call.
 Runs that feed git stdin spawn with the provider-bridge entry's
 `experimental_spawnPortableProcess`, the same spawn with piped stdin, and every
 run is admitted through `experimental_runVcsProcess` with an explicit priority.
@@ -3381,10 +3421,10 @@ Before stabilization, audit command cancellation, inherited environment
 filtering, and portable output handling for host-local plugin commands on
 every supported OS.
 
-## `TimelineOutputPreview.experimental_fullOutputAvailability` (`@get-bb/plugin-sdk`)
+## `TimelineOutputPreview.experimental_fullOutputAvailability` (`@sandy-sdk/plugin-sdk`)
 
 Says why a timeline row holds a preview instead of the full output, as
-returned by `bb.sdk.threads.timeline`. `available` means a detail read can
+returned by `sandy.sdk.threads.timeline`. `available` means a detail read can
 still hydrate it. `detail-limit` means that read exceeded its byte budget.
 `retention-expired` means the full value no longer exists.
 
@@ -3409,7 +3449,7 @@ workspace. Omitting it keeps message routing.
 Stabilize after plugin consumers verify nested paths, source identity, missing
 files, containment and line locations.
 
-## `PluginFileOpenerProps.experimental_lineRange` (`@get-bb/plugin-sdk/app`)
+## `PluginFileOpenerProps.experimental_lineRange` (`@sandy-sdk/plugin-sdk/app`)
 
 Passes the owning file tab's latest one-based, inclusive
 `{ startLineNumber, endLineNumber }` range to its opener (`null` for no
@@ -3430,7 +3470,7 @@ Docs: `frontend-core-slots.md`.
    reload restoration and cross-client range updates under the existing tab
    policy.
 
-## `bb.experimental_serverAccess.recheck`
+## `sandy.experimental_serverAccess.recheck`
 
 Sends a payload-less system `config-changed` notification to connected
 clients, so configuration re-reads every registered provider's availability.
@@ -3442,7 +3482,7 @@ plugin is inert, that a provider cannot use it to force repeated refreshes of
 unrelated configuration, and that pairing, unpairing and credential rejection
 each reach the Machines settings section without a manual reload.
 
-## `bb.experimental_serverAccess.register`
+## `sandy.experimental_serverAccess.register`
 
 Registers a server access provider: `availability` (optionally with a public
 `serverUrl`), `acquire({ key, hostId, signal })` returning a grant
@@ -3460,7 +3500,7 @@ prove reachability from a remote machine.
 
 ## Machine enrollment and bootstrap
 
-`bb.experimental_machines.bootstrap` prepares enrollment through the
+`sandy.experimental_machines.bootstrap` prepares enrollment through the
 provider's `MachineExecutor` and waits for the daemon connection. Each call
 issues a fresh single-use credential for the same durable host identity. The
 supporting `MachineExecutorRequest`, `MachineExecutor`,
@@ -3483,7 +3523,7 @@ integration release gate.
 A required callback on `PluginMachineProviderDefinition`, used only when no
 resource checkpoint exists. It discovers and removes uncertain allocations by
 the durable launch key and must never allocate or bootstrap. Experimental
-through `bb.experimental_machines`.
+through `sandy.experimental_machines`.
 
 Docs: `backend-machines.md`.
 
@@ -3515,7 +3555,7 @@ Audit ownership propagation and recovery before stabilizing.
 
 ## Coordinated machine maintenance
 
-`bb.sdk.hosts.experimental_suspend({ hostId })` drains active work (bounded at
+`sandy.sdk.hosts.experimental_suspend({ hostId })` drains active work (bounded at
 five minutes) and invokes the provider's suspend callback. It rejects with
 `machine_busy` while a live launch, provisioning environment or checkout
 preparation ties work to the host. Plugins own idle timing and preservation.
@@ -3553,7 +3593,7 @@ should replace it, and a second consumer.
 
 `experimental_host.deleted` delivers the removed host's public DTO once,
 fire-and-forget. A plugin not loaded at removal never sees it, so it must
-also reconcile against a 404 from `bb.sdk.hosts.get`.
+also reconcile against a 404 from `sandy.sdk.hosts.get`.
 
 Docs: `backend-events.md`.
 
@@ -3573,7 +3613,7 @@ Docs: `backend-events.md`.
 Stabilization requires review of the payload fields, repeat-removal
 semantics, notification timing, and recovery without guaranteed delivery.
 
-## `bb.experimental_machines.getResource`
+## `sandy.experimental_machines.getResource`
 
 `getResource(hostId)` returns core's persisted host resource JSON, or null when
 the host or resource is absent. Any plugin can read it, following the host
@@ -3585,7 +3625,7 @@ additional machine providers.
 
 ## Environment compositions
 
-`bb.experimental_environments.register({ id, displayName, description, icon, machineProviderId, environmentProviderId })`
+`sandy.experimental_environments.register({ id, displayName, description, icon, machineProviderId, environmentProviderId })`
 declares a new-machine environment option backed by one concrete environment
 provider. It supplies no lifecycle callbacks or inputs.
 
@@ -3597,11 +3637,11 @@ later project-checkout/worktree reuse.
 
 ## Experimental host SDK machine operations
 
-`bb.sdk.hosts.experimental_create`, `experimental_getEnrollmentCommand`,
+`sandy.sdk.hosts.experimental_create`, `experimental_getEnrollmentCommand`,
 `experimental_listProviders`, `experimental_reconnect`, `experimental_suspend`,
 `experimental_resume` and `experimental_retryCleanup` have no unprefixed
 aliases. `hosts.delete({ hostId, force: true })` is the path core's machine
-removal dialog and `bb machine remove --force` use to finish a persistent
+removal dialog and `sandy machine remove --force` use to finish a persistent
 machine's removal whose environment cleanup failed while the machine is
 disconnected; it skips on-machine environment cleanup, emits
 `experimental_environment.removed` for each environment, and still runs the
@@ -3620,7 +3660,7 @@ same-host restoration, serialized removal, plugin callers and UI/CLI parity.
 The enrollment command requires expiry/removal, credential authorization and
 transcript-redaction coverage.
 
-## Moving the server (`bb.sdk.experimental_server`, `hosts.experimental_deleteOldServerCopy`)
+## Moving the server (`sandy.sdk.experimental_server`, `hosts.experimental_deleteOldServerCopy`)
 
 `experimental_server.checkMove({ targetHostId, serverUrl })` returns the
 pre-move checklist (`ServerMoveCheckResponse`).
@@ -3636,9 +3676,9 @@ switch starts, and in `recovery_required` it rolls the switch back.
 copy. All of them refuse machine credentials. Everything except status and
 cancel requires the default-off `serverMove` experiment (403
 `server_move_experiment_disabled`). CLI:
-`bb server move|export|import|unlock|delete-old-copy|install-machine-service`.
+`sandy server move|export|import|unlock|delete-old-copy|install-machine-service`.
 
-Before stabilization, audit: authorization for plugin backends (`bb.sdk` runs
+Before stabilization, audit: authorization for plugin backends (`sandy.sdk` runs
 with owner access, so a plugin can export every secret or move the server);
 the switch ordering against daemons that miss
 `server.moved`; archive size limits and streaming memory use; cancellation
@@ -3679,9 +3719,9 @@ cross-plugin overrides, reload/error/recursion behavior, accessibility and
 theme rendering on desktop and mobile. Keep metadata fetching and plugin
 branding separate from provider artwork resolution.
 
-## `experimental_ThreadStatusGlyph` (`@get-bb/plugin-sdk/app`)
+## `experimental_ThreadStatusGlyph` (`@sandy-sdk/plugin-sdk/app`)
 
-Renders bb's thread status glyph from `PluginThreadStatusGlyphProps`
+Renders sandy's thread status glyph from `PluginThreadStatusGlyphProps`
 (`indicator`, `archived?`, `rowStatus`, `hideIdleDraftLabel`, `size`); the
 host owns icons, colors, and labels, and the caller resolves the indicator.
 The SDK test fake exposes the props as `data-*` attributes.
@@ -3698,7 +3738,7 @@ Docs: `frontend-registration.md`.
 
 1. **Indicator resolution.** The caller resolves the indicator, so the
    thread-list plugin keeps its own copy of the indicator precedence and labels
-   that `@bb/client-core` holds for bb's surfaces. Decide whether the SDK should
+   that `@sandy/client-core` holds for sandy's surfaces. Decide whether the SDK should
    export the resolver and labels instead.
 2. **Archived rows.** No plugin passes `archived` yet; confirm the archived
    glyph belongs on this component rather than in the archived list.
@@ -3709,14 +3749,14 @@ Explicitly reconciles a provider-managed machine with core's recorded state.
 For a suspended machine it starts the provider's suspension operation and
 returns HTTP 202; callers poll host status for completion. Active and
 transitional states are left unchanged. Provider suspend and resume must be
-idempotent. CLI: `bb machine reconcile`.
+idempotent. CLI: `sandy machine reconcile`.
 
 Validate concurrent resume/removal, failure reporting, long-running caller
 behavior, and the scope of supported states before stabilizing this API.
 
 ## Lifecycle ownership on thread creation
 
-`bb.sdk.threads.spawn` and `bb.sdk.threads.fork` accept
+`sandy.sdk.threads.spawn` and `sandy.sdk.threads.fork` accept
 `lifecycleOwnerThreadId`, and thread responses expose its nullable value.
 These are data fields on existing SDK methods, so they carry no prefix.
 
@@ -3768,7 +3808,7 @@ stabilizing this option.
 
 ## Provider discovery metadata
 
-`package.json` → `bb.experimental_providers` statically declares
+`package.json` → `sandy.experimental_providers` statically declares
 `{ kind, id, displayName }` provider identities before a plugin runs. Only
 `kind: "agent"` is accepted. It keeps a disabled plugin's agents discoverable
 in Settings → Providers, and grants no runtime capability. Add `"environment"`
@@ -3778,14 +3818,14 @@ Stabilize after validating first-install discovery, shared-plugin enablement,
 dynamic provider removal, plugin upgrades, and duplicate-ID ownership behavior
 with third-party providers.
 
-## Global prompt history (`bb.sdk.experimental_promptHistory`)
+## Global prompt history (`sandy.sdk.experimental_promptHistory`)
 
 `list({ cursor?, limit?, signal? })` returns `{ entries, nextCursor }`, every
 accepted user prompt newest first, each with `id`, `createdAt`, `input`,
 `projectId`, `threadId`, and `scope` (`"project"` for a prompt that started
 a top-level thread, `"thread"` for a follow-up). `limit` is a digit string (default 100, max 1000).
 A page can be short while `nextCursor` is set, because unparseable rows are
-skipped. The same route backs `bb prompt-history list`.
+skipped. The same route backs `sandy prompt-history list`.
 
 Before stabilization, audit whether `limit` should be a number, whether the cursor format needs versioning, whether project or thread filters belong on this call rather than on `projects.promptHistory` and `threads.promptHistory`, and whether skipped rows should fill the page.
 
@@ -3794,14 +3834,14 @@ Before stabilization, audit whether `limit` should be a number, whether the curs
 The message reference handed to `messageAction` runs, `ThreadChat` consumer
 message actions, and prose selections carries the event sequence that recorded
 the message. It is the `msg` value of a message link and the seq accepted by
-`sdk.threads.message` and `bb thread log --message`, so a plugin can build or
+`sdk.threads.message` and `sandy thread log --message`, so a plugin can build or
 resolve a message link without guessing. It equals `sourceSeqEnd` except for a
 steer, which is recorded by its request and shown at its acceptance.
 Stabilize once message links have shipped and the seq has stayed stable across
 edit-and-rerun, forks and context clears, and decide whether `sourceSeqEnd`
 should remain alongside it.
 
-## `BbNavigate.toThread` option `experimental_messageSeq`
+## `SandyNavigate.toThread` option `experimental_messageSeq`
 
 `toThread(threadId, { experimental_messageSeq })` navigates to the message link
 (`getMessageLinkPath`, `#msg=SEQ`) instead of the plain thread route. The
@@ -3814,7 +3854,7 @@ Stabilize once the seq stays stable across edit-and-rerun, forks and context
 clears (see `ThreadChatMessageReference.experimental_messageSeq`) and decide
 whether a missing seq should reject instead of toasting.
 
-## `PluginBbSdk.plugins.experimental_startUpdate` and `experimental_updateJobs`
+## `PluginSandySdk.plugins.experimental_startUpdate` and `experimental_updateJobs`
 
 Starts a server-owned plugin update and returns its job at once;
 `experimental_updateJobs.list/get` report queued/running phases and the
@@ -3827,31 +3867,31 @@ be cancelled during activation or rollback.
 Stabilization requires exercising reconnect/reload, concurrent deduplication,
 rollback delivery, missing jobs after restart, and CLI/SDK parity.
 
-## `PluginBbSdk.system.experimental_cliCommand`, `experimental_installCliCommand`, and `experimental_removeCliCommand`
+## `PluginSandySdk.system.experimental_cliCommand`, `experimental_installCliCommand`, and `experimental_removeCliCommand`
 
-`experimental_cliCommand()` reports whether `bb` is on PATH on the server's
-computer: `supported` (false without an installed bb-app launcher),
+`experimental_cliCommand()` reports whether `sandy` is on PATH on the server's
+computer: `supported` (false without an installed sandy-app launcher),
 `installedPath`, `onPath`, and `shadowedBy` (`source` `npm`, `machine`, or
-`other`). Install links `<dataDir>/bin/bb` into a PATH folder (on Windows,
-adds `<dataDir>\bin` to the user PATH) and refuses to replace another `bb`
+`other`). Install links `<dataDir>/bin/sandy` into a PATH folder (on Windows,
+adds `<dataDir>\bin` to the user PATH) and refuses to replace another `sandy`
 (`409 cli_command_blocked`); install and remove return the new status, fail
 with `409 cli_command_unsupported` when unsupported, and 403 for machine
 credentials. Core callers: Settings → General → Command line
-(`CliCommandSettingsSection`) and `bb settings cli-command`.
+(`CliCommandSettingsSection`) and `sandy settings cli-command`.
 
 Stabilize after deciding whether the command should be installable per
-machine through the host daemon (enrolled machines get `~/.local/bin/bb` from
+machine through the host daemon (enrolled machines get `~/.local/bin/sandy` from
 `install-machine.sh` today), and after exercising real Windows and macOS
 installs.
 
-## `PluginBbSdk.system.experimental_reportClientError`
+## `PluginSandySdk.system.experimental_reportClientError`
 
 `system.experimental_reportClientError({ source, message, stack,
 componentStack, path })` posts a browser error to
 `POST /api/v1/system/client-errors`, which writes it to the server log at
 error level as `Client error: <message>` with `clientErrorSource`,
 `clientPath`, `clientStack`, `clientComponentStack` and `userAgent`, and so
-to OTLP when `BB_OTLP_ENDPOINT` is set. `source` is `react-caught`,
+to OTLP when `SANDY_OTLP_ENDPOINT` is set. `source` is `react-caught`,
 `react-uncaught`, `window-error` or `unhandled-rejection`; message and path
 are capped at 2,000 characters, stacks at 16,000. Core caller: the web app's
 error reporter (`apps/app/src/lib/client-error-reporting.ts`), which hooks
@@ -3861,9 +3901,9 @@ React's root error callbacks and the window `error` and
 
 Stabilize after deciding whether plugin frames should report through it under
 their own plugin id, whether the server should rate-limit per client, and
-whether reports should be readable through `bb diagnostics`.
+whether reports should be readable through `sandy diagnostics`.
 
-## `PluginBbSdk.hosts.experimental_discoverRepos`
+## `PluginSandySdk.hosts.experimental_discoverRepos`
 
 `hosts.experimental_discoverRepos({ hostId })` lists up to 10 git
 repositories under the machine's home directory with local activity in the
@@ -3871,14 +3911,14 @@ last 30 days, newest first, each with `path`, `name`, `lastActivityAt`,
 `originUrl`, and the bound `projectId` or null; `truncated` reports an
 exhausted three-second walk budget. The walk skips dot, build, and scratch
 directories, linked worktrees, and submodules. Core callers: the setup guide
-(`OnboardingFlow`) and `bb project discover`; it rides the
+(`OnboardingFlow`) and `sandy project discover`; it rides the
 `host.discover_repos` daemon command.
 
 Stabilize after deciding whether depth, recency window, and limit should be
 caller options, and after exercising slow or network-mounted home directories
 and Windows hosts.
 
-## Shared VCS process admission (`@get-bb/plugin-sdk/host`)
+## Shared VCS process admission (`@sandy-sdk/plugin-sdk/host`)
 
 `experimental_runVcsProcess(command, args, operation, options)` admits a `git`
 or `gh` operation to the runtime's shared queue before invoking it. `args` are
@@ -3950,27 +3990,27 @@ field introduces no separate backend or headless side effect.
 
 ## Plugin contract live reads and writes
 
-- `experimental_useRpcQuery`, `experimental_useRpcKeyedQuery`, `experimental_useRpcMutation`, and `experimental_useRpcRefresh` use the core `@bb/query-tags` cache mechanism per client. Query state keeps previous data during refresh errors; consumers show an inline Retry using `refetch`. Successful reads clear the error. Keyed calls accept `{ keys }` and return a record containing every requested key; consumers share one observer per plugin/method and requests batch up to 200 keys. Each hook watches a key once while it holds it, so a changing key list subscribes only added keys and releases only removed ones (main re-subscribed every key on each change: 3,100 subscribe and 3,100 unsubscribe frames while scrolling a 70-thread sidebar). A keyed `refetch` refreshes only the calling hook's keys, batched with other hooks refreshing in the same tick. A pure `select` projection retains unchanged JSON subobjects across key and fetch-state changes, so default rows do not republish unchanged notification levels.
+- `experimental_useRpcQuery`, `experimental_useRpcKeyedQuery`, `experimental_useRpcMutation`, and `experimental_useRpcRefresh` use the core `@sandy/query-tags` cache mechanism per client. Query state keeps previous data during refresh errors; consumers show an inline Retry using `refetch`. Successful reads clear the error. Keyed calls accept `{ keys }` and return a record containing every requested key; consumers share one observer per plugin/method and requests batch up to 200 keys. Each hook watches a key once while it holds it, so a changing key list subscribes only added keys and releases only removed ones (main re-subscribed every key on each change: 3,100 subscribe and 3,100 unsubscribe frames while scrolling a 70-thread sidebar). A keyed `refetch` refreshes only the calling hook's keys, batched with other hooks refreshing in the same tick. A pure `select` projection retains unchanged JSON subobjects across key and fetch-state changes, so default rows do not republish unchanged notification levels.
 - `ExperimentalRpcMutationState.pendingInputs` contains every in-flight input for that hook instance until the server acknowledges its write. Background rereads are excluded. `isPending` remains true while any input is pending. Core `useTaggedMutation` exposes the same state from TanStack's mutation cache. Stabilization requires hook-instance isolation, concurrent targets, failure cleanup, and pending feedback surviving row moves between groups.
-- `ExperimentalRpcMutationOptions.optimistic(input, cache)` predicts loaded cached values before the write. `cache.update(method, input, updater)` targets a plain read, and `cache.updateKey(method, key, updater)` targets one keyed row. `cache` is an `ExperimentalRpcOptimisticCache`. Pure updaters receive the currently visible value and return its prediction. An absent plain read is skipped; a keyed row that loads while the write is pending shows the prediction. Predictions are shared by every reader on that client. Core thread writes pass the same optimistic descriptors to the same `@bb/query-tags` implementation.
-- Predictions remain over incoming reads until confirmed matched reads arrive, independently of mutation pending state. A rejected write rolls back its layer and surfaces the mutation error. An accepted write whose refresh fails keeps its prediction with the read error and Retry; a successful refresh replaces it. Later predictions and confirmed values are protected from older mutation settles and rollbacks. Inverted completion retains the later confirmed value until a subsequent fresh read can replace it. Keyed rows live in the `@bb/query-tags` keyed store: a row prediction is never written into the stored row, and an accepted one stays until a read of that row that started after acceptance replaces it. Stabilization includes overlapping writes, external invalidation, refresh failures, plain/keyed targets and completion without stale flicker.
-- `defineRpcContract` accepts `tags(input, output)` and `keyTags(key, value)` from `ContractTagDeclarations`; both receive validated values, and the tags travel in the RPC envelope. Writes declare nothing: the server calls `bb.rpc.experimental_invalidate` where the data changes, so a write from the app, the CLI, an agent tool or background work refreshes matching reads once. Tagged mutations resolve at write acknowledgement while matching active reads refresh in the background. Contract `invalidates` is retired (see its Retired entry).
-- `bb.rpc.experimental_invalidate(tags)` requires nonempty tags; `experimental_invalidateAll()` refreshes all reads of that plugin, including untagged reads. Load, reload, disable and reconnect refresh plugin reads through the same cache path. Plugin changed messages are scoped to `{ kind: "plugin", pluginId }` subscribers; reconnect batches subscriptions and unknown targets are ignored.
-- Tags are plugin-only. Core reads refresh through `changed` messages; UI preferences use the `ui-preferences-changed` system change. Core keeps each thread once, in the same `@bb/query-tags` keyed store as plugin keyed rows, and derives thread detail, every thread list, search and sidebar navigation from it as keyed views. Every core thread write (pin and unpin through one batcher, read state, rename, section and parent moves, archive, unarchive, delete, stop, send status, environment rename) predicts on the entity with `optimisticKeyedUpdate` through `beginOptimisticMutation`, the path `cache.updateKey` uses, and confirms at the server's acknowledgement. One contract table (`@bb/query-tags/testing`) runs against core thread entities and plugin keyed rows; the pin hooks add `useTaggedMutation` with `meta.errorMessage` for core's error toast. Push-notifications thread levels are the first plugin caller; delivery retains `useRealtime`. The GitHub PR Status plugin's composer segment and Info row call `experimental_useRpcKeyedQuery` and `experimental_useRpcMutation` from their own slots. The retired sidebar pull request member calls the keyed read with an explicit `pluginId: "bb--github-pr-status"` outside any plugin slot, the call another plugin makes; the hooks require `pluginId` only when no plugin slot provides one. Stabilization requires additional plugin callers and validation of scoped tags, failures, reconnects, batching and sidebar observer counts. Cache seeding remains outside this API.
+- `ExperimentalRpcMutationOptions.optimistic(input, cache)` predicts loaded cached values before the write. `cache.update(method, input, updater)` targets a plain read, and `cache.updateKey(method, key, updater)` targets one keyed row. `cache` is an `ExperimentalRpcOptimisticCache`. Pure updaters receive the currently visible value and return its prediction. An absent plain read is skipped; a keyed row that loads while the write is pending shows the prediction. Predictions are shared by every reader on that client. Core thread writes pass the same optimistic descriptors to the same `@sandy/query-tags` implementation.
+- Predictions remain over incoming reads until confirmed matched reads arrive, independently of mutation pending state. A rejected write rolls back its layer and surfaces the mutation error. An accepted write whose refresh fails keeps its prediction with the read error and Retry; a successful refresh replaces it. Later predictions and confirmed values are protected from older mutation settles and rollbacks. Inverted completion retains the later confirmed value until a subsequent fresh read can replace it. Keyed rows live in the `@sandy/query-tags` keyed store: a row prediction is never written into the stored row, and an accepted one stays until a read of that row that started after acceptance replaces it. Stabilization includes overlapping writes, external invalidation, refresh failures, plain/keyed targets and completion without stale flicker.
+- `defineRpcContract` accepts `tags(input, output)` and `keyTags(key, value)` from `ContractTagDeclarations`; both receive validated values, and the tags travel in the RPC envelope. Writes declare nothing: the server calls `sandy.rpc.experimental_invalidate` where the data changes, so a write from the app, the CLI, an agent tool or background work refreshes matching reads once. Tagged mutations resolve at write acknowledgement while matching active reads refresh in the background. Contract `invalidates` is retired (see its Retired entry).
+- `sandy.rpc.experimental_invalidate(tags)` requires nonempty tags; `experimental_invalidateAll()` refreshes all reads of that plugin, including untagged reads. Load, reload, disable and reconnect refresh plugin reads through the same cache path. Plugin changed messages are scoped to `{ kind: "plugin", pluginId }` subscribers; reconnect batches subscriptions and unknown targets are ignored.
+- Tags are plugin-only. Core reads refresh through `changed` messages; UI preferences use the `ui-preferences-changed` system change. Core keeps each thread once, in the same `@sandy/query-tags` keyed store as plugin keyed rows, and derives thread detail, every thread list, search and sidebar navigation from it as keyed views. Every core thread write (pin and unpin through one batcher, read state, rename, section and parent moves, archive, unarchive, delete, stop, send status, environment rename) predicts on the entity with `optimisticKeyedUpdate` through `beginOptimisticMutation`, the path `cache.updateKey` uses, and confirms at the server's acknowledgement. One contract table (`@sandy/query-tags/testing`) runs against core thread entities and plugin keyed rows; the pin hooks add `useTaggedMutation` with `meta.errorMessage` for core's error toast. Push-notifications thread levels are the first plugin caller; delivery retains `useRealtime`. The GitHub PR Status plugin's composer segment and Info row call `experimental_useRpcKeyedQuery` and `experimental_useRpcMutation` from their own slots. The retired sidebar pull request member calls the keyed read with an explicit `pluginId: "sandy--github-pr-status"` outside any plugin slot, the call another plugin makes; the hooks require `pluginId` only when no plugin slot provides one. Stabilization requires additional plugin callers and validation of scoped tags, failures, reconnects, batching and sidebar observer counts. Cache seeding remains outside this API.
 
 ## Typed RPC refusals (`experimental_PluginRpcRefusal`)
 
-- Handlers throw `new experimental_PluginRpcRefusal({ code, message, issues? })` from `@get-bb/plugin-sdk`. Codes map to HTTP statuses: `forbidden` 403, `not_found` 404, `conflict` 409, `invalid` 422. Issues use `PluginRpcValidationIssue[]`. The existing `{ ok: false, error: { code, message, issues? } }` envelope carries the refusal to app hooks, SDK calls and CLI errors.
+- Handlers throw `new experimental_PluginRpcRefusal({ code, message, issues? })` from `@sandy-sdk/plugin-sdk`. Codes map to HTTP statuses: `forbidden` 403, `not_found` 404, `conflict` 409, `invalid` 422. Issues use `PluginRpcValidationIssue[]`. The existing `{ ok: false, error: { code, message, issues? } }` envelope carries the refusal to app hooks, SDK calls and CLI errors.
 - Refusals count as invocations, but do not increment handler errors or change plugin status detail. Ordinary throws remain `handler_error` / 500. Refused writes reject so shared optimistic updates roll back.
-- Core caller: bb-account's connect-only credential RPC handlers use the same runtime, HTTP route and caller contract as third-party plugins. The fake host and `renderSlot` accept the same thrown refusal.
+- Core caller: sandy-account's connect-only credential RPC handlers use the same runtime, HTTP route and caller contract as third-party plugins. The fake host and `renderSlot` accept the same thrown refusal.
 - Stabilize after validating caller-gated refusals and optional issue propagation across HTTP, app queries/mutations, SDK watches and CLI, including rollback and crash accounting. Watching is added by the next stack PR; its `onError` receives the SDK error carrying the refusal code.
 
 ## Plugin RPC contract and client-state guarantees
 
 - All three live hooks use `{ contract, method, ... }` with contract/method inference and no explicit generic arguments. Plain reads add `input`, keyed reads add `keys` and optional `select`, and mutations add optional `optimistic`. `experimental_useRpcKeyedQuery({ contract, method, keys, select? })` infers rows and selection results from the contract value. `ExperimentalRpcKeyedMethod` restricts methods to schemas accepting only `{ keys: string[] }` plus optional/defaulted fields and returning string-indexed records; `ExperimentalRpcKeyedValue` derives their row values. The keyed state's `refetchKeys(keys)` reads only the given keys again and keeps the other rows; the Git plugin retries one failed patch or one environment's status with it. `defineRpcContract` rejects `keyTags` unless parsed input has string keys and output is a string-indexed record. Push-notifications is the first caller. Stabilization includes transformed schemas, invalid shapes and projected selections.
-- `experimental_PluginRpcCallError` is exported from the SDK root and app entry and is the error of live read/mutation hooks and every rejected `mutate`. It always has `code: PluginRpcErrorCode`, `message`, optional validated issues and optional HTTP status. `transport_error`, `invalid_response` and `unknown_error` cover client failures. The union may grow: consumers need a fallback; unknown server codes map to `unknown_error` and remain in `serverCode`. CLI output preserves newer codes without assuming an exhaustive list. Core callers use the same HTTP, SDK and command error boundaries; bb-account exercises expected refusals. Stabilize after version-skew, transport, malformed-response and refusal checks.
+- `experimental_PluginRpcCallError` is exported from the SDK root and app entry and is the error of live read/mutation hooks and every rejected `mutate`. It always has `code: PluginRpcErrorCode`, `message`, optional validated issues and optional HTTP status. `transport_error`, `invalid_response` and `unknown_error` cover client failures. The union may grow: consumers need a fallback; unknown server codes map to `unknown_error` and remain in `serverCode`. CLI output preserves newer codes without assuming an exhaustive list. Core callers use the same HTTP, SDK and command error boundaries; sandy-account exercises expected refusals. Stabilize after version-skew, transport, malformed-response and refusal checks.
 - `mutate`, `isPending` and `pendingInputs` finish at write acknowledgement. Core thread writes have the same semantics through `useTaggedMutation`. Cache predictions survive background refreshes and failed rereads until fresh confirmed data arrives. Write rejection rolls back. Owner tests cover acknowledgement, held refreshes, reconciliation and concurrent predictions.
-- BB read state means: `data` is the latest successful value plus predictions, retained during refresh errors (plain reads start undefined; keyed selections receive loaded rows, initially an empty record). `isLoading` means an enabled read is fetching never-loaded requested data. `isFetching` includes background attempts; keyed views share method activity. `error` records the completed read failure and clears on success; retrying a first load clears its old error while loading. `refetch` forces a read and waits through retries; failure remains in `error` and its promise resolves. Production freshness is two seconds without polling. Focus does not refetch while BB's realtime connection is healthy; while disconnected, focus/browser-online events recheck stale active reads. BB reconnect invalidates all plugin reads regardless of freshness. Page hiding cancels active attempts and resume restarts cancelled reads. Invalidations refresh immediately. Tags remain plain strings. Network/abort failures retry twice with 250 ms delay, HTTP failures never retry, and writes never retry automatically. No query-library options are exposed.
+- SANDY read state means: `data` is the latest successful value plus predictions, retained during refresh errors (plain reads start undefined; keyed selections receive loaded rows, initially an empty record). `isLoading` means an enabled read is fetching never-loaded requested data. `isFetching` includes background attempts; keyed views share method activity. `error` records the completed read failure and clears on success; retrying a first load clears its old error while loading. `refetch` forces a read and waits through retries; failure remains in `error` and its promise resolves. Production freshness is two seconds without polling. Focus does not refetch while SANDY's realtime connection is healthy; while disconnected, focus/browser-online events recheck stale active reads. SANDY reconnect invalidates all plugin reads regardless of freshness. Page hiding cancels active attempts and resume restarts cancelled reads. Invalidations refresh immediately. Tags remain plain strings. Network/abort failures retry twice with 250 ms delay, HTTP failures never retry, and writes never retry automatically. No query-library options are exposed.
 
 ## Page titles
 
@@ -4000,7 +4040,7 @@ The GitHub PR Status plugin's keyed `pullRequests` read is the first producer: i
 
 The Tasks plugin's plain `listTaskPullRequests` read is the second: while a watched task's last read included an open or draft pull request, it invalidates that task's pull-request tag every 60 seconds, the cadence of the client poll it replaced.
 
-`bb.rpc.experimental_whileWatched(method, handler)` starts one producer for each distinct subscribed `{input}` or `{key}` read, and aborts it when its last client leaves or the plugin unloads. An app tab hidden for five seconds stops counting as a client until it is visible again. Register after the RPC method. Read identity uses canonical JSON and the encoded read is capped at 16 KiB. The server drops an oversized target from a subscribe message and keeps the rest, and the app doesn't send one. Every live app query hook holds a `plugin-read` subscription for its read, whether or not the method has a producer. Producers start and stop through the hub's watched-target registry, the path core uses for daemon git and thread-storage watching, thread timeline pushes and environment pull request checks.
+`sandy.rpc.experimental_whileWatched(method, handler)` starts one producer for each distinct subscribed `{input}` or `{key}` read, and aborts it when its last client leaves or the plugin unloads. An app tab hidden for five seconds stops counting as a client until it is visible again. Register after the RPC method. Read identity uses canonical JSON and the encoded read is capped at 16 KiB. The server drops an oversized target from a subscribe message and keeps the rest, and the app doesn't send one. Every live app query hook holds a `plugin-read` subscription for its read, whether or not the method has a producer. Producers start and stop through the hub's watched-target registry, the path core uses for daemon git and thread-storage watching, thread timeline pushes and environment pull request checks.
 
 Stabilize after exercising producer cancellation, reload, reconnect and byte limits across additional consumers. In the app, core and plugin surfaces subscribe through the same `WebSocketManager` (`apps/app/src/lib/ws.ts`). The SDK has no watched-read API yet.
 
@@ -4008,7 +4048,7 @@ Stabilize after exercising producer cancellation, reload, reconnect and byte lim
 
 `app.slots.experimental_threadHeaderAction` and its
 `PluginThreadHeaderActionRegistration` and `PluginThreadHeaderActionProps`
-types are gone from `@get-bb/plugin-sdk/app`, the Plugin Guide and the
+types are gone from `@sandy-sdk/plugin-sdk/app`, the Plugin Guide and the
 authoring docs. Its replacement is a thread action with
 `placement: "header"` (see the `experimental_threadAction` entry), the path
 the Git plugin's Commit button uses. The collector keeps the method as a
@@ -4018,9 +4058,9 @@ typed by the internal `LegacyThreadHeaderActionRegistration`), so existing
 plugins, including ones that check `typeof app.slots.experimental_threadHeaderAction === "function"`
 first, still register, and `PluginThreadHeaderActions` still renders them in
 the header row before the workspace button, once per pane with
-`{ threadId, projectId, isCompactViewport }`, as before. `bb-plugin-build`
+`{ threadId, projectId, isCompactViewport }`, as before. `sandy-plugin-build`
 warns on any `.experimental_threadHeaderAction` reference with the
-replacement call: `bb plugin build` and `bb plugin dev` print it, and the
+replacement call: `sandy plugin build` and `sandy plugin dev` print it, and the
 server writes it to the plugin's log when it builds the plugin. Callers are
 marketplace plugins written against the old SDK: 105 plugins in the
 October 2026 marketplace scan (account-pool-balanced, advisor, agent-graph, agent-reload, agent-roles, app-preview, asciimoji, auto-compact, autoresearch, backlog, bookmarks, bots-sidebar, branch-pr, browser-copy, burn, calm, chief, claude-account-switcher, claude-design, claude-switcher, code-review, copilot-aic-usage, crew, delegation, desktop, diff-explorer, diff-review, diff-tree, dockside, ds4, fast-archive, file-explorer, file-gateway, file-tree, finder, firstmate, floating-notes, follow-thinking, followups, game-studio, genui, git-history, gitbutler, gtd-sidebar, hands-free, harness, herald, hmm-floating-terminal, ios-simulator, jb-flow, kata, kitchen-sink, linear, loom, model-connections, new-issue, office-viewer, omp-subagents, oxi-projects, pi-services, plan-tab, plannotator, pokecut-theme, pokemon-catcher, presentations, productive, project-colors, project-files, project-folders, recap, references, retitle, rewind, run-commands, saved-prompts, session-log, sessions-switcher, sidebar, sidebar-focus, slack, stelow, subscriptions, superhuman, t3sidebar, tab-manager, tabs, taskboard, tasks-plus, thread-briefs, thread-inbox, thread-namer, thread-overview, timer, tokenomics, treelanes, triage, ultragoal, vantage, vcs-widget, video-markup, visual-workflows, whiteboard, wikilinks, workbench-explorer, xlsx-preview). Remove the alias, the slot store
@@ -4029,10 +4069,10 @@ entry and `PluginThreadHeaderActions` only after those plugins have migrated.
 ## Retired RPC contract `invalidates`
 
 `invalidates(input, output)` on `defineRpcContract` methods is gone from
-`PluginRpcMethodContract` in `@get-bb/plugin-sdk`, the Plugin Guide and the
+`PluginRpcMethodContract` in `@sandy-sdk/plugin-sdk`, the Plugin Guide and the
 authoring docs. It fired only when a write went through that RPC method, so a
 plugin whose CLI commands, agent tools or background work change the same
-data also had to call `bb.rpc.experimental_invalidate` there, and an app-made
+data also had to call `sandy.rpc.experimental_invalidate` there, and an app-made
 write then refreshed twice. The replacement is that one call, made in the
 server code that changes the data. The first-party callers already did: the
 Git plugin's `markViewed`, `clearViewed` and `setMergeBase` refresh through
@@ -4041,85 +4081,85 @@ GitHub PR Status plugin's `refresh`, `markReady`, `markDraft` and `merge`
 through its pull request store's `publish` when the row changes, and the push
 notification plugin's `threadNotifications.set` through `publishSubtree`, and
 the Workflows plugin's `workflowStopRun` through `service.stop`, which
-`bb workflows stop` shares; their declarations are deleted. The runtime still reads the field:
+`sandy workflows stop` shares; their declarations are deleted. The runtime still reads the field:
 `readRpcMethodContract` in `packages/plugin-sdk/src/internal/host-policy.ts`
 keeps it in the method's declarations, `invokeRpcHandler` broadcasts the tags
 after a successful call, and `rpcResponseTags` returns them as `invalidated`
-so the calling client refreshes them, as before. `bb-plugin-build` warns when
+so the calling client refreshes them, as before. `sandy-plugin-build` warns when
 a server source file inside the plugin's own directory declares
 `invalidates` (`retiredRpcInvalidatesWarnings` in
 `packages/plugin-build/src/retired-sdk-members.ts`), with the replacement
-call: `bb plugin build` and `bb plugin dev` print it, and the server writes it
+call: `sandy plugin build` and `sandy plugin dev` print it, and the server writes it
 to the plugin's log when it builds the plugin. Core HTTP routes declare no
 tags. Callers are marketplace plugins written
 against the old SDK, from the 2026-10-28 scan of the 364 git repositories and
 14 npm packages behind the community marketplace's 469 entries:
-kalindudc/bb-marketplace's loom (`src/rpc-tags.ts`), shuttle and vantage
-(`src/contract.ts`), and smsunarto/bb-plugins' gtd-sidebar
+kalindudc/sandy-marketplace's loom (`src/rpc-tags.ts`), shuttle and vantage
+(`src/contract.ts`), and smsunarto/sandy-plugins' gtd-sidebar
 (`lib/rpc-contract.ts`) and kitchen-sink. Remove the runtime path and the
 field from `ContractTagDeclarations` consumers in the plugin SDK only after
 those plugins have migrated.
 
 ## Retired `experimental_useSidebarThreadPullRequest` runtime member
 
-`experimental_useSidebarThreadPullRequest(threadId)` and its `PluginSidebarPullRequest` and `PluginSidebarThreadPullRequestState` types are gone from `@get-bb/plugin-sdk/app`, the Plugin Guide and the authoring docs. Published bundles resolve `@get-bb/plugin-sdk/app` exports by name on `globalThis.__bbPluginRuntime.pluginSdkApp`, so the app installs `retiredPluginSdkAppMembers` (`apps/app/src/lib/plugin-sdk-app-impl.tsx`) next to the implementation. The member keeps its old shape, reads the GitHub PR Status plugin's `pullRequests` row for the thread's environment through `useRetiredSidebarEnvironmentPullRequest` (`apps/app/src/lib/retired-sidebar-pull-request.ts`), main's hook kept for it: a cached row refetches on mount and on page show, and the plugin's server decides whether that needs GitHub. It returns `{ isLoading: false, pullRequest: null }` when the plugin is disabled or the read fails. The GitHub PR Status plugin's own segment and Info row use the plugin's copy of that hook. Both copies use `useRefetchOnShowAndFocus` (`plugins/github-pr-status/ui/refetch-on-show.ts`), which refetches a row once when its first view mounts. The name leaves only the typings. `bb-plugin-build` keeps it in the `@get-bb/plugin-sdk/app` runtime shim's export list (`RETIRED_PLUGIN_SDK_APP_EXPORTS` in `packages/plugin-build/src/build-plugin-app.ts`), so plugins that still import it build and run, because git-sourced marketplace plugins are built by bb at install and update and path and builtin plugins rebuild when the SDK version changes. An import of it is a build warning carrying the replacement call: `bb plugin build` and `bb plugin dev` print it, and the server writes it to the plugin's log and the server log when it builds the plugin. Callers are marketplace plugins written against the old SDK (t3sidebar, dockside, gtd-sidebar, thread-inbox, radar-sidebar, bb-sidebar, sidebar-plus, cursor-sidebar, switchboard, vantage, jb-flow, tinted-threads among them). Their migration path is `experimental_ThreadRowMetadata` in the row, which draws the GitHub PR Status badge as bb's sidebar does; the build warning names it. Remove the runtime member and the shim entry only after those plugins have migrated.
+`experimental_useSidebarThreadPullRequest(threadId)` and its `PluginSidebarPullRequest` and `PluginSidebarThreadPullRequestState` types are gone from `@sandy-sdk/plugin-sdk/app`, the Plugin Guide and the authoring docs. Published bundles resolve `@sandy-sdk/plugin-sdk/app` exports by name on `globalThis.__sandyPluginRuntime.pluginSdkApp`, so the app installs `retiredPluginSdkAppMembers` (`apps/app/src/lib/plugin-sdk-app-impl.tsx`) next to the implementation. The member keeps its old shape, reads the GitHub PR Status plugin's `pullRequests` row for the thread's environment through `useRetiredSidebarEnvironmentPullRequest` (`apps/app/src/lib/retired-sidebar-pull-request.ts`), main's hook kept for it: a cached row refetches on mount and on page show, and the plugin's server decides whether that needs GitHub. It returns `{ isLoading: false, pullRequest: null }` when the plugin is disabled or the read fails. The GitHub PR Status plugin's own segment and Info row use the plugin's copy of that hook. Both copies use `useRefetchOnShowAndFocus` (`plugins/github-pr-status/ui/refetch-on-show.ts`), which refetches a row once when its first view mounts. The name leaves only the typings. `sandy-plugin-build` keeps it in the `@sandy-sdk/plugin-sdk/app` runtime shim's export list (`RETIRED_PLUGIN_SDK_APP_EXPORTS` in `packages/plugin-build/src/build-plugin-app.ts`), so plugins that still import it build and run, because git-sourced marketplace plugins are built by sandy at install and update and path and builtin plugins rebuild when the SDK version changes. An import of it is a build warning carrying the replacement call: `sandy plugin build` and `sandy plugin dev` print it, and the server writes it to the plugin's log and the server log when it builds the plugin. Callers are marketplace plugins written against the old SDK (t3sidebar, dockside, gtd-sidebar, thread-inbox, radar-sidebar, sandy-sidebar, sidebar-plus, cursor-sidebar, switchboard, vantage, jb-flow, tinted-threads among them). Their migration path is `experimental_ThreadRowMetadata` in the row, which draws the GitHub PR Status badge as sandy's sidebar does; the build warning names it. Remove the runtime member and the shim entry only after those plugins have migrated.
 
-## Retired environment git reads (`bb.sdk.environments.status`, `diff`, `diffFiles`, `diffPatch`, `diffFile`, `diffBranches`)
+## Retired environment git reads (`sandy.sdk.environments.status`, `diff`, `diffFiles`, `diffPatch`, `diffFile`, `diffBranches`)
 
-These six `PluginBbSdk.environments` methods are gone from the public typings, the Plugin Guide and the authoring docs; the Git plugin's RPC contract (`bb--git`: `status`, `diff`, `files`, `patches`, `fileSide`, `branches`) replaces them, and core's HTTP read routes are deleted. Published and git-sourced plugins keep working: `packages/sdk/src/areas/retired-environment-reads.ts` adds runtime adapters with the old shapes that call `POST /api/v1/plugins/bb--git/rpc/<method>`, so they fail with the RPC error when the Git plugin is disabled. `bb-plugin-build` scans app and server bundles for calls to them (`packages/plugin-build/src/retired-sdk-members.ts`) and prints a warning with the replacement RPC call; `bb plugin build`, `bb plugin dev` and server-side builds at install and update log it, and never fail. Callers are marketplace plugins written against the old SDK (vantage, diff-tree, firstmate, diff-viewed among them). Remove the adapters after those plugins migrate.
+These six `PluginSandySdk.environments` methods are gone from the public typings, the Plugin Guide and the authoring docs; the Git plugin's RPC contract (`sandy--git`: `status`, `diff`, `files`, `patches`, `fileSide`, `branches`) replaces them, and core's HTTP read routes are deleted. Published and git-sourced plugins keep working: `packages/sdk/src/areas/retired-environment-reads.ts` adds runtime adapters with the old shapes that call `POST /api/v1/plugins/sandy--git/rpc/<method>`, so they fail with the RPC error when the Git plugin is disabled. `sandy-plugin-build` scans app and server bundles for calls to them (`packages/plugin-build/src/retired-sdk-members.ts`) and prints a warning with the replacement RPC call; `sandy plugin build`, `sandy plugin dev` and server-side builds at install and update log it, and never fail. Callers are marketplace plugins written against the old SDK (vantage, diff-tree, firstmate, diff-viewed among them). Remove the adapters after those plugins migrate.
 
-`PLUGIN_CLI_OUTPUT_MAX_BYTES` is 32 MiB (was 1 MiB) so `bb git diff` and
-`bb git file` print what `bb environment diff` and `diff-file` printed: a diff
+`PLUGIN_CLI_OUTPUT_MAX_BYTES` is 32 MiB (was 1 MiB) so `sandy git diff` and
+`sandy git file` print what `sandy environment diff` and `diff-file` printed: a diff
 of up to 2 MiB with a 256 KiB file list, and file sides up to the 25 MB
-text and 10 MB image limits of `host.read_file`. The running bb enforces its
+text and 10 MB image limits of `host.read_file`. The running sandy enforces its
 own value, so plugins built against the old constant keep working.
 
 ## Panel controller (`experimental_useAppPanel`, `ExperimentalPanelController`, `ExperimentalOpenTabOptions`, `experimental_panel`)
 
 - **Surface:** `experimental_useAppPanel(): ExperimentalPanelController` for components, and `experimental_panel: ExperimentalPanelController` on every launcher context: `PluginCommandContext`, `PluginThreadActionItemInput`/`PluginThreadActionBulkItemInput`, `PluginMessageActionContext`, `PluginNewThreadPanelActionContext`, `ExperimentalThreadTabActionContext` and nav-panel action tabs' `run`. `openTab(options)`, `toggleTab(options)` and `close()` each return host acceptance. `ExperimentalOpenTabOptions` is `{ tab: ExperimentalTabReference, target? }` for fixed tabs (session-only, validated by the tab's `experimental_target`) or `{ tab, params?, title? }` for action tabs (persisted; the same params focus the existing instance). The types reject `target` on action tabs and `params`/`title` on fixed tabs.
 - **Behavior:** components get the controller of the surface they render in (thread view, plugin nav-panel page, New thread screen); commands and thread actions get the focused surface's; message actions get the thread view's; tab and New-thread actions get the surface that launched them. `toggleTab` closes the side panel when a fixed tab is selected with the panel open (target ignored) or the action instance with the same params is selected, and otherwise calls `openTab`. `close()` closes the side panel. Declines: no side panel, a tab not registered by this plugin for the surface or hidden, wrong availability, non-JSON or invalid target/params. On the New thread screen a `{ context: { kind: "thread" }, availability: "action" }` reference resolves against `experimental_newThreadPanelAction` with the same id.
-- **Core callers:** `useAppPanelController` and `createAppPanelController` in `apps/app/src/lib/app-fixed-tab-navigation.tsx` are the one implementation; `ThreadDetailView`, `PluginPanelRightPanelHost` and `RootComposeView` build it from their destinations and route bb's own controls through it: the Git plugin's Mod+D command is `toggleTab` on its Diff tab through `ctx.experimental_panel`, `panel.toggle` and the header/page toggle close through `close()` (opening restores the last tab), Info, the fixed-tab strip and Diff file/commit opens use `openTab`, and the panel close/collapse buttons, `panel.close` and the window-close request use `close()`. Plugin calls map through `createPluginPanelController` in `apps/app/src/lib/plugin-panel-controller.ts`. Contract tests: `app-fixed-tab-navigation.test.ts` and the surface tests that run the shared table.
-- **Retired members (2026-10-26):** removed from public typings, the Plugin Guide and the authoring docs; runtime shims call the controller and `bb plugin build` warns with the replacement call (`packages/plugin-build/src/retired-sdk-members.ts`).
+- **Core callers:** `useAppPanelController` and `createAppPanelController` in `apps/app/src/lib/app-fixed-tab-navigation.tsx` are the one implementation; `ThreadDetailView`, `PluginPanelRightPanelHost` and `RootComposeView` build it from their destinations and route sandy's own controls through it: the Git plugin's Mod+D command is `toggleTab` on its Diff tab through `ctx.experimental_panel`, `panel.toggle` and the header/page toggle close through `close()` (opening restores the last tab), Info, the fixed-tab strip and Diff file/commit opens use `openTab`, and the panel close/collapse buttons, `panel.close` and the window-close request use `close()`. Plugin calls map through `createPluginPanelController` in `apps/app/src/lib/plugin-panel-controller.ts`. Contract tests: `app-fixed-tab-navigation.test.ts` and the surface tests that run the shared table.
+- **Retired members (2026-10-26):** removed from public typings, the Plugin Guide and the authoring docs; runtime shims call the controller and `sandy plugin build` warns with the replacement call (`packages/plugin-build/src/retired-sdk-members.ts`).
 
   | Retired                                                                                                                                                                                                          | Replacement                                                                                                                         |
   | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
   | `ctx.openPanel(options?)` on every launcher context                                                                                                                                                              | `ctx.experimental_panel.openTab({ tab: { id, context: { kind: "thread" }, availability: "action" }, params, title })`               |
-  | `useBbNavigate().openThreadPanel({ actionId, params?, title? })`                                                                                                                                                 | `experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })` |
+  | `useSandyNavigate().openThreadPanel({ actionId, params?, title? })`                                                                                                                                              | `experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })` |
   | `experimental_useAppPanel().experimental_openTab({ surface, ...options })`                                                                                                                                       | `experimental_useAppPanel().openTab(options)`                                                                                       |
   | `experimental_useAppPanel().openFixedTab({ surface, tab: { panelId?, id }, target? })`                                                                                                                           | `experimental_useAppPanel().openTab({ tab: { id, context, availability: "fixed" }, target })`                                       |
   | testing `renderSlot` options `openThreadPanel`, `experimental_openTab`, `experimental_openFixedTab`; logs `experimental_tabOpenCalls`, `experimental_fixedTabOpenCalls` and the `openThreadPanel` `NavigateCall` | option `experimental_panel: Partial<ExperimentalPanelController>`; log `experimental_panelCalls`                                    |
 
-  One behaviour narrows: an action tab's or New-thread action's own `ctx.openPanel()` now resolves through the launching surface's registered tabs instead of opening its action directly, so it declines if the action was hidden or unregistered while `run` awaited. The other retired members already resolved against registered tabs. Survey of the 342 bb-community source repositories (shallow clones, 2026-10-26, production sources): `openPanel(` 102 call sites in 47 repos, `openThreadPanel(` 111 in 55, `experimental_openTab(` 3 in 2, `openFixedTab(` 11 in 8. Three repos self-open after an `await` in `run` (bb-plugin-crew, bb-wterm-terminal-plugin, bb-plugin-feed), all through the legacy `threadPanelAction`, which has no `useVisible`; the one tab with `useVisible` (shuttle) self-opens synchronously from its visible launcher. No caller relies on opening an unregistered or hidden action. In-repo callers (side-chat, tasks, workflows, docs, the ThreadChat demo) moved to the controller.
+  One behaviour narrows: an action tab's or New-thread action's own `ctx.openPanel()` now resolves through the launching surface's registered tabs instead of opening its action directly, so it declines if the action was hidden or unregistered while `run` awaited. The other retired members already resolved against registered tabs. Survey of the 342 sandy-community source repositories (shallow clones, 2026-10-26, production sources): `openPanel(` 102 call sites in 47 repos, `openThreadPanel(` 111 in 55, `experimental_openTab(` 3 in 2, `openFixedTab(` 11 in 8. Three repos self-open after an `await` in `run` (sandy-plugin-crew, sandy-wterm-terminal-plugin, sandy-plugin-feed), all through the legacy `threadPanelAction`, which has no `useVisible`; the one tab with `useVisible` (shuttle) self-opens synchronously from its visible launcher. No caller relies on opening an unregistered or hidden action. In-repo callers (side-chat, tasks, workflows, docs, the ThreadChat demo) moved to the controller.
 
 - **Stabilization:** audit focus resolution for commands and thread actions across split panes and plugin pages, `toggleTab` against compact drawers and plugin-detail overlays, `close()` acceptance when the panel is already closed, and whether a nav-panel action reference should resolve on thread surfaces. Remove the retired shims after published callers migrate, then rename project-wide and remove this entry.
 
 ## Open panel tabs (`experimental_usePanelTabs`, `ExperimentalPanelController.getTabs`/`selectTab`/`closeTab`, `experimental_PanelTabIcon`)
 
-- **Surface:** `experimental_usePanelTabs(): ExperimentalPanelTabs` returns `{ open, selectedKey, tabs }` for the side panel of the surface the component renders in, following live changes. Each `ExperimentalPanelTab` is `{ key, title, status, closable, detail }`; `ExperimentalPanelTabDetail` is `info`, `file` (`path`), `browser` (`url`), `terminal` (`terminalId`), `new-tab`, `plugin` (`pluginId`, the tab's `ExperimentalTabReference`, action `params`) or `plugin-details` (`pluginId`). `ExperimentalPanelController.getTabs()` returns the same list once, for commands, thread actions and other non-component callers (from the focused surface for commands). `selectTab(key)` and `closeTab(key)` act on any listed tab and return false for a key that is not open (and `closeTab` for a tab without a close button). `experimental_PanelTabIcon({ tabKey })` draws the strip's icon for a key. The testing harness takes `experimental_panelTabs` and logs `selectTab`/`closeTab` in `experimental_panelCalls`; `@get-bb/plugin-sdk/testing` exports `experimental_makePanelController(overrides?)`, a controller that declines every call except the overrides, for tests that run a command or action directly.
+- **Surface:** `experimental_usePanelTabs(): ExperimentalPanelTabs` returns `{ open, selectedKey, tabs }` for the side panel of the surface the component renders in, following live changes. Each `ExperimentalPanelTab` is `{ key, title, status, closable, detail }`; `ExperimentalPanelTabDetail` is `info`, `file` (`path`), `browser` (`url`), `terminal` (`terminalId`), `new-tab`, `plugin` (`pluginId`, the tab's `ExperimentalTabReference`, action `params`) or `plugin-details` (`pluginId`). `ExperimentalPanelController.getTabs()` returns the same list once, for commands, thread actions and other non-component callers (from the focused surface for commands). `selectTab(key)` and `closeTab(key)` act on any listed tab and return false for a key that is not open (and `closeTab` for a tab without a close button). `experimental_PanelTabIcon({ tabKey })` draws the strip's icon for a key. The testing harness takes `experimental_panelTabs` and logs `selectTab`/`closeTab` in `experimental_panelCalls`; `@sandy-sdk/plugin-sdk/testing` exports `experimental_makePanelController(overrides?)`, a controller that declines every call except the overrides, for tests that run a command or action directly.
 - **Behavior:** the list is the tab strip's, in its order: fixed tabs (Info, plugin fixed and page tabs), then content tabs. `title`, `status` and `closable` are what the strip shows; `selectTab` and `closeTab` call the strip's own `onSelect`/`onClose`, so closing a terminal ends it and selecting reveals the panel (the compact drawer on phones). Plugin components re-render only when the listed data changes. Keys are the core tab ids and are documented as valid only while the tab is open. A surface without a side panel reports a closed, empty list.
 - **Core callers:** every surface builds its strip from `usePanelTabPresenter` (`apps/app/src/components/secondary-panel/usePanelTabPresenter.tsx`) and renders `AppPanelTabsPublisher` (`apps/app/src/lib/app-panel-tabs.tsx`) with the same tab objects it hands `ThreadSecondaryPanel`: `ThreadDetailView`, `RootComposeView`, `PluginPanelRightPanelHost`, and the Plugins browse page (`PluginsView`, which now has its own panel controller). The publisher writes into the surface's `useAppPanelController` store in `apps/app/src/lib/app-fixed-tab-navigation.tsx`; the plugin hook, `selectTab`, `closeTab` and the icon read that store. Contract tests: the panel controller contract in `apps/app/src/test/panel-controller-contract.tsx`, run against the thread view, New thread screen and plugin page, plus `app-panel-tabs.test.tsx`.
 - **Stabilization:** audit whether every plugin should see other tabs' URLs and file paths; whether split panes need a per-pane list or `selectedKey` per pane (today it is the focused pane's tab); whether reorder, move between panes or pin should join `selectTab`/`closeTab`; and whether `detail` needs more (a file's source or line range, a terminal's target). Then rename project-wide and remove this entry.
 
 ## Unified tabs (`experimental_tab`)
 
-- **Surface:** `app.slots.experimental_tab`, `ExperimentalTabRegistration`, `ExperimentalTabContext`, `ExperimentalTabReference`, `ExperimentalTabTargetReference`, `ExperimentalThreadActionTabProps`, `ExperimentalThreadTabActionContext`, and `ExperimentalPanelController`. Context is thread (`threadId`, plus `environment: { id } | null` taken straight from the thread, null only without one; `ExperimentalThreadTabProps`) or an owned navigation panel (`panelId`, component `subPath`). Thread tabs read anything else about the environment themselves and own its loading and failure; the Git plugin's Diff tab does both through its `bb--git` status read. Availability is fixed or action. Only actions accept `run`, default `params` and per-open persisted params/title; fixed tabs retain validated session targets. `tooltip` defaults to title and layout is padded or flush.
+- **Surface:** `app.slots.experimental_tab`, `ExperimentalTabRegistration`, `ExperimentalTabContext`, `ExperimentalTabReference`, `ExperimentalTabTargetReference`, `ExperimentalThreadActionTabProps`, `ExperimentalThreadTabActionContext`, and `ExperimentalPanelController`. Context is thread (`threadId`, plus `environment: { id } | null` taken straight from the thread, null only without one; `ExperimentalThreadTabProps`) or an owned navigation panel (`panelId`, component `subPath`). Thread tabs read anything else about the environment themselves and own its loading and failure; the Git plugin's Diff tab does both through its `sandy--git` status read. Availability is fixed or action. Only actions accept `run`, default `params` and per-open persisted params/title; fixed tabs retain validated session targets. `tooltip` defaults to title and layout is padded or flush.
 - **Behavior:** one registry and destination dispatcher serve thread fixed, thread action, navigation-page fixed and navigation-page action tabs. `useVisible` runs inside plugin scope/crash isolation for the current context. It hides a destination or launcher without removing saved fixed identity/order or already-open action instances. Action params deduplicate instances; fixed tabs have one identity and cannot close. Every opener goes through the surface's panel controller (see Panel controller), including the retired `openFixedTab`, `experimental_openTab`, action `openPanel` and `openThreadPanel`. New-thread-screen actions retain their project-context API and use the same action-opening implementation.
-- **Compatibility:** `threadPanelAction`, `PluginThreadPanelActionRegistration`, `PluginThreadPanelProps`, `PluginThreadPanelActionContext`, `navPanel.fixedTabs`, `PluginFixedTabRegistration` and `PluginFixedTabDeclaration` are removed from public source typings by explicit product decision. Runtime adapters in the registration collector remain for published bundles and Git-source install/update builds: 92 marketplace repositories use `threadPanelAction`, 15 use `fixedTabs`. Legacy optional icons, unknown fields and older fixed-tab owner shapes are accepted; malformed entries warn/skip rather than crashing the plugin. `bb-plugin-build` emits migration warnings with replacement examples and the authoring migration link. Server install/rebuild paths copy warnings into the plugin log; warnings never block install or update. The runtime export manifest continues to expose existing SDK functions. Remove adapters only after known callers have migrated.
-- **Persistence and automation:** thread fixed entries use `{id, kind: 'plugin-fixed', pluginId, tabId}` through SDK `threads.tabs.get/update` and CLI `bb thread tabs show/set`, with revision checks. Existing `plugin-page-fixed` and `plugin-panel` action entries/params keep their IDs and storage keys. Selection is client-local. Legacy core Info/Diff kinds, active selections and split IDs convert without reordering; server entries rewrite through the revision-checked queue. Split restoration waits for registration/visibility readiness.
+- **Compatibility:** `threadPanelAction`, `PluginThreadPanelActionRegistration`, `PluginThreadPanelProps`, `PluginThreadPanelActionContext`, `navPanel.fixedTabs`, `PluginFixedTabRegistration` and `PluginFixedTabDeclaration` are removed from public source typings by explicit product decision. Runtime adapters in the registration collector remain for published bundles and Git-source install/update builds: 92 marketplace repositories use `threadPanelAction`, 15 use `fixedTabs`. Legacy optional icons, unknown fields and older fixed-tab owner shapes are accepted; malformed entries warn/skip rather than crashing the plugin. `sandy-plugin-build` emits migration warnings with replacement examples and the authoring migration link. Server install/rebuild paths copy warnings into the plugin log; warnings never block install or update. The runtime export manifest continues to expose existing SDK functions. Remove adapters only after known callers have migrated.
+- **Persistence and automation:** thread fixed entries use `{id, kind: 'plugin-fixed', pluginId, tabId}` through SDK `threads.tabs.get/update` and CLI `sandy thread tabs show/set`, with revision checks. Existing `plugin-page-fixed` and `plugin-panel` action entries/params keep their IDs and storage keys. Selection is client-local. Legacy core Info/Diff kinds, active selections and split IDs convert without reordering; server entries rewrite through the revision-checked queue. Split restoration waits for registration/visibility readiness.
 - **Core callers:** Info and Diff register as thread + fixed and use the shared content host, visibility, descriptor and open paths. Diff retains shortcut, Git setting, file/commit navigation and review state. Core-only Info metadata and Diff controllers remain pane-owned contexts; they are not public plugin API. Docs, GitHub, Side Chat, Tasks, Workflows and the ThreadChat demo use the unified registration.
 - **Stabilization:** audit context typing, targets versus persisted inputs, visibility and crash/reload lifecycles, independent panes/threads, startup split restoration, revision conflicts and compact drawers. Keep the shared contract table across contexts and legacy adapters, verify actual published plugin installs, then rename project-wide and remove this entry.
 
 ## Tab visibility (`experimental_useTabVisible`)
 
-- **Surface:** `experimental_useTabVisible(): boolean` on `@get-bb/plugin-sdk/app`, for any panel tab (fixed or action, thread or navigation page).
-- **Behavior:** true when the tab is the selected tab of its pane and the side panel is open; false while the panel is closed or suppressed, while another tab is selected, and outside a panel tab. bb keeps a closed panel's selected tab mounted, so a tab uses this to pause reads that only feed what it draws. The test harness's `renderSlot` answers `tabVisible` (default true).
+- **Surface:** `experimental_useTabVisible(): boolean` on `@sandy-sdk/plugin-sdk/app`, for any panel tab (fixed or action, thread or navigation page).
+- **Behavior:** true when the tab is the selected tab of its pane and the side panel is open; false while the panel is closed or suppressed, while another tab is selected, and outside a panel tab. sandy keeps a closed panel's selected tab mounted, so a tab uses this to pause reads that only feed what it draws. The test harness's `renderSlot` answers `tabVisible` (default true).
 - **Core callers:** `ThreadSecondaryPanel` provides the value (`TabVisibleContext` in `apps/app/src/components/secondary-panel/tab-visibility.ts`) around every pane's tab content, the one host for thread views, plugin pages and the New thread screen; `experimental_useTabVisible` reads that context. The Git plugin's Diff tab pauses its file list, patch and Viewed reads with it, as core's Diff did on `isDiffPanelLive`. Tests: `ThreadSecondaryPanel.tabVisible.test.tsx` and the panel-controller contract table case "reports the shown tab visible only while the side panel is open".
 - **Stabilization:** a second caller, behaviour in split panes and the compact drawer, and whether a not-yet-realized drawer should report false. Then rename project-wide and remove this entry.
 
 ## Thread context segments (`app.slots.experimental_threadContextSegment` / `experimental_THREAD_CONTEXT_SEGMENT_GROUPS`)
 
 - **Surface:** `PluginAppSlots.experimental_threadContextSegment`, `PluginSdkApp.experimental_THREAD_CONTEXT_SEGMENT_GROUPS`, `ExperimentalThreadContextSegmentRegistration`, `ExperimentalThreadContextSegmentProps`, `ExperimentalThreadContextSegmentInput`, `ExperimentalThreadContextSegmentReference` and `ExperimentalThreadEnvironment` (also used by `ExperimentalThreadInfoProps.environment`).
-- **Behavior:** a registration is `{ id, title, group, order?, summary, action?, details?, useVisible? }`. Segments share the context row above an existing thread's composer, and the host mounts each component in its own crash boundary: `summary` in the row (wrapped in a group named by `title`), `action` at the row's end after every summary, and `details` below the row. Segments sort like Info rows and thread actions: by `group` (string compare), then `order` within it (unset last), then registration order, core first on a tie. Core's groups are `experimental_THREAD_CONTEXT_SEGMENT_GROUPS`: `thread` (`1_thread`: parent thread) and `git` (`3_git`: changed files). The constant names only groups core renders; a plugin names its own group, placed where its string sorts. Each entry of `segments` is `{ key, pluginId }` with `key` `<pluginId>/<id>`, the key shape thread actions use; core's segments use `bb--core`. `useVisible(input)` runs in plugin scope per thread; false, or a crash, leaves the segment out of the row and of `segments`. Props carry `threadId`, `projectId`, `environment`, the visible `segments` in row order, and the shared disclosure state: one segment of the row is expanded at a time, keyed by `key`. `environment` is `{ id }`, or null when the thread has no environment, its host is not active, or the environment is not a usable checkout. The row is withheld while core's workspace status loads and while a question is pending, and read-only history (archived thread or gone environment) shows core's parent thread only. The banner renders under every composer plugin, because the host draws it above `ComposerBox`.
+- **Behavior:** a registration is `{ id, title, group, order?, summary, action?, details?, useVisible? }`. Segments share the context row above an existing thread's composer, and the host mounts each component in its own crash boundary: `summary` in the row (wrapped in a group named by `title`), `action` at the row's end after every summary, and `details` below the row. Segments sort like Info rows and thread actions: by `group` (string compare), then `order` within it (unset last), then registration order, core first on a tie. Core's groups are `experimental_THREAD_CONTEXT_SEGMENT_GROUPS`: `thread` (`1_thread`: parent thread) and `git` (`3_git`: changed files). The constant names only groups core renders; a plugin names its own group, placed where its string sorts. Each entry of `segments` is `{ key, pluginId }` with `key` `<pluginId>/<id>`, the key shape thread actions use; core's segments use `sandy--core`. `useVisible(input)` runs in plugin scope per thread; false, or a crash, leaves the segment out of the row and of `segments`. Props carry `threadId`, `projectId`, `environment`, the visible `segments` in row order, and the shared disclosure state: one segment of the row is expanded at a time, keyed by `key`. `environment` is `{ id }`, or null when the thread has no environment, its host is not active, or the environment is not a usable checkout. The row is withheld while core's workspace status loads and while a question is pending, and read-only history (archived thread or gone environment) shows core's parent thread only. The banner renders under every composer plugin, because the host draws it above `ComposerBox`.
 - **Core callers:** `ThreadPromptContextBanner` (`apps/app/src/components/promptbox/banner/ThreadPromptContextBanner.tsx`) registers the parent thread (summary and details, including read-only history) and changed files (summary, merge-base action, details) through `definePluginApp` and the same collector, and renders them with plugin registrations through `useThreadContextSegments` and `ThreadContextSegmentMount` (`apps/app/src/components/plugin/PluginThreadContextSegments.tsx`). Core segments read pane-local data from a React context and render without a plugin crash boundary, as core Info rows do. The GitHub PR Status plugin registers the pull request segment in its own group `2_pullRequest`, between core's two and its Mark ready and merge actions. Active child threads are a separate core row above the context row (`ThreadChildThreadsBanner`), not a segment. Contract tests: `ThreadPromptContextBanner.segments.test.tsx`.
 - **Stabilization:** audit per-component mounts and crash recovery across reloads and plugin disable, `segments` stability while visibility settles, focus handoff between a plugin's summary and details, independent panes, and compact widths with several plugin segments. Then rename project-wide and remove this entry.
 
@@ -4132,17 +4172,17 @@ own value, so plugins built against the old constant keep working.
 
 ## Provider skills index
 
-`@get-bb/plugin-sdk/provider-bridge` exports `experimental_scanSkillFiles`,
+`@sandy-sdk/plugin-sdk/provider-bridge` exports `experimental_scanSkillFiles`,
 `experimental_selectedSkillMentions`, `ExperimentalSkillScanRoot`, and
 `ExperimentalIndexedSkillFile`. The scanner resolves canonical filesystem paths,
 follows user links, bounds project links, enforces traversal limits, and returns
 each `SKILL.md` with its bytes and SHA-256 digest. Selected mentions are
 validated against their exact text ranges before provider translation.
 
-The implementation lives in `@bb/skill-index`. Core daemon command/skill discovery,
+The implementation lives in `@sandy/skill-index`. Core daemon command/skill discovery,
 workspace context reads, server/plugin catalogs, listing identity, and staging use
 that same implementation. The SDK exports are direct re-exports; frontmatter
-parsing stays in core (`@bb/skill-index/metadata`). Provider callers are Claude
+parsing stays in core (`@sandy/skill-index/metadata`). Provider callers are Claude
 Code (native catalog overlap and selected mentions), Codex (selected mentions and
 structured inputs), and Pi (selected mentions).
 
@@ -4155,12 +4195,12 @@ provider catalogs. Then rename project-wide and remove this entry.
 
 An optional icon on a declared service tier: a host glyph name, drawn filled
 like the default `Zap`, or a declared icon `"<pluginId>/<name>"` from the
-plugin's `bb.branding.experimental_icons`. The model picker trigger and the
+plugin's `sandy.branding.experimental_icons`. The model picker trigger and the
 single-tier toggle row show it when that tier is selected; Codex declares
 `"provider-codex/ultrafast"`, a double bolt shipped in its own `icons/`.
 Plugin-relative paths are rejected, and a declared icon must be one of the
 registering plugin's, checked with the provider icon at
-`bb.providers.register`. The server projects it onto
+`sandy.providers.register`. The server projects it onto
 `ProviderInfo.serviceTiers[].icon`; reasoning levels ignore it.
 
 Docs: `providers.md`.
@@ -4168,7 +4208,7 @@ Docs: `providers.md`.
 Before stabilization, decide whether `model/list` `supportedServiceTiers` may
 override the icon and whether reasoning levels should render it.
 
-## Host process toolchain (`@get-bb/plugin-sdk/process`)
+## Host process toolchain (`@sandy-sdk/plugin-sdk/process`)
 
 `experimental_hostToolchain` supplies `resolve`, `command`, `environment`,
 `node`, `npmCli`, `bundledNpmCli`, an asynchronous `refresh`, and
@@ -4202,3 +4242,22 @@ precedence, bounded discovery failure, and module-ABI preservation after Node
 replacement. Settle the shared process-local instance lifecycle across SDK
 bundle versions and whether `bundledNpmCli` belongs on the public surface before
 removing the prefix.
+
+## Theme kit (`sandy.sdk.theme.experimental_create`, `sandy.sdk.theme.experimental_check`)
+
+`experimental_create({ name, kit, overwrite? })` generates a complete custom theme
+from three anchor colors per mode (`kit.light` and `kit.dark`: `canvas`, `ink`,
+`accent`, each `oklch(L C H)` or `#rrggbb`), plus optional `statusChroma` (0 to
+0.16) and `fonts`, and writes it to `<theme dir>/<name>/theme.css`. It returns
+`{ name, path, css, issues }`. An existing name rejects with a 409 unless
+`overwrite` is set; built-in ids, unreadable colors and font stacks containing
+`;`, `{` or `}` reject with a 400. Findings never block the write.
+`experimental_check(css)` runs the same checks locally and returns
+`ThemeIssue[]` (`severity`, `mode`, `token`, `message`): text contrast
+below 4.5:1, missing required tokens, saturated status colors, a near-black dark
+or near-white light canvas, and oklch mixing of a colored value into grey.
+Core callers: `sandy theme new` and `sandy theme check` call the same SDK
+methods, and the server route `POST /settings/themes` is the only writer.
+Stabilize once the token derivations have survived a few third-party themes,
+decide whether `create` should also accept per-token overrides, and whether
+`check` belongs on the server for plugin and built-in themes.

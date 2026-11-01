@@ -2,8 +2,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { BRIDGE_JSON_RPC_ERRORS } from "@get-bb/plugin-sdk/provider-bridge";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import {
   FULL_ACCESS_SESSION_OPTIONS,
@@ -19,7 +19,7 @@ let workspaceDir: string;
 let processLogPath: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-archived-ws-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-archived-ws-"));
   processLogPath = join(workspaceDir, "app-server-processes.log");
   const scriptPath = join(workspaceDir, "fake-codex-script.json");
   writeFileSync(

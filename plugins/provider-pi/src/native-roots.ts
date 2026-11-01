@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 import {
   experimental_filterResolvedNativeRoots,
   type ExperimentalNativeRootsResolveAnswer,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import { z } from "zod";
 import {
   type PiPackageSkillRoot,

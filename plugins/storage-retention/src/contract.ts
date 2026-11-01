@@ -9,7 +9,7 @@ import {
   entryCleanupInputSchema,
   entryCleanupStatusSchema,
 } from "./storage-types.js";
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 const daysSchema = z.number().int().min(1).max(3650).nullable();

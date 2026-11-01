@@ -1,4 +1,4 @@
-import type { Host, HostType } from "@bb/domain";
+import type { Host, HostType } from "@sandy/domain";
 import type {
   CreateHostJoinCodeResponse,
   CreateMachineRequest,
@@ -19,7 +19,7 @@ import type {
   DeleteOldServerCopyResponse,
   UpdateHostRequest,
   SystemMachineProvider,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export interface HostGetArgs {

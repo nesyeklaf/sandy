@@ -29,27 +29,27 @@ import type {
   ThreadRuntimeDisplayStatus,
   ThreadStatus,
   WorkspaceGitOperation,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   CreateExecutionInputSources,
   CreateThreadEnvironmentArgs,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
-  BbSdkAreas,
+  SandySdkAreas,
   PluginThreadMetadataListArgs,
   PluginThreadMetadataListResult,
   ThreadPluginMetadataArgs,
   ThreadPluginMetadataResult,
   ThreadPluginMetadataUpdateArgs,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import type { JsonValue } from "./json-value.js";
 import type { PluginMentionTrigger } from "./backend-contract.js";
 
 /**
- * The `@get-bb/plugin-sdk/app` contract (plugin design §5.2) — pure types with no
- * side effects. The BB app imports these to keep its real implementation in
+ * The `@sandy-sdk/plugin-sdk/app` contract (plugin design §5.2) — pure types with no
+ * side effects. The SANDY app imports these to keep its real implementation in
  * sync (`satisfies PluginSdkApp`). Plugin authors import the same shapes through
- * `@get-bb/plugin-sdk/app`.
+ * `@sandy-sdk/plugin-sdk/app`.
  *
  * Per-slot props are versioned contracts: additive-only within an SDK major.
  */
@@ -99,7 +99,7 @@ export interface PluginNavPanelProps {
    * `/plugins/notes/notes/work/my%20ideas.md` renders the panel with
    * `subPath: "work/my%20ideas.md"`. Decode each segment with
    * `decodeURIComponent` before using it. Navigate within the panel via
-   * `useBbNavigate().toPluginPanel(path, { subPath })`, which takes
+   * `useSandyNavigate().toPluginPanel(path, { subPath })`, which takes
    * unencoded segments and encodes them — browser back/forward then walks
    * panel-internal history.
    */
@@ -167,7 +167,7 @@ export interface ExperimentalQuestionShortcut {
 }
 
 /**
- * A form-level action bb binds while a pending interaction is open: `submit`
+ * A form-level action sandy binds while a pending interaction is open: `submit`
  * presses the form's primary button (Next, or Submit on the last question),
  * `previous` and `next` show another question without submitting, and
  * `cancel` presses the form's Cancel button.
@@ -179,7 +179,7 @@ export type ExperimentalQuestionFormAction =
   | "cancel";
 
 /**
- * The keyboard shortcuts bb binds while a pending interaction is open. The
+ * The keyboard shortcuts sandy binds while a pending interaction is open. The
  * host owns the bindings (users can remap them); a form shows them and decides
  * what choosing an option or an action means.
  */
@@ -215,7 +215,7 @@ export interface ExperimentalQuestionFormHost {
 
 /**
  * Props of the host-owned `experimental_VoiceInputTextarea`: a controlled
- * textarea with bb's voice input. Other textarea attributes, including `ref`
+ * textarea with sandy's voice input. Other textarea attributes, including `ref`
  * and `className`, reach the underlying `<textarea>`; the caller styles it and
  * the host adds room for its microphone controls when voice input is
  * available.
@@ -269,7 +269,7 @@ export type ExperimentalSidebarNavigationAction =
 
 /**
  * Semantic icon identity for one sidebar navigation item. Render it with
- * {@link PluginSdkApp.experimental_SidebarNavigationIcon} to match bb's
+ * {@link PluginSdkApp.experimental_SidebarNavigationIcon} to match sandy's
  * artwork, including panel icons with plugin branding as their fallback.
  */
 export type ExperimentalSidebarNavigationIcon =
@@ -279,9 +279,9 @@ export type ExperimentalSidebarNavigationIcon =
 /** One host-owned destination or action a navigation provider arranges. */
 export interface ExperimentalSidebarNavigationItem {
   /**
-   * Arrangement key, stable across reloads: `__bb__/new-thread`,
-   * `__bb__/search-threads`, `__bb__/extensions`, `__bb__/skills`,
-   * `__bb__/automations`, or `<pluginId>/<panelId>`. The same keys appear in
+   * Arrangement key, stable across reloads: `__sandy__/new-thread`,
+   * `__sandy__/search-threads`, `__sandy__/extensions`, `__sandy__/skills`,
+   * `__sandy__/automations`, or `<pluginId>/<panelId>`. The same keys appear in
    * the `sidebar.pluginPanelOrder` and `sidebar.visiblePluginPanels`
    * settings.
    */
@@ -302,7 +302,7 @@ export interface ExperimentalSidebarNavigationItem {
    */
   isLoading: boolean;
   /**
-   * The plugin that contributed this panel; null for bb's own items. Gates
+   * The plugin that contributed this panel; null for sandy's own items. Gates
    * `openDetails` and `disablePlugin`.
    */
   pluginId: string | null;
@@ -367,7 +367,7 @@ export interface ExperimentalSidebarNavigationActions {
    */
   setOrder(itemIds: readonly string[]): void;
   /**
-   * Open bb's customize editor, which reorders and hides items, beside the
+   * Open sandy's customize editor, which reorders and hides items, beside the
    * navigation. It waits for an open menu to close and returns focus to the
    * control that opened it.
    */
@@ -394,7 +394,7 @@ export interface ExperimentalSidebarNavigationState {
    */
   isHomeActive: boolean;
   /**
-   * True while the user holds the app command modifier, when bb's own
+   * True while the user holds the app command modifier, when sandy's own
    * navigation reveals its `shortcut` labels. Show yours at the same time.
    */
   isShortcutModifierHeld: boolean;
@@ -470,7 +470,7 @@ export interface ExperimentalSidebarNavigationProps {
 /**
  * Props passed to a navigation's `headerComponent`, rendered in the sidebar's
  * header row between the sidebar toggle (and the macOS window controls) and
- * bb's back and forward buttons.
+ * sandy's back and forward buttons.
  */
 export interface ExperimentalSidebarHeaderProps {
   /**
@@ -481,7 +481,7 @@ export interface ExperimentalSidebarHeaderProps {
   width: number;
   /**
    * Width and height in px of the header's own buttons, equal to the
-   * `--bb-sidebar-control-size` CSS variable. Size your controls to match.
+   * `--sandy-sidebar-control-size` CSS variable. Size your controls to match.
    */
   controlSize: number;
   isCompactViewport: boolean;
@@ -503,7 +503,7 @@ export interface PluginThreadListProps {
    */
   onNavigate: () => void;
   /**
-   * Compatibility value for the former sidebar search field. BB now searches
+   * Compatibility value for the former sidebar search field. SANDY now searches
    * threads in the quick palette, so the host always supplies "".
    *
    * @deprecated The quick palette owns thread search. Ignore this value.
@@ -516,9 +516,9 @@ export type ExperimentalPluginBrowserPageWorld = "isolated" | "main";
 
 export interface ExperimentalPluginBrowserPageEvaluateOptions {
   /**
-   * `isolated` (default) runs in a BB-owned world that shares the page DOM but
-   * not page globals, and binds `bb.postMessage(data)`. `main` runs beside the
-   * page's own scripts, where `bb` is `null`.
+   * `isolated` (default) runs in a SANDY-owned world that shares the page DOM but
+   * not page globals, and binds `sandy.postMessage(data)`. `main` runs beside the
+   * page's own scripts, where `sandy` is `null`.
    */
   world?: ExperimentalPluginBrowserPageWorld;
 }
@@ -531,7 +531,7 @@ export interface ExperimentalPluginBrowserPage {
   /**
    * Evaluate a JavaScript expression and resolve its JSON-serialized value.
    * Promises are awaited and `undefined` resolves to `null`. The expression
-   * can reference `bb`. Rejects when the tab is gone or the expression throws.
+   * can reference `sandy`. Rejects when the tab is gone or the expression throws.
    * Anything the expression installs is lost when the document navigates.
    */
   evaluate(
@@ -540,7 +540,7 @@ export interface ExperimentalPluginBrowserPage {
   ): Promise<JsonValue>;
   /**
    * Subscribe to values this plugin's isolated-world scripts in this tab send
-   * with `bb.postMessage(data)`. Returns the unsubscribe function.
+   * with `sandy.postMessage(data)`. Returns the unsubscribe function.
    */
   onMessage(listener: (data: JsonValue) => void): () => void;
 }
@@ -584,7 +584,7 @@ export interface PluginFileOpenerProps {
   source: PluginFileOpenerSource;
   /**
    * One-based, inclusive lines requested by the latest file open, or null when
-   * untargeted. BB supplies a new object for each targeted open, including an
+   * untargeted. SANDY supplies a new object for each targeted open, including an
    * identical target in the active tab. Observe object identity to navigate
    * again; keep the editor model intact. Older hosts may omit this prop.
    *
@@ -595,7 +595,7 @@ export interface PluginFileOpenerProps {
     endLineNumber: number;
   } | null;
   /**
-   * BB's file preview, bound to this file. Render it to delegate conditionally
+   * SANDY's file preview, bound to this file. Render it to delegate conditionally
    * without re-entering plugin replacement resolution.
    *
    * @experimental Audit before relying on this as a stable contract.
@@ -635,9 +635,9 @@ export interface ExperimentalDiffFullFileContents {
 }
 
 /**
- * Props of the host-owned `experimental_SourceCode` component — BB's source
+ * Props of the host-owned `experimental_SourceCode` component — SANDY's source
  * viewer. The host owns syntax highlighting, gutters, wrapping, line-selection
- * presentation, and the live BB code theme; the caller owns loading the text
+ * presentation, and the live SANDY code theme; the caller owns loading the text
  * and any surrounding chrome. Inside a thread view, selected lines offer Add to
  * chat, which quotes them into that thread's composer.
  */
@@ -658,11 +658,11 @@ export interface SourceCodeProps {
 }
 
 /**
- * Props of the host-owned `experimental_Diff` component — BB's diff viewer.
+ * Props of the host-owned `experimental_Diff` component — SANDY's diff viewer.
  * The host owns patch normalization (a patch without a `diff --git` header is
  * completed from `path`), syntax highlighting, unified/split presentation,
  * gutters, line-selection presentation, optional full-file context expansion,
- * and the live BB code theme. Inside a thread view, selected lines offer Add
+ * and the live SANDY code theme. Inside a thread view, selected lines offer Add
  * to chat, which quotes them into that thread's composer. Content that cannot
  * be parsed as a patch degrades to plain monospace text.
  */
@@ -683,7 +683,7 @@ export interface DiffProps {
   showLineNumbers?: boolean;
   /**
    * Complete text for both file sides. When present and consistent with the
-   * patch, BB enables expand-context controls between hunks. The caller owns
+   * patch, SANDY enables expand-context controls between hunks. The caller owns
    * loading these contents; omit the field to render from the patch alone.
    */
   experimental_fullFileContents?: ExperimentalDiffFullFileContents;
@@ -701,7 +701,7 @@ export interface PluginSourceCodeRendererProps {
   overflow: CodeOverflowMode;
   highlightedLines: SourceCodeLineRange | null;
   /**
-   * BB's source renderer, bound to this request. Render it to delegate
+   * SANDY's source renderer, bound to this request. Render it to delegate
    * conditionally without re-entering plugin replacement resolution.
    *
    * @experimental Audit before relying on this as a stable contract.
@@ -724,12 +724,12 @@ export interface PluginDiffRendererProps {
    * Caller-resolved text for both sides, or `null` when the caller supplied
    * only the patch. A replacement can use this to implement context expansion,
    * but must verify that the paths and hunk lines agree with `patch` before
-   * treating the contents as complete. BB's original renderer performs that
+   * treating the contents as complete. SANDY's original renderer performs that
    * verification when it mounts.
    */
   experimental_fullFileContents: ExperimentalDiffFullFileContents | null;
   /**
-   * BB's diff renderer, bound to this request. Render it to delegate
+   * SANDY's diff renderer, bound to this request. Render it to delegate
    * conditionally without re-entering plugin replacement resolution.
    *
    * @experimental Audit before relying on this as a stable contract.
@@ -788,7 +788,7 @@ export type ExperimentalCodeFenceStatus = "streaming" | "closed" | "unclosed";
 /**
  * Props passed to an `experimental_codeFenceRenderer` component — one fenced
  * code block whose info-string language the plugin claimed, inside assistant
- * (or nested agent) message Markdown. BB mounts the component once per fence
+ * (or nested agent) message Markdown. SANDY mounts the component once per fence
  * and keeps that instance for as long as the message stays on screen, so
  * component state survives the whole stream, including the moment the fence
  * closes and the moment the reply finishes.
@@ -811,7 +811,7 @@ export interface ExperimentalCodeFenceRendererProps {
   index: number;
   message: PluginMessageDirectiveMessage;
   /**
-   * BB's own code block for this fence. Render it to show the source, for
+   * SANDY's own code block for this fence. Render it to show the source, for
    * example while `status` is `"streaming"` or when `code` does not parse.
    */
   Original: ComponentType;
@@ -844,12 +844,12 @@ export interface PluginSettingsSectionRegistration {
 }
 
 /**
- * Render app-wide plugin UI outside BB's layout regions.
+ * Render app-wide plugin UI outside SANDY's layout regions.
  *
  * The host mounts each registration once per app window through the ordinary
  * plugin React boundary. The component therefore keeps PluginContext, router,
  * query, realtime, and other app-level SDK contexts when it renders fixed UI
- * or creates a React portal. BB supplies no chrome, positioning, visibility,
+ * or creates a React portal. SANDY supplies no chrome, positioning, visibility,
  * or interaction policy; the plugin owns those details and responsive
  * behavior. Registrations are additive and a crash hides only that overlay.
  */
@@ -861,9 +861,9 @@ export interface ExperimentalAppOverlayRegistration {
 
 /**
  * A name the host resolves to a glyph, in this order: a name any plugin
- * registered with `app.experimental_icons.register()`, then a built-in BB icon
+ * registered with `app.experimental_icons.register()`, then a built-in SANDY icon
  * name (`"Zap"`), then a namespaced `"<pluginId>/<name>"` glyph naming an
- * entry of that plugin's manifest `bb.branding.experimental_icons` map. A
+ * entry of that plugin's manifest `sandy.branding.experimental_icons` map. A
  * registration therefore shadows a built-in, and either shadows a declared
  * icon of the same name. Names that resolve to none of the three fall back to
  * the surface's generic icon.
@@ -875,7 +875,7 @@ export interface ExperimentalAppOverlayRegistration {
  * registrations can be any React component but live only while the plugin's
  * app bundle is loaded.
  */
-type BbIconName = string;
+type SandyIconName = string;
 
 /**
  * Owner-defined validator for a fixed tab's transient target. The host first
@@ -905,7 +905,7 @@ export type ExperimentalPluginFixedTabReference<
     });
 
 /**
- * How urgent an {@link ExperimentalBadge} is. bb picks the colors: `neutral`
+ * How urgent an {@link ExperimentalBadge} is. sandy picks the colors: `neutral`
  * (the default) for counts and new items, `warning` for something due or
  * degraded, and `critical` for something failing or waiting on the user.
  *
@@ -915,7 +915,7 @@ export type ExperimentalBadgeTone = "neutral" | "warning" | "critical";
 
 /**
  * A live value the host draws on a nav panel's navigation entry. Set at most
- * one of `count` and `text`; with neither, bb draws a dot.
+ * one of `count` and `text`; with neither, sandy draws a dot.
  *
  * Experimental: see docs/api_to_audit.md.
  */
@@ -946,13 +946,13 @@ export interface PluginNavPanelRegistration {
   id: string;
   title: string;
   /** Resolved names take precedence over plugin branding in navigation and the header; unknown names fall back to branding. */
-  icon: BbIconName;
+  icon: SandyIconName;
   /** URL segment under `/plugins/<pluginId>/`; letters, digits, `-`, `_`. */
   path: string;
   component: ComponentType<PluginNavPanelProps>;
   /**
    * Sidebar shown instead of the thread list while this panel's route is
-   * active, in the same section sidebar as Settings, Plugins and Skills. BB
+   * active, in the same section sidebar as Settings, Plugins and Skills. SANDY
    * keeps the navigation rail, top chrome and resize handle; in the top-list
    * layout it adds a "Back to app" row and the panel title, and Back to app
    * (Escape) returns to the last app page. Receives the page's current
@@ -976,7 +976,7 @@ export interface PluginNavPanelRegistration {
    * for none. The host calls it once in your plugin's scope for every
    * registered panel, including ones hidden under More, so it can own an RPC
    * query and realtime subscription through the ordinary SDK hooks. The value
-   * reaches every navigation provider as the item's `badge`; bb's draw a
+   * reaches every navigation provider as the item's `badge`; sandy's draw a
    * count or a dot on the entry, a dot on More while the panel is hidden
    * there, and `label` in the tooltip and accessible name. A hook that throws
    * or returns an invalid badge is treated as a crashed slot and shows no
@@ -1019,7 +1019,7 @@ export interface ExperimentalTabReference {
 
 type ExperimentalTabCommon = ExperimentalTabReference & {
   title: string;
-  icon: BbIconName;
+  icon: SandyIconName;
   tooltip?: string;
   layout?: "padded" | "flush";
 };
@@ -1053,7 +1053,7 @@ type ExperimentalTabInput<
 > = {
   id: string;
   title: string;
-  icon: BbIconName;
+  icon: SandyIconName;
   tooltip?: string;
   layout?: "padded" | "flush";
   context: C;
@@ -1140,7 +1140,7 @@ export interface PluginNewThreadPanelActionRegistration {
   /** Label of the action row in the panel's new-tab launcher. */
   title: string;
   /** Resolved names take precedence over plugin branding; omitted or unknown names fall back to branding. */
-  icon?: BbIconName;
+  icon?: SandyIconName;
   /** Rendered inside every panel tab this action opens. */
   component: ComponentType<PluginNewThreadPanelProps>;
   /** Host framing; matches thread action tabs. */
@@ -1155,13 +1155,13 @@ export interface PluginNewThreadPanelActionRegistration {
 export interface PluginPendingInteractionRegistration {
   /**
    * The renderer's plugin-local name. Two addresses resolve to it: the
-   * `rendererId` a backend passes to `bb.ui.requestInput`, and the `<name>`
+   * `rendererId` a backend passes to `sandy.ui.requestInput`, and the `<name>`
    * half of a provider bridge's `interaction/request` kind
    * `"<pluginId>/<name>"` (docs/provider-plugin-api.md §4), which the client
    * splits on the slash to find this registration under its plugin.
-   * `bb.ui.requestInput` validates `rendererId` against `/^[a-zA-Z0-9_-]+$/`;
+   * `sandy.ui.requestInput` validates `rendererId` against `/^[a-zA-Z0-9_-]+$/`;
    * an extension kind must match `/^[a-z0-9-]+\/[a-z0-9-]+$/`
-   * (`EXTENSION_KIND_PATTERN` in @bb/domain), so an id addressable both ways
+   * (`EXTENSION_KIND_PATTERN` in @sandy/domain), so an id addressable both ways
    * uses lowercase letters, digits, and "-" only.
    */
   id: string;
@@ -1188,7 +1188,7 @@ export interface PluginSidebarFooterActionRegistration {
   /** Tooltip and accessible label for the icon button. */
   title: string;
   /** Resolved names take precedence over plugin branding; omitted or unknown names fall back to branding. */
-  icon: BbIconName;
+  icon: SandyIconName;
   /**
    * Runs when the user activates the action (e.g. call `openSettings()`,
    * open a panel via other surfaces, toast). Errors (sync or async) are
@@ -1209,7 +1209,7 @@ export interface ExperimentalSidebarFooterItemBase {
   id: string;
   /** Tooltip and accessible label for the host-rendered icon button. */
   label: string;
-  icon: BbIconName;
+  icon: SandyIconName;
 }
 
 /** A sidebar-footer item that runs a callback when activated. */
@@ -1254,18 +1254,18 @@ export interface ExperimentalSidebarFooter {
 // ---------------------------------------------------------------------------
 
 /**
- * The one status bb would paint for a thread, already resolved through the
+ * The one status sandy would paint for a thread, already resolved through the
  * host's precedence (attention before work; plan and goal before the generic
  * spinner). Draw your own glyph for it — the SDK ships no status component.
  *
- * Treat an unrecognized value as "none": bb adds kinds over time, and an
+ * Treat an unrecognized value as "none": sandy adds kinds over time, and an
  * older plugin must degrade to drawing nothing rather than throwing.
  *
  * "draft" and "working-draft" are never reported here: an unsubmitted composer
  * draft is per-client state the host reads per row, which an array-wide view
  * cannot. A thread holding a draft reports whatever it would report without
  * one. "queued-failed" and "queued-waiting" are reported, with the same
- * precedence bb's list uses (a failed send outranks the unread dot; a waiting
+ * precedence sandy's list uses (a failed send outranks the unread dot; a waiting
  * message ranks just below it).
  */
 export type PluginSidebarThreadIndicator =
@@ -1307,7 +1307,7 @@ export interface PluginSidebarThread {
   title: string | null;
   titleFallback: string | null;
   /**
-   * What bb shows for this thread as plain text: `title`, else
+   * What sandy shows for this thread as plain text: `title`, else
    * `titleFallback`, else a short id, with any `@project:`, `@section:`, and
    * `@thread:` mentions in it resolved to their names. Sort on it and use it
    * for accessible names; render {@link PluginSdkApp.ThreadTitle} for the
@@ -1338,7 +1338,7 @@ export interface PluginSidebarThread {
   providerId: string;
 
   /**
-   * The thread's execution status. bb's list sorts busy threads ("starting",
+   * The thread's execution status. sandy's list sorts busy threads ("starting",
    * "active", "stopping") above idle ones. Treat an unknown value as "idle".
    */
   status: ThreadStatus;
@@ -1371,23 +1371,23 @@ export interface PluginSidebarThread {
   /**
    * The user's manual order among pinned threads (lexicographic, ascending);
    * null for an unpinned thread or a pin that has never been reordered, which
-   * bb's list sorts after keyed pins by `pinnedAt`.
+   * sandy's list sorts after keyed pins by `pinnedAt`.
    */
   pinSortKey: string | null;
   isArchived: boolean;
   /** When the thread was archived (epoch ms); null when not archived. */
   archivedAt: number | null;
   /**
-   * The app-relative URL bb opens for this thread, e.g.
+   * The app-relative URL sandy opens for this thread, e.g.
    * `/projects/<projectId>/threads/<id>`. Put it on your row's anchor: the
    * host routes a plain click in place, and middle-click, copy-link, and
    * open-in-new-window work without further code.
    */
   href: string;
   /**
-   * True for threads bb keeps out of its own list (internal helper threads a
+   * True for threads sandy keeps out of its own list (internal helper threads a
    * plugin spawned with `visibility: "hidden"`). The array includes them so a
-   * list that wants them can show them; bb's list filters them out.
+   * list that wants them can show them; sandy's list filters them out.
    */
   isHidden: boolean;
 
@@ -1398,7 +1398,7 @@ export interface PluginSidebarThread {
     /** The checkout's absolute path on its host; null when unknown. */
     path: string | null;
     /**
-     * True when the environment is a git worktree, which is what bb's
+     * True when the environment is a git worktree, which is what sandy's
      * "group by environment" clusters; false for a plain checkout; null when
      * unknown.
      */
@@ -1443,7 +1443,7 @@ export interface PluginSidebarProject {
  * view. A thread belongs to at most one section via `sectionId`; a null
  * `sectionId` means the loose "Threads" bucket. Sections are created,
  * renamed, and deleted through the public API (`threadSections` in the SDK,
- * `bb thread section` in the CLI); this state is the read side.
+ * `sandy thread section` in the CLI); this state is the read side.
  */
 export interface PluginSidebarSection {
   id: string;
@@ -1499,13 +1499,13 @@ export interface PluginCodeThemeTokenRule {
 }
 
 /**
- * The active code theme as a VS Code theme file: the same document BB's own
+ * The active code theme as a VS Code theme file: the same document SANDY's own
  * highlighter renders from, so a plugin that embeds a third-party editor can
  * translate it into that editor's theme format rather than guessing colors
  * from CSS variables.
  */
 export interface PluginCodeThemeData {
-  /** Registered theme name — a bundled Shiki name or a BB-registered id. */
+  /** Registered theme name — a bundled Shiki name or a SANDY-registered id. */
   name: string;
   type: "light" | "dark";
   /** Default editor foreground, as `#rrggbb[aa]`. */
@@ -1518,7 +1518,7 @@ export interface PluginCodeThemeData {
 }
 
 /**
- * The code theme BB is currently rendering with (see
+ * The code theme SANDY is currently rendering with (see
  * {@link PluginSdkApp.experimental_useCodeTheme}). `mode` and `name` change
  * the moment the user switches palette or light/dark; `theme` follows once
  * the theme file resolves, and keeps the previous document until then so a
@@ -1543,7 +1543,7 @@ export interface ExperimentalClipboardContent {
 }
 
 /**
- * What {@link PluginSdkApp.experimental_saveFile} saves: a URL on the bb
+ * What {@link PluginSdkApp.experimental_saveFile} saves: a URL on the sandy
  * server (such as one of the plugin's own HTTP routes), or bytes already in
  * the page, plus the file name the user sees.
  */
@@ -1555,19 +1555,19 @@ export type ExperimentalSaveFileRequest =
  * How {@link PluginSdkApp.experimental_saveFile} started. `started` means
  * the browser or native shell took over the download; completion and share
  * cancellation are not reported to the page. `failed` means the download
- * could not start; bb already showed an error toast.
+ * could not start; sandy already showed an error toast.
  */
 export type ExperimentalSaveFileOutcome = "started" | "failed";
 
 /**
- * The `threads` area of {@link PluginBrowserBbSdk}: bb's public thread API
+ * The `threads` area of {@link PluginBrowserSandySdk}: sandy's public thread API
  * with the calling plugin's identity filled in. `spawn` and `fork` stamp
  * `origin: "plugin"` and `originPluginId` unless the call names another
  * origin, and the plugin-metadata calls default `pluginId`. The same
- * narrowing the backend `bb.sdk` applies.
+ * narrowing the backend `sandy.sdk` applies.
  */
 export type PluginBoundThreadsArea = Omit<
-  BbSdkAreas["threads"],
+  SandySdkAreas["threads"],
   | "getPluginMetadata"
   | "updatePluginMetadata"
   | "experimental_listPluginMetadata"
@@ -1588,14 +1588,14 @@ export type PluginBoundThreadsArea = Omit<
 };
 
 /**
- * bb's public API client, bound to the calling plugin, for plugin frontends
- * (see {@link PluginSdkApp.useSdk}). The same areas the `bb` CLI and the
- * backend `bb.sdk` expose: threads, thread sections, projects, environments,
+ * sandy's public API client, bound to the calling plugin, for plugin frontends
+ * (see {@link PluginSdkApp.useSdk}). The same areas the `sandy` CLI and the
+ * backend `sandy.sdk` expose: threads, thread sections, projects, environments,
  * hosts, files, and the rest. Requests carry the signed-in user's session on
  * the app origin, so every call runs with the user's own authority; there
  * is no narrower plugin scope.
  */
-export type PluginBrowserBbSdk = Omit<BbSdkAreas, "threads"> & {
+export type PluginBrowserSandySdk = Omit<SandySdkAreas, "threads"> & {
   threads: PluginBoundThreadsArea;
 };
 
@@ -1606,7 +1606,7 @@ export interface PluginThreadTitleProps {
 }
 
 /**
- * Props for {@link PluginSdkApp.experimental_ThreadStatusGlyph}: bb's thread
+ * Props for {@link PluginSdkApp.experimental_ThreadStatusGlyph}: sandy's thread
  * status glyph, the one its own lists draw. The caller resolves the
  * indicator, so a row can fold in state the host does not know about, such
  * as collapsed children or a client-local draft.
@@ -1624,12 +1624,12 @@ export interface PluginThreadStatusGlyphProps {
   rowStatus?: PluginSidebarThreadRowStatus | null;
   /** Hides the idle draft glyph from assistive technology. */
   hideIdleDraftLabel?: boolean;
-  /** "compact" draws a 14 px glyph; "default" matches bb's sidebar rows. */
+  /** "compact" draws a 14 px glyph; "default" matches sandy's sidebar rows. */
   size?: "default" | "compact";
 }
 
 /**
- * One environment provider from bb's catalog (see
+ * One environment provider from sandy's catalog (see
  * {@link PluginSdkApp.useEnvironmentProviders}): what a sidebar needs to
  * name and draw the environment a thread runs in. `icon` and `logoUrl` are
  * what `experimental_ProviderIcon` reads with `providerKind: "environment"`.
@@ -1654,7 +1654,7 @@ export interface PluginEnvironmentProvidersState {
 /**
  * Whether the composer holds unsent text for a thread (see
  * {@link PluginSdkApp.useSidebarThreadDraft}). This is per-client state, so
- * it lives beside `indicator` rather than in it: bb's row paints a pencil for
+ * it lives beside `indicator` rather than in it: sandy's row paints a pencil for
  * an idle thread with a draft and a "working-draft" glyph for a busy one.
  */
 export interface PluginSidebarThreadDraftState {
@@ -1664,7 +1664,7 @@ export interface PluginSidebarThreadDraftState {
 /**
  * The status another plugin's app-wide script set on a thread's row through
  * the content-script context's `experimental_setThreadRowStatus` (see
- * {@link PluginSdkApp.useSidebarThreadRowStatus}). bb's row draws it in
+ * {@link PluginSdkApp.useSidebarThreadRowStatus}). sandy's row draws it in
  * place of the draft glyph while it is set; a replaced list should do the
  * same so a status set by, say, the drafts or workflows plugin does not
  * vanish when the list changes hands.
@@ -1672,7 +1672,7 @@ export interface PluginSidebarThreadDraftState {
 export type PluginSidebarThreadRowStatus = PluginComposerThreadRowStatus;
 
 /**
- * The jump-to-thread shortcut bb assigned to a row while the app command
+ * The jump-to-thread shortcut sandy assigned to a row while the app command
  * modifier is held (see {@link PluginSdkApp.useSidebarThreadShortcut}).
  */
 export interface PluginSidebarThreadShortcut {
@@ -1690,16 +1690,16 @@ export interface PluginSidebarThreadShortcut {
  *
  * @internal Superseded by `app.slots.experimental_threadAction` and
  * `experimental_ThreadActionsMenu`, `useSdk().threads` for data writes, and
- * `useBbNavigate().toThread` / `toCompose` for navigation; kept for plugins
+ * `useSandyNavigate().toThread` / `toCompose` for navigation; kept for plugins
  * built against older SDKs.
  */
 export interface PluginSidebarThreadActions {
   /**
-   * Navigate to a thread. `split: true` applies bb's split placement rules —
+   * Navigate to a thread. `split: true` applies sandy's split placement rules —
    * a right split by default, focus when the thread is already open, replace
    * at the pane cap — and falls back to plain navigation where splits are off.
    * Opening also expands the thread's conversation if the secondary panel had
-   * collapsed it, as bb's own row does.
+   * collapsed it, as sandy's own row does.
    */
   open(threadId: string, options?: { split?: boolean }): void;
   /**
@@ -1707,7 +1707,7 @@ export interface PluginSidebarThreadActions {
    * the composer's selection, so the thread is created where you asked.
    * `sectionId` files the new thread under that section, and
    * `environmentId` reuses that environment (the "New thread in
-   * environment" affordance), both exactly as bb's own list does.
+   * environment" affordance), both exactly as sandy's own list does.
    * `experimental_placement` explicitly selects the section and pin state,
    * overriding `sectionId`. Omitting placement starts unpinned, outside sections
    * unless `sectionId` is supplied; previous composer placement is cleared.
@@ -1729,10 +1729,10 @@ export interface PluginSidebarThreadActions {
   rename(threadId: string, title: string): Promise<void>;
   /** Confirms before including child threads unless archive confirmation is disabled in Settings → General. */
   archive(threadId: string): void;
-  /** Archives an environment's active thread trees with bb's optimistic updates, pane cleanup, and one Undo toast. Rejects after bb shows an error toast on failure. */
+  /** Archives an environment's active thread trees with sandy's optimistic updates, pane cleanup, and one Undo toast. Rejects after sandy shows an error toast on failure. */
   experimental_archiveEnvironmentThreads(environmentId: string): Promise<void>;
   /**
-   * Opens bb's delete confirmation, which counts child threads first. Deletion
+   * Opens sandy's delete confirmation, which counts child threads first. Deletion
    * is destructive and recursive, so the host owns the confirmation: there is
    * deliberately no silent `delete`.
    */
@@ -1741,7 +1741,7 @@ export interface PluginSidebarThreadActions {
 
 /**
  * Props passed to an `experimental_threadRowMetadata` component, rendered on a
- * thread's row in a thread list: bb's sidebar and any list that draws
+ * thread's row in a thread list: sandy's sidebar and any list that draws
  * {@link PluginSdkApp.experimental_ThreadRowMetadata}.
  */
 export interface ExperimentalThreadRowMetadataProps<Data = undefined> {
@@ -1754,7 +1754,7 @@ export interface ExperimentalThreadRowMetadataProps<Data = undefined> {
 /** What a row metadata registration's `useData` receives. */
 export interface ExperimentalThreadRowMetadataDataInput {
   /**
-   * Every thread a list may draw a metadata line for: bb's active sidebar
+   * Every thread a list may draw a metadata line for: sandy's active sidebar
    * threads in sidebar order, then any other thread whose line is mounted
    * (such as an archived row), deduplicated. Threads whose rows are not
    * rendered, like a windowed list's rows off screen, are included: load
@@ -1767,10 +1767,10 @@ export interface ExperimentalThreadRowMetadataDataInput {
 /**
  * A small item on a thread row's metadata line, under the title: a badge, not
  * a control. Items share one line, left to right, and the line clips at the
- * row's edge. bb's sidebar draws the line only while the `threadRowMetadata`
+ * row's edge. sandy's sidebar draws the line only while the `threadRowMetadata`
  * experiment is on and the user turns on Organize → Rows → Metadata, and only
  * on rows where an item shows something.
- * Load the line's data in `useData`, a React hook bb calls once for the
+ * Load the line's data in `useData`, a React hook sandy calls once for the
  * whole app while any list draws a metadata line, never per row; it
  * receives every thread a list may show, so read them in one batch (for
  * example one `experimental_useRpcKeyedQuery` over their keys). The
@@ -1825,8 +1825,8 @@ export interface ExperimentalThreadEnvironment {
 }
 
 /**
- * A visible thread context segment. `key` is `<pluginId>/<id>`, where bb's own
- * segments use `bb--core`, as thread action keys do.
+ * A visible thread context segment. `key` is `<pluginId>/<id>`, where sandy's own
+ * segments use `sandy--core`, as thread action keys do.
  */
 export interface ExperimentalThreadContextSegmentReference {
   key: string;
@@ -1854,7 +1854,7 @@ export interface ExperimentalThreadContextSegmentProps extends ExperimentalThrea
 }
 
 /**
- * A segment of the context row above an existing thread's composer. bb's
+ * A segment of the context row above an existing thread's composer. sandy's
  * parent thread and changed files register through this slot too. The host
  * mounts each component in its own crash boundary.
  */
@@ -1865,8 +1865,8 @@ export interface ExperimentalThreadContextSegmentRegistration {
   title: string;
   /**
    * Segments sort by `group` (string compare), then by `order` within a group
-   * (unset sorts last), then by registration order, with bb's own first on a
-   * tie. bb's groups are
+   * (unset sorts last), then by registration order, with sandy's own first on a
+   * tie. sandy's groups are
    * {@link PluginSdkApp.experimental_THREAD_CONTEXT_SEGMENT_GROUPS}; any other
    * string is a group of its own, placed where it sorts.
    */
@@ -1998,7 +1998,7 @@ export interface ExperimentalThreadTocExtensionRegistration {
 }
 
 /**
- * A row in the thread Info tab's details block, beside bb's own rows. Render
+ * A row in the thread Info tab's details block, beside sandy's own rows. Render
  * one or more `experimental_DetailRow` elements, or null to show nothing for
  * this thread. A crash removes only this row for that thread.
  */
@@ -2007,8 +2007,8 @@ export interface ExperimentalThreadInfoRowRegistration {
   id: string;
   /**
    * Rows sort by `group` (string compare), then by `order` within a group
-   * (unset sorts last), then by registration order, with bb's own rows first
-   * on a tie. bb's groups are
+   * (unset sorts last), then by registration order, with sandy's own rows first
+   * on a tie. sandy's groups are
    * {@link PluginSdkApp.experimental_THREAD_INFO_ROW_GROUPS}; any other
    * string is a group of its own, placed where it sorts. Groups only order
    * rows; the details block draws no separator between them.
@@ -2029,8 +2029,8 @@ export interface ExperimentalThreadInfoSectionRegistration {
   id: string;
   /**
    * Sections sort by `group` (string compare), then by `order` within a group
-   * (unset sorts last), then by registration order, with bb's own sections
-   * first on a tie. bb's groups are
+   * (unset sorts last), then by registration order, with sandy's own sections
+   * first on a tie. sandy's groups are
    * {@link PluginSdkApp.experimental_THREAD_INFO_SECTION_GROUPS}; any other
    * string is a group of its own, placed where it sorts.
    */
@@ -2061,16 +2061,16 @@ export interface ExperimentalThreadContextCardProps {
 /**
  * How a thread pane shows its thread context: `banner` in the context row
  * above the composer, `card` in the thread context card at the pane's
- * upper-right. bb picks one per pane.
+ * upper-right. sandy picks one per pane.
  */
 export type ExperimentalThreadContextKind = "banner" | "card";
 
 /**
  * A row in the thread context card at a thread pane's upper-right, below the
- * header, beside bb's own rows; the card's counterpart of
+ * header, beside sandy's own rows; the card's counterpart of
  * `experimental_threadInfoRow`. Render one or more
  * `experimental_ThreadContextCardRow` elements, or null to show nothing for
- * this thread. bb draws the card and places it, and mounts rows only in panes
+ * this thread. sandy draws the card and places it, and mounts rows only in panes
  * whose thread context kind is `card`. A crash removes only this row for that
  * thread.
  */
@@ -2079,7 +2079,7 @@ export interface ExperimentalThreadContextCardRowRegistration {
   id: string;
   /**
    * Rows sort by `group` (string compare), then by `order` within a group
-   * (unset sorts last), then by registration order, with bb's own rows first
+   * (unset sorts last), then by registration order, with sandy's own rows first
    * on a tie. Rows use the Info tab's groups,
    * {@link PluginSdkApp.experimental_THREAD_INFO_ROW_GROUPS}; any other
    * string is a group of its own, placed where it sorts.
@@ -2091,18 +2091,18 @@ export interface ExperimentalThreadContextCardRowRegistration {
 
 /**
  * A titled section of the thread context card, below its rows; the card's
- * counterpart of `experimental_threadInfoSection`. bb draws the title and a
+ * counterpart of `experimental_threadInfoSection`. sandy draws the title and a
  * divider above it, and hides the section while its component renders
  * nothing. A crash removes only this section for that thread.
  */
 export interface ExperimentalThreadContextCardSectionRegistration {
   /** Unique within the plugin; letters, digits, `-`, `_`. */
   id: string;
-  /** Heading bb draws above the section's rows. */
+  /** Heading sandy draws above the section's rows. */
   title: string;
   /**
    * Sections sort by `group` (string compare), then by `order` within a group
-   * (unset sorts last), then by registration order, with bb's own sections
+   * (unset sorts last), then by registration order, with sandy's own sections
    * first on a tie. Sections use the Info tab's groups,
    * {@link PluginSdkApp.experimental_THREAD_INFO_SECTION_GROUPS}; any other
    * string is a group of its own, placed where it sorts.
@@ -2114,12 +2114,12 @@ export interface ExperimentalThreadContextCardSectionRegistration {
 
 /**
  * Props of the host-owned `experimental_ThreadContextCardRow` component, the row
- * bb's own card rows use: an icon, a label, an optional trailing value, and an
+ * sandy's own card rows use: an icon, a label, an optional trailing value, and an
  * optional second control. With `onClick` the label is a button.
  */
 export interface ExperimentalThreadContextCardRowProps {
   /** Icon drawn before the label, any name `experimental_Icon` accepts. */
-  icon?: BbIconName;
+  icon?: SandyIconName;
   /** Drawn in the icon's place, such as an app or site icon; wins over `icon`. */
   leading?: ReactNode;
   label: ReactNode;
@@ -2160,7 +2160,7 @@ export interface ExperimentalInfoSectionProps {
 export interface ExperimentalDetailRowProps {
   label: ReactNode;
   /** Icon drawn before the label, any name `experimental_Icon` accepts. */
-  icon?: BbIconName;
+  icon?: SandyIconName;
   /** Vertical alignment of label and value; defaults to `center`. */
   align?: "center" | "start";
   children: ReactNode;
@@ -2209,7 +2209,7 @@ export interface ExperimentalPluginBrowserToolbarActionRegistration {
 }
 
 /**
- * The thread a thread action is evaluated for: the fields bb's own actions
+ * The thread a thread action is evaluated for: the fields sandy's own actions
  * read, copied from the thread payload by the surface that shows the menu.
  */
 export interface PluginThreadActionTarget {
@@ -2234,7 +2234,7 @@ export interface PluginThreadActionTarget {
 export interface PluginThreadActionChoice {
   id: string;
   label: string;
-  icon?: BbIconName;
+  icon?: SandyIconName;
   selected?: boolean;
   disabled?: boolean;
 }
@@ -2261,7 +2261,7 @@ export interface PluginThreadActionRunInput {
   value?: string;
   /**
    * Start renaming a thread with the editor of the surface that showed the
-   * menu: inline in the sidebar row or thread header, bb's rename dialog
+   * menu: inline in the sidebar row or thread header, sandy's rename dialog
    * elsewhere.
    */
   requestRename(threadId: string): void;
@@ -2276,7 +2276,7 @@ export interface PluginThreadAction {
    * where only tooltips and screen readers include it.
    */
   detail?: string;
-  icon: BbIconName;
+  icon: SandyIconName;
   variant?: "default" | "destructive";
   disabled?: boolean;
   choices?: PluginThreadActionChoices;
@@ -2307,9 +2307,9 @@ export interface PluginThreadActionItemInput<Data> {
   /** What `useData` last returned; undefined when the registration has none. */
   data: Data;
   /** The registering plugin's `useSdk()` client. */
-  sdk: PluginBrowserBbSdk;
-  /** The registering plugin's `useBbNavigate()`. */
-  navigate: BbNavigate;
+  sdk: PluginBrowserSandySdk;
+  /** The registering plugin's `useSandyNavigate()`. */
+  navigate: SandyNavigate;
   /**
    * The focused surface's side panel, as for plugin commands. Thread menus
    * are not inside a side panel, so calls return false when the focused
@@ -2328,9 +2328,9 @@ export interface PluginThreadActionBulkItemInput<Data> {
   /** What `useData` last returned; undefined when the registration has none. */
   data: Data;
   /** The registering plugin's `useSdk()` client. */
-  sdk: PluginBrowserBbSdk;
-  /** The registering plugin's `useBbNavigate()`, as for `item`. */
-  navigate: BbNavigate;
+  sdk: PluginBrowserSandySdk;
+  /** The registering plugin's `useSandyNavigate()`, as for `item`. */
+  navigate: SandyNavigate;
   /** The focused surface's side panel, as for `item`. */
   experimental_panel: ExperimentalPanelController;
 }
@@ -2338,7 +2338,7 @@ export interface PluginThreadActionBulkItemInput<Data> {
 /**
  * Add an action to every thread actions menu: the thread header's menu, the
  * sidebar row's menu and right-click menu, the compact long-press drawer, and,
- * when the user picks it, a sidebar row's quick-action buttons. bb's own
+ * when the user picks it, a sidebar row's quick-action buttons. sandy's own
  * actions (Open in split, Copy link, Mark read, Pin, Rename, Archive,
  * Delete, …) are registrations of this same shape.
  *
@@ -2359,11 +2359,11 @@ export interface PluginThreadActionRegistration<Data = undefined> {
   /** Static name, shown where the user picks a row's quick actions. */
   title: string;
   /** Static icon for that picker; the evaluated action's `icon` wins in menus. */
-  icon: BbIconName;
+  icon: SandyIconName;
   /**
    * Menus and the quick-action picker sort by `group` (string compare) with a
    * separator between groups, then by `order` within a group (unset sorts
-   * last), then by registration order. bb's groups are
+   * last), then by registration order. sandy's groups are
    * {@link PluginSdkApp.experimental_THREAD_ACTION_GROUPS}; any other string
    * is a group of its own, placed where it sorts.
    */
@@ -2404,7 +2404,7 @@ export type PluginThreadActionPlacement = "menu" | "header";
 
 /**
  * A thread action as {@link PluginSdkApp.experimental_useThreadActions}
- * returns it: `run` is bound to the caller's `requestRename` (or bb's rename
+ * returns it: `run` is bound to the caller's `requestRename` (or sandy's rename
  * dialog), contains errors, and resolves when the action settles.
  */
 export interface PluginBoundThreadAction extends Omit<
@@ -2418,7 +2418,7 @@ export interface PluginBoundThreadAction extends Omit<
 /**
  * One row of {@link PluginSdkApp.experimental_useThreadActions}: `key` is
  * `<owner>/<id>`, where the owner is the registering plugin's id or
- * `bb--core` for bb's own actions.
+ * `sandy--core` for sandy's own actions.
  */
 export interface PluginThreadActionEntry {
   key: string;
@@ -2433,7 +2433,7 @@ export interface PluginThreadActionRegistrationInfo {
   key: string;
   pluginId: string;
   title: string;
-  icon: BbIconName;
+  icon: SandyIconName;
 }
 
 /** Options for {@link PluginSdkApp.experimental_useThreadActions}. */
@@ -2442,7 +2442,7 @@ export interface PluginThreadActionsOptions {
   keys?: readonly string[];
   /**
    * The surface's own rename editor, passed to `run` as `requestRename`.
-   * Omit to use bb's rename dialog.
+   * Omit to use sandy's rename dialog.
    */
   requestRename?(threadId: string): void;
 }
@@ -2477,7 +2477,7 @@ interface PluginThreadActionsMenuBaseProps {
 }
 
 /**
- * Props of the host-owned `experimental_ThreadActionsMenu`: bb's thread menu
+ * Props of the host-owned `experimental_ThreadActionsMenu`: sandy's thread menu
  * opened from the button `trigger` renders (see
  * {@link PluginThreadActionsTriggerProps}), a drawer at compact width.
  */
@@ -2489,7 +2489,7 @@ export interface PluginThreadActionsMenuProps extends PluginThreadActionsMenuBas
 }
 
 /**
- * Props of the host-owned `experimental_ThreadActionsContextMenu`: bb's thread
+ * Props of the host-owned `experimental_ThreadActionsContextMenu`: sandy's thread
  * menu on right-click of `children`, or on touch long-press at compact width.
  */
 export interface PluginThreadActionsContextMenuProps extends PluginThreadActionsMenuBaseProps {
@@ -2502,7 +2502,7 @@ export interface PluginThreadActionsContextMenuProps extends PluginThreadActions
    * The selected threads in list order when the row is part of a multi-row
    * selection. With two or more, the menu acts on all of them: it lists every
    * registration's `experimental_bulkItem` under a count of the
-   * selection, including bb's own Mark read, Pin, Archive and Delete, which
+   * selection, including sandy's own Mark read, Pin, Archive and Delete, which
    * confirm and clean up as the single-thread actions do, then `inline`.
    * Omit it, or pass fewer than two, for `thread`'s own menu. Experimental:
    * see docs/api_to_audit.md.
@@ -2585,7 +2585,7 @@ export interface PluginSidebarThreadSplit {
  * Replace the sidebar's thread list with a plugin component.
  *
  * Unlike every other slot, this one is EXCLUSIVE: two lists cannot share one
- * scroll area. bb ships its own list as the bundled Thread list plugin
+ * scroll area. sandy ships its own list as the bundled Thread list plugin
  * (`thread-list/thread-list`). Registering activates the replacement while the
  * plugin is enabled: by default the first registered list other than the
  * bundled one, in deterministic slot order, is active, falling back to the
@@ -2612,7 +2612,7 @@ export interface PluginThreadListRegistration {
 /**
  * Draw the sidebar's navigation: New thread, Plugins, Skills, Automations,
  * plugin panels, and More, plus optional controls in the sidebar header.
- * Exclusive: bb's bundled Navigation plugin registers Rail
+ * Exclusive: sandy's bundled Navigation plugin registers Rail
  * (`navigation/rail`, the default) and Top list (`navigation/top-list`)
  * through this slot. By default the first provider from another plugin is
  * active, falling back to Rail; the user can pin one provider under Settings →
@@ -2620,18 +2620,18 @@ export interface PluginThreadListRegistration {
  * back the same way, and a crashing provider is replaced by the Navigation
  * plugin's provider for the same placement.
  *
- * `placement` decides the layout around the component, so bb can lay out the
+ * `placement` decides the layout around the component, so sandy can lay out the
  * sidebar before the plugin loads:
  *
  * - `rail`: a fixed-width column on the sidebar's left edge that stays when
- *   the sidebar collapses. bb draws Settings at the bottom of the column;
+ *   the sidebar collapses. sandy draws Settings at the bottom of the column;
  *   draw Home with `actions.goHome({ target })`. On macOS, wide windows
  *   frame the sidebar and page below a title bar.
  * - `list` (the default): the area above the thread list. Settings is a
  *   footer action, the Settings, Plugins, and Skills lists start with a Back
  *   to app row, and collapsing hides the whole sidebar.
  *
- * Draw New thread yourself, in `component` or `headerComponent`. bb's Rail
+ * Draw New thread yourself, in `component` or `headerComponent`. sandy's Rail
  * puts it in its header; Top list draws it as a row.
  */
 export interface ExperimentalSidebarNavigationRegistration {
@@ -2645,8 +2645,8 @@ export interface ExperimentalSidebarNavigationRegistration {
   component: ComponentType<ExperimentalSidebarNavigationProps>;
   /**
    * Rendered in the sidebar's header row while this navigation is active,
-   * between the sidebar toggle and bb's back and forward buttons. Content is
-   * clipped to the row, so it cannot move the thread list or bb's controls.
+   * between the sidebar toggle and sandy's back and forward buttons. Content is
+   * clipped to the row, so it cannot move the thread list or sandy's controls.
    * On macOS the empty space keeps dragging the window; buttons, links, and
    * inputs do not. A crashing header is replaced by the header of the
    * bundled Navigation plugin's provider for the same placement.
@@ -2657,12 +2657,12 @@ export interface ExperimentalSidebarNavigationRegistration {
 /**
  * Register this plugin as a viewer/editor for file extensions. By default,
  * matching files render the first applicable opener in deterministic slot
- * order. The user can pin BB's preview or a specific opener per extension
+ * order. The user can pin SANDY's preview or a specific opener per extension
  * under Settings → Files. The file tab's "Open with" menu can override that
  * choice for one open. A plugin can also use its own setting and render
  * `Original` conditionally. Applies to working-tree, host, and
  * thread-storage files — never to git-ref snapshots (diff views always use
- * BB's preview).
+ * SANDY's preview).
  */
 export interface PluginFileOpenerRegistration {
   /** Unique within the plugin; letters, digits, `-`, `_`. */
@@ -2675,13 +2675,13 @@ export interface PluginFileOpenerRegistration {
 }
 
 /**
- * Replace BB's source-code renderer everywhere it renders supplied source
+ * Replace SANDY's source-code renderer everywhere it renders supplied source
  * text — the native file preview and every plugin that calls
  * `experimental_SourceCode`. Like `experimental_threadList` this slot is
  * **exclusive**: one renderer at a time. Registering activates it while the
  * plugin is enabled; if several are registered, one from a plugin the user
- * installed wins over one bundled with bb, then the first in deterministic
- * slot order. A missing, disabled, or crashing replacement falls back to BB's
+ * installed wins over one bundled with sandy, then the first in deterministic
+ * slot order. A missing, disabled, or crashing replacement falls back to SANDY's
  * renderer, and a replacement can render `Original` to delegate
  * per call (behind its own setting, by language, by size — whatever it needs).
  */
@@ -2696,7 +2696,7 @@ export interface PluginSourceCodeRendererRegistration {
 }
 
 /**
- * Replace BB's diff renderer everywhere it renders supplied diff content — the
+ * Replace SANDY's diff renderer everywhere it renders supplied diff content — the
  * timeline file diffs, the environment diff panel's text bodies, and every
  * plugin that calls `experimental_Diff`. Exclusive, with the same activation,
  * fallback, and `Original` delegation rules as
@@ -2720,16 +2720,16 @@ export interface PluginDiffRendererRegistration {
 export interface ExperimentalComposerProps {}
 
 /**
- * Draw bb's composer input box: the editor, its @-mention and slash-command
+ * Draw sandy's composer input box: the editor, its @-mention and slash-command
  * menus, attachments, voice input, the `+` and send menus and the send and
- * stop controls. It renders everywhere bb shows a composer (a thread's
+ * stop controls. It renders everywhere sandy shows a composer (a thread's
  * composer, the New thread screen, queued and sent message editors). The
- * banners, approval cards and queued messages above the box stay bb's.
+ * banners, approval cards and queued messages above the box stay sandy's.
  *
  * Exclusive, like `experimental_threadList`: a composer from a plugin the
  * user installed wins over the bundled one, then the first in slot order.
  * Users choose under Settings → Appearance → Composer (`composer.provider`).
- * bb ships its own composer as the bundled Composer plugin; with no composer
+ * sandy ships its own composer as the bundled Composer plugin; with no composer
  * plugin enabled, no composer is shown.
  *
  * The host keeps the draft, uploads, history, pickers and submission; the
@@ -2764,7 +2764,7 @@ export interface ExperimentalComposerAction {
   shortcut: ExperimentalShortcutPresentation;
   /**
    * Run it without the checks `useComposer().submit()` applies: the box has
-   * already decided it may. A failed send shows bb's error toast and restores
+   * already decided it may. A failed send shows sandy's error toast and restores
    * the draft.
    */
   run(): void;
@@ -2776,7 +2776,7 @@ export interface ExperimentalComposerSubmission {
   disabled?: boolean;
   disabledReason?: string;
   label?: string;
-  icon?: BbIconName;
+  icon?: SandyIconName;
   title?: string;
   isRunning?: boolean;
   onStop?: () => void;
@@ -2904,7 +2904,7 @@ export interface ExperimentalComposerPendingUpload {
   file: File;
 }
 
-/** The draft's attachments and bb's upload pipeline for them. */
+/** The draft's attachments and sandy's upload pipeline for them. */
 export interface ExperimentalComposerAttachments {
   items?: readonly ComposerAttachment[];
   pendingUploads?: readonly ExperimentalComposerPendingUpload[];
@@ -2942,7 +2942,7 @@ export interface ExperimentalFailedVoiceRecording {
   retrying: boolean;
 }
 
-/** bb's voice input for the composer. */
+/** sandy's voice input for the composer. */
 export interface ExperimentalComposerVoice {
   state: "idle" | "recording" | "transcribing" | "error";
   delivery: ExperimentalVoiceDelivery;
@@ -2977,7 +2977,7 @@ export interface ExperimentalComposerPromptAction {
  * Everything the host passes to a composer box for one surface. Read and
  * write the draft with `useComposer().draft` and `replace`, and submit with
  * `useComposer().submit()`; inside a composer box they are bound to this box.
- * The box decides where bb's controls (`executionControls`, `handoff`,
+ * The box decides where sandy's controls (`executionControls`, `handoff`,
  * `compactBeforeSend`) go, or whether to show them.
  */
 export interface ExperimentalComposerInput {
@@ -2990,11 +2990,11 @@ export interface ExperimentalComposerInput {
   onEscape?(): void;
   placeholder?: string;
   autoFocus?: boolean;
-  /** bb's model, reasoning effort and mode controls for this composer. */
+  /** sandy's model, reasoning effort and mode controls for this composer. */
   executionControls?: ReactNode;
   /** The "Handoff to new thread" banner, while a handoff is active. */
   handoff?: ReactNode;
-  /** bb's chip offering to compact the context before sending. */
+  /** sandy's chip offering to compact the context before sending. */
   compactBeforeSend?: ReactNode;
   submission: ExperimentalComposerSubmission;
   /** The editor's minimum height, from the space the host leaves above the box. */
@@ -3027,7 +3027,7 @@ export interface ExperimentalComposerInput {
    * When to show the box's one-line compact form, with `placeholder`;
    * absent, never. `"always"`: the host collapsed the box, on compact
    * viewports or after `onCollapse`. `"narrow"`: only while the thread pane
-   * is short or its column narrow, which bb signals in CSS so it applies
+   * is short or its column narrow, which sandy signals in CSS so it applies
    * without a render; style that form under
    * `@container follow-up-composer style(--follow-up-composer-container-compact: true)`.
    * Report the form the box shows in `editor.state.layout`.
@@ -3066,8 +3066,12 @@ export interface ExperimentalComposerPopupContribution extends ExperimentalCompo
   popup: ExperimentalComposerPopupRegistration;
 }
 
+export interface ExperimentalComposerMenuContribution extends ExperimentalComposerContribution {
+  menu: ExperimentalComposerMenuRegistration;
+}
+
 /**
- * Highlight rules to paint over the draft: bb's built-in highlights, other
+ * Highlight rules to paint over the draft: sandy's built-in highlights, other
  * plugins' `richText.effects` and `useComposer().setTextEffect` effects, in
  * paint order.
  */
@@ -3093,7 +3097,7 @@ export interface ExperimentalComposerEditorState {
  * What only the composer's editor can do, handed to
  * `experimental_ComposerRoot`: report its state, insert at its caret, take
  * focus, accept a dropped thread, run other plugins' popups and take voice
- * input. bb reaches the composer only through this.
+ * input. sandy reaches the composer only through this.
  */
 export interface ExperimentalComposerEditor {
   state: ExperimentalComposerEditorState;
@@ -3117,11 +3121,11 @@ export interface ExperimentalComposerEditor {
   openPopup(pluginId: string, popupId: string): boolean;
   closePopup(pluginId: string): boolean;
   isPopupOpen(): boolean;
-  /** How the composer takes bb's voice input; omit when it has none. */
+  /** How the composer takes sandy's voice input; omit when it has none. */
   voice?: ExperimentalComposerEditorVoice;
 }
 
-/** What a composer does with bb's voice input; recording and transcription stay bb's. */
+/** What a composer does with sandy's voice input; recording and transcription stay sandy's. */
 export interface ExperimentalComposerEditorVoice {
   /** The draft before the caret, sent with a recording to help transcription; null when empty. */
   textBeforeCursor(): string | null;
@@ -3144,13 +3148,13 @@ export interface ExperimentalComposerRootProps {
   menuOpen?: boolean;
 }
 
-/** The thread a bb thread link names, before it is resolved. */
+/** The thread a sandy thread link names, before it is resolved. */
 export interface ExperimentalComposerThreadLinkTarget {
   threadId: string;
   projectId: string;
 }
 
-/** A thread a pasted bb thread link resolved to. */
+/** A thread a pasted sandy thread link resolved to. */
 export interface ExperimentalComposerThreadLink extends ExperimentalComposerThreadLinkTarget {
   label: string;
 }
@@ -3167,21 +3171,21 @@ export interface ExperimentalShortcutPresentation {
   label: string;
 }
 
-/** A bb message copied to the clipboard, read back on paste. */
+/** A sandy message copied to the clipboard, read back on paste. */
 export interface ExperimentalMessageClipboardPayload {
   text: string;
   imageUrl: string;
 }
 
-/** bb thread links in the composer, from `experimental_useComposerRenderer().threadLinks`. */
+/** sandy thread links in the composer, from `experimental_useComposerRenderer().threadLinks`. */
 export interface ExperimentalComposerThreadLinks {
   /**
-   * The thread `url` links to when it is a thread link of this bb, or null.
+   * The thread `url` links to when it is a thread link of this sandy, or null.
    * `projectId` is the project the link names, or the personal project for
    * a link without one; a thread outside that project is not this link.
    */
   parse(url: string): ExperimentalComposerThreadLinkTarget | null;
-  /** A linked thread from bb's caches, without a request. */
+  /** A linked thread from sandy's caches, without a request. */
   cached(threadId: string): ExperimentalComposerThreadLink | null;
   /**
    * Fetch linked threads in batches, calling `onBatch` as each batch lands
@@ -3195,11 +3199,11 @@ export interface ExperimentalComposerThreadLinks {
   ): Promise<void>;
 }
 
-/** bb messages copied to the clipboard, from `experimental_useComposerRenderer().clipboard`. */
+/** sandy messages copied to the clipboard, from `experimental_useComposerRenderer().clipboard`. */
 export interface ExperimentalComposerClipboard {
-  /** Read a bb message copied as HTML, or null. */
+  /** Read a sandy message copied as HTML, or null. */
   readMessage(html: string): ExperimentalMessageClipboardPayload | null;
-  /** Fetch a copied bb message's image as a file; rejects when it is unavailable. */
+  /** Fetch a copied sandy message's image as a file; rejects when it is unavailable. */
   readMessageImage(imageUrl: string, signal: AbortSignal): Promise<File>;
 }
 
@@ -3215,7 +3219,7 @@ export interface ExperimentalComposerRendererApi {
   readonly key: string;
   /** A plugin locked editing through `useComposer().setInputLock(true)`. */
   readonly inputLocked: boolean;
-  /** The shortcut of bb's "Focus composer" command, or null when unbound. */
+  /** The shortcut of sandy's "Focus composer" command, or null when unbound. */
   readonly focusComposerShortcut: ExperimentalShortcutPresentation | null;
   /**
    * Every highlight rule to paint over the draft, in paint order. The host
@@ -3225,9 +3229,9 @@ export interface ExperimentalComposerRendererApi {
   readonly threadLinks: ExperimentalComposerThreadLinks;
   readonly clipboard: ExperimentalComposerClipboard;
   /**
-   * Run bb's app keyboard command for `event`, if any; returns whether one
+   * Run sandy's app keyboard command for `event`, if any; returns whether one
    * ran. Call it from the editor's key handler before handling the key
-   * itself, skipping IME composition: editors swallow keys before bb's
+   * itself, skipping IME composition: editors swallow keys before sandy's
    * window-level shortcuts see them.
    */
   dispatchAppCommandKey(event: KeyboardEvent): boolean;
@@ -3236,7 +3240,7 @@ export interface ExperimentalComposerRendererApi {
   /**
    * Image URL for an attachment: the local preview while it is still
    * uploading, else the uploaded file, resolved through the project when
-   * given. bb releases local previews when attachments leave the draft.
+   * given. sandy releases local previews when attachments leave the draft.
    */
   attachmentSrc(path: string, projectId?: string): string;
 }
@@ -3254,6 +3258,13 @@ export interface ExperimentalComposerContributions {
   readonly plusMenuItems: readonly ExperimentalComposerPlusMenuContribution[];
   /** Render each with `MenuEntry` and `kind: "send"`. */
   readonly sendMenuItems: readonly ExperimentalComposerSendMenuContribution[];
+  /** Typeahead menus other plugins registered; add their rows to the menu of their trigger and run a chosen leaf with `runMenuItem`. */
+  readonly menus: readonly ExperimentalComposerMenuContribution[];
+  /** Run a leaf row of `contribution` with that plugin's composer API. Errors are contained and shown as a toast. */
+  runMenuItem(
+    contribution: ExperimentalComposerMenuContribution,
+    item: ExperimentalComposerMenuItem,
+  ): void;
   /** Other plugins' inline actions, for the composer's action row. */
   readonly Actions: ComponentType;
   readonly Popup: ComponentType<ExperimentalComposerPopupProps>;
@@ -3285,7 +3296,7 @@ export type ExperimentalComposerMenuEntryProps =
       onSelected?(selection: ExperimentalComposerMenuSelection): void;
     };
 
-/** Props of `experimental_VoiceInputButton`: bb's button with a microphone warning tooltip. */
+/** Props of `experimental_VoiceInputButton`: sandy's button with a microphone warning tooltip. */
 export interface ExperimentalVoiceInputButtonProps extends ComponentPropsWithRef<"button"> {
   warning: string | null;
   variant?:
@@ -3307,7 +3318,7 @@ export interface ExperimentalVoiceRecordingBarProps {
   delivery: ExperimentalVoiceDelivery;
   stream: MediaStream | null;
   microphoneWarning: string | null;
-  submitIcon: BbIconName;
+  submitIcon: SandyIconName;
   onConfirm(): void;
   onSend(): void;
   onCancel(): void;
@@ -3345,9 +3356,9 @@ export interface ExperimentalImageLightboxProps {
   title: string;
 }
 
-/** How bb draws an @-mention pill, from `experimental_describePromptMention`. */
+/** How sandy draws an @-mention pill, from `experimental_describePromptMention`. */
 export interface ExperimentalPromptMentionPresentation {
-  /** bb's pill classes; add your own after them. */
+  /** sandy's pill classes; add your own after them. */
   className: string;
   /** The pill's tooltip, such as `src/app.ts` or `/review <files>`. */
   title: string;
@@ -3398,11 +3409,11 @@ export interface PluginMessageDirectiveRegistration {
  * Render fenced code blocks of chosen languages inside assistant (and nested
  * agent) message Markdown. ` ```ui ` matches a registration whose `languages`
  * include `"ui"`. Fences elsewhere (user messages, file previews, plugin
- * Markdown) keep BB's code block.
+ * Markdown) keep SANDY's code block.
  *
- * BB's code block also renders when two plugins claim the same language (BB
+ * SANDY's code block also renders when two plugins claim the same language (SANDY
  * logs a warning naming them), when the plugin is disabled, and for a fence
- * whose component throws. A throw affects that fence only, and BB tries the
+ * whose component throws. A throw affects that fence only, and SANDY tries the
  * component again when the fence's `code` or `status` changes.
  *
  * @experimental Audit before relying on this as a stable contract.
@@ -3434,7 +3445,7 @@ export interface ThreadChatMessageReference {
   /**
    * The event sequence that recorded this message: the `msg` value of a
    * message link and the seq that `sdk.threads.message` and
-   * `bb thread log --message` read. For a steer this is its request sequence,
+   * `sandy thread log --message` read. For a steer this is its request sequence,
    * which can differ from the acceptance sequence in `sourceSeqEnd`.
    */
   experimental_messageSeq: number;
@@ -3445,7 +3456,7 @@ export type ExperimentalMessageMetadataContext = Pick<
   ThreadChatMessageReference,
   "id" | "threadId"
 > & {
-  /** Unix time in milliseconds, supplied by BB's timeline. */
+  /** Unix time in milliseconds, supplied by SANDY's timeline. */
   createdAt: number;
   /** The containing turn, or null for a message outside a turn. */
   turnId: string | null;
@@ -3509,7 +3520,7 @@ export interface PluginMessageActionRegistration {
   id: string;
   /** Tooltip / menu label for the action. */
   title: string;
-  icon?: BbIconName;
+  icon?: SandyIconName;
   /**
    * Runs when the user activates the action. Errors (sync or async) are
    * contained and logged; they never break the timeline.
@@ -3546,9 +3557,9 @@ export interface PluginCommandShortcut {
 }
 
 /**
- * A command registered with `app.commands.register`, listed in bb's quick
+ * A command registered with `app.commands.register`, listed in sandy's quick
  * palette (Mod+Shift+P) under the plugin's name
- * beside bb's own commands. Host-rendered: the plugin supplies a title and
+ * beside sandy's own commands. Host-rendered: the plugin supplies a title and
  * `run`, and the host owns matching, ordering, and recency.
  */
 export interface PluginCommandRegistration {
@@ -3572,10 +3583,10 @@ export interface PluginCommandRegistration {
 }
 
 /**
- * A command handled by a composer through the same path as bb's own "Focus
+ * A command handled by a composer through the same path as sandy's own "Focus
  * composer" command. Listed, rebindable and namespaced like any other plugin
  * command. The composer holding the caret runs it; with the caret outside every
- * composer, the focused pane's primary composer does. Like bb's composer
+ * composer, the focused pane's primary composer does. Like sandy's composer
  * commands, its shortcut is inactive while a terminal, browser tab or modal has
  * focus, and the palette lists it only when some composer would run it.
  */
@@ -3593,7 +3604,7 @@ export interface ExperimentalComposerCommandRegistration {
   run(context: { composer: PluginComposerApi }): void | Promise<void>;
 }
 
-/** Registers commands for bb's command palette. */
+/** Registers commands for sandy's command palette. */
 export interface PluginAppCommands {
   /** Register a command. IDs are unique within this plugin, including legacy slot registrations. */
   register(registration: PluginCommandRegistration): void;
@@ -3616,7 +3627,7 @@ export interface PluginAppCommands {
 export interface PluginProviderIconRegistration {
   providerKind: "agent" | "machine" | "environment";
   /**
-   * The provider this mark is for — the id bb knows the provider by (the
+   * The provider this mark is for — the id sandy knows the provider by (the
    * provider declaration's id, e.g. `codex` or `acp-cursor`), not the plugin
    * id. Letters, digits, `-`, `_`.
    */
@@ -3742,7 +3753,7 @@ export type PluginEnvironmentProviderInputsChange =
 /**
  * Supply the control for one of this plugin's environment providers that
  * declared `inputs` (registered server-side via
- * `bb.experimental_environments.register`). The New Thread environment picker
+ * `sandy.experimental_environments.register`). The New Thread environment picker
  * renders the component beside the picker while that provider is selected and
  * submits the component's latest `onChange` value as the selection's `inputs`.
  * A provider whose schema rejects empty inputs cannot be submitted without a
@@ -3773,7 +3784,7 @@ export type PluginMachineProviderInputsChange =
 
 /**
  * Supply the inputs control for one machine provider registered server-side
- * through `bb.experimental_machines.register`.
+ * through `sandy.experimental_machines.register`.
  */
 export interface PluginMachineProviderInputsRegistration {
   /** The machine provider id this control supplies inputs for. */
@@ -3897,7 +3908,7 @@ export interface PluginAppSlots {
   ): void;
   fileOpener(registration: PluginFileOpenerRegistration): void;
   /**
-   * Replace BB's source-code renderer (see
+   * Replace SANDY's source-code renderer (see
    * {@link PluginSourceCodeRendererRegistration}). Experimental: see
    * docs/api_to_audit.md.
    */
@@ -3905,13 +3916,13 @@ export interface PluginAppSlots {
     registration: PluginSourceCodeRendererRegistration,
   ): void;
   /**
-   * Replace BB's diff renderer (see
+   * Replace SANDY's diff renderer (see
    * {@link PluginDiffRendererRegistration}). Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_diffRenderer(registration: PluginDiffRendererRegistration): void;
   /**
-   * Replace the input box of bb's thread composer (see
+   * Replace the input box of sandy's thread composer (see
    * {@link ExperimentalComposerRegistration}). Experimental: see
    * docs/api_to_audit.md.
    */
@@ -3978,7 +3989,7 @@ export interface PluginAppComposer {
   ): void;
 }
 
-/** Stable lifecycle values for one content-script instance in one bb client. */
+/** Stable lifecycle values for one content-script instance in one sandy client. */
 export interface PluginContentScriptContext {
   /** The id of the plugin that owns this script. */
   readonly pluginId: string;
@@ -4008,13 +4019,13 @@ export type PluginContentScriptDisposer = () => void | Promise<void>;
 
 /**
  * Trusted same-origin JavaScript/TypeScript mounted once per active frontend
- * generation in each bb app window or browser tab.
+ * generation in each sandy app window or browser tab.
  */
 export interface PluginContentScriptRegistration {
   /** Unique within the plugin; letters, digits, `-`, `_`. */
   id: string;
   /**
-   * Install behavior into the bb app shell. The host awaits a returned
+   * Install behavior into the sandy app shell. The host awaits a returned
    * promise, retains the plugin's imported frontend stylesheet for this
    * generation, contains failures, and calls the returned disposer exactly
    * once. Styling or decorating existing app-shell DOM belongs here rather
@@ -4068,7 +4079,7 @@ export interface ExperimentalProviderIconProps {
 
 /**
  * An app icon registered by a plugin. The registry is app-wide: a registered
- * name is usable wherever a `BbIconName` is — `experimental_Icon`, and every
+ * name is usable wherever a `SandyIconName` is — `experimental_Icon`, and every
  * host-rendered surface that takes one — by this plugin or any other.
  */
 export interface ExperimentalIconRegistration {
@@ -4108,7 +4119,7 @@ export type PluginAppSetup = (app: PluginAppBuilder) => void;
  */
 export interface PluginAppDefinition {
   /** Brand the host checks before interpreting a bundle's default export. */
-  readonly __bbPluginApp: true;
+  readonly __sandyPluginApp: true;
   readonly setup: PluginAppSetup;
 }
 
@@ -4120,7 +4131,7 @@ export interface PluginRpcClient<
   Contract extends PluginRpcContract = PluginRpcContract,
 > {
   /**
-   * Invoke one of the plugin's `bb.rpc` methods (POST
+   * Invoke one of the plugin's `sandy.rpc` methods (POST
    * /api/v1/plugins/&lt;id&gt;/rpc/&lt;method&gt;). Resolves with the method's
    * inferred output; rejects with an `Error` carrying the server's message,
    * stable `code`, and validation `issues` when present.
@@ -4140,7 +4151,7 @@ export interface PluginSettingsState {
   isLoading: boolean;
 }
 
-/** State of the app's shared realtime connection to the bb server. */
+/** State of the app's shared realtime connection to the sandy server. */
 export type PluginRealtimeConnectionState =
   | "connecting"
   | "connected"
@@ -4179,6 +4190,45 @@ export interface ComposerCustomization {
   richText?: ComposerRichTextSpec;
   /** Host-managed popups sharing the mention menu's above/below placement, with a responsive drawer on compact screens. Open by popup id, unique within this plugin. */
   experimental_popups?: readonly ExperimentalComposerPopupRegistration[];
+  /** Typeahead menus opened by a trigger character, rendered by the same menu as `/` and `@`. */
+  experimental_menus?: readonly ExperimentalComposerMenuRegistration[];
+}
+
+/** A trigger character that opens a plugin menu. `/` adds a group to the command menu; the others open their own menu, including on a bare trigger. */
+export type ExperimentalComposerMenuTrigger = "/" | "#" | "!" | "~";
+
+/**
+ * A typeahead menu in the composer. The host owns matching of nested rows,
+ * keyboard navigation, placement and dismissal; the plugin supplies the rows.
+ */
+export interface ExperimentalComposerMenuRegistration {
+  /** Unique within this customization; letters, digits, `-`, `_`. */
+  id: string;
+  trigger: ExperimentalComposerMenuTrigger;
+  /** Heading of the menu's group. */
+  label: string;
+  /**
+   * The top-level rows for the text typed after the trigger. Called on every
+   * keystroke, so keep it cheap and synchronous; return all rows for an empty
+   * query. The host filters nested rows by label.
+   */
+  items(query: string): readonly ExperimentalComposerMenuItem[];
+}
+
+/**
+ * One row of a plugin menu. A row with `items` is a submenu: Enter, click or
+ * the right arrow opens it, and Backspace on an empty query, the left arrow or
+ * Escape goes back. A row without `items` runs `run`, after the host removes the
+ * trigger text from the draft.
+ */
+export interface ExperimentalComposerMenuItem {
+  /** Unique among its siblings. */
+  id: string;
+  label: string;
+  description?: string;
+  icon?: SandyIconName;
+  items?: readonly ExperimentalComposerMenuItem[];
+  run?(context: { composer: PluginComposerApi }): void | Promise<void>;
 }
 
 /** Content for one composer's popup. The host owns placement, dismissal and focus restoration; the component owns its content and keyboard navigation. */
@@ -4195,8 +4245,8 @@ export interface ExperimentalComposerPopupRegistration {
 export interface ComposerPlusMenuItem {
   id: string;
   label: string;
-  /** Takes precedence over the plugin's `bb.branding.icon`, which is drawn when this is omitted. */
-  icon?: BbIconName;
+  /** Takes precedence over the plugin's `sandy.branding.icon`, which is drawn when this is omitted. */
+  icon?: SandyIconName;
   /** Accessible description for the host-rendered row. */
   description?: string;
   disabled?: boolean | ((composer: PluginComposerApi) => boolean);
@@ -4211,8 +4261,8 @@ export interface ComposerPlusMenuItem {
 export interface ComposerSendMenuItem {
   id: string;
   label: string;
-  /** Takes precedence over the plugin's `bb.branding.icon`, which is drawn when this is omitted. */
-  icon?: BbIconName;
+  /** Takes precedence over the plugin's `sandy.branding.icon`, which is drawn when this is omitted. */
+  icon?: SandyIconName;
   /** Accessible description for the host-rendered row. */
   description?: string;
   disabled?: boolean | ((composer: PluginComposerApi) => boolean);
@@ -4277,7 +4327,7 @@ export type ComposerAttachment = {
   path: string;
   name: string;
   mimeType?: string;
-  /** Exact size in bytes; omit when unknown. Zero is treated as unknown. A wrong nonzero size can make the send fail when bb stages a file. */
+  /** Exact size in bytes; omit when unknown. Zero is treated as unknown. A wrong nonzero size can make the send fail when sandy stages a file. */
   sizeBytes?: number;
 } & (
   | {
@@ -4385,9 +4435,9 @@ export interface PluginComposerTextEffect {
 export interface PluginComposerThreadRowStatus {
   /**
    * Always drawn as given: unlike the plugin-badged surfaces, this one has no
-   * preference for the plugin's own `bb.branding.icon`.
+   * preference for the plugin's own `sandy.branding.icon`.
    */
-  icon: BbIconName;
+  icon: SandyIconName;
   /** Accessible label for the status glyph. */
   label: string;
   /**
@@ -4400,7 +4450,7 @@ export interface PluginComposerThreadRowStatus {
 
 /** An @-mention pill bound to one of the calling plugin's mention providers. */
 export interface PluginComposerMention {
-  /** Mention provider id registered by THIS plugin via `bb.ui.registerMentionProvider`. */
+  /** Mention provider id registered by THIS plugin via `sandy.ui.registerMentionProvider`. */
   provider: string;
   /** Item id your provider's `resolve` will receive at send time. */
   id: string;
@@ -4562,7 +4612,7 @@ export interface PluginComposerApi {
    * and sent-message editors reject.
    *
    * Every option combines with the others. `experimental_mode` uses the
-   * names `bb.sdk.threads.send` uses. Without it, submit does what Enter
+   * names `sandy.sdk.threads.send` uses. Without it, submit does what Enter
    * does for this user, which may be to queue or to steer.
    * `"queue-if-active"` queues behind the running turn, or starts a turn.
    * `"steer-if-active"` adds the message to the running turn. Where nothing
@@ -4576,7 +4626,7 @@ export interface PluginComposerApi {
    * opaque data.
    *
    * Resolves once the composer has accepted the submission and cleared the
-   * draft. Failures of the underlying request show bb's usual error toast
+   * draft. Failures of the underlying request show sandy's usual error toast
    * and restore the draft, exactly as an interactive failure does, and then
    * reject with the toast's message.
    */
@@ -4644,10 +4694,10 @@ export interface PluginComposerApi {
 /**
  * Current picker values in `selection`, input for `setSelection`, and the shape it resolves with. Field names match `NewThreadRequest` and the `default*` props of
  * `experimental_NewThreadComposer`, so one routed decision can feed the
- * composer, the embedded composer and `bb.sdk.threads.spawn` alike.
+ * composer, the embedded composer and `sandy.sdk.threads.spawn` alike.
  */
 export interface ComposerSelection {
-  /** New-thread composers only. BB's personal-project id means "Don't work in a project". */
+  /** New-thread composers only. SANDY's personal-project id means "Don't work in a project". */
   projectId?: string;
   /**
    * New-thread composers only. `{ type: "project-default" }` and a `host`
@@ -4709,7 +4759,7 @@ export interface ThreadChatMessageAction {
   id: string;
   /** Tooltip / menu label for the action. */
   title: string;
-  icon?: BbIconName;
+  icon?: SandyIconName;
   /**
    * Message roles the action applies to. Omitted = both user and assistant
    * messages.
@@ -4725,7 +4775,7 @@ export interface ThreadChatMessageAction {
 /**
  * Props of the host-owned `ThreadChat` component — one thread's chat
  * (timeline, and for the composer variants the full send/queue/draft
- * engine), rendered by the BB app inside a plugin slot. This is the
+ * engine), rendered by the SANDY app inside a plugin slot. This is the
  * deliberate exception to the no-host-components rule (§5.5): a stable
  * product capability, not a UI kit. Versioned additive like slot props;
  * internal timeline rows, query hooks, and prompt-box configuration are
@@ -4773,7 +4823,7 @@ export interface ThreadChatProps {
  * The controlled execution selection resolved by the picker.
  *
  * Deliberately a single concrete shape, not a union: this value exists to be
- * forwarded verbatim to `bb.sdk.threads.spawn`, so it must name a real
+ * forwarded verbatim to `sandy.sdk.threads.spawn`, so it must name a real
  * provider and model.
  */
 export interface ExperimentalProviderModelPickerValue {
@@ -4796,7 +4846,7 @@ export type ExperimentalProviderModelPickerRouting =
  * Props of the host-owned `experimental_ProviderModelPicker` component.
  * Provider switches emit one coherent value after the live catalog resolves
  * its default model, reasoning level, and service-tier capability. Failed or
- * empty catalogs leave `value` unchanged. Omit `routing` to use bb's
+ * empty catalogs leave `value` unchanged. Omit `routing` to use sandy's
  * primary-machine routing. Environment routing is required when a provider's
  * model catalog depends on the selected workspace.
  */
@@ -4815,7 +4865,7 @@ export interface ExperimentalProviderModelPickerProps {
 }
 
 /**
- * Props of the host-owned `experimental_BranchPicker` component — bb's branch
+ * Props of the host-owned `experimental_BranchPicker` component — sandy's branch
  * picker bundled with its branch-options loading for the given host and
  * project. The host owns fetching, searching, and refreshing the branch list;
  * the caller owns the selection and its meaning.
@@ -4877,7 +4927,7 @@ export interface CheckoutState {
   operation: WorkspaceGitOperation;
 }
 
-/** Props of BB's controlled, host-resolved permission-mode picker. */
+/** Props of SANDY's controlled, host-resolved permission-mode picker. */
 export interface ExperimentalPermissionModePickerProps {
   /** Provider whose supported modes determine the available choices. */
   providerId: string;
@@ -4899,10 +4949,10 @@ export interface ExperimentalPermissionModePickerProps {
 /**
  * Every selection the composer resolved, JSON-serializable so a plugin can
  * forward it to its own backend rpc verbatim and hand it straight to
- * `bb.sdk.threads.spawn`.
+ * `sandy.sdk.threads.spawn`.
  *
  * The split is deliberate: the composer owns *user selections*, the plugin
- * owns *filing and attribution*. `bb.sdk.threads.spawn` auto-fills
+ * owns *filing and attribution*. `sandy.sdk.threads.spawn` auto-fills
  * `origin: "plugin"` and `originPluginId`, so a thread created this way stays
  * attributed to the plugin — which it would not be if the component created
  * the thread itself. The plugin adds `sectionId`, `parentThreadId`, `title`,
@@ -4911,11 +4961,11 @@ export interface ExperimentalPermissionModePickerProps {
  */
 export interface NewThreadRequest {
   /**
-   * The selected project id. Choosing "Don't work in a project" submits BB's
+   * The selected project id. Choosing "Don't work in a project" submits SANDY's
    * personal-project id (not `null`) together with a `personal` workspace
    * environment. Forward those fields unchanged to `threads.spawn`; if the
    * plugin needs project metadata, request it from the plugin backend with
-   * `bb.sdk.projects.list({ includePersonal: true })`.
+   * `sandy.sdk.projects.list({ includePersonal: true })`.
    */
   projectId: string;
   providerId: string;
@@ -4949,11 +4999,11 @@ export interface NewThreadRequest {
 }
 
 /**
- * Props of the host-owned `experimental_NewThreadComposer` component — bb's
+ * Props of the host-owned `experimental_NewThreadComposer` component — sandy's
  * full new-thread compose surface (prompt editor with @-mentions and expand,
  * attachments, provider/model/reasoning picker, voice, submit, and the row
  * beneath with project, environment, branch-from, and permission mode),
- * rendered by the BB app inside a plugin slot.
+ * rendered by the SANDY app inside a plugin slot.
  *
  * It is the create-side counterpart to `ThreadChat`: same deliberate
  * exception to the no-host-components rule (§5.5), same additive versioning.
@@ -5060,7 +5110,7 @@ export interface NewThreadComposerProps {
 }
 
 /**
- * Props of the host-owned `Markdown` component — bb's chat message renderer
+ * Props of the host-owned `Markdown` component — sandy's chat message renderer
  * (the same typography, spacing, and code styling as timeline messages).
  * Use it wherever plugin UI quotes or previews message content so it reads
  * like the rest of the chat. Like `ThreadChat`, this is a stable product
@@ -5079,7 +5129,7 @@ export interface MarkdownProps {
 }
 
 /**
- * Props for BB's semantic URL link. The host owns ordinary activation while
+ * Props for SANDY's semantic URL link. The host owns ordinary activation while
  * retaining browser-owned anchor behavior for app routes, modifiers, explicit
  * targets, copying, and unsupported schemes. New top-level targets preserve
  * supplied `rel` tokens and receive safe defaults unless `opener` is explicit.
@@ -5114,14 +5164,14 @@ export type ExperimentalFileLocation =
   | { kind: "line"; line: number; column: number | null }
   | { kind: "range"; startLine: number; endLine: number };
 
-/** Options shared by BB's preview and preferred-external file intents. */
+/** Options shared by SANDY's preview and preferred-external file intents. */
 export interface ExperimentalFileOpenOptions {
   target: ExperimentalLiveFileTarget;
   location: ExperimentalFileLocation | null;
 }
 
 /**
- * Props for BB's host-rendered semantic file link. Valid targets receive a
+ * Props for SANDY's host-rendered semantic file link. Valid targets receive a
  * scheme-safe anchor href; traversal paths, ill-formed Unicode, and other
  * malformed runtime targets remain inert.
  */
@@ -5189,7 +5239,7 @@ export interface ExperimentalPanelController {
    */
   getTabs(): ExperimentalPanelTabs;
   /**
-   * Select any open tab, bb's or a plugin's, by its
+   * Select any open tab, sandy's or a plugin's, by its
    * {@link ExperimentalPanelTab.key} and reveal the side panel; false for a
    * key that is not open.
    */
@@ -5234,7 +5284,7 @@ export interface ExperimentalPanelTab {
    * tab may get another key.
    */
   key: string;
-  /** The label bb's tab strip shows. */
+  /** The label sandy's tab strip shows. */
   title: string;
   /** The strip's secondary label, such as a terminal's exit status. */
   status: string | null;
@@ -5243,7 +5293,7 @@ export interface ExperimentalPanelTab {
   detail: ExperimentalPanelTabDetail;
 }
 
-/** The tabs of one surface's side panel, in the order bb's tab strip shows them. */
+/** The tabs of one surface's side panel, in the order sandy's tab strip shows them. */
 export interface ExperimentalPanelTabs {
   /** Whether the side panel is showing. */
   open: boolean;
@@ -5259,14 +5309,14 @@ export interface ExperimentalPanelTabIconProps {
 }
 
 /** Current app selection, derived from the route. */
-export interface BbContext {
+export interface SandyContext {
   projectId: string | null;
   threadId: string | null;
 }
 
-export interface BbNavigate {
+export interface SandyNavigate {
   /**
-   * Open a thread. `split: true` applies bb's split placement rules (a right
+   * Open a thread. `split: true` applies sandy's split placement rules (a right
    * split by default, focus when already open, replace at the pane cap) and
    * falls back to plain navigation where splits are off. Opening also expands
    * the thread's conversation if the side panel had collapsed it.
@@ -5315,21 +5365,21 @@ export interface BbNavigate {
     hostId?: string;
   }): void;
   /**
-   * Open an HTTP(S) URL using this client's BB browser preference, or request
+   * Open an HTTP(S) URL using this client's SANDY browser preference, or request
    * an application link on this device with confirmation unless its scheme is approved when
    * the applicationLinks experiment is enabled. Returns false
    * for blocked or unsupported schemes. True means handled, not launched. See
    * docs/api_to_audit.md.
    */
   openUrl(url: string): boolean;
-  /** Open a live file in this surface's shared BB preview panel. */
+  /** Open a live file in this surface's shared SANDY preview panel. */
   experimental_openFilePreview(options: ExperimentalFileOpenOptions): boolean;
   /** Open a live file in this client's preferred external file target. */
   experimental_openFileExternally(
     options: ExperimentalFileOpenOptions,
   ): boolean;
   /**
-   * Show a terminal session in this surface's BB terminal panel: select its
+   * Show a terminal session in this surface's SANDY terminal panel: select its
    * tab, adding one when needed, and reveal the panel. Create the session
    * first with `useSdk().terminals.create`, whose scope chooses the thread,
    * environment, or host directory it runs in. A thread surface accepts only
@@ -5344,11 +5394,11 @@ export interface BbNavigate {
 
 // ---------------------------------------------------------------------------
 // The whole runtime surface. Declaration-versus-runtime parity is tested
-// against the actual `@get-bb/plugin-sdk/app` module namespace.
+// against the actual `@sandy-sdk/plugin-sdk/app` module namespace.
 //
 // Components are deliberately NOT part of this surface (removed 2026-07-03,
 // plugin design §5.5): plugins vendor shadcn-style component source from the
-// BB registry (`npx shadcn add @bb/<name>`) and own it. `bb plugin build`
+// SANDY registry (`npx shadcn add @sandy/<name>`) and own it. `sandy plugin build`
 // shims react, the shared-singleton packages (portal radix families,
 // sonner, vaul, @pierre/diffs) and the host-resident libraries every plugin
 // would otherwise duplicate (clsx, tailwind-merge, class-variance-authority,
@@ -5358,9 +5408,9 @@ export interface BbNavigate {
 // ---------------------------------------------------------------------------
 
 /**
- * BB live reads are fresh for two seconds, with no polling when freshness expires.
- * Focus does not refetch while BB's realtime connection is healthy. While
- * disconnected, focus/browser-online events recheck stale active reads; BB
+ * SANDY live reads are fresh for two seconds, with no polling when freshness expires.
+ * Focus does not refetch while SANDY's realtime connection is healthy. While
+ * disconnected, focus/browser-online events recheck stale active reads; SANDY
  * reconnect invalidates all plugin reads regardless of freshness. Page hiding
  * cancels active attempts; resuming restarts those cancelled reads.
  * Invalidations refresh immediately. Network/abort failures retry twice at
@@ -5455,7 +5505,7 @@ export interface ExperimentalRpcMutationOptions<
 /**
  * One mutation hook's state. `mutate` calls the RPC and resolves when the
  * server acknowledges the write. Reads refresh in the background when the
- * server marks their tags stale with `bb.rpc.experimental_invalidate`.
+ * server marks their tags stale with `sandy.rpc.experimental_invalidate`.
  * `error` holds the last failure until the next `mutate` or `reset`.
  */
 export interface ExperimentalRpcMutationState<
@@ -5471,7 +5521,7 @@ export interface ExperimentalRpcMutationState<
 }
 
 /**
- * A bb server this client can switch to (see
+ * A sandy server this client can switch to (see
  * {@link PluginSdkApp.experimental_useServers}).
  */
 export interface ExperimentalServer {
@@ -5480,7 +5530,7 @@ export interface ExperimentalServer {
   name: string;
   /** Scheme, host and port only, never login details or a path. */
   origin: string;
-  /** `local` is bb Desktop's built-in server, `account` comes from the user's bb account, and `custom` is an address the user added. */
+  /** `local` is sandy Desktop's built-in server, `account` comes from the user's sandy account, and `custom` is an address the user added. */
   kind: "local" | "account" | "custom";
   /** True for the server this page is loaded from. */
   active: boolean;
@@ -5488,7 +5538,7 @@ export interface ExperimentalServer {
 
 /** The viewing client's servers (see {@link PluginSdkApp.experimental_useServers}). */
 export interface ExperimentalServers {
-  /** `loading` until bb Desktop answers, briefly after the page loads. The mobile app's list is ready at once. */
+  /** `loading` until sandy Desktop answers, briefly after the page loads. The mobile app's list is ready at once. */
   status: "loading" | "ready";
   /** In the client's own order; empty while loading. Changes as the user adds, renames or removes servers. */
   servers: readonly ExperimentalServer[];
@@ -5497,27 +5547,27 @@ export interface ExperimentalServers {
 }
 
 /**
- * Everything `@get-bb/plugin-sdk/app` resolves to at runtime. The BB app builds
- * the real implementation and `satisfies` this interface; `bb plugin build`
- * shims the specifier to that object on `globalThis.__bbPluginRuntime`.
+ * Everything `@sandy-sdk/plugin-sdk/app` resolves to at runtime. The SANDY app builds
+ * the real implementation and `satisfies` this interface; `sandy plugin build`
+ * shims the specifier to that object on `globalThis.__sandyPluginRuntime`.
  */
 export interface PluginSdkApp {
-  /** List URL schemes approved for this BB site in the viewing client's localStorage. Core Settings uses the same implementation. */
+  /** List URL schemes approved for this SANDY site in the viewing client's localStorage. Core Settings uses the same implementation. */
   experimental_getApplicationLinkApprovals(): Promise<string[]>;
-  /** Revoke one scheme, or all with null, for this BB site on this client. Does not grant permission. */
+  /** Revoke one scheme, or all with null, for this SANDY site on this client. Does not grant permission. */
   experimental_revokeApplicationLinkApproval(
     scheme: string | null,
   ): Promise<string[]>;
   experimental_PluginRpcCallError: typeof experimental_PluginRpcCallError;
   experimental_useRpcRefresh(): { refresh(): void; isRefreshing: boolean };
-  /** Read tagged plugin data through BB's shared query cache and realtime lifecycle. */
+  /** Read tagged plugin data through SANDY's shared query cache and realtime lifecycle. */
   experimental_useRpcQuery<
     Contract extends PluginRpcContract,
     Method extends keyof Contract & string,
   >(
     options: ExperimentalRpcQueryOptions<Contract, Method>,
   ): ExperimentalRpcQueryState<PluginRpcResult<Contract[Method]>>;
-  /** Call a mutating RPC through BB's query client; pending until the server acknowledges the write; matched reads refresh in the background. */
+  /** Call a mutating RPC through SANDY's query client; pending until the server acknowledges the write; matched reads refresh in the background. */
   experimental_useRpcMutation<
     Contract extends PluginRpcContract,
     Method extends keyof Contract & string,
@@ -5567,9 +5617,9 @@ export interface PluginSdkApp {
   useRealtimeConnectionState(): PluginRealtimeConnectionState;
   useSettings(): PluginSettingsState;
   /**
-   * Whether the bb experiment `key` is on (Settings → Experiments,
-   * `bb settings experiment <key>`), following live changes. False while the
-   * app config loads and for keys this bb does not know. Experimental: see
+   * Whether the sandy experiment `key` is on (Settings → Experiments,
+   * `sandy settings experiment <key>`), following live changes. False while the
+   * app config loads and for keys this sandy does not know. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_useExperiment(key: string): boolean;
@@ -5582,26 +5632,26 @@ export interface PluginSdkApp {
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_useThreadContextKind(): ExperimentalThreadContextKind;
-  useBbContext(): BbContext;
+  useSandyContext(): SandyContext;
   /**
    * The id of the plugin that owns the calling component: the same id
-   * `bb.pluginId` reports on the server, derived from the package name. Key
-   * state the plugin keeps outside bb's per-plugin storage with it, such as
+   * `sandy.pluginId` reports on the server, derived from the package name. Key
+   * state the plugin keeps outside sandy's per-plugin storage with it, such as
    * localStorage entries and log prefixes, so a copy of the plugin published
    * under another name does not collide with the original. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_usePluginId(): string;
   /**
-   * The answer shortcuts bb binds while a pending interaction is open. Inside
+   * The answer shortcuts sandy binds while a pending interaction is open. Inside
    * a `pendingInteraction` component the form shows each option's shortcut and
    * registers a handler that chooses the option; outside one, the map is empty
    * and handlers never run. Experimental: see docs/api_to_audit.md.
    */
   experimental_useQuestionFormHost(): ExperimentalQuestionFormHost;
-  useBbNavigate(): BbNavigate;
+  useSandyNavigate(): SandyNavigate;
   /**
-   * Whether `useBbNavigate().experimental_openFileExternally` can open this
+   * Whether `useSandyNavigate().experimental_openFileExternally` can open this
    * target now: it resolves to a path on its host (a ready environment, a
    * host, or thread storage) and this client has an external file target for
    * that host. False while either is loading; the component re-renders when
@@ -5614,13 +5664,13 @@ export interface PluginSdkApp {
    * Whether the panel tab this component renders in is showing: it is the
    * selected tab of its pane and the side panel is open. False while the panel
    * is closed or suppressed, while another tab is selected, and outside a
-   * panel tab. bb keeps a closed panel's tab mounted, so pause reads that only
+   * panel tab. sandy keeps a closed panel's tab mounted, so pause reads that only
    * feed what the tab draws while this is false. Works in fixed and action
    * tabs. Experimental: see docs/api_to_audit.md.
    */
   experimental_useTabVisible(): boolean;
   /**
-   * The servers this client can switch between, the list bb's command palette
+   * The servers this client can switch between, the list sandy's command palette
    * offers. Null when the client keeps no server list: any web browser.
    */
   experimental_useServers(): ExperimentalServers | null;
@@ -5631,7 +5681,7 @@ export interface PluginSdkApp {
   experimental_useAppPanel(): ExperimentalPanelController;
   /**
    * The tabs open in the side panel of the surface the calling component
-   * renders in, following live changes: the same list bb's tab strip shows.
+   * renders in, following live changes: the same list sandy's tab strip shows.
    * Closed and empty on a surface without a side panel. Act on a tab with
    * `experimental_useAppPanel().selectTab` or `closeTab`. Experimental: see
    * docs/api_to_audit.md.
@@ -5683,15 +5733,15 @@ export interface PluginSdkApp {
    * docs/api_to_audit.md.
    *
    * @internal Superseded by `experimental_useThreadActions`, the thread
-   * action components, `useSdk().threads`, and `useBbNavigate()`; kept for
+   * action components, `useSdk().threads`, and `useSandyNavigate()`; kept for
    * plugins built against older SDKs.
    */
   experimental_useSidebarThreadActions(): PluginSidebarThreadActions;
   /**
-   * Archive an environment's active thread trees the way bb's own list does:
+   * Archive an environment's active thread trees the way sandy's own list does:
    * optimistic removal, closing their split panes, leaving a route that shows
    * one of them, and one Undo toast that restores them and the route. The
-   * promise rejects after bb has shown an error toast. Experimental: see
+   * promise rejects after sandy has shown an error toast. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_useArchiveEnvironmentThreads(): (
@@ -5699,7 +5749,7 @@ export interface PluginSdkApp {
   ) => Promise<void>;
   /**
    * Every `"menu"` thread action for one thread, in menu order (see
-   * {@link PluginThreadAction} for grouping): bb's own registrations first,
+   * {@link PluginThreadAction} for grouping): sandy's own registrations first,
    * then plugins' in registration order. Registrations' `useData` hooks run
    * once for the app, so calling this per sidebar row costs one store
    * subscription and a pure `item` call per registration. Pass `keys` for a
@@ -5717,20 +5767,20 @@ export interface PluginSdkApp {
    */
   experimental_useThreadActionRegistrations(): readonly PluginThreadActionRegistrationInfo[];
   /**
-   * bb's thread menu behind a trigger (see
+   * sandy's thread menu behind a trigger (see
    * {@link PluginThreadActionsMenuProps}): the same items, order, choice
    * submenus and compact drawer as the thread header's menu. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_ThreadActionsMenu: ComponentType<PluginThreadActionsMenuProps>;
   /**
-   * bb's thread menu on right-click or long-press (see
+   * sandy's thread menu on right-click or long-press (see
    * {@link PluginThreadActionsContextMenuProps}). Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_ThreadActionsContextMenu: ComponentType<PluginThreadActionsContextMenuProps>;
   /**
-   * bb's thread menu groups, for a registration that joins one:
+   * sandy's thread menu groups, for a registration that joins one:
    * `open` (split, copy link, new thread in environment), `state` (pin,
    * read, notifications), `organize` (rename, move), `settings`, and
    * `lifecycle` (archive, delete). Experimental: see docs/api_to_audit.md.
@@ -5743,7 +5793,7 @@ export interface PluginSdkApp {
     readonly lifecycle: "4_lifecycle";
   };
   /**
-   * bb's thread context segment groups, for an
+   * sandy's thread context segment groups, for an
    * `experimental_threadContextSegment` that joins one: `thread` (Parent
    * thread) and `git` (Changed files). A plugin names its own
    * group to sort between them, such as `"2_pullRequest"`. Experimental: see
@@ -5754,7 +5804,7 @@ export interface PluginSdkApp {
     readonly git: "3_git";
   };
   /**
-   * bb's thread Info row groups, for an `experimental_threadInfoRow` that
+   * sandy's thread Info row groups, for an `experimental_threadInfoRow` that
    * joins one: `thread` (Parent, Notify parent, Project), `environment`
    * (Environment, Machine, provisioning failure, Directory), `git` (Branch,
    * Merge base, Git status), `pullRequest`, and `lifecycle` (Archived).
@@ -5768,7 +5818,7 @@ export interface PluginSdkApp {
     readonly lifecycle: "5_lifecycle";
   };
   /**
-   * bb's thread Info section groups, for an `experimental_threadInfoSection`
+   * sandy's thread Info section groups, for an `experimental_threadInfoSection`
    * that joins one: `related` (Child threads, Forks), `changes` (Commits,
    * Uncommitted files), and `storage` (Thread storage). Experimental: see
    * docs/api_to_audit.md.
@@ -5791,7 +5841,7 @@ export interface PluginSdkApp {
    * The sidebar navigation items in the user's saved order, the active item,
    * and the host actions that activate, hide, reorder, and customize them
    * (see {@link ExperimentalSidebarNavigationState}). One model shared by
-   * every navigation provider, bb's included. Items keep their identity while
+   * every navigation provider, sandy's included. Items keep their identity while
    * unchanged. Outside the sidebar it returns no items and actions that do
    * nothing. Experimental: see docs/api_to_audit.md.
    */
@@ -5806,7 +5856,7 @@ export interface PluginSdkApp {
     options?: ExperimentalSidebarNavigationSplitOptions,
   ): ExperimentalSidebarNavigationSplit;
   /**
-   * bb's artwork for a navigation item's icon: bb's glyphs for its own items,
+   * sandy's artwork for a navigation item's icon: sandy's glyphs for its own items,
    * and the panel's explicit icon, falling back to plugin branding, for
    * plugin panels. Experimental: see docs/api_to_audit.md.
    */
@@ -5826,7 +5876,7 @@ export interface PluginSdkApp {
   useSidebarThreadDraftIds(): ReadonlySet<string>;
   /**
    * The row status another plugin set on this thread (see
-   * {@link PluginSidebarThreadRowStatus}), or null. Draw it where bb's row
+   * {@link PluginSidebarThreadRowStatus}), or null. Draw it where sandy's row
    * would: in place of the draft glyph, with its `tone`.
    */
   useSidebarThreadRowStatus(
@@ -5849,7 +5899,7 @@ export interface PluginSdkApp {
   /**
    * The jump shortcut assigned to this row while the app command modifier is
    * held (see {@link PluginSidebarThreadShortcut}), or null the rest of the
-   * time. bb assigns keys in DOM order to rows carrying the
+   * time. sandy assigns keys in DOM order to rows carrying the
    * `data-sidebar-thread-shortcut-target` attribute, so a row that omits it
    * always reads null.
    */
@@ -5858,55 +5908,55 @@ export interface PluginSdkApp {
   ): PluginSidebarThreadShortcut | null;
   /**
    * A thread's display title with `@project:`, `@section:`, and `@thread:`
-   * mentions rendered as bb's chips (see {@link PluginThreadTitleProps}).
+   * mentions rendered as sandy's chips (see {@link PluginThreadTitleProps}).
    * Inline content; wrap it in your own truncating container. The plain-text
    * form is `displayTitle` on the thread.
    */
   ThreadTitle: ComponentType<PluginThreadTitleProps>;
   /**
-   * bb's thread status glyph (see {@link PluginThreadStatusGlyphProps}): the
-   * same icons, colors, and accessible labels as bb's own thread lists.
+   * sandy's thread status glyph (see {@link PluginThreadStatusGlyphProps}): the
+   * same icons, colors, and accessible labels as sandy's own thread lists.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_ThreadStatusGlyph: ComponentType<PluginThreadStatusGlyphProps>;
   /**
    * Every `experimental_threadRowMetadata` contribution for one thread row (see
-   * {@link ExperimentalThreadRowMetadataRegistration}), the items bb's sidebar
+   * {@link ExperimentalThreadRowMetadataRegistration}), the items sandy's sidebar
    * draws on its rows' metadata line. Render it under your row's title, in
    * a flex parent as wide as the line. Badges such as a pull request's status then appear on your rows as they do on
-   * bb's. It renders nothing when no plugin contributes an item.
+   * sandy's. It renders nothing when no plugin contributes an item.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_ThreadRowMetadata: ComponentType<ExperimentalThreadRowMetadataLineProps>;
   /**
-   * bb's environment provider catalog (see
+   * sandy's environment provider catalog (see
    * {@link PluginEnvironmentProvidersState}), the directory a thread's
    * `environment.providerId` points into. Reads the host's own cached
    * catalog, so it costs no extra request.
    */
   useEnvironmentProviders(): PluginEnvironmentProvidersState;
   /**
-   * bb's public API client bound to this plugin (see
-   * {@link PluginBrowserBbSdk}). The first choice for reading and mutating
-   * bb state from a frontend: creating or renaming thread sections, moving a
+   * sandy's public API client bound to this plugin (see
+   * {@link PluginBrowserSandySdk}). The first choice for reading and mutating
+   * sandy state from a frontend: creating or renaming thread sections, moving a
    * thread into one, pinning, unarchiving, spawning a thread. The host's own
-   * caches refresh over realtime, so a mutation made here shows up in bb's
+   * caches refresh over realtime, so a mutation made here shows up in sandy's
    * surfaces without further work. Reserve `useRpc` for work that needs your
    * server: secrets, host files, or your plugin's own storage.
    *
    * Thread title, section, parent, pin, and unpin writes are optimistic in
-   * bb's surfaces. Synchronous calls share one cache transaction; writes to
+   * sandy's surfaces. Synchronous calls share one cache transaction; writes to
    * the same thread execute in order, so unpin and move can be submitted
    * together. Unarchive, environment-group archive, project/machine/environment
    * renames, and project/section removal are also optimistic and roll back on
    * failure. Created sections enter the cache when the server assigns their id.
-   * Navigation belongs to `useBbNavigate()`; archive and delete
+   * Navigation belongs to `useSandyNavigate()`; archive and delete
    * confirmation to the thread action menus.
    *
    * The client is stable for the plugin's lifetime, so it is safe in effect
    * and callback dependency lists.
    */
-  useSdk(): PluginBrowserBbSdk;
+  useSdk(): PluginBrowserSandySdk;
   /**
    * The provider directory (see {@link PluginProvidersState}). Reads the
    * host's own cached provider roster, so a plugin that shows a thread's
@@ -5917,14 +5967,14 @@ export interface PluginSdkApp {
   /**
    * The active code theme as a VS Code theme file (see
    * {@link PluginCodeThemeState}), for a plugin that renders code with an
-   * engine of its own and needs BB's palette to reach it. Experimental: see
+   * engine of its own and needs SANDY's palette to reach it. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_useCodeTheme(): PluginCodeThemeState;
   /**
-   * Writes content to the system clipboard through bb's own clipboard writer,
-   * the one bb's copy actions use. A plain function, callable from
-   * components, content scripts, and command callbacks. bb Desktop writes
+   * Writes content to the system clipboard through sandy's own clipboard writer,
+   * the one sandy's copy actions use. A plain function, callable from
+   * components, content scripts, and command callbacks. sandy Desktop writes
    * through the native clipboard, so copies work without window focus or a
    * secure origin; browsers use the Clipboard API, then the copy command.
    * Resolves true once the clipboard holds the content and false when every
@@ -5935,15 +5985,15 @@ export interface PluginSdkApp {
     content: ExperimentalClipboardContent,
   ): Promise<boolean>;
   /**
-   * Saves a file through bb's own download path, the one bb's file preview
-   * and attachment downloads use. Browsers and bb Desktop start an ordinary
-   * download. In the bb iOS app, where a download link would otherwise
+   * Saves a file through sandy's own download path, the one sandy's file preview
+   * and attachment downloads use. Browsers and sandy Desktop start an ordinary
+   * download. In the sandy iOS app, where a download link would otherwise
    * replace the app, the file goes to the system share sheet (Save to Files,
    * AirDrop, other apps). A plain function: call it from a click handler and
    * keep a real `href` on the link for copy-link and accessibility. Resolves
    * with `started` or `failed` and never rejects. Completion and share-sheet
    * cancellation are not reported. The native shell shows download errors;
-   * bb shows an error toast when the download cannot start.
+   * sandy shows an error toast when the download cannot start.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_saveFile(
@@ -5961,7 +6011,7 @@ export interface PluginSdkApp {
    */
   Markdown: ComponentType<MarkdownProps>;
   /**
-   * A real anchor whose ordinary HTTP(S) activation uses BB's URL preference.
+   * A real anchor whose ordinary HTTP(S) activation uses SANDY's URL preference.
    * Experimental: see docs/api_to_audit.md.
    */
   UrlLink: ComponentType<UrlLinkProps>;
@@ -5974,27 +6024,27 @@ export interface PluginSdkApp {
    */
   experimental_NewThreadComposer: ComponentType<NewThreadComposerProps>;
   /**
-   * BB's textarea with voice input (see
+   * SANDY's textarea with voice input (see
    * {@link ExperimentalVoiceInputTextareaProps}): the same microphone
    * preference, transcription service, and error handling as the prompt box.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_VoiceInputTextarea: ComponentType<ExperimentalVoiceInputTextareaProps>;
   /**
-   * BB's controlled provider/model/reasoning picker. Provider changes emit
+   * SANDY's controlled provider/model/reasoning picker. Provider changes emit
    * only after the new provider's verified defaults and capabilities resolve,
    * so `onChange` always receives one coherent value. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_ProviderModelPicker: ComponentType<ExperimentalProviderModelPickerProps>;
   /**
-   * BB's controlled permission-mode picker. The host resolves provider
+   * SANDY's controlled permission-mode picker. The host resolves provider
    * capabilities and the routed machine's permission ceiling. Experimental:
    * see docs/api_to_audit.md.
    */
   experimental_PermissionModePicker: ComponentType<ExperimentalPermissionModePickerProps>;
   /**
-   * BB's branch picker with its branch-options loading for one host and
+   * SANDY's branch picker with its branch-options loading for one host and
    * project (see {@link BranchPickerProps}) — the same control
    * the New Thread composer renders as "Branch from". Experimental: see
    * docs/api_to_audit.md.
@@ -6014,14 +6064,14 @@ export interface PluginSdkApp {
   experimental_useCheckoutState(args: UseCheckoutStateArgs): CheckoutState;
   /**
    * The host-owned source viewer (see {@link SourceCodeProps}). Renders
-   * supplied source text with BB's syntax highlighting, gutters, and live code
+   * supplied source text with SANDY's syntax highlighting, gutters, and live code
    * theme, and honours an active `experimental_sourceCodeRenderer`
    * replacement. Experimental: see docs/api_to_audit.md.
    */
   experimental_SourceCode: ComponentType<SourceCodeProps>;
   /**
    * The host-owned diff viewer (see {@link DiffProps}). Renders supplied patch
-   * content with BB's normalization, optional full-file context expansion,
+   * content with SANDY's normalization, optional full-file context expansion,
    * syntax highlighting, unified/split presentation, and live code theme, and
    * honours an active
    * `experimental_diffRenderer` replacement. Experimental: see
@@ -6030,40 +6080,40 @@ export interface PluginSdkApp {
   experimental_Diff: ComponentType<DiffProps>;
   /**
    * The thread Info tab's section frame (see
-   * {@link ExperimentalInfoSectionProps}), the one bb's own sections use.
+   * {@link ExperimentalInfoSectionProps}), the one sandy's own sections use.
    * Inside an `experimental_threadInfoSection` it collapses, and the host
    * remembers that per registration. Experimental: see docs/api_to_audit.md.
    */
   experimental_InfoSection: ComponentType<ExperimentalInfoSectionProps>;
   /**
    * The thread Info tab's label and value row (see
-   * {@link ExperimentalDetailRowProps}), the one bb's own rows use.
+   * {@link ExperimentalDetailRowProps}), the one sandy's own rows use.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_DetailRow: ComponentType<ExperimentalDetailRowProps>;
   /**
    * The thread context card's row (see
-   * {@link ExperimentalThreadContextCardRowProps}), the one bb's own entries
+   * {@link ExperimentalThreadContextCardRowProps}), the one sandy's own entries
    * use.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_ThreadContextCardRow: ComponentType<ExperimentalThreadContextCardRowProps>;
   /**
-   * The icon bb's tab strip draws for an open side panel tab (see
+   * The icon sandy's tab strip draws for an open side panel tab (see
    * {@link ExperimentalPanelTabIconProps}). Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_PanelTabIcon: ComponentType<ExperimentalPanelTabIconProps>;
   /**
    * The thread Info tab's list (see {@link ExperimentalInfoListProps}), the
-   * one bb's own sections use. Experimental: see docs/api_to_audit.md.
+   * one sandy's own sections use. Experimental: see docs/api_to_audit.md.
    */
   experimental_InfoList<Item>(
     props: ExperimentalInfoListProps<Item>,
   ): ReactNode;
   /**
    * One row of `experimental_InfoList` (see
-   * {@link ExperimentalInfoListRowProps}), the row bb's own sections use.
+   * {@link ExperimentalInfoListRowProps}), the row sandy's own sections use.
    * Experimental: see docs/api_to_audit.md.
    */
   experimental_InfoListRow: ComponentType<ExperimentalInfoListRowProps>;
@@ -6085,7 +6135,7 @@ export interface PluginSdkApp {
    */
   experimental_useComposerContributions(): ExperimentalComposerContributions;
   /**
-   * Search bb's @-mention sources for this composer: files, threads,
+   * Search sandy's @-mention sources for this composer: files, threads,
    * projects, sections and plugin mention providers. Report the open menu's
    * query with `search()`; the results are for the last query reported, and a
    * composer has one mention search. Throws outside an
@@ -6101,8 +6151,8 @@ export interface PluginSdkApp {
    */
   experimental_useComposerCommandSearch(): ExperimentalComposerCommandSearch;
   /**
-   * Connect a composer to bb: render it inside the composer's root element.
-   * It publishes `editor` to other plugins' `useComposer()`, routes bb's and
+   * Connect a composer to sandy: render it inside the composer's root element.
+   * It publishes `editor` to other plugins' `useComposer()`, routes sandy's and
    * other plugins' composer commands to keys inside `rootRef`, and makes the
    * root the target of pane focus and thread drops. Renders no DOM.
    * Experimental: see docs/api_to_audit.md.
@@ -6116,8 +6166,8 @@ export interface PluginSdkApp {
   experimental_ImageLightbox: ComponentType<ExperimentalImageLightboxProps>;
   experimental_PromptMentionIcon: ComponentType<ExperimentalPromptMentionIconProps>;
   /**
-   * The classes, tooltip and text bb gives a pill for `mention`, so pills look
-   * the same in a composer and in bb's messages. Experimental: see
+   * The classes, tooltip and text sandy gives a pill for `mention`, so pills look
+   * the same in a composer and in sandy's messages. Experimental: see
    * docs/api_to_audit.md.
    */
   experimental_describePromptMention(
@@ -6125,7 +6175,7 @@ export interface PluginSdkApp {
   ): ExperimentalPromptMentionPresentation;
   /**
    * Attributes to spread onto a pill element so that copying it and pasting
-   * into any bb composer recreates the pill; `text` is the draft text the pill
+   * into any sandy composer recreates the pill; `text` is the draft text the pill
    * covers. Experimental: see docs/api_to_audit.md.
    */
   experimental_promptMentionClipboardAttributes(
@@ -6133,7 +6183,7 @@ export interface PluginSdkApp {
     text: string,
   ): Readonly<Record<string, string>>;
   /**
-   * The pill a pasted element stands for, when it was copied from a bb
+   * The pill a pasted element stands for, when it was copied from a sandy
    * composer or message; null for any other element. Experimental: see
    * docs/api_to_audit.md.
    */

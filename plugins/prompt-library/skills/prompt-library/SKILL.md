@@ -1,6 +1,6 @@
 ---
 name: prompt-library
-description: Search prompt history and manage starred reusable prompts in BB.
+description: Search prompt history and manage starred reusable prompts in SANDY.
 ---
 
 # Prompt library
@@ -49,13 +49,13 @@ thread is deleted.
 
 ## CLI and SDK
 
-- `bb prompts search [query...] [--project ID | --thread ID] [--composer new-thread|follow-up] [--partial] [--json]`; `--composer` defaults to `follow-up`
-- `bb prompts list [--json]`
-- `bb prompts star <text...> [--title "Title"] [--json]`
-- `bb prompts title <id> <title...> [--json]` or `bb prompts title <id> --clear [--json]`
-- `bb prompts unstar <id> [--json]`
+- `sandy prompts search [query...] [--project ID | --thread ID] [--composer new-thread|follow-up] [--partial] [--json]`; `--composer` defaults to `follow-up`
+- `sandy prompts list [--json]`
+- `sandy prompts star <text...> [--title "Title"] [--json]`
+- `sandy prompts title <id> <title...> [--json]` or `sandy prompts title <id> --clear [--json]`
+- `sandy prompts unstar <id> [--json]`
 
-Use `bb.sdk.plugins.callRpc({ pluginId: "bb--prompt-library", method, input })`:
+Use `sandy.sdk.plugins.callRpc({ pluginId: "sandy--prompt-library", method, input })`:
 `search` takes `{ query, scope: "thread" | "project" | "global", projectId, threadId, composer: "new-thread" | "follow-up" }`
 with nullable IDs. It also accepts `waitForHistory` (default `true`) and
 `refreshHistory` (default `true`). Set `waitForHistory: false` to return available
@@ -71,6 +71,6 @@ also include `title`. `unstar` and
 `markUsed` take `{ id }`.
 
 The bundled plugin is disabled by default. Enable it in Settings → Plugins or
-with `bb plugin enable bb--prompt-library`. Its Search prompts shortcut is
+with `sandy plugin enable sandy--prompt-library`. Its Search prompts shortcut is
 rebindable in Keyboard Settings. Plugins can page through the same core history
-with `bb.sdk.experimental_promptHistory.list({ cursor, limit })`.
+with `sandy.sdk.experimental_promptHistory.list({ cursor, limit })`.

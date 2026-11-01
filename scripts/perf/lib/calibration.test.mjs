@@ -11,7 +11,7 @@ import {
 } from "./calibration.mjs";
 
 const FIELD_FUNCTION =
-  "function bbBenchmarkIndex() { const start = performance.now(); let iterations = 0; while (performance.now() - start < 300) { const values = []; for (let i = 0; i < 50000; i++) values.push((i * 7919) % 10007); values.sort((a, b) => a - b); iterations++; } return Math.round((iterations * 1000) / (performance.now() - start)); }";
+  "function sandyBenchmarkIndex() { const start = performance.now(); let iterations = 0; while (performance.now() - start < 300) { const values = []; for (let i = 0; i < 50000; i++) values.push((i * 7919) % 10007); values.sort((a, b) => a - b); iterations++; } return Math.round((iterations * 1000) / (performance.now() - start)); }";
 
 describe("calibration", () => {
   it("runs the field plugin's benchmark verbatim", () => {

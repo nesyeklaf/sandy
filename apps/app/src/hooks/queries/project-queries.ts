@@ -6,8 +6,8 @@ import type {
   ProjectWithThreadsResponse,
   PromptHistoryResponse,
   WorkspacePathListResponse,
-} from "@bb/server-contract";
-import type { FilePreview } from "@bb/client-core";
+} from "@sandy/server-contract";
+import type { FilePreview } from "@sandy/client-core";
 import { loadFilePreview } from "@/lib/api";
 import {
   buildProjectAttachmentContentUrl,

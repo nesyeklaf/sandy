@@ -1,4 +1,4 @@
-import { getThread, setAiServiceSelection, threads } from "@bb/db";
+import { getThread, setAiServiceSelection, threads } from "@sandy/db";
 import { eq } from "drizzle-orm";
 import {
   encodeClientTurnRequestIdNumber,
@@ -9,7 +9,7 @@ import {
   type SystemMessageKind,
   type ThreadTurnInitiator,
   type TurnRequestTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readJson } from "../helpers/json.js";
 import { textInput } from "../helpers/prompt-input.js";
@@ -145,7 +145,7 @@ describe("thread title regeneration", () => {
     await withTitleService(async (harness) => {
       const thread = seedTitledThread(
         harness,
-        "Verify BB cloud Chinese support",
+        "Verify SANDY cloud Chinese support",
       );
       seedTurnRequest(harness, {
         threadId: thread.id,
@@ -159,7 +159,7 @@ describe("thread title regeneration", () => {
             mentions: [],
             visibility: "agent-only",
           },
-          ...textInput("确认一下bb cloud服务是否支持中文"),
+          ...textInput("确认一下sandy cloud服务是否支持中文"),
         ],
       });
       seedTurnRequest(harness, {
@@ -216,13 +216,13 @@ describe("thread title regeneration", () => {
         "排查线程标题生成英文的原因",
       );
       const prompt = sentPrompt();
-      expect(prompt).toContain("Task:\n确认一下bb cloud服务是否支持中文");
+      expect(prompt).toContain("Task:\n确认一下sandy cloud服务是否支持中文");
       expect(prompt).toContain(
         "- 请重点检查线程标题为什么生成英文，并验证怎样才能生成中文标题。",
       );
       expect(prompt).toContain("- 标题提示把语言规则放在了任务前面");
       expect(prompt).toContain(
-        'The thread is currently titled "Verify BB cloud Chinese support".',
+        'The thread is currently titled "Verify SANDY cloud Chinese support".',
       );
       expect(prompt).not.toContain("Checking the title prompt");
       expect(prompt).not.toContain("Subagent finding");

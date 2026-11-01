@@ -1,7 +1,7 @@
 import {
   lastServerMoveSchema,
   serverMoveStepIdSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
 
 export const serverMoveStepStatusSchema = z.enum([

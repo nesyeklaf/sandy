@@ -3,8 +3,8 @@ import {
   parseLegacyImageGenerationCompletion,
   type ThreadEventItemType,
   type ThreadEventType,
-} from "@bb/domain";
-import { sliceUtf16HeadAndTail } from "@bb/text-utils";
+} from "@sandy/domain";
+import { sliceUtf16HeadAndTail } from "@sandy/text-utils";
 import type { DbQueryConnection } from "../connection.js";
 import {
   COMPLETED_EVENT_OUTPUT_RETAINED_HEAD_CHARS,

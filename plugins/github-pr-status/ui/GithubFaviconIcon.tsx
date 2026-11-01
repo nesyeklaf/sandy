@@ -1,4 +1,4 @@
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { GithubCheckStatus } from "./display";
 
 const GITHUB_MARK_PATH =

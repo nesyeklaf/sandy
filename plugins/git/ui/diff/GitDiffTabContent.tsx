@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect } from "react";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
-import { Skeleton } from "@bb/shared-ui/skeleton";
-import { DiffLoadingSkeleton } from "@bb/shared-ui/diff-loading-skeleton";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
+import { DiffLoadingSkeleton } from "@sandy/shared-ui/diff-loading-skeleton";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { GitFilesResult, WorkspaceDiffTarget } from "../../contract.js";
 import type { DiffFileFilters } from "./diff-file-filters.js";
 import { DiffFilesPanel } from "./DiffFilesPanel.js";

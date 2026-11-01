@@ -1,5 +1,5 @@
-import type { MachineBootstrapApi } from "@get-bb/plugin-sdk";
-import type { PluginMachineProviderProgress } from "@get-bb/plugin-sdk/machine-provider";
+import type { MachineBootstrapApi } from "@sandy-sdk/plugin-sdk";
+import type { PluginMachineProviderProgress } from "@sandy-sdk/plugin-sdk/machine-provider";
 import type { EnrollmentBootstrap, MachineEnrollments } from "./enrollments.js";
 import { readFile } from "node:fs/promises";
 import { INSTALL_MACHINE_SCRIPT_PATH } from "../../install-machine-asset.js";
@@ -7,13 +7,13 @@ import { INSTALL_MACHINE_SCRIPT_PATH } from "../../install-machine-asset.js";
 const installerScript = `
 set -eu
 umask 077
-BB_ENROLLMENT=$(cat)
-export BB_ENROLLMENT
+SANDY_ENROLLMENT=$(cat)
+export SANDY_ENROLLMENT
 installer_url=$1
 installer_file=$(mktemp)
 trap 'rm -f "$installer_file"' EXIT HUP INT TERM
-node -e 'for (const [name,value] of Object.entries(JSON.parse(process.env.BB_ENROLLMENT).headers ?? {})) console.log("header = " + JSON.stringify(name + ": " + value))' | curl --config - --fail --silent --show-error --location --connect-timeout 10 --max-time 60 "$installer_url" > "$installer_file"
-sh "$installer_file" --bootstrap-env BB_ENROLLMENT
+node -e 'for (const [name,value] of Object.entries(JSON.parse(process.env.SANDY_ENROLLMENT).headers ?? {})) console.log("header = " + JSON.stringify(name + ": " + value))' | curl --config - --fail --silent --show-error --location --connect-timeout 10 --max-time 60 "$installer_url" > "$installer_file"
+sh "$installer_file" --bootstrap-env SANDY_ENROLLMENT
 `;
 
 function installerCommand(bootstrap: EnrollmentBootstrap) {
@@ -22,7 +22,7 @@ function installerCommand(bootstrap: EnrollmentBootstrap) {
       "sh",
       "-c",
       installerScript,
-      "bb-machine-install",
+      "sandy-machine-install",
       new URL("/install.sh", bootstrap.serverUrl).href,
     ],
     stdin: JSON.stringify(bootstrap),

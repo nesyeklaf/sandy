@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import { promptTextInput } from "./test/prompt-input.js";
 import { UNSOLICITED_TURN_THREAD_ID_ENV } from "./test/bridges/unsolicited-turn-bridge.js";
 import {
@@ -68,7 +68,7 @@ describe("createAgentRuntime command contracts", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "bb-runtime-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "sandy-runtime-test-"));
   });
 
   afterEach(() => {
@@ -135,7 +135,7 @@ describe("createAgentRuntime command contracts", () => {
 
   it("expands contributed provider environment for model list against the server URL", async () => {
     const { record, runtime } = createContractRuntime({
-      shellEnv: { BB_SERVER_URL: "http://server.test" },
+      shellEnv: { SANDY_SERVER_URL: "http://server.test" },
     });
 
     try {
@@ -338,11 +338,11 @@ describe("createAgentRuntime command contracts", () => {
       expect(record.last("thread/name/set")?.params).toEqual({
         threadId: "t1",
         providerThreadId: "prov-1",
-        title: "[bb] New Title",
+        title: "[sandy] New Title",
       });
       expect(events).not.toContainEqual(
         expect.objectContaining({
-          threadName: "[bb] New Title",
+          threadName: "[sandy] New Title",
           type: "thread/name/updated",
         }),
       );

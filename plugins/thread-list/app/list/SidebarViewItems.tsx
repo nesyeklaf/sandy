@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { experimental_useExperiment } from "@get-bb/plugin-sdk/app";
+import { experimental_useExperiment } from "@sandy-sdk/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
 import {
   DropdownMenuGroup,

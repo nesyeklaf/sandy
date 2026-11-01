@@ -9,8 +9,8 @@ import {
   type DeclaredCodeTheme,
   type DeclaredCodeThemeSlot,
   type UiCodeThemeDeclaration,
-} from "@bb/domain";
-import { isPathWithinDirectory } from "@bb/process-utils";
+} from "@sandy/domain";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 
 const THEME_MANIFEST_FILE_NAME = "theme.json";
 const CONVENTION_CODE_THEME_FILES = {
@@ -161,6 +161,6 @@ export function resolvePluginCodeThemePath(
   return resolveWithinRoot(
     rootDir,
     value,
-    `bb.themes.${themeId}.codeTheme.${side}`,
+    `sandy.themes.${themeId}.codeTheme.${side}`,
   );
 }

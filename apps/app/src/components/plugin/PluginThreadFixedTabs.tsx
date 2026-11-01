@@ -13,7 +13,7 @@ import {
 import type { AppFixedTabReference } from "@/lib/app-navigation-host";
 import { isThreadTab, type PluginThreadFixedTabSlot } from "@/lib/plugin-slots";
 import { PluginTabScope, usePluginTabs } from "./PluginTabs";
-import type { ExperimentalThreadEnvironment } from "@get-bb/plugin-sdk";
+import type { ExperimentalThreadEnvironment } from "@sandy-sdk/plugin-sdk";
 
 export interface ThreadFixedTabEntry {
   slot: PluginThreadFixedTabSlot;

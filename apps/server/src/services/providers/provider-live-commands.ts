@@ -1,4 +1,4 @@
-import type { ThreadProviderCommand } from "@bb/domain";
+import type { ThreadProviderCommand } from "@sandy/domain";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import type { AppDeps } from "../../types.js";
 import { callHostRetryableOnlineRpc } from "../hosts/online-rpc.js";

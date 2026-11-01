@@ -6,10 +6,10 @@ import {
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { THREAD_JUMP_APP_COMMAND_IDS } from "@bb/domain";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { THREAD_JUMP_APP_COMMAND_IDS } from "@sandy/domain";
 import { useNavigate } from "react-router-dom";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
 import {
   Sidebar,
   SidebarCollapsibleBody,
@@ -31,7 +31,7 @@ import {
 import { SidebarPluginAttentionGlyph } from "./SidebarPluginAttentionGlyph";
 import { SidebarUpdatesBadge } from "./SidebarUpdatesBadge";
 import { SidebarResizeHandle, SidebarTopReserveRow } from "./SidebarChrome";
-import { SIDEBAR_FOOTER_ACTION_CLASS } from "@bb/shared-ui/sidebar-row-classes";
+import { SIDEBAR_FOOTER_ACTION_CLASS } from "@sandy/shared-ui/sidebar-row-classes";
 import { getRootComposeRoutePath, getThreadRoutePath } from "@/lib/route-paths";
 import { openUrlInExternalBrowser } from "@/lib/url-open-routing";
 import {
@@ -56,10 +56,10 @@ import { SIDEBAR_FOOTER_MORE_ID } from "./sidebarFooterPreferences";
 import { LazySidebarFooterCustomize } from "./LazySidebarFooterCustomize";
 import {
   CHROME_ROW_HEIGHT_CLASS,
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_WINDOW_DRAG_CLASS,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { NavRailSettingsButton } from "./NavRailSettingsButton";
 import { SidebarNavigationHeader } from "./SidebarNavigationHeader";
 import {
@@ -74,7 +74,7 @@ import {
 
 import { NAV_RAIL_WIDTH_CLASS } from "./navRailWidth";
 
-const BUG_REPORT_NEW_ISSUE_URL = "https://github.com/get-bb/bb/issues/new";
+const BUG_REPORT_NEW_ISSUE_URL = "https://github.com/nesyeklaf/sandy/issues/new";
 
 interface AppSidebarProps {
   onResizeMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -96,7 +96,7 @@ export function AppSidebar({
   alternateBody,
 }: AppSidebarProps) {
   const placement = sidebarNavigationPlacement(navigation);
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const isFramed = useIsSidebarFramed();
   const threadListReplacement = useThreadListReplacement();
   const { threadId: activeThreadId } = useRouteState();
@@ -257,13 +257,13 @@ export function AppSidebar({
   const footer = (
     <SidebarFooter
       className={cn(
-        "w-full justify-center pl-(--bb-frame-footer-inset) pointer-fine:pl-[calc(var(--bb-frame-footer-inset)_+_(2rem_-_var(--bb-title-bar-control-size))/2)] pointer-fine:[&_[data-sidebar=menu-button]]:size-(--bb-title-bar-control-size) [&_[data-sidebar=menu-button]]:ring-inset pointer-fine:[&_[data-sidebar=menu]]:gap-0.5",
+        "w-full justify-center pl-(--sandy-frame-footer-inset) pointer-fine:pl-[calc(var(--sandy-frame-footer-inset)_+_(2rem_-_var(--sandy-title-bar-control-size))/2)] pointer-fine:[&_[data-sidebar=menu-button]]:size-(--sandy-title-bar-control-size) [&_[data-sidebar=menu-button]]:ring-inset pointer-fine:[&_[data-sidebar=menu]]:gap-0.5",
         isFramed
           ? cn(
-              "h-(--bb-app-chrome-row-height) py-0",
+              "h-(--sandy-app-chrome-row-height) py-0",
               placement === "rail" && "-mb-px",
             )
-          : "pb-(--bb-frame-footer-inset)",
+          : "pb-(--sandy-frame-footer-inset)",
       )}
     >
       <SidebarMenu
@@ -406,7 +406,7 @@ export function AppSidebar({
                 isFramed &&
                   !isBodyHidden &&
                   placement === "rail" &&
-                  "rounded-bl-none border-b-0 [clip-path:inset(0_-6px_0_0_round_var(--bb-frame-card-radius)_0_0_0)]",
+                  "rounded-bl-none border-b-0 [clip-path:inset(0_-6px_0_0_round_var(--sandy-frame-card-radius)_0_0_0)]",
               )}
             >
               <div
@@ -424,8 +424,8 @@ export function AppSidebar({
                   "col-start-1 row-start-2 flex shrink-0 items-center justify-center",
                   NAV_RAIL_WIDTH_CLASS,
                   isFramed
-                    ? "h-(--bb-app-chrome-row-height)"
-                    : "bg-surface-recessed -mb-[env(safe-area-inset-bottom)] pt-2 pb-[calc(var(--bb-frame-footer-inset)_+_env(safe-area-inset-bottom))]",
+                    ? "h-(--sandy-app-chrome-row-height)"
+                    : "bg-surface-recessed -mb-[env(safe-area-inset-bottom)] pt-2 pb-[calc(var(--sandy-frame-footer-inset)_+_env(safe-area-inset-bottom))]",
                 )}
               >
                 <NavRailSettingsButton
@@ -442,7 +442,7 @@ export function AppSidebar({
                 className={cn(
                   "col-start-2 row-start-2",
                   isFramed &&
-                    "rounded-tl-none border-t-0 [clip-path:inset(0_-6px_0_0_round_0_0_0_var(--bb-frame-card-radius))]",
+                    "rounded-tl-none border-t-0 [clip-path:inset(0_-6px_0_0_round_0_0_0_var(--sandy-frame-card-radius))]",
                 )}
               >
                 {footer}

@@ -16,13 +16,13 @@ import {
   type KeyedView,
   type KeyedViewSlot,
   type TaggedOptimisticUpdate,
-} from "@bb/query-tags";
+} from "@sandy/query-tags";
 import {
   threadWithRuntimeSchema,
   type ThreadListEntry,
   type ThreadWithRuntime,
-} from "@bb/domain";
-import type { ThreadResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { ThreadResponse } from "@sandy/server-contract";
 import {
   ARCHIVED_THREADS_LIST_KIND,
   allThreadDetailBootstrapQueryKeyPrefix,

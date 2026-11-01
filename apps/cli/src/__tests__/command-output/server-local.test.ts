@@ -31,7 +31,7 @@ import {
   writeServerArchive,
   writeServerImportFile,
   writeServerMovedFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import {
   collectLogPayloads,
   readlineMocks,
@@ -40,7 +40,7 @@ import {
 } from "../helpers/command-output-harness.js";
 import type { CommandRegistrar } from "../helpers/command-output-harness.js";
 import { registerServerCommands } from "../../commands/server.js";
-import { isNewerBbVersion } from "../../commands/server-local.js";
+import { isNewerSandyVersion } from "../../commands/server-local.js";
 
 const tempDirs: string[] = [];
 
@@ -62,15 +62,15 @@ async function writeDataFile(
 }
 
 async function buildArchive(
-  bbVersion = "0.50.0",
+  sandyVersion = "0.50.0",
   serverMoveExperiment = true,
 ): Promise<string> {
-  const sourceDataDir = await makeTempDir("bb-cli-server-source-");
+  const sourceDataDir = await makeTempDir("sandy-cli-server-source-");
   const files = [
-    { archivePath: "bb.db", body: "sqlite database" },
+    { archivePath: "sandy.db", body: "sqlite database" },
     {
       archivePath: "config.json",
-      body: JSON.stringify({ config: { BB_LOG_LEVEL: "debug" } }),
+      body: JSON.stringify({ config: { SANDY_LOG_LEVEL: "debug" } }),
     },
     { archivePath: "auth-secret", body: "secret" },
     { archivePath: "attachments/thr_1/image.png", body: "png" },
@@ -87,7 +87,7 @@ async function buildArchive(
     })),
   );
   const outPath = join(
-    await makeTempDir("bb-cli-server-archive-"),
+    await makeTempDir("sandy-cli-server-archive-"),
     "export.tar.gz",
   );
   await writeServerArchive({
@@ -95,10 +95,10 @@ async function buildArchive(
     files: sourceFiles,
     manifest: {
       createdAt: 1_700_000_000_000,
-      bbVersion,
+      sandyVersion,
       protocolVersion: 209,
       migrationCount: 150,
-      sourceDataDir: "/home/old/.bb",
+      sourceDataDir: "/home/old/.sandy",
       sourceServerHostId: "host-old-server",
       serverMoveExperiment,
     },
@@ -141,13 +141,13 @@ async function writeCraftedArchive(
 ): Promise<string> {
   const manifest = Buffer.from(
     JSON.stringify({
-      format: "bb-server-archive",
+      format: "sandy-server-archive",
       version: 2,
       createdAt: 1_700_000_000_000,
-      bbVersion: "0.50.0",
+      sandyVersion: "0.50.0",
       protocolVersion: 209,
       migrationCount: 150,
-      sourceDataDir: "/home/old/.bb",
+      sourceDataDir: "/home/old/.sandy",
       sourceServerHostId: "host-old-server",
       serverMoveExperiment: true,
       entries: files.map((file) => ({
@@ -167,7 +167,7 @@ async function writeCraftedArchive(
     ]),
   );
   const outPath = join(
-    await makeTempDir("bb-cli-server-archive-"),
+    await makeTempDir("sandy-cli-server-archive-"),
     "crafted.tar.gz",
   );
   await writeFile(outPath, archive);
@@ -183,7 +183,7 @@ function movedLock(overrides: Partial<ServerMovedFile> = {}): ServerMovedFile {
     toHostId: "host-desktop",
     toHostName: "desktop",
     serverUrl: "https://me.example.test",
-    oldCopyEntries: ["bb.db", "attachments", "plugins/tasks/data.db"],
+    oldCopyEntries: ["sandy.db", "attachments", "plugins/tasks/data.db"],
     ...overrides,
   };
 }
@@ -206,7 +206,7 @@ afterAll(async () => {
   );
 });
 
-describe("bb server import", () => {
+describe("sandy server import", () => {
   setupCommandOutputTestEnvironment();
 
   const createdDirs: string[] = [];
@@ -220,18 +220,18 @@ describe("bb server import", () => {
   });
 
   async function makeDataDirParent(): Promise<string> {
-    const dir = await mkdtemp(join(tmpdir(), "bb-cli-server-import-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-cli-server-import-"));
     createdDirs.push(dir);
     return dir;
   }
 
   beforeEach(() => {
-    vi.stubEnv("BB_APP_VERSION", "0.50.0");
+    vi.stubEnv("SANDY_APP_VERSION", "0.50.0");
   });
 
   it("installs a plain export and marks it for a manual import boot", async () => {
     const parent = await makeDataDirParent();
-    const dataDir = join(parent, "bb-data");
+    const dataDir = join(parent, "sandy-data");
     vi.spyOn(Date, "now").mockReturnValue(1_700_000_500_000);
 
     await runCommand(
@@ -239,7 +239,7 @@ describe("bb server import", () => {
       register,
     );
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "sqlite database",
     );
     expect(
@@ -257,12 +257,12 @@ describe("bb server import", () => {
       kind: "manual",
       moveId: null,
       activationToken: null,
-      sourceDataDir: "/home/old/.bb",
+      sourceDataDir: "/home/old/.sandy",
       sourceServerHostId: "host-old-server",
       targetHostId: null,
       serverUrl: null,
       importedEntries: expect.arrayContaining([
-        "bb.db",
+        "sandy.db",
         "config.json",
         "auth-secret",
         "attachments/thr_1/image.png",
@@ -271,19 +271,19 @@ describe("bb server import", () => {
       createdAt: 1_700_000_500_000,
       fixupsAppliedAt: null,
     });
-    expect(await readdir(parent)).toEqual(["bb-data"]);
+    expect(await readdir(parent)).toEqual(["sandy-data"]);
     const output = collectLogPayloads(vi.mocked(console.log));
     expect(output[0]).toBe(
-      `Imported the bb server into ${dataDir} (5 files from /home/old/.bb, exported by bb 0.50.0).`,
+      `Imported the sandy server into ${dataDir} (5 files from /home/old/.sandy, exported by sandy 0.50.0).`,
     );
     expect(output.slice(2)).toEqual([
-      "Stop the original bb server before you start this one. Two servers running from the same data split your threads, machines, and settings between them.",
-      `Then start it with npx bb-app --data-dir ${dataDir}.`,
+      "Stop the original sandy server before you start this one. Two servers running from the same data split your threads, machines, and settings between them.",
+      `Then start it with npx sandy-app --data-dir ${dataDir}.`,
     ]);
   });
 
   it("prints the import result as JSON", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
 
     await runCommand(
       [
@@ -303,14 +303,14 @@ describe("bb server import", () => {
       JSON.parse(collectLogPayloads(vi.mocked(console.log))[0]!),
     ).toMatchObject({
       dataDir,
-      bbVersion: "0.50.0",
+      sandyVersion: "0.50.0",
       sourceServerHostId: "host-old-server",
     });
   });
 
   it("refuses a data directory that already has a server database", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
-    await writeDataFile(dataDir, "bb.db", "existing server");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
+    await writeDataFile(dataDir, "sandy.db", "existing server");
 
     await expect(
       runCommand(
@@ -320,21 +320,21 @@ describe("bb server import", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))[0]).toBe(
-      `Error: ${dataDir} already has a bb server database (bb.db). Import into a data directory without a server, such as --data-dir ~/.bb-imported.`,
+      `Error: ${dataDir} already has a sandy server database (sandy.db). Import into a data directory without a server, such as --data-dir ~/.sandy-imported.`,
     );
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "existing server",
     );
     expect(await readServerImportFile(dataDir)).toBeNull();
   });
 
-  it("refuses while bb is running from the data directory", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
+  it("refuses while sandy is running from the data directory", async () => {
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
     await writeDataFile(
       dataDir,
-      "bb-app-runtime.json",
+      "sandy-app-runtime.json",
       JSON.stringify({
-        entryPath: "/usr/lib/bb-app/dist/launcher.js",
+        entryPath: "/usr/lib/sandy-app/dist/launcher.js",
         pid: process.pid,
         surface: "cli",
         serverUrl: "http://127.0.0.1:38886",
@@ -351,18 +351,18 @@ describe("bb server import", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))[0]).toBe(
-      `Error: bb is running from ${dataDir} (pid ${String(process.pid)}). Stop it with bb-app stop or quit the desktop app, then try again.`,
+      `Error: sandy is running from ${dataDir} (pid ${String(process.pid)}). Stop it with sandy-app stop or quit the desktop app, then try again.`,
     );
-    await expect(stat(join(dataDir, "bb.db"))).rejects.toThrow();
+    await expect(stat(join(dataDir, "sandy.db"))).rejects.toThrow();
   });
 
   it("imports past a stale runtime record whose process has exited", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
     await writeDataFile(
       dataDir,
-      "bb-app-runtime.json",
+      "sandy-app-runtime.json",
       JSON.stringify({
-        entryPath: "/usr/lib/bb-app/dist/launcher.js",
+        entryPath: "/usr/lib/sandy-app/dist/launcher.js",
         pid: 2_147_483_646,
         surface: "cli",
         serverUrl: "http://127.0.0.1:38886",
@@ -381,7 +381,7 @@ describe("bb server import", () => {
 
   it("changes nothing when the confirmation is declined", async () => {
     const parent = await makeDataDirParent();
-    const dataDir = join(parent, "bb-data");
+    const dataDir = join(parent, "sandy-data");
     readlineMocks.question.mockResolvedValue("n");
 
     await runCommand(
@@ -390,15 +390,15 @@ describe("bb server import", () => {
     );
 
     expect(readlineMocks.question).toHaveBeenCalledWith(
-      `Import the bb server from ${plainArchive} into ${dataDir}? [y/N] `,
+      `Import the sandy server from ${plainArchive} into ${dataDir}? [y/N] `,
     );
     expect(await readdir(parent)).toEqual([]);
   });
 
-  it("refuses an export made by a newer bb and leaves nothing behind", async () => {
+  it("refuses an export made by a newer sandy and leaves nothing behind", async () => {
     const newerArchive = await buildArchive("0.51.0");
     const parent = await makeDataDirParent();
-    const dataDir = join(parent, "bb-data");
+    const dataDir = join(parent, "sandy-data");
 
     await expect(
       runCommand(
@@ -408,7 +408,7 @@ describe("bb server import", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))).toEqual([
-      "Error: This export came from bb 0.51.0; install that version or newer before importing.",
+      "Error: This export came from sandy 0.51.0; install that version or newer before importing.",
     ]);
     expect(await readdir(parent)).toEqual([]);
   });
@@ -416,7 +416,7 @@ describe("bb server import", () => {
   it("refuses an export from a server with the serverMove experiment off before installing anything", async () => {
     const offArchive = await buildArchive("0.50.0", false);
     const parent = await makeDataDirParent();
-    const dataDir = join(parent, "bb-data");
+    const dataDir = join(parent, "sandy-data");
 
     await expect(
       runCommand(
@@ -426,27 +426,27 @@ describe("bb server import", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))).toEqual([
-      'Error: This export came from a server with the "Server move" experiment off. Turn on the "Server move" experiment in Settings → Experiments, or run bb settings experiment serverMove true, on that server, then export again.',
+      'Error: This export came from a server with the "Server move" experiment off. Turn on the "Server move" experiment in Settings → Experiments, or run sandy settings experiment serverMove true, on that server, then export again.',
     ]);
     expect(await readdir(parent)).toEqual([]);
   });
 
   it("rolls back an interrupted import before importing again", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
     await writeDataFile(dataDir, "host-id", "host-desktop");
     await writeDataFile(
       dataDir,
       "config.json",
       JSON.stringify({
-        config: { BB_APP_URL: "https://desktop.ts.net", BB_LOG_LEVEL: "trace" },
+        config: { SANDY_APP_URL: "https://desktop.ts.net", SANDY_LOG_LEVEL: "trace" },
       }),
     );
     await writeDataFile(
       dataDir,
       "server-import-backup/config.json",
-      JSON.stringify({ config: { BB_APP_URL: "https://desktop.ts.net" } }),
+      JSON.stringify({ config: { SANDY_APP_URL: "https://desktop.ts.net" } }),
     );
-    await writeDataFile(dataDir, "bb.db", "interrupted import database");
+    await writeDataFile(dataDir, "sandy.db", "interrupted import database");
     await writeDataFile(
       dataDir,
       "skills/interrupted/SKILL.md",
@@ -457,7 +457,7 @@ describe("bb server import", () => {
       "server-import-journal.json",
       JSON.stringify({
         version: 1,
-        entries: ["skills/interrupted/SKILL.md", "config.json", "bb.db"],
+        entries: ["skills/interrupted/SKILL.md", "config.json", "sandy.db"],
         preexistingEntries: ["config.json"],
       }),
     );
@@ -467,27 +467,27 @@ describe("bb server import", () => {
       register,
     );
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "sqlite database",
     );
     expect((await readdir(dataDir)).sort()).toEqual([
       ".config.json.lock",
       "attachments",
       "auth-secret",
-      "bb.db",
       "config.json",
       "host-id",
       "plugins",
+      "sandy.db",
       "server-import.json",
     ]);
     expect(
       JSON.parse(await readFile(join(dataDir, "config.json"), "utf8")),
     ).toEqual({
-      config: { BB_APP_URL: "https://desktop.ts.net", BB_LOG_LEVEL: "debug" },
+      config: { SANDY_APP_URL: "https://desktop.ts.net", SANDY_LOG_LEVEL: "debug" },
     });
     expect(await readServerImportFile(dataDir)).toMatchObject({
       kind: "manual",
-      importedEntries: expect.arrayContaining(["bb.db", "config.json"]),
+      importedEntries: expect.arrayContaining(["sandy.db", "config.json"]),
     });
     expect(collectLogPayloads(vi.mocked(console.log))[0]).toBe(
       `Rolled back an interrupted import in ${dataDir}.`,
@@ -495,9 +495,9 @@ describe("bb server import", () => {
   });
 
   it("refuses to import over a finished import whose journal was left behind", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
-    const importedEntries = ["attachments/thr_1/image.png", "bb.db"];
-    await writeDataFile(dataDir, "bb.db", "imported database");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
+    const importedEntries = ["attachments/thr_1/image.png", "sandy.db"];
+    await writeDataFile(dataDir, "sandy.db", "imported database");
     await writeDataFile(dataDir, "attachments/thr_1/image.png", "imported png");
     await writeDataFile(
       dataDir,
@@ -513,7 +513,7 @@ describe("bb server import", () => {
       kind: "manual",
       moveId: null,
       activationToken: null,
-      sourceDataDir: "/home/old/.bb",
+      sourceDataDir: "/home/old/.sandy",
       sourceServerHostId: "host-old-server",
       targetHostId: null,
       serverUrl: null,
@@ -530,9 +530,9 @@ describe("bb server import", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))[0]).toBe(
-      `Error: ${dataDir} already has a bb server database (bb.db). Import into a data directory without a server, such as --data-dir ~/.bb-imported.`,
+      `Error: ${dataDir} already has a sandy server database (sandy.db). Import into a data directory without a server, such as --data-dir ~/.sandy-imported.`,
     );
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "imported database",
     );
     expect(
@@ -548,11 +548,11 @@ describe("bb server import", () => {
   });
 
   it("removes the pre-import config backups once the import is marked", async () => {
-    const dataDir = join(await makeDataDirParent(), "bb-data");
+    const dataDir = join(await makeDataDirParent(), "sandy-data");
     await writeDataFile(
       dataDir,
       "config.json",
-      JSON.stringify({ config: { BB_APP_URL: "https://desktop.ts.net" } }),
+      JSON.stringify({ config: { SANDY_APP_URL: "https://desktop.ts.net" } }),
     );
 
     await runCommand(
@@ -565,17 +565,17 @@ describe("bb server import", () => {
     expect(
       JSON.parse(await readFile(join(dataDir, "config.json"), "utf8")),
     ).toEqual({
-      config: { BB_APP_URL: "https://desktop.ts.net", BB_LOG_LEVEL: "debug" },
+      config: { SANDY_APP_URL: "https://desktop.ts.net", SANDY_LOG_LEVEL: "debug" },
     });
   });
 
   it("refuses an archive that carries host-owned files", async () => {
     const hostileArchive = await writeCraftedArchive([
-      { path: "bb.db", body: "sqlite database" },
+      { path: "sandy.db", body: "sqlite database" },
       { path: "host-id", body: "host-attacker" },
     ]);
     const parent = await makeDataDirParent();
-    const dataDir = join(parent, "bb-data");
+    const dataDir = join(parent, "sandy-data");
 
     await expect(
       runCommand(
@@ -591,7 +591,7 @@ describe("bb server import", () => {
   });
 });
 
-describe("isNewerBbVersion", () => {
+describe("isNewerSandyVersion", () => {
   it.each([
     ["0.51.0", "0.50.0", true],
     ["0.50.0", "0.50.0", false],
@@ -604,11 +604,11 @@ describe("isNewerBbVersion", () => {
     ["0.50.0-beta", "0.50.0-beta.1", false],
     ["not-a-version", "0.50.0", false],
   ] as const)("%s newer than %s is %s", (candidate, current, expected) => {
-    expect(isNewerBbVersion(candidate, current)).toBe(expected);
+    expect(isNewerSandyVersion(candidate, current)).toBe(expected);
   });
 });
 
-describe("bb server unlock", () => {
+describe("sandy server unlock", () => {
   setupCommandOutputTestEnvironment();
 
   beforeEach(() => {
@@ -625,7 +625,7 @@ describe("bb server unlock", () => {
   }
 
   it("refuses while the new server still answers its health check", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     const configPath = await writeDataFile(
       dataDir,
@@ -657,7 +657,7 @@ describe("bb server unlock", () => {
   });
 
   it("--force unlocks without probing the new server", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     vi.mocked(globalThis.fetch).mockResolvedValue(
       healthResponse(200, { ok: true }),
@@ -679,7 +679,7 @@ describe("bb server unlock", () => {
         Promise.resolve(
           healthResponse(410, {
             code: "server_moved",
-            message: "This bb server moved",
+            message: "This sandy server moved",
             details: {
               serverUrl: "https://me.example.test",
               toHostName: "desktop",
@@ -713,7 +713,7 @@ describe("bb server unlock", () => {
         ),
     ],
   ])("unlocks when %s", async (_label, respond) => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     vi.mocked(globalThis.fetch).mockImplementation(respond);
 
@@ -727,30 +727,30 @@ describe("bb server unlock", () => {
   });
 
   it("warns, confirms, and removes the lock", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
-    await writeDataFile(dataDir, "bb.db", "old server");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
+    await writeDataFile(dataDir, "sandy.db", "old server");
     await writeServerMovedFile(dataDir, movedLock());
     readlineMocks.question.mockResolvedValue("yes");
 
     await runCommand(["server", "unlock", "--data-dir", dataDir], register);
 
     expect(await readServerMovedFile(dataDir)).toBeNull();
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe("old server");
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe("old server");
     const warnings = collectLogPayloads(vi.mocked(console.error));
     expect(warnings[0]).toMatch(
-      /^This bb server moved to desktop \(https:\/\/me\.example\.test\) on /u,
+      /^This sandy server moved to desktop \(https:\/\/me\.example\.test\) on /u,
     );
     expect(warnings.slice(1)).toEqual([
       "Unlocking starts this old copy again. Everything since the move is lost here: threads, settings, and plugin data changed on desktop stay there.",
-      "Stop the bb server on desktop first. Two servers running from the same data split your threads, machines, and settings between them.",
+      "Stop the sandy server on desktop first. Two servers running from the same data split your threads, machines, and settings between them.",
     ]);
     expect(collectLogPayloads(vi.mocked(console.log))).toEqual([
-      `Unlocked ${dataDir}. bb on this computer starts the old server again within a few seconds; if bb isn't running, start it with npx bb-app --data-dir ${dataDir}.`,
+      `Unlocked ${dataDir}. sandy on this computer starts the old server again within a few seconds; if sandy isn't running, start it with npx sandy-app --data-dir ${dataDir}.`,
     ]);
   });
 
   it("keeps the lock when the confirmation is declined", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     readlineMocks.question.mockResolvedValue("n");
 
@@ -760,7 +760,7 @@ describe("bb server unlock", () => {
   });
 
   it("refuses without --yes outside an interactive terminal", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     Object.defineProperty(process.stdout, "isTTY", {
       value: false,
@@ -775,7 +775,7 @@ describe("bb server unlock", () => {
   });
 
   it("refuses to unlock an old copy that was already deleted", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock({ oldCopyEntries: [] }));
 
     await expect(
@@ -786,13 +786,13 @@ describe("bb server unlock", () => {
     ).rejects.toThrow("process.exit:1");
 
     expect(collectLogPayloads(vi.mocked(console.error))).toEqual([
-      `Error: The old server copy in ${dataDir} was deleted, so there is nothing to unlock. Unlocking would start an empty bb server.`,
+      `Error: The old server copy in ${dataDir} was deleted, so there is nothing to unlock. Unlocking would start an empty sandy server.`,
     ]);
     expect(await readServerMovedFile(dataDir)).not.toBeNull();
   });
 
   it("reports an unlocked data directory without failing", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
 
     await runCommand(
       ["server", "unlock", "--data-dir", dataDir, "--json"],
@@ -807,17 +807,17 @@ describe("bb server unlock", () => {
   });
 
   it("drops the new server's address and credentials from config.json and keeps everything else", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     const configPath = await writeDataFile(
       dataDir,
       "config.json",
       JSON.stringify({
-        config: { BB_LOG_LEVEL: "debug", BB_APP_URL: "https://laptop.ts.net" },
+        config: { SANDY_LOG_LEVEL: "debug", SANDY_APP_URL: "https://laptop.ts.net" },
         customModels: [{ providerId: "codex", model: "gpt-5.4" }],
         customAcpAgents: [{ id: "not a valid agent" }],
         serverUrl: "https://me.example.test",
-        serverHeaders: { "x-bb-machine-access": "credential" },
+        serverHeaders: { "x-sandy-machine-access": "credential" },
         machineCredential: "machine-secret",
         connectMachineId: "machine-1",
       }),
@@ -831,7 +831,7 @@ describe("bb server unlock", () => {
 
     expect(await readServerMovedFile(dataDir)).toBeNull();
     expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual({
-      config: { BB_LOG_LEVEL: "debug", BB_APP_URL: "https://laptop.ts.net" },
+      config: { SANDY_LOG_LEVEL: "debug", SANDY_APP_URL: "https://laptop.ts.net" },
       customModels: [{ providerId: "codex", model: "gpt-5.4" }],
       customAcpAgents: [{ id: "not a valid agent" }],
     });
@@ -851,8 +851,8 @@ describe("bb server unlock", () => {
     });
   });
 
-  it("keeps the lock and config untouched when config.json is not a valid bb-app config", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+  it("keeps the lock and config untouched when config.json is not a valid sandy-app config", async () => {
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
     const invalid = JSON.stringify({
       serverUrl: "https://me.example.test",
@@ -869,7 +869,7 @@ describe("bb server unlock", () => {
 
     expect(collectLogPayloads(vi.mocked(console.error)).at(-1)).toMatch(
       new RegExp(
-        `^Error: ${configPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&")} is not a valid bb-app config\\. Fix it, then unlock again\\.`,
+        `^Error: ${configPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&")} is not a valid sandy-app config\\. Fix it, then unlock again\\.`,
         "u",
       ),
     );
@@ -878,7 +878,7 @@ describe("bb server unlock", () => {
   });
 
   it("unlocks without creating config.json when there is none", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
 
     await runCommand(
@@ -888,14 +888,14 @@ describe("bb server unlock", () => {
 
     expect(await readdir(dataDir)).toEqual([]);
     expect(collectLogPayloads(vi.mocked(console.log))).toEqual([
-      `Unlocked ${dataDir}. bb on this computer starts the old server again within a few seconds; if bb isn't running, start it with npx bb-app --data-dir ${dataDir}.`,
+      `Unlocked ${dataDir}. sandy on this computer starts the old server again within a few seconds; if sandy isn't running, start it with npx sandy-app --data-dir ${dataDir}.`,
     ]);
   });
 
-  it("uses BB_DATA_DIR when --data-dir is omitted", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-lock-");
+  it("uses SANDY_DATA_DIR when --data-dir is omitted", async () => {
+    const dataDir = await makeTempDir("sandy-cli-server-lock-");
     await writeServerMovedFile(dataDir, movedLock());
-    vi.stubEnv("BB_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
 
     await runCommand(["server", "unlock", "--yes"], register);
 
@@ -903,15 +903,15 @@ describe("bb server unlock", () => {
   });
 });
 
-describe("bb server delete-old-copy", () => {
+describe("sandy server delete-old-copy", () => {
   setupCommandOutputTestEnvironment();
 
   it("deletes the listed server entries and sidecars but keeps the lock and host-owned files", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-old-copy-");
+    const dataDir = await makeTempDir("sandy-cli-server-old-copy-");
     for (const path of [
-      "bb.db",
-      "bb.db-wal",
-      "bb.db-shm",
+      "sandy.db",
+      "sandy.db-wal",
+      "sandy.db-shm",
       "attachments/thr_1/image.png",
       "plugins/tasks/data.db",
       "plugins/tasks/data.db-wal",
@@ -928,7 +928,7 @@ describe("bb server delete-old-copy", () => {
       dataDir,
       movedLock({
         oldCopyEntries: [
-          "bb.db",
+          "sandy.db",
           "attachments",
           "plugins/tasks/data.db",
           "config.json",
@@ -944,7 +944,7 @@ describe("bb server delete-old-copy", () => {
     );
 
     expect(readlineMocks.question).toHaveBeenCalledWith(
-      `Delete the old bb server copy in ${dataDir} (5 entries)? The server now runs on desktop; this cannot be undone. [y/N] `,
+      `Delete the old sandy server copy in ${dataDir} (5 entries)? The server now runs on desktop; this cannot be undone. [y/N] `,
     );
     expect((await readdir(dataDir)).sort()).toEqual([
       "auth.json",
@@ -962,20 +962,20 @@ describe("bb server delete-old-copy", () => {
       movedLock({ oldCopyEntries: [] }),
     );
     expect(collectLogPayloads(vi.mocked(console.log))).toEqual([
-      `Deleted the old bb server copy from ${dataDir} (3 entries). This computer keeps running as a regular machine.`,
+      `Deleted the old sandy server copy from ${dataDir} (3 entries). This computer keeps running as a regular machine.`,
     ]);
   });
 
   it("reports that there is no old copy when the data directory is not locked", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-old-copy-");
-    await writeDataFile(dataDir, "bb.db", "this machine's server");
+    const dataDir = await makeTempDir("sandy-cli-server-old-copy-");
+    await writeDataFile(dataDir, "sandy.db", "this machine's server");
 
     await runCommand(
       ["server", "delete-old-copy", "--data-dir", dataDir, "--yes"],
       register,
     );
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "this machine's server",
     );
     expect(collectLogPayloads(vi.mocked(console.log))).toEqual([
@@ -984,7 +984,7 @@ describe("bb server delete-old-copy", () => {
   });
 
   it("is a no-op after the old copy was deleted", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-old-copy-");
+    const dataDir = await makeTempDir("sandy-cli-server-old-copy-");
     await writeServerMovedFile(dataDir, movedLock({ oldCopyEntries: [] }));
 
     await runCommand(
@@ -1002,8 +1002,8 @@ describe("bb server delete-old-copy", () => {
   });
 
   it("keeps everything when the confirmation is declined", async () => {
-    const dataDir = await makeTempDir("bb-cli-server-old-copy-");
-    await writeDataFile(dataDir, "bb.db", "old server");
+    const dataDir = await makeTempDir("sandy-cli-server-old-copy-");
+    await writeDataFile(dataDir, "sandy.db", "old server");
     await writeServerMovedFile(dataDir, movedLock());
     readlineMocks.question.mockResolvedValue("n");
 
@@ -1012,7 +1012,7 @@ describe("bb server delete-old-copy", () => {
       register,
     );
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe("old server");
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe("old server");
     expect((await readServerMovedFile(dataDir))?.oldCopyEntries).toEqual(
       movedLock().oldCopyEntries,
     );

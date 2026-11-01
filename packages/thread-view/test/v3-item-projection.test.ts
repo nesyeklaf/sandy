@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { TimelineRow, TimelineWorkRow } from "@bb/server-contract";
+import type { TimelineRow, TimelineWorkRow } from "@sandy/server-contract";
 import type { ThreadTimelineViewRow } from "../src/index.js";
-import type { ThreadEventItemPresentation } from "@bb/domain";
+import type { ThreadEventItemPresentation } from "@sandy/domain";
 import {
   buildTimelineActivityIntentTitles,
   buildTimelineRowTitle,
@@ -541,7 +541,7 @@ describe("v3 item projection", () => {
         event.toolCallCompleted({
           turnId: "turn-1",
           itemId: "plugin-1",
-          tool: "bb_task_update",
+          tool: "sandy_task_update",
           presentation: {
             label: { pending: "Updating task", completed: "Updated task" },
             icon: { glyph: "ListTodo" },

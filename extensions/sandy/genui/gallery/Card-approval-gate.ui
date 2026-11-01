@@ -1,0 +1,14 @@
+Card("Force-push fix/upload-race to origin?", [
+  Text("The rebase onto main is done on this machine. origin still has the three commits from before it, so a plain push is rejected."),
+  Approval([{kind: "external", target: "origin/fix/upload-race", detail: "Replaces the 3 commits on origin (tip 9be4d02) with the 3 rebased ones (tip 4c2e7a1). This rewrites history on the remote; anyone who already pulled the branch has to reset it.", command: "git push --force-with-lease=fix/upload-race:9be4d02 origin fix/upload-race", revert: "git push --force-with-lease=fix/upload-race:4c2e7a1 origin 9be4d02:fix/upload-race. After the push 9be4d02 exists only in this machine's reflog."}], title: "One step, remote and not undone by git alone"),
+  Callout("This approves the push only. Opening the PR, merging and deploying are separate questions, asked when they come.", tone: "info"),
+  Table(["Instead of rewriting", "Command", "Cost"], [
+    ["Merge main into the branch, plain push", "git merge origin/main && git push", "No rewrite; adds a merge commit"],
+    ["Push the rebased branch under a new name", "git push origin fix/upload-race:fix/upload-race-v2", "Old branch stays on origin; the PR must point to the new one"]
+  ], source: "illustrative"),
+  Button("Yes, force-push with lease", icon: "Upload"),
+  Button("Merge main instead"),
+  Button("Push as fix/upload-race-v2"),
+  Button("No, do not push"),
+  Text("Something else: say so in your message.")
+])

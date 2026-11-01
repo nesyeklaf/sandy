@@ -1,4 +1,4 @@
-import { experimental_execHostFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFile } from "@sandy-sdk/plugin-sdk/process";
 import {
   type ProviderHealthResult,
   type ProviderInstallationStatus,
@@ -7,7 +7,7 @@ import {
   experimental_formatCommand as formatCommand,
   experimental_resolveExecutablePath as resolveExecutablePath,
   experimental_versionFrom as versionFrom,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { resolvePiLaunch, resolvePiProcessLaunch } from "./rpc-child.js";
 
 const execFileAsync = experimental_execHostFile;

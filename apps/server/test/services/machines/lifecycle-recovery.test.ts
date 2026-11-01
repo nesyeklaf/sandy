@@ -20,8 +20,8 @@ import {
   hosts,
   listThreadIdsWithHostOfflineQueueWaits,
   updateHost,
-} from "@bb/db";
-import { validatePluginEnvironmentProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy/db";
+import { validatePluginEnvironmentProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   requestMachineRemoval,
   retryMachineCleanup,

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { createStore, Provider } from "jotai";
 import { splitLayoutAtom, maximizedPaneIdAtom } from "@/lib/split-layout/atoms";
 import type { ReactNode } from "react";
@@ -26,7 +26,7 @@ import {
   type PluginListItem,
 } from "@/hooks/queries/plugin-settings-queries";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import {
   resetPluginSlotStoreForTest,
   setPluginSlotRegistrations,
@@ -56,18 +56,18 @@ import {
   AppCommandProvider,
   useAppCommandRunner,
 } from "@/components/commands/AppCommandProvider";
-import { getFixedPanelTabsStateStorageKey } from "@bb/client-core";
+import { getFixedPanelTabsStateStorageKey } from "@sandy/client-core";
 import { resetFixedPanelTabsStateForTest } from "@/lib/fixed-panel-tabs";
 import { getFocusedAppPanelController } from "@/lib/app-fixed-tab-navigation";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
-import type { BbDesktopCloseWindowRequestHandler } from "@bb/desktop-contract";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
+import type { SandyDesktopCloseWindowRequestHandler } from "@sandy/desktop-contract";
 
 function seedBrowseTabs(
   tabs: readonly string[],
   activePluginId: string | null,
 ) {
   window.localStorage.setItem(
-    "bb.plugins.workspace.tabs",
+    "sandy.plugins.workspace.tabs",
     JSON.stringify({ tabs, activePluginId }),
   );
 }
@@ -106,23 +106,23 @@ vi.mock(
 const GITHUB_PLUGIN = makePluginListItem({
   id: "github",
   source: "builtin:github",
-  rootDir: "/Users/you/.bb/plugins/github",
-  description: "Browse GitHub issues and pull requests in BB.",
+  rootDir: "/Users/you/.sandy/plugins/github",
+  description: "Browse GitHub issues and pull requests in SANDY.",
   name: "GitHub",
   icon: "Github",
   app: { hasApp: true, bundle: null },
   provenance: "catalog",
   catalogEntryId: "github",
-  publisherLabel: "BB Official",
-  sourceDisplay: "BB Official · GitHub",
+  publisherLabel: "SANDY Official",
+  sourceDisplay: "SANDY Official · GitHub",
 });
 
 const GITHUB_CATALOG_ENTRY = {
   entryId: "github",
-  marketplace: "bb-official",
+  marketplace: "sandy-official",
   pluginId: "github",
   displayName: "GitHub",
-  description: "Browse GitHub issues and pull requests in BB.",
+  description: "Browse GitHub issues and pull requests in SANDY.",
   icon: "Github",
   iconUrl: null,
   iconTinted: false,
@@ -131,9 +131,9 @@ const GITHUB_CATALOG_ENTRY = {
   collections: [],
   source: "builtin:github",
   repositoryUrl: null,
-  marketplaceDisplayName: "BB Official",
-  publisherKey: "bb-official",
-  publisherLabel: "BB Official",
+  marketplaceDisplayName: "SANDY Official",
+  publisherKey: "sandy-official",
+  publisherLabel: "SANDY Official",
   official: true,
   author: null,
   installed: false,
@@ -189,7 +189,7 @@ afterEach(() => {
   resetPluginSlotStoreForTest();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
 });
 
 function ClosePluginCommand({
@@ -214,9 +214,9 @@ describe("Plugins catalog close arbitration", () => {
   ] as const)(
     "closes active details before window fallback via %s (compact: %s)",
     async (entryPoint, compact) => {
-      const handlers = new Set<BbDesktopCloseWindowRequestHandler>();
-      window.bbDesktop = {
-        ...createBbDesktopApi({
+      const handlers = new Set<SandyDesktopCloseWindowRequestHandler>();
+      window.sandyDesktop = {
+        ...createSandyDesktopApi({
           platform: "macos",
           version: "0.0.0-test",
         }),
@@ -279,7 +279,7 @@ describe("Plugins catalog close arbitration", () => {
         return handled;
       };
       expect(
-        window.localStorage.getItem("bb.plugins.workspace.tabs"),
+        window.localStorage.getItem("sandy.plugins.workspace.tabs"),
       ).toBeNull();
       expect(getFocusedAppPanelController()?.getTabs()).toMatchObject({
         open: true,
@@ -308,7 +308,7 @@ describe("Plugins catalog close arbitration", () => {
 });
 
 describe("PluginDetail official catalog lifecycle", () => {
-  it("offers Install from an unowned BB Official plugin detail page", () => {
+  it("offers Install from an unowned SANDY Official plugin detail page", () => {
     const onInstall = vi.fn();
     const { container } = renderWithQueryClient(
       <CatalogPluginDetail
@@ -320,10 +320,10 @@ describe("PluginDetail official catalog lifecycle", () => {
     );
 
     expect(screen.getByRole("heading", { name: "GitHub" })).toBeTruthy();
-    expect(screen.getAllByText("BB Official").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("SANDY Official").length).toBeGreaterThan(0);
     expect(screen.queryByText("Developer tools")).toBeNull();
     expect(
-      screen.getByText("Browse GitHub issues and pull requests in BB."),
+      screen.getByText("Browse GitHub issues and pull requests in SANDY."),
     ).toBeTruthy();
     expect(screen.queryByText("Capabilities")).toBeNull();
     expect(container.querySelector('[data-icon="Github"]')).not.toBeNull();
@@ -337,7 +337,7 @@ describe("PluginDetail official catalog lifecycle", () => {
       <CatalogPluginDetail
         entry={{
           ...GITHUB_CATALOG_ENTRY,
-          repositoryUrl: "https://github.com/acme/bb-github",
+          repositoryUrl: "https://github.com/acme/sandy-github",
         }}
         onInstall={() => {}}
         catalogEntries={[]}
@@ -346,9 +346,9 @@ describe("PluginDetail official catalog lifecycle", () => {
     );
 
     const link = screen.getByRole("link", {
-      name: /github\.com\/acme\/bb-github/u,
+      name: /github\.com\/acme\/sandy-github/u,
     });
-    expect(link.getAttribute("href")).toBe("https://github.com/acme/bb-github");
+    expect(link.getAttribute("href")).toBe("https://github.com/acme/sandy-github");
     expect(link.getAttribute("target")).toBe("_blank");
   });
 
@@ -408,7 +408,7 @@ describe("PluginDetail official catalog lifecycle", () => {
     const incompatibleEntry = {
       ...GITHUB_CATALOG_ENTRY,
       compatible: false,
-      incompatibleReason: "Requires bb 0.20 or newer.",
+      incompatibleReason: "Requires sandy 0.20 or newer.",
     };
     renderWithQueryClient(
       <>
@@ -427,15 +427,15 @@ describe("PluginDetail official catalog lifecycle", () => {
 
     expect(screen.queryByRole("alert")).toBeNull();
     const compatibilityStatus = screen
-      .getByText("Update bb to install this plugin")
+      .getByText("Update sandy to install this plugin")
       .closest("div[class*='bg-surface-recessed']");
     expect(compatibilityStatus).not.toBeNull();
     if (compatibilityStatus === null) return;
     expect(compatibilityStatus.textContent).toContain(
-      "Update bb to install this plugin",
+      "Update sandy to install this plugin",
     );
     expect(compatibilityStatus.textContent).toContain(
-      "Requires bb 0.20 or newer.",
+      "Requires sandy 0.20 or newer.",
     );
     expect(
       screen
@@ -467,7 +467,7 @@ describe("PluginDetail official catalog lifecycle", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByText("BB Official").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("SANDY Official").length).toBeGreaterThan(0);
     expect(screen.queryByText("Developer tools")).toBeNull();
     expect(
       screen.queryByRole("button", { name: "Uninstall GitHub" }),
@@ -475,7 +475,7 @@ describe("PluginDetail official catalog lifecycle", () => {
 
     expect(screen.getByRole("heading", { name: "Details" })).toBeTruthy();
     expect(
-      screen.getByText("Browse GitHub issues and pull requests in BB."),
+      screen.getByText("Browse GitHub issues and pull requests in SANDY."),
     ).toBeTruthy();
     const meta = screen.getByText("0.1.0");
     expect(
@@ -483,11 +483,11 @@ describe("PluginDetail official catalog lifecycle", () => {
         .closest("[data-resource-detail-section]")
         ?.getAttribute("data-resource-detail-section"),
     ).toBe("release");
-    expect(screen.queryByText("~/.bb/plugins/github")).toBeNull();
+    expect(screen.queryByText("~/.sandy/plugins/github")).toBeNull();
     expect(
       screen.queryByRole("button", { name: /Copy plugin path/u }),
     ).toBeNull();
-    expect(screen.getByText("Updates with bb")).toBeTruthy();
+    expect(screen.getByText("Updates with sandy")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Check now" })).toBeNull();
 
     expect(container.querySelector('[data-icon="Github"]')).not.toBeNull();
@@ -537,7 +537,7 @@ describe("PluginDetail official catalog lifecycle", () => {
       name: "Update GitHub to 1.5.0",
     });
     const activation = screen.getByRole("switch", { name: "Disable GitHub" });
-    const path = screen.queryByText("~/.bb/plugins/github");
+    const path = screen.queryByText("~/.sandy/plugins/github");
     const releaseSection = document.querySelector(
       '[data-resource-detail-section="release"]',
     );
@@ -595,7 +595,7 @@ describe("PluginDetail official catalog lifecycle", () => {
 
     expect(screen.getByText("Installed", { selector: "dt" })).toBeTruthy();
     expect(screen.getByText("Install date unavailable")).toBeTruthy();
-    expect(screen.queryByText("Updates with bb")).toBeNull();
+    expect(screen.queryByText("Updates with sandy")).toBeNull();
   });
 
   it("loads the install date for a local plugin", async () => {
@@ -605,7 +605,7 @@ describe("PluginDetail official catalog lifecycle", () => {
       vi.fn(async (input: RequestInfo | URL) =>
         String(input) === "/api/v1/plugins/github/source"
           ? Response.json({
-              requested: "path:/Users/you/src/bb-plugin-github",
+              requested: "path:/Users/you/src/sandy-plugin-github",
               resolved: "0.1.0",
               engines: {},
               installedAt,
@@ -616,8 +616,8 @@ describe("PluginDetail official catalog lifecycle", () => {
     );
     const plugin: PluginListItem = {
       ...GITHUB_PLUGIN,
-      source: "path:/Users/you/src/bb-plugin-github",
-      rootDir: "/Users/you/src/bb-plugin-github",
+      source: "path:/Users/you/src/sandy-plugin-github",
+      rootDir: "/Users/you/src/sandy-plugin-github",
       provenance: "direct",
       catalogEntryId: null,
       publisherLabel: null,
@@ -671,7 +671,7 @@ describe("PluginDetail official catalog lifecycle", () => {
         ...EMPTY_PLUGIN_UPDATE_STATE,
         blockedVersion: "2.0.0",
         blockedLabel: "2.0.0",
-        blockedReasons: ["Requires bb 0.20 or newer."],
+        blockedReasons: ["Requires sandy 0.20 or newer."],
       },
       expected: "Update blocked",
       actionName: null,
@@ -770,8 +770,8 @@ describe("PluginDetail official catalog lifecycle", () => {
       source: "builtin:automations",
       provenance: "builtin" as const,
       catalogEntryId: null,
-      publisherKey: "bb-official",
-      publisherLabel: "BB Official",
+      publisherKey: "sandy-official",
+      publisherLabel: "SANDY Official",
     };
     const { wrapper: QueryClientWrapper } = createQueryClientTestHarness();
     render(
@@ -793,7 +793,7 @@ describe("PluginDetail official catalog lifecycle", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getAllByText("BB Official").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("SANDY Official").length).toBeGreaterThan(0);
     expect(
       screen.getByRole("switch", { name: "Disable Automations" }),
     ).toBeTruthy();
@@ -810,13 +810,13 @@ describe("PluginDetail official catalog lifecycle", () => {
     fireEvent.pointerMove(uninstall);
     expect(
       await screen.findAllByText(
-        "Included with BB; disable this plugin instead.",
+        "Included with SANDY; disable this plugin instead.",
       ),
     ).not.toHaveLength(0);
   });
 });
 
-describe("BB Official plugin detail routing", () => {
+describe("SANDY Official plugin detail routing", () => {
   it.each([
     {
       action: "Close other tabs",
@@ -916,7 +916,7 @@ describe("BB Official plugin detail routing", () => {
     "keeps official attribution and tabs through collection navigation (compact: %s)",
     async (compact) => {
       const author = {
-        name: "BB",
+        name: "SANDY",
         github: "get-bb",
         url: "https://github.com/get-bb",
       };
@@ -945,7 +945,7 @@ describe("BB Official plugin detail routing", () => {
                     name: "GitHub",
                     source: "builtin:github",
                     provenance: "builtin",
-                    publisherLabel: "BB Official",
+                    publisherLabel: "SANDY Official",
                   }),
                 ],
               }),
@@ -979,18 +979,18 @@ describe("BB Official plugin detail routing", () => {
       expect(header).not.toBeNull();
       if (!header) throw new Error("Plugin header missing");
       const authorLink = await within(header).findByRole("link", {
-        name: "BB Official",
+        name: "SANDY Official",
       });
       expect(within(header).queryByText(/^By/u)).toBeNull();
-      expect(within(header).getAllByText("BB Official")).toHaveLength(1);
+      expect(within(header).getAllByText("SANDY Official")).toHaveLength(1);
       expect(
         within(header).getByRole("img", {
-          name: "BB Official's GitHub avatar",
+          name: "SANDY Official's GitHub avatar",
         }),
       ).toBeTruthy();
       fireEvent.click(authorLink);
       expect(
-        await screen.findByRole("heading", { name: /^BB Official/u, level: 1 }),
+        await screen.findByRole("heading", { name: /^SANDY Official/u, level: 1 }),
       ).toBeTruthy();
       if (compact) {
         await waitFor(() =>
@@ -1067,10 +1067,10 @@ describe("BB Official plugin detail routing", () => {
       displayName: "Canvas",
       description: "Draw diagrams on a shared tldraw canvas.",
       source: "git:https://github.com/example/canvas.git@main",
-      marketplace: "bb-community",
-      marketplaceDisplayName: "BB Community",
-      publisherKey: "bb-community",
-      publisherLabel: "BB Community",
+      marketplace: "sandy-community",
+      marketplaceDisplayName: "SANDY Community",
+      publisherKey: "sandy-community",
+      publisherLabel: "SANDY Community",
       official: false,
       conflictingInstallSource: "path:/Users/you/git/canvas",
     } satisfies PluginCatalogSearchEntry;
@@ -1125,7 +1125,7 @@ describe("BB Official plugin detail routing", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("location").textContent).toBe(
-        "/plugins/canvas?q=canvas&listing=bb-community",
+        "/plugins/canvas?q=canvas&listing=sandy-community",
       );
     });
     await waitFor(() => {
@@ -1153,12 +1153,12 @@ describe("BB Official plugin detail routing", () => {
         "Edit .mdx files beside the chat.",
       );
     });
-    expect(screen.getByText("Also published in BB Community")).toBeTruthy();
+    expect(screen.getByText("Also published in SANDY Community")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "View listing" }));
     await waitFor(() => {
       expect(screen.getByTestId("location").textContent).toBe(
-        "/plugins/canvas?q=canvas&listing=bb-community",
+        "/plugins/canvas?q=canvas&listing=sandy-community",
       );
     });
   });
@@ -1166,10 +1166,10 @@ describe("BB Official plugin detail routing", () => {
   it("uses the installed catalog identity when plugin ids collide", async () => {
     const firstCatalogEntry = {
       ...GITHUB_CATALOG_ENTRY,
-      marketplace: "bb-community",
-      marketplaceDisplayName: "BB Community",
-      publisherKey: "bb-community:example",
-      publisherLabel: "BB Community",
+      marketplace: "sandy-community",
+      marketplaceDisplayName: "SANDY Community",
+      publisherKey: "sandy-community:example",
+      publisherLabel: "SANDY Community",
       description: "Description from the first catalog.",
       repositoryUrl: "https://github.com/example/first-catalog-plugin",
       author: {
@@ -1266,10 +1266,10 @@ describe("BB Official plugin detail routing", () => {
   it("uses installed metadata when its catalog entry is unavailable", async () => {
     const unrelatedCatalogEntry = {
       ...GITHUB_CATALOG_ENTRY,
-      marketplace: "bb-community",
-      marketplaceDisplayName: "BB Community",
-      publisherKey: "bb-community:example",
-      publisherLabel: "BB Community",
+      marketplace: "sandy-community",
+      marketplaceDisplayName: "SANDY Community",
+      publisherKey: "sandy-community:example",
+      publisherLabel: "SANDY Community",
       description: "Description from an unrelated catalog entry.",
       repositoryUrl: "https://github.com/example/unrelated-catalog-plugin",
       author: {
@@ -1403,7 +1403,7 @@ describe("BB Official plugin detail routing", () => {
         categoryId: "code-and-reviews",
         category: "Code & Reviews",
         author: {
-          name: "BB",
+          name: "SANDY",
           github: "get-bb",
           url: "https://github.com/get-bb",
         },
@@ -1512,7 +1512,7 @@ describe("BB Official plugin detail routing", () => {
     "/plugins?view=installed",
   ])("opens installed plugin settings from %s", async (path) => {
     const author = {
-      name: "BB",
+      name: "SANDY",
       github: "get-bb",
       url: "https://github.com/get-bb",
     };
@@ -1537,7 +1537,7 @@ describe("BB Official plugin detail routing", () => {
               plugins: [
                 {
                   ...GITHUB_PLUGIN,
-                  catalogMarketplaceName: "bb-official",
+                  catalogMarketplaceName: "sandy-official",
                   iconUrl: null,
                   screenshots: [],
                   collections: [],
@@ -1605,7 +1605,7 @@ describe("BB Official plugin detail routing", () => {
 
   it("opens an author from a card and returns to the prior Browse filters", async () => {
     const author = {
-      name: "BB",
+      name: "SANDY",
       github: "get-bb",
       url: "https://github.com/get-bb",
     };
@@ -1664,23 +1664,23 @@ describe("BB Official plugin detail routing", () => {
     );
 
     fireEvent.click(
-      (await screen.findAllByRole("link", { name: "BB Official" }))[0]!,
+      (await screen.findAllByRole("link", { name: "SANDY Official" }))[0]!,
     );
-    expect(await screen.findByRole("heading", { name: /^BB/u })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^SANDY/u })).toBeTruthy();
     expect(screen.getByTestId("location").textContent).toBe(
-      "/plugins?category=code-and-reviews&sort=recently-added&author=11%3Abb-official%3Agithub%3Aget-bb",
+      "/plugins?category=code-and-reviews&sort=recently-added&author=14%3Asandy-official%3Agithub%3Aget-bb",
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Browser back" }));
     await waitFor(() => {
-      expect(screen.queryByRole("heading", { name: /^BB/u })).toBeNull();
+      expect(screen.queryByRole("heading", { name: /^SANDY/u })).toBeNull();
     });
     expect(screen.getByTestId("location").textContent).toBe(
       "/plugins?category=code-and-reviews&sort=recently-added",
     );
 
     fireEvent.click(
-      (await screen.findAllByRole("link", { name: "BB Official" }))[0]!,
+      (await screen.findAllByRole("link", { name: "SANDY Official" }))[0]!,
     );
     const card = await screen.findByRole("button", {
       name: "Open GitHub details",
@@ -1696,7 +1696,7 @@ describe("BB Official plugin detail routing", () => {
 
   it("routes the detail author link to the restored author page", async () => {
     const author = {
-      name: "BB",
+      name: "SANDY",
       github: "get-bb",
       url: "https://github.com/get-bb",
     };
@@ -1745,14 +1745,14 @@ describe("BB Official plugin detail routing", () => {
     expect(
       await screen.findByRole("heading", { name: "More from this author" }),
     ).toBeTruthy();
-    const authorLinks = screen.getAllByRole("link", { name: "BB Official" });
+    const authorLinks = screen.getAllByRole("link", { name: "SANDY Official" });
     fireEvent.click(authorLinks.at(-1)!);
     await waitFor(() => {
       expect(screen.getByTestId("location").textContent).toBe(
-        "/plugins?author=11%3Abb-official%3Agithub%3Aget-bb",
+        "/plugins?author=14%3Asandy-official%3Agithub%3Aget-bb",
       );
     });
-    expect(await screen.findByRole("heading", { name: /^BB/u })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^SANDY/u })).toBeTruthy();
   });
 });
 
@@ -1760,16 +1760,16 @@ describe("plugin removal confirmation", () => {
   it("warns that removing a local plugin deletes its settings, secrets, and schedules and names the move path", async () => {
     const localPlugin = {
       id: "github",
-      source: "path:/Users/you/src/bb-plugin-github",
-      rootDir: "/Users/you/src/bb-plugin-github",
+      source: "path:/Users/you/src/sandy-plugin-github",
+      rootDir: "/Users/you/src/sandy-plugin-github",
       version: "0.1.0",
       provenance: "direct",
       isOrphanedBuiltin: false,
       publisherLabel: null,
-      sourceDisplay: "path · /Users/you/src/bb-plugin-github",
+      sourceDisplay: "path · /Users/you/src/sandy-plugin-github",
       updateState: {},
       enabled: true,
-      description: "Browse GitHub issues and pull requests in BB.",
+      description: "Browse GitHub issues and pull requests in SANDY.",
       name: "GitHub",
       icon: "Github",
       iconUrl: null,
@@ -1823,13 +1823,13 @@ describe("plugin removal confirmation", () => {
       screen.getByRole("button", { name: "GitHub actions" }),
     );
     fireEvent.click(
-      await screen.findByRole("menuitem", { name: "Remove from bb" }),
+      await screen.findByRole("menuitem", { name: "Remove from sandy" }),
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Remove plugin from bb?" }),
+      await screen.findByRole("heading", { name: "Remove plugin from sandy?" }),
     ).toBeTruthy();
-    const description = screen.getByText(/Remove "github" from bb/);
+    const description = screen.getByText(/Remove "github" from sandy/);
     expect(description.textContent).toContain(
       "delete its settings, secrets, and schedules",
     );
@@ -1860,7 +1860,7 @@ describe("PluginDetail banner precedence", () => {
       availableLabel: "1.5.0",
       blockedVersion: "2.0.0",
       blockedLabel: "2.0.0",
-      blockedReasons: ["Requires a newer bb."],
+      blockedReasons: ["Requires a newer sandy."],
       lastFailure: {
         version: "1.4.5",
         label: "1.4.5",
@@ -1961,8 +1961,8 @@ describe("PluginDetail runtime health", () => {
       source: "builtin:github",
       provenance: "builtin" as const,
       catalogEntryId: null,
-      publisherKey: "bb-official",
-      publisherLabel: "BB Official",
+      publisherKey: "sandy-official",
+      publisherLabel: "SANDY Official",
       status,
       statusDetail: "The runtime reported a problem.",
       ...overrides,
@@ -2038,13 +2038,13 @@ describe("PluginDetail runtime health", () => {
     expect(alertText).toContain("Wait, then reload.");
     expect(alertText).not.toContain("issue-sync");
     expect(alertText).not.toContain("handler");
-    expect(alertText).not.toContain("Restart bb");
+    expect(alertText).not.toContain("Restart sandy");
     expect(screen.getByRole("button", { name: "Reload" })).toBeTruthy();
   });
 
   it.each([
-    ["incompatible", "This version is incompatible with bb.", "Update bb."],
-    ["missing", "Plugin files are missing.", "Update or reinstall bb."],
+    ["incompatible", "This version is incompatible with sandy.", "Update sandy."],
+    ["missing", "Plugin files are missing.", "Update or reinstall sandy."],
   ] as const)(
     "explains the %s condition and a supported recovery without offering Reload",
     (status, condition, recovery) => {
@@ -2334,7 +2334,7 @@ describe("PluginDetail capability inventory", () => {
       "Adds a page to the app sidebar.",
       "enhance-prompt",
       "Adds an action beside the thread composer.",
-      "bb capability",
+      "sandy capability",
       "Inspect contributed capabilities.",
       "review",
       "Review repository changes.",
@@ -2592,8 +2592,8 @@ describe("plugin detail source and settings", () => {
     const onOpenSource = vi.fn();
     const plugin: PluginListItem = {
       ...GITHUB_PLUGIN,
-      source: "path:/Users/you/src/bb-plugin-github",
-      rootDir: "/Users/you/src/bb-plugin-github",
+      source: "path:/Users/you/src/sandy-plugin-github",
+      rootDir: "/Users/you/src/sandy-plugin-github",
       provenance: "direct",
       catalogEntryId: null,
       publisherLabel: null,
@@ -2624,7 +2624,7 @@ describe("plugin detail source and settings", () => {
     expect(source).not.toBeNull();
     if (source === null) return;
     expect(
-      within(source as HTMLElement).getByText("~/src/bb-plugin-github"),
+      within(source as HTMLElement).getByText("~/src/sandy-plugin-github"),
     ).toBeTruthy();
     fireEvent.click(
       within(source as HTMLElement).getByRole("button", {
@@ -2634,11 +2634,11 @@ describe("plugin detail source and settings", () => {
     expect(onOpenSource).toHaveBeenCalledWith(plugin);
     fireEvent.click(
       within(source as HTMLElement).getByRole("button", {
-        name: "Copy plugin path: /Users/you/src/bb-plugin-github",
+        name: "Copy plugin path: /Users/you/src/sandy-plugin-github",
       }),
     );
     await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith("/Users/you/src/bb-plugin-github");
+      expect(writeText).toHaveBeenCalledWith("/Users/you/src/sandy-plugin-github");
     });
 
     fireEvent.pointerDown(
@@ -2669,7 +2669,7 @@ describe("plugin detail source and settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "GitHub settings" }));
     expect(await screen.findByLabelText("Repository")).toHaveProperty(
       "value",
-      "get-bb/bb",
+      "nesyeklaf/sandy",
     );
     expect(screen.getByTestId("location").textContent).toBe(
       "/plugins/github?view=installed&configure=github",
@@ -2686,7 +2686,7 @@ describe("plugin detail source and settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "Browser back" }));
     expect(await screen.findByLabelText("Repository")).toHaveProperty(
       "value",
-      "get-bb/bb",
+      "nesyeklaf/sandy",
     );
   });
 
@@ -2715,7 +2715,7 @@ describe("plugin detail source and settings", () => {
           return Response.json({
             ok: true,
             schema: { repository: { type: "string", label: "Repository" } },
-            values: { repository: "get-bb/bb" },
+            values: { repository: "nesyeklaf/sandy" },
           });
         }
         return Response.json({ error: "not found" }, { status: 404 });
@@ -2760,7 +2760,7 @@ describe("plugin detail source and settings", () => {
 
     expect(await screen.findByLabelText("Repository")).toHaveProperty(
       "value",
-      "get-bb/bb",
+      "nesyeklaf/sandy",
     );
     expect(screen.getByTestId("location").textContent).toBe(
       "/plugins/github?view=installed&configure=github",
@@ -2786,7 +2786,7 @@ describe("plugin detail source and settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "GitHub settings" }));
     expect(await screen.findByLabelText("Repository")).toHaveProperty(
       "value",
-      "get-bb/bb",
+      "nesyeklaf/sandy",
     );
     expect(screen.getByTestId("location").textContent).toBe(
       "/threads/thr_1?panel=files",

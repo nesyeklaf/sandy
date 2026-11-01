@@ -3,10 +3,10 @@
   "name": "resource-pagination",
   "type": "registry:ui",
   "title": "resource-pagination",
-  "description": "BB ui \"resource-pagination\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-pagination\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/icon"
+    "@sandy/button",
+    "@sandy/icon"
   ],
   "files": [
     {

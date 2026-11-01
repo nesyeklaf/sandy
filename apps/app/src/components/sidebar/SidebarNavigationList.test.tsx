@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import { useSyncExternalStore } from "react";
-import type { ExperimentalBadge } from "@get-bb/plugin-sdk";
+import type { ExperimentalBadge } from "@sandy-sdk/plugin-sdk";
 import { createStore, Provider } from "jotai";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import {
@@ -20,8 +20,8 @@ import {
   it,
   vi,
 } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
   pluginNavPanelOrderAtom,
@@ -71,10 +71,10 @@ const THREAD_PATH = getThreadRoutePath({
 });
 const DOCS_PATH = getPluginPanelRoutePath({ pluginId: "garden", path: "docs" });
 const ALL_KEYS = [
-  "__bb__/new-thread",
-  "__bb__/search-threads",
-  "__bb__/extensions",
-  "__bb__/skills",
+  "__sandy__/new-thread",
+  "__sandy__/search-threads",
+  "__sandy__/extensions",
+  "__sandy__/skills",
   "garden/docs",
 ];
 
@@ -201,7 +201,7 @@ afterEach(() => {
 describe("SidebarNavigationList", () => {
   it("labels each visible destination in a row and puts hidden ones, New thread included, behind More", async () => {
     renderList(THREAD_PATH, {
-      visibleKeys: ["__bb__/extensions", "garden/docs"],
+      visibleKeys: ["__sandy__/extensions", "garden/docs"],
     });
 
     expect(rowLabels()).toEqual(["Plugins", "Docs", "More"]);
@@ -251,7 +251,7 @@ describe("SidebarNavigationList", () => {
 
     expect(rowLabels()).toEqual(["Plugins", "Skills", "Docs", "More"]);
     expect(store.get(pluginNavVisiblePanelKeysAtom)).not.toContain(
-      "__bb__/new-thread",
+      "__sandy__/new-thread",
     );
   });
 
@@ -291,7 +291,7 @@ describe("SidebarNavigationList", () => {
 
   it("marks More when a badged destination is hidden under it", () => {
     registerDocsBadge({ label: "Needs review" });
-    renderList(THREAD_PATH, { visibleKeys: ["__bb__/extensions"] });
+    renderList(THREAD_PATH, { visibleKeys: ["__sandy__/extensions"] });
 
     const more = within(list()).getByRole("button", {
       name: "More, Docs: Needs review",

@@ -1,13 +1,13 @@
-import { getThread } from "@bb/db";
-import type { EnvironmentRow } from "@bb/db";
+import { getThread } from "@sandy/db";
+import type { EnvironmentRow } from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
   type ResolvedThreadExecutionOptions,
   type Thread,
-} from "@bb/domain";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
+} from "@sandy/domain";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
 import { describe, expect, it } from "vitest";
 import {
   hasLiveThreadStartInFlight,

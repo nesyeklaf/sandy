@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { Command } from "commander";
 import {
-  BB_SKILL_SOURCE_IDS,
-  bbSkillSourceIdSchema,
+  SANDY_SKILL_SOURCE_IDS,
+  sandySkillSourceIdSchema,
   PERSONAL_PROJECT_ID,
-  type BbSkillSourceId,
-} from "@bb/domain";
+  type SandySkillSourceId,
+} from "@sandy/domain";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { resolveMachineId, selectMachines } from "./machine.js";
 import type { ContextSnapshot } from "../context-env.js";
 import { renderBorderlessTable } from "../table.js";
@@ -55,26 +55,26 @@ function addWorkspaceOptions(command: Command): Command {
   return command
     .option(
       "--project <id>",
-      "Project ID (defaults to BB_PROJECT_ID or personal)",
+      "Project ID (defaults to SANDY_PROJECT_ID or personal)",
     )
     .option("--environment <id>", "Project environment workspace")
     .option("--json", "Print machine-readable JSON output");
 }
 
-const SKILL_SOURCE_DESCRIPTIONS: Readonly<Record<BbSkillSourceId, string>> = {
-  "bb-plugins":
-    "Skills that installed bb plugins contribute, including generated plugin command skills",
-  "bb-user":
-    "Skills in bb's data directory skills folder and in BB_INHERITED_SKILLS_ROOTS",
-  "bb-project": "Skills in the project's .bb/skills directory",
+const SKILL_SOURCE_DESCRIPTIONS: Readonly<Record<SandySkillSourceId, string>> = {
+  "sandy-plugins":
+    "Skills that installed sandy plugins contribute, including generated plugin command skills",
+  "sandy-user":
+    "Skills in sandy's data directory skills folder and in SANDY_INHERITED_SKILLS_ROOTS",
+  "sandy-project": "Skills in the project's .sandy/skills directory",
   shared: "Skills from the sharedSkillRoots in config.json",
 };
 
-function parseSkillSource(value: string): BbSkillSourceId {
-  const parsed = bbSkillSourceIdSchema.safeParse(value);
+function parseSkillSource(value: string): SandySkillSourceId {
+  const parsed = sandySkillSourceIdSchema.safeParse(value);
   if (parsed.success) return parsed.data;
   throw new Error(
-    `Unknown skill source '${value}'. Known sources: ${BB_SKILL_SOURCE_IDS.join(", ")}.`,
+    `Unknown skill source '${value}'. Known sources: ${SANDY_SKILL_SOURCE_IDS.join(", ")}.`,
   );
 }
 
@@ -97,7 +97,7 @@ export function registerSkillCommands(
     )
     .action(
       action(async (options: SkillListOptions) => {
-        const listed = await createCliBbSdk(getUrl()).skills.list({
+        const listed = await createCliSandySdk(getUrl()).skills.list({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
         });
@@ -142,7 +142,7 @@ export function registerSkillCommands(
           console.log(`\n${entry.name}  ${entry.filePath}`);
           for (const duplicate of entry.duplicates) {
             console.log(
-              `  ${duplicate.relation.padEnd(12)} ${duplicate.provider ?? "bb"}  ${duplicate.filePath}`,
+              `  ${duplicate.relation.padEnd(12)} ${duplicate.provider ?? "sandy"}  ${duplicate.filePath}`,
             );
           }
         }
@@ -158,7 +158,7 @@ export function registerSkillCommands(
           skillId: string,
           options: SkillWorkspaceOptions & { path: string },
         ) => {
-          const result = await createCliBbSdk(getUrl()).skills.getContent({
+          const result = await createCliSandySdk(getUrl()).skills.getContent({
             projectId: projectId(options, getContext()),
             environmentId: environmentId(options),
             skillId,
@@ -175,7 +175,7 @@ export function registerSkillCommands(
     .description("List files included in an installed skill")
     .action(
       action(async (skillId: string, options: SkillWorkspaceOptions) => {
-        const result = await createCliBbSdk(getUrl()).skills.listFiles({
+        const result = await createCliSandySdk(getUrl()).skills.listFiles({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
@@ -191,11 +191,11 @@ export function registerSkillCommands(
     .requiredOption("--file <path>", "Local SKILL.md to upload")
     .requiredOption(
       "--revision <sha256>",
-      "Revision returned by bb skill show --json",
+      "Revision returned by sandy skill show --json",
     )
     .action(
       action(async (skillId: string, options: SkillUpdateOptions) => {
-        const result = await createCliBbSdk(getUrl()).skills.update({
+        const result = await createCliSandySdk(getUrl()).skills.update({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
@@ -221,7 +221,7 @@ export function registerSkillCommands(
           console.log("Aborted.");
           return;
         }
-        const result = await createCliBbSdk(getUrl()).skills.remove({
+        const result = await createCliSandySdk(getUrl()).skills.remove({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
@@ -234,7 +234,7 @@ export function registerSkillCommands(
   skill
     .command("sources [source] [state]")
     .description(
-      `Show or switch which bb-owned skill sources bb injects into agents and lists (${BB_SKILL_SOURCE_IDS.join(", ")}; state on or off)`,
+      `Show or switch which sandy-owned skill sources sandy injects into agents and lists (${SANDY_SKILL_SOURCE_IDS.join(", ")}; state on or off)`,
     )
     .option("--json", "Print machine-readable JSON output")
     .action(
@@ -244,7 +244,7 @@ export function registerSkillCommands(
           state: string | undefined,
           options: JsonOutputOptions,
         ) => {
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const config = await sdk.system.config();
           let disabled = config.generalSettings.disabledSkillSources;
           if (source !== undefined) {
@@ -254,7 +254,7 @@ export function registerSkillCommands(
                 `Expected on or off after '${sourceId}', got '${state ?? ""}'.`,
               );
             }
-            disabled = BB_SKILL_SOURCE_IDS.filter((id) =>
+            disabled = SANDY_SKILL_SOURCE_IDS.filter((id) =>
               id === sourceId ? state === "off" : disabled.includes(id),
             );
             await sdk.system.updateGeneralSettings({
@@ -263,7 +263,7 @@ export function registerSkillCommands(
             });
           }
           const result = {
-            sources: BB_SKILL_SOURCE_IDS.map((id) => ({
+            sources: SANDY_SKILL_SOURCE_IDS.map((id) => ({
               id,
               enabled: !disabled.includes(id),
               description: SKILL_SOURCE_DESCRIPTIONS[id],
@@ -291,7 +291,7 @@ export function registerSkillCommands(
   skill
     .command("cli-skills-status")
     .description(
-      "Show whether each machine has bb's built-in CLI skills installed",
+      "Show whether each machine has sandy's built-in CLI skills installed",
     )
     .option(
       "--machine <id-or-name>",
@@ -302,7 +302,7 @@ export function registerSkillCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (options: SkillInstallCliSkillsOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hosts = options.machine.length > 0 ? await sdk.hosts.list() : [];
         const hostIds =
           options.machine.length > 0
@@ -331,7 +331,7 @@ export function registerSkillCommands(
   skill
     .command("install-cli-skills")
     .description(
-      "Install bb's built-in CLI skills into ~/.agents/skills and ~/.claude/skills on a machine",
+      "Install sandy's built-in CLI skills into ~/.agents/skills and ~/.claude/skills on a machine",
     )
     .option(
       "--machine <id-or-name>",
@@ -342,7 +342,7 @@ export function registerSkillCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (options: SkillInstallCliSkillsOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hosts = await sdk.hosts.list();
         const hostIds =
           options.machine.length > 0

@@ -5,18 +5,18 @@ import {
   getStoredProviderModelCatalog,
   replaceStoredProviderModelCatalog,
   type ProviderModelCatalogRowKey,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   availableModelSchema,
   providerModelCatalogDependsOnWorkspace,
   type AvailableModel,
   type ProviderInfo,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonBridgeLaunch,
   HostDaemonContributedEnvEntry,
-} from "@bb/host-daemon-contract";
-import type { SystemExecutionOptionsModelLoadErrorCode } from "@bb/server-contract";
+} from "@sandy/host-daemon-contract";
+import type { SystemExecutionOptionsModelLoadErrorCode } from "@sandy/server-contract";
 import { z } from "zod";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import { ApiError } from "../../errors.js";

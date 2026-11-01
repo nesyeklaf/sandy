@@ -7,7 +7,7 @@ import {
   listStoredTurnRejectedRowsByClientRequestIds,
   type DbConnection,
   type StoredThreadEventDataRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   providerErrorInfoSchema,
   providerRateLimitStateSchema,
@@ -16,8 +16,8 @@ import {
   type ProviderRateLimitState,
   type Thread,
   type TurnRequestEventData,
-} from "@bb/domain";
-import type { PluginTurnFailedEvent } from "@get-bb/plugin-sdk";
+} from "@sandy/domain";
+import type { PluginTurnFailedEvent } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import { parseStoredTurnRequestEvent } from "./thread-events.js";
 

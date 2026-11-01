@@ -4,11 +4,11 @@ import {
   pluginCommandId,
   type AppDefaultKeybindings,
   type AppKeybindingOverrides,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useBuiltinPluginIds, usePluginSlots } from "@/lib/plugin-slots";
 import { browserPlatform } from "@/lib/app-keybindings";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 import { resolvePluginCommandDefaults } from "@/lib/plugin-command-keybindings";
 
 const EMPTY_DEFAULTS: AppDefaultKeybindings = [];
@@ -20,7 +20,7 @@ export function usePluginCommandBindings() {
   const builtinPluginIds = useBuiltinPluginIds();
   const builtInDefaults = data?.defaultKeybindings ?? EMPTY_DEFAULTS;
   const overrides = data?.keybindingOverrides ?? EMPTY_OVERRIDES;
-  const isDesktop = getBbDesktopInfo() !== null;
+  const isDesktop = getSandyDesktopInfo() !== null;
   const platform = browserPlatform();
   return useMemo(() => {
     const pluginDefaults: AppDefaultKeybindings = commandPaletteActions.map(

@@ -1,14 +1,14 @@
 import type { Hono } from "hono";
-import type { PromptHistoryPosition } from "@bb/db";
+import type { PromptHistoryPosition } from "@sandy/db";
 import {
   PROMPT_HISTORY_PAGE_DEFAULT_LIMIT,
   PROMPT_HISTORY_PAGE_MAX_LIMIT,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { ApiError } from "../errors.js";
 import { parseBoundedPositiveOptionalInteger } from "../services/lib/validation.js";
 import {

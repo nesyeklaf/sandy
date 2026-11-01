@@ -263,7 +263,7 @@ export function createAcpSessionModel(
     }
     synthesizedMessageCount += 1;
     const created: AcpMessageEntity = {
-      messageId: `bb-message-${synthesizedMessageCount}`,
+      messageId: `sandy-message-${synthesizedMessageCount}`,
       role,
       content: [],
       idSource: "synthesized",

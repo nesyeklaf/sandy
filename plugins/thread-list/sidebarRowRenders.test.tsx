@@ -2,8 +2,8 @@
 
 import { act, cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PluginThreadListProps } from "@get-bb/plugin-sdk/app";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import type { PluginThreadListProps } from "@sandy-sdk/plugin-sdk/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import { makePluginProject, makeSidebarThread } from "./app/model/fixtures.js";
 import {
   resetPreferencesSyncForTest,

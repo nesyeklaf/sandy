@@ -17,19 +17,19 @@ import {
   upsertHost,
   type DbConnection,
   type ThreadWithPendingInteractionState,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import {
   formatClientTurnRequestIdSuffix,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ClientTurnRequestId,
   PromptInput,
   Thread,
   ThreadRuntimeState,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { HOST_RECONNECT_GRACE_MS } from "../../../src/constants.js";
 import {
   resolveThreadRuntimeState,

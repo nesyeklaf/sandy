@@ -5,9 +5,9 @@ import {
   type DbNotifier,
   type DbTransaction,
   updateThread,
-} from "@bb/db";
-import type { PromptInput, SystemMessageSubject, Thread } from "@bb/domain";
-import { renderTemplate } from "@bb/templates";
+} from "@sandy/db";
+import type { PromptInput, SystemMessageSubject, Thread } from "@sandy/domain";
+import { renderTemplate } from "@sandy/templates";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { NotificationBuffer } from "../lib/notification-buffer.js";
 import { emitPluginThreadParentChanged } from "../plugins/plugin-thread-events.js";
@@ -72,7 +72,7 @@ const pendingOwnershipChanges = new WeakMap<
 >();
 const THREAD_OWNERSHIP_NOTICE_DELAY_MS = 2_000;
 
-const THREAD_OWNERSHIP_MENTION_SLOT = "__BB_THREAD_OWNERSHIP_MENTION__";
+const THREAD_OWNERSHIP_MENTION_SLOT = "__SANDY_THREAD_OWNERSHIP_MENTION__";
 
 async function queueParentSystemMessageBestEffort(
   deps: LoggedPendingInteractionWorkSessionDeps,

@@ -3,9 +3,9 @@
   "name": "pill",
   "type": "registry:ui",
   "title": "pill",
-  "description": "BB ui \"pill\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"pill\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -1,5 +1,5 @@
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
-import { isBuiltinIconName } from "@bb/shared-ui/icon";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
+import { isBuiltinIconName } from "@sandy/shared-ui/icon";
 import { describe, expect, it } from "vitest";
 import { resolveMachineIconProvider } from "./MachineLabel";
 

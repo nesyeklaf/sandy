@@ -13,8 +13,8 @@ import {
   experimental_useSidebarThreads,
   experimental_usePluginId,
   type ExperimentalSidebarFooterDisclosureProps,
-  useBbContext,
-} from "@get-bb/plugin-sdk/app";
+  useSandyContext,
+} from "@sandy-sdk/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -921,7 +921,7 @@ function ProviderUsageStatus(props: ExperimentalSidebarFooterDisclosureProps) {
     getStoreSnapshot,
     getStoreSnapshot,
   );
-  const { threadId } = useBbContext();
+  const { threadId } = useSandyContext();
   const sidebarThreads = experimental_useSidebarThreads();
   const threadMachineId = useMemo(
     () =>
@@ -935,7 +935,7 @@ function ProviderUsageStatus(props: ExperimentalSidebarFooterDisclosureProps) {
       pluginId={pluginId}
       snapshot={snapshot}
       threadMachineId={threadMachineId}
-      machineSelectionStorageKey={`bb.${pluginId}.selected-machine.v1`}
+      machineSelectionStorageKey={`sandy.${pluginId}.selected-machine.v1`}
     />
   );
 }

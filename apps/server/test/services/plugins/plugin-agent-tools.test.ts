@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { encodeClientTurnRequestIdNumber } from "@bb/domain";
-import type { Logger } from "@bb/logger";
-import { RESERVED_AGENT_TOOL_NAMES } from "@get-bb/plugin-sdk/internal/host-policy";
+import { type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { encodeClientTurnRequestIdNumber } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
+import { RESERVED_AGENT_TOOL_NAMES } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -48,7 +48,7 @@ async function writePlugin(
     JSON.stringify({
       name: options.name,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Agent tools fixture",
         description: "Agent tools plugin fixture.",
         branding: { icon: "Zap" },
@@ -60,14 +60,14 @@ async function writePlugin(
   return rootDir;
 }
 
-describe("bb.agents.registerTool", () => {
+describe("sandy.agents.registerTool", () => {
   let db: DbConnection;
   let workDir: string;
   let service: PluginService;
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-tools-test-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-tools-test-"));
     service = createPluginService({
       aiServices: createAiServiceRegistry(),
       db,
@@ -92,16 +92,16 @@ describe("bb.agents.registerTool", () => {
 
   it("rejects duplicate tool names within one factory execution", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-replacer",
+      name: "sandy-plugin-replacer",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "echo_tool",
             description: "first version",
             parameters: { type: "object", properties: { text: { type: "string" } } },
             execute: () => "first",
           });
-          bb.agents.registerTool({
+          sandy.agents.registerTool({
             name: "echo_tool",
             description: "second version",
             instructions: "Prefer echo_tool for echoing.",
@@ -121,11 +121,11 @@ describe("bb.agents.registerTool", () => {
 
   it("rejects duplicate configure registrations within one factory execution", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-double-configure",
+      name: "sandy-plugin-double-configure",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.configure(() => ({ tools: [], skills: [] }));
-          bb.agents.configure(() => ({ tools: [], skills: [] }));
+        export default function plugin(sandy: any) {
+          sandy.agents.configure(() => ({ tools: [], skills: [] }));
+          sandy.agents.configure(() => ({ tools: [], skills: [] }));
         }
       `,
     });
@@ -138,10 +138,10 @@ describe("bb.agents.registerTool", () => {
 
   it("two tools from different plugins dispatch by name (design §9 regression)", async () => {
     const a = await writePlugin(workDir, {
-      name: "bb-plugin-tool-a",
+      name: "sandy-plugin-tool-a",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "alpha_tool",
             description: "Alpha",
             parameters: { type: "object" },
@@ -151,10 +151,10 @@ describe("bb.agents.registerTool", () => {
       `,
     });
     const b = await writePlugin(workDir, {
-      name: "bb-plugin-tool-b",
+      name: "sandy-plugin-tool-b",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "beta_tool",
             description: "Beta",
             parameters: { type: "object" },
@@ -197,7 +197,7 @@ describe("bb.agents.registerTool", () => {
 
   it("zod parameters: converted to JSON schema, validated per call, bad input is not a plugin error", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-zodded",
+      name: "sandy-plugin-zodded",
       serverSource: "export default function plugin() {}",
     });
     await service.installPath(rootDir);
@@ -273,7 +273,7 @@ describe("bb.agents.registerTool", () => {
 
   it("uses a foreign zod schema's own JSON Schema converter", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-foreign-zod",
+      name: "sandy-plugin-foreign-zod",
       serverSource: "export default function plugin() {}",
     });
     await service.installPath(rootDir);
@@ -310,7 +310,7 @@ describe("bb.agents.registerTool", () => {
 
   it("rejects recursive tool schemas before they reach a provider", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-schema-refs",
+      name: "sandy-plugin-schema-refs",
       serverSource: "export default function plugin() {}",
     });
     await service.installPath(rootDir);
@@ -363,7 +363,7 @@ describe("bb.agents.registerTool", () => {
 
   it("resolves one full row presentation per injected tool", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-presented-tools",
+      name: "sandy-plugin-presented-tools",
       serverSource: "export default function plugin() {}",
     });
     await service.installPath(rootDir);
@@ -417,10 +417,10 @@ describe("bb.agents.registerTool", () => {
 
   it("cross-plugin name collision drops the later registration with a status detail", async () => {
     const first = await writePlugin(workDir, {
-      name: "bb-plugin-collide-a",
+      name: "sandy-plugin-collide-a",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "shared_tool",
             description: "First owner",
             parameters: { type: "object" },
@@ -430,16 +430,16 @@ describe("bb.agents.registerTool", () => {
       `,
     });
     const second = await writePlugin(workDir, {
-      name: "bb-plugin-collide-b",
+      name: "sandy-plugin-collide-b",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "shared_tool",
             description: "Second owner",
             parameters: { type: "object" },
             execute: () => "from collide-b",
           });
-          bb.agents.registerTool({
+          sandy.agents.registerTool({
             name: "unique_tool",
             description: "Unrelated",
             parameters: { type: "object" },
@@ -466,10 +466,10 @@ describe("bb.agents.registerTool", () => {
 
   it("fails a plugin's load when its environment provider id is already registered", async () => {
     const first = await writePlugin(workDir, {
-      name: "bb-plugin-env-a",
+      name: "sandy-plugin-env-a",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.experimental_environments.register({
+        export default function plugin(sandy: any) {
+          sandy.experimental_environments.register({
             id: "shared-env",
             displayName: "Shared",
             description: "Create a shared workspace.",
@@ -480,10 +480,10 @@ describe("bb.agents.registerTool", () => {
       `,
     });
     const second = await writePlugin(workDir, {
-      name: "bb-plugin-env-b",
+      name: "sandy-plugin-env-b",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.experimental_environments.register({
+        export default function plugin(sandy: any) {
+          sandy.experimental_environments.register({
             id: "shared-env",
             displayName: "Shared again",
             description: "Create another shared workspace.",
@@ -507,10 +507,10 @@ describe("bb.agents.registerTool", () => {
       UPDATE_ENVIRONMENT_DIRECTORY_TOOL_NAME,
     );
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-shadower",
+      name: "sandy-plugin-shadower",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "update_environment_directory",
             description: "Shadow attempt",
             parameters: { type: "object" },
@@ -521,7 +521,7 @@ describe("bb.agents.registerTool", () => {
     });
     const entry = await service.installPath(rootDir);
     expect(entry.status).toBe("error");
-    expect(entry.statusDetail).toContain("built-in bb tool");
+    expect(entry.statusDetail).toContain("built-in sandy tool");
     expect(service.listAgentTools()).toEqual([]);
   });
 
@@ -542,10 +542,10 @@ describe("bb.agents.registerTool", () => {
     "rejects a registration built against SDK <0.4.16 that carries %s",
     async (field, message) => {
       const rootDir = await writePlugin(workDir, {
-        name: "bb-plugin-stale-field",
+        name: "sandy-plugin-stale-field",
         serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "stale_tool",
             description: "Built against an SDK before 0.4.16",
             ${field}: { pending: "Working", completed: "Worked" },
@@ -563,14 +563,14 @@ describe("bb.agents.registerTool", () => {
   );
 });
 
-describe("bb.agents.contributeInstructions", () => {
+describe("sandy.agents.contributeInstructions", () => {
   let db: DbConnection;
   let workDir: string;
   let service: PluginService;
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-instr-test-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-instr-test-"));
     service = createPluginService({
       aiServices: createAiServiceRegistry(),
       db,
@@ -595,11 +595,11 @@ describe("bb.agents.contributeInstructions", () => {
 
   it("rejects duplicate instruction providers within one factory execution", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-advisor",
+      name: "sandy-plugin-advisor",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.contributeInstructions(() => "first");
-          bb.agents.contributeInstructions(() => "second");
+        export default function plugin(sandy: any) {
+          sandy.agents.contributeInstructions(() => "first");
+          sandy.agents.contributeInstructions(() => "second");
         }
       `,
     });
@@ -613,18 +613,18 @@ describe("bb.agents.contributeInstructions", () => {
 
   it("two plugins each contribute one provider, ordered by plugin id", async () => {
     const zebra = await writePlugin(workDir, {
-      name: "bb-plugin-zebra",
+      name: "sandy-plugin-zebra",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.contributeInstructions(() => "from zebra");
+        export default function plugin(sandy: any) {
+          sandy.agents.contributeInstructions(() => "from zebra");
         }
       `,
     });
     const alpha = await writePlugin(workDir, {
-      name: "bb-plugin-alpha",
+      name: "sandy-plugin-alpha",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.contributeInstructions(() => "from alpha");
+        export default function plugin(sandy: any) {
+          sandy.agents.contributeInstructions(() => "from alpha");
         }
       `,
     });
@@ -640,10 +640,10 @@ describe("bb.agents.contributeInstructions", () => {
 
   it("reload without contributeInstructions clears the previous provider", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-transient",
+      name: "sandy-plugin-transient",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.contributeInstructions(() => "present");
+        export default function plugin(sandy: any) {
+          sandy.agents.contributeInstructions(() => "present");
         }
       `,
     });
@@ -665,7 +665,7 @@ describe("plugin tools reach thread runtime config", () => {
 
   beforeEach(async () => {
     harness = await createTestAppHarness();
-    pluginsDir = await mkdtemp(join(tmpdir(), "bb-plugin-tools-runtime-"));
+    pluginsDir = await mkdtemp(join(tmpdir(), "sandy-plugin-tools-runtime-"));
   });
 
   afterEach(async () => {
@@ -676,17 +676,17 @@ describe("plugin tools reach thread runtime config", () => {
 
   it("thread.start dynamicTools include plugin tools with per-tool instructions", async () => {
     const rootDir = await writePlugin(pluginsDir, {
-      name: "bb-plugin-tooldemo",
+      name: "sandy-plugin-tooldemo",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "demo_lookup",
             description: "Look up demo data",
             instructions: "Call demo_lookup before guessing demo data.",
             parameters: { type: "object", properties: { key: { type: "string" } } },
             execute: () => "demo",
           });
-          bb.agents.registerTool({
+          sandy.agents.registerTool({
             name: "quiet_tool",
             description: "No instructions on purpose",
             parameters: { type: "object" },
@@ -745,7 +745,7 @@ describe("plugin tools reach thread runtime config", () => {
     ).toMatchObject({ type: "object" });
     expect(command.instructions).toContain("update_environment_directory");
     expect(command.instructions).toContain(
-      'The following instructions come from the BB plugin "tooldemo" for its tool "demo_lookup":',
+      'The following instructions come from the SANDY plugin "tooldemo" for its tool "demo_lookup":',
     );
     expect(command.instructions).toContain(
       "Call demo_lookup before guessing demo data.",
@@ -755,15 +755,15 @@ describe("plugin tools reach thread runtime config", () => {
 
   it("resolves different conditional tools, skills, instructions, and context without rebuilding static registrations", async () => {
     const rootDir = await writePlugin(pluginsDir, {
-      name: "bb-plugin-conditional",
+      name: "sandy-plugin-conditional",
       serverSource: `
-        globalThis.__bbConditionalFactoryCount =
-          (globalThis.__bbConditionalFactoryCount ?? 0) + 1;
-        const factoryCount = globalThis.__bbConditionalFactoryCount;
+        globalThis.__sandyConditionalFactoryCount =
+          (globalThis.__sandyConditionalFactoryCount ?? 0) + 1;
+        const factoryCount = globalThis.__sandyConditionalFactoryCount;
         let configureCount = 0;
-        export default function plugin(bb: any) {
+        export default function plugin(sandy: any) {
           for (const name of ["alpha_tool", "beta_tool"]) {
-            bb.agents.registerTool({
+            sandy.agents.registerTool({
               name,
               description: name,
               instructions: "Static instructions for " + name,
@@ -771,7 +771,7 @@ describe("plugin tools reach thread runtime config", () => {
               execute: () => name,
             });
           }
-          bb.agents.configure((context: any) => {
+          sandy.agents.configure((context: any) => {
             configureCount += 1;
             if (
               context.origin.pluginId === "side-chat" &&
@@ -813,16 +813,16 @@ describe("plugin tools reach thread runtime config", () => {
       );
     }
     const brokenRoot = await writePlugin(pluginsDir, {
-      name: "bb-plugin-broken-conditional",
+      name: "sandy-plugin-broken-conditional",
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "broken_tool",
             description: "Must never leak from an invalid selection",
             parameters: { type: "object" },
             execute: () => "broken",
           });
-          bb.agents.configure((context: any) => {
+          sandy.agents.configure((context: any) => {
             if (context.provider.id === "claude-code") {
               throw new Error("conditional failure");
             }
@@ -1001,7 +1001,7 @@ describe("plugin tools reach thread runtime config", () => {
       sideCommand.injectedSkillSources.map((skill) => skill.name),
     ).not.toContain("beta-skill");
     expect(sideCommand.instructions).toContain(
-      'The following dynamic instructions come from the BB plugin "conditional":',
+      'The following dynamic instructions come from the SANDY plugin "conditional":',
     );
     expect(
       harness.pluginService.list().find((plugin) => plugin.id === "conditional")
@@ -1039,13 +1039,13 @@ describe("plugin tools reach thread runtime config", () => {
 describe("internal tool-call dispatch to plugin tools", () => {
   it("dispatches by name to plugin tools and keeps update_environment_directory working", async () => {
     await withTestHarness(async (harness) => {
-      const pluginsDir = await mkdtemp(join(tmpdir(), "bb-plugin-tools-wire-"));
+      const pluginsDir = await mkdtemp(join(tmpdir(), "sandy-plugin-tools-wire-"));
       try {
         const rootDir = await writePlugin(pluginsDir, {
-          name: "bb-plugin-wired",
+          name: "sandy-plugin-wired",
           serverSource: `
-            export default function plugin(bb: any) {
-              bb.agents.registerTool({
+            export default function plugin(sandy: any) {
+              sandy.agents.registerTool({
                 name: "echo_context",
                 description: "Echo params and call context",
                 parameters: { type: "object" },

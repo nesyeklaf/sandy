@@ -3,8 +3,10 @@ import type {
   ExperimentalComposerCommandSuggestion,
   ExperimentalComposerCommandSuggestionGroup,
   ExperimentalComposerCommandTrigger,
+  ExperimentalComposerMenuContribution,
+  ExperimentalComposerMenuItem,
   ExperimentalComposerMentionSuggestion,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { isImageAttachment } from "../attachments";
 import type { MentionTarget } from "../editor/composer-mentions";
 
@@ -25,9 +27,24 @@ export interface MenuMentionGroup {
   suggestions: readonly MenuMentionSuggestion[];
 }
 
+export interface PluginMenuSuggestion {
+  kind: "menu";
+  key: string;
+  contribution: ExperimentalComposerMenuContribution;
+  item: ExperimentalComposerMenuItem;
+  path: readonly string[];
+}
+
+export interface PluginMenuGroup {
+  key: string;
+  label: string;
+  suggestions: readonly PluginMenuSuggestion[];
+}
+
 export type TypeaheadSuggestion =
   | MenuMentionSuggestion
-  | ExperimentalComposerCommandSuggestion;
+  | ExperimentalComposerCommandSuggestion
+  | PluginMenuSuggestion;
 
 export type MentionMenuState =
   | { kind: "hint" }
@@ -35,7 +52,7 @@ export type MentionMenuState =
   | { kind: "error" }
   | {
       kind: "results";
-      groups: readonly MenuMentionGroup[];
+      groups: readonly (MenuMentionGroup | PluginMenuGroup)[];
       refreshing: boolean;
     };
 
@@ -44,7 +61,10 @@ export type CommandMenuState =
   | { kind: "error" }
   | {
       kind: "results";
-      groups: readonly ExperimentalComposerCommandSuggestionGroup[];
+      groups: readonly (
+        | ExperimentalComposerCommandSuggestionGroup
+        | PluginMenuGroup
+      )[];
       refreshing: boolean;
     };
 

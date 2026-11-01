@@ -29,7 +29,7 @@ import {
   installTestPluginRuntime,
   renderSlot,
   type PluginSdkTestFakes,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import {
   collapsedSidebarSectionIdsAtom,
   sidebarCollapsedMachinesAtom,

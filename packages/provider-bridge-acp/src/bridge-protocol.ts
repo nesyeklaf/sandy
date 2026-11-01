@@ -2,7 +2,7 @@ import {
   acpNativeReasoningSchema as acpBridgeNativeReasoningSchema,
   acpPermissionCliSchema as acpBridgePermissionCliSchema,
   acpReasoningCliSchema as acpBridgeReasoningCliSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   initializeParamsSchema,
   providerInstallationStatusParamsSchema,
@@ -16,7 +16,7 @@ import {
   threadStopParamsSchema as canonicalThreadStopParamsSchema,
   turnStartParamsSchema as canonicalTurnStartParamsSchema,
   turnSteerParamsSchema as canonicalTurnSteerParamsSchema,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import { z } from "zod";
 import { acpSessionUpdateSchema, acpStopReasonSchema } from "./wire.js";
 

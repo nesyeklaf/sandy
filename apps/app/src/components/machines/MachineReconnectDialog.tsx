@@ -1,14 +1,14 @@
 import { useEffect } from "react";
-import type { Host } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Host } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/dialog";
+import { Icon } from "@sandy/shared-ui/icon";
 import { MachineLaunchCommand } from "@/components/dialogs/AddMachineDialog";
 import { MachineStatusDot } from "@/components/machines/MachineStatusDot";
 import { useReconnectHost } from "@/hooks/mutations/host-mutations";

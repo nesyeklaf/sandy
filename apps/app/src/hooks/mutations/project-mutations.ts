@@ -5,7 +5,7 @@ import type {
   ReorderProjectRequest,
   UpdateProjectRequest,
   UploadedPromptAttachment,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { sdk } from "@/lib/sdk";
 import { registerLocalAttachmentPreview } from "@/lib/attachment-local-previews";
 import {

@@ -4,7 +4,7 @@ import {
   experimental_Icon as Icon,
   useRpc,
   type StandardSchemaV1InferOutput,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ function matchesQuery(agent: RegistryAgent, query: string): boolean {
 
 function agentNote(agent: RegistryAgent): string | null {
   if (agent.status === "built-in") {
-    return "bb already ships this agent as a provider.";
+    return "sandy already ships this agent as a provider.";
   }
   if (agent.status === "manual-install") {
     return "Ships only as a downloadable binary. Install it yourself, then add it under Custom agents with its command.";

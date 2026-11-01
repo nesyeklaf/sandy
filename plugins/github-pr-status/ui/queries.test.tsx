@@ -13,7 +13,7 @@ const keyedQuery = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@get-bb/plugin-sdk/app", () => ({
+vi.mock("@sandy-sdk/plugin-sdk/app", () => ({
   experimental_useRpcKeyedQuery: (options: { keys: readonly string[] }) => ({
     data: keyedQuery.data,
     error: null,
@@ -37,9 +37,9 @@ function row(state: PullRequest["state"]): EnvironmentPullRequest {
       number: 7,
       title: "Ship it",
       state,
-      url: "https://github.com/acme/bb/pull/7",
+      url: "https://github.com/acme/sandy/pull/7",
       baseRefName: "main",
-      headRefName: "bb/ship",
+      headRefName: "sandy/ship",
       updatedAt: "2026-10-22T00:00:00Z",
       autoMerge: false,
       inMergeQueue: false,

@@ -1,7 +1,7 @@
-import type { Host } from "@bb/domain";
-import type { SystemMachineProvider } from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+import type { Host } from "@sandy/domain";
+import type { SystemMachineProvider } from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 
 export interface MachineLifecycleAction {
   icon: IconName;

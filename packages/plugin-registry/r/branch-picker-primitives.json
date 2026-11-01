@@ -3,13 +3,13 @@
   "name": "branch-picker-primitives",
   "type": "registry:ui",
   "title": "branch-picker-primitives",
-  "description": "BB ui \"branch-picker-primitives\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"branch-picker-primitives\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/icon",
-    "@bb/input",
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/icon",
+    "@sandy/input",
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

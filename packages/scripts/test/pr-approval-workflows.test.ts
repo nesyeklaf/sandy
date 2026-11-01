@@ -50,9 +50,9 @@ it("keeps trusted automation pull requests open", ({ skip }) => {
       PR_ASSOCIATION: "NONE",
       EVENT_ACTION: "opened",
       PR_NUMBER: "123",
-      GITHUB_REPOSITORY: "get-bb/bb",
+      GITHUB_REPOSITORY: "nesyeklaf/sandy",
     });
-  for (const author of ["bb-slop-cop[bot]", "dependabot[bot]"]) {
+  for (const author of ["sandy-slop-cop[bot]", "dependabot[bot]"]) {
     const result = gate(author);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("--remove-label needs-approval");
@@ -82,32 +82,32 @@ it("closes personal fork pull requests that block maintainer edits", ({
       EVENT_ACTION: "opened",
       LINKED_ISSUES: "1",
       PR_NUMBER: "123",
-      GITHUB_REPOSITORY: "get-bb/bb",
+      GITHUB_REPOSITORY: "nesyeklaf/sandy",
       HEAD_REPO: headRepo,
       HEAD_OWNER_TYPE: ownerType,
       MAINTAINER_CAN_MODIFY: canModify,
     });
   for (const [headRepo, ownerType, canModify] of [
-    ["fork-author/bb", "User", "true"],
-    ["acme/bb", "Organization", "false"],
-    ["get-bb/bb", "Organization", "false"],
+    ["fork-author/sandy", "User", "true"],
+    ["acme/sandy", "Organization", "false"],
+    ["nesyeklaf/sandy", "Organization", "false"],
     ["", "", "false"],
   ]) {
     const result = gate("MEMBER", headRepo, ownerType, canModify);
     expect(result.status).toBe(0);
     expect(result.stdout).not.toContain("pr close");
   }
-  const blocked = gate("MEMBER", "fork-author/bb", "User", "false");
+  const blocked = gate("MEMBER", "fork-author/sandy", "User", "false");
   expect(blocked.stdout).toContain(
     '"Allow edits by maintainers" is turned off',
   );
   expect(blocked.stdout).toContain("pr close");
   expect(blocked.stdout).not.toContain("--add-label needs-approval");
-  const unapproved = gate("NONE", "fork-author/bb", "User", "true");
+  const unapproved = gate("NONE", "fork-author/sandy", "User", "true");
   expect(unapproved.stdout).toContain("Contributor approval");
   expect(unapproved.stdout).not.toContain("Maintainer edits");
   expect(unapproved.stdout).toContain("pr close");
-  const unapprovedBlocked = gate("NONE", "fork-author/bb", "User", "false");
+  const unapprovedBlocked = gate("NONE", "fork-author/sandy", "User", "false");
   expect(unapprovedBlocked.stdout).toContain(
     '"Allow edits by maintainers" is turned off',
   );
@@ -131,8 +131,8 @@ it("requires pull requests from outside the team to close an open issue", ({
       PR_STATE: "open",
       PR_NEEDS_ISSUE: "false",
       EVENT_ACTION: "opened",
-      GITHUB_REPOSITORY: "get-bb/bb",
-      HEAD_REPO: "fork-author/bb",
+      GITHUB_REPOSITORY: "nesyeklaf/sandy",
+      HEAD_REPO: "fork-author/sandy",
       HEAD_OWNER_TYPE: "User",
       MAINTAINER_CAN_MODIFY: "true",
       LINKED_ISSUES: "0",

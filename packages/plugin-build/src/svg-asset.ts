@@ -1,5 +1,5 @@
 import { SaxesParser, type SaxesTagNS } from "saxes";
-import { PLUGIN_ICON_MAX_BYTES } from "@bb/domain";
+import { PLUGIN_ICON_MAX_BYTES } from "@sandy/domain";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace";
@@ -179,7 +179,7 @@ function assertValidPluginSvg(
 
 export function assertValidPluginCompactIconSvg(
   bytes: Uint8Array,
-  label = "bb.branding.icon",
+  label = "sandy.branding.icon",
 ): void {
   assertValidPluginSvg(bytes, `manifest ${label}`, COMPACT_ICON_RULES);
 }
