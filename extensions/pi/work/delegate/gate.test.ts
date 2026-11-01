@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cliPolicySource, filePolicySource, hasDelegateMarker, installDelegateGate, installPiSubagentsBlock, piSubagentsGate, runSandyCli, toolCallGate } from "./gate.ts";
+import { cliPolicySource, filePolicySource, hasDelegateMarker, installDelegateGate, installPiSubagentsBlock, piSubagentsGate, toolCallGate } from "./gate.ts";
 import { policyHash } from "../../../sandy/work/delegate/shared/policy.ts";
 
 const dir = mkdtempSync(join(tmpdir(), "sandy-delegate-ext-"));
@@ -88,36 +88,6 @@ test("cliPolicySource: denied yields the deny-all policy without an ack; pending
 
   await assert.rejects(cliPolicySource("thr_x", { run: fakeSandy([{ status: "pending" }]).run, retryMs: 1, pendingTimeoutMs: 5 }).load(), /still pending/);
   await assert.rejects(cliPolicySource("thr_x", { run: fakeSandy([{ status: "ok", policy: cliPolicy, policyHash: "0".repeat(64), nonce: "n" }]).run }).load(), /malformed/);
-});
-
-// A fake sandy CLI process at SANDY_CLI: prints `stdout`, then `stderr`, then exits with `code`.
-const withFakeCli = async <T>(name: string, stdout: string, stderr: string, code: number, body: () => Promise<T>): Promise<T> => {
-  const path = file(name, `#!/usr/bin/env node\nprocess.stdout.write(${JSON.stringify(stdout)});\nprocess.stderr.write(${JSON.stringify(stderr)});\nprocess.exitCode = ${code};\n`);
-  chmodSync(path, 0o755);
-  const saved = process.env.SANDY_CLI;
-  process.env.SANDY_CLI = path;
-  try {
-    return await body();
-  } finally {
-    if (saved === undefined) delete process.env.SANDY_CLI;
-    else process.env.SANDY_CLI = saved;
-  }
-};
-
-// Windows, Node 24: the sandy CLI prints a plugin command's complete answer, then its process.exit aborts in
-// libuv (exit 0xC0000409, 127 under bash). Seen on seraphim with sandy 0.48.1 for every `sandy work ...` call.
-const LIBUV_ABORT = "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\\win\\async.c, line 76\r\n";
-
-test("runSandyCli: a JSON answer followed by the libuv teardown abort is the answer", async () => {
-  const answer = JSON.stringify({ status: "ok", nonce: "n" }) + "\n";
-  assert.equal(await withFakeCli("abort-json.mjs", answer, LIBUV_ABORT, 127, () => runSandyCli(["work", "delegate", "policy"])), answer);
-});
-
-test("runSandyCli: a failure stays a failure: nonzero exit without the abort, or the abort without a JSON answer", async () => {
-  await assert.rejects(withFakeCli("fail-json.mjs", "{}\n", "refused\n", 1, () => runSandyCli(["x"])), /refused/);
-  await assert.rejects(withFakeCli("abort-empty.mjs", "", "nonce was already acked\n" + LIBUV_ABORT, 127, () => runSandyCli(["x"])), /already acked/);
-  await assert.rejects(withFakeCli("abort-text.mjs", "partial {", LIBUV_ABORT, 127, () => runSandyCli(["x"])), /UV_HANDLE_CLOSING/);
-  assert.equal(await withFakeCli("ok.mjs", "{}\n", "", 0, () => runSandyCli(["x"])), "{}\n");
 });
 
 // A fake `sandy` whose first `failPolicy` policy calls and `failAck` ack calls throw, as while the plugin reloads.

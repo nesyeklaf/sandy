@@ -1,10 +1,10 @@
 import { statSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { ExtensionAPI, ExecResult } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 // Relative import across packages (docs/decisions.md): track-guard and pi/autopilot are installed from one checkout.
 import { LEASE_MARKER, LEASE_METERED, latestMarker, unreportedTickets, usageForTicket, type SessionEntryLike } from '../../autopilot/usage.ts';
 import { decide, parsePolicy, stateDir, type Env, type Policy, type PolicyError } from './policy.ts';
-import { workCliArgs } from '../../sandy-cli.ts';
+import { sandyCli, workCliArgs, type RunSandy } from '../../sandy-cli.ts';
 
 type Cached = { key: string; policy: Policy | PolicyError };
 
@@ -35,8 +35,8 @@ export default function stageGuardExtension(
   pi: ExtensionAPI,
   options: {
     env?: Env;
-    /** Runs the sandy CLI for the late report; pi.exec by default. */
-    exec?: (command: string, args: string[]) => Promise<ExecResult>;
+    /** Runs the sandy CLI for the late report; the shared runner (SANDY_CLI or `sandy`) by default. */
+    sandy?: RunSandy;
     /** Where a failed report is noted; stderr by default. */
     log?: (message: string) => void;
   } = {},
@@ -104,13 +104,13 @@ export default function stageGuardExtension(
   function report(marked: string, usage: ReturnType<typeof usageForTicket>): void {
     if (usage === null) return;
     const env = options.env ?? process.env;
-    const exec = options.exec ?? ((command, args) => pi.exec(command, args));
+    const sandy = options.sandy ?? sandyCli({ env });
     const log = options.log ?? ((message: string) => console.error(message));
     const args = workCliArgs('track', 'usage', '--ticket', marked, '--usage', JSON.stringify(usage));
     const threadId = env.SANDY_THREAD_ID;
     if (threadId) args.push('--thread', threadId);
-    reports = reports.then(() => exec(env.SANDY_CLI || 'sandy', args)).then(
-      (result) => { if (result.code !== 0) log(`track-guard: usage report for ${marked} failed: ${(result.stderr || result.stdout).trim().split('\n')[0]}`); },
+    reports = reports.then(() => sandy(args)).then(
+      () => {},
       (e: unknown) => log(`track-guard: usage report for ${marked} failed: ${(e as Error).message}`),
     );
   }

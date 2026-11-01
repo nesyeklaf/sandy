@@ -8,26 +8,12 @@
  * the track to another stage: once its lease ends (advanced, forced, switched, released, expired, aborted) every call
  * rejects with LeaseLost, and the plugin launches or tells whoever drives next.
  */
-import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import type { Env, StageDriver } from "./policy.ts";
 import type { LeaseUsage } from "./usage.ts";
-import { workCliArgs } from "../sandy-cli.ts";
+import { sandyCli, workCliArgs, type RunSandy } from "../sandy-cli.ts";
 
-/** Runs `sandy <args>` and resolves its stdout; rejects with stderr on a non-zero exit. */
-export type RunSandy = (args: string[], signal?: AbortSignal) => Promise<string>;
-
-export function runSandy(env: Env): RunSandy {
-	const bin = env.SANDY_CLI || "sandy";
-	return (args, signal) =>
-		new Promise((resolve, reject) => {
-			execFile(bin, args, { signal, timeout: 120_000, maxBuffer: 4 * 1024 * 1024 }, (error, stdout, stderr) => {
-				if (!error) return resolve(stdout);
-				const detail = String(stderr).trim().split("\n")[0] || error.message;
-				reject(error.name === "AbortError" ? error : new Error(`${bin} ${args.slice(0, 3).join(" ")}: ${detail}`));
-			});
-		});
-}
+export type { RunSandy };
 
 /** sandy/work/track/run.ts StationView as the CLI returns it (JSON); the client does not re-validate driver semantics. */
 export type LeaseStation = {
@@ -119,7 +105,7 @@ const unexpected = (command: string, reply: Reply) => new Error(`sandy work trac
 const refused = (command: string, reasons: string[]) => new Error(`sandy work track drive ${command} refused: ${reasons.join("; ")}`);
 
 /** The thread's track client, or null outside a sandy thread (no SANDY_THREAD_ID). */
-export function createTrackClient(env: Env = process.env, sandy: RunSandy = runSandy(env), options: TrackClientOptions = {}): TrackClient | null {
+export function createTrackClient(env: Env = process.env, sandy: RunSandy = sandyCli({ env, timeoutMs: 120_000 }), options: TrackClientOptions = {}): TrackClient | null {
 	if (!env.SANDY_THREAD_ID) return null;
 	const sleep = options.sleep ?? sleepMs;
 	const pollMs = options.pollMs ?? 2_000;

@@ -12,18 +12,14 @@
  * /autopilot resume (autopilots/resume.ts) continues the newest unfinished plan-run of this session after pi reloaded or
  * restarted in the middle of it; the run's state lives in session entries, not in the autopilot module (docs/resume.md).
  */
-import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { promisify } from "node:util";
 import { installSession, type Session, type SessionBinding } from "./session.ts";
 import { createTrackClient, LeaseLost, type LeaseTrack, type TrackClient } from "./track.ts";
 import { LEASE_MARKER, usageForTicket, type SessionEntryLike } from "./usage.ts";
-import { workCliArgs } from "../sandy-cli.ts";
-
-const run = promisify(execFile);
+import { sandyCli, workCliArgs } from "../sandy-cli.ts";
 
 function locate(cwd: string, name: string): string {
 	if (!/^[a-z][a-z0-9-]*$/.test(name)) throw new Error(`bad autopilot name ${name}`);
@@ -39,7 +35,7 @@ async function runAutopilot(cwd: string, name: string, args: unknown, api: unkno
 }
 
 async function report(value: unknown): Promise<void> {
-	await run("sandy", workCliArgs("workflows-plus", "result", "--value", JSON.stringify(value)), { timeout: 60_000 });
+	await sandyCli({ timeoutMs: 60_000 })(workCliArgs("workflows-plus", "result", "--value", JSON.stringify(value)));
 }
 
 const RETRY_DELAYS_MS = [2_000, 10_000];
