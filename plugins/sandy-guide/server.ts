@@ -34,13 +34,6 @@ export default async function plugin(sandy: SandyPluginApi) {
       description: "Create and improve SANDY skills.",
       default: true,
     },
-    submitPlugin: {
-      type: "boolean",
-      label: "Plugin submission skill",
-      description:
-        "Prepare and submit a SANDY plugin to the Community marketplace.",
-      default: true,
-    },
   });
   let current = await settings.get();
   settings.onChange((next) => {
@@ -56,7 +49,6 @@ export default async function plugin(sandy: SandyPluginApi) {
           ...(current.sandyCli ? ["sandy-cli"] : []),
           ...(current.pluginAuthoring ? ["sandy-plugin-authoring"] : []),
           ...(current.skillCreator ? ["skill-creator"] : []),
-          ...(current.submitPlugin ? ["submit-a-plugin"] : []),
         ]
       : [],
   }));

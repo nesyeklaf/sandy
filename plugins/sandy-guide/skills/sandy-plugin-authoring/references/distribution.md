@@ -210,10 +210,10 @@ one text in two lengths. Whenever you change `sandy.description`, or add or remo
 a surface, update this file in the same change so the lead paragraph and the
 Overview section never disagree.
 
-The `submit-a-plugin` skill copies the file into the marketplace repository as
-`overview/<plugin-id>.md` and references it from the entry with
-`"overview": "./overview/<plugin-id>.md"`. A bundled SANDY plugin uses the same
-file, and the sandy-official generator folds it into the built catalog.
+The file goes into a marketplace repository as `overview/<plugin-id>.md` and the entry
+references it with `"overview": "./overview/<plugin-id>.md"`. A bundled SANDY
+plugin uses the same file, and the sandy-official generator folds it into the
+built catalog.
 
 Follow these rules. Marketplace CI rejects a file that breaks one.
 

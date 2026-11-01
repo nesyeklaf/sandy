@@ -87,7 +87,7 @@ Skills (.sandy/skills/):
 SANDY guide plugin:
 
   The enabled-by-default SANDY guide plugin owns the SANDY introduction and the
-  sandy-cli, sandy-plugin-authoring, skill-creator, and submit-a-plugin skills. Settings → Installed
+  sandy-cli, sandy-plugin-authoring, and skill-creator skills. Settings → Installed
   plugins → SANDY guide exposes introduction, a master skills switch, and one
   switch per skill. All default to true. Use:
 
@@ -96,7 +96,6 @@ SANDY guide plugin:
     sandy plugin config sandy-guide set sandyCli false
     sandy plugin config sandy-guide set pluginAuthoring false
     sandy plugin config sandy-guide set skillCreator false
-    sandy plugin config sandy-guide set submitPlugin false
 
   Changes apply when agent configuration is next assembled. They do not erase
   existing conversation text or disable independently installed copies.

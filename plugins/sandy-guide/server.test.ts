@@ -64,11 +64,7 @@ it("keeps the introduction and skill switches independent across reloads", async
       pluginAuthoring: false,
     });
     expect(instructions()).toBeNull();
-    expect(await skills()).toEqual([
-      "sandy-cli",
-      "skill-creator",
-      "submit-a-plugin",
-    ]);
+    expect(await skills()).toEqual(["sandy-cli", "skill-creator"]);
     await harness.behavior.setSettings({ skills: false });
     expect(await skills()).toEqual([]);
     await harness.lifecycle.reload(plugin);
@@ -76,11 +72,7 @@ it("keeps the introduction and skill switches independent across reloads", async
     expect(await skills()).toEqual([]);
     await harness.behavior.setSettings({ introduction: true, skills: true });
     expect(instructions()).toContain("sandy status");
-    expect(await skills()).toEqual([
-      "sandy-cli",
-      "skill-creator",
-      "submit-a-plugin",
-    ]);
+    expect(await skills()).toEqual(["sandy-cli", "skill-creator"]);
   } finally {
     await harness.lifecycle.dispose();
   }
@@ -88,10 +80,9 @@ it("keeps the introduction and skill switches independent across reloads", async
 
 describe("individual skill selection", () => {
   it.each([
-    ["sandyCli", ["sandy-plugin-authoring", "skill-creator", "submit-a-plugin"]],
-    ["pluginAuthoring", ["sandy-cli", "skill-creator", "submit-a-plugin"]],
-    ["skillCreator", ["sandy-cli", "sandy-plugin-authoring", "submit-a-plugin"]],
-    ["submitPlugin", ["sandy-cli", "sandy-plugin-authoring", "skill-creator"]],
+    ["sandyCli", ["sandy-plugin-authoring", "skill-creator"]],
+    ["pluginAuthoring", ["sandy-cli", "skill-creator"]],
+    ["skillCreator", ["sandy-cli", "sandy-plugin-authoring"]],
   ])("disables %s", async (key, expected) => {
     const { sandy, harness } = createFakePluginHost({
       pluginId: "sandy-guide",

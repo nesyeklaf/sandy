@@ -177,7 +177,7 @@ export function SkillProvenanceTooltip({
         className="flex size-3.5 shrink-0 items-center justify-center"
       >
         {providerId === null ? (
-          <SandyLogo className="size-3.5 brightness-0 invert" />
+          <SandyLogo glyph className="size-3.5 brightness-0 invert" />
         ) : (
           <ProviderLogo
             providerId={providerId}
