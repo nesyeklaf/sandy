@@ -1,0 +1,11 @@
+d = Load("data/reconcile/billing-customers.json")
+total = sum(d.parts.map(p => p.value))
+both = d.parts.find(p => p.id == "both").value
+neither = d.parts.find(p => p.id == "neither").value
+Card("Which customers are billed where?", [
+  Text("**" + fmt(total) + "** customers in the " + d.universe.name + ", sorted by which billing system holds them."),
+  SegmentedBar(d.parts, unit: "customers"),
+  Text("**" + both + "** are in both systems and **" + neither + "** in neither. The reason for those " + neither + " has not been looked into yet."),
+  Table(["Source", "Counts", "As of", "Its own number", "Distinct customers"], d.sources.map(s => [s.name, s.counts, s.asOf, s.own, fmt(s.distinct)])),
+  Callout(d.caveats.join("\n\n"), tone: "warn", title: "Not comparable")
+])

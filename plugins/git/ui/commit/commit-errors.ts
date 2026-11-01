@@ -1,4 +1,4 @@
-import { lifecycleApiErrorSchema } from "@bb/server-contract";
+import { lifecycleApiErrorSchema } from "@sandy/server-contract";
 
 export const COMMIT_FAILED_TITLE = "Commit failed";
 const FALLBACK_MESSAGE = "Failed to start git action";

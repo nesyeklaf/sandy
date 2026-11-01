@@ -9,9 +9,9 @@ import {
   upsertInstalledPlugin,
   type DbConnection,
   type PluginSourceIntent,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { PLUGIN_CATALOG_CATEGORIES } from "@bb/domain";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { PLUGIN_CATALOG_CATEGORIES } from "@sandy/domain";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPluginCatalogService } from "../../../src/services/plugin-catalog/plugin-catalog-service.js";
 import {
@@ -90,7 +90,7 @@ describe("plugin catalog service", () => {
     db = createMigratedConnection();
     installedNames = [];
     installedCatalogEntries = [];
-    dataDir = await mkdtemp(join(tmpdir(), "bb-catalog-data-"));
+    dataDir = await mkdtemp(join(tmpdir(), "sandy-catalog-data-"));
   });
 
   afterEach(async () => {
@@ -134,7 +134,7 @@ describe("plugin catalog service", () => {
       source: `builtin:${args.name}`,
       provenance: {
         kind: "catalog",
-        marketplace: "bb-official",
+        marketplace: "sandy-official",
         entryId: args.name,
       },
       sourceIntent: { kind: "builtin", name: args.name },
@@ -195,14 +195,14 @@ describe("plugin catalog service", () => {
       category: "File Viewers & Editors",
       screenshots: [],
       collections: [
-        { id: "bb-official", rank: OFFICIAL_ORDER.indexOf("simple-notes") },
+        { id: "sandy-official", rank: OFFICIAL_ORDER.indexOf("simple-notes") },
       ],
       source: "builtin:docs",
-      marketplace: "bb-official",
-      marketplaceDisplayName: "BB Official",
-      publisherKey: "bb-official",
-      publisherLabel: "BB Official",
-      author: { name: "BB", url: null },
+      marketplace: "sandy-official",
+      marketplaceDisplayName: "SANDY Official",
+      publisherKey: "sandy-official",
+      publisherLabel: "SANDY Official",
+      author: { name: "SANDY", url: null },
       installed: false,
       installedByDefault: false,
       compatible: true,
@@ -218,8 +218,8 @@ describe("plugin catalog service", () => {
     );
     expect(catalog.collections()).toEqual([
       {
-        id: "bb-official",
-        displayName: "BB Official",
+        id: "sandy-official",
+        displayName: "SANDY Official",
         pluginIds: OFFICIAL_ORDER,
       },
     ]);
@@ -262,7 +262,7 @@ describe("plugin catalog service", () => {
   });
 
   it("drops entries whose bundled manifest is unreadable", async () => {
-    const missingRoot = await mkdtemp(join(tmpdir(), "bb-missing-plugin-"));
+    const missingRoot = await mkdtemp(join(tmpdir(), "sandy-missing-plugin-"));
     await rm(missingRoot, { recursive: true, force: true });
     const warnings: string[] = [];
     const registrations = listBundledPluginRegistrations();
@@ -308,17 +308,17 @@ describe("plugin catalog service", () => {
       (entry) => entry.entryId === withGlyph.name,
     );
     expect(svgEntry?.icon?.startsWith("./")).toBe(true);
-    const icon = await catalog.icon("bb-official", withSvg.name);
+    const icon = await catalog.icon("sandy-official", withSvg.name);
     expect(icon?.contentType).toBe("image/svg+xml");
     expect(svgEntry?.iconUrl).toBe(
-      `/api/v1/plugin-catalog/icons/bb-official/${withSvg.name}?h=${icon?.hash}`,
+      `/api/v1/plugin-catalog/icons/sandy-official/${withSvg.name}?h=${icon?.hash}`,
     );
     expect(new TextDecoder().decode(icon?.bytes)).toContain("<svg");
     expect(svgEntry?.iconTinted).toBe(true);
 
     expect(glyphEntry?.iconUrl).toBeNull();
     expect(glyphEntry?.iconTinted).toBe(false);
-    expect(await catalog.icon("bb-official", withGlyph.name)).toBeUndefined();
+    expect(await catalog.icon("sandy-official", withGlyph.name)).toBeUndefined();
   });
 
   describe("marketplace rows", () => {
@@ -352,8 +352,8 @@ describe("plugin catalog service", () => {
       expect((await catalog.search("widgets"))[0]?.collections).toEqual([]);
       expect(catalog.collections()).toEqual([
         {
-          id: "bb-official",
-          displayName: "BB Official",
+          id: "sandy-official",
+          displayName: "SANDY Official",
           pluginIds: OFFICIAL_ORDER,
         },
       ]);
@@ -438,7 +438,7 @@ describe("plugin catalog service", () => {
 
     it("converts plugins from a leftover remote marketplace to direct installs and deletes its row", () => {
       upsertPluginMarketplace(db, {
-        name: "bb-community",
+        name: "sandy-community",
         sourceKind: "https",
         manifestUrl: "https://marketplace.test/marketplace.json",
         sourceGitRef: null,
@@ -451,15 +451,15 @@ describe("plugin catalog service", () => {
       });
       upsertInstalledPlugin(db, {
         id: "thread-hover-cards",
-        source: "git:https://github.com/brsbl/bb-plugins.git@main",
+        source: "git:https://github.com/brsbl/sandy-plugins.git@main",
         provenance: {
           kind: "catalog",
-          marketplace: "bb-community",
+          marketplace: "sandy-community",
           entryId: "thread-hover-cards",
         },
         sourceIntent: {
           kind: "git",
-          url: "https://github.com/brsbl/bb-plugins.git",
+          url: "https://github.com/brsbl/sandy-plugins.git",
           subdirectory: null,
           selector: { kind: "ref", ref: "main", refKind: "branch" },
         },
@@ -479,7 +479,7 @@ describe("plugin catalog service", () => {
 
       service();
 
-      expect(getPluginMarketplace(db, "bb-community")).toBeUndefined();
+      expect(getPluginMarketplace(db, "sandy-community")).toBeUndefined();
       expect(getInstalledPlugin(db, "thread-hover-cards")).toMatchObject({
         provenance: "direct",
         catalogMarketplaceName: null,
@@ -502,7 +502,7 @@ describe("plugin catalog service", () => {
       icon: "ZoomIn",
       source: {
         git: {
-          url: "https://github.com/brsbl/bb-plugins.git",
+          url: "https://github.com/brsbl/sandy-plugins.git",
           ref: "30f91fd977ba1ce60532af27a68534464fb62516",
         },
       },
@@ -513,7 +513,7 @@ describe("plugin catalog service", () => {
       upsertInstalledPlugin(db, {
         id: "hover-cards",
         source:
-          "git:https://github.com/brsbl/bb-plugins.git@30f91fd977ba1ce60532af27a68534464fb62516",
+          "git:https://github.com/brsbl/sandy-plugins.git@30f91fd977ba1ce60532af27a68534464fb62516",
         provenance: {
           kind: "catalog",
           marketplace: "acme-plugins",
@@ -521,7 +521,7 @@ describe("plugin catalog service", () => {
         },
         sourceIntent: {
           kind: "git",
-          url: "https://github.com/brsbl/bb-plugins.git",
+          url: "https://github.com/brsbl/sandy-plugins.git",
           subdirectory: null,
           selector: {
             kind: "ref",
@@ -573,10 +573,10 @@ describe("plugin catalog service", () => {
       },
       {
         name: "the entry's git repository",
-        source: "git:https://github.com/brsbl/bb-plugins@main",
+        source: "git:https://github.com/brsbl/sandy-plugins@main",
         sourceIntent: {
           kind: "git",
-          url: "https://github.com/brsbl/bb-plugins",
+          url: "https://github.com/brsbl/sandy-plugins",
           subdirectory: null,
           selector: { kind: "ref", ref: "main", refKind: "branch" },
         },

@@ -4,13 +4,13 @@ import type {
   ComposerPlusMenuItem,
   ComposerView,
   PluginComposerApi,
-} from "@get-bb/plugin-sdk";
-import { Button } from "@bb/shared-ui/button";
-import { COARSE_POINTER_PROMPT_ICON_ACTION_BUTTON_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { DropdownMenuItem } from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
+} from "@sandy-sdk/plugin-sdk";
+import { Button } from "@sandy/shared-ui/button";
+import { COARSE_POINTER_PROMPT_ICON_ACTION_BUTTON_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { DropdownMenuItem } from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
 import { appToast } from "@/components/ui/app-toast";
 import {
   recordPluginComposerActionUse,

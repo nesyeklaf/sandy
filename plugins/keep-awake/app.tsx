@@ -3,7 +3,7 @@ import {
   definePluginApp,
   useRpc,
   type StandardSchemaV1InferOutput,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -148,7 +148,7 @@ function KeepAwakeSettings() {
             Prevent idle sleep
           </h3>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Keep selected Macs awake while bb is running. Closing the lid or
+            Keep selected Macs awake while sandy is running. Closing the lid or
             choosing Sleep still sleeps the Mac.
           </p>
         </div>

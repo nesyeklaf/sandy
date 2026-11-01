@@ -44,10 +44,10 @@ import type { SidebarThread } from "../model/sidebar-thread.js";
 import { toast } from "sonner";
 import {
   experimental_useArchiveEnvironmentThreads,
-  useBbNavigate,
+  useSandyNavigate,
   useEnvironmentProviders,
   useSdk,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   findEnvironmentDisplayProvider,
   getEnvironmentLabelIconName,
@@ -960,7 +960,7 @@ const EnvironmentThreadGroupRow = memo(function EnvironmentThreadGroupRow({
           nodeDepth: nodeDepth - 1,
         })
       : undefined;
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const sectionWhenUnpinned = nodes.every(
     (node) => node.thread.sectionId === representativeThread.sectionId,
   )
@@ -2290,7 +2290,7 @@ function ProjectRowComponent({
       >
         <ConfirmDeleteDialogContent
           title={`Remove ${project.name}?`}
-          description="The project and its threads are removed from bb. This cannot be undone."
+          description="The project and its threads are removed from sandy. This cannot be undone."
           confirmLabel="Remove project"
           pending={isRemovePending}
           onConfirm={confirmRemove}

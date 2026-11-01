@@ -14,7 +14,7 @@ const stateSchema = z.object({
   schemes: applicationLinkApprovalsSchema,
 });
 export const APPLICATION_LINK_APPROVALS_STORAGE_KEY =
-  "bb.applicationLinkApprovals.v1";
+  "sandy.applicationLinkApprovals.v1";
 
 export function createApplicationLinkApprovals(storage: {
   read(): string | null;

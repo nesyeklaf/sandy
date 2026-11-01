@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { registerDesktopAttentionIpc } from "../src/desktop-attention.js";
-import { BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL } from "../src/desktop-window-command-ipc.js";
+import { SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL } from "../src/desktop-window-command-ipc.js";
 
 const mock = vi.hoisted(() => {
   const windows: {
@@ -56,7 +56,7 @@ function makeWindow(id: number, origin = "http://localhost:3000") {
 }
 function report(index: number, payload: unknown, mainFrame = true) {
   const sender = mock.windows[index]!.webContents;
-  mock.handlers.get(BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL)?.(
+  mock.handlers.get(SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL)?.(
     { sender, senderFrame: mainFrame ? sender.mainFrame : {} },
     payload,
   );
@@ -107,7 +107,7 @@ it.each(["darwin", "linux", "win32"] as const)(
     report(0, attention([], []), false);
     expect(badge()).toBe(expected(2, true));
     const frame = {};
-    mock.handlers.get(BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL)?.(
+    mock.handlers.get(SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL)?.(
       { sender: { id: 99, mainFrame: frame }, senderFrame: frame },
       attention(["untrusted"], []),
     );

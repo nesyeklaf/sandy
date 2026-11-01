@@ -55,12 +55,12 @@ export function tallyCliErrors(
 export function registerDiagnosticsCommands(program: Command): void {
   const diagnostics = program
     .command("diagnostics")
-    .description("Inspect local bb CLI diagnostics");
+    .description("Inspect local sandy CLI diagnostics");
 
   diagnostics
     .command("cli-errors")
     .description(
-      "Tally failed bb invocations recorded on this machine, most frequent first (records the command path, error code, and the unknown command or flag; never argument values)",
+      "Tally failed sandy invocations recorded on this machine, most frequent first (records the command path, error code, and the unknown command or flag; never argument values)",
     )
     .option(
       "--since <duration>",
@@ -106,10 +106,10 @@ export function registerDiagnosticsCommands(program: Command): void {
           return;
         }
         if (!isCliErrorLogEnabled()) {
-          console.log("Recording is off (BB_CLI_ERROR_LOG=0).");
+          console.log("Recording is off (SANDY_CLI_ERROR_LOG=0).");
         }
         if (rows.length === 0) {
-          console.log(`No failed bb invocations recorded in ${logPath}`);
+          console.log(`No failed sandy invocations recorded in ${logPath}`);
           return;
         }
         const tableRows = rows.map((row) => [

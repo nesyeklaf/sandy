@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ExperimentalSidebarHeaderProps } from "@get-bb/plugin-sdk";
+import type { ExperimentalSidebarHeaderProps } from "@sandy-sdk/plugin-sdk";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import type { ExperimentalSidebarNavigationSlot } from "@/lib/plugin-slots";
@@ -88,7 +88,7 @@ afterEach(() => {
 });
 
 describe("SidebarNavigationHeader", () => {
-  it("leaves the header to bb when the navigation has no header", () => {
+  it("leaves the header to sandy when the navigation has no header", () => {
     renderHeader(navigationSlot());
 
     expect(screen.queryByTestId("sidebar-header-slot")).toBeNull();
@@ -152,7 +152,7 @@ describe("SidebarNavigationHeader", () => {
     expect(getNotifications()).toEqual([
       expect.objectContaining({
         description:
-          "Garden icons (garden) stopped working, so bb drew the Rail header instead.",
+          "Garden icons (garden) stopped working, so sandy drew the Rail header instead.",
       }),
     ]);
   });

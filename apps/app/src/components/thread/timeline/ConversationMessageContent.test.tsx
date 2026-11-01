@@ -2,7 +2,7 @@
 
 import { LazyMarkdownHtml } from "@/components/ui/lazy-markdown-html";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { ThreadListEntry } from "@bb/domain";
+import type { ThreadListEntry } from "@sandy/domain";
 import { beforeAll, afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { ThreadTitleMentionResourcesProvider } from "@/components/thread/ThreadTitleMentions";
@@ -12,9 +12,9 @@ import {
   type MessageDirectiveRegistry,
 } from "@/components/ui/markdown-message-directives";
 import { ConversationMessageContent } from "./ConversationMessageContent";
-import { USER_MESSAGE_CHAR_CAP } from "@bb/client-core";
+import { USER_MESSAGE_CHAR_CAP } from "@sandy/client-core";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import { makeThreadListEntry as makeThreadListEntryFixture } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry as makeThreadListEntryFixture } from "@sandy/test-helpers/domain-fixtures";
 
 beforeAll(() => LazyMarkdownHtml.preload());
 
@@ -504,7 +504,7 @@ describe("ConversationMessageContent automation messages", () => {
             systemMessageKind="unlabeled"
             systemMessageSubject={null}
             text={
-              "[bb automation due:auto_zto0dtbcxme]\n\nWeekday unread digest.\n\nSearch Gmail for AUTOMATION_PROMPT_TAIL."
+              "[sandy automation due:auto_zto0dtbcxme]\n\nWeekday unread digest.\n\nSearch Gmail for AUTOMATION_PROMPT_TAIL."
             }
             projectId="proj_automation"
             timestamp={0}
@@ -519,7 +519,7 @@ describe("ConversationMessageContent automation messages", () => {
       </MemoryRouter>,
     );
 
-    expect(container.textContent).not.toContain("[bb automation due:");
+    expect(container.textContent).not.toContain("[sandy automation due:");
     expect(
       screen.getByRole("link", { name: "Automation" }).getAttribute("href"),
     ).toBe("/plugins/automations/automations/proj_automation/auto_zto0dtbcxme");
@@ -532,7 +532,7 @@ describe("ConversationMessageContent automation messages", () => {
     fireEvent.click(screen.getByRole("button", { name: /Automation/u }));
 
     expect(container.textContent).toContain("AUTOMATION_PROMPT_TAIL");
-    expect(container.textContent).not.toContain("[bb automation due:");
+    expect(container.textContent).not.toContain("[sandy automation due:");
   });
 });
 
@@ -552,7 +552,7 @@ describe("ConversationMessageContent undelivered automation messages", () => {
             systemMessageKind="unlabeled"
             systemMessageSubject={null}
             text={
-              "[bb automation due:auto_zto0dtbcxme]\n\nWeekday unread digest."
+              "[sandy automation due:auto_zto0dtbcxme]\n\nWeekday unread digest."
             }
             timestamp={0}
             threadId="thr_automation"

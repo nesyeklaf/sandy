@@ -4,11 +4,11 @@ import {
   experimental_sanitizeInheritedChildProcessEnv as sanitizeInheritedChildProcessEnv,
   experimental_spawnPortableOutputProcess as spawnPortableOutputProcess,
   type ExperimentalVcsProcessPriority,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import {
   experimental_killPortableProcess as killPortableProcess,
   experimental_spawnPortableProcess as spawnPortableProcess,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   workspaceResolutionFailureCodeSchema,
   type DefaultBranchRelation,

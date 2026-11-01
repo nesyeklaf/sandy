@@ -1,7 +1,7 @@
 import type {
   TimelineConversationAttachments,
   TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { useEffect } from "react";
 import { setPluginSlotRegistrations, removePluginSlotRegistrations } from "@/lib/plugin-slots";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";

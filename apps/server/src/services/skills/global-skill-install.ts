@@ -1,13 +1,13 @@
-import { listHosts, listNonDestroyedHostsByIds } from "@bb/db";
+import { listHosts, listNonDestroyedHostsByIds } from "@sandy/db";
 import type {
   CliSkillMachineStatus,
   SystemCliSkillsStatusResponse,
   SystemInstallCliSkillsResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   HostGlobalSkillsStatusResult,
   HostInstallGlobalSkill,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import { ApiError } from "../../errors.js";
 import type { AppDeps } from "../../types.js";
@@ -17,7 +17,7 @@ import {
 } from "../hosts/online-rpc.js";
 import { resolveServerOwnedSkillCatalogEntries } from "./injected-skills.js";
 
-const GLOBAL_CLI_SKILL_NAMES: readonly string[] = ["bb-cli"];
+const GLOBAL_CLI_SKILL_NAMES: readonly string[] = ["sandy-cli"];
 
 const STATUS_TIMEOUT_MS = 5_000;
 
@@ -125,7 +125,7 @@ export async function readGlobalCliSkillStatus(
       } catch (error) {
         deps.logger.debug(
           { hostId: host.id, err: error },
-          "Could not read the bb CLI skill status from a machine",
+          "Could not read the sandy CLI skill status from a machine",
         );
         return { ...base, status: "unknown" as const };
       }
@@ -160,7 +160,7 @@ export async function installGlobalCliSkills(
     throw new ApiError(
       500,
       "cli_skill_unavailable",
-      "The built-in bb CLI skill is unavailable on this server",
+      "The built-in sandy CLI skill is unavailable on this server",
     );
   }
 
@@ -181,7 +181,7 @@ export async function installGlobalCliSkills(
       } catch (error) {
         deps.logger.warn(
           { hostId: host.id, err: error },
-          "Failed to install the bb CLI skills on a machine",
+          "Failed to install the sandy CLI skills on a machine",
         );
         return {
           ok: false as const,

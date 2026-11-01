@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please read [docs/filing-issues.md](https://github.com/get-bb/bb/blob/main/docs/filing-issues.md) first. Short and precise beats long and vague.
+        Please read [docs/filing-issues.md](https://github.com/nesyeklaf/sandy/blob/main/docs/filing-issues.md) first. Short and precise beats long and vague.
   - type: textarea
     id: summary
     attributes:
@@ -17,11 +17,11 @@ body:
     id: environment
     attributes:
       label: Versions and environment
-      description: bb version and install method (desktop app, npx, install.sh, source commit); OS; Node if from source; provider + provider CLI version if an agent is involved; anything unusual (remote machine, Connect, worktree env, custom ports/data dir).
+      description: sandy version and install method (desktop app, npx, install.sh, source commit); OS; Node if from source; provider + provider CLI version if an agent is involved; anything unusual (remote machine, Connect, worktree env, custom ports/data dir).
       placeholder: |
-        - bb 0.38.0 (desktop app), macOS 26
+        - sandy 0.38.0 (desktop app), macOS 26
         - claude-code, claude 2.1.x
-        - worktree environment, bb Connect paired
+        - worktree environment, sandy Connect paired
     validations:
       required: true
   - type: textarea
@@ -30,7 +30,7 @@ body:
       label: Steps to reproduce
       description: Numbered, copy-pasteable, minimal. Exact commands, clicks, or prompt text. Note anything you tried that did NOT reproduce it.
       placeholder: |
-        1. bb thread spawn --project … --provider codex --prompt "Reply only with ok."
+        1. sandy thread spawn --project … --provider codex --prompt "Reply only with ok."
         2. …
         Did not reproduce with: claude-code; a fresh data dir.
     validations:
@@ -39,7 +39,7 @@ body:
     id: expected-actual
     attributes:
       label: Expected vs actual
-      description: Paste actual output verbatim (terminal, logs, HTTP responses, `bb thread log` excerpts). Attach a screenshot for visual bugs and say what to look at. Then state what you expected.
+      description: Paste actual output verbatim (terminal, logs, HTTP responses, `sandy thread log` excerpts). Attach a screenshot for visual bugs and say what to look at. Then state what you expected.
       render: text
     validations:
       required: true
@@ -47,7 +47,7 @@ body:
     id: evidence
     attributes:
       label: Evidence
-      description: Trimmed logs from ~/.bb/logs; thread/project/environment ids (thr_…, proj_…, env_…); code permalinks with a commit sha (`blob/<sha>/path#L…`); how you measured any numbers.
+      description: Trimmed logs from ~/.sandy/logs; thread/project/environment ids (thr_…, proj_…, env_…); code permalinks with a commit sha (`blob/<sha>/path#L…`); how you measured any numbers.
   - type: textarea
     id: ruled-out
     attributes:

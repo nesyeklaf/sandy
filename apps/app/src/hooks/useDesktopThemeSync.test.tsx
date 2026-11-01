@@ -2,10 +2,10 @@
 
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { BbDesktopInfo, BbDesktopTheme } from "@bb/desktop-contract";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import type { SandyDesktopInfo, SandyDesktopTheme } from "@sandy/desktop-contract";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 
-const desktopInfo: BbDesktopInfo = {
+const desktopInfo: SandyDesktopInfo = {
   platform: "macos",
   version: "0.0.0-test",
 };
@@ -58,7 +58,7 @@ function installColorSchemeMediaQuery(initialDark: boolean): {
 
 afterEach(() => {
   cleanup();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
   window.localStorage.clear();
   vi.restoreAllMocks();
   vi.resetModules();
@@ -67,10 +67,10 @@ afterEach(() => {
 describe("desktop theme synchronization", () => {
   it("keeps Electron on system while the resolved theme follows OS changes", async () => {
     const colorScheme = installColorSchemeMediaQuery(true);
-    const setThemeCalls: BbDesktopTheme[] = [];
-    const desktopApi = createBbDesktopApi(desktopInfo);
+    const setThemeCalls: SandyDesktopTheme[] = [];
+    const desktopApi = createSandyDesktopApi(desktopInfo);
     desktopApi.setTheme = (theme) => setThemeCalls.push(theme);
-    window.bbDesktop = desktopApi;
+    window.sandyDesktop = desktopApi;
 
     const { useDesktopThemeSync } = await import("./useDesktopThemeSync");
     const { usePreferredTheme } = await import("./useTheme");

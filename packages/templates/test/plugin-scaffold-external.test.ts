@@ -24,7 +24,7 @@ import {
   expect,
   it,
 } from "vitest";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
 import { scaffoldPlugin } from "../src/plugin-scaffold.js";
 
 const execFileAsync = promisify(execFile);
@@ -73,13 +73,13 @@ const EXTERNAL_DEPENDENCIES = [
 
 const BACKEND_TEST = `
 import { describe, expect, it } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server";
 
 describe("scaffold backend", () => {
   it("loads, inspects, and atomically reloads through the packed harness", async () => {
     const host = createFakePluginHost({ pluginId: "external-backend" });
-    await plugin(host.bb);
+    await plugin(host.sandy);
     await expect(host.harness.behavior.callRpc("todos_list")).resolves.toEqual({
       todos: [],
     });
@@ -94,7 +94,7 @@ describe("scaffold backend", () => {
       "todos_remove",
     ]);
 
-    // The todo store lives in bb.storage.kv, so it survives a reload.
+    // The todo store lives in sandy.storage.kv, so it survives a reload.
     const next = await host.harness.lifecycle.reload(plugin);
     await expect(next.harness.behavior.callRpc("todos_list")).resolves.toEqual({
       todos: [added],
@@ -108,7 +108,7 @@ const FRONTEND_TEST = `
 // @vitest-environment jsdom
 import { fireEvent } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 
 describe("scaffold frontend", () => {
   it("loads and renders the Example todos page through the packed harness", async () => {
@@ -144,7 +144,7 @@ describe("scaffold frontend", () => {
       "todos_list",
     ]);
 
-    // A server-side write (bb <id> remove …) reaches the page as a signal.
+    // A server-side write (sandy <id> remove …) reaches the page as a signal.
     todos = [];
     await slot.behavior.emitRealtime("todos-changed", { count: 0 });
     await slot.findByText(/Nothing to do/);
@@ -163,7 +163,7 @@ export default defineConfig({
 `;
 
 const REPRESENTATIVE_SERVER = `
-import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
+import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 export const rpcContract = defineRpcContract({
@@ -173,21 +173,21 @@ export const rpcContract = defineRpcContract({
   },
 });
 
-async function verifyFullSdk(bb: BbPluginApi) {
-  const thread = await bb.sdk.threads.spawn({
+async function verifyFullSdk(sandy: SandyPluginApi) {
+  const thread = await sandy.sdk.threads.spawn({
     projectId: "proj_fixture",
     environment: { type: "project-default" },
     prompt: "Verify the portable SDK contract",
   });
   const threadId: string = thread.id;
 
-  const file = await bb.sdk.files.read({ path: "/tmp/fixture.txt" });
+  const file = await sandy.sdk.files.read({ path: "/tmp/fixture.txt" });
   const sha256: string = file.sha256;
 
-  const project = await bb.sdk.projects.get({ projectId: "proj_fixture" });
+  const project = await sandy.sdk.projects.get({ projectId: "proj_fixture" });
   const projectName: string = project.name;
   const sourceId: string | undefined = project.sources[0]?.id;
-  const attachment = await bb.sdk.projects.attachments.upload({
+  const attachment = await sandy.sdk.projects.attachments.upload({
     projectId: "proj_fixture",
     clientFile: new Uint8Array([0, 1, 255]),
     filename: "fixture.bin",
@@ -195,7 +195,7 @@ async function verifyFullSdk(bb: BbPluginApi) {
   });
   const attachmentPath: string = attachment.path;
 
-  const environment = await bb.sdk.environments.get({
+  const environment = await sandy.sdk.environments.get({
     environmentId: "env_fixture",
   });
   const outcome: "creating" | "provisioning" | "ready" | "error" | "destroyed" =
@@ -204,20 +204,20 @@ async function verifyFullSdk(bb: BbPluginApi) {
   return { attachmentPath, outcome, projectName, sha256, sourceId, threadId };
 }
 
-export default function plugin(bb: BbPluginApi) {
+export default function plugin(sandy: SandyPluginApi) {
   void verifyFullSdk;
-  bb.rpc.register(rpcContract, {
+  sandy.rpc.register(rpcContract, {
     async projectName({ projectId }) {
-      const project = await bb.sdk.projects.get({ projectId });
+      const project = await sandy.sdk.projects.get({ projectId });
       return { name: project.name };
     },
   });
-  bb.log.info("portable SDK fixture loaded");
+  sandy.log.info("portable SDK fixture loaded");
 }
 `;
 
 const REPRESENTATIVE_APP = `
-import { definePluginApp, useRpc } from "@get-bb/plugin-sdk/app";
+import { definePluginApp, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { rpcContract } from "./server";
 
 function Panel() {
@@ -327,7 +327,7 @@ async function scaffoldSdkPin(targetDir: string): Promise<string | undefined> {
   const manifest = JSON.parse(
     await readFile(join(targetDir, "package.json"), "utf8"),
   ) as { devDependencies?: Record<string, string> };
-  return manifest.devDependencies?.["@get-bb/plugin-sdk"];
+  return manifest.devDependencies?.["@sandy-sdk/plugin-sdk"];
 }
 
 async function includeTestsInTypecheck(targetDir: string): Promise<void> {
@@ -382,13 +382,13 @@ describe("external plugin scaffold types", () => {
   }
 
   beforeAll(async () => {
-    packRoot = await mkdtemp(join(tmpdir(), "bb-external-pack-"));
+    packRoot = await mkdtemp(join(tmpdir(), "sandy-external-pack-"));
     tarball = await packPluginSdk(join(packRoot, "pack"));
     const templateDir = join(packRoot, "installed");
     await mkdir(templateDir);
     await writeFile(
       join(templateDir, "package.json"),
-      JSON.stringify({ name: "bb-plugin-external-fixture", private: true }),
+      JSON.stringify({ name: "sandy-plugin-external-fixture", private: true }),
     );
     await installPackedSdk(templateDir, tarball);
     await linkExternalDependencies(templateDir);
@@ -400,7 +400,7 @@ describe("external plugin scaffold types", () => {
   });
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-external-scaffold-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-external-scaffold-"));
   });
 
   afterEach(async () => {
@@ -408,11 +408,11 @@ describe("external plugin scaffold types", () => {
   });
 
   it("typechecks full SDK results against the installed package, with library checks enabled", async () => {
-    const targetDir = join(workDir, "bb-plugin-external");
+    const targetDir = join(workDir, "sandy-plugin-external");
     await scaffoldPlugin({
       targetDir,
-      packageName: "bb-plugin-external",
-      bbVersion: "0.9.0",
+      packageName: "sandy-plugin-external",
+      sandyVersion: "0.9.0",
     });
     await writeFile(join(targetDir, "server.ts"), REPRESENTATIVE_SERVER);
     await writeFile(join(targetDir, "app.tsx"), REPRESENTATIVE_APP);
@@ -430,17 +430,17 @@ describe("external plugin scaffold types", () => {
     expect(tsconfig.compilerOptions.skipLibCheck).toBe(false);
     expect(Object.keys(tsconfig.compilerOptions.paths ?? {})).toEqual(["@/*"]);
     await expect(
-      access(join(targetDir, "types", "bb-plugin-sdk.d.ts")),
+      access(join(targetDir, "types", "sandy-plugin-sdk.d.ts")),
     ).rejects.toThrow();
     await expect(
       access(
         join(
           targetDir,
           "node_modules",
-          "@get-bb",
+          "@sandy-sdk",
           "plugin-sdk",
           "bundled-types",
-          "bb-plugin-sdk.d.ts",
+          "sandy-plugin-sdk.d.ts",
         ),
       ),
     ).resolves.toBeUndefined();
@@ -455,10 +455,10 @@ describe("external plugin scaffold types", () => {
     expect(packedListing).toContain("package/dist/testing/index.js");
     expect(packedListing).toContain("package/dist/testing/app.js");
     expect(packedListing).toContain(
-      "package/bundled-types/bb-plugin-sdk-testing.d.ts",
+      "package/bundled-types/sandy-plugin-sdk-testing.d.ts",
     );
     expect(packedListing).toContain(
-      "package/bundled-types/bb-plugin-sdk-testing-app.d.ts",
+      "package/bundled-types/sandy-plugin-sdk-testing-app.d.ts",
     );
     expect(
       packedListing.some((entry) => entry.startsWith("package/src/")),
@@ -467,23 +467,23 @@ describe("external plugin scaffold types", () => {
       packedListing.some((entry) => entry.startsWith("package/scripts/")),
     ).toBe(false);
 
-    const backendDir = join(workDir, "bb-plugin-external-backend");
+    const backendDir = join(workDir, "sandy-plugin-external-backend");
     await scaffoldPlugin({
       targetDir: backendDir,
-      packageName: "bb-plugin-external-backend",
-      bbVersion: "0.9.0",
+      packageName: "sandy-plugin-external-backend",
+      sandyVersion: "0.9.0",
     });
     await useInstalledNodeModules(backendDir);
     await writeFile(join(backendDir, "server.test.ts"), BACKEND_TEST);
     await includeTestsInTypecheck(backendDir);
 
-    expect(await readdir(join(backendDir, "node_modules", "@get-bb"))).toEqual([
+    expect(await readdir(join(backendDir, "node_modules", "@sandy-sdk"))).toEqual([
       "plugin-sdk",
     ]);
     const installedSdk = join(
       backendDir,
       "node_modules",
-      "@get-bb",
+      "@sandy-sdk",
       "plugin-sdk",
     );
     const installedManifest = JSON.parse(
@@ -516,19 +516,19 @@ describe("external plugin scaffold types", () => {
         join(installedSdk, entry.types.replace(/^\.\//u, "")),
         "utf8",
       );
-      const bbImports = [
-        ...declarations.matchAll(/from ['"](@(?:get-)?bb\/[^'"]+)['"]/gu),
+      const sandyImports = [
+        ...declarations.matchAll(/from ['"](@(?:sandy-sdk|sandy)\/[^'"]+)['"]/gu),
       ].map((match) => match[1]);
-      expect(new Set(bbImports)).toEqual(new Set(["@get-bb/plugin-sdk"]));
-      expect(declarations).not.toContain("@bb/sdk");
-      expect(declarations).not.toContain("@bb/server-contract");
+      expect(new Set(sandyImports)).toEqual(new Set(["@sandy-sdk/plugin-sdk"]));
+      expect(declarations).not.toContain("@sandy/sdk");
+      expect(declarations).not.toContain("@sandy/server-contract");
     }
     for (const runtimePath of [
       "dist/testing/index.js",
       "dist/testing/app.js",
     ]) {
       const runtime = await readFile(join(installedSdk, runtimePath), "utf8");
-      expect(runtime).not.toMatch(/from ['"]@bb\//u);
+      expect(runtime).not.toMatch(/from ['"]@sandy\//u);
     }
     await expect(access(join(installedSdk, "src"))).rejects.toThrow();
     const backendTsconfig = JSON.parse(
@@ -542,11 +542,11 @@ describe("external plugin scaffold types", () => {
     expect(backendTsconfig.compilerOptions.skipLibCheck).toBe(false);
     expect(backendTsconfig.compilerOptions.paths).toEqual({ "@/*": ["./*"] });
 
-    const frontendDir = join(workDir, "bb-plugin-external-frontend");
+    const frontendDir = join(workDir, "sandy-plugin-external-frontend");
     await scaffoldPlugin({
       targetDir: frontendDir,
-      packageName: "bb-plugin-external-frontend",
-      bbVersion: "0.9.0",
+      packageName: "sandy-plugin-external-frontend",
+      sandyVersion: "0.9.0",
     });
     await useInstalledNodeModules(frontendDir);
     await writeFile(join(frontendDir, "app.test.tsx"), FRONTEND_TEST);

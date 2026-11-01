@@ -1,4 +1,4 @@
-import type { EnvironmentHostLifecycle } from "@bb/domain";
+import type { EnvironmentHostLifecycle } from "@sandy/domain";
 
 export type MachineRemovalStatus = Exclude<EnvironmentHostLifecycle, "active">;
 

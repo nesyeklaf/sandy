@@ -2,9 +2,9 @@ import {
   pluginUpdateJobResponseSchema,
   pluginUpdateJobListResponseSchema,
   type PluginUpdateJob,
-} from "@bb/server-contract";
-export type { PluginUpdateJob } from "@bb/server-contract";
-import { jsonValueSchema, type JsonValue } from "@bb/domain";
+} from "@sandy/server-contract";
+export type { PluginUpdateJob } from "@sandy/server-contract";
+import { jsonValueSchema, type JsonValue } from "@sandy/domain";
 import {
   installedPluginSchema,
   pluginRpcDiscoveryQuerySchema,
@@ -62,12 +62,12 @@ import {
   type PluginSourceSelection,
   type PluginTokenResponse,
   type PluginUpdateCheckEntry,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { z } from "zod";
 import type { CreateSdkAreaArgs } from "./common.js";
 
 /**
- * A server older than `providerIds` (bb-app < 0.39) or `icons` answers with
+ * A server older than `providerIds` (sandy-app < 0.39) or `icons` answers with
  * the installed-plugin shape minus those fields. The contract keeps them
  * required — the server fills them once at its boundary — so the tolerance
  * lives here, on the response side only: the SDK never sends this shape, and a
@@ -450,7 +450,7 @@ export function createPluginsArea(args: CreateSdkAreaArgs): PluginsArea {
     const response = await requestInstall(path, body);
     if ("job" in response) return response.job;
     throw new Error(
-      `installed "${response.plugin.id}" without an install job; this BB server predates background installs`,
+      `installed "${response.plugin.id}" without an install job; this SANDY server predates background installs`,
     );
   }
 
@@ -597,7 +597,7 @@ export function createPluginsArea(args: CreateSdkAreaArgs): PluginsArea {
       const response = await requestUpdate(input);
       if ("job" in response) return response.job;
       throw new Error(
-        "Update completed without a job; this BB server predates background updates",
+        "Update completed without a job; this SANDY server predates background updates",
       );
     },
     experimental_updateJobs: updateJobs,

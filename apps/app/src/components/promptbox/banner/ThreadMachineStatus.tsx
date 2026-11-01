@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { useHosts } from "@/hooks/queries/host-queries";
 import { useResumeHost } from "@/hooks/mutations/host-mutations";
-import type { SystemMachineProvider } from "@bb/server-contract";
+import type { SystemMachineProvider } from "@sandy/server-contract";
 import {
   MachineIcon,
   type MachineLabelHost,
 } from "@/components/machines/MachineLabel";
 import { useSystemMachineProviders } from "@/hooks/queries/machine-provider-queries";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PROMPT_STACK_DISCLOSURE_TRIGGER_CLASS,
   PromptStackHoverChevron,
   useDisclosureFocusHandoff,
   AnimatedDisclosureBody,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 import {
   BannerActionSlot,
   PromptBannerActionButton,
-} from "@bb/shared-ui/prompt-banner-actions";
+} from "@sandy/shared-ui/prompt-banner-actions";
 import {
   PromptStackCard,
   PROMPT_STACK_CARD_ROW_HEIGHT,

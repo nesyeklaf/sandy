@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { TimelineRow } from "@bb/server-contract";
+import type { TimelineRow } from "@sandy/server-contract";
 import type { ThreadTimelineWindow } from "./timeline.js";
 
 const TAG_LENGTH = 22;

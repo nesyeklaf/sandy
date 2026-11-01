@@ -2,7 +2,7 @@ import { expect, it, vi } from "vitest";
 import {
   createFakePluginHost,
   makeHostResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server.js";
 import { usageListMethod, usageFetchMethod } from "./usage-source-contract.js";
 
@@ -113,7 +113,7 @@ it("lists cheaply, fetches only the selected source/provider, preserves failed m
       },
     },
   });
-  plugin(host.bb);
+  plugin(host.sandy);
   const request = {
     force: false,
     machineIds: null,
@@ -240,7 +240,7 @@ it("keeps an unconfigured shared group without hosts or measurement requests", a
       },
     },
   });
-  plugin(host.bb);
+  plugin(host.sandy);
   try {
     await expect(
       host.harness.behavior.callRpc("getUsage", {
@@ -267,7 +267,7 @@ it("keeps an unconfigured shared group without hosts or measurement requests", a
 });
 
 it("collapses known account observations per machine, preserves unknown identities, and normalizes display labels", async () => {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: {
       system: { config: async () => ({ primaryHostId: null }) },
       hosts: {
@@ -326,7 +326,7 @@ it("collapses known account observations per machine, preserves unknown identiti
     },
   });
   try {
-    plugin(bb);
+    plugin(sandy);
     const snapshot = await harness.behavior.callRpc("getUsage", {
       force: false,
       machineIds: ["host"],

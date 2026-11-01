@@ -1,5 +1,5 @@
-import type { JsonValue } from "@get-bb/plugin-sdk";
-import type { JsonObject } from "@get-bb/plugin-sdk/provider-bridge";
+import type { JsonValue } from "@sandy-sdk/plugin-sdk";
+import type { JsonObject } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { fetchChatGpt, isCloudflareChallenge } from "./chatgpt-fetch.js";
 import type {
   CodexAiCompleteInput,
@@ -147,8 +147,8 @@ function createChatGptHeaders(auth: CodexChatGptAuthCredentials): Headers {
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${auth.accessToken}`);
   headers.set("chatgpt-account-id", auth.accountId);
-  headers.set("originator", "bb");
-  headers.set("User-Agent", "bb-host-daemon");
+  headers.set("originator", "sandy");
+  headers.set("User-Agent", "sandy-host-daemon");
   if (auth.isFedrampAccount) {
     headers.set("X-OpenAI-Fedramp", "true");
   }
@@ -158,7 +158,7 @@ function createChatGptHeaders(auth: CodexChatGptAuthCredentials): Headers {
 function createOpenAiHeaders(auth: CodexOpenAiApiKeyCredentials): Headers {
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${auth.apiKey}`);
-  headers.set("User-Agent", "bb-host-daemon");
+  headers.set("User-Agent", "sandy-host-daemon");
   return headers;
 }
 
@@ -447,7 +447,7 @@ async function createCodexHttpError({
     return new AiServiceFailure(
       "service_unavailable",
       "codex_service_unavailable",
-      `${prefix}: chatgpt.com answered with a Cloudflare challenge that bb cannot solve. Retry, or choose another service in Settings → AI services.`,
+      `${prefix}: chatgpt.com answered with a Cloudflare challenge that sandy cannot solve. Retry, or choose another service in Settings → AI services.`,
     );
   }
   const providerMessage = isHtmlResponse(response)

@@ -3,15 +3,15 @@
   "name": "form",
   "type": "registry:ui",
   "title": "form",
-  "description": "BB ui \"form\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"form\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-label",
     "@radix-ui/react-slot",
     "react-hook-form"
   ],
   "registryDependencies": [
-    "@bb/label",
-    "@bb/utils"
+    "@sandy/label",
+    "@sandy/utils"
   ],
   "files": [
     {

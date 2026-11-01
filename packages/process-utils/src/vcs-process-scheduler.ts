@@ -183,9 +183,9 @@ class VcsProcessScheduler {
 }
 
 const registry = globalThis as typeof globalThis & {
-  __bbVcsProcessScheduler?: VcsProcessScheduler;
+  __sandyVcsProcessScheduler?: VcsProcessScheduler;
 };
-const scheduler = (registry.__bbVcsProcessScheduler ??=
+const scheduler = (registry.__sandyVcsProcessScheduler ??=
   new VcsProcessScheduler());
 
 export function withVcsProcessPriority<T>(

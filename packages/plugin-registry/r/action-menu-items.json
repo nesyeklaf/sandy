@@ -3,12 +3,12 @@
   "name": "action-menu-items",
   "type": "registry:ui",
   "title": "action-menu-items",
-  "description": "BB ui \"action-menu-items\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"action-menu-items\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/context-menu",
-    "@bb/dropdown-menu",
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/context-menu",
+    "@sandy/dropdown-menu",
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

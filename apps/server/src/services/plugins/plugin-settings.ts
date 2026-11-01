@@ -4,15 +4,15 @@ import {
   getPluginSettingsValues,
   setPluginSettingsValues,
   type DbConnection,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   PluginSettingDescriptor,
   PluginSettingDescriptors,
   PluginSettingValue,
-} from "@get-bb/plugin-sdk";
-import { coerceStoredPluginSettingValue } from "@get-bb/plugin-sdk/internal/host-policy";
-import type { PluginSettingDescriptor as PublicPluginSettingDescriptor } from "@bb/server-contract";
-import { deleteSecretFile, writeSecretFile } from "@bb/secret-storage";
+} from "@sandy-sdk/plugin-sdk";
+import { coerceStoredPluginSettingValue } from "@sandy-sdk/plugin-sdk/internal/host-policy";
+import type { PluginSettingDescriptor as PublicPluginSettingDescriptor } from "@sandy/server-contract";
+import { deleteSecretFile, writeSecretFile } from "@sandy/secret-storage";
 
 export class PluginSettingsValidationError extends Error {
   constructor(message: string) {

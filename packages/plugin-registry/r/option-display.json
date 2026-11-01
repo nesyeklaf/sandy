@@ -3,10 +3,10 @@
   "name": "option-display",
   "type": "registry:ui",
   "title": "option-display",
-  "description": "BB ui \"option-display\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"option-display\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/tooltip",
-    "@bb/utils"
+    "@sandy/tooltip",
+    "@sandy/utils"
   ],
   "files": [
     {

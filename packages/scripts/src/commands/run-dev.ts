@@ -5,7 +5,7 @@ import {
   resolveCurrentDevInstanceConfig,
   toDevProcessEnv,
   type DevInstanceConfig,
-} from "@bb/config/runtime";
+} from "@sandy/config/runtime";
 import { migrateLegacyDevData } from "../lib/legacy-dev-data-migration.js";
 import { runScriptProcess } from "../lib/process-helpers.js";
 import { repoRoot, runMainIfEntrypoint } from "../lib/script-entry.js";
@@ -31,9 +31,9 @@ function createDevTurboCommand(): DevCommand {
       "turbo",
       "run",
       "dev",
-      "--filter=@bb/app",
-      "--filter=@bb/server",
-      "--filter=@bb/host-daemon",
+      "--filter=@sandy/app",
+      "--filter=@sandy/server",
+      "--filter=@sandy/host-daemon",
       "--ui",
       "tui",
       "--concurrency",
@@ -53,7 +53,7 @@ export function createStartWorktreeCommand(
       "--conditions=source",
       "--import",
       "tsx",
-      resolve(repoRoot, "scripts", "start-bb.mjs"),
+      resolve(repoRoot, "scripts", "start-sandy.mjs"),
       "--worktree-runtime-policy",
       ...(dryRun ? ["--dryrun"] : []),
       ...(performanceDiagnostics ? ["--perf-diagnostics"] : []),
@@ -83,12 +83,12 @@ export function toDevLaunchProcessEnv(args: {
     baseEnv: args.baseEnv,
     config: args.config,
   });
-  env.BB_SKIP_ONBOARDING ??= "1";
+  env.SANDY_SKIP_ONBOARDING ??= "1";
   if (args.mode === "vite") {
     return env;
   }
 
-  delete env.BB_DEV_APP_PORT;
+  delete env.SANDY_DEV_APP_PORT;
   env.NODE_ENV = "production";
   return env;
 }
@@ -176,13 +176,13 @@ async function main(): Promise<void> {
     });
     if (migration.skippedReason === "legacy-dev-process-running") {
       throw new Error(
-        "[dev] Legacy ~/.bb-dev data was found, but an old dev server or host-daemon is still running. Stop the old dev process and rerun pnpm dev to migrate it.",
+        "[dev] Legacy ~/.sandy-dev data was found, but an old dev server or host-daemon is still running. Stop the old dev process and rerun pnpm dev to migrate it.",
       );
     }
     await assertPortsAvailable(config, mode);
     await mkdir(config.dataDir, { recursive: true });
     await writeFile(
-      resolve(config.dataDir, "bb-dev-instance.json"),
+      resolve(config.dataDir, "sandy-dev-instance.json"),
       JSON.stringify({ repoRoot: config.repoRoot }),
       "utf8",
     );

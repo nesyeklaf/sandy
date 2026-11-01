@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { createBbSdk } from "../src/core.js";
+import { createSandySdk } from "../src/core.js";
 import { createHttpTransport } from "../src/transport-http.js";
 
 interface Call {
@@ -9,9 +9,9 @@ interface Call {
 
 function sdkWith(result: (method: string, body: unknown) => unknown) {
   const calls: Call[] = [];
-  const sdk = createBbSdk({
+  const sdk = createSandySdk({
     transport: createHttpTransport({
-      baseUrl: "http://bb.test",
+      baseUrl: "http://sandy.test",
       runtime: "node",
       fetch: async (input, init) => {
         const url = String(input);
@@ -39,7 +39,7 @@ it("keeps retired environment status working through the Git plugin", async () =
   ).resolves.toEqual(status);
   expect(calls).toEqual([
     {
-      url: "http://bb.test/api/v1/plugins/bb--git/rpc/workspaceStatus",
+      url: "http://sandy.test/api/v1/plugins/sandy--git/rpc/workspaceStatus",
       body: { environmentId: "env_1", mergeBaseBranch: "main" },
     },
   ]);
@@ -75,7 +75,7 @@ it("reassembles retired diffPatch results from keyed patch rows", async () => {
     ],
   });
   expect(calls[0]?.url).toBe(
-    "http://bb.test/api/v1/plugins/bb--git/rpc/patches",
+    "http://sandy.test/api/v1/plugins/sandy--git/rpc/patches",
   );
 });
 

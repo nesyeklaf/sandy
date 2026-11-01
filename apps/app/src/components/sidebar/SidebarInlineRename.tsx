@@ -3,13 +3,13 @@ import {
   useRenameController,
   type InlineRenameArgs,
   type InlineRenameEditorProps,
-} from "@bb/shared-ui/inline-rename";
+} from "@sandy/shared-ui/inline-rename";
 import { defineSplit } from "@/lib/define-split";
 
 const InlineRenameEditor = defineSplit<InlineRenameEditorProps>({
   id: "sidebar-rename-editor",
   load: () =>
-    import("@bb/shared-ui/inline-rename-editor").then(
+    import("@sandy/shared-ui/inline-rename-editor").then(
       (module) => module.InlineRenameEditor,
     ),
   loading: ({ session }) => (

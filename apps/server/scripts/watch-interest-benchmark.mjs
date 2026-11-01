@@ -7,7 +7,7 @@ import {
   createThread,
   noopNotifier,
   environments,
-} from "@bb/db";
+} from "@sandy/db";
 import { eq } from "drizzle-orm";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -26,7 +26,7 @@ if (
   throw new Error(
     "Usage: watch-interest-benchmark.mjs <threads:1..1000> <hosts:1..10> <rounds>",
   );
-const directory = await mkdtemp(join(tmpdir(), "bb-watch-benchmark-"));
+const directory = await mkdtemp(join(tmpdir(), "sandy-watch-benchmark-"));
 const db = createConnection(join(directory, "core.db"));
 migrate(db);
 const hub = new NotificationHub();

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import parcelWatcher from "@parcel/watcher";
-import { createDeferredPromise, makeTempDir } from "@bb/test-helpers";
+import { createDeferredPromise, makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   collectDataDirSkillsObservedChanges,
@@ -17,7 +17,7 @@ afterEach(() => {
 
 describe("thread storage watcher", () => {
   it("creates and watches only the thread's own storage directory", async () => {
-    const root = await fs.realpath(await makeTempDir("bb-thread-storage-"));
+    const root = await fs.realpath(await makeTempDir("sandy-thread-storage-"));
     const watchedPath = path.join(root, "thr_watched");
     const subscribed = createDeferredPromise<{
       callback: ParcelWatcherCallback;

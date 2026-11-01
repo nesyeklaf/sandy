@@ -12,7 +12,7 @@ export const REPO_ROOT = resolve(
 
 const refuseProductionDataDir = (dataDir) => {
   const resolved = resolve(dataDir);
-  const forbidden = [join(homedir(), ".bb"), join(homedir(), ".bb-machines")];
+  const forbidden = [join(homedir(), ".sandy"), join(homedir(), ".sandy-machines")];
   if (
     forbidden.some(
       (path) => resolved === path || resolved.startsWith(path + "/"),
@@ -58,7 +58,7 @@ export const startAppServer = async ({
   env = {},
 }) => {
   refuseProductionDataDir(dataDir);
-  if (!existsSync(join(dataDir, "bb.db"))) {
+  if (!existsSync(join(dataDir, "sandy.db"))) {
     throw new Error(
       "No database in " +
         dataDir +
@@ -74,7 +74,7 @@ export const startAppServer = async ({
     "--conditions=source",
     "--import",
     "tsx",
-    join(repoRoot, "scripts/start-bb.mjs"),
+    join(repoRoot, "scripts/start-sandy.mjs"),
     "--data-dir",
     dataDir,
     "--server-port",
@@ -91,7 +91,7 @@ export const startAppServer = async ({
       ...process.env,
       ...env,
       NODE_ENV: "production",
-      BB_SKIP_ONBOARDING: "1",
+      SANDY_SKIP_ONBOARDING: "1",
     },
   });
   const url = "http://127.0.0.1:" + port;

@@ -14,7 +14,7 @@ const { execute } = vi.hoisted(() => ({
     >(),
 }));
 
-vi.mock("@get-bb/plugin-sdk/process", () => ({
+vi.mock("@sandy-sdk/plugin-sdk/process", () => ({
   experimental_execHostFile: execute,
 }));
 

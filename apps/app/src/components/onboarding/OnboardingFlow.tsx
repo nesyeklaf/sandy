@@ -4,9 +4,9 @@ import { useLocation } from "react-router-dom";
 import {
   findLocalPathProjectSourceForHost,
   isActiveTerminalSessionStatus,
-} from "@bb/domain";
-import type { TerminalOutputChunk, TerminalSession } from "@bb/server-contract";
-import { useMediaQuery } from "@bb/shared-ui/hooks/use-media-query";
+} from "@sandy/domain";
+import type { TerminalOutputChunk, TerminalSession } from "@sandy/server-contract";
+import { useMediaQuery } from "@sandy/shared-ui/hooks/use-media-query";
 import { AddMachineDialog } from "@/components/dialogs/AddMachineDialog";
 import { ProjectPathDialog } from "@/components/dialogs/ProjectPathDialog";
 import { useSetPluginEnabled } from "@/components/plugin/useSetPluginEnabled";
@@ -41,9 +41,9 @@ import { useDesktopWindowState } from "@/hooks/useDesktopWindowState";
 import { useHostDaemon } from "@/hooks/useHostDaemon";
 import { useQuickCreateProjectController } from "@/hooks/useQuickCreateProject";
 import {
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   shouldReserveMacosTrafficLights,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { decodeBase64Bytes } from "@/lib/base64-bytes";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
 import { sdk } from "@/lib/sdk";
@@ -410,7 +410,7 @@ function AgentStepContainer({
       {...chrome}
       step="agent"
       title="Connect a coding agent"
-      description="bb runs the agents you already use. You need one that is installed and signed in on this computer."
+      description="sandy runs the agents you already use. You need one that is installed and signed in on this computer."
       footerNote={
         agentBlocked ? "Threads can't start until one agent is ready." : null
       }
@@ -574,7 +574,7 @@ function ProjectsStepContainer({
             : reposQuery.isError
               ? {
                   kind: "error",
-                  message: "bb couldn't scan this computer for git repos.",
+                  message: "sandy couldn't scan this computer for git repos.",
                 }
               : { kind: "results", truncated: reposQuery.data.truncated }
         }
@@ -733,8 +733,8 @@ function PluginsStepContainer({
     <OnboardingLayout
       {...chrome}
       step="plugins"
-      title="Make bb yours"
-      description="Most of bb is plugins. These ones are off until you want them, and you can change your mind in Plugins."
+      title="Make sandy yours"
+      description="Most of sandy is plugins. These ones are off until you want them, and you can change your mind in Plugins."
       primaryLabel="Continue"
       secondaryLabel="Skip"
       onPrimary={onContinue}
@@ -794,9 +794,9 @@ function DevicesStepContainer({
     <OnboardingLayout
       {...chrome}
       step="devices"
-      title="Use bb from anywhere"
+      title="Use sandy from anywhere"
       description="All optional. Everything here also lives in Settings → Machines."
-      primaryLabel="Start using bb"
+      primaryLabel="Start using sandy"
       onPrimary={onFinish}
       onBack={onBack}
     >
@@ -852,7 +852,7 @@ export function OnboardingFlow({
     onClose();
   };
   const compact = useMediaQuery("(max-width: 640px)");
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const windowState = useDesktopWindowState();
   const chrome: StepChrome = {
     compact,

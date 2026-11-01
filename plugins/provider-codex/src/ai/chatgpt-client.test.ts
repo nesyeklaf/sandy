@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { JsonValue } from "@get-bb/plugin-sdk";
-import type { JsonObject } from "@get-bb/plugin-sdk/provider-bridge";
+import type { JsonValue } from "@sandy-sdk/plugin-sdk";
+import type { JsonObject } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   completeCodexInference,
@@ -33,7 +33,7 @@ interface CreateAccessTokenArgs {
 }
 
 async function makeTempHome(): Promise<string> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "bb-codex-auth-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-codex-auth-"));
   tempDirs.push(tempDir);
   vi.stubEnv("HOME", tempDir);
   vi.stubEnv("USERPROFILE", tempDir);
@@ -552,7 +552,7 @@ describe("Codex ChatGPT client", () => {
     });
   });
 
-  it("stops reading the stream when bb cancels the host call", async () => {
+  it("stops reading the stream when sandy cancels the host call", async () => {
     const homeDir = await makeTempHome();
     await writeCodexApiKeyAuth({
       homeDir,
@@ -578,7 +578,7 @@ describe("Codex ChatGPT client", () => {
     });
   });
 
-  it("aborts the fetch when bb cancels before the response arrives", async () => {
+  it("aborts the fetch when sandy cancels before the response arrives", async () => {
     const homeDir = await makeTempHome();
     await writeCodexApiKeyAuth({
       homeDir,
@@ -781,7 +781,7 @@ describe("Codex ChatGPT client", () => {
     expect(thrown).toMatchObject({
       detailCode: "codex_service_unavailable",
       message:
-        "Codex transcription request failed with HTTP 403: chatgpt.com answered with a Cloudflare challenge that bb cannot solve. Retry, or choose another service in Settings → AI services.",
+        "Codex transcription request failed with HTTP 403: chatgpt.com answered with a Cloudflare challenge that sandy cannot solve. Retry, or choose another service in Settings → AI services.",
     });
   });
 

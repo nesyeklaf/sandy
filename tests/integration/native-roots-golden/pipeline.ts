@@ -4,11 +4,11 @@ import {
   normalizeProviderNativeRoots,
   providerNativeRootSetSchema,
   type ProviderNativeRootSet,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   DiscoveredSkill,
   HostProviderCommand,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { PluginProviderDeclaration } from "../../../packages/plugin-sdk/src/backend-contract.js";
 import {
   discoverProviderCommands,
@@ -84,7 +84,7 @@ function providerSource(providerId: string): ProviderNativeRootSource {
   if (providerId === "pi") {
     return {
       declaration: PI_NATIVE_ROOTS_DECLARATION,
-      resolve: (_cwd, homeDir) => resolvePiNativeRoots({ homeDir, env }),
+      resolve: (cwd, homeDir) => resolvePiNativeRoots({ cwd, homeDir, env }),
     };
   }
   const agent = KNOWN_ACP_AGENTS.find(

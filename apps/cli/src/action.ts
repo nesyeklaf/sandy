@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { BbHttpError } from "@bb/sdk";
+import { SandyHttpError } from "@sandy/sdk";
 import {
   beginJsonOutputTracking,
   isJsonInvocation,
@@ -7,7 +7,7 @@ import {
 } from "./cli-error-output.js";
 import { CliUsageError } from "./cli-usage-error.js";
 import { getErrorMessage } from "./commands/helpers.js";
-import { resolveBbCliVersion } from "./version.js";
+import { resolveSandyCliVersion } from "./version.js";
 
 export { CliUsageError } from "./cli-usage-error.js";
 
@@ -70,7 +70,7 @@ function actionErrorCode(err: unknown): string {
   if (err instanceof CliUsageError || err instanceof CliExitError) {
     return err.code;
   }
-  if (err instanceof BbHttpError) return err.code ?? `http_${err.status}`;
+  if (err instanceof SandyHttpError) return err.code ?? `http_${err.status}`;
   return "error";
 }
 
@@ -109,11 +109,11 @@ async function logActionError(args: {
     const { appendCliErrorLogEntry } = await import("./cli-error-log.js");
     appendCliErrorLogEntry({
       at: new Date().toISOString(),
-      cliVersion: resolveBbCliVersion(),
+      cliVersion: resolveSandyCliVersion(),
       code: args.code,
       command: args.command,
       exitCode: args.exitCode,
-      threadId: process.env.BB_THREAD_ID ?? null,
+      threadId: process.env.SANDY_THREAD_ID ?? null,
       token: null,
     });
   } catch {}

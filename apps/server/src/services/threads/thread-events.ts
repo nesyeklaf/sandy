@@ -13,7 +13,7 @@ import {
   noopNotifier,
   updateThread,
   type StoredTurnRequestEventRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   CLIENT_TURN_REQUEST_ID_ALPHABET,
   CLIENT_TURN_REQUEST_ID_SUFFIX_LENGTH,
@@ -25,7 +25,7 @@ import {
   threadScope,
   turnRequestEventDataSchema,
   WORKSPACE_PROVISIONING_STEP_KEYS,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { randomBytes } from "node:crypto";
 import type {
   ClientTurnRequestId,
@@ -47,12 +47,12 @@ import type {
   ThreadChangeKind,
   ThreadChangeMetadata,
   Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ApiError, TurnStartGuardError } from "../../errors.js";
 import type { AppDeps } from "../../types.js";
 import { parseStoredEventPayload } from "./thread-data.js";
-import type { DbNotifier, DbQueryConnection, DbTransaction } from "@bb/db";
-import type { AppendStoredThreadEventArgs as AppendThreadEventArgs } from "@bb/db";
+import type { DbNotifier, DbQueryConnection, DbTransaction } from "@sandy/db";
+import type { AppendStoredThreadEventArgs as AppendThreadEventArgs } from "@sandy/db";
 
 interface ThreadEventReadDeps {
   db: DbQueryConnection;
@@ -922,10 +922,10 @@ export function requireDispatchableProviderThreadId(
         409,
         "provider_session_unavailable",
         session.kind === "invalid"
-          ? "This thread has a stored identity without a valid provider session, so bb will not replace it silently. Clear context (/clear or bb thread clear) for a new session; history is kept."
+          ? "This thread has a stored identity without a valid provider session, so sandy will not replace it silently. Clear context (/clear or sandy thread clear) for a new session; history is kept."
           : session.kind === "ambiguous"
-            ? "Another thread claimed this thread's provider session in the same millisecond, so bb will not guess whose it is. Clear context (/clear or bb thread clear) for a new session; history is kept."
-            : "This thread's only provider session belongs to another thread, so bb will not resume it. Clear context (/clear or bb thread clear) for a new session; history is kept.",
+            ? "Another thread claimed this thread's provider session in the same millisecond, so sandy will not guess whose it is. Clear context (/clear or sandy thread clear) for a new session; history is kept."
+            : "This thread's only provider session belongs to another thread, so sandy will not resume it. Clear context (/clear or sandy thread clear) for a new session; history is kept.",
         {
           details: {
             reason: session.kind,

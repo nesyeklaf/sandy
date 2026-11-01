@@ -11,6 +11,8 @@ import {
   setAiServiceSelectionRequestSchema,
   systemProviderEnabledRequestSchema,
   testAiServiceRequestSchema,
+  clientErrorReportSchema,
+  type ClientErrorReport,
   type MachineEnvironmentReplace,
   type SetAiServiceSelectionRequest,
   type SystemAiServicesResponse,
@@ -69,8 +71,8 @@ import {
   appKeybindingOverridesSchema,
   appThemeSelectionSchema,
   experimentUpdatesSchema,
-} from "@bb/domain";
-import type { ProviderUsageResponse } from "@bb/host-daemon-contract";
+} from "@sandy/domain";
+import type { ProviderUsageResponse } from "@sandy/host-daemon-contract";
 import {
   binaryResponse,
   defineRoute,
@@ -82,7 +84,7 @@ import {
   queryRequest,
   type ApiSchemaFromRouteDescriptors,
   type EmptyInput,
-} from "@bb/hono-typed-routes";
+} from "@sandy/hono-typed-routes";
 import type {
   PathId,
   PathProjectId,
@@ -214,6 +216,9 @@ import {
   type SystemVoiceTranscriptionResponse,
   type TerminalListResponse,
   type ThemeCatalogResponse,
+  type CreateThemeRequest,
+  type CreateThemeResponse,
+  createThemeRequestSchema,
   type TerminalSession,
   type TerminalInputRequest,
   type TerminalListQuery,
@@ -236,6 +241,8 @@ import {
   type ThreadConversationOutlineQuery,
   type ThreadConversationOutlineResponse,
   type ThreadOpenRequest,
+  type ThreadEnvironmentDirectoryRequest,
+  type ThreadEnvironmentDirectoryResponse,
   type ThreadOpenResponse,
   type ThreadPaneActionRequest,
   type ThreadPaneActionResponse,
@@ -359,6 +366,7 @@ import {
   threadGetQuerySchema,
   threadCountQuerySchema,
   threadListQuerySchema,
+  threadEnvironmentDirectoryRequestSchema,
   threadOpenRequestSchema,
   threadPaneActionRequestSchema,
   threadSearchQuerySchema,
@@ -1583,6 +1591,14 @@ export const publicApiRoutes = {
       request: noRequest<PathId>(),
       response: jsonResponse<{ ok: true }>(),
     }),
+    updateEnvironmentDirectory: defineRoute({
+      path: "/threads/:id/environment-directory",
+      method: "put",
+      request: jsonRequest<PathId, ThreadEnvironmentDirectoryRequest>(
+        threadEnvironmentDirectoryRequestSchema,
+      ),
+      response: jsonResponse<ThreadEnvironmentDirectoryResponse>(),
+    }),
     open: defineRoute({
       path: "/threads/:id/open",
       method: "post",
@@ -1827,7 +1843,7 @@ export const publicApiRoutes = {
     /**
      * Every live queued row, optionally narrowed to one thread or one
      * wait holder. Cross-thread because "what is queued right now" is a
-     * whole-workspace question (`bb thread queue list` with no thread, a
+     * whole-workspace question (`sandy thread queue list` with no thread, a
      * limiter plugin's own bookkeeping, a router recovering its rows after a
      * restart) that no single thread's list can answer.
      */
@@ -1898,6 +1914,14 @@ export const publicApiRoutes = {
         setAiServiceSelectionRequestSchema,
       ),
       response: jsonResponse<SystemAiServicesResponse>(),
+    }),
+    reportClientError: defineRoute({
+      path: "/system/client-errors",
+      method: "post",
+      request: jsonRequest<EmptyInput, ClientErrorReport>(
+        clientErrorReportSchema,
+      ),
+      response: jsonResponse<{ ok: true }>(),
     }),
     testAiService: defineRoute({
       path: "/system/ai-services/test",
@@ -1975,9 +1999,23 @@ export const publicApiRoutes = {
       response: jsonResponse<ThemeCatalogResponse>(),
     }),
     /**
+     * Generate a custom theme from three anchor colors per mode and write it to
+     * `<theme dir>/<name>/theme.css`. Refuses an existing name (409) unless
+     * `overwrite` is set. The response carries the CSS and the check findings;
+     * warnings never block the write, bad kit input is a 400.
+     */
+    createTheme: defineRoute({
+      path: "/settings/themes",
+      method: "post",
+      request: jsonRequest<EmptyInput, CreateThemeRequest>(
+        createThemeRequestSchema,
+      ),
+      response: jsonResponse<CreateThemeResponse>(),
+    }),
+    /**
      * Resolve a built-in, custom, or plugin theme exactly as activating it
      * would, without persisting anything. The Settings palette hover preview
-     * and `bb theme show <id>` read it; `faviconColor` echoes the stored
+     * and `sandy theme show <id>` read it; `faviconColor` echoes the stored
      * appearance because the response is a full `AppTheme`.
      */
     resolveTheme: defineRoute({

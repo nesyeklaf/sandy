@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { resetFixedPanelTabsStateForTest } from "@/lib/fixed-panel-tabs";
 import { createPluginPageFixedPanelTab } from "@/lib/fixed-panel-tabs-state";
 import { markPluginFrontendsSettled } from "@/lib/plugin-frontend-boot-state";
@@ -49,7 +49,7 @@ vi.mock("@/components/commands/AppCommandProvider", () => ({
   },
   useAppCommandShortcut: () => null,
 }));
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => false,
 }));
 vi.mock("@/hooks/queries/plugin-settings-queries", () => ({
@@ -64,7 +64,7 @@ vi.mock("@/hooks/queries/host-queries", () => ({
 vi.mock("@/hooks/queries/system-queries", () => ({
   useSystemConfig: () => ({ data: { primaryHostId: null } }),
 }));
-vi.mock("@/lib/bb-desktop", () => ({
+vi.mock("@/lib/sandy-desktop", () => ({
   getDesktopBrowserApi: () => null,
   isDesktopBrowserAvailable: () => false,
 }));

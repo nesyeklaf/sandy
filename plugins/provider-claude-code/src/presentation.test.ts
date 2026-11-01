@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import type { ThreadEvent } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { describe, expect, it } from "vitest";
 import {
   createClaudeDeltaHarness,
@@ -280,11 +280,11 @@ describe("claude item presentation", () => {
     ]);
   });
 
-  it("emits a bb-injected tool call as server:bb with the definition's presentation", () => {
+  it("emits a sandy-injected tool call as server:sandy with the definition's presentation", () => {
     const translator = createClaudeDeltaTranslator({ sandboxEnabled: false });
     translator.configureInjectedTools([
       {
-        name: "bb_workflow_result",
+        name: "sandy_workflow_result",
         presentation: {
           label: {
             pending: "Reading workflow result",
@@ -294,7 +294,7 @@ describe("claude item presentation", () => {
           suppress: true,
         },
       },
-      { name: "bb_thread_list" },
+      { name: "sandy_thread_list" },
     ]);
     const deltas = translator.translate(
       {
@@ -304,20 +304,20 @@ describe("claude item presentation", () => {
           content: [
             {
               type: "tool_use",
-              id: "bb-1",
-              name: "mcp__bb-bridge__bb_workflow_result",
+              id: "sandy-1",
+              name: "mcp__sandy-bridge__sandy_workflow_result",
               input: { runId: "wfr_1" },
             },
             {
               type: "tool_use",
-              id: "bb-2",
-              name: "mcp__bb-bridge__bb_thread_list",
+              id: "sandy-2",
+              name: "mcp__sandy-bridge__sandy_thread_list",
               input: {},
             },
             {
               type: "tool_use",
-              id: "bb-3",
-              name: "mcp__bb-bridge__not_in_session",
+              id: "sandy-3",
+              name: "mcp__sandy-bridge__not_in_session",
               input: {},
             },
           ],
@@ -331,8 +331,8 @@ describe("claude item presentation", () => {
       expect.objectContaining({
         item: {
           type: "tool",
-          tool: "bb_workflow_result",
-          server: "bb",
+          tool: "sandy_workflow_result",
+          server: "sandy",
           args: { runId: "wfr_1" },
         },
         presentation: {
@@ -345,17 +345,17 @@ describe("claude item presentation", () => {
         },
       }),
       expect.objectContaining({
-        item: { type: "tool", tool: "bb_thread_list", server: "bb", args: {} },
+        item: { type: "tool", tool: "sandy_thread_list", server: "sandy", args: {} },
         presentation: {
           label: {
-            pending: "Running bb_thread_list",
-            completed: "Ran bb_thread_list",
+            pending: "Running sandy_thread_list",
+            completed: "Ran sandy_thread_list",
           },
           icon: { glyph: "Toolbox" },
         },
       }),
       expect.objectContaining({
-        item: { type: "tool", tool: "not_in_session", server: "bb", args: {} },
+        item: { type: "tool", tool: "not_in_session", server: "sandy", args: {} },
       }),
     ]);
   });

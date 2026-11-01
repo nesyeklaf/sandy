@@ -13,7 +13,7 @@ import {
   updatePreparingEnvironment,
   getProjectSourceByHost,
   type EnvironmentRow,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   type Environment,
   type ProjectSource,
@@ -27,7 +27,7 @@ import {
   type EnvironmentMachineSelection,
   type JsonValue,
   type GitBranchSelection,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   type ThreadProvisionContext,
   getThreadProvisionContext,
@@ -57,8 +57,8 @@ import type {
   EnvironmentArgs,
   ProviderEnvironmentArgs,
   UnmanagedBranchSpec,
-} from "@bb/server-contract";
-import { summarizeStandardIssues } from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy/server-contract";
+import { summarizeStandardIssues } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import {

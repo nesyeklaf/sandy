@@ -4,7 +4,7 @@ import type {
   ExperimentalSidebarNavigationIcon,
   ExperimentalSidebarNavigationItem,
   ExperimentalSidebarNavigationShortcut,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { PluginNavPanelChromeEntry } from "@/lib/plugin-nav-panel-chrome";
 import {
   AUTOMATIONS_PLUGIN_ID,
@@ -86,7 +86,7 @@ export function createSidebarNavigationRows(
       const { chrome } = entry;
       const isAutomations = chrome.pluginId === AUTOMATIONS_PLUGIN_ID;
       return {
-        pluginId: isAutomations ? "__bb__" : chrome.pluginId,
+        pluginId: isAutomations ? "__sandy__" : chrome.pluginId,
         id: isAutomations ? "automations" : chrome.id,
         label: chrome.title,
         icon: { kind: "plugin", pluginId: chrome.pluginId, icon: chrome.icon },

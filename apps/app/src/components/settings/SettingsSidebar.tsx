@@ -9,21 +9,21 @@ import {
   type RefObject,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import {
   COARSE_POINTER_COMPACT_ICON_BUTTON_CLASS,
   COARSE_POINTER_ICON_SIZE_CLASS,
   COARSE_POINTER_ROW_HEIGHT_CLASS,
   COARSE_POINTER_TEXT_BASE_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   SIDEBAR_ROW_BASE_CLASS,
   SIDEBAR_ROW_INTERACTIVE_STATE_CLASS,
   SIDEBAR_STANDARD_ROW_PADDING_CLASS,
-} from "@bb/shared-ui/sidebar-row-classes";
-import { ShortcutPill } from "@bb/shared-ui/shortcut-pill";
+} from "@sandy/shared-ui/sidebar-row-classes";
+import { ShortcutPill } from "@sandy/shared-ui/shortcut-pill";
 import { PluginIcon } from "@/components/plugin/PluginIcon";
 import {
   SectionSidebar,
@@ -35,7 +35,7 @@ import {
 import { useSidebarHeaderControlAxisClass } from "@/components/sidebar/SidebarChrome";
 import { useCloseMobileSidebar, useSidebar } from "@/components/ui/sidebar.js";
 import { isEditableKeyboardTarget } from "@/lib/app-keybindings";
-import { MACOS_APP_REGION_NO_DRAG_CLASS } from "@/lib/bb-desktop";
+import { MACOS_APP_REGION_NO_DRAG_CLASS } from "@/lib/sandy-desktop";
 import { canOpenNativeScreen, shellOpenNative } from "@/lib/native-shell";
 import { getPluginConfigurationRoutePath } from "@/lib/route-paths";
 import { useSettingsNavState } from "./settings-nav";

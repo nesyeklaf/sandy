@@ -7,7 +7,7 @@ import { PI_BRIDGE_ARGS_ENV, PI_BRIDGE_COMMAND_ENV } from "./rpc-child.js";
 import { PiRpcSession } from "./rpc-session.js";
 
 it("auto-cancels extension dialogs in a helper session without a UI handler", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "bb-pi-helper-ui-"));
+  const dir = mkdtempSync(join(tmpdir(), "sandy-pi-helper-ui-"));
   const log = join(dir, "responses.jsonl");
   const script = `
     const fs = require("node:fs");
@@ -30,7 +30,7 @@ it("auto-cancels extension dialogs in a helper session without a UI handler", as
   `;
   vi.stubEnv(PI_BRIDGE_COMMAND_ENV, process.execPath);
   vi.stubEnv(PI_BRIDGE_ARGS_ENV, JSON.stringify(["-e", script, "--"]));
-  vi.stubEnv("BB_PI_BRIDGE_READINESS_TIMEOUT_MS", "1000");
+  vi.stubEnv("SANDY_PI_BRIDGE_READINESS_TIMEOUT_MS", "1000");
   const session = new PiRpcSession(
     {
       cwd: dir,

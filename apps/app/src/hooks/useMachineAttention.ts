@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import { createJsonLocalStorage } from "@/lib/browser-storage";
 
 const acknowledgedIssuesAtom = atomWithStorage<string[]>(
-  "bb.sidebar.machineAttentionAcknowledged",
+  "sandy.sidebar.machineAttentionAcknowledged",
   [],
   createJsonLocalStorage<string[]>(
     (value): value is string[] =>

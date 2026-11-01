@@ -3,9 +3,9 @@
   "name": "table",
   "type": "registry:ui",
   "title": "table",
-  "description": "BB ui \"table\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"table\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

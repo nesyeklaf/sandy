@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import {
   resolveSkillCatalogEntries,

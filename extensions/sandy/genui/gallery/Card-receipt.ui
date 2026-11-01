@@ -1,0 +1,12 @@
+Card("Receipt: upload race fix", [
+  Steps([
+    {title: "Committed", detail: "2 commits on fix/upload-race", status: "done"},
+    {title: "Pushed", detail: "origin/fix/upload-race is at 3fa91c2, the newest commit", status: "done"},
+    {title: "Merged", detail: "PR #482 is open and waits for your review", status: "user"},
+    {title: "Deployed", detail: "Not deployed: production runs the release from before this fix"}
+  ]),
+  Table(["SHA", "Commit", "Files"], Load("data/receipt/commits.json").map(c => [c.sha, c.message, c.files])),
+  Tests(Load("data/receipt/tests.json"), "Tests on this machine"),
+  Callout("The e2e upload test was skipped, and CI has not run on this push, so the fix is not checked against real storage.", tone: "warn", title: "Not checked"),
+  Button("Open PR #482", OpenUrl("https://github.com/orbit-example/app/pull/482"), icon: "ExternalLink")
+])

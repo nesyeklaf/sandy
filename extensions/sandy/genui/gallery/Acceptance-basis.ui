@@ -1,0 +1,9 @@
+Card("Is the sync fix done?", [
+  Acceptance([
+    {name: "Sync no longer drops edits", status: "passed", basis: "observed", note: "Edited on two phones, both kept the change"},
+    {name: "Retry backs off", status: "passed", basis: "tested", run: "vitest 214 passed"},
+    {name: "Old clients still connect", status: "passed", basis: "read", note: "The protocol version check accepts v3"},
+    {name: "Battery use unchanged", status: "claimed", basis: "reported", by: "worker"},
+    {name: "No data migration needed", status: "untested", basis: "assumed"}
+  ])
+])

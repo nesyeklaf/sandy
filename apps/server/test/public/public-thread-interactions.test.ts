@@ -1,14 +1,14 @@
-import { createQueuedThreadMessage, listQueuedThreadMessages } from "@bb/db";
+import { createQueuedThreadMessage, listQueuedThreadMessages } from "@sandy/db";
 import {
   turnScope,
   USER_QUESTION_MAX_FREE_TEXT_LENGTH,
   USER_QUESTION_MAX_SELECTED,
-} from "@bb/domain";
-import type { PendingInteractionCreate } from "@bb/domain";
+} from "@sandy/domain";
+import type { PendingInteractionCreate } from "@sandy/domain";
 import type {
   PendingInteractionResolution,
   UserQuestionPendingInteractionPayload,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AppDeps } from "../../src/types.js";
 import type { PendingInteractionLifecycle } from "../../src/services/interactions/pending-interactions.js";

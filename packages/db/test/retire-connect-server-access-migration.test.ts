@@ -10,8 +10,8 @@ import {
 } from "../src/index.js";
 
 it("moves hosts off the removed connect access provider and leaves others alone", () => {
-  const directory = mkdtempSync(join(tmpdir(), "bb-retire-connect-"));
-  const db = createConnection(join(directory, "bb.db"));
+  const directory = mkdtempSync(join(tmpdir(), "sandy-retire-connect-"));
+  const db = createConnection(join(directory, "sandy.db"));
   try {
     migrate(db);
     for (const id of [

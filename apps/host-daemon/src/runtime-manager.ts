@@ -7,32 +7,32 @@ import {
   type AgentRuntimeSkillRoot,
   type AgentRuntimeProcessExitInfo,
   type ReapedIdleProviderSession,
-} from "@bb/agent-runtime";
-import type { Logger } from "@bb/logger";
-import { sliceUtf16Tail } from "@bb/text-utils";
+} from "@sandy/agent-runtime";
+import type { Logger } from "@sandy/logger";
+import { sliceUtf16Tail } from "@sandy/text-utils";
 import {
   type PendingInteractionCreate,
   type PendingInteractionResolution,
   type ThreadEvent,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonActiveThread,
   HostDaemonContributedEnvEntry,
   HostDaemonLoadedEnvironment,
   HostDaemonInjectedSkillSource,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type {
   DataDirSkillsWatchError,
   HostWatcher,
   InjectedSkillsObservedChange,
-} from "@bb/host-watcher";
+} from "@sandy/host-watcher";
 import {
   provisionWorkspace,
   type HostWorkspace,
   type ProvisionWorkspaceArgs,
-} from "@bb/host-workspace";
+} from "@sandy/host-workspace";
 import {
   cleanupInjectedSkillStagingDirs,
   EMPTY_SKILL_CATALOG_HASH,
@@ -48,7 +48,7 @@ import type { SkillTreeTransport } from "./skill-trees.js";
 import { userExecutableProcessOptions } from "./user-executable-env.js";
 import { runSetupScript } from "./environment-lifecycle-script.js";
 import { runInSerialLane } from "./serial-lane.js";
-import { WorkspaceError } from "bb-environment-provider-host/workspace-git";
+import { WorkspaceError } from "sandy-environment-provider-host/workspace-git";
 
 type StopWatching = () => void | Promise<void>;
 
@@ -267,9 +267,9 @@ function providerProcessEnvFromShellEnv(
   if (shellEnv.PATH) {
     env.PATH = shellEnv.PATH;
   }
-  const recordDir = process.env.BB_PROVIDER_BRIDGE_RECORD_DIR;
+  const recordDir = process.env.SANDY_PROVIDER_BRIDGE_RECORD_DIR;
   if (recordDir) {
-    env.BB_PROVIDER_BRIDGE_RECORD_DIR = recordDir;
+    env.SANDY_PROVIDER_BRIDGE_RECORD_DIR = recordDir;
   }
   return Object.keys(env).length > 0 ? env : null;
 }

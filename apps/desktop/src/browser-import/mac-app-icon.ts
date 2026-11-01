@@ -1,4 +1,4 @@
-import { execHostFileCallback as execFile } from "@bb/process-utils";
+import { execHostFileCallback as execFile } from "@sandy/process-utils";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,7 +51,7 @@ export async function readMacAppIcon(
   if (iconFile === undefined) return undefined;
   const icnsPath = join(appPath, "Contents", "Resources", iconFile);
   if (!(await isRegularFile(icnsPath))) return undefined;
-  const directory = await mkdtemp(join(tmpdir(), "bb-app-icon-"));
+  const directory = await mkdtemp(join(tmpdir(), "sandy-app-icon-"));
   const pngPath = join(directory, "icon.png");
   try {
     const converted = await run("sips", [

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import type { JsonValue } from "@bb/domain";
-import { installTestPluginRuntime } from "@get-bb/plugin-sdk/testing/app";
+import type { JsonValue } from "@sandy/domain";
+import { installTestPluginRuntime } from "@sandy-sdk/plugin-sdk/testing/app";
 import { collectPluginAppRegistrations } from "@/lib/plugin-app-definition";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
 import {
@@ -182,7 +182,7 @@ export function Unsupported() {
         serverName: "files",
         message: "Upload a file",
         nativeMode: "form",
-        reason: "This form uses fields or constraints BB cannot display.",
+        reason: "This form uses fields or constraints SANDY cannot display.",
       }}
     />
   );

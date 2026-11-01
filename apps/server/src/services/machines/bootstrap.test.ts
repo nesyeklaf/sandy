@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { MachineExecutor } from "@get-bb/plugin-sdk";
+import type { MachineExecutor } from "@sandy-sdk/plugin-sdk";
 import type { MachineEnrollments, EnrollmentBootstrap } from "./enrollments.js";
 import { createMachineBootstrapApi } from "./bootstrap.js";
 

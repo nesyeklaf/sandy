@@ -16,11 +16,11 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { activateSecondaryPanelTabInState } from "@bb/client-core";
+import { activateSecondaryPanelTabInState } from "@sandy/client-core";
 import type {
   ExperimentalTabRegistration,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   collectPluginAppRegistrations,
   definePluginApp,

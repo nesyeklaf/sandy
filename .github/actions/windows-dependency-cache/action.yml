@@ -35,7 +35,7 @@ runs:
       env:
         SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
       with:
-        path: ${{ runner.temp }}/bb-dependencies.vhdx
+        path: ${{ runner.temp }}/sandy-dependencies.vhdx
         key: ${{ steps.identity.outputs.key }}
         lookup-only: ${{ inputs.seed == 'true' }}
     - name: Prepare dependency disk

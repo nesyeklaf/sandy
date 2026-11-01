@@ -1,7 +1,7 @@
 import {
   createFakePluginHost,
   makeThreadResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import { createStore } from "../api";
 import type { Comment, Project, Task } from "../db";
@@ -38,7 +38,7 @@ function createTestPreset(
 
 describe("task delegation", () => {
   it("spawns from a preset, attaches the thread, advances status, comments, and invalidates", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -48,12 +48,12 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Tasks plugin",
       prefix: "TASK",
       color: "blue",
-      linkedBbProjectId: "proj_bb",
+      linkedSandyProjectId: "proj_sandy",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
@@ -61,7 +61,7 @@ describe("task delegation", () => {
       description: "Build the core agent loop.",
       status: "todo",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store);
 
     const result = delegationRpcContract.delegate.output.parse(
@@ -76,7 +76,7 @@ describe("task delegation", () => {
     expect(harness.sdk.callsTo("threads.spawn")).toEqual([
       [
         expect.objectContaining({
-          projectId: "proj_bb",
+          projectId: "proj_sandy",
           environment: { type: "project-default" },
           providerId: "claude-code",
           model: "claude-sonnet-5",
@@ -130,7 +130,7 @@ describe("task delegation", () => {
   });
 
   it("corrects the attached row when a delegated thread becomes active immediately", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -140,18 +140,18 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Fast delegation",
       prefix: "FAST",
       color: "blue",
-      linkedBbProjectId: "proj_bb",
+      linkedSandyProjectId: "proj_sandy",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
       title: "Transition during spawn",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store);
 
     await harness.callRpc("delegate", {
@@ -173,7 +173,7 @@ describe("task delegation", () => {
   });
 
   it("bounds delegated thread titles by display width", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -183,18 +183,18 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Tasks plugin",
       prefix: "TASK",
       color: "blue",
-      linkedBbProjectId: "proj_bb",
+      linkedSandyProjectId: "proj_sandy",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
       title: "调".repeat(100),
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store);
 
     await harness.callRpc("delegate", {
@@ -211,7 +211,7 @@ describe("task delegation", () => {
   });
 
   it("spawns a new worktree from the configured branch on the configured machine", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -221,18 +221,18 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Worktree delegation",
       prefix: "WT",
       color: "blue",
-      linkedBbProjectId: "proj_demo",
+      linkedSandyProjectId: "proj_demo",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
       title: "Use a fresh checkout",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store, {
       environmentKind: "new-worktree",
       baseBranch: "release/next",
@@ -264,7 +264,7 @@ describe("task delegation", () => {
   });
 
   it("resolves the default machine and default branch for a worktree preset", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         system: {
@@ -280,18 +280,18 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Default worktree target",
       prefix: "DWT",
       color: "blue",
-      linkedBbProjectId: "proj_demo",
+      linkedSandyProjectId: "proj_demo",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
       title: "Use default worktree target",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store, {
       environmentKind: "new-worktree",
     });
@@ -325,7 +325,7 @@ describe("task delegation", () => {
       code: "host_not_found",
       status: 404,
     });
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -335,18 +335,18 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Invalid target",
       prefix: "BAD",
       color: "blue",
-      linkedBbProjectId: "proj_demo",
+      linkedSandyProjectId: "proj_demo",
     });
     const task = store.tasks.createTask({
       projectId: project.id,
       title: "Reject bad machine",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
     const preset = createTestPreset(store, {
       environmentKind: "new-worktree",
       baseBranch: "missing-branch",
@@ -368,7 +368,7 @@ describe("task delegation", () => {
   });
 
   it("self-attaches an existing thread through taskThreadsAttach", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -381,7 +381,7 @@ describe("task delegation", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Manual",
       prefix: "MAN",
@@ -391,7 +391,7 @@ describe("task delegation", () => {
       projectId: project.id,
       title: "Attach current worker",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
 
     await expect(
       harness.callRpc("taskThreadsAttach", {
@@ -421,7 +421,7 @@ describe("task delegation", () => {
 
 describe("task thread detach", () => {
   it("detaches an attached thread through taskThreadsDetach and invalidates", async () => {
-    const { bb, harness } = createFakePluginHost({
+    const { sandy, harness } = createFakePluginHost({
       pluginId: "tasks",
       sdk: {
         threads: {
@@ -434,7 +434,7 @@ describe("task thread detach", () => {
         },
       },
     });
-    const store = createStore(bb);
+    const store = createStore(sandy);
     const project = store.tasks.createProject({
       name: "Manual",
       prefix: "MAN",
@@ -448,7 +448,7 @@ describe("task thread detach", () => {
       projectId: project.id,
       title: "Other work",
     });
-    registerDelegation(bb, store);
+    registerDelegation(sandy, store);
 
     await harness.callRpc("taskThreadsAttach", {
       taskId: task.id,
@@ -504,7 +504,7 @@ describe("delegation seed prompt", () => {
       nextTaskNumber: 4,
       color: "blue",
       folderId: null,
-      linkedBbProjectId: "proj_tasks",
+      linkedSandyProjectId: "proj_tasks",
       createdAt: "2026-07-15T17:00:00.000Z",
     };
     const task: Task = {
@@ -584,7 +584,7 @@ describe("delegation seed prompt", () => {
       ## Project context
 
       - Name: Tasks plugin
-      - Linked bb project: proj_tasks
+      - Linked sandy project: proj_tasks
 
       ## Sub-tasks
 
@@ -593,7 +593,7 @@ describe("delegation seed prompt", () => {
       ## Attachments
 
       - delegation-notes.md · 01J00000000000000000000006
-        Fetch with: bb tasks attachment get 01J00000000000000000000006 --out <path>
+        Fetch with: sandy tasks attachment get 01J00000000000000000000006 --out <path>
 
       ## Recent comments
 
@@ -607,7 +607,7 @@ describe("delegation seed prompt", () => {
 
       ## Report-back contract
 
-      You are working on task TASK-1. Use the bb tasks CLI: comment substantive updates (bb tasks comment TASK-1 --body ...), attach result artifacts, set status when done (bb tasks update TASK-1 --status in_review) or explain blockage in a comment. Your thread is already attached to the task.
+      You are working on task TASK-1. Use the sandy tasks CLI: comment substantive updates (sandy tasks comment TASK-1 --body ...), attach result artifacts, set status when done (sandy tasks update TASK-1 --status in_review) or explain blockage in a comment. Your thread is already attached to the task.
 
       ## Preset instructions
 

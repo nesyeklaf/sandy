@@ -14,13 +14,13 @@ const full = {
   tests: {
     include: shards.tests.map((entry) => ({
       ...entry,
-      mobile: matchesFilter("@bb/mobile", entry.filter),
+      mobile: matchesFilter("@sandy/mobile", entry.filter),
     })),
   },
   "windows-tests": {
     include: shards["windows-tests"].map((entry) => ({
       ...entry,
-      mobile: matchesFilter("@bb/mobile", entry.filter),
+      mobile: matchesFilter("@sandy/mobile", entry.filter),
     })),
   },
   foundation: true,
@@ -137,7 +137,7 @@ function select() {
     /^apps\/(?:app|web)\/(?:src|public)\//u.test(path),
   );
   const packaging = paths.some((path) =>
-    /^(?:apps\/(?:desktop\/|app\/(?:vite\.config|scripts\/|package\.json))|packages\/(?:bb-app|server-archive|plugin-build|bundled-plugins|plugin-sdk|sdk|templates)\/)/u.test(
+    /^(?:apps\/(?:desktop\/|app\/(?:vite\.config|scripts\/|package\.json))|packages\/(?:sandy-app|server-archive|plugin-build|bundled-plugins|plugin-sdk|sdk|templates)\/)/u.test(
       path,
     ),
   );
@@ -151,7 +151,7 @@ function select() {
         : [
             {
               ...entry,
-              mobile: selected.includes("@bb/mobile"),
+              mobile: selected.includes("@sandy/mobile"),
               filter: selected
                 .sort()
                 .map((name) => `--filter=${name}`)
@@ -175,14 +175,14 @@ function select() {
       ),
     ),
     forks:
-      !appOnly && tasks.some((task) => task.package.startsWith("bb-plugin-")),
+      !appOnly && tasks.some((task) => task.package.startsWith("sandy-plugin-")),
     buildNeeded: buildPackages.length > 0,
     staticNeeded: staticPackages.length > 0,
     appBuild: tasks.some(
-      (task) => task.package === "@bb/app" && task.name === "build",
+      (task) => task.package === "@sandy/app" && task.name === "build",
     ),
     sdkBuild: tasks.some(
-      (task) => task.package === "@get-bb/plugin-sdk" && task.name === "build",
+      (task) => task.package === "@sandy-sdk/plugin-sdk" && task.name === "build",
     ),
     buildFilters: filtersFor(buildPackages),
     staticFilters: filtersFor(staticPackages),

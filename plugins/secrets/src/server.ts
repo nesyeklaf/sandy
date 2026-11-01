@@ -3,10 +3,10 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliContext,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   SECRET_REQUEST_RENDERER_ID,
@@ -182,11 +182,11 @@ function httpStatus(error: unknown): number | null {
 }
 
 async function readSnapshot(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   args: { hostId: string; path: string },
 ): Promise<FileSnapshot> {
   try {
-    const result = fileReadResultSchema.parse(await bb.sdk.files.read(args));
+    const result = fileReadResultSchema.parse(await sandy.sdk.files.read(args));
     if (result.contentEncoding !== "utf8")
       throw new Error("Dotenv file is not valid UTF-8 text.");
     return { content: result.content, sha256: result.sha256 };
@@ -197,20 +197,20 @@ async function readSnapshot(
 }
 
 async function runRequest(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   parsed: ParsedRequest,
   ctx: PluginCliContext,
 ): Promise<PluginCliResult> {
   if (!ctx.threadId)
-    cliError("bb secret request must run from a bb thread.", "missing_thread");
+    cliError("sandy secret request must run from a sandy thread.", "missing_thread");
   if (!ctx.cwd) {
     cliError(
-      "bb secret request requires the invoking working directory.",
+      "sandy secret request requires the invoking working directory.",
       "missing_cwd",
     );
   }
   const thread = threadHostSchema.parse(
-    await bb.sdk.threads.get({
+    await sandy.sdk.threads.get({
       threadId: ctx.threadId,
       include: "host",
     }),
@@ -219,10 +219,10 @@ async function runRequest(
   if (!host?.id) cliError("The thread needs a live host.", "missing_host");
   const destinationPath = resolveHostPath(ctx.cwd, parsed.writeEnv);
   const fileArgs = { hostId: host.id, path: destinationPath };
-  let snapshot = await readSnapshot(bb, fileArgs);
+  let snapshot = await readSnapshot(sandy, fileArgs);
   assertNoDuplicateAssignments(snapshot.content, parsed.names);
 
-  const result = await bb.ui.requestInput(
+  const result = await sandy.ui.requestInput(
     {
       threadId: ctx.threadId,
       rendererId: SECRET_REQUEST_RENDERER_ID,
@@ -286,7 +286,7 @@ async function runRequest(
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const reconciled = reconcileDotenv(snapshot.content, response.values);
     const write = fileWriteResultSchema.parse(
-      await bb.sdk.files.write({
+      await sandy.sdk.files.write({
         ...fileArgs,
         content: reconciled.content,
         contentEncoding: "utf8",
@@ -307,13 +307,13 @@ async function runRequest(
         "dotenv_write_conflict",
       );
     }
-    snapshot = await readSnapshot(bb, fileArgs);
+    snapshot = await readSnapshot(sandy, fileArgs);
     assertNoDuplicateAssignments(snapshot.content, parsed.names);
   }
   cliError("Unreachable dotenv write state.", "unreachable_write_state");
 }
 
-export default function plugin(bb: BbPluginApi) {
+export default function plugin(sandy: SandyPluginApi) {
   const cli = defineCli({
     name: "secret",
     summary: "Securely request credentials and write them to a dotenv file.",
@@ -371,7 +371,7 @@ export default function plugin(bb: BbPluginApi) {
             writeEnv: input.options["write-env"],
           });
           try {
-            return await runRequest(bb, parsed, ctx);
+            return await runRequest(sandy, parsed, ctx);
           } catch (error) {
             if (error instanceof PluginCliError) throw error;
             throw new PluginCliError(
@@ -382,7 +382,7 @@ export default function plugin(bb: BbPluginApi) {
       }),
     },
   });
-  bb.cli.register({
+  sandy.cli.register({
     ...cli,
     run: (argv, ctx) => cli.run(foldDescribePairs(argv), ctx),
   });

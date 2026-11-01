@@ -112,7 +112,7 @@ export function classify(
     return {
       direction,
       state: "third-party",
-      reason: `${row.comm} is not bb: ${judged.reason}`,
+      reason: `${row.comm} is not sandy: ${judged.reason}`,
     };
   return { direction, ...judged };
 }

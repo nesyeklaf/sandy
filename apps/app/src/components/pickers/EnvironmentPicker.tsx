@@ -1,16 +1,16 @@
-import { PICKER_MOBILE_CLASS_NAME } from "@bb/shared-ui/picker-layout";
+import { PICKER_MOBILE_CLASS_NAME } from "@sandy/shared-ui/picker-layout";
 import { EnvironmentProviderIcon } from "@/components/plugin/EnvironmentProviderIcon";
 import { useMemo, useRef, useState } from "react";
 import {
   type Host,
   type ProjectSource,
   findLocalPathProjectSourceForHost,
-} from "@bb/domain";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+} from "@sandy/domain";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 import { pluginIconName } from "@/components/plugin/PluginIcon";
-import { Button } from "@bb/shared-ui/button";
-import { Skeleton } from "@bb/shared-ui/skeleton";
+import { Button } from "@sandy/shared-ui/button";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 import {
   Command,
   CommandGroup,
@@ -18,26 +18,26 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@bb/shared-ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
+} from "@sandy/shared-ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
 import {
   COARSE_POINTER_COMPACT_ICON_SIZE_CLASS,
   COARSE_POINTER_COMPACT_ICON_SIZE_SHRINK_CLASS,
   COARSE_POINTER_DOT_SIZE_CLASS,
   COARSE_POINTER_ICON_SIZE_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { LIST_HOVER_TRANSITION } from "@bb/shared-ui/motion";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { LIST_HOVER_TRANSITION } from "@sandy/shared-ui/motion";
 import { MachineStatusDot } from "@/components/machines/MachineStatusDot";
 import { REUSE_ENVIRONMENT_ICON_NAME } from "@/lib/environment-workspace-display";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { formatHostUpdateStatus } from "@/lib/host-update-status";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   OPTION_BASE_CLASS_NAME,
   OPTION_INTERACTIVE_CLASS_NAME,
   OPTION_MUTED_CLASS_NAME,
   OPTION_TRIGGER_CONTENT_CLASS_NAME,
-} from "@bb/shared-ui/option-display";
+} from "@sandy/shared-ui/option-display";
 import {
   encodeProviderValue,
   parseEnvironmentValue,
@@ -45,12 +45,12 @@ import {
 import { selectHosts } from "@/hooks/queries/host-queries";
 import { providerInputsControlRequired } from "./environment-provider-inputs";
 import { MACHINE_BADGE_CLASS_NAME, orderLocalHostFirst } from "./MachinePicker";
-import { ListLoadingPlaceholder } from "@bb/shared-ui/list-loading-placeholder";
+import { ListLoadingPlaceholder } from "@sandy/shared-ui/list-loading-placeholder";
 import { MachineIcon } from "@/components/machines/MachineLabel";
 import { searchMachineHosts } from "./machine-picker-search";
 import {
   useResetPickerScroll,
-} from "@bb/shared-ui/hooks/use-reset-picker-scroll";
+} from "@sandy/shared-ui/hooks/use-reset-picker-scroll";
 
 interface SelectedEnvironment {
   modeLabel: string;

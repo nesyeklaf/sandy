@@ -16,10 +16,10 @@ import {
   type TimelineTitleSegment,
   type TimelineTitleSegmentAccent,
   type TimelineTitleTone,
-} from "@bb/thread-view";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Icon } from "@bb/shared-ui/icon";
-import { DiffStatsTally } from "@bb/shared-ui/diff-stats-tally";
+} from "@sandy/thread-view";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { DiffStatsTally } from "@sandy/shared-ui/diff-stats-tally";
 import { RouteAnchor } from "@/components/ui/app-route-anchor.js";
 import { LiveDurationText } from "./LiveDurationText.js";
 import {

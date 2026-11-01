@@ -1,12 +1,12 @@
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type { ActivePluginInstallJob } from "@/hooks/queries/plugin-install-job-queries";
 import {
   NEW_TEXT_STYLE,
@@ -119,11 +119,11 @@ export function PluginCatalogInstallControl(
     ? included || props.onUninstall === undefined
     : props.disabled;
   const tooltip = included
-    ? "Included with BB"
+    ? "Included with SANDY"
     : installed
       ? "Installed"
       : disabled
-        ? (props.unavailableReason ?? "Unavailable for this version of BB.")
+        ? (props.unavailableReason ?? "Unavailable for this version of SANDY.")
         : `Install ${displayName}`;
   const stateIcon = installed
     ? "Check"

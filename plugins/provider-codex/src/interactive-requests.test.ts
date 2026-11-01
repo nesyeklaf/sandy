@@ -9,7 +9,7 @@ import {
 import {
   ProviderRequestDecodeError,
   interactionRequestPayloadSchema,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import computerUseElicitation from "./fixtures/computer-use-elicitation.json";
 
 it("surfaces a standard elicitation from another MCP server", () => {
@@ -700,7 +700,7 @@ describe("decodeCodexInteractiveRequest", () => {
     });
   });
 
-  it("rejects secret Codex user input instead of rendering it in the BB form", () => {
+  it("rejects secret Codex user input instead of rendering it in the SANDY form", () => {
     expect(() =>
       decodeCodexInteractiveRequest({
         id: 13,
@@ -728,7 +728,7 @@ describe("decodeCodexInteractiveRequest", () => {
 });
 
 describe("buildCodexInteractiveResponse", () => {
-  it("maps bb command approvals back to Codex responses", () => {
+  it("maps sandy command approvals back to Codex responses", () => {
     expect(
       buildCodexInteractiveResponse({
         payload: {

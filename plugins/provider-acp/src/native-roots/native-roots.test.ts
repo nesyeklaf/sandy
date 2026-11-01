@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { experimental_nativeRootsResolveOutputSchema } from "@get-bb/plugin-sdk/host";
+import { experimental_nativeRootsResolveOutputSchema } from "@sandy-sdk/plugin-sdk/host";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resolveGrokNativeRoots } from "./grok.js";
 import { resolveHermesNativeRoots } from "./hermes.js";
@@ -19,7 +19,7 @@ let homeDir: string;
 let cwd: string;
 
 beforeEach(async () => {
-  tempRoot = await mkdtemp(path.join(tmpdir(), "bb-acp-native-roots-"));
+  tempRoot = await mkdtemp(path.join(tmpdir(), "sandy-acp-native-roots-"));
   homeDir = path.join(tempRoot, "home");
   cwd = path.join(tempRoot, "workspace");
   await mkdir(homeDir, { recursive: true });

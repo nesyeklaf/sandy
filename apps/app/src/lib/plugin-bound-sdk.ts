@@ -4,15 +4,15 @@ import {
 } from "@/hooks/mutations/thread-state-mutations";
 import { createThreadMutationBatcher } from "@/hooks/mutations/thread-mutation-batcher";
 import type {
-  BbSdkAreas,
+  SandySdkAreas,
   ThreadForkArgs,
   PluginThreadMetadataListArgs,
   ThreadPluginMetadataArgs,
   ThreadPluginMetadataUpdateArgs,
   ThreadSpawnArgs,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import type { QueryClient } from "@tanstack/react-query";
-import type { PluginBrowserBbSdk } from "@get-bb/plugin-sdk";
+import type { PluginBrowserSandySdk } from "@sandy-sdk/plugin-sdk";
 import { invalidateEnvironmentActionQueries } from "@/hooks/cache-owners/environment-cache-effects";
 import {
   beginEnvironmentNameUpdateTransaction,
@@ -48,10 +48,10 @@ function withPluginThreadAttribution<
 }
 
 export function bindSdkToPlugin(
-  sdk: BbSdkAreas,
+  sdk: SandySdkAreas,
   pluginId: string,
   queryClient: QueryClient,
-): PluginBrowserBbSdk {
+): PluginBrowserSandySdk {
   const threadMutations = createThreadMutationBatcher(sdk.threads, queryClient);
   return {
     ...sdk,
@@ -298,14 +298,14 @@ export function bindSdkToPlugin(
 
 const boundSdkByQueryClient = new WeakMap<
   QueryClient,
-  WeakMap<BbSdkAreas, Map<string, PluginBrowserBbSdk>>
+  WeakMap<SandySdkAreas, Map<string, PluginBrowserSandySdk>>
 >();
 
 export function getPluginBoundSdk(
-  sdk: BbSdkAreas,
+  sdk: SandySdkAreas,
   pluginId: string,
   queryClient: QueryClient,
-): PluginBrowserBbSdk {
+): PluginBrowserSandySdk {
   let bySdk = boundSdkByQueryClient.get(queryClient);
   if (bySdk === undefined) {
     bySdk = new WeakMap();

@@ -104,7 +104,7 @@ export async function replaceFile(
     ({ kind: "create", mode: DEFAULT_CREATE_MODE } as const);
   const temporaryPath = path.join(
     path.dirname(args.path),
-    `.bb-write-${randomUUID()}`,
+    `.sandy-write-${randomUUID()}`,
   );
   try {
     try {

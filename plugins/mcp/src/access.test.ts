@@ -23,8 +23,8 @@ describe("mcpAccessProblem", () => {
     expect(
       problem({
         origin: "https://evil.example",
-        "x-bb-gate-auth": "oauth",
-        "x-bb-gate-oauth-scope": "bb",
+        "x-sandy-gate-auth": "oauth",
+        "x-sandy-gate-oauth-scope": "sandy",
       }),
     ).toMatchObject({ status: 403 });
   });

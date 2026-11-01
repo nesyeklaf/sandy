@@ -8,7 +8,7 @@ root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 cd "$root"
 exceptions="$root/scripts/fork/egress-exceptions.tsv"
 
-FORBIDDEN='posthog|get-bb/bb/releases|exp\.host|\bskills\.sh\b|modal\.com|getbb\.app'
+FORBIDDEN='posthog|nesyeklaf/sandy/releases|exp\.host|\bskills\.sh\b|modal\.com|getbb\.app'
 
 pathspec=(. ':!pnpm-lock.yaml' ':!scripts/fork/check-egress-hosts.sh' ':!scripts/fork/egress-exceptions.tsv')
 while IFS=$'\t' read -r prefix _reason; do

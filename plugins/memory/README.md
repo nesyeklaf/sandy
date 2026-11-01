@@ -1,17 +1,17 @@
-# bb-plugin-memory
+# sandy-plugin-memory
 
-BB's official plugin for durable, progressively disclosed agent memory. It
+SANDY's official plugin for durable, progressively disclosed agent memory. It
 provides:
 
 Because this memory store works across providers, we recommend turning off
 provider-native memory under Settings → Providers while using it. That avoids
-duplicated or conflicting memories split between Codex, Claude Code, and bb.
+duplicated or conflicting memories split between Codex, Claude Code, and sandy.
 
 - plugin-private SQLite storage with append-only migrations;
 - global and current-project memory scopes;
 - an automatically injected, 3,900-character summary catalog through
-  `bb.agents.contributeInstructions`;
-- CLI-only agent access through `bb memory` (no native agent tools);
+  `sandy.agents.contributeInstructions`;
+- CLI-only agent access through `sandy memory` (no native agent tools);
 - FTS5 search followed by full-record reads;
 - explicit provenance, tags, kinds, importance, pinning, and version history;
 - optimistic update/forget operations and soft deletion;
@@ -22,21 +22,21 @@ duplicated or conflicting memories split between Codex, Claude Code, and bb.
 
 ## Install
 
-Install Memory from the BB Official catalog:
+Install Memory from the SANDY Official catalog:
 
 ```bash
-bb plugin install memory
-bb plugin list
+sandy plugin install memory
+sandy plugin list
 ```
 
 ## Try it
 
 ```bash
-bb memory add \
+sandy memory add \
   --scope project \
   --name turbo-validation \
   --summary "Use Turbo for builds and typechecks" \
-  --details "Run pnpm exec turbo run typecheck --filter=@bb/<pkg>." \
+  --details "Run pnpm exec turbo run typecheck --filter=@sandy/<pkg>." \
   --kind procedure \
   --tag build \
   --tag testing \
@@ -44,11 +44,11 @@ bb memory add \
   --reason "Durable repository validation convention" \
   --json
 
-bb memory search "Turbo typecheck" --scope all --json
-bb memory get <id> --scope all --json
+sandy memory search "Turbo typecheck" --scope all --json
+sandy memory get <id> --scope all --json
 ```
 
-Project writes take the invoking CLI's BB project context. Global writes must
+Project writes take the invoking CLI's SANDY project context. Global writes must
 explicitly pass `--scope global`. The injected catalog refreshes at every
 thread start / turn submission, so a successful CLI write is visible on the
 next turn.
@@ -66,6 +66,6 @@ next turn.
 ## Develop
 
 ```bash
-pnpm exec turbo run test typecheck --filter=bb-plugin-memory
-bb plugin dev ./plugins/memory
+pnpm exec turbo run test typecheck --filter=sandy-plugin-memory
+sandy plugin dev ./plugins/memory
 ```

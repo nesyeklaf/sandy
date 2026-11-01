@@ -1,8 +1,8 @@
-import { DiffLoadingSkeleton } from "@bb/shared-ui/diff-loading-skeleton";
+import { DiffLoadingSkeleton } from "@sandy/shared-ui/diff-loading-skeleton";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 import type { DiffFileEntry } from "../../contract.js";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 import {
   getGitDiffCardImageSizeStat,
   GitDiffCardBody,
@@ -13,26 +13,26 @@ import {
   type GitDiffCardImagePreview,
   type GitDiffCardSvgDisplayMode,
   type RequestDiffFileContents,
-} from "@bb/shared-ui/git-diff/card-body";
+} from "@sandy/shared-ui/git-diff/card-body";
 import {
   GitDiffCardHeader,
   GitDiffCardImageSizeStat,
   GitDiffCardRawToggle,
   gitDiffCardHeaderWrapperClass,
   type GitDiffCardHeaderModel,
-} from "@bb/shared-ui/git-diff/card-header";
+} from "@sandy/shared-ui/git-diff/card-header";
 import {
   isPreviewableImagePath,
   isSvgGitDiffFile,
   parseGitDiffFiles,
   type ParsedGitDiffFile,
-} from "@bb/shared-ui/git-diff/parsing";
-import { Button } from "@bb/shared-ui/button";
-import { Checkbox } from "@bb/shared-ui/checkbox";
-import { FilePathLink } from "@bb/shared-ui/file-path-link";
+} from "@sandy/shared-ui/git-diff/parsing";
+import { Button } from "@sandy/shared-ui/button";
+import { Checkbox } from "@sandy/shared-ui/checkbox";
+import { FilePathLink } from "@sandy/shared-ui/file-path-link";
 import type { DiffPatchState } from "./diff-data.js";
 import { estimateCardBodyHeight } from "./diffFilesStore.js";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 function formatDiffEntryLabel(entry: DiffFileEntry): string {
   if (

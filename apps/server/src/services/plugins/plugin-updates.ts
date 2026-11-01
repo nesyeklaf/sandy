@@ -8,7 +8,7 @@ import {
   setInstalledPluginUpdateState,
   type InstalledPluginRow,
   type PluginGitSelector,
-} from "@bb/db";
+} from "@sandy/db";
 import { gitSelectorForRow } from "./git-source-intent.js";
 import {
   gitArtifactCacheDir,
@@ -39,7 +39,7 @@ import {
   pluginUpdateCheckEntrySchema,
   type PluginSourceDetail,
   type PluginUpdateCheckEntry,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   PluginApplyUpdateOutcome,
   PluginServiceDeps,
@@ -270,7 +270,7 @@ export function createPluginUpdates(
           detail:
             `security check failed: ${url} now publishes "${ref}" as a branch, but this install ` +
             `${evidence === "tag" ? "recorded it as a tag" : "has no local record of its ref kind"}. ` +
-            `bb keeps the plugin pinned to ${row.gitResolvedCommit ?? "its recorded commit"} rather than ` +
+            `sandy keeps the plugin pinned to ${row.gitResolvedCommit ?? "its recorded commit"} rather than ` +
             "tracking that branch. Remove the plugin and install it again to accept the new ref",
         };
       }
@@ -546,12 +546,12 @@ export function createPluginUpdates(
           ? {}
           : { resolvedTag: row.sourceGitResolvedTag }),
         engines: {
-          ...(manifest?.bbEngineRange === undefined
+          ...(manifest?.sandyEngineRange === undefined
             ? {}
-            : { bb: manifest.bbEngineRange }),
-          ...(manifest?.bbPluginSdkRange === undefined
+            : { sandy: manifest.sandyEngineRange }),
+          ...(manifest?.sandyPluginSdkRange === undefined
             ? {}
-            : { bbPluginSdk: manifest.bbPluginSdkRange }),
+            : { sandyPluginSdk: manifest.sandyPluginSdkRange }),
         },
         installedAt: row.installedAt,
         history: artifacts.map((artifact) => ({
@@ -585,7 +585,7 @@ export function createPluginUpdates(
             ok: false,
             error:
               row.sourceKind === "path"
-                ? `plugin "${id}" is a local path source with no update channel; edit it in place and run \`bb plugin reload ${id}\`, or move it with \`bb plugin install path:<new directory>\` (settings, secrets, and schedules are kept)`
+                ? `plugin "${id}" is a local path source with no update channel; edit it in place and run \`sandy plugin reload ${id}\`, or move it with \`sandy plugin install path:<new directory>\` (settings, secrets, and schedules are kept)`
                 : `plugin "${id}" is pinned by its source intent; remove and reinstall it with a git branch or a git semver range to track updates`,
           };
         }

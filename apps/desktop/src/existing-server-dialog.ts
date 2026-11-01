@@ -1,12 +1,12 @@
 import { ipcMain, type BrowserWindow } from "electron";
-import { escapeHtmlText } from "@bb/text-utils";
+import { escapeHtmlText } from "@sandy/text-utils";
 import {
   createDesktopDialogWindow,
   DESKTOP_DIALOG_BASE_CSS,
   showDesktopDialogHtml,
 } from "./desktop-dialog-window.js";
 import {
-  BB_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL,
+  SANDY_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL,
   existingServerDialogChooseRequestSchema,
 } from "./existing-server-dialog-ipc.js";
 import type { ForeignRuntimeDetails } from "./foreign-runtime.js";
@@ -49,7 +49,7 @@ export function formatStartedAt(startedAt: string, now: Date): string {
 }
 
 export function formatSurface(surface: string): string {
-  return surface === "desktop" ? "the bb desktop app" : "a terminal";
+  return surface === "desktop" ? "the sandy desktop app" : "a terminal";
 }
 
 function buildDetailRows(args: {
@@ -98,21 +98,21 @@ export function renderExistingServerDialogHtml(
     .join("\n      ");
   const canReplace = args.details !== null;
   const replaceButtonHtml = canReplace
-    ? `<button type="button" data-choice="replace">Quit other bb</button>`
+    ? `<button type="button" data-choice="replace">Quit other sandy</button>`
     : "";
   const replaceWarningHtml = canReplace
     ? `<p class="warning">If you stop the running copy, its agent threads stop too.</p>`
     : "";
   const introText = canReplace
     ? "This app can use the copy that is already running, or you can stop it and start a new one."
-    : "This app can use the copy that is already running. bb cannot identify that copy, so it cannot stop it for you.";
+    : "This app can use the copy that is already running. sandy cannot identify that copy, so it cannot stop it for you.";
 
   return `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
-  <title>bb is already running</title>
+  <title>sandy is already running</title>
   <style>
 ${DESKTOP_DIALOG_BASE_CSS}
 
@@ -159,14 +159,14 @@ ${DESKTOP_DIALOG_BASE_CSS}
   </style>
 </head>
 <body>
-  <h1>bb is already running on ${BUILTIN_SERVER_NAME}</h1>
+  <h1>sandy is already running on ${BUILTIN_SERVER_NAME}</h1>
   <p>${introText}</p>
   <div class="details">
       ${detailHtml}
   </div>
   ${replaceWarningHtml}
   <div class="actions">
-    <button type="button" data-choice="quit">Quit this bb</button>
+    <button type="button" data-choice="quit">Quit this sandy</button>
     ${replaceButtonHtml}
     <button type="button" data-choice="connect">Connect</button>
   </div>
@@ -180,7 +180,7 @@ export function openExistingServerDialog(
   const dialogWindow = createDesktopDialogWindow({
     parentWindow: args.parentWindow,
     preloadPath: args.preloadPath,
-    title: "bb is already running",
+    title: "sandy is already running",
     width: 460,
   });
 
@@ -193,7 +193,7 @@ export function openExistingServerDialog(
       }
       settled = true;
       ipcMain.removeListener(
-        BB_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL,
+        SANDY_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL,
         handleChoose,
       );
       if (!dialogWindow.isDestroyed()) {
@@ -216,7 +216,7 @@ export function openExistingServerDialog(
       finish(parsed.data.choice);
     }
 
-    ipcMain.on(BB_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL, handleChoose);
+    ipcMain.on(SANDY_DESKTOP_EXISTING_SERVER_DIALOG_CHOOSE_CHANNEL, handleChoose);
     dialogWindow.on("closed", () => {
       finish("quit");
     });

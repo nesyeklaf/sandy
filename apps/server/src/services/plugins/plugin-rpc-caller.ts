@@ -1,13 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
-  createNodeBbSdk,
+  createNodeSandySdk,
   createRequestTimeoutFetch,
-  DEFAULT_BB_REQUEST_TIMEOUT_MS,
-  type BbSdk,
-} from "@bb/sdk";
-import type { ExperimentalPluginRpcCaller } from "@get-bb/plugin-sdk";
+  DEFAULT_SANDY_REQUEST_TIMEOUT_MS,
+  type SandySdk,
+} from "@sandy/sdk";
+import type { ExperimentalPluginRpcCaller } from "@sandy-sdk/plugin-sdk";
 
-export const PLUGIN_RPC_CALLER_HEADER = "x-bb-plugin-caller";
+export const PLUGIN_RPC_CALLER_HEADER = "x-sandy-plugin-caller";
 
 export interface PluginRpcCallerCredential {
   readonly token: string;
@@ -54,11 +54,11 @@ export function createPluginRpcCallerRegistry(): PluginRpcCallerRegistry {
 export function createPluginRpcCallerSdk(args: {
   baseUrl: string;
   token: string;
-}): BbSdk {
+}): SandySdk {
   const timeoutFetch = createRequestTimeoutFetch({
-    timeoutMs: DEFAULT_BB_REQUEST_TIMEOUT_MS,
+    timeoutMs: DEFAULT_SANDY_REQUEST_TIMEOUT_MS,
   });
-  return createNodeBbSdk({
+  return createNodeSandySdk({
     baseUrl: args.baseUrl,
     fetch: (input, init) => {
       const headers = new Headers(init?.headers);

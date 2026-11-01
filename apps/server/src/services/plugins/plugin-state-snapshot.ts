@@ -24,7 +24,7 @@ import {
   type DbConnection,
   type InstalledPluginRow,
   type PluginStateSnapshotRow,
-} from "@bb/db";
+} from "@sandy/db";
 
 const kvRowSchema = z.object({
   pluginId: z.string(),
@@ -162,7 +162,7 @@ export async function createPluginStateSnapshotOnDisk(args: {
     status: "pending",
     rollbackCandidateVersion: null,
     rollbackSourceFingerprint: null,
-    rollbackBbVersion: null,
+    rollbackSandyVersion: null,
     rollbackSdkVersion: null,
     rollbackDetail: null,
     createdAt: args.now,

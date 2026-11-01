@@ -7,7 +7,7 @@ export default defineWorkspaceTestConfig({
   test: {
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "bb-plugin-bb--storage-retention",
+      name: "sandy-plugin-sandy--storage-retention",
       include: ["src/**/*.test.ts", "app.test.tsx"],
     }),
   },

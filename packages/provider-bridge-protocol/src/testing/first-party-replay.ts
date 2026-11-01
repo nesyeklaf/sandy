@@ -67,8 +67,8 @@ export function resolveReplayProfile(
       dialect: "json-rpc",
       bridgeFamily: "codex",
       env: ({ replayCommand }) => ({
-        BB_CODEX_BRIDGE_APP_SERVER_COMMAND: replayCommand[0],
-        BB_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify(replayCommand.slice(1)),
+        SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND: replayCommand[0],
+        SANDY_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify(replayCommand.slice(1)),
       }),
     };
   }
@@ -77,7 +77,7 @@ export function resolveReplayProfile(
       dialect: "claude-cli",
       bridgeFamily: "claude-code",
       env: ({ wrapperPath, stateDir }) => ({
-        BB_CLAUDE_CODE_EXECUTABLE: wrapperPath,
+        SANDY_CLAUDE_CODE_EXECUTABLE: wrapperPath,
         CLAUDE_CONFIG_DIR: claudeConfigDir(stateDir),
       }),
       prepareState: seedClaudeForkTranscripts,
@@ -97,9 +97,9 @@ export function resolveReplayProfile(
       dialect: "pi-rpc",
       bridgeFamily: "pi",
       env: ({ replayCommand, stateDir }) => ({
-        BB_PI_BRIDGE_COMMAND: replayCommand[0],
-        BB_PI_BRIDGE_ARGS: JSON.stringify(replayCommand.slice(1)),
-        BB_PI_BRIDGE_SESSION_DIR: piSessionDir(stateDir),
+        SANDY_PI_BRIDGE_COMMAND: replayCommand[0],
+        SANDY_PI_BRIDGE_ARGS: JSON.stringify(replayCommand.slice(1)),
+        SANDY_PI_BRIDGE_SESSION_DIR: piSessionDir(stateDir),
       }),
       prepareState: seedPiSessionFiles,
     };

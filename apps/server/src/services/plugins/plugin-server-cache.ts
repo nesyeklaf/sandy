@@ -29,7 +29,7 @@ import {
   PLUGIN_TOOLCHAIN_PINS,
   pluginBuildCodeDigest,
   type PluginBuildToolchain,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 
 const PLUGIN_SERVER_RUNTIME_FORMAT_VERSION = 5;
 const RETAINED_PLUGIN_SERVER_ARTIFACTS = 4;
@@ -78,7 +78,7 @@ interface CachedPluginServerArgs {
   dataDir: string;
   pluginId: string;
   sdkVersion: string;
-  bbVersion: string;
+  sandyVersion: string;
   validatedConfig: {
     serverEntry: string;
     packageName: string;
@@ -315,7 +315,7 @@ async function pluginServerConfigKey(
       packageName: args.validatedConfig.packageName,
       pluginVersion: args.validatedConfig.pluginVersion,
       sdkVersion: args.sdkVersion,
-      bbVersion: args.bbVersion,
+      sandyVersion: args.sandyVersion,
       nodeVersion: process.versions.node,
       toolchain: PLUGIN_TOOLCHAIN_PINS,
       runtimeImports: Object.entries(args.runtimeImports)
@@ -432,7 +432,7 @@ export async function buildCachedPluginServer(
     const builtSinceMs = (await stat(stageDir)).mtimeMs;
     const built = await buildPluginServer(
       args.rootDir,
-      args.bbVersion,
+      args.sandyVersion,
       await args.toolchain(),
       {
         outDir: stageDir,

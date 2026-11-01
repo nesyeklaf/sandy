@@ -1,25 +1,25 @@
 import {
   experimental_copyToClipboard as copyToClipboard,
   experimental_ThreadContextCardRow as ThreadContextCardRow,
-  useBbNavigate,
+  useSandyNavigate,
   useSettings,
   type ExperimentalThreadContextCardProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { useRef, useState } from "react";
 import {
   getThreadContextCardMenuOffsets,
   type ThreadContextCardMenuOffsets,
   THREAD_CONTEXT_CARD_MENU_CONTENT_CLASS,
   THREAD_CONTEXT_CARD_MENU_TRIGGER_CLASS,
-} from "@bb/shared-ui/chrome-style-tokens";
+} from "@sandy/shared-ui/chrome-style-tokens";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   SHOW_PULL_REQUEST_SETTING,
   type PullRequest,
@@ -180,7 +180,7 @@ function PullRequestRow({
   environmentId: string;
   pullRequest: PullRequest;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const actions = usePullRequestActions(environmentId);
   return (
     <PullRequestContextCardRowView

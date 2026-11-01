@@ -21,7 +21,7 @@ import {
   type DesktopBrowserCommand,
   type DesktopBrowserInstance,
   type DesktopBrowserResult,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 
 interface Peer {
   socket: WebSocket;
@@ -325,7 +325,7 @@ export async function startDesktopBrowserBroker(options: {
         throw new Error("Desktop browser broker is disconnected from server");
       return {
         proof: createHmac("sha256", token)
-          .update(`bb-desktop-broker:${challenge}`)
+          .update(`sandy-desktop-broker:${challenge}`)
           .digest("hex"),
       };
     },

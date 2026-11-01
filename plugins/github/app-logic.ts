@@ -1,4 +1,4 @@
-import type { PluginRpcResult } from "@get-bb/plugin-sdk/app";
+import type { PluginRpcResult } from "@sandy-sdk/plugin-sdk/app";
 import type { githubRpcContract } from "./server.js";
 
 export type Item = PluginRpcResult<

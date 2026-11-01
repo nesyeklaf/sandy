@@ -8,10 +8,10 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
-import type { BbDesktopInfo } from "@bb/desktop-contract";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
+import type { SandyDesktopInfo } from "@sandy/desktop-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import { focusWithKeyboard } from "@/test/keyboard-focus";
 import { useIsBrowserDimmingModalOpen } from "@/hooks/useBrowserDimmingModal";
 import { PaneContext, type PaneContextValue } from "./PaneContext";
@@ -70,7 +70,7 @@ function renderButton(
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
 });
 
 describe("PaneMaximizeButton", () => {
@@ -112,7 +112,7 @@ describe("PaneMaximizeButton", () => {
     expect(onToggle).toHaveBeenCalledOnce();
   });
 
-  it("shows only BB's supported split arrangement actions on hover", () => {
+  it("shows only SANDY's supported split arrangement actions on hover", () => {
     vi.useFakeTimers();
     const onMoveToSide = vi.fn();
     renderButton(false, noop, onMoveToSide);
@@ -187,11 +187,11 @@ describe("PaneMaximizeButton", () => {
   });
 
   it("preserves full-screen copy in every desktop app context", async () => {
-    const desktopInfo: BbDesktopInfo = {
+    const desktopInfo: SandyDesktopInfo = {
       platform: "linux",
       version: "0.0.0-test",
     };
-    window.bbDesktop = createBbDesktopApi(desktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(desktopInfo);
     renderButton(false);
 
     const button = screen.getByRole("button", {
@@ -207,11 +207,11 @@ describe("PaneMaximizeButton", () => {
 
   it("hides the native desktop browser while the arrangement menu can cover it", () => {
     vi.useFakeTimers();
-    const desktopInfo: BbDesktopInfo = {
+    const desktopInfo: SandyDesktopInfo = {
       platform: "macos",
       version: "0.0.0-test",
     };
-    window.bbDesktop = createBbDesktopApi(desktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(desktopInfo);
     renderButton(false);
     expect(screen.getByTestId("browser-overlay-state").textContent).toBe(
       "visible",

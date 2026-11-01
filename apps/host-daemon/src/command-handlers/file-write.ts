@@ -1,9 +1,9 @@
 import { Buffer } from "node:buffer";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { replaceFile } from "@bb/file-transfer";
-import type { HostDaemonOnlineRpcResult } from "@bb/host-daemon-contract";
-import { isPathWithinDirectory } from "@bb/process-utils";
+import { replaceFile } from "@sandy/file-transfer";
+import type { HostDaemonOnlineRpcResult } from "@sandy/host-daemon-contract";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import { CommandDispatchError } from "../command-dispatch-support.js";
 import type { CommandOf } from "../command-dispatch-support.js";
 import { isFsErrorWithCode } from "../fs-errors.js";

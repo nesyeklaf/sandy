@@ -34,7 +34,7 @@ async function fixture(
   layout: "global" | "local" = "global",
 ) {
   const root = await realpath(
-    await mkdtemp(path.join(os.tmpdir(), "bb pi launch-")),
+    await mkdtemp(path.join(os.tmpdir(), "sandy pi launch-")),
   );
   directories.push(root);
   const nodeModules = path.join(root, "node_modules");
@@ -154,28 +154,28 @@ describe("Windows Pi npm launch", () => {
   it("preserves explicit commands, arguments, and argument validation", () => {
     expect(
       resolvePiLaunch({
-        BB_PI_BRIDGE_COMMAND: "pi",
-        BB_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
+        SANDY_PI_BRIDGE_COMMAND: "pi",
+        SANDY_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
       }),
     ).toEqual({ command: "pi", args: ["--flag", "value with spaces"] });
-    expect(resolvePiLaunch({ BB_PI_BRIDGE_COMMAND: "custom-pi" })).toEqual({
+    expect(resolvePiLaunch({ SANDY_PI_BRIDGE_COMMAND: "custom-pi" })).toEqual({
       command: "custom-pi",
       args: [],
     });
     expect(() =>
-      resolvePiLaunch({ BB_PI_BRIDGE_COMMAND: "pi", BB_PI_BRIDGE_ARGS: "[1]" }),
+      resolvePiLaunch({ SANDY_PI_BRIDGE_COMMAND: "pi", SANDY_PI_BRIDGE_ARGS: "[1]" }),
     ).toThrow("must be a JSON array of strings");
   });
 
   it("keeps default configuration independent from process resolution", () => {
-    expect(resolvePiLaunch({ BB_PI_BRIDGE_ARGS: "invalid" })).toEqual({
+    expect(resolvePiLaunch({ SANDY_PI_BRIDGE_ARGS: "invalid" })).toEqual({
       command: "pi",
       args: [],
     });
     expect(() =>
       resolvePiLaunch({
-        BB_PI_BRIDGE_COMMAND: "pi",
-        BB_PI_BRIDGE_ARGS: "invalid",
+        SANDY_PI_BRIDGE_COMMAND: "pi",
+        SANDY_PI_BRIDGE_ARGS: "invalid",
       }),
     ).toThrow();
   });
@@ -218,8 +218,8 @@ describe("Windows Pi npm launch", () => {
       ).toEqual({ command: node, args: [second.cli] });
       const explicit = resolvePiProcessLaunch(
         {
-          BB_PI_BRIDGE_COMMAND: first.shim,
-          BB_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
+          SANDY_PI_BRIDGE_COMMAND: first.shim,
+          SANDY_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
         },
         childEnv,
         first.pkg,
@@ -233,7 +233,7 @@ describe("Windows Pi npm launch", () => {
       await writeFile(path.join(second.root, "unrelated.cmd"), "");
       expect(
         resolvePiProcessLaunch(
-          { BB_PI_BRIDGE_COMMAND: "unrelated.cmd" },
+          { SANDY_PI_BRIDGE_COMMAND: "unrelated.cmd" },
           childEnv,
           first.pkg,
         ),
@@ -245,8 +245,8 @@ describe("Windows Pi npm launch", () => {
       expect(
         resolvePiProcessLaunch(
           {
-            BB_PI_BRIDGE_COMMAND: "pi",
-            BB_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
+            SANDY_PI_BRIDGE_COMMAND: "pi",
+            SANDY_PI_BRIDGE_ARGS: '["--flag","value with spaces"]',
           },
           { Path: first.root, PATHEXT: ".CMD" },
           first.pkg,
@@ -305,8 +305,8 @@ createInterface({ input: new Socket({ fd: 4, readable: true, writable: false }) 
 });
 `,
       );
-      vi.stubEnv("BB_PI_BRIDGE_COMMAND", undefined);
-      vi.stubEnv("BB_PI_BRIDGE_ARGS", undefined);
+      vi.stubEnv("SANDY_PI_BRIDGE_COMMAND", undefined);
+      vi.stubEnv("SANDY_PI_BRIDGE_ARGS", undefined);
       const env = { ...process.env };
       for (const key of Object.keys(env)) {
         if (["PATH", "PATHEXT"].includes(key.toUpperCase())) delete env[key];

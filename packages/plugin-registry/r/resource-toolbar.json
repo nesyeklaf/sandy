@@ -3,15 +3,15 @@
   "name": "resource-toolbar",
   "type": "registry:ui",
   "title": "resource-toolbar",
-  "description": "BB ui \"resource-toolbar\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-toolbar\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/dropdown-menu",
-    "@bb/icon",
-    "@bb/input",
-    "@bb/tooltip",
-    "@bb/use-compact-viewport",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/dropdown-menu",
+    "@sandy/icon",
+    "@sandy/input",
+    "@sandy/tooltip",
+    "@sandy/use-compact-viewport",
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -5,13 +5,13 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import {
   defaultCommandRunner,
-  resolveBbAppPackage,
-  type BbAppArtifactCommandRunner,
-} from "../install/bb-app-artifact.js";
+  resolveSandyAppPackage,
+  type SandyAppArtifactCommandRunner,
+} from "../install/sandy-app-artifact.js";
 
 const REQUIRED_PACKAGE_PATHS = [
-  "dist/bb-server.js",
-  "dist/bb-app.js",
+  "dist/sandy-server.js",
+  "dist/sandy-app.js",
   "server/dist",
   "app/dist",
 ] as const;
@@ -19,24 +19,24 @@ const PACKAGE_SIZE_SKIPPED_DIRECTORIES: ReadonlySet<string> = new Set([
   "node_modules",
 ]);
 
-export interface FullBbAppArtifact {
+export interface FullSandyAppArtifact {
   path: string;
   sha256: string;
   sizeBytes: number;
   version: string;
 }
 
-export type FullBbAppArtifactAvailability =
+export type FullSandyAppArtifactAvailability =
   | { available: true; unpackedSizeBytes: number; version: string }
   | { available: false; reason: string };
 
-export interface FullBbAppArtifactService {
-  availability(): Promise<FullBbAppArtifactAvailability>;
-  build(): Promise<FullBbAppArtifact>;
+export interface FullSandyAppArtifactService {
+  availability(): Promise<FullSandyAppArtifactAvailability>;
+  build(): Promise<FullSandyAppArtifact>;
 }
 
-export interface CreateFullBbAppArtifactServiceArgs {
-  commandRunner?: BbAppArtifactCommandRunner;
+export interface CreateFullSandyAppArtifactServiceArgs {
+  commandRunner?: SandyAppArtifactCommandRunner;
   dataDir: string;
   serverEntryUrl: string;
 }
@@ -73,11 +73,11 @@ async function packageSizeBytes(root: string): Promise<number> {
   return total;
 }
 
-export function createFullBbAppArtifactService(
-  args: CreateFullBbAppArtifactServiceArgs,
-): FullBbAppArtifactService {
+export function createFullSandyAppArtifactService(
+  args: CreateFullSandyAppArtifactServiceArgs,
+): FullSandyAppArtifactService {
   const cacheDir = join(args.dataDir, "install-cache");
-  let artifactPromise: Promise<FullBbAppArtifact> | undefined;
+  let artifactPromise: Promise<FullSandyAppArtifact> | undefined;
   let packageSize:
     | { root: string; version: string; sizeBytes: number }
     | undefined;
@@ -96,9 +96,9 @@ export function createFullBbAppArtifactService(
     | { available: true; root: string; version: string }
     | { available: false; reason: string }
   > {
-    let resolved: Awaited<ReturnType<typeof resolveBbAppPackage>>;
+    let resolved: Awaited<ReturnType<typeof resolveSandyAppPackage>>;
     try {
-      resolved = await resolveBbAppPackage(args.serverEntryUrl);
+      resolved = await resolveSandyAppPackage(args.serverEntryUrl);
     } catch (error) {
       return {
         available: false,
@@ -109,14 +109,14 @@ export function createFullBbAppArtifactService(
       return {
         available: false,
         reason:
-          "This server runs from a source checkout, so it can't send its full bb-app package.",
+          "This server runs from a source checkout, so it can't send its full sandy-app package.",
       };
     }
     for (const relativePath of REQUIRED_PACKAGE_PATHS) {
       if (!(await pathExists(join(resolved.root, relativePath)))) {
         return {
           available: false,
-          reason: `The installed bb-app package is missing ${relativePath}.`,
+          reason: `The installed sandy-app package is missing ${relativePath}.`,
         };
       }
     }
@@ -127,7 +127,7 @@ export function createFullBbAppArtifactService(
     };
   }
 
-  async function buildArtifact(): Promise<FullBbAppArtifact> {
+  async function buildArtifact(): Promise<FullSandyAppArtifact> {
     const resolved = await resolvePackagedRoot();
     if (!resolved.available) {
       throw new Error(resolved.reason);
@@ -146,7 +146,7 @@ export function createFullBbAppArtifactService(
     const sha256 = await sha256File(packedPath);
     const artifactPath = join(
       cacheDir,
-      `bb-app-full-${resolved.version}-${sha256}.tgz`,
+      `sandy-app-full-${resolved.version}-${sha256}.tgz`,
     );
     await rename(packedPath, artifactPath);
     const artifactStats = await stat(artifactPath);

@@ -13,7 +13,7 @@ import {
   type AiTask,
   type AppKeybindingOverrides,
   type AppSettings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { eq, inArray } from "drizzle-orm";
 import type { DbConnection, DbQueryConnection } from "../connection.js";
 import { appSettingsValues } from "../schema.js";
@@ -245,7 +245,7 @@ export function setDisabledProviderIds(
 }
 
 const pluginProviderCatalogSchema =
-  pluginPackageJsonSchema.shape.bb.shape.experimental_providers
+  pluginPackageJsonSchema.shape.sandy.shape.experimental_providers
     .unwrap()
     .element.omit({ kind: true })
     .array();

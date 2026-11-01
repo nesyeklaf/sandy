@@ -1,11 +1,11 @@
-import type { ThreadChatMessageReference } from "@get-bb/plugin-sdk";
-import type { PromptInput } from "@bb/domain";
+import type { ThreadChatMessageReference } from "@sandy-sdk/plugin-sdk";
+import type { PromptInput } from "@sandy/domain";
 import type {
   MarkdownPreviewLocalFileLink,
   MarkdownPreviewLocalFileLinkHandler,
 } from "../../ui/markdown-local-file-link.js";
 import type { MarkdownPreviewLinkHandler } from "../../ui/markdown-link.js";
-import type { PromptDraftAttachment } from "@bb/client-core";
+import type { PromptDraftAttachment } from "@sandy/client-core";
 
 export type ThreadTimelineLocalFileLink = MarkdownPreviewLocalFileLink;
 

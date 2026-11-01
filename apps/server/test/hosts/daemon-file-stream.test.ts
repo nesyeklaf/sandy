@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { describe, expect, it, vi } from "vitest";
-import { HOST_FILE_CHUNK_MAX_BYTES } from "@bb/host-daemon-contract";
+import { HOST_FILE_CHUNK_MAX_BYTES } from "@sandy/host-daemon-contract";
 import { createDaemonFileStreamResponse } from "../../src/services/hosts/daemon-file-stream.js";
 
 const metadata = {
@@ -26,7 +26,7 @@ function reader() {
   );
 }
 function request(headers: HeadersInit = {}, method = "GET") {
-  return new Request("http://bb.test/clip.mp4", { headers, method });
+  return new Request("http://sandy.test/clip.mp4", { headers, method });
 }
 
 describe("daemon file streaming", () => {

@@ -1,4 +1,4 @@
-import type { PromptMentionResource, PromptTextMention } from "@bb/domain";
+import type { PromptMentionResource, PromptTextMention } from "@sandy/domain";
 import type {
   PromptDraftAttachment,
   PromptDraftState,

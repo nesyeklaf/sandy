@@ -1,5 +1,5 @@
-import type { ExperimentalMessageMetadataProps } from "@get-bb/plugin-sdk";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import type { ExperimentalMessageMetadataProps } from "@sandy-sdk/plugin-sdk";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import {
   collectPluginAppRegistrations,
   definePluginApp,

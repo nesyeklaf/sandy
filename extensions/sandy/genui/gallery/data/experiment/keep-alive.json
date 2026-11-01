@@ -1,0 +1,54 @@
+{
+  "name": "keep-alive for uploads",
+  "hypothesis": "Reusing connections for upload requests cuts p95 upload latency by at least 10 %.",
+  "threshold": 10,
+  "primary": "p95 upload latency",
+  "metrics": [
+    {
+      "name": "p95 upload latency",
+      "unit": "ms",
+      "before": [
+        181,
+        186,
+        183,
+        188,
+        182
+      ],
+      "after": [
+        243,
+        251,
+        247,
+        255,
+        254
+      ],
+      "better": "lower"
+    },
+    {
+      "name": "TCP connections per 100 uploads",
+      "unit": "",
+      "before": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "after": [
+        21,
+        19,
+        20,
+        22,
+        20
+      ],
+      "better": "lower"
+    }
+  ],
+  "runs": 5,
+  "commit": {
+    "sha": "a3f9c1e",
+    "branch": "exp/keep-alive",
+    "commits": 3,
+    "merged": false,
+    "pushed": false
+  }
+}

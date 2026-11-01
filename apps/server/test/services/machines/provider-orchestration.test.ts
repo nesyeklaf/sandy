@@ -11,11 +11,11 @@ import {
   replaceStoredProviderModelCatalog,
   setThreadStartupContext,
   updateHost,
-} from "@bb/db";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/db";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { eq } from "drizzle-orm";
-import type { JsonValue } from "@bb/domain";
-import type { PluginMachineProviderDeclaration } from "@get-bb/plugin-sdk";
+import type { JsonValue } from "@sandy/domain";
+import type { PluginMachineProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 import {
   askMachineLaunch,
   requestAutomaticMachineRemoval,
@@ -179,12 +179,12 @@ describe("machine creation hosts", () => {
       const cleanupStarted = createDeferredPromise<void>();
       const finishCleanup = createDeferredPromise<void>();
       const message =
-        "Machine bootstrap command failed:\nbb-machine-install: 9: node: not found\nbb-machine-install: 9: curl: not found";
+        "Machine bootstrap command failed:\nsandy-machine-install: 9: node: not found\nsandy-machine-install: 9: curl: not found";
       const record = installMachineProvider({
         create: async ({ report }) => {
           report.step("Bootstrapping machine");
-          report.log("bb-machine-install: 9: node: not found\n");
-          report.log("bb-machine-install: 9: curl: not found\n");
+          report.log("sandy-machine-install: 9: node: not found\n");
+          report.log("sandy-machine-install: 9: curl: not found\n");
           return { status: "failed", message };
         },
         reconcileCleanup: async () => {

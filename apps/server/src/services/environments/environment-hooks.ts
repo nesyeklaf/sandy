@@ -1,8 +1,8 @@
 import { resolveHostEnvironment } from "../hosts/host-environment.js";
-import { environmentHookOperations } from "@bb/db";
+import { environmentHookOperations } from "@sandy/db";
 import { eq } from "drizzle-orm";
-import type { EnvironmentHookProgressMessage } from "@bb/host-daemon-contract";
-import type { PluginEnvironmentProviderProgress } from "@get-bb/plugin-sdk/environment-provider";
+import type { EnvironmentHookProgressMessage } from "@sandy/host-daemon-contract";
+import type { PluginEnvironmentProviderProgress } from "@sandy-sdk/plugin-sdk/environment-provider";
 import type { WorkSessionDeps } from "../../types.js";
 import {
   callHostOnlineRpc,

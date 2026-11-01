@@ -1,11 +1,11 @@
-import { HOST_TAILWIND_VERSION } from "@bb/plugin-build/host-tailwind-version";
+import { HOST_TAILWIND_VERSION } from "@sandy/plugin-build/host-tailwind-version";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Hono } from "hono";
-import { upsertInstalledPlugin } from "@bb/db";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
+import { upsertInstalledPlugin } from "@sandy/db";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
 import { loadHostStylesheet } from "../../../src/host-stylesheet.js";
 import { registerPluginRoutes } from "../../../src/routes/plugins.js";
 import { createPluginInstallJobs } from "../../../src/services/plugins/plugin-install-jobs.js";
@@ -42,7 +42,7 @@ function npmPersistence(packageName: string, version: string) {
   };
 }
 
-const SERVER_SOURCE = `export default function plugin(bb: any) { bb.log.info("loaded"); }`;
+const SERVER_SOURCE = `export default function plugin(sandy: any) { sandy.log.info("loaded"); }`;
 const APP_SOURCE = `export default function App() {\n  return <div className="line-clamp-2">hi</div>;\n}\n`;
 const COMPRESSIBLE_APP_SOURCE = `const payload = ${JSON.stringify(
   "compressible plugin bundle payload ".repeat(200),
@@ -63,7 +63,7 @@ async function writeAppPluginFixture(
     JSON.stringify({
       name: options.name,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "App bundle fixture",
         description: "Plugin app bundle fixture.",
         branding: { icon: "Zap" },
@@ -94,9 +94,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   });
 
   it("builds path installs at install time and serves hash-cached assets", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-appy");
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-appy");
     await writeAppPluginFixture(rootDir, {
-      name: "bb-plugin-appy",
+      name: "sandy-plugin-appy",
       appSource: COMPRESSIBLE_APP_SOURCE,
     });
 
@@ -127,7 +127,7 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
       "public, max-age=31536000, immutable",
     );
     const jsText = await js.text();
-    expect(jsText).toContain("__bbPluginRuntime");
+    expect(jsText).toContain("__sandyPluginRuntime");
     expect(js.headers.get("content-encoding")).toBeNull();
     expect(js.headers.get("content-length")).toBe(
       String(Buffer.byteLength(jsText)),
@@ -179,10 +179,10 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     expect(css.headers.get("content-type")).toContain("text/css");
     const cssText = await css.text();
     expect(cssText).toContain("line-clamp-2");
-    const scope = ":where([data-bb-plugin=appy])";
-    expect(cssText).not.toContain(",[data-bb-plugin-root]");
+    const scope = ":where([data-sandy-plugin=appy])";
+    expect(cssText).not.toContain(",[data-sandy-plugin-root]");
     expect(cssText).toContain(
-      ":where([data-bb-plugin-root]:not([data-bb-plugin]))",
+      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
     );
     expect(cssText).toContain(`${scope} .line-clamp-2`);
     expect(cssText).toContain(`${scope}.line-clamp-2`);
@@ -249,9 +249,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   }, 60_000);
 
   it("drops utilities the served host stylesheet already declares only for that stylesheet", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-dup");
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-dup");
     await writeAppPluginFixture(rootDir, {
-      name: "bb-plugin-dup",
+      name: "sandy-plugin-dup",
       appSource: `export default function App() {\n  return <div className="flex text-center">hi</div>;\n}\n`,
     });
     const staticDir = join(harness.config.dataDir, "static-app");
@@ -301,10 +301,10 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-headless",
+      "sandy-plugin-headless",
     );
     await writeAppPluginFixture(rootDir, {
-      name: "bb-plugin-headless",
+      name: "sandy-plugin-headless",
       app: false,
     });
     const entry = await harness.pluginService.installPath(rootDir);
@@ -321,12 +321,12 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-typed-rpc",
+      "sandy-plugin-typed-rpc",
     );
     await writeAppPluginFixture(rootDir, {
-      name: "bb-plugin-typed-rpc",
+      name: "sandy-plugin-typed-rpc",
       serverSource: `
-        import { defineRpcContract } from "@get-bb/plugin-sdk";
+        import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
         import { z } from "zod";
         const BACKEND_ONLY_SENTINEL = "backend-contract-must-not-bundle";
         export const rpcContract = defineRpcContract({
@@ -335,13 +335,13 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
             output: z.object({ value: z.string() }),
           },
         });
-        export default function plugin(bb: any) {
+        export default function plugin(sandy: any) {
           void BACKEND_ONLY_SENTINEL;
-          bb.rpc.register(rpcContract, { echo: (input: any) => input });
+          sandy.rpc.register(rpcContract, { echo: (input: any) => input });
         }
       `,
       appSource: `
-        import { definePluginApp, useRpc } from "@get-bb/plugin-sdk/app";
+        import { definePluginApp, useRpc } from "@sandy-sdk/plugin-sdk/app";
         import type { rpcContract } from "./server";
         function Panel() {
           const rpc = useRpc<typeof rpcContract>();
@@ -363,9 +363,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   }, 60_000);
 
   it("fails the install when the frontend build fails", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-bad");
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-bad");
     await writeAppPluginFixture(rootDir, {
-      name: "bb-plugin-bad",
+      name: "sandy-plugin-bad",
       appSource: "export default function App( {\n",
     });
     await expect(
@@ -375,8 +375,8 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   }, 60_000);
 
   it("rebuilds a path plugin at load when the recorded SDK version is stale", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-aged");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-aged" });
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-aged");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-aged" });
     await harness.pluginService.installPath(rootDir);
 
     const metaPath = join(rootDir, "dist", "app.meta.json");
@@ -396,8 +396,8 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   }, 120_000);
 
   it("keeps an npm plugin's backend running with compatible:false on a major mismatch (no rebuild)", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-oldie");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-oldie" });
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-oldie");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-oldie" });
     const staleMajor = PLUGIN_SDK_MAJOR + 1;
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(join(rootDir, "dist", "app.js"), "export default {};\n");
@@ -406,9 +406,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
       JSON.stringify({ sdkMajor: staleMajor, sdkVersion: `${staleMajor}.0.0` }),
     );
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-oldie", "0.1.0"),
+      ...npmPersistence("sandy-plugin-oldie", "0.1.0"),
       id: "oldie",
-      source: "npm:bb-plugin-oldie@0.1.0",
+      source: "npm:sandy-plugin-oldie@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -437,9 +437,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     expect(js.status).toBe(200);
   });
 
-  it("refreshes the served bundle hash on reload-by-id after dist changes (bb plugin dev cycle)", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-devy");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-devy" });
+  it("refreshes the served bundle hash on reload-by-id after dist changes (sandy plugin dev cycle)", async () => {
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-devy");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-devy" });
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(join(rootDir, "dist", "app.js"), "export default 1;\n");
     await writeFile(
@@ -450,9 +450,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
       }),
     );
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-devy", "0.1.0"),
+      ...npmPersistence("sandy-plugin-devy", "0.1.0"),
       id: "devy",
-      source: "npm:bb-plugin-devy@0.1.0",
+      source: "npm:sandy-plugin-devy@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -488,9 +488,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-brittle",
+      "sandy-plugin-brittle",
     );
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-brittle" });
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-brittle" });
     await harness.pluginService.installPath(rootDir);
     const before = harness.pluginService
       .list()
@@ -520,8 +520,8 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   }, 120_000);
 
   it("re-keys the bundle hash when only the meta changes (same js/css)", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-meta");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-meta" });
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-meta");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-meta" });
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(join(rootDir, "dist", "app.js"), "export default 1;\n");
     await writeFile(
@@ -532,9 +532,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
       }),
     );
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-meta", "0.1.0"),
+      ...npmPersistence("sandy-plugin-meta", "0.1.0"),
       id: "meta",
-      source: "npm:bb-plugin-meta@0.1.0",
+      source: "npm:sandy-plugin-meta@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -563,15 +563,15 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-malformed",
+      "sandy-plugin-malformed",
     );
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-malformed" });
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-malformed" });
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(join(rootDir, "dist", "app.js"), "export default 1;\n");
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-malformed", "0.1.0"),
+      ...npmPersistence("sandy-plugin-malformed", "0.1.0"),
       id: "malformed",
-      source: "npm:bb-plugin-malformed@0.1.0",
+      source: "npm:sandy-plugin-malformed@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -605,8 +605,8 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   });
 
   it("stops serving assets when the plugin is disabled", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-gated");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-gated" });
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-gated");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-gated" });
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(join(rootDir, "dist", "app.js"), "export default 1;\n");
     await writeFile(
@@ -617,9 +617,9 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
       }),
     );
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-gated", "0.1.0"),
+      ...npmPersistence("sandy-plugin-gated", "0.1.0"),
       id: "gated",
-      source: "npm:bb-plugin-gated@0.1.0",
+      source: "npm:sandy-plugin-gated@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,
@@ -641,12 +641,12 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
   });
 
   it("reports bundle:null when an npm plugin's dist is missing at load", async () => {
-    const rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-bare");
-    await writeAppPluginFixture(rootDir, { name: "bb-plugin-bare" });
+    const rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-bare");
+    await writeAppPluginFixture(rootDir, { name: "sandy-plugin-bare" });
     upsertInstalledPlugin(harness.db, {
-      ...npmPersistence("bb-plugin-bare", "0.1.0"),
+      ...npmPersistence("sandy-plugin-bare", "0.1.0"),
       id: "bare",
-      source: "npm:bb-plugin-bare@0.1.0",
+      source: "npm:sandy-plugin-bare@0.1.0",
       rootDir,
       version: "0.1.0",
       enabled: true,

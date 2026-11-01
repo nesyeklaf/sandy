@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAtomValue } from "jotai";
 import { z } from "zod";
-import type { ExperimentalSidebarNavigationPlacement } from "@get-bb/plugin-sdk";
+import type { ExperimentalSidebarNavigationPlacement } from "@sandy-sdk/plugin-sdk";
 import { createLastKnownCache } from "@/lib/last-known-cache";
 import {
   usePluginFrontendLoadFailed,
@@ -108,7 +108,7 @@ export function sidebarNavigationPlacement(
 }
 
 const lastKnownPreferenceCache = createLastKnownCache({
-  prefix: "bb.sidebar-navigation-provider",
+  prefix: "sandy.sidebar-navigation-provider",
   version: "1",
   schema: z.string().min(1),
 });
@@ -124,7 +124,7 @@ export const sidebarNavigationProviderAtom = createSyncedPreferenceAtom(
 );
 
 const lastResolvedCache = createLastKnownCache({
-  prefix: "bb.sidebar-navigation-resolved",
+  prefix: "sandy.sidebar-navigation-resolved",
   version: "1",
   schema: lastResolvedSchema,
 });

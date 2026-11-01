@@ -1,0 +1,32 @@
+[
+  {
+    "name": "upload queue › retries a failed upload once",
+    "status": "pass",
+    "file": "src/uploadQueue.test.ts",
+    "ms": 12
+  },
+  {
+    "name": "upload queue › two uploads of one file retry once",
+    "status": "pass",
+    "file": "src/uploadQueue.test.ts",
+    "ms": 18
+  },
+  {
+    "name": "upload queue › keeps order across a retry",
+    "status": "pass",
+    "file": "src/uploadQueue.test.ts",
+    "ms": 9
+  },
+  {
+    "name": "upload api › rejects a file over 25 MB",
+    "status": "pass",
+    "file": "src/uploadApi.test.ts",
+    "ms": 6
+  },
+  {
+    "name": "upload e2e › resumes after the network drops",
+    "status": "skip",
+    "file": "e2e/upload.spec.ts",
+    "message": "needs the storage sandbox, not available on this machine"
+  }
+]

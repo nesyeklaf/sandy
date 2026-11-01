@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import type {
   PluginInstallJob,
   PluginInstallJobState,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { makeInstalledPlugin } from "@/test/fixtures/plugins";
 import { appToast } from "@/components/ui/app-toast";
 import {
@@ -14,7 +14,7 @@ import { reportPluginInstallJobs } from "./PluginInstallJobsHost";
 
 const BASE = {
   id: "job-1",
-  target: { kind: "catalog", entryId: "notes", marketplace: "bb-community" },
+  target: { kind: "catalog", entryId: "notes", marketplace: "sandy-community" },
   displayName: "Notes",
 } as const;
 

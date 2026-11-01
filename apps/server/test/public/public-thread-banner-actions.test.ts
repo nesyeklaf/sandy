@@ -1,12 +1,12 @@
-import { getLastStoredProviderThreadId, getThread, listEvents } from "@bb/db";
+import { getLastStoredProviderThreadId, getThread, listEvents } from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
   type PromptInput,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { describe, expect, it, vi } from "vitest";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
 import { internalAuthHeaders } from "../helpers/commands.js";
 import {
   registerHostRpcResponder,

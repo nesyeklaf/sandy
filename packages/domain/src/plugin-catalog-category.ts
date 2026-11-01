@@ -44,7 +44,7 @@ export const PLUGIN_CATALOG_CATEGORIES = [
   {
     id: "themes-and-appearance",
     displayName: "Themes & Appearance",
-    description: "Personalize how bb looks and feels.",
+    description: "Personalize how sandy looks and feels.",
   },
   {
     id: "thread-management",
@@ -109,18 +109,18 @@ export const PLUGIN_CATALOG_CATEGORIES = [
   {
     id: "command-line",
     displayName: "Command Line",
-    description: "Work with shells and command-line programs inside bb.",
+    description: "Work with shells and command-line programs inside sandy.",
   },
   {
     id: "utilities",
     displayName: "Utilities",
-    description: "Inspect or control the computers bb runs on.",
+    description: "Inspect or control the computers sandy runs on.",
   },
   {
     id: "plugin-development",
     displayName: "Plugin Development",
     description:
-      "Understand, inspect, build, or debug bb and its plugin surfaces.",
+      "Understand, inspect, build, or debug sandy and its plugin surfaces.",
   },
   {
     id: "tasks-and-workflows",

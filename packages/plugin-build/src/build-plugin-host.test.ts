@@ -33,16 +33,16 @@ describe("plugin host build", () => {
   });
 
   it("builds a self-contained Node artifact with identity and digest metadata", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-host-build-test-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-host-build-test-"));
     tempDirs.push(dir);
     await mkdir(join(dir, "dist"), { recursive: true });
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-build-fixture",
+        name: "sandy-plugin-host-build-fixture",
         version: "1.2.3",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Host fixture",
           description: "Exercises the host artifact builder.",
           branding: { icon: "Cpu" },
@@ -58,8 +58,8 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "host.ts"),
       [
-        'import { experimental_defineHostEntry, type ExperimentalHostEntry } from "@get-bb/plugin-sdk/host";',
-        'import { defineRpcContract } from "@get-bb/plugin-sdk";',
+        'import { experimental_defineHostEntry, type ExperimentalHostEntry } from "@sandy-sdk/plugin-sdk/host";',
+        'import { defineRpcContract } from "@sandy-sdk/plugin-sdk";',
         'const schema = { "~standard": { validate(value: unknown) { return { value }; } } };',
         "const contract = defineRpcContract({ echo: {",
         "  input: schema,",
@@ -85,15 +85,15 @@ describe("plugin host build", () => {
     const metadata = JSON.parse(await readFile(result.metaPath, "utf8")) as {
       pluginId: string;
       pluginVersion: string;
-      builtWith: { bbVersion: string };
+      builtWith: { sandyVersion: string };
       artifactDigest: string;
     };
 
-    expect(bundle).not.toMatch(/from\s+["']@get-bb\/plugin-sdk/u);
+    expect(bundle).not.toMatch(/from\s+["']@sandy-sdk\/plugin-sdk/u);
     expect(metadata).toMatchObject({
       pluginId: "host-build-fixture",
       pluginVersion: "1.2.3",
-      builtWith: { bbVersion: "0.9.0-test" },
+      builtWith: { sandyVersion: "0.9.0-test" },
       artifactDigest: result.artifactDigest,
     });
     expect(result.artifactDigest).toBe(
@@ -115,7 +115,7 @@ describe("plugin host build", () => {
   });
 
   it("removes old host staging directories without deleting an active concurrent build", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-host-stage-cleanup-test-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-host-stage-cleanup-test-"));
     tempDirs.push(dir);
     const distDir = join(dir, "dist");
     await mkdir(join(distDir, ".host-stage-abandoned"), { recursive: true });
@@ -138,10 +138,10 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-stage-cleanup-fixture",
+        name: "sandy-plugin-host-stage-cleanup-fixture",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Host stage cleanup fixture",
           description: "Exercises stale host staging directory cleanup.",
           branding: { icon: "Cpu" },
@@ -176,10 +176,10 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-escape-fixture",
+        name: "sandy-plugin-host-escape-fixture",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Escape fixture",
           description: "Invalid host path.",
           branding: { icon: "Cpu" },
@@ -198,16 +198,16 @@ describe("plugin host build", () => {
     ).rejects.toThrow(/escapes the plugin directory/u);
   });
 
-  it("rejects private BB workspace imports from host entries", async () => {
+  it("rejects private SANDY workspace imports from host entries", async () => {
     const dir = await mkdtemp(join(process.cwd(), ".host-build-private-test-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-private-fixture",
+        name: "sandy-plugin-host-private-fixture",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Private import fixture",
           description: "Invalid host dependency.",
           branding: { icon: "Cpu" },
@@ -226,12 +226,12 @@ describe("plugin host build", () => {
     );
     await writeFile(
       join(dir, "helper.ts"),
-      'import type { JsonValue } from "@bb/domain";\nexport default function helper(value: JsonValue) { return value; }\n',
+      'import type { JsonValue } from "@sandy/domain";\nexport default function helper(value: JsonValue) { return value; }\n',
     );
 
     await expect(
       buildPluginHost(dir, "0.9.0-test", await testToolchain()),
-    ).rejects.toThrow(/cannot import private BB workspace package/u);
+    ).rejects.toThrow(/cannot import private SANDY workspace package/u);
   });
 
   it("bundles the published bridge surface without stubbing it", async () => {
@@ -240,11 +240,11 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-bridge-fixture",
+        name: "sandy-plugin-host-bridge-fixture",
         version: "1.0.0",
         type: "module",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Bridge surface fixture",
           description: "Imports the published bridge surface.",
           branding: { icon: "Cpu" },
@@ -260,7 +260,7 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "host.ts"),
       [
-        'import { experimental_compareVersions, experimental_defineProviderBridge, threadDeltaSchema, threadStartParamsSchema } from "@get-bb/plugin-sdk/provider-bridge";',
+        'import { experimental_compareVersions, experimental_defineProviderBridge, threadDeltaSchema, threadStartParamsSchema } from "@sandy-sdk/plugin-sdk/provider-bridge";',
         "export const compareVersions = experimental_compareVersions;",
         "export const experimental_providerBridge = experimental_defineProviderBridge({",
         "  handleLine(line) {",
@@ -277,7 +277,7 @@ describe("plugin host build", () => {
       await testToolchain(),
     );
     const bundle = await readFile(result.jsPath, "utf8");
-    expect(bundle).not.toMatch(/from\s*"@bb\//u);
+    expect(bundle).not.toMatch(/from\s*"@sandy\//u);
     expect(bundle).toContain("experimental_apiVersion");
     expect(bundle).not.toMatch(/(?:from\s*|require\()["']semver/u);
     const builtEntry = await import(
@@ -294,10 +294,10 @@ describe("plugin host build", () => {
 
   describe("host contract imports without a usable SDK", () => {
     const manifest = {
-      name: "bb-plugin-host-contract-fixture",
+      name: "sandy-plugin-host-contract-fixture",
       version: "1.0.0",
-      engines: { bb: ">=0.0" },
-      bb: {
+      engines: { sandy: ">=0.0" },
+      sandy: {
         name: "Host contract fixture",
         description: "Imports a host contract from the SDK.",
         branding: { icon: "Cpu" },
@@ -310,7 +310,7 @@ describe("plugin host build", () => {
       "  experimental_defineHostEntry,",
       "  experimental_nativeRootsHostContract,",
       "  type ExperimentalHostEntry,",
-      '} from "@get-bb/plugin-sdk/host";',
+      '} from "@sandy-sdk/plugin-sdk/host";',
       "export default experimental_defineHostEntry({",
       "  contract: experimental_nativeRootsHostContract,",
       "  handlers: { resolveNativeRoots: () => ({ roots: [] }) },",
@@ -328,32 +328,32 @@ describe("plugin host build", () => {
     }
 
     it("names the missing SDK dependency when the plugin has no node_modules", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "bb-host-no-sdk-test-"));
+      const dir = await mkdtemp(join(tmpdir(), "sandy-host-no-sdk-test-"));
       tempDirs.push(dir);
       await writeFixture(dir);
 
       await expect(
         buildPluginHost(dir, "0.9.0-test", await testToolchain()),
       ).rejects.toThrow(
-        '"@get-bb/plugin-sdk/host" is not installed for this plugin (no node_modules/@get-bb/plugin-sdk); a host entry that imports experimental_nativeRootsHostContract needs the SDK as a dependency',
+        '"@sandy-sdk/plugin-sdk/host" is not installed for this plugin (no node_modules/@sandy-sdk/plugin-sdk); a host entry that imports experimental_nativeRootsHostContract needs the SDK as a dependency',
       );
     });
 
     it("names the unbuilt SDK dist when the package is installed without it", async () => {
-      const dir = await mkdtemp(join(tmpdir(), "bb-host-unbuilt-sdk-test-"));
+      const dir = await mkdtemp(join(tmpdir(), "sandy-host-unbuilt-sdk-test-"));
       tempDirs.push(dir);
       await writeFixture(dir);
-      const sdkDir = join(dir, "node_modules", "@get-bb", "plugin-sdk");
+      const sdkDir = join(dir, "node_modules", "@sandy-sdk", "plugin-sdk");
       await mkdir(sdkDir, { recursive: true });
       await writeFile(
         join(sdkDir, "package.json"),
         JSON.stringify({
-          name: "@get-bb/plugin-sdk",
+          name: "@sandy-sdk/plugin-sdk",
           version: "0.0.0-test",
           type: "module",
           exports: {
             "./host": {
-              types: "./bundled-types/bb-plugin-sdk-host.d.ts",
+              types: "./bundled-types/sandy-plugin-sdk-host.d.ts",
               import: "./dist/host.js",
               default: "./dist/host.js",
             },
@@ -364,7 +364,7 @@ describe("plugin host build", () => {
       await expect(
         buildPluginHost(dir, "0.9.0-test", await testToolchain()),
       ).rejects.toThrow(
-        `"@get-bb/plugin-sdk/host" is installed for this plugin but its dist is not built: run the SDK build (${join(await realpath(sdkDir), "dist", "host.js")} is missing); a host entry that imports experimental_nativeRootsHostContract needs the built SDK`,
+        `"@sandy-sdk/plugin-sdk/host" is installed for this plugin but its dist is not built: run the SDK build (${join(await realpath(sdkDir), "dist", "host.js")} is missing); a host entry that imports experimental_nativeRootsHostContract needs the built SDK`,
       );
     });
   });
@@ -410,7 +410,7 @@ describe("plugin host build", () => {
     ["alias", 'import { value } from "private-alias"; export default value;'],
     ["transitive", 'export { default } from "./helper.js";'],
   ])("rejects private packages reached by %s", async (_name, source) => {
-    const parent = await mkdtemp(join(tmpdir(), "bb-host-private-graph-"));
+    const parent = await mkdtemp(join(tmpdir(), "sandy-host-private-graph-"));
     tempDirs.push(parent);
     const dir = join(parent, "plugin");
     const privatePackage = join(parent, "private-package");
@@ -418,7 +418,7 @@ describe("plugin host build", () => {
     await mkdir(privatePackage);
     await writeFile(
       join(privatePackage, "package.json"),
-      JSON.stringify({ name: "@bb/private-fixture", type: "module" }),
+      JSON.stringify({ name: "@sandy/private-fixture", type: "module" }),
     );
     await writeFile(
       join(privatePackage, "index.ts"),
@@ -437,10 +437,10 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-private-graph",
+        name: "sandy-plugin-private-graph",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Private graph",
           description: "Private graph fixture",
           branding: { icon: "Cpu" },
@@ -462,7 +462,7 @@ describe("plugin host build", () => {
     );
     await expect(
       buildPluginHost(dir, "0.9.0-test", await testToolchain()),
-    ).rejects.toThrow(/@bb\/private-fixture/u);
+    ).rejects.toThrow(/@sandy\/private-fixture/u);
     expect(await readFile(join(dir, "dist", "host.js"), "utf8")).toBe(
       "previous validated artifact",
     );
@@ -470,15 +470,15 @@ describe("plugin host build", () => {
   });
 
   it("allows unresolved relative type imports without replacing runtime validation", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-host-erased-missing-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-host-erased-missing-"));
     tempDirs.push(dir);
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-erased-missing",
+        name: "sandy-plugin-erased-missing",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Erased missing",
           description: "Erased missing fixture",
           branding: { icon: "Cpu" },
@@ -503,10 +503,10 @@ describe("plugin host build", () => {
     await writeFile(
       join(dir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-prose-fixture",
+        name: "sandy-plugin-host-prose-fixture",
         version: "1.0.0",
-        engines: { bb: ">=0.0" },
-        bb: {
+        engines: { sandy: ">=0.0" },
+        sandy: {
           name: "Prose fixture",
           description: "Valid host source.",
           branding: { icon: "Cpu" },
@@ -521,7 +521,7 @@ describe("plugin host build", () => {
     );
     await writeFile(
       join(dir, "host.ts"),
-      '// Do not import from "@bb/domain".\nexport default "import type X from \'@bb/domain\'";\n',
+      '// Do not import from "@sandy/domain".\nexport default "import type X from \'@sandy/domain\'";\n',
     );
 
     await expect(

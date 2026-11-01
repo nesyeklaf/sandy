@@ -1,0 +1,12 @@
+criteria = Load("data/proof/search-debounce.json").criteria
+seen = criteria.filter(c => c.status == "passed" && ["observed", "tested"].includes(c.basis)).length
+unchecked = criteria.filter(c => c.status == "untested" || c.status == "claimed").length
+inferred = criteria.length - seen - unchecked
+Card("PR 214: what is proven", [
+  Row([
+    Metric("Seen or tested", seen, note: "a live check or a run"),
+    Metric("Inferred", inferred, note: "passes that rest on reading the code"),
+    Metric("Unchecked", unchecked, note: "untested, or only reported by someone", tone: unchecked > 0 ? "warn" : "neutral")
+  ]),
+  Acceptance(Load("data/proof/search-debounce.json"))
+])

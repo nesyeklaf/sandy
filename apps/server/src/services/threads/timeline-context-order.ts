@@ -1,9 +1,9 @@
-import type { TimelineRow } from "@bb/server-contract";
+import type { TimelineRow } from "@sandy/server-contract";
 import {
   isExternalUserBoundaryForTurn,
   type ExternalUserBoundaryMessage,
   type ExternalUserBoundaryTurnSpan,
-} from "@bb/thread-view";
+} from "@sandy/thread-view";
 import {
   getDatabaseDataVersion,
   getFirstParentedTimelineBoundarySequence,
@@ -11,7 +11,7 @@ import {
   getTimelineGroupingContextChangesInRange,
   listTimelineOrderingContext,
   type DbConnection,
-} from "@bb/db";
+} from "@sandy/db";
 
 interface TimelineGroupingContext {
   orderingBoundarySequence: number | null;

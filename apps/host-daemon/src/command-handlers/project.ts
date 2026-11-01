@@ -5,7 +5,7 @@ import {
   type GitProcessOptions,
   runGit,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 const PROJECT_CLONE_TIMEOUT_MS = 20 * 60 * 1000;
 

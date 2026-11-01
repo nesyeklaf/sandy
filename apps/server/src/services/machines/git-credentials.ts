@@ -1,6 +1,6 @@
-import { createAsyncTtlMemo, type AsyncTtlMemo } from "@bb/async-cache";
-import { execHostFile } from "@bb/process-utils";
-import type { HostDaemonContributedEnvEntry } from "@bb/host-daemon-contract";
+import { createAsyncTtlMemo, type AsyncTtlMemo } from "@sandy/async-cache";
+import { execHostFile } from "@sandy/process-utils";
+import type { HostDaemonContributedEnvEntry } from "@sandy/host-daemon-contract";
 import { z } from "zod";
 
 const exec = execHostFile;

@@ -17,17 +17,17 @@ import {
 const USAGE = `Usage: node scripts/perf/calibrate.mjs (--device-score <n> | --field) [options]
 
 Finds the --cpu-throttle factor that makes headless Chrome on this machine as fast as a user's device.
-Runs bbBenchmarkIndex (the function the field-latency plugin runs in the user's browser) in a dedicated
+Runs sandyBenchmarkIndex (the function the field-latency plugin runs in the user's browser) in a dedicated
 Web Worker, takes the median of the runs as the lab score, recommends lab score / device score, and checks
 it by running the benchmark on the throttled main thread.
 
 Options:
-  --device-score <n>    The device's bbBenchmarkIndex
-  --field               Read the device score as the median benchmarkIndex of the devices in bb field-latency report --json
+  --device-score <n>    The device's sandyBenchmarkIndex
+  --field               Read the device score as the median benchmarkIndex of the devices in sandy field-latency report --json
   --since <duration>    With --field, how far back to read (default 7d)
   --runs <n>            Benchmark runs per measurement (default 5)
   --refine <n>          Correction steps when the throttled score misses the target by more than 10% (default 2)
-  --chrome <path>       Chrome/Chromium executable (or BB_PERF_CHROME)
+  --chrome <path>       Chrome/Chromium executable (or SANDY_PERF_CHROME)
   --json                Print the result as JSON
 `;
 
@@ -50,14 +50,14 @@ if (values.help || (!values["device-score"] && !values.field)) {
 
 const readFieldScore = () => {
   const output = execFileSync(
-    "bb",
+    "sandy",
     ["field-latency", "report", "--json", "--since", values.since],
     { encoding: "utf8" },
   );
   const { score, sessions } = fieldDeviceScore(JSON.parse(output));
   if (score === null) {
     console.error(
-      "bb field-latency report --json lists no device with a benchmarkIndex in that window. Pass --device-score <n>.",
+      "sandy field-latency report --json lists no device with a benchmarkIndex in that window. Pass --device-score <n>.",
     );
     process.exit(2);
   }

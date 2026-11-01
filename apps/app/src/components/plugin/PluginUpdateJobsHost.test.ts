@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { createMemoryStorage } from "@bb/test-helpers";
-import type { PluginUpdateJob } from "@bb/server-contract";
+import { createMemoryStorage } from "@sandy/test-helpers";
+import type { PluginUpdateJob } from "@sandy/server-contract";
 import { appToast } from "@/components/ui/app-toast";
 import { reportPluginUpdateJobs } from "./PluginUpdateJobsHost";
 

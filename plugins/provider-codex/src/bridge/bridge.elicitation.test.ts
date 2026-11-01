@@ -9,8 +9,8 @@ import {
   BRIDGE_JSON_RPC_ERRORS,
   interactionRequestPayloadSchema,
   type JsonValue,
-} from "@get-bb/plugin-sdk/provider-bridge";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import computerUseElicitation from "../fixtures/computer-use-elicitation.json";
 import mcpToolApprovalElicitation from "../fixtures/mcp-tool-approval-elicitation.json";
 import { CODEX_MCP_ELICITATION_KIND } from "../mcp-elicitation.js";
@@ -201,7 +201,7 @@ async function runElicitation(args: {
   request: ScriptedElicitationRequest;
   runtimeError?: string;
 }) {
-  const tempDir = mkdtempSync(join(tmpdir(), "bb-codex-elicitation-"));
+  const tempDir = mkdtempSync(join(tmpdir(), "sandy-codex-elicitation-"));
   const scriptPath = join(tempDir, "script.json");
   const responseLogPath = join(tempDir, "outbound-responses.jsonl");
   const threadId = `thr_codex_elicitation_${Date.now()}`;
@@ -215,9 +215,9 @@ async function runElicitation(args: {
       turns: [[{ kind: "request", ...args.request }]],
     }),
   );
-  vi.stubEnv("BB_CODEX_BRIDGE_APP_SERVER_COMMAND", process.execPath);
+  vi.stubEnv("SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND", process.execPath);
   vi.stubEnv(
-    "BB_CODEX_BRIDGE_APP_SERVER_ARGS",
+    "SANDY_CODEX_BRIDGE_APP_SERVER_ARGS",
     JSON.stringify([fakeAppServerPath, scriptPath]),
   );
   const harness = createBridgeJsonRpcTestHarness(handleLine);
@@ -338,7 +338,7 @@ it.sequential("round-trips a validated generic form response", async () => {
     request: formElicitation,
     answer: {
       action: "accept",
-      content: { project: "bb", retries: 4, notify: false },
+      content: { project: "sandy", retries: 4, notify: false },
     },
   });
   expect(interaction.payload).toEqual({
@@ -386,7 +386,7 @@ it.sequential("round-trips a validated generic form response", async () => {
     id: "fx-req-1",
     result: {
       action: "accept",
-      content: { project: "bb", retries: 4, notify: false },
+      content: { project: "sandy", retries: 4, notify: false },
       _meta: null,
     },
   });

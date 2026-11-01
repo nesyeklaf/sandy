@@ -1,14 +1,14 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import {
   createFakePluginHost,
   type ExperimentalFakeHostRpcCall,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { makeWorkspaceMergeBase, makeWorkspaceStatus } from "../testing.js";
 import { describe, expect, it } from "vitest";
 import plugin from "../server.js";
 
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["get"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["get"]>
 >;
 
 const ENVIRONMENT = {
@@ -56,7 +56,7 @@ function setup(
   const viewedCalls: { method: string; args: unknown }[] = [];
   const fileReads: unknown[] = [];
   const fake = createFakePluginHost({
-    pluginId: "bb--git",
+    pluginId: "sandy--git",
     sdk: {
       environments: {
         get: async () => options.environment ?? ENVIRONMENT,
@@ -83,7 +83,7 @@ function setup(
     },
     experimental_callHostRpc: host,
   });
-  plugin(fake.bb);
+  plugin(fake.sandy);
   return { fake, viewedCalls, fileReads };
 }
 
@@ -158,7 +158,7 @@ function filesHost() {
   };
 }
 
-describe("bb git", () => {
+describe("sandy git", () => {
   it("prints status against the requested merge base and qualifies incomplete counts", async () => {
     const { fake } = setup(() => ({
       outcome: "available",
@@ -709,10 +709,10 @@ describe("bb git", () => {
   });
 });
 
-describe("bb git errors", () => {
-  it("reports a missing environment with the old bb environment error envelope", async () => {
+describe("sandy git errors", () => {
+  it("reports a missing environment with the old sandy environment error envelope", async () => {
     const fake = createFakePluginHost({
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
       sdk: {
         environments: {
           get: async () => {
@@ -723,7 +723,7 @@ describe("bb git errors", () => {
         },
       },
     });
-    plugin(fake.bb);
+    plugin(fake.sandy);
     const result = await fake.harness.runCli(["status", "env-gone", "--json"]);
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toBe("Error: Environment not found\n");

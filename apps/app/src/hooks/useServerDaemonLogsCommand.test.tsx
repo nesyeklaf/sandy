@@ -4,7 +4,7 @@ import { cleanup, render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { useEffect } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { defaultAppSettings, type AppDefaultKeybinding } from "@bb/domain";
+import { defaultAppSettings, type AppDefaultKeybinding } from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandRunner,
@@ -31,8 +31,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => ({
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => ({
     platform: "macos",
     getInfo: () =>
       Promise.resolve({ serverDaemonLogsAvailable: testState.available }),

@@ -3,13 +3,13 @@
   "name": "input-otp",
   "type": "registry:ui",
   "title": "input-otp",
-  "description": "BB ui \"input-otp\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"input-otp\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "input-otp"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

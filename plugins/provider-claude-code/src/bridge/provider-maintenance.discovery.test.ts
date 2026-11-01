@@ -16,7 +16,7 @@ describe.skipIf(process.platform === "win32")(
       await mkdir(pathDir);
       vi.stubEnv("HOME", homeDir);
       vi.stubEnv("PATH", pathDir);
-      vi.stubEnv("BB_CLAUDE_CODE_EXECUTABLE", "");
+      vi.stubEnv("SANDY_CLAUDE_CODE_EXECUTABLE", "");
     });
 
     afterEach(async () => {

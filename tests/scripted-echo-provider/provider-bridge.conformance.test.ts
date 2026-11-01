@@ -6,15 +6,15 @@ import {
   experimental_captureBridgeJsonRpcOutput as captureBridgeJsonRpcOutput,
   experimental_formatConformanceReport as formatConformanceReport,
   experimental_runBridgeConformance as runBridgeConformance,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
-import type { CapturedBridgeJsonRpcOutput } from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
+import type { CapturedBridgeJsonRpcOutput } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./src/provider-bridge.js";
 
 let output: CapturedBridgeJsonRpcOutput;
 let workspaceDir: string;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-scripted-echo-conformance-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-scripted-echo-conformance-"));
   output = captureBridgeJsonRpcOutput();
 });
 

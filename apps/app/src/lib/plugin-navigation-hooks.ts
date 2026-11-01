@@ -2,14 +2,14 @@ import { useCallback, useContext, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import type {
-  BbNavigate,
+  SandyNavigate,
   ExperimentalLiveFileTarget,
-  PluginBrowserBbSdk,
-} from "@get-bb/plugin-sdk";
-import { getMessageLinkPath } from "@bb/client-core";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+  PluginBrowserSandySdk,
+} from "@sandy-sdk/plugin-sdk";
+import { getMessageLinkPath } from "@sandy/client-core";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import { usePluginId } from "@/components/plugin/plugin-context";
-import { BbHttpError, sdk } from "@/lib/sdk";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 import { getPluginBoundSdk } from "@/lib/plugin-bound-sdk";
 import {
   AUTOMATIONS_PLUGIN_ID,
@@ -21,7 +21,7 @@ import {
 } from "@/lib/route-paths";
 import { RouteNavigationCallbackContext } from "@/components/ui/app-route-anchor";
 import { useStore } from "jotai";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { getThreadConversationCollapsedAtom } from "@/components/secondary-panel/threadSecondaryPanelAtoms";
 import { lookupCachedThread } from "@/lib/cached-thread";
 import { useSetRootComposeProjectId } from "@/lib/root-compose-selection";
@@ -44,7 +44,7 @@ export function isAutomationEditRoutePath(pathname: string): boolean {
   );
 }
 
-export function useSdk(): PluginBrowserBbSdk {
+export function useSdk(): PluginBrowserSandySdk {
   const pluginId = usePluginId();
   const queryClient = useQueryClient();
   return getPluginBoundSdk(sdk, pluginId, queryClient);
@@ -56,7 +56,7 @@ export function usePluginCanOpenFileExternally(
   return useCanOpenFileExternally(normalizeExperimentalLiveFileTarget(target));
 }
 
-export function useBbNavigate(): BbNavigate {
+export function useSandyNavigate(): SandyNavigate {
   const pluginId = usePluginId();
   const onNavigate = useContext(RouteNavigationCallbackContext);
   const location = useLocation();
@@ -66,7 +66,7 @@ export function useBbNavigate(): BbNavigate {
   const queryClient = useQueryClient();
   const isCompact = useIsCompactViewport();
   const setRootComposeProjectId = useSetRootComposeProjectId();
-  const toThread = useCallback<BbNavigate["toThread"]>(
+  const toThread = useCallback<SandyNavigate["toThread"]>(
     (threadId, options) => {
       onNavigate?.();
       const messageSeq = options?.experimental_messageSeq;
@@ -130,7 +130,7 @@ export function useBbNavigate(): BbNavigate {
     },
     [navigate, onNavigate, pluginId],
   );
-  const toCompose = useCallback<BbNavigate["toCompose"]>(
+  const toCompose = useCallback<SandyNavigate["toCompose"]>(
     (options) => {
       const replacesAutomationEditRoute =
         pluginId === AUTOMATIONS_PLUGIN_ID &&
@@ -173,12 +173,12 @@ export function useBbNavigate(): BbNavigate {
       ),
     [appNavigation.panel, pluginId],
   );
-  const openUrl = useCallback<BbNavigate["openUrl"]>(
+  const openUrl = useCallback<SandyNavigate["openUrl"]>(
     (url) => appNavigation.openUrl({ url }),
     [appNavigation],
   );
   const experimental_openFilePreview = useCallback<
-    BbNavigate["experimental_openFilePreview"]
+    SandyNavigate["experimental_openFilePreview"]
   >(
     (options) => {
       const normalized = normalizeExperimentalFileOpenOptions(options);
@@ -187,7 +187,7 @@ export function useBbNavigate(): BbNavigate {
     [appNavigation],
   );
   const experimental_openFileExternally = useCallback<
-    BbNavigate["experimental_openFileExternally"]
+    SandyNavigate["experimental_openFileExternally"]
   >(
     (options) => {
       const normalized = normalizeExperimentalFileOpenOptions(options);
@@ -198,20 +198,20 @@ export function useBbNavigate(): BbNavigate {
     [appNavigation],
   );
   const experimental_openTerminal = useCallback<
-    BbNavigate["experimental_openTerminal"]
+    SandyNavigate["experimental_openTerminal"]
   >(
     async ({ terminalId }) => {
       const session = await sdk.terminals
         .get({ terminalId })
         .catch((error: unknown) => {
-          if (error instanceof BbHttpError && error.status === 404) return null;
+          if (error instanceof SandyHttpError && error.status === 404) return null;
           throw error;
         });
       return session !== null && appNavigation.openTerminal(session);
     },
     [appNavigation],
   );
-  return useMemo<BbNavigate & { openThreadPanel: typeof openThreadPanel }>(
+  return useMemo<SandyNavigate & { openThreadPanel: typeof openThreadPanel }>(
     () => ({
       toThread,
       toProject,

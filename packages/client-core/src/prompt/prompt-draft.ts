@@ -2,8 +2,8 @@ import {
   promptTextMentionSchema,
   type PromptInput,
   type PromptTextMention,
-} from "@bb/domain";
-import { uploadedPromptAttachmentSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { uploadedPromptAttachmentSchema } from "@sandy/server-contract";
 import { z } from "zod";
 
 const draftAttachmentFields = uploadedPromptAttachmentSchema

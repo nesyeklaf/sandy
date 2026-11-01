@@ -7,7 +7,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import { resolveBuiltinSkillsRootPath } from "../../src/services/skills/builtin-skills-copy.js";
 import {
@@ -249,17 +249,17 @@ describe("injected skill source discovery", () => {
     expect(warnings).toEqual([]);
   });
 
-  it("applies bb precedence around shared user and project roots", async () => {
+  it("applies sandy precedence around shared user and project roots", async () => {
     const dataDir = await makeTempDir();
     const userSkillRoot = await writeSkill({
       rootPath: path.join(dataDir, "skills"),
       name: "review",
-      description: "bb user review skill.",
+      description: "sandy user review skill.",
     });
     await writeSkill({
       rootPath: path.join(dataDir, "skills"),
       name: "deploy",
-      description: "bb user deploy skill.",
+      description: "sandy user deploy skill.",
     });
     const sharedUserRoot = path.join(dataDir, "external", "review");
     const sharedProjectRoot = path.join(dataDir, "workspace", "deploy");
@@ -299,7 +299,7 @@ describe("injected skill source discovery", () => {
       await expectedTreeSource({
         sourceType: "data-dir",
         name: "review",
-        description: "bb user review skill.",
+        description: "sandy user review skill.",
         rootPath: userSkillRoot,
       }),
     ]);
@@ -385,19 +385,19 @@ describe("injected skill source discovery", () => {
     const workspacePath = await makeTempDir();
     await writeSkill({
       rootPath: path.join(dataDir, "skills"),
-      name: "bb-cli",
+      name: "sandy-cli",
       description: "User copy.",
     });
     const projectSkillRoot = await writeSkill({
-      rootPath: path.join(workspacePath, ".bb", "skills"),
-      name: "bb-cli",
+      rootPath: path.join(workspacePath, ".sandy", "skills"),
+      name: "sandy-cli",
       description: "Project copy.",
     });
     const { logger, warnings } = createCapturingLogger();
     const projectSkillSource = resolveProjectSkillSourceFromContent(logger, {
       candidatePath: projectSkillRoot,
       content: await readFile(path.join(projectSkillRoot, "SKILL.md"), "utf8"),
-      directoryName: "bb-cli",
+      directoryName: "sandy-cli",
     });
     expect(projectSkillSource).not.toBeNull();
 
@@ -411,13 +411,72 @@ describe("injected skill source discovery", () => {
       {
         kind: "workspace-path",
         sourceType: "project",
-        name: "bb-cli",
+        name: "sandy-cli",
         description: "Project copy.",
         sourceRootPath: projectSkillRoot,
         skillFilePath: path.join(projectSkillRoot, "SKILL.md"),
       },
     ]);
     expect(warnings).toEqual([]);
+  });
+
+  it("drops every sandy skill source the owner turned off", async () => {
+    const dataDir = await makeTempDir();
+    const workspacePath = await makeTempDir();
+    const pluginRootPath = path.join(dataDir, "plugin-skills");
+    await writeSkill({ rootPath: path.join(dataDir, "skills"), name: "mine" });
+    await writeSkill({ rootPath: pluginRootPath, name: "bundled" });
+    const projectSkillRoot = await writeSkill({
+      rootPath: path.join(workspacePath, ".sandy", "skills"),
+      name: "local",
+    });
+    const sharedRoot = path.join(dataDir, "external", "team");
+    const { logger } = createCapturingLogger();
+    const projectSkillSource = resolveProjectSkillSourceFromContent(logger, {
+      candidatePath: projectSkillRoot,
+      content: await readFile(path.join(projectSkillRoot, "SKILL.md"), "utf8"),
+      directoryName: "local",
+    });
+    if (projectSkillSource === null) throw new Error("project skill invalid");
+    const args = {
+      dataDir,
+      pluginSkillRoots: [{ pluginId: "example", rootPath: pluginRootPath }],
+      projectSkillSources: [projectSkillSource],
+      sharedSkillSources: [
+        {
+          kind: "host-path" as const,
+          sourceType: "shared-user" as const,
+          name: "team",
+          description: "Shared team skill.",
+          sourceRootPath: sharedRoot,
+          skillFilePath: path.join(sharedRoot, "SKILL.md"),
+        },
+      ],
+    };
+    const namesWith = async (
+      disabled: NonNullable<ResolveInjectedSkillSourcesArgs["disabledSources"]>,
+    ) =>
+      (
+        await resolveInjectedSkillSources(logger, {
+          ...args,
+          disabledSources: disabled,
+        })
+      ).map((source) => source.name);
+
+    expect(await namesWith(new Set())).toEqual([
+      "bundled",
+      "local",
+      "mine",
+      "team",
+    ]);
+    expect(await namesWith(new Set(["sandy-user", "sandy-plugins"]))).toEqual([
+      "local",
+      "team",
+    ]);
+    expect(await namesWith(new Set(["sandy-project", "shared"]))).toEqual([
+      "bundled",
+      "mine",
+    ]);
   });
 
   it("resolves the bundled built-in skills root with valid built-in skills", async () => {
@@ -436,7 +495,7 @@ describe("injected skill source discovery", () => {
       .map((entry) => entry.runtimeSource);
 
     const builtinNames = sources.map((source) => source.name);
-    expect(builtinNames).toContain("bb-cli");
+    expect(builtinNames).toContain("sandy-cli");
     expect(builtinNames).toContain("submit-a-plugin");
     for (const source of sources) {
       expect(source.sourceType).toBe("builtin");

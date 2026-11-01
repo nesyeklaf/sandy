@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DesktopBrowserImportSource } from "@bb/host-daemon-contract";
+import type { DesktopBrowserImportSource } from "@sandy/host-daemon-contract";
 import {
   canCloseDialog,
   failedDialogStep,
@@ -139,10 +139,10 @@ describe("browser import dialog steps", () => {
     const storage = new Map<string, string>();
     const fake = { getItem: (key: string) => storage.get(key) ?? null };
     expect(readBrowserImportRecords(fake)).toEqual({});
-    storage.set("bb:browser-import:records", "not json");
+    storage.set("sandy:browser-import:records", "not json");
     expect(readBrowserImportRecords(fake)).toEqual({});
     storage.set(
-      "bb:browser-import:records",
+      "sandy:browser-import:records",
       JSON.stringify({
         chrome: {
           at: 5,

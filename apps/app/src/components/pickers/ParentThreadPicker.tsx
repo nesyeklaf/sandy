@@ -1,5 +1,5 @@
-import { ListLoadingPlaceholder } from "@bb/shared-ui/list-loading-placeholder";
-import { PICKER_MOBILE_CLASS_NAME } from "@bb/shared-ui/picker-layout";
+import { ListLoadingPlaceholder } from "@sandy/shared-ui/list-loading-placeholder";
+import { PICKER_MOBILE_CLASS_NAME } from "@sandy/shared-ui/picker-layout";
 import { useCallback, useMemo, useState } from "react";
 import {
   Command,
@@ -7,22 +7,22 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@bb/shared-ui/command";
+} from "@sandy/shared-ui/command";
 import {
   COARSE_POINTER_ICON_SIZE_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
 import {
   ThreadTitle,
   useResolveThreadTitle,
 } from "@/components/thread/ThreadTitleMentions";
-import { searchPickerOptions } from "@bb/shared-ui/picker-search";
+import { searchPickerOptions } from "@sandy/shared-ui/picker-search";
 import {
   useResetPickerScroll,
-} from "@bb/shared-ui/hooks/use-reset-picker-scroll";
+} from "@sandy/shared-ui/hooks/use-reset-picker-scroll";
 
 export interface ParentThreadPickerOption {
   label: string;

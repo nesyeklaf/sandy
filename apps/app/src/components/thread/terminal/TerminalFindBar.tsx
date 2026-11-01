@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ISearchOptions, SearchAddon } from "@xterm/addon-search";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 
 function searchOptions(caseSensitive: boolean): ISearchOptions {
   const styles = getComputedStyle(document.documentElement);

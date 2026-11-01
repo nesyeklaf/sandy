@@ -3,10 +3,10 @@ import {
   PendingInteractionShell,
 } from "@/components/thread/pending-interactions/PendingInteractionShell";
 import { useCallback, useContext, useMemo, useState } from "react";
-import { Button } from "@bb/shared-ui/button";
-import type { JsonValue, PendingInteraction } from "@bb/domain";
+import { Button } from "@sandy/shared-ui/button";
+import type { JsonValue, PendingInteraction } from "@sandy/domain";
 import { PluginSlotMount } from "./PluginSlotMount";
-import { Skeleton } from "@bb/shared-ui/skeleton";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 import { resolvePendingInteraction } from "@/lib/plugin-slot-resolvers";
 import { usePluginDisplayName } from "@/lib/plugin-logos";
 import { usePluginFrontendsSettled } from "@/lib/plugin-frontend-boot-state";

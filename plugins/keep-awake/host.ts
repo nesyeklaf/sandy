@@ -1,8 +1,8 @@
-import { experimental_spawnHostProcess as spawn } from "@get-bb/plugin-sdk/process";
+import { experimental_spawnHostProcess as spawn } from "@sandy-sdk/plugin-sdk/process";
 import {
   experimental_defineHostEntry,
   type ExperimentalHostWorkerLease,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import { keepAwakeHostContract } from "./contract.js";
 
 const CAFFEINATE_COMMAND = "/usr/bin/caffeinate";
@@ -32,7 +32,7 @@ export function keepAwakeCommand(
         "-Command",
         [
           "$ErrorActionPreference = 'Stop'",
-          "$power = Add-Type -Name KeepAwake -Namespace Bb -PassThru -MemberDefinition '[DllImport(\"kernel32.dll\")] public static extern uint SetThreadExecutionState(uint flags);'",
+          "$power = Add-Type -Name KeepAwake -Namespace Sandy -PassThru -MemberDefinition '[DllImport(\"kernel32.dll\")] public static extern uint SetThreadExecutionState(uint flags);'",
           `if ($power::SetThreadExecutionState(${WINDOWS_AWAKE_STATE}) -eq 0) { exit 1 }`,
           `Wait-Process -Id ${pid}`,
         ].join("; "),

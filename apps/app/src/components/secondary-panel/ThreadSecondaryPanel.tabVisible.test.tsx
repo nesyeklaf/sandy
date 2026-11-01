@@ -4,7 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { afterEach, expect, it } from "vitest";
 import { Panel, PanelGroup } from "react-resizable-panels";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import {
   createGitDiffFixedPanelTab,
   createThreadInfoFixedPanelTab,

@@ -1,10 +1,10 @@
-import { experimental_hostToolchain as hostToolchain } from "@get-bb/plugin-sdk/process";
+import { experimental_hostToolchain as hostToolchain } from "@sandy-sdk/plugin-sdk/process";
 import {
   type InstructionMode,
   type ReasoningLevel,
   type ServiceTier,
   type RuntimePermissionScope,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { accessSync, constants, statSync } from "node:fs";
 import { join } from "node:path";
 import type { Options, Settings } from "@anthropic-ai/claude-agent-sdk";
@@ -56,7 +56,7 @@ const SUMMARIZED_ADAPTIVE_THINKING = {
   type: "adaptive",
   display: "summarized",
 } satisfies Exclude<Options["thinking"], undefined>;
-const CLAUDE_CODE_EXECUTABLE_ENV = "BB_CLAUDE_CODE_EXECUTABLE";
+const CLAUDE_CODE_EXECUTABLE_ENV = "SANDY_CLAUDE_CODE_EXECUTABLE";
 
 export function toSdkEffort(
   reasoningLevel: ReasoningLevel,
@@ -126,11 +126,11 @@ export function buildMutableFlagSettings(args: {
 }
 
 export function buildReadonlyDenialMessage(): string {
-  return "bb readonly mode allows reading and analysis only. Continue with a read-only answer; do not modify files, run mutating shell commands, use network, or use mutating tools.";
+  return "sandy readonly mode allows reading and analysis only. Continue with a read-only answer; do not modify files, run mutating shell commands, use network, or use mutating tools.";
 }
 
 export function buildWorkspaceWriteDenialMessage(): string {
-  return "bb's workspace sandbox allows work inside the current workspace only. Stay inside the workspace or explain why extra access is needed.";
+  return "sandy's workspace sandbox allows work inside the current workspace only. Stay inside the workspace or explain why extra access is needed.";
 }
 
 function isWorkspaceWriteSession(params: WorkspaceWriteSandboxArgs): boolean {

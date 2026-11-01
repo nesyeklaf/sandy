@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeThread } from "@bb/test-helpers/domain-fixtures";
+import { makeThread } from "@sandy/test-helpers/domain-fixtures";
 import { summarizeThreadSelection } from "./thread-selection-plan";
 
 describe("summarizeThreadSelection", () => {

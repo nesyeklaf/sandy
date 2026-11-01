@@ -1,5 +1,5 @@
 import type { PullRequest, PullRequestState } from "../contract";
-import type { IconName } from "@bb/shared-ui/icon";
+import type { IconName } from "@sandy/shared-ui/icon";
 
 interface PullRequestDisplay {
   label: string;

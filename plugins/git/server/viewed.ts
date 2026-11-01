@@ -1,6 +1,6 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { WorkspaceDiffTarget } from "../contract.js";
-import type { DiffViewedFile } from "@bb/server-contract";
+import type { DiffViewedFile } from "@sandy/server-contract";
 
 export interface GitViewed {
   list(
@@ -33,8 +33,8 @@ function diffQuery(target: WorkspaceDiffTarget) {
   }
 }
 
-export function createGitViewed(bb: BbPluginApi): GitViewed {
-  const environments = bb.sdk.environments;
+export function createGitViewed(sandy: SandyPluginApi): GitViewed {
+  const environments = sandy.sdk.environments;
   return {
     list: (environmentId, target, paths) =>
       environments.experimental_diffViewed({

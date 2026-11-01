@@ -2,13 +2,13 @@ import {
   createFakePluginHost,
   makeMessageDispatchHookContext,
   makeQueueEntry,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import plugin from "./server.js";
 
 function setup() {
   const fake = createFakePluginHost({ pluginId: "drafts" });
-  plugin(fake.bb);
+  plugin(fake.sandy);
   const hook = fake.harness.registrations.hooks["message.dispatch"];
   if (hook === null) throw new Error("message.dispatch was not registered");
   return hook;

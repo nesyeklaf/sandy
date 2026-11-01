@@ -4,7 +4,7 @@ import path from "node:path";
 import {
   EMPTY_PROVIDER_NATIVE_ROOTS,
   normalizeProviderNativeRoots,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { afterEach, describe, expect, it } from "vitest";
 import { readWorkspaceAgentContext } from "./workspace-agent-context.js";
 
@@ -28,7 +28,7 @@ afterEach(async () => {
 });
 
 async function makeWorkspace(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "bb-agent-context-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-agent-context-"));
   tempDirs.push(dir);
   return fs.realpath(dir);
 }
@@ -45,8 +45,8 @@ function skillMarkdown(name: string): string {
 describe("readWorkspaceAgentContext", () => {
   it("reads the instructions and each direct project skill the way the server listed them", async () => {
     const root = await makeWorkspace();
-    const skillsRoot = path.join(root, ".bb", "skills");
-    await writeFile(path.join(root, ".bb", "AGENTS.md"), "\n  Be terse.  \n");
+    const skillsRoot = path.join(root, ".sandy", "skills");
+    await writeFile(path.join(root, ".sandy", "AGENTS.md"), "\n  Be terse.  \n");
     await writeFile(
       path.join(skillsRoot, "beta", "SKILL.md"),
       skillMarkdown("beta"),
@@ -105,9 +105,9 @@ describe("readWorkspaceAgentContext", () => {
     });
   });
 
-  it("returns an empty context for a workspace without .bb", async () => {
+  it("returns an empty context for a workspace without .sandy", async () => {
     const root = await makeWorkspace();
-    await writeFile(path.join(root, ".bb-not", "AGENTS.md"), "ignored");
+    await writeFile(path.join(root, ".sandy-not", "AGENTS.md"), "ignored");
 
     await expect(
       readWorkspaceAgentContext({
@@ -157,7 +157,7 @@ describe("readWorkspaceAgentContext", () => {
       ["kept", "SKILL.md"],
     ] as const) {
       await writeFile(
-        path.join(root, ".bb", "skills", directory, filename),
+        path.join(root, ".sandy", "skills", directory, filename),
         skillMarkdown(directory),
       );
     }
@@ -180,7 +180,7 @@ describe("readWorkspaceAgentContext", () => {
       ["c", "c"],
     ] as const) {
       await writeFile(
-        path.join(root, ".bb", "skills", name, "SKILL.md"),
+        path.join(root, ".sandy", "skills", name, "SKILL.md"),
         content,
       );
     }
@@ -205,7 +205,7 @@ describe("readWorkspaceAgentContext", () => {
     const root = await makeWorkspace();
     const outside = await makeWorkspace();
     await fs.mkdir(path.join(outside, "skills"));
-    await fs.symlink(outside, path.join(root, ".bb"));
+    await fs.symlink(outside, path.join(root, ".sandy"));
     await expect(
       readWorkspaceAgentContext({
         type: "host.read_workspace_agent_context",
@@ -219,7 +219,7 @@ describe("readWorkspaceAgentContext", () => {
 
   it("skips instructions for command lookup but reports invalid instructions for a turn", async () => {
     const root = await makeWorkspace();
-    await fs.mkdir(path.join(root, ".bb", "AGENTS.md"), { recursive: true });
+    await fs.mkdir(path.join(root, ".sandy", "AGENTS.md"), { recursive: true });
     const command = {
       type: "host.read_workspace_agent_context" as const,
       ...readOptions,
@@ -239,7 +239,7 @@ describe("readWorkspaceAgentContext", () => {
 
   it("follows contained linked skill files and reports the directory count limit", async () => {
     const root = await makeWorkspace();
-    const skillsRoot = path.join(root, ".bb", "skills");
+    const skillsRoot = path.join(root, ".sandy", "skills");
     await writeFile(path.join(root, "outside.md"), skillMarkdown("linked"));
     await fs.mkdir(path.join(skillsRoot, "a"), { recursive: true });
     await fs.symlink(

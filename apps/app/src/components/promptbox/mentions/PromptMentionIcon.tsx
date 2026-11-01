@@ -1,8 +1,8 @@
-import type { PromptMentionResource } from "@bb/domain";
-import type { ComposerMentionTargetShape } from "@bb/client-core";
-import { Icon } from "@bb/shared-ui/icon";
+import type { PromptMentionResource } from "@sandy/domain";
+import type { ComposerMentionTargetShape } from "@sandy/client-core";
+import { Icon } from "@sandy/shared-ui/icon";
 import { PluginItemIcon } from "@/components/plugin/PluginIcon";
-import { promptMentionIconName } from "@bb/client-core";
+import { promptMentionIconName } from "@sandy/client-core";
 import { composerMentionResource } from "./prompt-mention-pill";
 
 export function PromptMentionIcon({

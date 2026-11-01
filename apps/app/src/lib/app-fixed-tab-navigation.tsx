@@ -14,8 +14,8 @@ import type {
   ExperimentalFixedTabTargetContract,
   ExperimentalPanelTabs,
   JsonValue,
-} from "@get-bb/plugin-sdk";
-import { jsonValueSchema } from "@bb/domain";
+} from "@sandy-sdk/plugin-sdk";
+import { jsonValueSchema } from "@sandy/domain";
 import type {
   AppTabOpenIntent,
   AppFixedTabReference,

@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 
 export class RuntimeBackgroundWorkState {
   private readonly openTaskIdsByThreadId = new Map<string, Set<string>>();

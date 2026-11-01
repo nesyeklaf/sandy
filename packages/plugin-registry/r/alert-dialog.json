@@ -3,15 +3,15 @@
   "name": "alert-dialog",
   "type": "registry:ui",
   "title": "alert-dialog",
-  "description": "BB ui \"alert-dialog\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"alert-dialog\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-alert-dialog"
   ],
   "registryDependencies": [
-    "@bb/button",
-    "@bb/overlay-open-tracer",
-    "@bb/portal-scope",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/overlay-open-tracer",
+    "@sandy/portal-scope",
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -8,7 +8,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import * as appServer from "./app-server-connection.js";
 import { handleLine } from "./bridge.js";
 import {
@@ -42,7 +42,7 @@ let writerLockPath = "";
 let releaseHeldWriter: (() => void) | null = null;
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-writer-lock-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-writer-lock-"));
   processLogPath = join(workspaceDir, "app-server-processes.log");
   writerLockPath = join(workspaceDir, "writer.lock");
   const scriptPath = join(workspaceDir, "fake-codex-script.json");

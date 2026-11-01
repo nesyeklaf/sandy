@@ -1,4 +1,4 @@
-import { createBrowserBbSdk, type BrowserBbSdk } from "@bb/sdk/browser";
+import { createBrowserSandySdk, type BrowserSandySdk } from "@sandy/sdk/browser";
 import type { ServerProfile } from "../profiles/profile";
 import {
   createMobileRealtime,
@@ -9,7 +9,7 @@ import { realtimeUrlForServer } from "../realtime/realtime-url";
 import { createMobileFetch, type MobileFetchOptions } from "./mobile-fetch";
 
 export interface MobileSdk {
-  sdk: BrowserBbSdk;
+  sdk: BrowserSandySdk;
   realtime: MobileRealtime;
   fetch: typeof fetch;
 }
@@ -30,7 +30,7 @@ export function createMobileSdk(
     onAuthFailure: options.onAuthFailure,
     onServerMoved: options.onServerMoved,
   });
-  const sdk = createBrowserBbSdk({
+  const sdk = createBrowserSandySdk({
     baseUrl: profile.serverUrl,
     fetch: mobileFetch,
   });

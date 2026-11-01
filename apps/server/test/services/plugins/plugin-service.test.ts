@@ -21,11 +21,11 @@ import {
   upsertInstalledPlugin,
   upsertPluginMarketplace,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { PLUGIN_SDK_VERSION, type SystemChangeKind } from "@bb/domain";
-import type { Logger } from "@bb/logger";
-import { pluginListResponseSchema } from "@bb/server-contract";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { PLUGIN_SDK_VERSION, type SystemChangeKind } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
+import { pluginListResponseSchema } from "@sandy/server-contract";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -43,7 +43,7 @@ async function writePlugin(
     version?: string;
     engines?: string;
     serverSource: string;
-    bb?: Record<string, unknown>;
+    sandy?: Record<string, unknown>;
   },
 ): Promise<string> {
   const rootDir = join(dir, options.name);
@@ -53,13 +53,13 @@ async function writePlugin(
     JSON.stringify({
       name: options.name,
       version: options.version ?? "0.1.0",
-      ...(options.engines ? { engines: { bb: options.engines } } : {}),
-      bb: {
+      ...(options.engines ? { engines: { sandy: options.engines } } : {}),
+      sandy: {
         name: "Service fixture",
         description: "Plugin service fixture.",
         branding: { icon: "Zap" },
         server: "./server.ts",
-        ...options.bb,
+        ...options.sandy,
       },
     }),
   );
@@ -72,10 +72,10 @@ async function writeEsmPlugin(rootDir: string, id: string): Promise<void> {
   await writeFile(
     join(rootDir, "package.json"),
     JSON.stringify({
-      name: `bb-plugin-${id}`,
+      name: `sandy-plugin-${id}`,
       version: "0.1.0",
       type: "module",
-      bb: {
+      sandy: {
         name: `${id} fixture`,
         description: "ESM reload fixture.",
         branding: { icon: "Zap" },
@@ -111,7 +111,7 @@ describe("plugin service", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-test-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-test-"));
     service = createPluginService({
       aiServices: createAiServiceRegistry(),
       db,
@@ -161,7 +161,7 @@ describe("plugin service", () => {
     "reports starting while a %s factory is pending",
     async (mode) => {
       const rootDir = await writePlugin(workDir, {
-        name: "bb-plugin-starting",
+        name: "sandy-plugin-starting",
         serverSource: `export default function plugin() { throw new Error("failed"); }`,
       });
       expect((await service.installPath(rootDir)).status).toBe("error");
@@ -223,7 +223,7 @@ describe("plugin service", () => {
   );
 
   it("summarizes user-facing capabilities and drops the live ones when disabled", async () => {
-    const rootDir = join(workDir, "bb-plugin-capabilities");
+    const rootDir = join(workDir, "sandy-plugin-capabilities");
     await mkdir(join(rootDir, "skills", "review"), { recursive: true });
     await mkdir(join(rootDir, "skills", "triage"), { recursive: true });
     await mkdir(join(rootDir, "skills", "not-a-skill"), { recursive: true });
@@ -231,8 +231,8 @@ describe("plugin service", () => {
     await writeFile(join(rootDir, "skills", "triage", "SKILL.md"), "# triage");
     await writeFile(join(rootDir, "midnight.css"), ":root { --canvas: #000; }");
     await writePlugin(workDir, {
-      name: "bb-plugin-capabilities",
-      bb: {
+      name: "sandy-plugin-capabilities",
+      sandy: {
         themes: [
           {
             id: "midnight",
@@ -243,14 +243,14 @@ describe("plugin service", () => {
         ],
       },
       serverSource: `
-        export default function plugin(bb: any) {
-          bb.agents.registerTool({
+        export default function plugin(sandy: any) {
+          sandy.agents.registerTool({
             name: "capabilities_probe",
             description: "Probe capabilities",
             parameters: { type: "object" },
             execute: async () => ({ content: "ok" }),
           });
-          bb.ui.registerMentionProvider({
+          sandy.ui.registerMentionProvider({
             id: "issues",
             label: "Issues",
             triggers: ["#"],
@@ -308,11 +308,11 @@ describe("plugin service", () => {
 
   it("marks a throwing factory as error without affecting others", async () => {
     const bad = await writePlugin(workDir, {
-      name: "bb-plugin-bad",
+      name: "sandy-plugin-bad",
       serverSource: `export default function plugin() { throw new Error("boom at load"); }`,
     });
     const good = await writePlugin(workDir, {
-      name: "bb-plugin-good",
+      name: "sandy-plugin-good",
       serverSource: `export default function plugin() {}`,
     });
     await service.installPath(bad);
@@ -327,14 +327,14 @@ describe("plugin service", () => {
 
   it("reload re-runs the factory against current sources and runs dispose hooks LIFO", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-cycler",
+      name: "sandy-plugin-cycler",
       serverSource: `
-        export default function plugin(bb: any) {
+        export default function plugin(sandy: any) {
           const g = globalThis as any;
           g.__cyclerVersion = "v1";
           g.__cyclerDisposals = g.__cyclerDisposals ?? [];
-          bb.onDispose(() => g.__cyclerDisposals.push("first"));
-          bb.onDispose(() => g.__cyclerDisposals.push("second"));
+          sandy.onDispose(() => g.__cyclerDisposals.push("first"));
+          sandy.onDispose(() => g.__cyclerDisposals.push("second"));
         }
       `,
     });
@@ -353,7 +353,7 @@ describe("plugin service", () => {
   });
 
   it("reload re-reads an ESM plugin's entry and its submodules", async () => {
-    const rootDir = join(workDir, "bb-plugin-esm-reloader");
+    const rootDir = join(workDir, "sandy-plugin-esm-reloader");
     await writeEsmPlugin(rootDir, "esm-reloader");
     const globals = globalThis as Record<string, unknown>;
 
@@ -372,9 +372,9 @@ describe("plugin service", () => {
 
   it("runs a CommonJS entry whose module.exports is the factory", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-cjs-factory",
+      name: "sandy-plugin-cjs-factory",
       serverSource: "",
-      bb: { server: "./server.cjs" },
+      sandy: { server: "./server.cjs" },
     });
     await writeFile(
       join(rootDir, "server.cjs"),
@@ -392,7 +392,7 @@ describe("plugin service", () => {
   });
 
   it("reload re-reads a plugin's CommonJS children", async () => {
-    const rootDir = join(workDir, "bb-plugin-cjs-child");
+    const rootDir = join(workDir, "sandy-plugin-cjs-child");
     await writeEsmPlugin(rootDir, "cjs-child");
     const writeSources = async (value: string): Promise<void> => {
       await writeFile(
@@ -425,8 +425,8 @@ describe("plugin service", () => {
   });
 
   it("hides a failed reload's sources from a plugin that imports it", async () => {
-    const importerDir = join(workDir, "bb-plugin-fail-importer");
-    const importedDir = join(workDir, "bb-plugin-fail-imported");
+    const importerDir = join(workDir, "sandy-plugin-fail-importer");
+    const importedDir = join(workDir, "sandy-plugin-fail-imported");
     await writeEsmPlugin(importerDir, "fail-importer");
     await writeEsmPlugin(importedDir, "fail-imported");
     await writeEsmSources(importedDir, "failImported", "entry1", "sub1");
@@ -510,7 +510,7 @@ describe("plugin service", () => {
   });
 
   it("keeps a live plugin's lazy imports coherent after a failed reload", async () => {
-    const rootDir = join(workDir, "bb-plugin-rollback");
+    const rootDir = join(workDir, "sandy-plugin-rollback");
     await writeEsmPlugin(rootDir, "rollbacker");
     await writeFile(join(rootDir, "lazy.js"), `export const LAZY = "lazy1";\n`);
     await writeFile(
@@ -542,10 +542,10 @@ describe("plugin service", () => {
 
   it("stale API handles throw after reload", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-staler",
+      name: "sandy-plugin-staler",
       serverSource: `
-        export default function plugin(bb: any) {
-          (globalThis as any).__stalerApi = bb;
+        export default function plugin(sandy: any) {
+          (globalThis as any).__stalerApi = sandy;
         }
       `,
     });
@@ -559,7 +559,7 @@ describe("plugin service", () => {
 
   it("marks initial engine mismatches incompatible and preserves a live plugin when reload finds its directory missing", async () => {
     const tooNew = await writePlugin(workDir, {
-      name: "bb-plugin-too-new",
+      name: "sandy-plugin-too-new",
       engines: ">=99.0.0",
       serverSource: `export default function plugin() {}`,
     });
@@ -569,7 +569,7 @@ describe("plugin service", () => {
     );
 
     const vanishing = await writePlugin(workDir, {
-      name: "bb-plugin-vanishing",
+      name: "sandy-plugin-vanishing",
       serverSource: `export default function plugin() {}`,
     });
     await service.installPath(vanishing);
@@ -586,7 +586,7 @@ describe("plugin service", () => {
     const globals = globalThis as Record<string, unknown>;
     globals.__slowFactoryEntered = false;
     const slowRoot = await writePlugin(workDir, {
-      name: "bb-plugin-aaa-slow",
+      name: "sandy-plugin-aaa-slow",
       serverSource: `
         export default async function plugin() {
           (globalThis as any).__slowFactoryEntered = true;
@@ -595,11 +595,11 @@ describe("plugin service", () => {
       `,
     });
     const pendingRoot = await writePlugin(workDir, {
-      name: "bb-plugin-zzz-pending",
+      name: "sandy-plugin-zzz-pending",
       serverSource: `export default function plugin() {}`,
     });
     const brokenRoot = await writePlugin(workDir, {
-      name: "bb-plugin-zzz-broken",
+      name: "sandy-plugin-zzz-broken",
       serverSource: `export default function plugin() { throw new Error("nope"); }`,
     });
     const install = (id: string, rootDir: string) => {
@@ -697,7 +697,7 @@ describe("plugin service", () => {
         bundledPlugins: [],
       });
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-notify",
+      name: "sandy-plugin-notify",
       version: "0.2.1",
       engines: ">=0.38.0 <0.39.0",
       serverSource: `export default function plugin() {}`,
@@ -727,29 +727,29 @@ describe("plugin service", () => {
     const entry = after.list().find((p) => p.id === "notify");
     expect(entry?.status).toBe("incompatible");
     expect(entry?.statusDetail).toBe(
-      "requires bb >=0.38.0 <0.39.0, this is 0.39.0",
+      "requires sandy >=0.38.0 <0.39.0, this is 0.39.0",
     );
     expect(lines).toContain(
-      "warn plugin notify not loaded (incompatible): requires bb >=0.38.0 <0.39.0, this is 0.39.0",
+      "warn plugin notify not loaded (incompatible): requires sandy >=0.38.0 <0.39.0, this is 0.39.0",
     );
     await after.stop();
   });
 
   it("keeps a persisted 0.4.8 scaffold plugin running after an SDK upgrade", async () => {
     const fixtureDir = new URL(
-      "../../fixtures/plugins/bb-plugin-sdk-0.4.8-scaffold/",
+      "../../fixtures/plugins/sandy-plugin-sdk-0.4.8-scaffold/",
       import.meta.url,
     );
-    const rootDir = join(workDir, "bb-plugin-sdk-upgrade-fixture");
+    const rootDir = join(workDir, "sandy-plugin-sdk-upgrade-fixture");
     await cp(fixtureDir, rootDir, { recursive: true });
     const manifest = JSON.parse(
       await readFile(join(rootDir, "package.json"), "utf8"),
     ) as {
-      engines: { bbPluginSdk: string };
+      engines: { sandyPluginSdk: string };
       devDependencies: Record<string, string>;
     };
-    expect(manifest.engines.bbPluginSdk).toBe(">=0.4.8");
-    expect(manifest.devDependencies["@get-bb/plugin-sdk"]).toBe("0.4.8");
+    expect(manifest.engines.sandyPluginSdk).toBe(">=0.4.8");
+    expect(manifest.devDependencies["@sandy-sdk/plugin-sdk"]).toBe("0.4.8");
     expect(semver.gt(PLUGIN_SDK_VERSION, "0.4.8")).toBe(true);
 
     upsertInstalledPlugin(db, {
@@ -817,7 +817,7 @@ describe("plugin service", () => {
       loadTimeoutMs: 2000,
     });
     const gated = await writePlugin(workDir, {
-      name: "bb-plugin-dev-gated",
+      name: "sandy-plugin-dev-gated",
       engines: ">=0.9",
       serverSource: `export default function plugin() {}`,
     });
@@ -942,7 +942,7 @@ describe("plugin service", () => {
             author: { name: "Acme" },
             source: {
               git: {
-                url: "https://github.com/acme/bb-plugin-installed-tool.git",
+                url: "https://github.com/acme/sandy-plugin-installed-tool.git",
                 ref: "v1.0.0",
               },
             },
@@ -961,7 +961,7 @@ describe("plugin service", () => {
 
   it("times out a hung factory and reports error", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-hang",
+      name: "sandy-plugin-hang",
       serverSource: `export default function plugin() { return new Promise(() => {}); }`,
     });
     await service.installPath(rootDir);
@@ -972,7 +972,7 @@ describe("plugin service", () => {
 
   it("enables a disabled path plugin when it is reinstalled", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-reinstalled",
+      name: "sandy-plugin-reinstalled",
       serverSource: `export default function plugin() {}`,
     });
     await service.install(rootDir, { kind: "root" });
@@ -993,10 +993,10 @@ describe("plugin service", () => {
   it("reports a settings change to the server once the plugin's own listeners ran", async () => {
     const changed: string[] = [];
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-observed",
+      name: "sandy-plugin-observed",
       serverSource: `
-        export default function plugin(bb) {
-          const settings = bb.settings.define({
+        export default function plugin(sandy) {
+          const settings = sandy.settings.define({
             floor: { type: "string", label: "Floor", default: "60" },
           });
           settings.onChange((next) => {
@@ -1040,20 +1040,20 @@ describe("plugin service", () => {
 
   it("re-points a path plugin at a new checkout and keeps its settings, secrets, and schedules", async () => {
     const serverSource = (marker: string) => `
-      export default function plugin(bb) {
-        bb.settings.define({
+      export default function plugin(sandy) {
+        sandy.settings.define({
           floor: { type: "string", label: "Floor", default: "60" },
           token: { type: "string", label: "Token", secret: true },
         });
-        bb.background.schedule("sweep", "0 * * * *", async () => {});
+        sandy.background.schedule("sweep", "0 * * * *", async () => {});
         globalThis.__movedCheckout = "${marker}";
       }`;
     const checkoutA = await writePlugin(join(workDir, "a"), {
-      name: "bb-plugin-moved",
+      name: "sandy-plugin-moved",
       serverSource: serverSource("a"),
     });
     const checkoutB = await writePlugin(join(workDir, "b"), {
-      name: "bb-plugin-moved",
+      name: "sandy-plugin-moved",
       serverSource: serverSource("b"),
     });
     await service.installPath(checkoutA);
@@ -1088,7 +1088,7 @@ describe("plugin service", () => {
         .all("moved"),
     ).toEqual([{ name: "sweep" }]);
 
-    const checkoutC = join(workDir, "c", "bb-plugin-moved");
+    const checkoutC = join(workDir, "c", "sandy-plugin-moved");
     await mkdir(checkoutC, { recursive: true });
     await writeFile(join(checkoutC, "package.json"), "{ not json");
     await expect(service.installPath(checkoutC)).rejects.toThrowError();
@@ -1108,11 +1108,11 @@ describe("plugin service", () => {
         globalThis.__disabledMoveStarted = "${marker}";
       }`;
     const checkoutA = await writePlugin(join(workDir, "a"), {
-      name: "bb-plugin-dormant",
+      name: "sandy-plugin-dormant",
       serverSource: serverSource("a"),
     });
     const checkoutB = await writePlugin(join(workDir, "b"), {
-      name: "bb-plugin-dormant",
+      name: "sandy-plugin-dormant",
       serverSource: serverSource("b"),
     });
     await service.installPath(checkoutA);
@@ -1149,18 +1149,18 @@ describe("plugin service", () => {
 
   it("rejects a path move whose new checkout fails to start and keeps the old install running", async () => {
     const checkoutA = await writePlugin(join(workDir, "a"), {
-      name: "bb-plugin-brittle",
+      name: "sandy-plugin-brittle",
       version: "0.2.0",
       serverSource: `
-        export default function plugin(bb) {
-          bb.settings.define({
+        export default function plugin(sandy) {
+          sandy.settings.define({
             token: { type: "string", label: "Token", secret: true },
           });
           globalThis.__brittleCheckout = "a";
         }`,
     });
     const checkoutB = await writePlugin(join(workDir, "b"), {
-      name: "bb-plugin-brittle",
+      name: "sandy-plugin-brittle",
       version: "0.3.0",
       serverSource: `
         export default function plugin() {
@@ -1200,10 +1200,10 @@ describe("plugin service", () => {
       "data",
       "personal-workspaces",
       "env_test",
-      "bb-plugin-managed",
+      "sandy-plugin-managed",
     );
     const written = await writePlugin(workDir, {
-      name: "bb-plugin-managed",
+      name: "sandy-plugin-managed",
       serverSource: `export default function plugin() {}`,
     });
     await mkdir(dirname(managedRoot), { recursive: true });
@@ -1211,7 +1211,7 @@ describe("plugin service", () => {
 
     await service.installPath(managedRoot);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("bb-managed workspace"),
+      expect.stringContaining("sandy-managed workspace"),
     );
   });
 
@@ -1219,7 +1219,7 @@ describe("plugin service", () => {
     const warnSpy = vi.spyOn(logger, "warn");
     warnSpy.mockClear();
     const checkoutRoot = await writePlugin(join(workDir, "checkout"), {
-      name: "bb-plugin-attached",
+      name: "sandy-plugin-attached",
       serverSource: `export default function plugin() {}`,
     });
     seedEnvironmentAtPath(db, {
@@ -1230,7 +1230,7 @@ describe("plugin service", () => {
 
     await service.installPath(checkoutRoot);
     expect(warnSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining("bb-managed workspace"),
+      expect.stringContaining("sandy-managed workspace"),
     );
   });
 
@@ -1238,7 +1238,7 @@ describe("plugin service", () => {
     const warnSpy = vi.spyOn(logger, "warn");
     warnSpy.mockClear();
     const ownedRoot = await writePlugin(join(workDir, "owned"), {
-      name: "bb-plugin-owned",
+      name: "sandy-plugin-owned",
       serverSource: `export default function plugin() {}`,
     });
     seedEnvironmentAtPath(db, {
@@ -1249,7 +1249,7 @@ describe("plugin service", () => {
 
     await service.installPath(ownedRoot);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("bb-managed workspace"),
+      expect.stringContaining("sandy-managed workspace"),
     );
   });
 });
@@ -1265,7 +1265,7 @@ describe("plugins-changed broadcast", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-notify-test-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-notify-test-"));
     notifySystem = vi.fn<(changes: SystemChangeKind[]) => void>();
     providerRegistry = createProviderRegistryService();
     service = createPluginService({
@@ -1293,7 +1293,7 @@ describe("plugins-changed broadcast", () => {
 
   it("broadcasts plugins-changed on install, reload, and enable/disable", async () => {
     const rootDir = await writePlugin(workDir, {
-      name: "bb-plugin-notifier",
+      name: "sandy-plugin-notifier",
       serverSource: `export default function plugin() {}`,
     });
     await service.installPath(rootDir);

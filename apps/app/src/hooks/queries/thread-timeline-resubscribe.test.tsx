@@ -8,8 +8,8 @@ import {
   clientMessageSchema,
   defaultExperiments,
   type ClientMessage,
-} from "@bb/domain";
-import type { ThreadTimelineResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { sdk } from "@/lib/sdk";
 import { wsManager } from "@/lib/ws";
@@ -54,7 +54,7 @@ vi.mock("partysocket/ws", () => ({
 }));
 
 vi.mock("@/lib/dev-websocket-url", () => ({
-  buildBrowserWebSocketUrl: () => "ws://bb.test/ws",
+  buildBrowserWebSocketUrl: () => "ws://sandy.test/ws",
 }));
 
 vi.mock("@/lib/sdk", () => ({

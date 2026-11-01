@@ -16,7 +16,7 @@ function recordingFile(contents: string): File {
   return new File([contents], "recording.webm", { type: "audio/webm" });
 }
 
-const recordingsDatabase = createStore("bb-voice-recordings", "recordings");
+const recordingsDatabase = createStore("sandy-voice-recordings", "recordings");
 
 afterEach(() => clear(recordingsDatabase));
 

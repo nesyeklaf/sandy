@@ -39,12 +39,12 @@ describe("namespaced glyphs", () => {
   });
 });
 
-describe("bb.branding.icon grammar", () => {
+describe("sandy.branding.icon grammar", () => {
   function manifest(icon: string) {
     return pluginPackageJsonSchema.safeParse({
-      name: "bb-plugin-icons",
+      name: "sandy-plugin-icons",
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Icons",
         description: "Declares icons.",
         branding: { icon, experimental_icons: { logo: "./icons/logo.svg" } },
@@ -61,19 +61,19 @@ describe("bb.branding.icon grammar", () => {
   it("refuses the namespaced declared-icon form, naming the value", () => {
     const parsed = manifest("icons/logo");
     expect(parsed.success).toBe(false);
-    expect(parsed.error?.issues[0]?.path).toEqual(["bb", "branding", "icon"]);
+    expect(parsed.error?.issues[0]?.path).toEqual(["sandy", "branding", "icon"]);
     expect(parsed.error?.issues[0]?.message).toMatch(
       /^"icons\/logo" is a namespaced glyph/u,
     );
   });
 });
 
-describe("bb.branding.experimental_icons grammar", () => {
+describe("sandy.branding.experimental_icons grammar", () => {
   function manifest(icons: unknown) {
     return pluginPackageJsonSchema.safeParse({
-      name: "bb-plugin-icons",
+      name: "sandy-plugin-icons",
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Icons",
         description: "Declares icons.",
         branding: { icon: "Zap", experimental_icons: icons },
@@ -94,7 +94,7 @@ describe("bb.branding.experimental_icons grammar", () => {
     const badName = manifest({ Receipt: "./icons/receipt.svg" });
     expect(badName.success).toBe(false);
     expect(badName.error?.issues[0]?.path).toEqual([
-      "bb",
+      "sandy",
       "branding",
       "experimental_icons",
       "Receipt",

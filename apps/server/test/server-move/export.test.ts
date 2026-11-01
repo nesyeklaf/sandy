@@ -2,14 +2,14 @@ import Database from "better-sqlite3";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { createConnection, getHost, setExperiments } from "@bb/db";
-import { defaultExperiments } from "@bb/domain";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import { createConnection, getHost, setExperiments } from "@sandy/db";
+import { defaultExperiments } from "@sandy/domain";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import {
   extractServerArchive,
   serverMovedFileSchema,
-} from "@bb/server-archive";
-import { makeTempDir } from "@bb/test-helpers";
+} from "@sandy/server-archive";
+import { makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { exportServerArchive } from "../../src/services/server-move/export.js";
 import { seedHost } from "../helpers/seed.js";
@@ -100,7 +100,7 @@ describe("server archive export", () => {
           destinationDir: destination,
         });
         expect(manifest).toMatchObject({
-          bbVersion: harness.config.appVersion,
+          sandyVersion: harness.config.appVersion,
           createdAt: 1_700_000_000_000,
           protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
           sourceDataDir: dataDir,
@@ -111,7 +111,7 @@ describe("server archive export", () => {
         const paths = manifest.entries.map((entry) => entry.path);
         expect(paths).toEqual(
           expect.arrayContaining([
-            "bb.db",
+            "sandy.db",
             "config.json",
             "attachments/project-1/notes.txt",
             "plugins/tasks/data.db",
@@ -136,7 +136,7 @@ describe("server archive export", () => {
         );
 
         const importedDb = createConnection(
-          join(destination, "files", "bb.db"),
+          join(destination, "files", "sandy.db"),
         );
         try {
           expect(getHost(importedDb, "host-old")).toMatchObject({

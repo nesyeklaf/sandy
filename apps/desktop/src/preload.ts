@@ -1,143 +1,143 @@
 import {
-  bbDesktopServerChoicesSchema,
+  sandyDesktopServerChoicesSchema,
   MACOS_TRAFFIC_LIGHT_INSET_PX,
   MACOS_TRAFFIC_LIGHT_TOP_INSET_PX,
-  type BbDesktopServerChoice,
-} from "@bb/desktop-contract";
+  type SandyDesktopServerChoice,
+} from "@sandy/desktop-contract";
 import { contextBridge, ipcRenderer, webFrame } from "electron";
-import { appCommandIdSchema, type AppCommandId } from "@bb/domain";
+import { appCommandIdSchema, type AppCommandId } from "@sandy/domain";
 import {
   desktopBrowserImportOutcomeSchema,
   desktopBrowserImportSourceSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { z } from "zod";
 import {
-  bbDesktopBrowserEvaluateResultSchema,
-  bbDesktopBrowserFindResultSchema,
-  bbDesktopBrowserOpenTabRequestSchema,
-  bbDesktopBrowserPageMessageSchema,
-  bbDesktopBrowserScopedOpenTabRequestSchema,
-  bbDesktopBrowserTabRefSchema,
-  bbDesktopBrowserSnapshotSchema,
-  bbDesktopBrowserStateSchema,
-  bbDesktopBrowserTargetSchema,
-  bbDesktopBrowserControlStateSchema,
-  bbDesktopBrowserRevealRequestSchema,
-  type BbDesktopBrowserControlState,
-  type BbDesktopClipboardContent,
-  type BbDesktopBrowserRevealRequest,
-  bbDesktopInfoSchema,
-  bbDesktopWindowStateSchema,
-  type BbDesktopApi,
-  type BbDesktopAppCommandHandler,
-  type BbDesktopBrowserApi,
-  type BbDesktopBrowserFindResultHandler,
-  type BbDesktopWindowFindRequest,
-  type BbDesktopBrowserPageMessageHandler,
-  type BbDesktopBrowserOpenTabHandler,
-  type BbDesktopBrowserScopedOpenTabHandler,
-  type BbDesktopBrowserFocusHandler,
-  type BbDesktopBrowserSnapshotHandler,
-  type BbDesktopBrowserStateHandler,
-  type BbDesktopBrowserState,
-  type BbDesktopBrowserUnsubscribe,
-  type BbDesktopBrowserViewBounds,
-  type BbDesktopCloseWindowRequestHandler,
-  type BbDesktopInfo,
-  type BbDesktopInfoChangeHandler,
-  type BbDesktopInfoUnsubscribe,
-  type BbDesktopOpenNewTabHandler,
-  type BbDesktopTheme,
-  type BbDesktopWindowState,
-  type BbDesktopWindowStateChangeHandler,
-  type BbDesktopZoomChangeHandler,
-} from "@bb/desktop-contract";
+  sandyDesktopBrowserEvaluateResultSchema,
+  sandyDesktopBrowserFindResultSchema,
+  sandyDesktopBrowserOpenTabRequestSchema,
+  sandyDesktopBrowserPageMessageSchema,
+  sandyDesktopBrowserScopedOpenTabRequestSchema,
+  sandyDesktopBrowserTabRefSchema,
+  sandyDesktopBrowserSnapshotSchema,
+  sandyDesktopBrowserStateSchema,
+  sandyDesktopBrowserTargetSchema,
+  sandyDesktopBrowserControlStateSchema,
+  sandyDesktopBrowserRevealRequestSchema,
+  type SandyDesktopBrowserControlState,
+  type SandyDesktopClipboardContent,
+  type SandyDesktopBrowserRevealRequest,
+  sandyDesktopInfoSchema,
+  sandyDesktopWindowStateSchema,
+  type SandyDesktopApi,
+  type SandyDesktopAppCommandHandler,
+  type SandyDesktopBrowserApi,
+  type SandyDesktopBrowserFindResultHandler,
+  type SandyDesktopWindowFindRequest,
+  type SandyDesktopBrowserPageMessageHandler,
+  type SandyDesktopBrowserOpenTabHandler,
+  type SandyDesktopBrowserScopedOpenTabHandler,
+  type SandyDesktopBrowserFocusHandler,
+  type SandyDesktopBrowserSnapshotHandler,
+  type SandyDesktopBrowserStateHandler,
+  type SandyDesktopBrowserState,
+  type SandyDesktopBrowserUnsubscribe,
+  type SandyDesktopBrowserViewBounds,
+  type SandyDesktopCloseWindowRequestHandler,
+  type SandyDesktopInfo,
+  type SandyDesktopInfoChangeHandler,
+  type SandyDesktopInfoUnsubscribe,
+  type SandyDesktopOpenNewTabHandler,
+  type SandyDesktopTheme,
+  type SandyDesktopWindowState,
+  type SandyDesktopWindowStateChangeHandler,
+  type SandyDesktopZoomChangeHandler,
+} from "@sandy/desktop-contract";
 import {
-  BB_DESKTOP_GET_INFO_CHANNEL,
-  BB_DESKTOP_INFO_CHANGED_CHANNEL,
-  BB_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
-  BB_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
-  BB_DESKTOP_SET_THEME_CHANNEL,
-  BB_DESKTOP_ZOOM_CHANGED_CHANNEL,
-  BB_DESKTOP_ZOOM_COMMAND_CHANNEL,
+  SANDY_DESKTOP_GET_INFO_CHANNEL,
+  SANDY_DESKTOP_INFO_CHANGED_CHANNEL,
+  SANDY_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
+  SANDY_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
+  SANDY_DESKTOP_SET_THEME_CHANNEL,
+  SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL,
+  SANDY_DESKTOP_ZOOM_COMMAND_CHANNEL,
 } from "./desktop-ipc-channels.js";
 import {
-  BB_DESKTOP_BROWSER_ATTACH_CHANNEL,
-  BB_DESKTOP_BROWSER_TARGET_CHANNEL,
-  BB_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_REVEAL_CHANNEL,
-  BB_DESKTOP_BROWSER_DETACH_CHANNEL,
-  BB_DESKTOP_BROWSER_LIST_THREADS_WITH_TABS_CHANNEL,
-  BB_DESKTOP_BROWSER_SET_THREAD_DISCARDED_CHANNEL,
-  BB_DESKTOP_BROWSER_FOCUS_CHANNEL,
-  BB_DESKTOP_BROWSER_FOCUSED_CHANNEL,
-  BB_DESKTOP_BROWSER_FIND_IN_PAGE_CHANNEL,
-  BB_DESKTOP_BROWSER_FIND_RESULT_CHANNEL,
-  BB_DESKTOP_BROWSER_GO_BACK_CHANNEL,
-  BB_DESKTOP_BROWSER_GO_FORWARD_CHANNEL,
-  BB_DESKTOP_BROWSER_NAVIGATE_CHANNEL,
-  BB_DESKTOP_BROWSER_OPEN_TAB_CHANNEL,
-  BB_DESKTOP_BROWSER_RELOAD_CHANNEL,
-  BB_DESKTOP_BROWSER_SCOPED_OPEN_TAB_CHANNEL,
-  BB_DESKTOP_BROWSER_SET_BOUNDS_CHANNEL,
-  BB_DESKTOP_BROWSER_SET_VISIBLE_CHANNEL,
-  BB_DESKTOP_BROWSER_SET_VISIBLE_WITHOUT_FOCUS_CHANNEL,
-  BB_DESKTOP_BROWSER_SNAPSHOT_CHANNEL,
-  BB_DESKTOP_BROWSER_STATE_CHANNEL,
-  BB_DESKTOP_BROWSER_STOP_CHANNEL,
-  BB_DESKTOP_BROWSER_STOP_FIND_IN_PAGE_CHANNEL,
-  BB_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
-  BB_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
-  BB_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
-  BB_DESKTOP_BROWSER_EVALUATE_CHANNEL,
-  BB_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_ATTACH_CHANNEL,
+  SANDY_DESKTOP_BROWSER_TARGET_CHANNEL,
+  SANDY_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_REVEAL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_DETACH_CHANNEL,
+  SANDY_DESKTOP_BROWSER_LIST_THREADS_WITH_TABS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SET_THREAD_DISCARDED_CHANNEL,
+  SANDY_DESKTOP_BROWSER_FOCUS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_FOCUSED_CHANNEL,
+  SANDY_DESKTOP_BROWSER_FIND_IN_PAGE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_FIND_RESULT_CHANNEL,
+  SANDY_DESKTOP_BROWSER_GO_BACK_CHANNEL,
+  SANDY_DESKTOP_BROWSER_GO_FORWARD_CHANNEL,
+  SANDY_DESKTOP_BROWSER_NAVIGATE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_OPEN_TAB_CHANNEL,
+  SANDY_DESKTOP_BROWSER_RELOAD_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SCOPED_OPEN_TAB_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SET_BOUNDS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SET_VISIBLE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SET_VISIBLE_WITHOUT_FOCUS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_SNAPSHOT_CHANNEL,
+  SANDY_DESKTOP_BROWSER_STATE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_STOP_CHANNEL,
+  SANDY_DESKTOP_BROWSER_STOP_FIND_IN_PAGE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
+  SANDY_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
+  SANDY_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_EVALUATE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
 } from "./desktop-browser-ipc.js";
 import {
-  BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
-  BB_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
-  BB_DESKTOP_SELECT_SERVER_CHANNEL,
-  BB_DESKTOP_APP_COMMAND_CHANNEL,
-  BB_DESKTOP_OPEN_WINDOW_FIND_CHANNEL,
-  BB_DESKTOP_RELOAD_WINDOW_CHANNEL,
-  BB_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
-  BB_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
-  BB_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL,
-  BB_DESKTOP_FOCUS_WINDOW_CHANNEL,
-  BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL,
-  BB_DESKTOP_GET_WINDOW_STATE_CHANNEL,
-  BB_DESKTOP_OPEN_NEW_TAB_CHANNEL,
-  BB_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL,
-  BB_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL,
-  BB_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
-  BB_DESKTOP_WRITE_CLIPBOARD_CHANNEL,
+  SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
+  SANDY_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
+  SANDY_DESKTOP_SELECT_SERVER_CHANNEL,
+  SANDY_DESKTOP_APP_COMMAND_CHANNEL,
+  SANDY_DESKTOP_OPEN_WINDOW_FIND_CHANNEL,
+  SANDY_DESKTOP_RELOAD_WINDOW_CHANNEL,
+  SANDY_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
+  SANDY_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
+  SANDY_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL,
+  SANDY_DESKTOP_FOCUS_WINDOW_CHANNEL,
+  SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL,
+  SANDY_DESKTOP_GET_WINDOW_STATE_CHANNEL,
+  SANDY_DESKTOP_OPEN_NEW_TAB_CHANNEL,
+  SANDY_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL,
+  SANDY_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL,
+  SANDY_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
+  SANDY_DESKTOP_WRITE_CLIPBOARD_CHANNEL,
 } from "./desktop-window-command-ipc.js";
 import {
   getDesktopVersion,
-  resolveBbDesktopPlatform,
+  resolveSandyDesktopPlatform,
 } from "./desktop-platform.js";
 import { STARTUP_ACTION_CHANNEL } from "./local-view.js";
 
-function createInitialDesktopInfo(): BbDesktopInfo {
+function createInitialDesktopInfo(): SandyDesktopInfo {
   return {
-    platform: resolveBbDesktopPlatform(process.platform),
-    version: getDesktopVersion(process.env.BB_DESKTOP_VERSION),
+    platform: resolveSandyDesktopPlatform(process.platform),
+    version: getDesktopVersion(process.env.SANDY_DESKTOP_VERSION),
   };
 }
 
-function createInitialDesktopWindowState(): BbDesktopWindowState {
+function createInitialDesktopWindowState(): SandyDesktopWindowState {
   return {
     isFullScreen: false,
   };
 }
 
 const serverChoiceListeners = new Set<
-  (choices: BbDesktopServerChoice[]) => void
+  (choices: SandyDesktopServerChoice[]) => void
 >();
-const listeners = new Set<BbDesktopInfoChangeHandler>();
-const appCommandListeners = new Set<BbDesktopAppCommandHandler>();
-const windowStateListeners = new Set<BbDesktopWindowStateChangeHandler>();
+const listeners = new Set<SandyDesktopInfoChangeHandler>();
+const appCommandListeners = new Set<SandyDesktopAppCommandHandler>();
+const windowStateListeners = new Set<SandyDesktopWindowStateChangeHandler>();
 let currentInfo = createInitialDesktopInfo();
 let currentWindowState = createInitialDesktopWindowState();
 
@@ -153,8 +153,8 @@ function notifyWindowStateListeners(): void {
   }
 }
 
-function applyDesktopInfoPayload(payload: unknown): BbDesktopInfo | null {
-  const parsed = bbDesktopInfoSchema.safeParse(payload);
+function applyDesktopInfoPayload(payload: unknown): SandyDesktopInfo | null {
+  const parsed = sandyDesktopInfoSchema.safeParse(payload);
   if (!parsed.success) {
     return null;
   }
@@ -165,8 +165,8 @@ function applyDesktopInfoPayload(payload: unknown): BbDesktopInfo | null {
 
 function applyDesktopWindowStatePayload(
   payload: unknown,
-): BbDesktopWindowState | null {
-  const parsed = bbDesktopWindowStateSchema.safeParse(payload);
+): SandyDesktopWindowState | null {
+  const parsed = sandyDesktopWindowStateSchema.safeParse(payload);
   if (!parsed.success) {
     return null;
   }
@@ -175,7 +175,7 @@ function applyDesktopWindowStatePayload(
   return currentWindowState;
 }
 
-async function invokeDesktopInfo(channel: string): Promise<BbDesktopInfo> {
+async function invokeDesktopInfo(channel: string): Promise<SandyDesktopInfo> {
   try {
     const payload: unknown = await ipcRenderer.invoke(channel);
     return applyDesktopInfoPayload(payload) ?? currentInfo;
@@ -184,10 +184,10 @@ async function invokeDesktopInfo(channel: string): Promise<BbDesktopInfo> {
   }
 }
 
-async function invokeDesktopWindowState(): Promise<BbDesktopWindowState> {
+async function invokeDesktopWindowState(): Promise<SandyDesktopWindowState> {
   try {
     const payload: unknown = await ipcRenderer.invoke(
-      BB_DESKTOP_GET_WINDOW_STATE_CHANNEL,
+      SANDY_DESKTOP_GET_WINDOW_STATE_CHANNEL,
     );
     return applyDesktopWindowStatePayload(payload) ?? currentWindowState;
   } catch {
@@ -195,8 +195,8 @@ async function invokeDesktopWindowState(): Promise<BbDesktopWindowState> {
   }
 }
 
-const browserStateListeners = new Set<BbDesktopBrowserStateHandler>();
-const browserStates = new Map<string, BbDesktopBrowserState>();
+const browserStateListeners = new Set<SandyDesktopBrowserStateHandler>();
+const browserStates = new Map<string, SandyDesktopBrowserState>();
 browserStateListeners.add((state) => {
   browserStates.delete(state.tabId);
   browserStates.set(state.tabId, state);
@@ -206,28 +206,28 @@ browserStateListeners.add((state) => {
   }
 });
 const browserControlListeners = new Set<
-  (state: BbDesktopBrowserControlState) => void
+  (state: SandyDesktopBrowserControlState) => void
 >();
 const browserRevealListeners = new Set<
-  (request: BbDesktopBrowserRevealRequest) => void
+  (request: SandyDesktopBrowserRevealRequest) => void
 >();
-const browserOpenTabListeners = new Set<BbDesktopBrowserOpenTabHandler>();
+const browserOpenTabListeners = new Set<SandyDesktopBrowserOpenTabHandler>();
 const browserScopedOpenTabListeners =
-  new Set<BbDesktopBrowserScopedOpenTabHandler>();
-const browserFocusListeners = new Set<BbDesktopBrowserFocusHandler>();
+  new Set<SandyDesktopBrowserScopedOpenTabHandler>();
+const browserFocusListeners = new Set<SandyDesktopBrowserFocusHandler>();
 const browserPageMessageListeners =
-  new Set<BbDesktopBrowserPageMessageHandler>();
-const browserSnapshotListeners = new Set<BbDesktopBrowserSnapshotHandler>();
-const browserFindResultListeners = new Set<BbDesktopBrowserFindResultHandler>();
+  new Set<SandyDesktopBrowserPageMessageHandler>();
+const browserSnapshotListeners = new Set<SandyDesktopBrowserSnapshotHandler>();
+const browserFindResultListeners = new Set<SandyDesktopBrowserFindResultHandler>();
 const closeWindowRequestListeners =
-  new Set<BbDesktopCloseWindowRequestHandler>();
-const openNewTabListeners = new Set<BbDesktopOpenNewTabHandler>();
-const zoomListeners = new Set<BbDesktopZoomChangeHandler>();
+  new Set<SandyDesktopCloseWindowRequestHandler>();
+const openNewTabListeners = new Set<SandyDesktopOpenNewTabHandler>();
+const zoomListeners = new Set<SandyDesktopZoomChangeHandler>();
 let lastZoomFactor = webFrame.getZoomFactor();
 
 function publishZoomFactor(factor: number): void {
-  document.documentElement.style.setProperty("--bb-zoom", String(factor));
-  ipcRenderer.send(BB_DESKTOP_ZOOM_CHANGED_CHANNEL);
+  document.documentElement.style.setProperty("--sandy-zoom", String(factor));
+  ipcRenderer.send(SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL);
 }
 
 function notifyZoomChangeIfChanged(): void {
@@ -249,9 +249,9 @@ function addListener<T>(listeners: Set<T>, listener: T): () => void {
   };
 }
 
-async function listServerChoices(): Promise<BbDesktopServerChoice[]> {
-  return bbDesktopServerChoicesSchema.parse(
-    await ipcRenderer.invoke(BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL),
+async function listServerChoices(): Promise<SandyDesktopServerChoice[]> {
+  return sandyDesktopServerChoicesSchema.parse(
+    await ipcRenderer.invoke(SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL),
   );
 }
 
@@ -272,8 +272,8 @@ function forwardParsed<T>(
 }
 
 function browserViewBoundsAtWindowScale(
-  bounds: BbDesktopBrowserViewBounds,
-): BbDesktopBrowserViewBounds {
+  bounds: SandyDesktopBrowserViewBounds,
+): SandyDesktopBrowserViewBounds {
   const zoomFactor = webFrame.getZoomFactor();
   if (zoomFactor === 1) {
     return bounds;
@@ -291,21 +291,21 @@ function browserViewBoundsAtWindowScale(
   };
 }
 
-const bbBrowserApi: BbDesktopBrowserApi = {
+const sandyBrowserApi: SandyDesktopBrowserApi = {
   async getTarget() {
-    return bbDesktopBrowserTargetSchema
+    return sandyDesktopBrowserTargetSchema
       .nullable()
-      .parse(await ipcRenderer.invoke(BB_DESKTOP_BROWSER_TARGET_CHANNEL));
+      .parse(await ipcRenderer.invoke(SANDY_DESKTOP_BROWSER_TARGET_CHANNEL));
   },
   async getControl(tabId) {
-    return bbDesktopBrowserControlStateSchema.nullable().parse(
-      await ipcRenderer.invoke(BB_DESKTOP_BROWSER_GET_CONTROL_CHANNEL, {
+    return sandyDesktopBrowserControlStateSchema.nullable().parse(
+      await ipcRenderer.invoke(SANDY_DESKTOP_BROWSER_GET_CONTROL_CHANNEL, {
         tabId,
       }),
     );
   },
   releaseControl(tabId) {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL, { tabId });
   },
   onControl(listener) {
     return addListener(browserControlListeners, listener);
@@ -314,96 +314,96 @@ const bbBrowserApi: BbDesktopBrowserApi = {
     return addListener(browserRevealListeners, listener);
   },
   async evaluate(request) {
-    return bbDesktopBrowserEvaluateResultSchema.parse(
-      await ipcRenderer.invoke(BB_DESKTOP_BROWSER_EVALUATE_CHANNEL, request),
+    return sandyDesktopBrowserEvaluateResultSchema.parse(
+      await ipcRenderer.invoke(SANDY_DESKTOP_BROWSER_EVALUATE_CHANNEL, request),
     );
   },
   onPageMessage(listener) {
     return addListener(browserPageMessageListeners, listener);
   },
   attach(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_ATTACH_CHANNEL, {
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_ATTACH_CHANNEL, {
       ...request,
       bounds: browserViewBoundsAtWindowScale(request.bounds),
     });
   },
   detach(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_DETACH_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_DETACH_CHANNEL, { tabId });
   },
   setThreadDiscarded(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_SET_THREAD_DISCARDED_CHANNEL, request);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_SET_THREAD_DISCARDED_CHANNEL, request);
   },
   async listThreadIdsWithTabs() {
     return z
       .array(z.string().min(1))
       .parse(
         await ipcRenderer.invoke(
-          BB_DESKTOP_BROWSER_LIST_THREADS_WITH_TABS_CHANNEL,
+          SANDY_DESKTOP_BROWSER_LIST_THREADS_WITH_TABS_CHANNEL,
         ),
       );
   },
   navigate(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_NAVIGATE_CHANNEL, request);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_NAVIGATE_CHANNEL, request);
   },
   goBack(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_GO_BACK_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_GO_BACK_CHANNEL, { tabId });
   },
   goForward(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_GO_FORWARD_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_GO_FORWARD_CHANNEL, { tabId });
   },
   reload(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_RELOAD_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_RELOAD_CHANNEL, { tabId });
   },
   stop(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_STOP_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_STOP_CHANNEL, { tabId });
   },
   focus(tabId): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_FOCUS_CHANNEL, { tabId });
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_FOCUS_CHANNEL, { tabId });
   },
   setBounds(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_SET_BOUNDS_CHANNEL, {
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_SET_BOUNDS_CHANNEL, {
       ...request,
       bounds: browserViewBoundsAtWindowScale(request.bounds),
     });
   },
   setVisible(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_SET_VISIBLE_CHANNEL, request);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_SET_VISIBLE_CHANNEL, request);
   },
   setVisibleWithoutFocus(request): void {
     ipcRenderer.send(
-      BB_DESKTOP_BROWSER_SET_VISIBLE_WITHOUT_FOCUS_CHANNEL,
+      SANDY_DESKTOP_BROWSER_SET_VISIBLE_WITHOUT_FOCUS_CHANNEL,
       request,
     );
   },
-  onState(listener): BbDesktopBrowserUnsubscribe {
+  onState(listener): SandyDesktopBrowserUnsubscribe {
     const unsubscribe = addListener(browserStateListeners, listener);
     for (const state of browserStates.values()) listener(state);
     return unsubscribe;
   },
-  onOpenTab(listener): BbDesktopBrowserUnsubscribe {
+  onOpenTab(listener): SandyDesktopBrowserUnsubscribe {
     return addListener(browserOpenTabListeners, listener);
   },
-  onScopedOpenTab(listener): BbDesktopBrowserUnsubscribe {
+  onScopedOpenTab(listener): SandyDesktopBrowserUnsubscribe {
     return addListener(browserScopedOpenTabListeners, listener);
   },
-  onFocus(listener): BbDesktopBrowserUnsubscribe {
+  onFocus(listener): SandyDesktopBrowserUnsubscribe {
     return addListener(browserFocusListeners, listener);
   },
-  onSnapshot(listener): BbDesktopBrowserUnsubscribe {
+  onSnapshot(listener): SandyDesktopBrowserUnsubscribe {
     return addListener(browserSnapshotListeners, listener);
   },
   findInPage(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_FIND_IN_PAGE_CHANNEL, request);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_FIND_IN_PAGE_CHANNEL, request);
   },
   stopFindInPage(request): void {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_STOP_FIND_IN_PAGE_CHANNEL, request);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_STOP_FIND_IN_PAGE_CHANNEL, request);
   },
-  onFindResult(listener): BbDesktopBrowserUnsubscribe {
+  onFindResult(listener): SandyDesktopBrowserUnsubscribe {
     return addListener(browserFindResultListeners, listener);
   },
   async listImportSources() {
     const payload: unknown = await ipcRenderer.invoke(
-      BB_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
+      SANDY_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
     );
     return z
       .object({ sources: z.array(desktopBrowserImportSourceSchema) })
@@ -411,165 +411,165 @@ const bbBrowserApi: BbDesktopBrowserApi = {
   },
   async importCookies(request) {
     const payload: unknown = await ipcRenderer.invoke(
-      BB_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
+      SANDY_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
       request,
     );
     return desktopBrowserImportOutcomeSchema.parse(payload);
   },
   openFullDiskAccessSettings() {
-    ipcRenderer.send(BB_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL);
+    ipcRenderer.send(SANDY_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL);
   },
 };
 
-const bbDesktopApi: BbDesktopApi = {
-  browser: bbBrowserApi,
+const sandyDesktopApi: SandyDesktopApi = {
+  browser: sandyBrowserApi,
   getServerChoices: listServerChoices,
   listServerChoices,
   onServerChoicesChange(listener) {
     return addListener(serverChoiceListeners, listener);
   },
   selectServer(id) {
-    ipcRenderer.send(BB_DESKTOP_SELECT_SERVER_CHANNEL, id);
+    ipcRenderer.send(SANDY_DESKTOP_SELECT_SERVER_CHANNEL, id);
   },
   macosTrafficLightInset: MACOS_TRAFFIC_LIGHT_INSET_PX,
   macosTrafficLightTopInset: MACOS_TRAFFIC_LIGHT_TOP_INSET_PX,
-  platform: resolveBbDesktopPlatform(process.platform),
+  platform: resolveSandyDesktopPlatform(process.platform),
   get serverDaemonLogsAvailable() {
     return currentInfo.serverDaemonLogsAvailable;
   },
   version: currentInfo.version,
   getInfo() {
-    return invokeDesktopInfo(BB_DESKTOP_GET_INFO_CHANNEL);
+    return invokeDesktopInfo(SANDY_DESKTOP_GET_INFO_CHANNEL);
   },
   setAttentionThreads(threads) {
-    ipcRenderer.send(BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL, threads);
+    ipcRenderer.send(SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL, threads);
   },
   focusWindow() {
-    ipcRenderer.send(BB_DESKTOP_FOCUS_WINDOW_CHANNEL);
+    ipcRenderer.send(SANDY_DESKTOP_FOCUS_WINDOW_CHANNEL);
   },
   getWindowState() {
     return invokeDesktopWindowState();
   },
-  onChange(listener: BbDesktopInfoChangeHandler): BbDesktopInfoUnsubscribe {
+  onChange(listener: SandyDesktopInfoChangeHandler): SandyDesktopInfoUnsubscribe {
     return addListener(listeners, listener);
   },
   onWindowStateChange(
-    listener: BbDesktopWindowStateChangeHandler,
-  ): BbDesktopInfoUnsubscribe {
+    listener: SandyDesktopWindowStateChangeHandler,
+  ): SandyDesktopInfoUnsubscribe {
     return addListener(windowStateListeners, listener);
   },
-  onZoomChange(listener): BbDesktopInfoUnsubscribe {
+  onZoomChange(listener): SandyDesktopInfoUnsubscribe {
     return addListener(zoomListeners, listener);
   },
   zoom(command): void {
-    ipcRenderer.send(BB_DESKTOP_ZOOM_COMMAND_CHANNEL, command);
+    ipcRenderer.send(SANDY_DESKTOP_ZOOM_COMMAND_CHANNEL, command);
   },
-  onOpenNewTab(listener): BbDesktopInfoUnsubscribe {
+  onOpenNewTab(listener): SandyDesktopInfoUnsubscribe {
     return addListener(openNewTabListeners, listener);
   },
-  onAppCommand(listener): BbDesktopInfoUnsubscribe {
+  onAppCommand(listener): SandyDesktopInfoUnsubscribe {
     return addListener(appCommandListeners, listener);
   },
-  onCloseWindowRequest(listener): BbDesktopInfoUnsubscribe {
+  onCloseWindowRequest(listener): SandyDesktopInfoUnsubscribe {
     return addListener(closeWindowRequestListeners, listener);
   },
   openWindowFind(request): void {
-    ipcRenderer.send(BB_DESKTOP_OPEN_WINDOW_FIND_CHANNEL, {
+    ipcRenderer.send(SANDY_DESKTOP_OPEN_WINDOW_FIND_CHANNEL, {
       topOffset: Math.round(request.topOffset * webFrame.getZoomFactor()),
-    } satisfies BbDesktopWindowFindRequest);
+    } satisfies SandyDesktopWindowFindRequest);
   },
   async openDataDirectory(): Promise<void> {
-    await ipcRenderer.invoke(BB_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL);
+    await ipcRenderer.invoke(SANDY_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL);
   },
   async openApplicationUrl(url: string): Promise<void> {
-    await ipcRenderer.invoke(BB_DESKTOP_OPEN_APPLICATION_URL_CHANNEL, url);
+    await ipcRenderer.invoke(SANDY_DESKTOP_OPEN_APPLICATION_URL_CHANNEL, url);
   },
   openExternalUrl(url: string): void {
-    ipcRenderer.send(BB_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL, url);
+    ipcRenderer.send(SANDY_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL, url);
   },
   async openServerDaemonLogs(): Promise<void> {
-    await ipcRenderer.invoke(BB_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL);
+    await ipcRenderer.invoke(SANDY_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL);
   },
   reloadWindow(): void {
-    ipcRenderer.send(BB_DESKTOP_RELOAD_WINDOW_CHANNEL);
+    ipcRenderer.send(SANDY_DESKTOP_RELOAD_WINDOW_CHANNEL);
   },
   setSplitNavigationEnabled(
     enabled: boolean,
     directionalCommands?: readonly AppCommandId[],
   ): void {
     ipcRenderer.send(
-      BB_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
+      SANDY_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
       enabled,
       directionalCommands,
     );
   },
-  setTheme(theme: BbDesktopTheme): void {
-    ipcRenderer.send(BB_DESKTOP_SET_THEME_CHANNEL, theme);
+  setTheme(theme: SandyDesktopTheme): void {
+    ipcRenderer.send(SANDY_DESKTOP_SET_THEME_CHANNEL, theme);
   },
-  async writeClipboard(content: BbDesktopClipboardContent): Promise<void> {
-    await ipcRenderer.invoke(BB_DESKTOP_WRITE_CLIPBOARD_CHANNEL, content);
+  async writeClipboard(content: SandyDesktopClipboardContent): Promise<void> {
+    await ipcRenderer.invoke(SANDY_DESKTOP_WRITE_CLIPBOARD_CHANNEL, content);
   },
 };
 
 forwardParsed(
-  BB_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
-  bbDesktopServerChoicesSchema,
+  SANDY_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
+  sandyDesktopServerChoicesSchema,
   serverChoiceListeners,
 );
 
-ipcRenderer.on(BB_DESKTOP_INFO_CHANGED_CHANNEL, (_event, payload: unknown) => {
+ipcRenderer.on(SANDY_DESKTOP_INFO_CHANGED_CHANNEL, (_event, payload: unknown) => {
   applyDesktopInfoPayload(payload);
 });
 
 ipcRenderer.on(
-  BB_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
+  SANDY_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
   (_event, payload: unknown) => {
     applyDesktopWindowStatePayload(payload);
   },
 );
 
-ipcRenderer.on(BB_DESKTOP_OPEN_NEW_TAB_CHANNEL, () => {
+ipcRenderer.on(SANDY_DESKTOP_OPEN_NEW_TAB_CHANNEL, () => {
   for (const listener of openNewTabListeners) {
     listener();
   }
 });
 
 forwardParsed(
-  BB_DESKTOP_APP_COMMAND_CHANNEL,
+  SANDY_DESKTOP_APP_COMMAND_CHANNEL,
   appCommandIdSchema,
   appCommandListeners,
 );
 
-ipcRenderer.on(BB_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL, () => {
+ipcRenderer.on(SANDY_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL, () => {
   let handled = false;
   for (const listener of closeWindowRequestListeners) {
     handled = listener() || handled;
   }
-  ipcRenderer.send(BB_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL, handled);
+  ipcRenderer.send(SANDY_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL, handled);
 });
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_STATE_CHANNEL,
-  bbDesktopBrowserStateSchema,
+  SANDY_DESKTOP_BROWSER_STATE_CHANNEL,
+  sandyDesktopBrowserStateSchema,
   browserStateListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_CONTROL_CHANNEL,
-  bbDesktopBrowserControlStateSchema,
+  SANDY_DESKTOP_BROWSER_CONTROL_CHANNEL,
+  sandyDesktopBrowserControlStateSchema,
   browserControlListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_REVEAL_CHANNEL,
-  bbDesktopBrowserRevealRequestSchema,
+  SANDY_DESKTOP_BROWSER_REVEAL_CHANNEL,
+  sandyDesktopBrowserRevealRequestSchema,
   browserRevealListeners,
 );
 
 ipcRenderer.on(
-  BB_DESKTOP_BROWSER_FOCUSED_CHANNEL,
+  SANDY_DESKTOP_BROWSER_FOCUSED_CHANNEL,
   (_event, payload: unknown) => {
-    const parsed = bbDesktopBrowserTabRefSchema.safeParse(payload);
+    const parsed = sandyDesktopBrowserTabRefSchema.safeParse(payload);
     if (!parsed.success) {
       return;
     }
@@ -580,32 +580,32 @@ ipcRenderer.on(
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_OPEN_TAB_CHANNEL,
-  bbDesktopBrowserOpenTabRequestSchema,
+  SANDY_DESKTOP_BROWSER_OPEN_TAB_CHANNEL,
+  sandyDesktopBrowserOpenTabRequestSchema,
   browserOpenTabListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_SCOPED_OPEN_TAB_CHANNEL,
-  bbDesktopBrowserScopedOpenTabRequestSchema,
+  SANDY_DESKTOP_BROWSER_SCOPED_OPEN_TAB_CHANNEL,
+  sandyDesktopBrowserScopedOpenTabRequestSchema,
   browserScopedOpenTabListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_SNAPSHOT_CHANNEL,
-  bbDesktopBrowserSnapshotSchema,
+  SANDY_DESKTOP_BROWSER_SNAPSHOT_CHANNEL,
+  sandyDesktopBrowserSnapshotSchema,
   browserSnapshotListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
-  bbDesktopBrowserPageMessageSchema,
+  SANDY_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
+  sandyDesktopBrowserPageMessageSchema,
   browserPageMessageListeners,
 );
 
 forwardParsed(
-  BB_DESKTOP_BROWSER_FIND_RESULT_CHANNEL,
-  bbDesktopBrowserFindResultSchema,
+  SANDY_DESKTOP_BROWSER_FIND_RESULT_CHANNEL,
+  sandyDesktopBrowserFindResultSchema,
   browserFindResultListeners,
 );
 
@@ -623,7 +623,7 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
   });
 }
 
-void invokeDesktopInfo(BB_DESKTOP_GET_INFO_CHANNEL);
+void invokeDesktopInfo(SANDY_DESKTOP_GET_INFO_CHANNEL);
 void invokeDesktopWindowState();
 
-contextBridge.exposeInMainWorld("bbDesktop", bbDesktopApi);
+contextBridge.exposeInMainWorld("sandyDesktop", sandyDesktopApi);

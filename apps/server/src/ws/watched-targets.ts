@@ -1,4 +1,4 @@
-import type { RealtimeSubscriptionTarget } from "@bb/domain";
+import type { RealtimeSubscriptionTarget } from "@sandy/domain";
 
 export type WatchedTargetKind = RealtimeSubscriptionTarget["kind"];
 

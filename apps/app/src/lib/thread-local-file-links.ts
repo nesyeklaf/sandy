@@ -1,11 +1,11 @@
 import type { ThreadTimelineLocalFileLink } from "@/components/thread/timeline";
-import type { FilePreviewLineRange } from "@bb/client-core";
-import { areHostPathsEqual, getRelativeHostPath } from "@bb/domain";
-import type { WorkspaceOpenTargetId } from "@bb/host-daemon-contract";
+import type { FilePreviewLineRange } from "@sandy/client-core";
+import { areHostPathsEqual, getRelativeHostPath } from "@sandy/domain";
+import type { WorkspaceOpenTargetId } from "@sandy/host-daemon-contract";
 import {
   isAbsoluteFilePathWithinRoot,
   normalizeAbsoluteFilePath,
-} from "@bb/shared-ui/lib/absolute-file-path";
+} from "@sandy/shared-ui/lib/absolute-file-path";
 import { isRoutePath } from "./route-paths";
 
 const THREAD_LOCAL_FILE_LINK_UNAVAILABLE_DESCRIPTION =
@@ -131,7 +131,7 @@ function normalizeLocalFilePathWithinRoot(
   };
 }
 
-const THREAD_STORAGE_VARIABLE_PREFIX = "$BB_THREAD_STORAGE/";
+const THREAD_STORAGE_VARIABLE_PREFIX = "$SANDY_THREAD_STORAGE/";
 
 interface ResolveStorageRequestForWorkspaceRelativePathArgs {
   lineRange: FilePreviewLineRange | null;

@@ -1,7 +1,7 @@
-import { SERVER_MOVE_STEP_IDS } from "@bb/domain";
-import { BbHttpError } from "@bb/sdk/browser";
-import type { ServerMoveStatus } from "@bb/server-contract";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import { SERVER_MOVE_STEP_IDS } from "@sandy/domain";
+import { SandyHttpError } from "@sandy/sdk/browser";
+import type { ServerMoveStatus } from "@sandy/server-contract";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { describe, expect, it } from "vitest";
 import {
   canMoveServerHere,
@@ -38,21 +38,21 @@ function move(overrides: Partial<ServerMoveStatus> = {}): ServerMoveStatus {
 describe("serverMoveDestinationUrl", () => {
   it("keeps a base path, drops duplicate slashes, and carries the move id", () => {
     expect(
-      serverMoveDestinationUrl("https://example.com/bb/", LOCATION, "move_1"),
-    ).toBe("https://example.com/bb/threads/thr_1?a=1&bbServerMove=move_1#x");
+      serverMoveDestinationUrl("https://example.com/sandy/", LOCATION, "move_1"),
+    ).toBe("https://example.com/sandy/threads/thr_1?a=1&sandyServerMove=move_1#x");
     expect(
       serverMoveDestinationUrl("http://10.0.0.5:38886", LOCATION, "move_1"),
-    ).toBe("http://10.0.0.5:38886/threads/thr_1?a=1&bbServerMove=move_1#x");
+    ).toBe("http://10.0.0.5:38886/threads/thr_1?a=1&sandyServerMove=move_1#x");
   });
 
   it("replaces any query or fragment on the server address with the current ones", () => {
     expect(
       serverMoveDestinationUrl(
         "https://example.com/?stale=1#old",
-        { pathname: "/", search: "?bbServerMove=move_0", hash: "" },
+        { pathname: "/", search: "?sandyServerMove=move_0", hash: "" },
         "move_1",
       ),
-    ).toBe("https://example.com/?bbServerMove=move_1");
+    ).toBe("https://example.com/?sandyServerMove=move_1");
   });
 });
 
@@ -148,12 +148,12 @@ describe("canMoveServerHere", () => {
 });
 
 describe("movedServerUrlFromError", () => {
-  function httpError(status: number, body: unknown): BbHttpError {
+  function httpError(status: number, body: unknown): SandyHttpError {
     const code =
       typeof body === "object" && body !== null && "code" in body
         ? String(body.code)
         : null;
-    return new BbHttpError({ status, code, message: "moved", body });
+    return new SandyHttpError({ status, code, message: "moved", body });
   }
 
   it("reads the new address from a server_moved answer", () => {
@@ -295,7 +295,7 @@ describe("resolveServerMoveOverlay", () => {
       kind: "redirecting",
       move: switching,
       destination:
-        "https://desk.example.com/threads/thr_1?a=1&bbServerMove=move_1#x",
+        "https://desk.example.com/threads/thr_1?a=1&sandyServerMove=move_1#x",
     });
     expect(
       resolveServerMoveOverlay({ ...args, error: null, destination: null })

@@ -3,8 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { providerUsageResultSchema } from "@bb/provider-bridge-protocol";
-import { captureBridgeJsonRpcOutput } from "@bb/provider-bridge-protocol/testing";
+import { providerUsageResultSchema } from "@sandy/provider-bridge-protocol";
+import { captureBridgeJsonRpcOutput } from "@sandy/provider-bridge-protocol/testing";
 import { readOpenCodeGoUsage } from "./opencode-usage.js";
 
 const reportedUsage = {
@@ -32,7 +32,7 @@ let env: NodeJS.ProcessEnv;
 const fetchUsage = vi.fn<typeof fetch>();
 
 beforeEach(async () => {
-  directory = await fs.mkdtemp(path.join(os.tmpdir(), "bb-opencode-usage-"));
+  directory = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-opencode-usage-"));
   env = { XDG_DATA_HOME: directory, HOME: directory };
   fetchUsage.mockReset();
   fetchUsage.mockImplementation(async () => Response.json(reportedUsage));

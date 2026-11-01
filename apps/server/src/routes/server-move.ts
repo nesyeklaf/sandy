@@ -3,17 +3,17 @@ import { createReadStream } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
-import { getExperiments } from "@bb/db";
-import type { LastServerMove } from "@bb/domain";
+import { getExperiments } from "@sandy/db";
+import type { LastServerMove } from "@sandy/domain";
 import {
   readLastServerMoveFile,
   writeLastServerMoveFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import { ApiError } from "../errors.js";
 import {
@@ -34,7 +34,7 @@ const SERVER_EXPORT_WORK_DIR_NAME = "server-export";
 const DELETE_OLD_SERVER_COPY_TIMEOUT_MS = 5 * 60_000;
 
 export const SERVER_MOVE_EXPERIMENT_DISABLED_MESSAGE =
-  'Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run bb settings experiment serverMove true, then try again.';
+  'Moving the server is off. Turn on the "Server move" experiment in Settings → Experiments, or run sandy settings experiment serverMove true, then try again.';
 
 function assertServerMoveExperimentEnabled(deps: AppDeps): void {
   if (!getExperiments(deps.db).serverMove) {
@@ -58,7 +58,7 @@ export async function readLastServerMove(
 }
 
 function serverExportFileName(now: Date): string {
-  return `bb-server-${now.toISOString().slice(0, 10)}.tar.gz`;
+  return `sandy-server-${now.toISOString().slice(0, 10)}.tar.gz`;
 }
 
 export function registerServerMoveRoutes(
@@ -145,7 +145,7 @@ export function registerServerMoveRoutes(
         "content-disposition": `attachment; filename="${fileName}"`,
         "content-length": String(archive.sizeBytes),
         "content-type": "application/gzip",
-        "x-bb-archive-sha256": archive.sha256,
+        "x-sandy-archive-sha256": archive.sha256,
       },
     });
   });

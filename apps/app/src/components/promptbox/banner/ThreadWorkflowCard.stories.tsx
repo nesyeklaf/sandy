@@ -4,7 +4,7 @@ import type {
   WorkflowAgentState,
   WorkflowPhaseSnapshot,
   WorkflowProgressSnapshot,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { ThreadWorkflowCard } from "./ThreadWorkflowCard";
 import { ThreadWorkflowStack } from "./ThreadWorkflowStack";
 import { workflowRow } from "@/test/fixtures/thread-timeline-rows";
@@ -64,7 +64,7 @@ const runningWorkflow = workflowRow({
   id: "thr_fixture:workflow:investigation:running",
   status: "pending",
   taskStatus: "running",
-  workflowName: "bb-plugin-investigation",
+  workflowName: "sandy-plugin-investigation",
   description: "Investigate the plugin subsystem",
   startedAt: Date.now() - 326_000,
   workflow: investigationSnapshot,
@@ -159,7 +159,7 @@ const manyPhasesWorkflow = workflowRow({
   id: "thr_fixture:workflow:many-phases:running",
   status: "pending",
   taskStatus: "running",
-  workflowName: "bb-repo-wide-audit",
+  workflowName: "sandy-repo-wide-audit",
   description: "Audit the entire repository across forty phases",
   startedAt: Date.now() - 1_472_000,
   workflow: buildManyPhasesSnapshot(40, 12),
@@ -170,7 +170,7 @@ const secondRunningWorkflow = workflowRow({
   id: "thr_fixture:workflow:balance:running",
   status: "pending",
   taskStatus: "running",
-  workflowName: "bb-balance-pass",
+  workflowName: "sandy-balance-pass",
   description: "Close the remaining balance defects",
   startedAt: Date.now() - 94_000,
   workflow: {
@@ -253,7 +253,7 @@ function AutoAdvancePreview() {
         id: "thr_fixture:workflow:auto-advance:running",
         status: "pending",
         taskStatus: "running",
-        workflowName: "bb-repo-wide-audit",
+        workflowName: "sandy-repo-wide-audit",
         description: "Audit the entire repository across forty phases",
         startedAt: Date.now() - 1_472_000,
         workflow: buildManyPhasesSnapshot(40, activePhase),
@@ -342,12 +342,12 @@ const concurrentWorkflows = [
   {
     ...secondRunningWorkflow,
     id: "thr_fixture:workflow:balance:running-2",
-    workflowName: "bb-balance-pass-2",
+    workflowName: "sandy-balance-pass-2",
   },
   {
     ...runningWorkflow,
     id: "thr_fixture:workflow:investigation:running-2",
-    workflowName: "bb-plugin-investigation-2",
+    workflowName: "sandy-plugin-investigation-2",
   },
 ];
 

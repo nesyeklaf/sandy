@@ -1,8 +1,8 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type {
-  BbRealtime as RootBbRealtime,
-  BbSdk as RootBbSdk,
-  BbRealtimeConnectionEvent as RootRealtimeConnection,
+  SandyRealtime as RootSandyRealtime,
+  SandySdk as RootSandySdk,
+  SandyRealtimeConnectionEvent as RootRealtimeConnection,
   FileReadResult as RootFileRead,
   GuideRenderResult as RootGuideRender,
   HostGetResult as RootHostGet,
@@ -25,11 +25,11 @@ import type {
   ThemeSetInput as RootThemeSetInput,
   ThreadSectionListResult as RootThreadSectionList,
   ThreadSpawnResult as RootThreadSpawn,
-} from "@bb/sdk";
+} from "@sandy/sdk";
 import type {
-  BbSdk as BrowserBbSdk,
-  BrowserBbSdk as BrowserRuntimeBbSdk,
-  BbRealtimeConnectionEvent as BrowserRealtimeConnection,
+  SandySdk as BrowserSandySdk,
+  BrowserSandySdk as BrowserRuntimeSandySdk,
+  SandyRealtimeConnectionEvent as BrowserRealtimeConnection,
   FileReadResult as BrowserFileRead,
   GuideRenderResult as BrowserGuideRender,
   HostGetResult as BrowserHostGet,
@@ -51,11 +51,11 @@ import type {
   ThemeSetInput as BrowserThemeSetInput,
   ThreadSectionListResult as BrowserThreadSectionList,
   ThreadSpawnResult as BrowserThreadSpawn,
-  createBrowserBbSdk,
-} from "@bb/sdk/browser";
+  createBrowserSandySdk,
+} from "@sandy/sdk/browser";
 import type {
-  BbSdk as CoreBbSdk,
-  BbRealtimeConnectionEvent as CoreRealtimeConnection,
+  SandySdk as CoreSandySdk,
+  SandyRealtimeConnectionEvent as CoreRealtimeConnection,
   FileReadResult as CoreFileRead,
   GuideRenderResult as CoreGuideRender,
   HostGetResult as CoreHostGet,
@@ -77,10 +77,10 @@ import type {
   ThemeSetInput as CoreThemeSetInput,
   ThreadSectionListResult as CoreThreadSectionList,
   ThreadSpawnResult as CoreThreadSpawn,
-} from "@bb/sdk/core";
+} from "@sandy/sdk/core";
 import type {
-  BbSdk as NodeBbSdk,
-  BbRealtimeConnectionEvent as NodeRealtimeConnection,
+  SandySdk as NodeSandySdk,
+  SandyRealtimeConnectionEvent as NodeRealtimeConnection,
   FileReadResult as NodeFileRead,
   GuideRenderResult as NodeGuideRender,
   HostGetResult as NodeHostGet,
@@ -102,7 +102,7 @@ import type {
   ThemeSetInput as NodeThemeSetInput,
   ThreadSectionListResult as NodeThreadSectionList,
   ThreadSpawnResult as NodeThreadSpawn,
-} from "@bb/sdk/node";
+} from "@sandy/sdk/node";
 
 interface RootSurface {
   fileRead: RootFileRead;
@@ -204,7 +204,7 @@ interface NodeSurface {
   threadSpawn: NodeThreadSpawn;
 }
 
-type ExpectedBbSdkKey =
+type ExpectedSandySdkKey =
   | "experimental_desktopBrowsers"
   | "experimental_promptHistory"
   | "experimental_server"
@@ -357,6 +357,7 @@ type ExpectedSystemKey =
   | "experimental_cliCommand"
   | "experimental_installCliCommand"
   | "experimental_removeCliCommand"
+  | "experimental_reportClientError"
   | "reloadConfig"
   | "setAiServiceSelection"
   | "testAiService"
@@ -370,7 +371,13 @@ type ExpectedSystemKey =
 
 type ExpectedSystemUiPreferencesKey = "list" | "reset" | "set";
 
-type ExpectedThemeKey = "catalog" | "get" | "resolve" | "set";
+type ExpectedThemeKey =
+  | "catalog"
+  | "experimental_check"
+  | "experimental_create"
+  | "get"
+  | "resolve"
+  | "set";
 
 type ExpectedThreadSectionsKey = "create" | "delete" | "list" | "update";
 
@@ -380,6 +387,7 @@ type ExpectedThreadsKey =
   | "experimental_listCascade"
   | "experimental_listPluginMetadata"
   | "experimental_regenerateTitle"
+  | "experimental_updateEnvironmentDirectory"
   | "getPluginMetadata"
   | "updatePluginMetadata"
   | "context"
@@ -473,19 +481,19 @@ describe("SDK public type entrypoints", () => {
   });
 
   it("preserves the complete SDK surface at every entrypoint", () => {
-    expectTypeOf<keyof RootBbSdk>().toEqualTypeOf<ExpectedBbSdkKey>();
-    expectTypeOf<BrowserBbSdk>().toEqualTypeOf<RootBbSdk>();
-    expectTypeOf<CoreBbSdk>().toEqualTypeOf<RootBbSdk>();
-    expectTypeOf<NodeBbSdk>().toEqualTypeOf<RootBbSdk>();
+    expectTypeOf<keyof RootSandySdk>().toEqualTypeOf<ExpectedSandySdkKey>();
+    expectTypeOf<BrowserSandySdk>().toEqualTypeOf<RootSandySdk>();
+    expectTypeOf<CoreSandySdk>().toEqualTypeOf<RootSandySdk>();
+    expectTypeOf<NodeSandySdk>().toEqualTypeOf<RootSandySdk>();
   });
 
   it("keeps the local guide area off the browser SDK instance", () => {
-    expectTypeOf<keyof BrowserRuntimeBbSdk>().toEqualTypeOf<
-      Exclude<ExpectedBbSdkKey, "guide">
+    expectTypeOf<keyof BrowserRuntimeSandySdk>().toEqualTypeOf<
+      Exclude<ExpectedSandySdkKey, "guide">
     >();
     expectTypeOf<
-      ReturnType<typeof createBrowserBbSdk>
-    >().toEqualTypeOf<BrowserRuntimeBbSdk>();
+      ReturnType<typeof createBrowserSandySdk>
+    >().toEqualTypeOf<BrowserRuntimeSandySdk>();
   });
 
   it("exports only the public permission presets", () => {
@@ -541,73 +549,83 @@ describe("SDK public type entrypoints", () => {
   });
 
   it("snapshots every SDK area and nested method group", () => {
-    expectTypeOf<keyof RootBbRealtime>().toEqualTypeOf<ExpectedRealtimeKey>();
     expectTypeOf<
-      keyof RootBbSdk["environments"]
+      keyof RootSandyRealtime
+    >().toEqualTypeOf<ExpectedRealtimeKey>();
+    expectTypeOf<
+      keyof RootSandySdk["environments"]
     >().toEqualTypeOf<ExpectedEnvironmentsKey>();
-    expectTypeOf<keyof RootBbSdk["files"]>().toEqualTypeOf<ExpectedFilesKey>();
-    expectTypeOf<keyof RootBbSdk["guide"]>().toEqualTypeOf<ExpectedGuideKey>();
-    expectTypeOf<keyof RootBbSdk["hosts"]>().toEqualTypeOf<ExpectedHostsKey>();
     expectTypeOf<
-      keyof RootBbSdk["plugins"]
+      keyof RootSandySdk["files"]
+    >().toEqualTypeOf<ExpectedFilesKey>();
+    expectTypeOf<
+      keyof RootSandySdk["guide"]
+    >().toEqualTypeOf<ExpectedGuideKey>();
+    expectTypeOf<
+      keyof RootSandySdk["hosts"]
+    >().toEqualTypeOf<ExpectedHostsKey>();
+    expectTypeOf<
+      keyof RootSandySdk["plugins"]
     >().toEqualTypeOf<ExpectedPluginsKey>();
     expectTypeOf<
-      keyof RootBbSdk["plugins"]["catalog"]
+      keyof RootSandySdk["plugins"]["catalog"]
     >().toEqualTypeOf<ExpectedPluginCatalogKey>();
     expectTypeOf<
-      keyof RootBbSdk["plugins"]["marketplaces"]
+      keyof RootSandySdk["plugins"]["marketplaces"]
     >().toEqualTypeOf<ExpectedPluginMarketplacesKey>();
     expectTypeOf<
-      keyof RootBbSdk["plugins"]["installJobs"]
+      keyof RootSandySdk["plugins"]["installJobs"]
     >().toEqualTypeOf<ExpectedPluginInstallJobsKey>();
     expectTypeOf<
-      keyof RootBbSdk["projects"]
+      keyof RootSandySdk["projects"]
     >().toEqualTypeOf<ExpectedProjectsKey>();
     expectTypeOf<
-      keyof RootBbSdk["projects"]["attachments"]
+      keyof RootSandySdk["projects"]["attachments"]
     >().toEqualTypeOf<ExpectedProjectAttachmentsKey>();
     expectTypeOf<
-      keyof RootBbSdk["projects"]["sources"]
+      keyof RootSandySdk["projects"]["sources"]
     >().toEqualTypeOf<ExpectedProjectSourcesKey>();
     expectTypeOf<
-      keyof RootBbSdk["experimental_promptHistory"]
+      keyof RootSandySdk["experimental_promptHistory"]
     >().toEqualTypeOf<ExpectedExperimentalPromptHistoryKey>();
     expectTypeOf<
-      keyof RootBbSdk["providers"]
+      keyof RootSandySdk["providers"]
     >().toEqualTypeOf<ExpectedProvidersKey>();
     expectTypeOf<
-      keyof RootBbSdk["status"]
+      keyof RootSandySdk["status"]
     >().toEqualTypeOf<ExpectedStatusKey>();
     expectTypeOf<
-      keyof RootBbSdk["system"]
+      keyof RootSandySdk["system"]
     >().toEqualTypeOf<ExpectedSystemKey>();
     expectTypeOf<
-      keyof RootBbSdk["system"]["uiPreferences"]
+      keyof RootSandySdk["system"]["uiPreferences"]
     >().toEqualTypeOf<ExpectedSystemUiPreferencesKey>();
     expectTypeOf<
-      keyof RootBbSdk["terminals"]
+      keyof RootSandySdk["terminals"]
     >().toEqualTypeOf<ExpectedTerminalsKey>();
-    expectTypeOf<keyof RootBbSdk["theme"]>().toEqualTypeOf<ExpectedThemeKey>();
     expectTypeOf<
-      keyof RootBbSdk["threadSections"]
+      keyof RootSandySdk["theme"]
+    >().toEqualTypeOf<ExpectedThemeKey>();
+    expectTypeOf<
+      keyof RootSandySdk["threadSections"]
     >().toEqualTypeOf<ExpectedThreadSectionsKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]
+      keyof RootSandySdk["threads"]
     >().toEqualTypeOf<ExpectedThreadsKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]["events"]
+      keyof RootSandySdk["threads"]["events"]
     >().toEqualTypeOf<ExpectedThreadEventsKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]["queue"]
+      keyof RootSandySdk["threads"]["queue"]
     >().toEqualTypeOf<ExpectedThreadQueueKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]["interactions"]
+      keyof RootSandySdk["threads"]["interactions"]
     >().toEqualTypeOf<ExpectedThreadInteractionsKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]["queuedMessages"]
+      keyof RootSandySdk["threads"]["queuedMessages"]
     >().toEqualTypeOf<ExpectedThreadQueuedMessagesKey>();
     expectTypeOf<
-      keyof RootBbSdk["threads"]["tabs"]
+      keyof RootSandySdk["threads"]["tabs"]
     >().toEqualTypeOf<ExpectedThreadTabsKey>();
   });
 });

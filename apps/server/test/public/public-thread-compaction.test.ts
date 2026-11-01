@@ -3,13 +3,13 @@ import {
   getLatestThreadSequence,
   listEvents,
   listQueuedThreadMessages,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   createStandaloneBuiltinCompactCommandInput,
   turnRequestEventDataSchema,
   turnScope,
-} from "@bb/domain";
-import type { ClientTurnRequestId } from "@bb/domain";
+} from "@sandy/domain";
+import type { ClientTurnRequestId } from "@sandy/domain";
 import { applyTurnCompletedEvent } from "../../src/internal/turn-completed-events.js";
 import { sendNextQueuedMessageIfPresent } from "../../src/services/threads/queued-messages.js";
 import { queueParentSystemMessage } from "../../src/services/threads/parent-system-messages.js";

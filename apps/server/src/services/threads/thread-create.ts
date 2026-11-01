@@ -1,7 +1,7 @@
 import { requestThreadStorageDeletion } from "./thread-lifecycle.js";
 import { seedThreadSessionOptionSelections } from "./thread-session-options.js";
 import { assertEnvironmentPathAvailable } from "../environments/path-admission.js";
-import { markThreadDeleted, getEnvironment, getThread } from "@bb/db";
+import { markThreadDeleted, getEnvironment, getThread } from "@sandy/db";
 import {
   describeSessionOptionConflict,
   modelSessionOptionConflict,
@@ -11,7 +11,7 @@ import {
   type Thread,
   type ThreadOriginKind,
   type ThreadVisibility,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { assertProviderAcceptsPromptActions } from "../providers/provider-plan-command.js";
 import { ApiError } from "../../errors.js";

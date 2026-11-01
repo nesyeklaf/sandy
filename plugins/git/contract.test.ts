@@ -3,7 +3,7 @@ import { makeWorkspaceStatus } from "./testing.js";
 import { gitDiffResultSchema, gitStatusResultSchema } from "./contract.js";
 import type {
   WorkspaceResolutionFailure,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 
 const WORKSPACE_RESOLUTION_FAILURE: WorkspaceResolutionFailure = {
   code: "path_not_found",

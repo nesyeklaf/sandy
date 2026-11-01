@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { RETIRED_PLUGIN_SUCCESSORS } from "@bb/domain";
+import { RETIRED_PLUGIN_SUCCESSORS } from "@sandy/domain";
 
 export interface BundledPluginDefinition {
   name: string;
@@ -21,9 +21,9 @@ interface ResolveBuiltinPluginRootPathArgs {
 
 export const BUILTIN_PLUGINS_DIRECTORY_NAME = "builtin-plugins";
 
-export const BUILTIN_PLUGIN_ID_PREFIX = "bb--";
+export const BUILTIN_PLUGIN_ID_PREFIX = "sandy--";
 
-const ACCOUNT_POOL_PARENT_URL_ENV = "BB_ACCOUNT_POOL_PARENT_URL";
+const ACCOUNT_POOL_PARENT_URL_ENV = "SANDY_ACCOUNT_POOL_PARENT_URL";
 
 export function accountPoolDefaultEnabled(
   env: NodeJS.ProcessEnv = process.env,
@@ -37,17 +37,17 @@ const REPO_PLUGINS_DIRECTORY_NAME = "plugins";
 export const BUILTIN_PLUGINS = [
   {
     name: "connection-overview",
-    pluginId: "bb--connection-overview",
+    pluginId: "sandy--connection-overview",
     defaultEnabled: true,
   },
   {
     name: "storage-retention",
-    pluginId: "bb--storage-retention",
+    pluginId: "sandy--storage-retention",
     defaultEnabled: false,
   },
   {
-    name: "bb-guide",
-    pluginId: "bb-guide",
+    name: "sandy-guide",
+    pluginId: "sandy-guide",
     defaultEnabled: true,
   },
   {
@@ -122,7 +122,7 @@ export const BUILTIN_PLUGINS = [
   },
   {
     name: "provider-usage",
-    pluginId: "bb--provider-usage",
+    pluginId: "sandy--provider-usage",
     defaultEnabled: true,
   },
   {
@@ -152,12 +152,12 @@ export const BUILTIN_PLUGINS = [
   },
   {
     name: "git",
-    pluginId: "bb--git",
+    pluginId: "sandy--git",
     defaultEnabled: true,
   },
   {
     name: "github-pr-status",
-    pluginId: "bb--github-pr-status",
+    pluginId: "sandy--github-pr-status",
     defaultEnabled: true,
   },
   {
@@ -182,12 +182,12 @@ export const BUILTIN_PLUGINS = [
   },
   {
     name: "prompt-library",
-    pluginId: "bb--prompt-library",
+    pluginId: "sandy--prompt-library",
     defaultEnabled: false,
   },
   {
     name: "mcp",
-    pluginId: "bb--mcp",
+    pluginId: "sandy--mcp",
     defaultEnabled: false,
   },
   {
@@ -217,7 +217,7 @@ export const BUILTIN_PLUGINS = [
   },
   {
     name: "composer",
-    pluginId: "bb--composer",
+    pluginId: "sandy--composer",
     defaultEnabled: true,
   },
 ].map(
@@ -279,7 +279,7 @@ export interface RetiredBundledPlugin {
 const RETIRED_PLUGIN_CARRIED_SETTINGS: Readonly<
   Record<string, readonly string[]>
 > = {
-  "bb--provider-acp-next": ["customAgents"],
+  "sandy--provider-acp-next": ["customAgents"],
 };
 
 export const RETIRED_BUNDLED_PLUGINS: readonly RetiredBundledPlugin[] =

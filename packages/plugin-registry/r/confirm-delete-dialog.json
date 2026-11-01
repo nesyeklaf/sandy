@@ -3,10 +3,10 @@
   "name": "confirm-delete-dialog",
   "type": "registry:ui",
   "title": "confirm-delete-dialog",
-  "description": "BB ui \"confirm-delete-dialog\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"confirm-delete-dialog\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/dialog"
+    "@sandy/button",
+    "@sandy/dialog"
   ],
   "files": [
     {

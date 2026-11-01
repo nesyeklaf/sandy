@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { BottomAnchoredScrollBody } from "./bottom-anchored-scroll-body.js";
 import { PAGE_SHELL_CONTENT_STYLE } from "./page-shell-content-style.js";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
 import { TitleBarScrollFade } from "./title-bar-scroll-fade.js";
 
 type PageShellScrollBehavior = "bottom-anchor" | "static";
@@ -33,13 +33,13 @@ interface FooterRenderOptions {
 const SHELL_BLEED_CLASS =
   "-mx-4 -mt-4 flex h-full min-h-0 flex-1 flex-col overflow-hidden md:-mx-5 md:-mt-5";
 const STATIC_SHELL_BOTTOM_BLEED_CLASS =
-  "-mb-[calc(1rem+var(--bb-content-bottom-inset,0px))] md:-mb-[calc(1.25rem+var(--bb-content-bottom-inset,0px))]";
+  "-mb-[calc(1rem+var(--sandy-content-bottom-inset,0px))] md:-mb-[calc(1.25rem+var(--sandy-content-bottom-inset,0px))]";
 const STATIC_CONTENT_BOTTOM_PADDING_CLASS =
-  "pb-[calc(2rem+var(--bb-content-bottom-inset,0px))] md:pb-[calc(2.25rem+var(--bb-content-bottom-inset,0px))]";
+  "pb-[calc(2rem+var(--sandy-content-bottom-inset,0px))] md:pb-[calc(2.25rem+var(--sandy-content-bottom-inset,0px))]";
 const STATIC_FOOTER_BOTTOM_PADDING_CLASS =
-  "pb-[calc(1rem+max(1rem,var(--bb-content-bottom-inset,0px)))] md:pb-[calc(1.25rem+max(1rem,var(--bb-content-bottom-inset,0px)))]";
+  "pb-[calc(1rem+max(1rem,var(--sandy-content-bottom-inset,0px)))] md:pb-[calc(1.25rem+max(1rem,var(--sandy-content-bottom-inset,0px)))]";
 const ANCHORED_FOOTER_BOTTOM_PADDING_CLASS =
-  "pb-[max(0px,calc(1rem-var(--bb-content-bottom-inset,0px)))]";
+  "pb-[max(0px,calc(1rem-var(--sandy-content-bottom-inset,0px)))]";
 const DEFAULT_MAX_WIDTH_CLASS = "max-w-[760px]";
 
 function renderStaticFooter(

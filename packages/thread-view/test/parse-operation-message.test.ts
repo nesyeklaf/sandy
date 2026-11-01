@@ -5,7 +5,7 @@ import type {
   SystemThreadProvisioningStatus,
   ThreadEvent,
   ThreadEventRow,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   finalizeOperationMessage,
   interruptOperationMessage,

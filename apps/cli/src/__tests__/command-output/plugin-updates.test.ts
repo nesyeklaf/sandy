@@ -45,7 +45,7 @@ const pluginList = (id: string, source: string) => ({
   ],
 });
 
-describe("bb plugin update commands", () => {
+describe("sandy plugin update commands", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -76,7 +76,7 @@ describe("bb plugin update commands", () => {
             blocked: {
               version: "2.0.0",
               label: "2.0.0",
-              reasons: ["requires bb >= 9"],
+              reasons: ["requires sandy >= 9"],
             },
           },
           {
@@ -94,9 +94,9 @@ describe("bb plugin update commands", () => {
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain("update available");
     expect(output).toContain("pinned");
-    expect(output).toContain("2.0.0: requires bb >= 9");
+    expect(output).toContain("2.0.0: requires sandy >= 9");
     expect(output).toContain(
-      "incompatible [dev build: engines.bb not enforced]",
+      "incompatible [dev build: engines.sandy not enforced]",
     );
     expect(output).toContain("unavailable");
   });
@@ -123,7 +123,7 @@ describe("bb plugin update commands", () => {
       Response.json({
         requested: "git:github.com/acme/notes@^1",
         resolved: "1.2.0",
-        engines: { bb: ">=0.9", bbPluginSdk: "^0.2.0" },
+        engines: { sandy: ">=0.9", sandyPluginSdk: "^0.2.0" },
         installedAt: 1_752_300_000_000,
         history: [
           { version: "1.2.0", activatedAt: 1_752_300_000_000 },
@@ -137,7 +137,7 @@ describe("bb plugin update commands", () => {
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain("requested: git:github.com/acme/notes@^1");
     expect(output).toContain("resolved: 1.2.0");
-    expect(output).toContain("engines.bbPluginSdk: ^0.2.0");
+    expect(output).toContain("engines.sandyPluginSdk: ^0.2.0");
     expect(output).toContain("1.1.0");
   });
 
@@ -213,10 +213,10 @@ describe("bb plugin update commands", () => {
 
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain(
-      'command: bb plugin run shadower — Shadow threads (core command "bb thread" takes precedence)',
+      'command: sandy plugin run shadower — Shadow threads (core command "sandy thread" takes precedence)',
     );
-    expect(output).toContain("command: bb notes — Take notes");
-    expect(output).not.toContain('core command "bb notes"');
+    expect(output).toContain("command: sandy notes — Take notes");
+    expect(output).not.toContain('core command "sandy notes"');
   });
 
   it("skips pinned plugins with manual reinstall guidance", async () => {
@@ -272,7 +272,7 @@ describe("bb plugin update commands", () => {
     );
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(collectLogPayloads(vi.mocked(console.log)).join("\n")).toContain(
-      "bb plugin update-jobs update-1",
+      "sandy plugin update-jobs update-1",
     );
     vi.mocked(console.log).mockClear();
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ job }));
@@ -296,7 +296,7 @@ describe("bb plugin update commands", () => {
               blocked: {
                 version: "2",
                 label: "2",
-                reasons: ["requires newer bb"],
+                reasons: ["requires newer sandy"],
               },
             },
             {
@@ -324,7 +324,7 @@ describe("bb plugin update commands", () => {
 
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain("pin: skipped — pinned");
-    expect(output).toContain("bad: skipped — incompatible: requires newer bb");
+    expect(output).toContain("bad: skipped — incompatible: requires newer sandy");
     expect(output).toContain("good: updated and activated 1 → 2");
     expect(JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body))).toEqual({});
   });

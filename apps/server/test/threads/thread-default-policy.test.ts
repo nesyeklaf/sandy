@@ -7,8 +7,8 @@ import {
   type ProjectExecutionDefaults,
   type Thread,
   type GitSourceInspection,
-} from "@bb/domain";
-import { createEnvironment } from "@bb/db";
+} from "@sandy/domain";
+import { createEnvironment } from "@sandy/db";
 import { describe, expect, it } from "vitest";
 import {
   resolveCreateThreadEnvironment,

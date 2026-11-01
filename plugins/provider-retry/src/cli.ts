@@ -3,10 +3,10 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliContext,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   findQueuedRetry,
   listQueuedRetries,
@@ -39,7 +39,7 @@ function requiredThreadId(
   const threadId = requested ?? context.threadId;
   if (threadId === undefined) {
     throw new PluginCliError(
-      `A thread id is required: bb provider-retry ${command} <thread-id>`,
+      `A thread id is required: sandy provider-retry ${command} <thread-id>`,
       { code: "missing_thread_id", exitCode: 2 },
     );
   }
@@ -47,28 +47,28 @@ function requiredThreadId(
 }
 
 async function act(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   threadId: string,
   json: boolean,
   command: "cancel" | "retry",
 ): Promise<PluginCliResult> {
-  const queued = await findQueuedRetry(bb, threadId);
+  const queued = await findQueuedRetry(sandy, threadId);
   if (queued === null) {
     throw new PluginCliError(
       `No pending provider retry exists for ${threadId}.`,
       {
         code: "no_pending_retry",
-        hint: "Run `bb provider-retry status` for the threads with a pending retry.",
+        hint: "Run `sandy provider-retry status` for the threads with a pending retry.",
       },
     );
   }
   if (command === "cancel") {
-    await bb.sdk.threads.queuedMessages.delete({
+    await sandy.sdk.threads.queuedMessages.delete({
       threadId: queued.threadId,
       queuedMessageId: queued.id,
     });
   } else {
-    await bb.sdk.threads.queuedMessages.send({
+    await sandy.sdk.threads.queuedMessages.send({
       threadId: queued.threadId,
       queuedMessageId: queued.id,
       mode: "auto",
@@ -89,8 +89,8 @@ async function act(
   };
 }
 
-export function registerProviderRetryCli(bb: BbPluginApi): void {
-  bb.cli.register(
+export function registerProviderRetryCli(sandy: SandyPluginApi): void {
+  sandy.cli.register(
     defineCli({
       name: "provider-retry",
       summary: "Manage pending automatic provider retries",
@@ -112,7 +112,7 @@ export function registerProviderRetryCli(bb: BbPluginApi): void {
             const threadId =
               input.positionals["thread-id"] ?? context.threadId ?? null;
             const queued = await listQueuedRetries(
-              bb,
+              sandy,
               threadId === null ? undefined : threadId,
             );
             if (input.options.json) {
@@ -140,7 +140,7 @@ export function registerProviderRetryCli(bb: BbPluginApi): void {
               context,
               "explain",
             );
-            const diagnostic = await readRetryDiagnostic(bb, threadId);
+            const diagnostic = await readRetryDiagnostic(sandy, threadId);
             if (input.options.json)
               return {
                 exitCode: 0,
@@ -164,7 +164,7 @@ export function registerProviderRetryCli(bb: BbPluginApi): void {
           options: { json: JSON_OPTION },
           run: (input, context) =>
             act(
-              bb,
+              sandy,
               requiredThreadId(
                 input.positionals["thread-id"],
                 context,
@@ -180,7 +180,7 @@ export function registerProviderRetryCli(bb: BbPluginApi): void {
           options: { json: JSON_OPTION },
           run: (input, context) =>
             act(
-              bb,
+              sandy,
               requiredThreadId(
                 input.positionals["thread-id"],
                 context,

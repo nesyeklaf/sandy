@@ -1,4 +1,4 @@
-import type { PluginSidebarSplitPane } from "@get-bb/plugin-sdk/app";
+import type { PluginSidebarSplitPane } from "@sandy-sdk/plugin-sdk/app";
 import { describe, expect, it } from "vitest";
 import {
   splitPaneMiniMapRepresentsFocusedPane,

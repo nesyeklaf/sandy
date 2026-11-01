@@ -10,9 +10,9 @@ import {
   promptHistoryEntries,
   upsertHost,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { PromptHistoryScope, PromptInput } from "@bb/domain";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { PromptHistoryScope, PromptInput } from "@sandy/domain";
 import {
   listProjectPromptHistory,
   listThreadPromptHistory,

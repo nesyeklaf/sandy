@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   INFERENCE_PROCESSES,
@@ -24,15 +24,15 @@ afterEach(async () => {
 });
 
 async function harness() {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-connections-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-connections-"));
   cleanups.push(() => rm(dataDir, { recursive: true, force: true }));
   const host = createFakePluginHost({
-    pluginId: "bb--connection-overview",
+    pluginId: "sandy--connection-overview",
     dataDir,
   });
   const store = createStore(
-    host.bb.storage.database(),
-    host.bb.storage.migrate,
+    host.sandy.storage.database(),
+    host.sandy.storage.migrate,
   );
   const book = createHostnameBook();
   let now = 1_000_000;

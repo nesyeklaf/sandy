@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { PERSONAL_PROJECT_ID, type Host, type ProviderInfo } from "@bb/domain";
+import { PERSONAL_PROJECT_ID, type Host, type ProviderInfo } from "@sandy/domain";
 import type {
   SidebarBootstrapResponse,
   SystemAiServicesResponse,
-} from "@bb/server-contract";
-import type { ProviderCliStatusResponse } from "@bb/host-daemon-contract";
+} from "@sandy/server-contract";
+import type { ProviderCliStatusResponse } from "@sandy/host-daemon-contract";
 import {
   hostProviderCliStatusQueryKey,
   hostsQueryKey,
@@ -26,7 +26,7 @@ import {
   MANUAL_MACHINE_PROVIDER,
   MODAL_MACHINE_PROVIDER,
 } from "./machine-story-fixtures";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
 import {
   MachineUpdatesSection,
   PluginUpdatesSection,
@@ -133,8 +133,8 @@ const remoteProviderStatus = {
 } satisfies ProviderCliStatusResponse;
 
 const project = makeProject({
-  id: PROJECT_IDS.bb,
-  gitRemoteUrl: "git@github.com:get-bb/bb.git",
+  id: PROJECT_IDS.sandy,
+  gitRemoteUrl: "git@github.com:nesyeklaf/sandy.git",
   sources: [...STORY_PROJECT_SOURCES],
 });
 const pierreProject = makeProject({
@@ -174,9 +174,9 @@ const sidebarNavigation = {
       ...project,
       defaultExecutionOptions: null,
       threads: [
-        makeThreadListEntry({ id: "thr_bb_1", projectId: PROJECT_IDS.bb }),
-        makeThreadListEntry({ id: "thr_bb_2", projectId: PROJECT_IDS.bb }),
-        makeThreadListEntry({ id: "thr_bb_3", projectId: PROJECT_IDS.bb }),
+        makeThreadListEntry({ id: "thr_sandy_1", projectId: PROJECT_IDS.sandy }),
+        makeThreadListEntry({ id: "thr_sandy_2", projectId: PROJECT_IDS.sandy }),
+        makeThreadListEntry({ id: "thr_sandy_3", projectId: PROJECT_IDS.sandy }),
       ],
     },
     {
@@ -202,7 +202,7 @@ const systemConfig = makeSystemConfig({
   primaryHostId: HOST_IDS.local,
   primaryHostPlatform: "darwin",
   voiceTranscriptionEnabled: true,
-  dataDir: "/Users/michael/.bb",
+  dataDir: "/Users/michael/.sandy",
 });
 
 const systemProviders = [
@@ -278,14 +278,14 @@ function createSettingsStoryQueryClient(hosts: Host[] = SETTINGS_STORY_HOSTS) {
     variables: STORY_GLOBAL_VARIABLES,
     inheritedVariables: [],
   });
-  queryClient.setQueryData(machineEnvironmentQueryKey(PROJECT_IDS.bb), {
+  queryClient.setQueryData(machineEnvironmentQueryKey(PROJECT_IDS.sandy), {
     builtInGit: STORY_GIT_HEALTH,
     variables: [
       {
         name: "DATABASE_URL",
         value: null,
         secret: true,
-        note: "Points at the bb sandbox.",
+        note: "Points at the sandy sandbox.",
       },
     ],
     inheritedVariables: STORY_GLOBAL_VARIABLES,

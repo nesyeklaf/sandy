@@ -3,19 +3,19 @@
   "name": "sidebar-visibility-customize",
   "type": "registry:ui",
   "title": "sidebar-visibility-customize",
-  "description": "BB ui \"sidebar-visibility-customize\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"sidebar-visibility-customize\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@dnd-kit/core",
     "@dnd-kit/sortable"
   ],
   "registryDependencies": [
-    "@bb/checkbox",
-    "@bb/coarse-pointer-sizing",
-    "@bb/icon",
-    "@bb/sidebar-customize-panel",
-    "@bb/sortable-motion",
-    "@bb/use-sidebar-reorder-dnd",
-    "@bb/utils"
+    "@sandy/checkbox",
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/icon",
+    "@sandy/sidebar-customize-panel",
+    "@sandy/sortable-motion",
+    "@sandy/use-sidebar-reorder-dnd",
+    "@sandy/utils"
   ],
   "files": [
     {

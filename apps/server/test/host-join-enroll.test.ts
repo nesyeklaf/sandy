@@ -1,10 +1,10 @@
-import { authApiKeys, getHost } from "@bb/db";
+import { authApiKeys, getHost } from "@sandy/db";
 import { eq } from "drizzle-orm";
 import {
   hostDaemonEnrollKeyResponseSchema,
   hostDaemonEnrollResponseSchema,
   type HostDaemonEnrollKeyResponse,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { createServerErrorHandler } from "../src/errors.js";
@@ -59,7 +59,7 @@ async function requestHostEnrollKey(
 }
 
 describe("host enroll routes", () => {
-  it("creates local enroll-key material without BB_APP_URL", async () => {
+  it("creates local enroll-key material without SANDY_APP_URL", async () => {
     const harness = await createTestAppHarness({ appUrl: undefined });
     const app = createInternalHostRouteApp({
       deps: harness.deps,
@@ -80,7 +80,7 @@ describe("host enroll routes", () => {
       expect(response.status).toBe(201);
       const body = await parseHostEnrollKeyResponse(response);
       expect(body.hostId).toBe("host_local_enroll_key");
-      expect(body.enrollKey).toMatch(/^bbde_/u);
+      expect(body.enrollKey).toMatch(/^sandyde_/u);
       expect(getHost(harness.db, "host_local_enroll_key")).toBeNull();
     } finally {
       await harness.cleanup();
@@ -144,7 +144,7 @@ describe("host enroll routes", () => {
       expect(enrollBody).toMatchObject({
         hostId: enrollKeyBody.hostId,
       });
-      expect(enrollBody.hostKey).toMatch(/^bbdh_/u);
+      expect(enrollBody.hostKey).toMatch(/^sandydh_/u);
       expect(getHost(harness.db, enrollKeyBody.hostId)).toMatchObject({
         id: enrollKeyBody.hostId,
         name: "real-host-name",

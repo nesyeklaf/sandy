@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   BranchPicker,
   type BranchPickerProps,
-} from "@bb/shared-ui/branch-picker";
+} from "@sandy/shared-ui/branch-picker";
 import {
   EnvironmentPickerUI,
   type EnvironmentPickerUIProps,
@@ -43,7 +43,7 @@ function EnvironmentOptionsStrip({
   worktreeValue = null,
 }: EnvironmentOptionsStripProps) {
   const [projectValue, setProjectValue] = useState<string | null>(
-    project?.value ?? PROJECT_IDS.bb,
+    project?.value ?? PROJECT_IDS.sandy,
   );
   const environmentValue = environment?.value ?? "provider:project-checkout";
   const showReuseEnvironmentPicker = environmentValue === "reuse";

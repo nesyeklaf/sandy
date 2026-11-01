@@ -1,4 +1,4 @@
-import type { PluginAppDefinition } from "@get-bb/plugin-sdk";
+import type { PluginAppDefinition } from "@sandy-sdk/plugin-sdk";
 import { isPluginAppDefinition } from "@/lib/plugin-app-definition";
 
 export async function loadPluginAppDefinition(

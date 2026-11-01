@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 
 interface RootComposePanelCommandHandlersProps {
   isFocused: boolean;
@@ -26,7 +26,7 @@ export function RootComposePanelCommandHandlers({
   });
   useEffect(() => {
     if (!isFocused) return;
-    const desktopInfo = getBbDesktopInfo();
+    const desktopInfo = getSandyDesktopInfo();
     if (desktopInfo?.onCloseWindowRequest === undefined) return;
     return desktopInfo.onCloseWindowRequest(onClose);
   }, [isFocused, onClose]);

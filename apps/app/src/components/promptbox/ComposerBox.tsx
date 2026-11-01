@@ -28,8 +28,8 @@ import type {
   ExperimentalComposerVoice,
   PluginComposerScope,
   PluginMentionTrigger,
-} from "@get-bb/plugin-sdk";
-import type { ThreadResponse } from "@bb/server-contract";
+} from "@sandy-sdk/plugin-sdk";
+import type { ThreadResponse } from "@sandy/server-contract";
 import {
   composerDraftFromPromptDraft,
   DEFAULT_PLUGIN_MENTION_TRIGGER,
@@ -37,10 +37,10 @@ import {
   type PromptDraftAttachment,
   type PromptDraftState,
   type PromptMentionLinkResolver,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { isProjectAttachmentPath } from "@/lib/file-content-urls";
 import { getThreadDisplayTitle } from "@/lib/thread-title";
-import type { PromptTextMention } from "@bb/domain";
+import type { PromptTextMention } from "@sandy/domain";
 import { composerMentionResource } from "./mentions/prompt-mention-pill";
 import {
   PluginSlotMount,
@@ -57,6 +57,7 @@ import {
 } from "@/components/plugin/plugin-composer-host";
 import {
   useResolvedComposerEditor,
+  useResolvedComposerMenus,
   useResolvedComposerPlusMenuItems,
   useResolvedComposerPopups,
   useResolvedComposerSendMenuItems,
@@ -85,7 +86,7 @@ import type {
   ComposerEditorState,
   ComposerEditorSubmission,
   ComposerSubmitExtras,
-} from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import {
   readMessageClipboardHtml,
   readMessageClipboardImage,
@@ -105,6 +106,10 @@ import { toUserAttachmentImageSrc } from "@/lib/user-attachment-images";
 import { useOptionalPaneContext } from "@/views/thread-detail/PaneContext";
 import { ComposerPlaceholder } from "./ComposerPlaceholder";
 import { PluginComposerPopup } from "@/components/plugin/PluginComposerPopup";
+import {
+  createComposerMenuComposers,
+  runComposerMenuItem,
+} from "@/components/plugin/PluginComposerMenus";
 import {
   ComposerContributionsContext,
   ComposerMenuEntry,
@@ -417,6 +422,8 @@ function useComposerRendererHostApi({
   const pluginScopeKind = suppress ? null : view.scope.kind;
   const resolvedEditor = useResolvedComposerEditor(pluginScopeKind);
   const popups = useResolvedComposerPopups(pluginScopeKind);
+  const menus = useResolvedComposerMenus(pluginScopeKind);
+  const [menuComposers] = useState(createComposerMenuComposers);
   const plusMenuItems = useResolvedComposerPlusMenuItems(view.scope.kind);
   const sendMenuItems = useResolvedComposerSendMenuItems(pluginScopeKind);
   const draftAttachments = attachments?.items ?? EMPTY_ATTACHMENTS;
@@ -617,12 +624,17 @@ function useComposerRendererHostApi({
     onFocusCommand,
     reportMenuLayout: reportTypeaheadLayout,
     runsPluginCommands: host !== null && !suppress,
+    menus,
+    menuComposers,
     isFocusedPane,
   };
   const contributions: ExperimentalComposerContributions = {
     popups,
     plusMenuItems,
     sendMenuItems,
+    menus,
+    runMenuItem: (contribution, item) =>
+      runComposerMenuItem(menuComposers, contribution, item),
     Actions: suppress ? NoComposerPluginActions : ComposerPluginActions,
     Popup: PluginComposerPopup,
     MenuEntry: ComposerMenuEntry,

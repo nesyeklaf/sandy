@@ -1,12 +1,12 @@
-import type { ServerAccessStatus } from "@bb/server-contract";
+import type { ServerAccessStatus } from "@sandy/server-contract";
 import { isLocalOnlyUrl } from "@/lib/loopback-hostname";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import { getPluginConfigurationRoutePath } from "@/lib/route-paths";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { COARSE_POINTER_INPUT_HEIGHT_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { COARSE_POINTER_INPUT_HEIGHT_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
 import { OptionPicker } from "@/components/pickers/OptionPicker";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useUpdateGeneralSettings } from "@/hooks/mutations/settings-mutations";
@@ -150,7 +150,7 @@ export function MachineAccessSettingsContent({
       <div>
         <h2 className="text-sm font-semibold">{title}</h2>
         <p className="mt-1 text-xs text-subtle-foreground">
-          Choose how your devices reach this bb server.
+          Choose how your devices reach this sandy server.
         </p>
       </div>
       <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -299,7 +299,7 @@ function MachineAccessDetails({
               aria-label="Server address"
               aria-invalid={error !== null}
               value={draft ?? value}
-              placeholder={access?.effectiveUrl ?? "https://bb.example.com"}
+              placeholder={access?.effectiveUrl ?? "https://sandy.example.com"}
               disabled={disabled}
               onChange={(event) => machineAccess.editDraft(event.target.value)}
               onKeyDown={(event) => {

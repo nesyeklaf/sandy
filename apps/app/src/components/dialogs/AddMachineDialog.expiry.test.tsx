@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MachineLaunchCommand } from "./AddMachineDialog";
 
 const COMMAND =
-  "curl -fsSL -H 'X-BB-Enrollment: secret' https://bb/install.sh | sh";
+  "curl -fsSL -H 'X-SANDY-Enrollment: secret' https://sandy/install.sh | sh";
 
 describe("MachineLaunchCommand", () => {
   beforeEach(() => {

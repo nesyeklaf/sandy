@@ -1,10 +1,10 @@
 import type {
   ProviderCommand,
   ThreadTimelineSessionOption,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { Command } from "commander";
 import { action } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { outputJson, requireThreadIdOrSelf } from "../helpers.js";
 
 interface SessionStateCommandOptions {
@@ -131,7 +131,7 @@ export function registerSessionStateCommands(
       action(
         async (id: string | undefined, opts: SessionStateCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const timeline = await createCliBbSdk(getUrl()).threads.timeline({
+          const timeline = await createCliSandySdk(getUrl()).threads.timeline({
             threadId,
             summaryOnly: "true",
           });
@@ -165,7 +165,7 @@ export function registerSessionStateCommands(
       action(
         async (id: string | undefined, opts: SessionOptionsCommandOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const readOptions = async () =>
             (await sdk.threads.timeline({ threadId, summaryOnly: "true" }))
               .sessionOptions;

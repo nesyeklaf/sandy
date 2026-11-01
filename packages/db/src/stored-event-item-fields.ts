@@ -2,7 +2,7 @@ import type {
   ThreadEvent,
   ThreadEventItemType,
   ThreadEventType,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export interface StoredEventItemFields {
   itemId: string | null;

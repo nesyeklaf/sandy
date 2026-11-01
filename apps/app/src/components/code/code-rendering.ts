@@ -3,9 +3,9 @@ import type {
   DiffViewMode,
   ExperimentalDiffFullFileContents,
   SourceCodeLineRange,
-} from "@get-bb/plugin-sdk";
-import type { ParsedGitDiffFile } from "@bb/shared-ui/git-diff/parsing";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+} from "@sandy-sdk/plugin-sdk";
+import type { ParsedGitDiffFile } from "@sandy/shared-ui/git-diff/parsing";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 
 export const DEFAULT_CODE_OVERFLOW: CodeOverflowMode = "scroll";
 export const DEFAULT_DIFF_VIEW: DiffViewMode = "unified";
@@ -15,7 +15,7 @@ interface SourceCodePresentation {
   highlightedLines: SourceCodeLineRange | null;
 }
 
-export interface BbSourceCodeProps extends SourceCodePresentation {
+export interface SandySourceCodeProps extends SourceCodePresentation {
   content: string;
   path: string;
   cacheKey?: string;
@@ -24,7 +24,7 @@ export interface BbSourceCodeProps extends SourceCodePresentation {
   onSelectionAddToChat?: (text: string) => void;
 }
 
-export interface BbDiffProps extends DiffPresentation {
+export interface SandyDiffProps extends DiffPresentation {
   file: ParsedGitDiffFile;
   patchText?: string;
   fullFileContents: ExperimentalDiffFullFileContents | null;

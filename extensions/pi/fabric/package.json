@@ -1,0 +1,189 @@
+{
+  "name": "pi-fabric",
+  "version": "0.119.2",
+  "description": "A programmable tool and agent runtime for Pi",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "pi-fabric": "./dist/cli/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js"
+    },
+    "./agents": {
+      "types": "./dist/agents.d.ts",
+      "import": "./dist/agents.js"
+    },
+    "./runners": {
+      "types": "./dist/runners.d.ts",
+      "import": "./dist/runners.js"
+    },
+    "./durable": {
+      "types": "./dist/durable.d.ts",
+      "import": "./dist/durable.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp.d.ts",
+      "import": "./dist/mcp.js"
+    },
+    "./assessment": {
+      "types": "./dist/assessment.d.ts",
+      "import": "./dist/assessment.js"
+    },
+    "./jev": {
+      "types": "./dist/jev.d.ts",
+      "import": "./dist/jev.js"
+    },
+    "./memory": {
+      "types": "./dist/memory.d.ts",
+      "import": "./dist/memory.js"
+    },
+    "./scope": {
+      "types": "./dist/scope.d.ts",
+      "import": "./dist/scope.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "skillsets/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "proofs/",
+    "scripts/verified-kernels.ts"
+  ],
+  "scripts": {
+    "proof:generate": "bun scripts/verified-kernels.ts --write",
+    "proof:check": "bun scripts/verified-kernels.ts --check",
+    "proof:artifact": "bun scripts/verified-kernels.ts --artifact",
+    "proof:dist": "node scripts/smoke-verified-kernels.mjs",
+    "build": "bun run proof:artifact && node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json --emitDeclarationOnly && node scripts/build.mjs && bun run assert:build-artifacts",
+    "typecheck": "tsc --noEmit",
+    "test:pi1": "bun run build && vitest run tests/pi1-sdk.test.ts tests/pi1-public-contract.test.ts tests/pi110-compaction-contract.test.ts",
+    "test:jev:live": "PI_FABRIC_JEV_LIVE=1 vitest run tests/jev-live.test.ts",
+    "test:jev:dist": "node scripts/smoke-jev.mjs",
+    "test:changed": "node scripts/test-affected.mjs",
+    "test:affected": "node scripts/test-affected.mjs --base $PI_TEST_BASE",
+    "test:smoke": "vitest run tests/optional-preview-startup.test.ts tests/script-runtime.test.ts tests/pi-binary.test.ts tests/host-compatibility.test.ts tests/output-budget.test.ts tests/actor-mesh-monitor.test.ts tests/handoff.test.ts tests/config-migrations.test.ts tests/monty-payload-preflight.test.ts tests/bundled-binary-spawn.test.ts tests/worker-installation.test.ts tests/durable-worker-installation.test.ts tests/conversation-native-reader-suspension.test.ts",
+    "test:related": "vitest related --run",
+    "check:fast": "bun run typecheck && bun run test:changed",
+    "certify:context": "bun run build && node scripts/certify-context.mjs",
+    "certify:entropy": "bun run build && node scripts/certify-entropy.mjs",
+    "benchmark:real-resume": "bun run build && node scripts/benchmark-real-resume.mjs",
+    "benchmark:memory-heads": "bun run build && node scripts/benchmark-memory-heads.mjs",
+    "benchmark:memory-recall": "bun run build && node scripts/benchmark-memory-recall.mjs",
+    "benchmark:conversation": "bun run build && node --expose-gc scripts/benchmark-conversation.mjs",
+    "benchmark:kitty": "bun scripts/benchmark-kitty.mjs",
+    "benchmark:provider-dispatch": "node scripts/benchmark-provider-dispatch.mjs",
+    "benchmark:activity": "node --expose-gc scripts/benchmark-activity.mjs",
+    "benchmark:turn-cpu": "node scripts/benchmark-turn-cpu.mjs",
+    "benchmark:startup": "node scripts/benchmark-startup.mjs",
+    "lint:dead": "knip --no-gitignore",
+    "assert:lazy-graph": "node scripts/assert-lazy-graph-host-free.mjs",
+    "assert:build-artifacts": "node scripts/assert-build-artifacts.mjs",
+    "prepack": "bun run proof:check && bun run typecheck && bun run build && node scripts/bundle-pi-packages.mjs"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "codemode",
+    "mcp",
+    "agents",
+    "actors",
+    "steering",
+    "mesh",
+    "swarm",
+    "workflows",
+    "rlm",
+    "orchestration"
+  ],
+  "license": "MIT",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/pi-fabric"
+  },
+  "author": "monotykamary",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabric-runtime/pi-fabric.git"
+  },
+  "homepage": "https://github.com/fabric-runtime/pi-fabric#readme",
+  "bugs": {
+    "url": "https://github.com/fabric-runtime/pi-fabric/issues"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "pi": {
+    "extensions": [
+      "./dist/extension-bootstrap.js",
+      "./node_modules/pi-coralbricks-provider/index.ts"
+    ],
+    "skills": [],
+    "image": "https://raw.githubusercontent.com/fabric-runtime/pi-fabric/main/media/banner.svg"
+  },
+  "dependencies": {
+    "@earendil-works/chord": "1.3.0",
+    "@earendil-works/pi-durable": "1.3.0",
+    "@jitl/quickjs-singlefile-mjs-release-sync": "^0.32.0",
+    "@lezer/common": "^1.5.2",
+    "@lezer/python": "^1.1.19",
+    "@pydantic/monty": "0.0.23",
+    "@shikijs/langs": "4.4.3",
+    "@shikijs/themes": "4.4.3",
+    "cross-spawn": "^7.0.6",
+    "diff": "^9.0.0",
+    "mcporter": "^0.12.3",
+    "pi-coralbricks-provider": "1.0.32",
+    "pi-fabric-worker-sdk": "npm:@earendil-works/pi-coding-agent@1.3.0",
+    "quickjs-emscripten-core": "^0.32.0",
+    "shiki": "4.4.3",
+    "typescript": "^6.0.3",
+    "yaml": "^2.9.0"
+  },
+  "bundledDependencies": [
+    "pi-coralbricks-provider"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "1.3.0",
+    "@earendil-works/pi-ai": "1.3.0",
+    "@earendil-works/pi-coding-agent": "1.3.0",
+    "@earendil-works/pi-tui": "1.3.0",
+    "@types/cross-spawn": "^6.0.6",
+    "@types/node": "^26.1.2",
+    "esbuild": "^0.25.12",
+    "gdp-wired": "0.12.3",
+    "knip": "^6.29.0",
+    "typebox": "1.3.27",
+    "vitest": "^4.1.10"
+  },
+  "workspaces": [
+    "."
+  ],
+  "overrides": {
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "brace-expansion": "5.0.12",
+    "fast-uri": "3.1.7",
+    "nanoid": "3.3.18",
+    "proxy-addr": "2.0.8",
+    "source-map-js": "1.2.2"
+  },
+  "optionalDependencies": {
+    "jev-fabric": "0.8.0"
+  }
+}

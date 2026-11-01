@@ -1,6 +1,6 @@
-import type { Host } from "@bb/domain";
-import { Icon, type BuiltinIconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { Host } from "@sandy/domain";
+import { Icon, type BuiltinIconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   MachineProviderIcon,
   type MachineProviderPresentation,

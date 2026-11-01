@@ -5,12 +5,12 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useTaggedMutation } from "@bb/query-tags";
+import { useTaggedMutation } from "@sandy/query-tags";
 import type {
   ThreadArchiveAllResponse,
   ThreadResponse,
   UpdateThreadRequest,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { sdk } from "@/lib/sdk";
 import type { LifecycleErrorOperation } from "@/lib/lifecycle-errors";
 import {

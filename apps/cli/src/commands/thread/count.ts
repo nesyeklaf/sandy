@@ -3,15 +3,15 @@ import {
   threadStatusSchema,
   threadStatusValues,
   type ThreadStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   threadCountGroupBySchema,
   THREAD_COUNT_ROOT_PARENT,
   type ThreadCountGroupBy,
-} from "@bb/server-contract";
-import type { ThreadCountResult } from "@bb/sdk";
+} from "@sandy/server-contract";
+import type { ThreadCountResult } from "@sandy/sdk";
 import { action } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { columnWidths, printBorderlessTable } from "../../table.js";
 import { joinValues, outputJson } from "../helpers.js";
 
@@ -56,7 +56,7 @@ export function registerCountCommand(
     .action(
       action(async (opts: ThreadCountCommandOptions) => {
         const groupBy = parseGroupBy(opts.by);
-        const result = await createCliBbSdk(getUrl()).threads.count({
+        const result = await createCliSandySdk(getUrl()).threads.count({
           ...(opts.status ? { status: parseStatus(opts.status) } : {}),
           ...(opts.host ? { hostId: opts.host } : {}),
           ...(opts.provider ? { providerId: opts.provider } : {}),
@@ -72,7 +72,7 @@ export function registerCountCommand(
 
 /**
  * An ungrouped count is one number, so it prints as one number: the common
- * `bb thread count --status active` call stays pipeable without --json.
+ * `sandy thread count --status active` call stays pipeable without --json.
  */
 function printThreadCount(
   result: ThreadCountResult,

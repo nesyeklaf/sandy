@@ -3,7 +3,7 @@ import {
   PANE_FOCUS_APP_COMMAND_IDS,
   THREAD_JUMP_APP_COMMAND_IDS,
   type AppCommandId,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 interface AppCommandMetadata {
   command: AppCommandId;
@@ -88,18 +88,18 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
       paletteHiddenCommand(
         "palette.open",
         "Open quick palette",
-        "Search and run bb commands from the keyboard.",
+        "Search and run sandy commands from the keyboard.",
       ),
-      command("window.new", "New window", "Open another bb desktop window."),
+      command("window.new", "New window", "Open another sandy desktop window."),
       command(
         "window.find",
         "Find in window",
-        "Search the text shown in the current bb desktop window.",
+        "Search the text shown in the current sandy desktop window.",
       ),
       command(
         "window.reload",
         "Reload window",
-        "Reload the current bb desktop window.",
+        "Reload the current sandy desktop window.",
       ),
       command("history.back", "Go back", "Go back in this window's history."),
       command(
@@ -112,11 +112,11 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
         "Back to app",
         "Return from Settings, Plugins, Skills, or a plugin page with its own sidebar to the app.",
       ),
-      command("settings.open", "Open settings", "Open bb settings."),
+      command("settings.open", "Open settings", "Open sandy settings."),
       command(
         "settings.openServers",
         "Open server settings",
-        "Open settings to add or manage bb servers.",
+        "Open settings to add or manage sandy servers.",
       ),
       command(
         "sidebar.toggle",
@@ -223,7 +223,7 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
       command(
         "dataDirectory.open",
         "Open data directory",
-        "Reveal the bb data directory in the system file manager.",
+        "Reveal the sandy data directory in the system file manager.",
       ),
       command(
         "notifications.open",
@@ -233,7 +233,7 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
       command(
         "plugins.enterSafeMode",
         "Turn on plugin safe mode",
-        "Stop every plugin you installed, keeping each plugin's enabled setting. Plugins included with bb keep running.",
+        "Stop every plugin you installed, keeping each plugin's enabled setting. Plugins included with sandy keep running.",
       ),
       command(
         "plugins.exitSafeMode",
@@ -243,7 +243,7 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
       command(
         "plugins.pruneCache",
         "Clean up plugin cache",
-        "Delete cached plugin versions that no installed plugin uses, such as versions left by earlier bb releases.",
+        "Delete cached plugin versions that no installed plugin uses, such as versions left by earlier sandy releases.",
       ),
     ],
   },
@@ -344,7 +344,7 @@ export const APP_COMMAND_GROUPS: readonly AppCommandGroup[] = [
         paletteHiddenCommand(
           id,
           `Choose answer ${index + 1}`,
-          `Choose visible answer ${index + 1} when bb asks a question.`,
+          `Choose visible answer ${index + 1} when sandy asks a question.`,
         ),
       ),
       paletteHiddenCommand(

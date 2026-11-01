@@ -19,11 +19,11 @@ export {
 } from "./thread-session-option.js";
 
 export const THREAD_PROVIDER_COMMANDS_STATE_KIND =
-  "bb/provider-commands" satisfies ExtensionKind;
+  "sandy/provider-commands" satisfies ExtensionKind;
 export const THREAD_SESSION_OPTIONS_STATE_KIND =
-  "bb/session-options" satisfies ExtensionKind;
+  "sandy/session-options" satisfies ExtensionKind;
 export const THREAD_PROVIDER_MODEL_CATALOG_STATE_KIND =
-  "bb/provider-model-catalog" satisfies ExtensionKind;
+  "sandy/provider-model-catalog" satisfies ExtensionKind;
 
 export const threadProviderModelCatalogStateSchema = z.object({
   models: z.array(availableModelSchema).max(1000),
@@ -52,7 +52,7 @@ export type ThreadSessionOptionsState = z.infer<
 >;
 
 export const THREAD_SESSION_OPTION_SELECTIONS_STATE_KIND =
-  "bb/session-option-selections" satisfies ExtensionKind;
+  "sandy/session-option-selections" satisfies ExtensionKind;
 
 export const threadSessionOptionSelectionsStateSchema = z.object({
   selections: sessionOptionSelectionsSchema,
@@ -271,7 +271,7 @@ const CORE_THREAD_STATE_SCHEMAS = {
   [THREAD_SESSION_OPTIONS_STATE_KIND]: threadSessionOptionsStateSchema,
 } as const;
 
-export const CORE_THREAD_STATE_PLUGIN_ID = "bb";
+export const CORE_THREAD_STATE_PLUGIN_ID = "sandy";
 
 export function coreThreadStateSchema(kind: string): z.ZodType | null {
   return Object.hasOwn(CORE_THREAD_STATE_SCHEMAS, kind)

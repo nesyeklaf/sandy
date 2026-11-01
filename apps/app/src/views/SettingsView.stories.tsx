@@ -11,11 +11,11 @@ import {
   type ExperimentUpdates,
   defaultAppSettings,
   type AppSettings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   WorkspaceOpenTarget,
   WorkspaceOpenTargetId,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { VoiceInputSettingsSectionContent } from "@/components/settings/VoiceInputSettingsSection";
 import { AiServicesSettingsSection } from "@/components/settings/AiServicesSettingsSection";
 import { ArchivedThreadsSettingsSection } from "@/components/settings/ArchivedThreadsSettingsSection";
@@ -130,6 +130,9 @@ function useSettingsStoryState() {
     useState(false);
   const [summarizeShellCommands, setSummarizeShellCommands] = useState(true);
   const [streamerMode, setStreamerMode] = useState(false);
+  const [disabledSkillSources, setDisabledSkillSources] = useState(
+    defaultAppSettings.disabledSkillSources,
+  );
   const [managedBranchPrefix, setManagedBranchPrefix] = useState(
     defaultAppSettings.managedBranchPrefix,
   );
@@ -148,6 +151,8 @@ function useSettingsStoryState() {
     openLinksInAppBrowser,
     rewriteLocalhostLinks,
     steerActiveThreadOnEnter,
+    disabledSkillSources,
+    setDisabledSkillSources,
     confirmThreadArchive,
     setConfirmThreadArchive,
     keepHistoryAfterContextClear,
@@ -222,6 +227,8 @@ function GeneralSettingsStory({
         openLinksInAppBrowser={state.openLinksInAppBrowser}
         rewriteLocalhostLinks={state.rewriteLocalhostLinks}
         steerActiveThreadOnEnter={state.steerActiveThreadOnEnter}
+        disabledSkillSources={state.disabledSkillSources}
+        onDisabledSkillSourcesChange={state.setDisabledSkillSources}
       />
       <CliCommandSettingsSectionContent
         onChange={() => {}}

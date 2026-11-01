@@ -1,13 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { createDeferredPromise, initRepo, makeTempDir } from "@bb/test-helpers";
+import { createDeferredPromise, initRepo, makeTempDir } from "@sandy/test-helpers";
 import {
   ProcessLocalQueuedLockTimeoutError,
   withProcessLocalQueuedLocks,
-} from "bb-environment-provider-host/process-local-lock";
+} from "sandy-environment-provider-host/process-local-lock";
 import { Workspace } from "../src/host-workspace.js";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 import { withCheckoutMutationLock } from "../src/checkout-mutation-lock.js";
 
 function waitForLockContention(): Promise<void> {
@@ -16,7 +16,7 @@ function waitForLockContention(): Promise<void> {
 
 describe("Workspace", () => {
   it("changes the local state fingerprint when local checkout state changes", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
     const workspace = new Workspace({
       path: repoPath,
       isGitRepo: false,
@@ -45,7 +45,7 @@ describe("Workspace", () => {
   });
 
   it("observes the initial branch before the first commit", async () => {
-    const repoPath = await makeTempDir("bb-workspace-unborn-");
+    const repoPath = await makeTempDir("sandy-workspace-unborn-");
     await runGit(["init", "-b", "main"], { cwd: repoPath });
     const workspace = new Workspace({
       path: repoPath,
@@ -59,7 +59,7 @@ describe("Workspace", () => {
   });
 
   it("fingerprints an untracked path without reading its contents", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
     const workspace = new Workspace({
       path: repoPath,
       isGitRepo: false,
@@ -82,7 +82,7 @@ describe("Workspace", () => {
   it.for(["files", "reftable"])(
     "includes the default branch in %s shared refs without depending on file edits",
     async (format, context) => {
-      const repoPath = await makeTempDir("bb-workspace-repo-");
+      const repoPath = await makeTempDir("sandy-workspace-repo-");
       await initRepo(repoPath);
       if (format === "reftable") {
         const migration = await runGit(
@@ -175,7 +175,7 @@ describe("Workspace", () => {
   );
 
   it("commits staged work", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
     const workspace = new Workspace({
       path: repoPath,
       isGitRepo: false,
@@ -194,7 +194,7 @@ describe("Workspace", () => {
   });
 
   it("throws a typed no_changes error when there is nothing to commit", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
     const workspace = new Workspace({
       path: repoPath,
       isGitRepo: false,
@@ -217,8 +217,8 @@ describe("Workspace", () => {
   });
 
   it("does not serialize different linked worktree checkout mutations", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
-    const worktreeParent = await makeTempDir("bb-workspace-lock-worktrees-");
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
+    const worktreeParent = await makeTempDir("sandy-workspace-lock-worktrees-");
     const worktreePath = path.join(worktreeParent, "feature");
     await runGit(["worktree", "add", "-b", "feature", worktreePath, "main"], {
       cwd: repoPath,
@@ -277,10 +277,10 @@ describe("Workspace", () => {
   });
 
   it("returns null when HEAD is unavailable in an empty repository", async () => {
-    const repoPath = await makeTempDir("bb-workspace-empty-repo-");
+    const repoPath = await makeTempDir("sandy-workspace-empty-repo-");
     await runGit(["init", "-b", "main"], { cwd: repoPath });
-    await runGit(["config", "user.name", "BB Tests"], { cwd: repoPath });
-    await runGit(["config", "user.email", "bb@example.com"], { cwd: repoPath });
+    await runGit(["config", "user.name", "SANDY Tests"], { cwd: repoPath });
+    await runGit(["config", "user.email", "sandy@example.com"], { cwd: repoPath });
 
     const workspace = new Workspace({
       path: repoPath,
@@ -291,7 +291,7 @@ describe("Workspace", () => {
     expect(await workspace.getHeadSha()).toBeNull();
   });
   it("serializes same-checkout mutations", async () => {
-    const repoPath = await initRepo(await makeTempDir("bb-workspace-repo-"));
+    const repoPath = await initRepo(await makeTempDir("sandy-workspace-repo-"));
     const workspace = new Workspace({
       path: repoPath,
       isGitRepo: false,
@@ -327,7 +327,7 @@ describe("Workspace", () => {
   });
 
   it("rejects git mutations for non-git directories", async () => {
-    const folder = await makeTempDir("bb-workspace-nongit-");
+    const folder = await makeTempDir("sandy-workspace-nongit-");
     const workspace = new Workspace({
       path: folder,
       isGitRepo: false,

@@ -7,7 +7,7 @@ import { useClipboardCopy, type ClipboardCopyOptions } from "@/lib/clipboard";
 import {
   CopyableInlineLabelView,
   CopyIconButton,
-} from "@bb/shared-ui/copy-button";
+} from "@sandy/shared-ui/copy-button";
 
 interface CopyButtonProps
   extends

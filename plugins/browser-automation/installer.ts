@@ -104,5 +104,5 @@ export function missingRuntimeMessage(
   const dir = installDir(dataDir, release);
   if (expected === undefined)
     return `DevBrowser ${release.version} has no verified release artifact recorded for ${platform}; see the plugin README before using this host.`;
-  return `DevBrowser runtime ${release.package}@${release.version} is not installed on this browser host, and bb does not download it. Expected a verified runtime in ${dir}: verified.json for ${platform} and the binary ${join(dir, runtimeBinaryPath(release))} with sha256 ${expected}. Install it yourself outside bb as described in the Browser Automation plugin README, then open the session again.`;
+  return `DevBrowser runtime ${release.package}@${release.version} is not installed on this browser host, and sandy does not download it. Expected a verified runtime in ${dir}: verified.json for ${platform} and the binary ${join(dir, runtimeBinaryPath(release))} with sha256 ${expected}. Install it yourself outside sandy as described in the Browser Automation plugin README, then open the session again.`;
 }

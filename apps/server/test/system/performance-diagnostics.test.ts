@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { inspect } from "node:util";
-import { setExperiments } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+import { setExperiments } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { describe, expect, it } from "vitest";
 import { NotificationHub } from "../../src/ws/hub.js";
 import { startGatedPerformanceDiagnostics } from "../../src/services/system/performance-diagnostics.js";
@@ -42,7 +42,7 @@ describe("performance diagnostics gates", () => {
     "requires launch permission %s as well as the live experiment",
     async (allowed) => {
       const db = createMigratedConnection();
-      const dataDir = await mkdtemp(join(tmpdir(), "bb-perf-gates-"));
+      const dataDir = await mkdtemp(join(tmpdir(), "sandy-perf-gates-"));
       const hub = new NotificationHub();
       const messages: DiagnosticLog[] = [];
       const startedAt = performance.now();

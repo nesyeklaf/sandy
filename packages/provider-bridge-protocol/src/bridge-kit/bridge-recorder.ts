@@ -4,7 +4,7 @@ import { StringDecoder } from "node:string_decoder";
 import type { Readable, Writable } from "node:stream";
 import { MAX_JSON_RPC_LINE_BYTES } from "./bounded-line-reader.js";
 
-export const PROVIDER_BRIDGE_RECORD_DIR_ENV = "BB_PROVIDER_BRIDGE_RECORD_DIR";
+export const PROVIDER_BRIDGE_RECORD_DIR_ENV = "SANDY_PROVIDER_BRIDGE_RECORD_DIR";
 
 export const BRIDGE_RECORDING_DIRECTIONS = [
   "runtime→bridge",
@@ -276,7 +276,7 @@ export function createBridgeRecorder(args: { dir: string }): BridgeRecorder {
   };
 }
 
-const RECORDER_GLOBAL_KEY = Symbol.for("bb.providerBridgeRecorder");
+const RECORDER_GLOBAL_KEY = Symbol.for("sandy.providerBridgeRecorder");
 
 interface RecorderGlobalSlot {
   recorder: BridgeRecorder | null;

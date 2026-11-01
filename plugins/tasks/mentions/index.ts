@@ -1,4 +1,4 @@
-import type { BbPluginApi, PluginMentionItem } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, PluginMentionItem } from "@sandy-sdk/plugin-sdk";
 
 import type { TasksApiStore } from "../api";
 import {
@@ -13,7 +13,7 @@ import { displayName } from "../shared/display-name";
 const SEARCH_LIMIT = 10;
 const RECENT_COMMENT_LIMIT = 5;
 
-type PluginDatabase = ReturnType<BbPluginApi["storage"]["database"]>;
+type PluginDatabase = ReturnType<SandyPluginApi["storage"]["database"]>;
 
 interface MentionTaskRow {
   id: string;
@@ -31,12 +31,12 @@ interface AttachmentManifestRow {
 function searchTasks(
   database: PluginDatabase,
   query: string,
-  bbProjectId: string | null,
+  sandyProjectId: string | null,
 ): PluginMentionItem[] {
   const normalizedQuery = query.trim();
   const search = `%${escapeLike(normalizedQuery)}%`;
   const rows = database
-    .prepare<{ bbProjectId: string | null; search: string }, MentionTaskRow>(
+    .prepare<{ sandyProjectId: string | null; search: string }, MentionTaskRow>(
       `
         SELECT
           t.id,
@@ -52,8 +52,8 @@ function searchTasks(
           OR t.title LIKE @search ESCAPE '\\'
         ORDER BY
           CASE
-            WHEN @bbProjectId IS NOT NULL
-              AND p.linked_bb_project_id = @bbProjectId THEN 0
+            WHEN @sandyProjectId IS NOT NULL
+              AND p.linked_sandy_project_id = @sandyProjectId THEN 0
             ELSE 1
           END,
           t.updated_at DESC,
@@ -61,7 +61,7 @@ function searchTasks(
         LIMIT ${SEARCH_LIMIT}
       `,
     )
-    .all({ bbProjectId, search });
+    .all({ sandyProjectId, search });
 
   return rows.map((row) => ({
     id: row.id,
@@ -105,7 +105,7 @@ function formatAttachments(
     .map(
       (attachment) =>
         `- ${attachment.id} · ${attachment.fileName}\n` +
-        `  Fetch with: bb tasks attachment get ${attachment.id} --out <path>`,
+        `  Fetch with: sandy tasks attachment get ${attachment.id} --out <path>`,
     )
     .join("\n");
 }
@@ -184,14 +184,14 @@ ${formatThreads(store.tasks.listTaskThreads(task.id))}
 
 ## Action contract
 
-You can act on this task with the bb tasks CLI. If you begin working on it, first run: bb tasks attach ${task.key} (attaches THIS thread so the task shows you as working). Comment substantive updates via bb tasks comment ${task.key} --body ... and set status via bb tasks update ${task.key} --status ...
+You can act on this task with the sandy tasks CLI. If you begin working on it, first run: sandy tasks attach ${task.key} (attaches THIS thread so the task shows you as working). Comment substantive updates via sandy tasks comment ${task.key} --body ... and set status via sandy tasks update ${task.key} --status ...
 `;
 }
 
-export function registerMentions(bb: BbPluginApi, store: TasksApiStore): void {
-  const database = bb.storage.database();
+export function registerMentions(sandy: SandyPluginApi, store: TasksApiStore): void {
+  const database = sandy.storage.database();
 
-  bb.ui.registerMentionProvider({
+  sandy.ui.registerMentionProvider({
     id: "task",
     label: "Tasks",
     search({ query, projectId }) {

@@ -13,7 +13,7 @@ import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import path from "node:path";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   accountSchema,
@@ -217,13 +217,13 @@ async function createFixture(args: {
   priority?: number;
   beforePlugin?: (host: Fixture["host"]) => void;
 }): Promise<Fixture> {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-account-pool-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-account-pool-"));
   const host = createFakePluginHost({
     pluginId: "account-pool",
     dataDir,
     sdk: sdkStubs(),
   });
-  await host.bb.storage.kv.set("config", {
+  await host.sandy.storage.kv.set("config", {
     anthropicUpstreamBaseUrl: args.upstreamUrl,
     codexUpstreamBaseUrl: args.upstreamUrl,
   });
@@ -232,7 +232,7 @@ async function createFixture(args: {
     ...args.options,
   });
   args.beforePlugin?.(host);
-  await plugin(host.bb);
+  await plugin(host.sandy);
   const accountMetadata = accountSchema.parse(
     await host.harness.behavior.callRpc("account.add", {
       provider: args.provider ?? "claude",
@@ -395,7 +395,7 @@ describe("Account Pool config schema", () => {
 describe("Account Pool plugin", () => {
   it("removes persisted cache debugging settings while preserving pool configuration across reloads", async () => {
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-config-upgrade-"),
+      path.join(tmpdir(), "sandy-account-pool-config-upgrade-"),
     );
     const host = createFakePluginHost({
       pluginId: "account-pool",
@@ -411,14 +411,14 @@ describe("Account Pool plugin", () => {
       switchThreshold: 0.75,
       parentMode: "isolate",
     });
-    await host.bb.storage.kv.set("config", {
+    await host.sandy.storage.kv.set("config", {
       ...expected,
       cacheMissDebug: true,
       cacheMissMinTokens: 20_000,
     });
     const plugin = createAccountPoolPlugin();
-    await plugin(host.bb);
-    expect(await host.bb.storage.kv.get("config")).toEqual(expected);
+    await plugin(host.sandy);
+    expect(await host.sandy.storage.kv.get("config")).toEqual(expected);
     expect(await host.harness.behavior.callRpc("config.get", null)).toEqual(
       expected,
     );
@@ -430,14 +430,14 @@ describe("Account Pool plugin", () => {
 
   it("reads and updates one full config record through RPC and CLI", async () => {
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-config-"),
+      path.join(tmpdir(), "sandy-account-pool-config-"),
     );
     const host = createFakePluginHost({
       pluginId: "account-pool",
       dataDir,
       sdk: sdkStubs(),
     });
-    await createAccountPoolPlugin()(host.bb);
+    await createAccountPoolPlugin()(host.sandy);
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
       await fs.rm(dataDir, { recursive: true, force: true });
@@ -478,7 +478,7 @@ describe("Account Pool plugin", () => {
       parentMode: "proxy",
     });
     expect(
-      accountPoolConfigSchema.parse(await host.bb.storage.kv.get("config")),
+      accountPoolConfigSchema.parse(await host.sandy.storage.kv.get("config")),
     ).toEqual(updated);
     expect(host.harness.inspection.realtimeSignals).toContainEqual({
       channel: "config-changed",
@@ -502,7 +502,7 @@ describe("Account Pool plugin", () => {
       request: {
         id: "search-1",
         model: "gpt-5.5",
-        commands: { search_query: [{ q: "bb account pooler" }] },
+        commands: { search_query: [{ q: "sandy account pooler" }] },
       },
       result: { encrypted_output: "encrypted-search-output" },
     },
@@ -533,7 +533,7 @@ describe("Account Pool plugin", () => {
         {
           headers: {
             "content-type": "application/json",
-            "x-bb-account-pool-token": fixture.key,
+            "x-sandy-account-pool-token": fixture.key,
             authorization: "Bearer local-token",
           },
           body,
@@ -549,7 +549,7 @@ describe("Account Pool plugin", () => {
       expect(requests[0]?.headers.get("chatgpt-account-id")).toBe(
         "chatgpt-account",
       );
-      expect(requests[0]?.headers.has("x-bb-account-pool-token")).toBe(false);
+      expect(requests[0]?.headers.has("x-sandy-account-pool-token")).toBe(false);
       expect(await requests[0]?.text()).toBe(body);
     },
   );
@@ -663,7 +663,7 @@ describe("Account Pool plugin", () => {
     });
     cleanups.push(upstream.close);
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-codex-"),
+      path.join(tmpdir(), "sandy-account-pool-codex-"),
     );
     let imported = 0;
     const importCodexCredentials =
@@ -683,7 +683,7 @@ describe("Account Pool plugin", () => {
       dataDir,
       sdk: sdkStubs(),
     });
-    await host.bb.storage.kv.set("config", {
+    await host.sandy.storage.kv.set("config", {
       anthropicUpstreamBaseUrl: upstream.url,
       codexUpstreamBaseUrl: upstream.url,
     });
@@ -692,7 +692,7 @@ describe("Account Pool plugin", () => {
       codexUsageUrl: `${upstream.url}/usage`,
       importCodexCredentials,
       usageUrl: "data:application/json,{}",
-    })(host.bb);
+    })(host.sandy);
     const service = host.harness.behavior.runService("hub");
     cleanups.push(async () => {
       service.controller.abort();
@@ -779,7 +779,7 @@ describe("Account Pool plugin", () => {
       {
         headers: {
           authorization: "Bearer local-codex-token",
-          "x-bb-account-pool-token": routed.token,
+          "x-sandy-account-pool-token": routed.token,
           "content-type": "application/json",
           "openai-beta": "responses=experimental",
         },
@@ -792,7 +792,7 @@ describe("Account Pool plugin", () => {
       "GET",
       "/v1/models",
       {
-        headers: { "x-bb-account-pool-token": routed.token },
+        headers: { "x-sandy-account-pool-token": routed.token },
       },
     );
     expect(await modelsResponse.json()).toEqual({ data: [] });
@@ -807,7 +807,7 @@ describe("Account Pool plugin", () => {
       host.harness.behavior.fetchHttp("POST", "/v1/responses", {
         headers: {
           authorization: "Bearer local-codex-token",
-          "x-bb-account-pool-token": routed.token,
+          "x-sandy-account-pool-token": routed.token,
           "content-type": "application/json",
         },
         body: JSON.stringify({ model: "gpt-5", input }),
@@ -893,7 +893,7 @@ describe("Account Pool plugin", () => {
       "POST",
       "/v1/responses",
       {
-        headers: { "x-bb-account-pool-token": routed.token },
+        headers: { "x-sandy-account-pool-token": routed.token },
         body: JSON.stringify({ model: "gpt-5", input: [] }),
       },
     );
@@ -923,7 +923,7 @@ describe("Account Pool plugin", () => {
 
   it("cancels a Codex upstream read when the HTTP client aborts", async () => {
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-codex-cancel-"),
+      path.join(tmpdir(), "sandy-account-pool-codex-cancel-"),
     );
     let upstreamReadCanceled = false;
     const upstreamFetch = async (
@@ -961,7 +961,7 @@ describe("Account Pool plugin", () => {
       dataDir,
       sdk: sdkStubs(),
     });
-    await host.bb.storage.kv.set("config", {
+    await host.sandy.storage.kv.set("config", {
       codexUpstreamBaseUrl: "https://example.com",
     });
     await createAccountPoolPlugin({
@@ -975,7 +975,7 @@ describe("Account Pool plugin", () => {
         email: null,
         expiresAt: null,
       }),
-    })(host.bb);
+    })(host.sandy);
     const service = host.harness.behavior.runService("hub");
     cleanups.push(async () => {
       service.controller.abort();
@@ -1003,7 +1003,7 @@ describe("Account Pool plugin", () => {
       "/v1/responses",
       {
         headers: {
-          "x-bb-account-pool-token": token,
+          "x-sandy-account-pool-token": token,
           "content-type": "application/json",
         },
         body: JSON.stringify({ model: "gpt-5", input: [] }),
@@ -1028,7 +1028,7 @@ describe("Account Pool plugin", () => {
   });
 
   it("prunes token files for unenrolled hosts on startup and status", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-pool-prune-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-pool-prune-"));
     const secretDir = path.join(
       dataDir,
       "plugins",
@@ -1046,7 +1046,7 @@ describe("Account Pool plugin", () => {
       dataDir,
       sdk: sdkStubs(),
     });
-    await createAccountPoolPlugin()(host.bb);
+    await createAccountPoolPlugin()(host.sandy);
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
       await fs.rm(dataDir, { recursive: true, force: true });
@@ -1073,7 +1073,7 @@ describe("Account Pool plugin", () => {
 
   it("uses a single-process token cache and throttles last-use file writes", async () => {
     let now = 1_000;
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-pool-tokens-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-pool-tokens-"));
     cleanups.push(() => fs.rm(dataDir, { recursive: true, force: true }));
     const tokens = new HubTokenStore(dataDir, () => now);
     await tokens.initialize();
@@ -1114,17 +1114,17 @@ describe("Account Pool plugin", () => {
     });
     cleanups.push(upstream.close);
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-empty-"),
+      path.join(tmpdir(), "sandy-account-pool-empty-"),
     );
     const host = createFakePluginHost({
       pluginId: "account-pool",
       dataDir,
       sdk: sdkStubs(),
     });
-    await host.bb.storage.kv.set("config", {
+    await host.sandy.storage.kv.set("config", {
       anthropicUpstreamBaseUrl: upstream.url,
     });
-    await createAccountPoolPlugin()(host.bb);
+    await createAccountPoolPlugin()(host.sandy);
     const service = host.harness.behavior.runService("hub");
     cleanups.push(async () => {
       service.controller.abort();
@@ -1152,7 +1152,7 @@ describe("Account Pool plugin", () => {
       }),
     ).resolves.toBeNull();
     expect(host.harness.inspection.needsConfigurationMessages).toEqual([
-      "Add and enable a Claude or Codex account with `bb pool account add`.",
+      "Add and enable a Claude or Codex account with `sandy pool account add`.",
     ]);
     const hello = helloResponse();
     expect(hello.status).toBe(200);
@@ -1209,15 +1209,15 @@ describe("Account Pool plugin", () => {
     expect(loginCompleteHelp.stdout).toContain("--code-stdin");
     const topLevelHelp = await fixture.host.harness.behavior.runCli(["--help"]);
     expect(topLevelHelp.exitCode).toBe(0);
-    expect(topLevelHelp.stdout).toContain("bb pool account refresh");
-    expect(topLevelHelp.stdout).toContain("bb pool account login-poll");
+    expect(topLevelHelp.stdout).toContain("sandy pool account refresh");
+    expect(topLevelHelp.stdout).toContain("sandy pool account login-poll");
     const refreshHelp = await fixture.host.harness.behavior.runCli([
       "account",
       "refresh",
       "--help",
     ]);
     expect(refreshHelp.exitCode).toBe(0);
-    expect(refreshHelp.stdout).toContain("bb pool account refresh <id>");
+    expect(refreshHelp.stdout).toContain("sandy pool account refresh <id>");
     const list = await fixture.host.harness.behavior.runCli([
       "account",
       "list",
@@ -1316,13 +1316,13 @@ describe("Account Pool plugin", () => {
   });
 
   it("refuses unusable pool invocations instead of guessing", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-account-pool-cli-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-account-pool-cli-"));
     const host = createFakePluginHost({
       pluginId: "account-pool",
       dataDir,
       sdk: sdkStubs(),
     });
-    await createAccountPoolPlugin()(host.bb);
+    await createAccountPoolPlugin()(host.sandy);
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
       await fs.rm(dataDir, { recursive: true, force: true });
@@ -1349,7 +1349,7 @@ describe("Account Pool plugin", () => {
     ]);
     expect(stdinFlag.exitCode).toBe(1);
     expect(stdinFlag.stderr).toContain(
-      "--code-stdin is read by the bb CLI, which rewrites it to --code <value>",
+      "--code-stdin is read by the sandy CLI, which rewrites it to --code <value>",
     );
 
     const badProvider = await run([
@@ -1391,7 +1391,7 @@ describe("Account Pool plugin", () => {
         code: "missing_required",
         message:
           "missing required options: one of --login, --import, --api-key",
-        hint: expect.stringContaining("bb pool account add"),
+        hint: expect.stringContaining("sandy pool account add"),
       },
     });
     expect(jsonEnvelope.stderr).toContain(
@@ -1403,7 +1403,7 @@ describe("Account Pool plugin", () => {
     });
     expect(bypassWithoutThread.exitCode).toBe(1);
     expect(bypassWithoutThread.stderr).toContain(
-      "This thread is thread-seven; re-run with bb pool bypass thread-seven",
+      "This thread is thread-seven; re-run with sandy pool bypass thread-seven",
     );
   });
 
@@ -1445,7 +1445,7 @@ describe("Account Pool plugin", () => {
       response.end();
     });
     cleanups.push(oauth.close);
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-pool-login-rpc-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-pool-login-rpc-"));
     const host = createFakePluginHost({
       pluginId: "account-pool",
       dataDir,
@@ -1456,7 +1456,7 @@ describe("Account Pool plugin", () => {
       oauthTokenUrl: `${oauth.url}/token`,
       oauthProfileUrl: `${oauth.url}/profile`,
       usageUrl: "data:application/json,{}",
-    })(host.bb);
+    })(host.sandy);
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
       await fs.rm(dataDir, { recursive: true, force: true });
@@ -1607,7 +1607,7 @@ describe("Account Pool plugin", () => {
       response.end("{}");
     });
     cleanups.push(auth.close);
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-pool-codex-login-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-pool-codex-login-"));
     const host = createFakePluginHost({
       pluginId: "account-pool",
       dataDir,
@@ -1617,7 +1617,7 @@ describe("Account Pool plugin", () => {
       codexAuthBaseUrl: auth.url,
       codexUsageUrl: EMPTY_USAGE_URL,
       usageUrl: "data:application/json,{}",
-    })(host.bb);
+    })(host.sandy);
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
       await fs.rm(dataDir, { recursive: true, force: true });
@@ -1758,12 +1758,12 @@ describe("Account Pool plugin", () => {
           "Claude Code limits Opus to a 200k context window behind a custom base URL; the hub forwards to Anthropic's API",
       },
       {
-        name: "BB_ACCOUNT_POOL_PARENT_URL",
+        name: "SANDY_ACCOUNT_POOL_PARENT_URL",
         value: { serverPath: "/api/v1/plugins/account-pool/http" },
-        reason: "Account Pooler hub for nested bb servers on this machine",
+        reason: "Account Pooler hub for nested sandy servers on this machine",
       },
       {
-        name: "BB_ACCOUNT_POOL_PARENT_TOKEN",
+        name: "SANDY_ACCOUNT_POOL_PARENT_TOKEN",
         value: fixture.key,
         reason: "Account Pooler hub token for this machine",
       },
@@ -1822,7 +1822,7 @@ describe("Account Pool plugin", () => {
         fetch: async () => Response.json({}),
       },
     });
-    await fixture.host.bb.storage.kv.delete("retry-route:thread-codex");
+    await fixture.host.sandy.storage.kv.delete("retry-route:thread-codex");
 
     const entries = await fixture.host.harness.behavior.resolveProviderEnv(
       "codex",
@@ -1841,7 +1841,7 @@ describe("Account Pool plugin", () => {
         reason: "Account Pooler hub token for this machine",
       },
     ]);
-    expect(await fixture.host.bb.storage.kv.list("retry-route:")).toEqual([]);
+    expect(await fixture.host.sandy.storage.kv.list("retry-route:")).toEqual([]);
   });
 
   it("restores the 1-hour prompt cache only while a subscription account can serve Claude", async () => {
@@ -2031,7 +2031,7 @@ describe("Account Pool plugin", () => {
     expect(fixture.host.harness.inspection.logEntries).toContainEqual({
       level: "warn",
       message:
-        "Account Pooler disabled with 1 recently routed thread on machines without a local Claude login. Run bb pool status before disabling to inspect them.",
+        "Account Pooler disabled with 1 recently routed thread on machines without a local Claude login. Run sandy pool status before disabling to inspect them.",
     });
   });
 
@@ -2143,7 +2143,7 @@ describe("Account Pool plugin", () => {
         app: request.headers["x-app"]?.toString(),
         stainlessRetry: request.headers["x-stainless-retry-count"]?.toString(),
         cookie: request.headers.cookie,
-        gateMachineId: request.headers["x-bb-gate-machine-id"]?.toString(),
+        gateMachineId: request.headers["x-sandy-gate-machine-id"]?.toString(),
         forwarded: request.headers.forwarded,
         cfRay: request.headers["cf-ray"]?.toString(),
         body: await readRequestBody(request),
@@ -2190,8 +2190,8 @@ describe("Account Pool plugin", () => {
           "user-agent": "claude-code-test",
           "x-app": "cli",
           "x-stainless-retry-count": "2",
-          cookie: "bb_session=browser-secret",
-          "x-bb-gate-machine-id": "machine-stable-id",
+          cookie: "sandy_session=browser-secret",
+          "x-sandy-gate-machine-id": "machine-stable-id",
           forwarded: "for=192.0.2.1",
           "cf-ray": "edge-request-id",
           "accept-encoding": "gzip",
@@ -6892,7 +6892,7 @@ describe("sequential pool recovery", () => {
     ]);
     const persisted = z
       .array(accountSchema)
-      .parse(await fixture.host.bb.storage.kv.get("accounts:v1"));
+      .parse(await fixture.host.sandy.storage.kv.get("accounts:v1"));
     expect(
       persisted.find((account) => account.id === third.id)?.priority,
     ).toBeLessThan(
@@ -6910,7 +6910,7 @@ describe("sequential pool recovery", () => {
         }),
       ).rejects.toThrow("exactly once");
     }
-    expect(await fixture.host.bb.storage.kv.get("accounts:v1")).toEqual(
+    expect(await fixture.host.sandy.storage.kv.get("accounts:v1")).toEqual(
       persisted,
     );
     await send("new-before-failover");
@@ -7006,8 +7006,8 @@ it("drains a streamed response before disposing the owned transport", async () =
   const fixture = await createFixture({
     upstreamUrl: upstream.url,
     beforePlugin(host) {
-      const register = host.bb.onDispose.bind(host.bb);
-      vi.spyOn(host.bb, "onDispose").mockImplementation((hook) => {
+      const register = host.sandy.onDispose.bind(host.sandy);
+      vi.spyOn(host.sandy, "onDispose").mockImplementation((hook) => {
         hooks.push(hook);
         register(hook);
       });
@@ -7086,7 +7086,7 @@ it("publishes pooled usage without a display plugin and does not invent unobserv
 });
 
 it("publishes an empty shared usage group before any accounts or settings are configured", async () => {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-empty-usage-pool-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-empty-usage-pool-"));
   const host = createFakePluginHost({
     pluginId: "account-pool",
     dataDir,
@@ -7096,7 +7096,7 @@ it("publishes an empty shared usage group before any accounts or settings are co
     throw new Error("An empty pool must not contact an upstream");
   });
   try {
-    await createAccountPoolPlugin({ fetch })(host.bb);
+    await createAccountPoolPlugin({ fetch })(host.sandy);
     expect(
       host.harness.registrations.experimental_publishedRpcMethods.map(
         (entry) => entry.method,
@@ -7138,7 +7138,7 @@ describe("Account Pool nested proxy", () => {
       records.push({
         url: request.url ?? "",
         token:
-          (request.headers["x-bb-account-pool-token"] as string | undefined) ??
+          (request.headers["x-sandy-account-pool-token"] as string | undefined) ??
           null,
         authorization: request.headers.authorization ?? null,
         body: body.toString("utf8"),
@@ -7162,7 +7162,7 @@ describe("Account Pool nested proxy", () => {
     parentMode?: "proxy" | "isolate";
   }): Promise<ReturnType<typeof createFakePluginHost>> {
     const dataDir = await mkdtemp(
-      path.join(tmpdir(), "bb-account-pool-child-"),
+      path.join(tmpdir(), "sandy-account-pool-child-"),
     );
     const host = createFakePluginHost({
       pluginId: "account-pool",
@@ -7170,7 +7170,7 @@ describe("Account Pool nested proxy", () => {
       sdk: sdkStubs(),
     });
     if (args.parentMode !== undefined) {
-      await host.bb.storage.kv.set("config", { parentMode: args.parentMode });
+      await host.sandy.storage.kv.set("config", { parentMode: args.parentMode });
     }
     await createAccountPoolPlugin({
       usageUrl: "data:application/json,{}",
@@ -7179,10 +7179,10 @@ describe("Account Pool nested proxy", () => {
         args.parentUrl === null
           ? {}
           : {
-              BB_ACCOUNT_POOL_PARENT_URL: args.parentUrl,
-              BB_ACCOUNT_POOL_PARENT_TOKEN: PARENT_TOKEN,
+              SANDY_ACCOUNT_POOL_PARENT_URL: args.parentUrl,
+              SANDY_ACCOUNT_POOL_PARENT_TOKEN: PARENT_TOKEN,
             },
-    })(host.bb);
+    })(host.sandy);
     host.harness.behavior.runService("hub");
     cleanups.push(async () => {
       await host.harness.lifecycle.dispose();
@@ -7194,7 +7194,7 @@ describe("Account Pool nested proxy", () => {
   it("reads retry availability from the parent and fails closed on an unsupported parent", async () => {
     let supported = true;
     const parent = await startUpstream((request, response) => {
-      expect(request.headers["x-bb-account-pool-token"]).toBe(PARENT_TOKEN);
+      expect(request.headers["x-sandy-account-pool-token"]).toBe(PARENT_TOKEN);
       response.setHeader("content-type", "application/json");
       if (request.url === "/availability")
         response.end(JSON.stringify({ claude: true, codex: true }));
@@ -7235,7 +7235,7 @@ describe("Account Pool nested proxy", () => {
       name,
       value: "",
       reason:
-        "Account Pooler is isolated from the parent bb server's pool on this instance",
+        "Account Pooler is isolated from the parent sandy server's pool on this instance",
     }));
 
   it.each([
@@ -7298,8 +7298,8 @@ describe("Account Pool nested proxy", () => {
       "ENABLE_TOOL_SEARCH",
       "_CLAUDE_CODE_ASSUME_FIRST_PARTY_BASE_URL",
       "ENABLE_PROMPT_CACHING_1H",
-      "BB_ACCOUNT_POOL_PARENT_URL",
-      "BB_ACCOUNT_POOL_PARENT_TOKEN",
+      "SANDY_ACCOUNT_POOL_PARENT_URL",
+      "SANDY_ACCOUNT_POOL_PARENT_TOKEN",
     ]);
     expect(
       entries.find((entry) => entry.name === "ANTHROPIC_BASE_URL")?.value,
@@ -7374,7 +7374,7 @@ describe("Account Pool nested proxy", () => {
     const allowed = await fixture.host.harness.behavior.fetchHttp(
       "GET",
       "/availability",
-      { headers: { "x-bb-account-pool-token": fixture.key } },
+      { headers: { "x-sandy-account-pool-token": fixture.key } },
     );
     expect(allowed.status).toBe(200);
     expect(await allowed.json()).toEqual({ claude: true, codex: false });

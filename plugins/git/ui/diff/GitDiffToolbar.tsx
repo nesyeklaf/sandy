@@ -5,13 +5,13 @@ import {
 } from "./diff-file-filters.js";
 import { useEffect, useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import {
   COARSE_POINTER_COMPACT_ICON_BUTTON_CLASS,
   COARSE_POINTER_COMPACT_ICON_SIZE_CLASS,
   COARSE_POINTER_COMPACT_ICON_SIZE_SHRINK_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,30 +20,30 @@ import {
   DropdownMenuLabel,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
-import { Input } from "@bb/shared-ui/input";
-import { Skeleton } from "@bb/shared-ui/skeleton";
+} from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
+import { Input } from "@sandy/shared-ui/input";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { DiffStatsTally } from "@bb/shared-ui/diff-stats-tally";
+} from "@sandy/shared-ui/tooltip";
+import { DiffStatsTally } from "@sandy/shared-ui/diff-stats-tally";
 import {
   formatChangeSummary,
   renderChangeSummary,
-} from "@bb/shared-ui/workspace-change-summary";
-import type { CodeOverflowMode } from "@get-bb/plugin-sdk";
+} from "@sandy/shared-ui/workspace-change-summary";
+import type { CodeOverflowMode } from "@sandy-sdk/plugin-sdk";
 import type {
   CodeOverflowModeChangeHandler,
   GitDiffDisplayMode,
   GitDiffDisplayModeChangeHandler,
 } from "./git-diff-view-preferences.js";
-import { cn } from "@bb/shared-ui/lib/utils";
-import type { GitDiffStats } from "@bb/shared-ui/git-diff/parsing";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import type { GitDiffStats } from "@sandy/shared-ui/git-diff/parsing";
 
 const GIT_DIFF_SELECTOR_MENU_MIN_WIDTH = "20rem";
 

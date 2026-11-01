@@ -7,19 +7,19 @@ export * from "./public-api.js";
 export * from "./thread-timeline.js";
 export * from "./thread-timeline-delta.js";
 
-export { typedRoutes } from "@bb/hono-typed-routes";
+export { typedRoutes } from "@sandy/hono-typed-routes";
 
 export {
   changedMessageLenientSchema,
   pingMessageSchema,
   pongMessageLenientSchema,
   realtimeSubscriptionTargetKey,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export type {
   ChangedMessage,
   ClientMessage,
   RealtimeSubscriptionTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export * from "./api/machine-environment.js";

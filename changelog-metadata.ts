@@ -15,7 +15,7 @@ export const RELEASE_META: Record<string, ReleaseMeta> = {
   },
   "0.46.1": {
     date: "October 15, 2026",
-    headline: "MCP server, bb CLI install, and Settings search",
+    headline: "MCP server, sandy CLI install, and Settings search",
   },
   "0.46.0": {
     date: "October 9, 2026",
@@ -83,7 +83,7 @@ export const RELEASE_META: Record<string, ReleaseMeta> = {
   },
   "0.0.30": {
     date: "July 14, 2026",
-    headline: "Multi-machine workflows and bb Connect",
+    headline: "Multi-machine workflows and sandy Connect",
   },
   "0.0.29": {
     date: "July 9, 2026",

@@ -2,16 +2,16 @@ import {
   corpusAvailable,
   listCorpusThreads,
   loadCorpusThread,
-} from "@bb/test-helpers";
+} from "@sandy/test-helpers";
 import {
   createConnection,
   getLatestThreadSequence,
   insertEvents,
   noopNotifier,
-} from "@bb/db";
-import type { DbConnection } from "@bb/db";
-import type { Thread, ThreadEventType } from "@bb/domain";
-import { turnScope } from "@bb/domain";
+} from "@sandy/db";
+import type { DbConnection } from "@sandy/db";
+import type { Thread, ThreadEventType } from "@sandy/domain";
+import { turnScope } from "@sandy/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ProviderRegistryService } from "../../src/services/providers/provider-registry.js";
 import { clearTimelineOrderingContextCache } from "../../src/services/threads/timeline-context-order.js";

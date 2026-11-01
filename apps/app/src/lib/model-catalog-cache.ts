@@ -1,4 +1,4 @@
-import { availableModelSchema } from "@bb/domain";
+import { availableModelSchema } from "@sandy/domain";
 import { z } from "zod";
 import { createLastKnownCache } from "@/lib/last-known-cache";
 
@@ -8,11 +8,11 @@ const cachedModelCatalogSchema = z.object({
 });
 
 const modelCatalogCache = createLastKnownCache({
-  prefix: "bb.model-catalog",
+  prefix: "sandy.model-catalog",
   version: "1",
   schema: cachedModelCatalogSchema,
   maxEntries: 8,
-  obsoletePrefixes: ["bb.claude-model-catalog"],
+  obsoletePrefixes: ["sandy.claude-model-catalog"],
 });
 
 export function modelCatalogCacheKey({

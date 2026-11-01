@@ -1,0 +1,8 @@
+Card("Rollout of genui 0.4.0", [
+  Provenance([
+    {name: "Merged", status: "done", facts: {branch: "main", sha: "9cbcb56e1f"}},
+    {name: "Built on the VPS", status: "done", facts: {sha: "9cbcb56", exit: "0", backup: "dist.orig-0.3.1"}},
+    {name: "Reloaded in SANDY", status: "done", facts: {version: "0.4.0", rollback: "rm -rf dist && cp -r dist.orig-0.3.1 dist && sandy plugin reload genui"}},
+    {name: "Live check", status: "done", facts: {version: "0.4.0", health: "HTTP 200 in 84 ms", url: "https://sandy.example.com"}}
+  ], {sha: "9cbcb56"})
+])

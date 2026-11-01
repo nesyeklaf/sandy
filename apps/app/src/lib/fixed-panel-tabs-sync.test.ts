@@ -3,7 +3,7 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
-import { replaceNewTabWithSecondaryPanelTabInState } from "@bb/client-core";
+import { replaceNewTabWithSecondaryPanelTabInState } from "@sandy/client-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createBrowserFixedPanelTab,
@@ -24,7 +24,7 @@ import {
   useRemoveFixedRightTerminalTab,
   useUpdateFixedPanelTabsState,
 } from "./fixed-panel-tabs";
-import { BbHttpError } from "./sdk";
+import { SandyHttpError } from "./sdk";
 import {
   getCachedThreadTabs,
   invalidateCachedThreadTabs,
@@ -83,9 +83,9 @@ describe("fixed panel tab server sync", () => {
     const tabs = [
       terminal,
       {
-        id: "plugin-fixed:bb--git:diff",
+        id: "plugin-fixed:sandy--git:diff",
         kind: "plugin-fixed",
-        pluginId: "bb--git",
+        pluginId: "sandy--git",
         tabId: "diff",
       },
       {
@@ -217,7 +217,7 @@ describe("fixed panel tab server sync", () => {
       .mockResolvedValueOnce({ revision: 0, tabs: [] })
       .mockResolvedValueOnce({ revision: 1, tabs: [serverTab] });
     apiMocks.updateThreadTabs.mockRejectedValueOnce(
-      new BbHttpError({
+      new SandyHttpError({
         body: null,
         code: "thread_tabs_conflict",
         message: "changed",
@@ -386,7 +386,7 @@ describe("fixed panel tab server sync", () => {
           tabs: [originalTab, concurrentTab],
         });
         apiMocks.updateThreadTabs.mockRejectedValueOnce(
-          new BbHttpError({
+          new SandyHttpError({
             body: null,
             code: "thread_tabs_conflict",
             message: "changed",
@@ -489,7 +489,7 @@ describe("fixed panel tab server sync", () => {
       });
     apiMocks.updateThreadTabs
       .mockRejectedValueOnce(
-        new BbHttpError({
+        new SandyHttpError({
           body: null,
           code: "thread_tabs_conflict",
           message: "changed",

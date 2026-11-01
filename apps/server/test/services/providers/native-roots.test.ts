@@ -1,7 +1,7 @@
-import type { JsonValue } from "@bb/domain";
-import type { HostDaemonOnlineRpcRequestMessage } from "@bb/host-daemon-contract";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
-import type { ExperimentalNativeRootsResolveAnswer } from "@get-bb/plugin-sdk/host";
+import type { JsonValue } from "@sandy/domain";
+import type { HostDaemonOnlineRpcRequestMessage } from "@sandy/host-daemon-contract";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
+import type { ExperimentalNativeRootsResolveAnswer } from "@sandy-sdk/plugin-sdk/host";
 import { describe, expect, it, vi } from "vitest";
 import { COMMAND_TIMEOUT_MS } from "../../../src/constants.js";
 import { ApiError } from "../../../src/errors.js";
@@ -408,7 +408,7 @@ describe("resolveProviderNativeRootSet", () => {
         });
         expect(withoutArtifact.resolved).toEqual({ skills: [], commands: [] });
         expect(warn).toHaveBeenCalledTimes(1);
-        expect(warn.mock.calls[0]?.[1]).toContain("no live bb.host artifact");
+        expect(warn.mock.calls[0]?.[1]).toContain("no live sandy.host artifact");
 
         const declaredOnly = await resolveProviderNativeRootSet(deps, {
           registration: registration(harness, "declared"),

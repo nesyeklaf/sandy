@@ -1,10 +1,10 @@
 import type { Hono } from "hono";
-import { listQueuedThreadMessagesForApi } from "@bb/db";
+import { listQueuedThreadMessagesForApi } from "@sandy/db";
 import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { ApiError } from "../errors.js";
 import type { AppDeps } from "../types.js";
 import { toThreadQueuedMessage } from "../services/threads/thread-queued-messages.js";

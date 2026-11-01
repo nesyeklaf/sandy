@@ -3,7 +3,7 @@
   "name": "motion",
   "type": "registry:ui",
   "title": "motion",
-  "description": "BB ui \"motion\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"motion\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "files": [
     {
       "path": "registry/components/ui/motion.ts",

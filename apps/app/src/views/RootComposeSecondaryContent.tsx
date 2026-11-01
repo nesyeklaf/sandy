@@ -1,7 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from "react";
-import { Skeleton } from "@bb/shared-ui/skeleton";
-import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
+import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PluginHomepageSections } from "@/components/plugin/PluginHomepageSections";
 import { usePluginComposerHost } from "@/components/plugin/plugin-composer-host";
 import { SecondaryPanelLayout } from "@/components/secondary-panel/SecondaryPanelLayout";
@@ -9,14 +9,14 @@ import { secondaryPanelWidthPercentAtom } from "@/components/secondary-panel/thr
 import { LazyThreadSecondaryPanel } from "@/components/secondary-panel/lazySecondaryPanelComponents";
 import {
   CHROME_ROW_HEIGHT_CLASS,
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_APP_REGION_NO_DRAG_CLASS,
   MACOS_CHROME_CONTROL_AXIS_CLASS,
   MACOS_TITLE_BAR_CONTROL_SIZE_CLASS,
   MACOS_TITLE_BAR_PINNED_TOGGLE_CLASS,
   MACOS_WINDOW_DRAG_CLASS,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { useIsSidebarFramed } from "@/components/ui/sidebar.js";
 import { RootComposeHome } from "./RootComposeHome";
 import { useOptionalPaneContext } from "./thread-detail/PaneContext";
@@ -25,11 +25,11 @@ const ROOT_COMPOSE_PINNED_PANEL_TOGGLE_POSITION_CLASS =
   "right-[calc(1rem+env(safe-area-inset-right))] top-[calc(0.625rem+env(safe-area-inset-top))] max-md:pointer-coarse:top-[calc(0.375rem+env(safe-area-inset-top))]";
 
 export function useRootComposePinnedPanelToggleBoxClassName(): string {
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const isSidebarFramed = useIsSidebarFramed();
   return cn(
-    "fixed mr-(--bb-window-frame-lip)",
+    "fixed mr-(--sandy-window-frame-lip)",
     ROOT_COMPOSE_PINNED_PANEL_TOGGLE_POSITION_CLASS,
     usesDesktopChrome && [
       MACOS_CHROME_CONTROL_AXIS_CLASS,
@@ -92,7 +92,7 @@ export function RootComposeSecondaryContent({
   const paneContext = useOptionalPaneContext();
   const secondaryPanelHost = paneContext?.secondaryPanelHost ?? null;
   const composerHost = usePluginComposerHost();
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const pinnedPanelToggleBoxClassName =
     useRootComposePinnedPanelToggleBoxClassName();
@@ -101,7 +101,7 @@ export function RootComposeSecondaryContent({
   const { renderBrowserDeck, ...threadSecondaryPanelProps } = secondaryPanel;
 
   const mainContent = (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden pt-(--bb-window-frame-top)">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden pt-(--sandy-window-frame-top)">
       {rendersWindowDragStrip ? (
         <div
           data-testid="root-compose-main-window-drag-strip"

@@ -21,16 +21,16 @@ function readPackageVersion(packagePath) {
   return packageJson.version;
 }
 
-const bbAppVersion = readPackageVersion("packages/bb-app/package.json");
+const sandyAppVersion = readPackageVersion("packages/sandy-app/package.json");
 const desktopVersion = readPackageVersion("apps/desktop/package.json");
 
-if (bbAppVersion !== desktopVersion) {
+if (sandyAppVersion !== desktopVersion) {
   console.error(
-    `Version mismatch: bb-app=${bbAppVersion} @bb/desktop=${desktopVersion}; bump both via scripts/bump-version.mjs`,
+    `Version mismatch: sandy-app=${sandyAppVersion} @sandy/desktop=${desktopVersion}; bump both via scripts/bump-version.mjs`,
   );
   process.exit(1);
 }
 
 console.log(
-  `Versions locked: bb-app=${bbAppVersion} @bb/desktop=${desktopVersion}`,
+  `Versions locked: sandy-app=${sandyAppVersion} @sandy/desktop=${desktopVersion}`,
 );

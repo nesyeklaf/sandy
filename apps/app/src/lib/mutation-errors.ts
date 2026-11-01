@@ -1,4 +1,4 @@
-import { extractErrorMessage, toRecord } from "@bb/core-ui";
+import { extractErrorMessage, toRecord } from "@sandy/core-ui";
 import { appToast } from "@/components/ui/app-toast";
 import { asHttpError, getHttpErrorMessage } from "./http-error";
 import {

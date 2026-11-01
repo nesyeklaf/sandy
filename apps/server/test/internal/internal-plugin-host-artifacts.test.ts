@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 async function createRouteHarness(bytes: Uint8Array) {
-  const directory = await mkdtemp(join(tmpdir(), "bb-host-artifact-route-"));
+  const directory = await mkdtemp(join(tmpdir(), "sandy-host-artifact-route-"));
   tempDirs.push(directory);
   const path = join(directory, "host.js");
   await writeFile(path, bytes);

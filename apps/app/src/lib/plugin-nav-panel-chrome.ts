@@ -23,7 +23,7 @@ export interface PluginNavPanelChromeEntry {
 }
 
 const chromeCache = createLastKnownCache({
-  prefix: "bb.plugin-nav-panels",
+  prefix: "sandy.plugin-nav-panels",
   version: "1",
   schema: z.array(pluginNavPanelChromeSchema),
 });

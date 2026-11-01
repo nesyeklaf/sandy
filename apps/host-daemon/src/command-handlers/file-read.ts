@@ -3,8 +3,8 @@ import { isUtf8 } from "node:buffer";
 import fs from "node:fs/promises";
 import path from "node:path";
 import mimeTypes from "mime-types";
-import type { HostReadFileIfNoneMatch } from "@bb/host-daemon-contract";
-import { isPathWithinDirectory } from "@bb/process-utils";
+import type { HostReadFileIfNoneMatch } from "@sandy/host-daemon-contract";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import {
   CommandDispatchError,
   ExpectedCommandDispatchError,
@@ -15,8 +15,8 @@ import { resolveNonSymlinkDirectoryPath } from "./root-path.js";
 import {
   type GitProcessOptions,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
-import { readGitBlob } from "@bb/host-workspace";
+} from "sandy-environment-provider-host/workspace-git";
+import { readGitBlob } from "@sandy/host-workspace";
 
 const IMAGE_FILE_SIZE_LIMIT_BYTES = 10 * 1024 * 1024;
 export const NON_IMAGE_FILE_SIZE_LIMIT_BYTES = 25 * 1024 * 1024;

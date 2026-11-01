@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import type { ThreadQueuedMessage } from "@bb/domain";
+import type { ThreadQueuedMessage } from "@sandy/domain";
 import {
   runCommand,
   setupCommandOutputTestEnvironment,
@@ -40,7 +40,7 @@ function queuedMessage(
   };
 }
 
-describe("bb thread organization commands", () => {
+describe("sandy thread organization commands", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -131,7 +131,7 @@ describe("bb thread organization commands", () => {
   ] as const)(
     "uploads CLI-local %s bytes to the thread project before queueing",
     async (flag, type, filename, mimeType) => {
-      const dir = await mkdtemp(join(tmpdir(), "bb-queue-attachment-"));
+      const dir = await mkdtemp(join(tmpdir(), "sandy-queue-attachment-"));
       try {
         const path = join(dir, filename);
         const bytes = new Uint8Array([137, 80, 78, 71]);
@@ -204,7 +204,7 @@ describe("bb thread organization commands", () => {
   );
 
   it("does not enqueue the text when an attachment upload fails", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "bb-queue-rejected-"));
+    const dir = await mkdtemp(join(tmpdir(), "sandy-queue-rejected-"));
     try {
       const path = join(dir, "blue.png");
       await writeFile(path, new Uint8Array([137, 80, 78, 71]));
@@ -293,7 +293,7 @@ describe("bb thread organization commands", () => {
         .join("\n");
       expect(output).toContain("failed_exhausted");
       expect(output).toContain(`Failed queued-1: ${failureReason}`);
-      expect(output).toContain("bb thread queue send thread-1 queued-1");
+      expect(output).toContain("sandy thread queue send thread-1 queued-1");
       expect(output).not.toContain("waiting for Michael-M4 to reconnect");
     },
   );

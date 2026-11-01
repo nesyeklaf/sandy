@@ -2,12 +2,12 @@ import {
   findLocalPathProjectSourceForHost,
   type ProjectSource,
   type ThreadListEntry,
-} from "@bb/domain";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
 import {
   PERSONAL_WORKSPACE_ENVIRONMENT_PROVIDER_ID,
   PROJECT_CHECKOUT_ENVIRONMENT_PROVIDER_ID,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   encodeProviderValue,
   parseEnvironmentValue,

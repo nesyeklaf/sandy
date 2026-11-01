@@ -64,6 +64,6 @@ async function selectOption(trigger: HTMLElement, name: RegExp) {
 
 function storedPreference(): Record<string, string> {
   return JSON.parse(
-    window.localStorage.getItem("bb.fileOpenerByExtension") ?? "{}",
+    window.localStorage.getItem("sandy.fileOpenerByExtension") ?? "{}",
   ) as Record<string, string>;
 }

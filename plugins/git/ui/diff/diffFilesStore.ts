@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { GitDiffStats } from "@bb/shared-ui/git-diff/parsing";
+import type { GitDiffStats } from "@sandy/shared-ui/git-diff/parsing";
 import type { DiffFileEntry } from "../../contract.js";
 import {
   GIT_DIFF_AUTO_COLLAPSE_FILE_THRESHOLD,

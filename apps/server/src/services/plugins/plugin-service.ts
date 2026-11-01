@@ -1,8 +1,8 @@
-import { rpcResponseTags } from "@get-bb/plugin-sdk/internal/rpc-tags";
+import { rpcResponseTags } from "@sandy-sdk/plugin-sdk/internal/rpc-tags";
 import type {
   PluginRpcDiscoveryQuery,
   PublishedPluginRpcMethod,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { watch } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -20,7 +20,7 @@ import {
   type SystemChangeKind,
   type ThreadEventItemPresentation,
   type ToolCallResponse,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   type ExperimentalPluginWebSocketContext,
   type ExperimentalPluginWebSocketHandlers,
@@ -29,7 +29,7 @@ import {
   type ExperimentalPluginProviderEnvHealthContext,
   type PluginRpcError,
   type ExperimentalPluginRpcCaller,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   enforcePluginCliOutputLimit,
   normalizePluginAgentConfiguration,
@@ -40,15 +40,15 @@ import {
   validatePluginProviderEnvEntries,
   validateRpcValue,
   validateSettingsUpdate,
-} from "@get-bb/plugin-sdk/internal/host-policy";
-import { buildPluginApp, createPluginDevLoop } from "@bb/plugin-build";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
+import { buildPluginApp, createPluginDevLoop } from "@sandy/plugin-build";
 import { getPluginBuildToolchain } from "./build-toolchain.js";
 import { buildMutablePluginHost } from "./mutable-plugin-artifacts.js";
 import {
   marketplacePublisherLabel,
   pluginPublisherLabel,
 } from "../plugin-catalog/marketplace-publishers.js";
-import { deleteSecretFile, readOrCreateSecretFile } from "@bb/secret-storage";
+import { deleteSecretFile, readOrCreateSecretFile } from "@sandy/secret-storage";
 import {
   ROOT_PLUGIN_SOURCE_SELECTION,
   type InstalledPlugin,
@@ -58,7 +58,7 @@ import {
   type PluginSourceDetail,
   type PluginSourceSelection,
   type PluginUpdateCheckEntry,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   claimPluginScheduledRun,
   deleteAllPluginKvValues,
@@ -89,7 +89,7 @@ import {
   setPluginSafeMode,
   type InstalledPluginRow,
   type PluginMarketplaceRow,
-} from "@bb/db";
+} from "@sandy/db";
 import { toHostRecord } from "../lib/entity-lookup.js";
 import {
   catalogEntryMetadata,
@@ -126,7 +126,7 @@ import {
   listBundledPluginRegistrations,
 } from "./builtin-registry.js";
 import {
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginAgentConfigurationContext,
   type PluginAgentToolContext,
   type PluginAgentToolRecord,
@@ -162,10 +162,7 @@ import {
 } from "./plugin-hook-registry.js";
 import type { PluginEnvironmentProviderBridge } from "./plugin-environment-provider-registry.js";
 import { createPluginRegistration } from "./plugin-registration.js";
-import {
-  createPluginRuntime,
-  forgetMutableRoot,
-} from "./plugin-runtime.js";
+import { createPluginRuntime, forgetMutableRoot } from "./plugin-runtime.js";
 import {
   nextCronRunAt,
   raceTimeout,
@@ -247,8 +244,8 @@ export interface PluginService {
   machineProviders: PluginMachineProviderBridge;
   serverAccessProviders: import("./plugin-server-access-registry.js").ServerAccessBridge;
   /**
-   * Bind the in-process BB SDK to the running server. Call once the HTTP
-   * listener is up, before start(): bb.sdk throws until this runs.
+   * Bind the in-process SANDY SDK to the running server. Call once the HTTP
+   * listener is up, before start(): sandy.sdk throws until this runs.
    */
   bindSdk(args: { baseUrl: string }): void;
   start(): Promise<void>;
@@ -293,7 +290,7 @@ export interface PluginService {
   reload(id?: string): Promise<PluginReloadOutcome>;
   getSafeMode(): boolean;
   setSafeMode(enabled: boolean): Promise<PluginSafeModeUpdateResponse>;
-  getApi(id: string): BbPluginApi | undefined;
+  getApi(id: string): SandyPluginApi | undefined;
   /**
    * Whether this server still means to run this plugin, which is what decides
    * a `plugin:<id>` queue wait's fate: core clears a wait whose owner is gone
@@ -362,7 +359,7 @@ export interface PluginService {
   getRpcHandler(id: string, method: string): PluginWireLookup<PluginRpcHandler>;
   /**
    * The caller of a plugin rpc request: a plugin when `token` is the live
-   * per-load token its `bb.sdk.plugins.callRpc` attaches, the client when no
+   * per-load token its `sandy.sdk.plugins.callRpc` attaches, the client when no
    * token was sent, and not ok for any other token.
    */
   resolveRpcCaller(token: string | undefined): PluginRpcCallerResolution;
@@ -589,6 +586,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
     })();
     if (!(await settledWithin(run, installHandlerTimeoutMs))) {
       logger.warn(
+        { pluginId: id },
         `[plugin:${id}] install handlers were still running after ${installHandlerTimeoutMs / 1000}s; the install finished without waiting for them`,
       );
     }
@@ -1295,7 +1293,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
       logger.info(
         row.enabled
           ? `plugin ${row.id} retired; its settings moved to ${retired.successorPluginId}, which is now enabled`
-          : `plugin ${row.id} retired because bb no longer bundles ${row.source}`,
+          : `plugin ${row.id} retired because sandy no longer bundles ${row.source}`,
       );
     }
   }
@@ -1318,7 +1316,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
       deleteAllPluginKvValues(deps.db, row.id);
       deleteInstalledPlugin(deps.db, row.id);
       logger.info(
-        `plugin ${row.id} removed because bb no longer bundles ${row.source}; its settings, secrets, and schedules were deleted`,
+        `plugin ${row.id} removed because sandy no longer bundles ${row.source}; its settings, secrets, and schedules were deleted`,
       );
     }
   }
@@ -1557,7 +1555,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
                   dataDir: deps.dataDir,
                   pluginId: row.id,
                   rootDir: bundled.rootDir,
-                  bbVersion: deps.appVersion,
+                  sandyVersion: deps.appVersion,
                   toolchain: await getPluginBuildToolchain(deps),
                 });
                 setDevBuildProblem(row.id, "host", null);
@@ -2211,7 +2209,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
         ctx.signal,
       );
       if (outcome.ok) return outcome.value;
-      return fail(`bb ${registration.name} failed: ${outcome.error}`);
+      return fail(`sandy ${registration.name} failed: ${outcome.error}`);
     },
 
     listSkillRootContributions() {
@@ -2698,6 +2696,7 @@ export function createPluginService(deps: PluginServiceDeps): PluginService {
           newNextRunAt = nextCronRunAt(schedule.cron, now);
         } catch (error) {
           logger.warn(
+            { pluginId: row.pluginId },
             `[plugin:${row.pluginId}] schedule ${row.name} has an invalid cron: ${
               error instanceof Error ? error.message : String(error)
             }`,

@@ -37,7 +37,7 @@ export interface CommandSearchMatch {
 export class CommandIndexUnavailableError extends Error {
   constructor() {
     super(
-      "The bb CLI on this bb server did not return its command index (`bb guide commands --json`), so the `read` and `search` tools are unavailable. Update bb on that machine.",
+      "The sandy CLI on this sandy server did not return its command index (`sandy guide commands --json`), so the `read` and `search` tools are unavailable. Update sandy on that machine.",
     );
     this.name = "CommandIndexUnavailableError";
   }
@@ -130,7 +130,7 @@ export function searchCommands(
     )
     .slice(0, Math.max(1, Math.min(limit, SEARCH_MAX_LIMIT)));
   return ranked.map(({ command }) => ({
-    usage: `bb ${command.path}${command.arguments ? ` ${command.arguments}` : ""}`,
+    usage: `sandy ${command.path}${command.arguments ? ` ${command.arguments}` : ""}`,
     description: command.description,
     options: command.options,
     aliases: command.aliases,

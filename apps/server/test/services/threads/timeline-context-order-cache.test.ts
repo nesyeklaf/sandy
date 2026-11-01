@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { THREAD_CONTEXT_CLEAR_OPERATION } from "@bb/domain";
+import { THREAD_CONTEXT_CLEAR_OPERATION } from "@sandy/domain";
 import {
   advanceThreadPruning,
   deleteThreadEventSuffixInTransaction,
   getLatestCompletedThreadContextClearSequence,
   getLatestThreadSequence,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   clearTimelineOrderingContextCache,
   getTimelineGroupingContext,

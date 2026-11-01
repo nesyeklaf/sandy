@@ -1,4 +1,4 @@
-import { experimental_spawnHostProcess as spawn } from "@get-bb/plugin-sdk/process";
+import { experimental_spawnHostProcess as spawn } from "@sandy-sdk/plugin-sdk/process";
 import {
   query,
   type CanUseTool,
@@ -15,7 +15,7 @@ import {
 import {
   experimental_isProviderBridgeRecording,
   experimental_recordProviderChildIo,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { ClaudePermissionMode } from "../interactive-contract.js";
 import {
   isMissingClaudeCliMessage,

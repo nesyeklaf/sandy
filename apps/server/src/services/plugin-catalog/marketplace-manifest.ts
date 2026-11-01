@@ -7,12 +7,12 @@ import {
   pluginMarketplaceCollectionSchema,
   type PluginMarketplaceCategory,
   type PluginMarketplaceCollection,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   pluginMarketplaceNameSchema,
   ROOT_PLUGIN_SOURCE_SELECTION,
   type PluginSourceSelection,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import semver from "semver";
 import { z } from "zod";
 import {
@@ -29,7 +29,7 @@ import {
 import { BUNDLED_MARKETPLACE_NAME } from "./bundled-marketplace-paths.js";
 export { BUNDLED_MARKETPLACE_NAME } from "./bundled-marketplace-paths.js";
 
-export const BUILTIN_PUBLISHER_LABEL = "BB Official";
+export const BUILTIN_PUBLISHER_LABEL = "SANDY Official";
 
 const NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/u;
 const TAG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;

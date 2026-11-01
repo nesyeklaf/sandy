@@ -1,5 +1,5 @@
-import type { Host } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import type { Host } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { describe, expect, it } from "vitest";
 import { shouldOpenPathEntryDialog } from "./useLocalPathPicker";
 

@@ -3,7 +3,7 @@ import { and, asc, eq, isNull, lt, notExists, sql } from "drizzle-orm";
 import {
   ProjectAttachmentError,
   type ProjectAttachmentOwnershipMode,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { DbConnection, DbQueryConnection } from "../connection.js";
 import {
   projectAttachments,
@@ -89,6 +89,22 @@ export function acquireProjectAttachmentOwnership(
     },
     { behavior: "immediate" },
   );
+}
+
+export function listThreadAttachmentPaths(
+  db: DbQueryConnection,
+  threadId: string,
+): string[] {
+  return db
+    .select({ storedPath: projectAttachments.storedPath })
+    .from(projectAttachmentThreads)
+    .innerJoin(
+      projectAttachments,
+      eq(projectAttachments.id, projectAttachmentThreads.attachmentId),
+    )
+    .where(eq(projectAttachmentThreads.threadId, threadId))
+    .all()
+    .map((row) => row.storedPath);
 }
 
 export function copyProjectAttachmentOwnership(

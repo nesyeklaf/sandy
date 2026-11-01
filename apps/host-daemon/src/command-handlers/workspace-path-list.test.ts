@@ -2,15 +2,15 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { initRepo } from "@bb/test-helpers";
+import { initRepo } from "@sandy/test-helpers";
 import { listWorkspacePaths } from "./file-list.js";
 import { listHostPaths } from "./host-files.js";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 
 const roots: string[] = [];
 
 async function createRoot() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bb-workspace-paths-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-workspace-paths-"));
   roots.push(root);
   return root;
 }

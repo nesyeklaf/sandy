@@ -1,7 +1,7 @@
-import { CompetingTurnError } from "@bb/agent-runtime";
-import { COMPETING_TURN_ERROR_CODE } from "@bb/host-daemon-contract";
-import { BRIDGE_JSON_RPC_ERRORS } from "@bb/provider-bridge-protocol";
-import { JsonRpcResponseError } from "@bb/provider-bridge-protocol/bridge-kit";
+import { CompetingTurnError } from "@sandy/agent-runtime";
+import { COMPETING_TURN_ERROR_CODE } from "@sandy/host-daemon-contract";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy/provider-bridge-protocol";
+import { JsonRpcResponseError } from "@sandy/provider-bridge-protocol/bridge-kit";
 import { describe, expect, it } from "vitest";
 import {
   CommandDispatchError,
@@ -32,7 +32,7 @@ describe("command dispatch support", () => {
       getErrorCode(
         new JsonRpcResponseError(
           BRIDGE_JSON_RPC_ERRORS.MISSING_EXECUTABLE,
-          "bb could not find the Codex CLI on this machine.",
+          "sandy could not find the Codex CLI on this machine.",
         ),
       ),
     ).toBe("missing_executable");
@@ -40,7 +40,7 @@ describe("command dispatch support", () => {
       getErrorCode(
         new JsonRpcResponseError(
           BRIDGE_JSON_RPC_ERRORS.BRIDGE_ERROR,
-          "bb could not find the Codex CLI on this machine.",
+          "sandy could not find the Codex CLI on this machine.",
         ),
       ),
     ).toBe("command_failed");

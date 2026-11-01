@@ -1,0 +1,32 @@
+# Frontend testing API symbol index
+
+Use this index to check `app.tsx` test imports; backend-api-index.md lists
+the backend and host-entry test entrypoints.
+Read `testing.md` for examples and fidelity limits.
+
+## `@sandy-sdk/plugin-sdk/testing/app`
+
+- `RpcCall`
+- `SdkCall`
+- `PluginSdkTestFakes`
+- `NavigateCall`
+- `ComposerLog`
+- `SidebarActionCall`
+- `SidebarNavigationCall`
+- `TestThreadActionsResolver`
+- `TestThreadBulkActionsResolver`
+- `installTestPluginRuntime`
+- `CapturedPluginApp`
+- `PluginAppSource`
+- `loadPluginApp`
+- `ContentScriptTestMountOptions`
+- `ContentScriptThreadRowStatusCall`
+- `MountedPluginContentScripts`
+- `mountPluginContentScripts`
+- `PluginRpcTestHandlers`
+- `RenderSlotOptions`
+- `RenderedSlotBehaviorDrivers`
+- `RenderedSlotInspectionState`
+- `RenderedSlotLifecycleControls`
+- `RenderedSlot`
+- `renderSlot`

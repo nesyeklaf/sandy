@@ -1,0 +1,24 @@
+{
+  "dir": "/home/aemon/.pi/agent/agents",
+  "dryRun": false,
+  "agents": [
+    {
+      "file": "implementer-high.md",
+      "name": "implementer-high",
+      "outcome": "imported",
+      "version": 1
+    },
+    {
+      "file": "implementer-low.md",
+      "name": "implementer-low",
+      "outcome": "updated",
+      "version": 2
+    },
+    {
+      "file": "implementer-medium.md",
+      "name": "implementer-medium",
+      "outcome": "imported",
+      "version": 1
+    }
+  ]
+}

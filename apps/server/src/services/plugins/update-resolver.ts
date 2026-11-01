@@ -1,5 +1,5 @@
 import semver from "semver";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
 import {
   DEFAULT_GIT_REF,
   gitSemverTagName,
@@ -15,7 +15,7 @@ import {
 export type GitRefKind = "branch" | "tag" | "commit";
 
 export interface CompatibilityProblem {
-  engine: "bb" | "bbPluginSdk";
+  engine: "sandy" | "sandyPluginSdk";
   required: string;
   actual: string;
   message: string;
@@ -70,7 +70,7 @@ function requestedRangeIncludesPrerelease(spec: string): boolean {
 }
 
 export function evaluateCompatibility(args: {
-  bbRange: string | undefined;
+  sandyRange: string | undefined;
   sdkRange: string | undefined;
   appVersion: string;
 }): {
@@ -80,24 +80,24 @@ export function evaluateCompatibility(args: {
 } {
   const appVersion = semver.coerce(args.appVersion);
   if (!appVersion) {
-    throw new Error(`cannot parse running bb version "${args.appVersion}"`);
+    throw new Error(`cannot parse running sandy version "${args.appVersion}"`);
   }
   const devMode = appVersion.version === "0.0.0";
-  const bbProblems: CompatibilityProblem[] = [];
-  if (args.bbRange !== undefined) {
-    if (semver.validRange(args.bbRange) === null) {
-      bbProblems.push({
-        engine: "bb",
-        required: args.bbRange,
+  const sandyProblems: CompatibilityProblem[] = [];
+  if (args.sandyRange !== undefined) {
+    if (semver.validRange(args.sandyRange) === null) {
+      sandyProblems.push({
+        engine: "sandy",
+        required: args.sandyRange,
         actual: appVersion.version,
-        message: `declares invalid engines.bb range ${JSON.stringify(args.bbRange)}`,
+        message: `declares invalid engines.sandy range ${JSON.stringify(args.sandyRange)}`,
       });
-    } else if (!semver.satisfies(appVersion, args.bbRange)) {
-      bbProblems.push({
-        engine: "bb",
-        required: args.bbRange,
+    } else if (!semver.satisfies(appVersion, args.sandyRange)) {
+      sandyProblems.push({
+        engine: "sandy",
+        required: args.sandyRange,
         actual: appVersion.version,
-        message: `requires bb ${args.bbRange}, running bb is ${appVersion.version}`,
+        message: `requires sandy ${args.sandyRange}, running sandy is ${appVersion.version}`,
       });
     }
   }
@@ -105,14 +105,14 @@ export function evaluateCompatibility(args: {
   if (args.sdkRange !== undefined) {
     if (semver.validRange(args.sdkRange) === null) {
       sdkProblems.push({
-        engine: "bbPluginSdk",
+        engine: "sandyPluginSdk",
         required: args.sdkRange,
         actual: PLUGIN_SDK_VERSION,
-        message: `declares invalid engines.bbPluginSdk range ${JSON.stringify(args.sdkRange)}`,
+        message: `declares invalid engines.sandyPluginSdk range ${JSON.stringify(args.sdkRange)}`,
       });
     } else if (!isPluginSdkRangeSatisfied(args.sdkRange)) {
       sdkProblems.push({
-        engine: "bbPluginSdk",
+        engine: "sandyPluginSdk",
         required: args.sdkRange,
         actual: PLUGIN_SDK_VERSION,
         message: pluginSdkRangeProblem(args.sdkRange),
@@ -120,8 +120,8 @@ export function evaluateCompatibility(args: {
     }
   }
   return {
-    effective: devMode ? sdkProblems : [...bbProblems, ...sdkProblems],
-    packaged: bbProblems,
+    effective: devMode ? sdkProblems : [...sandyProblems, ...sdkProblems],
+    packaged: sandyProblems,
     devMode,
   };
 }
@@ -287,7 +287,7 @@ function movedGitTagDetail(args: {
   if (args.currentCommit === args.recordedCommit) return null;
   return (
     `security check failed: git tag "${args.tag}" in ${args.url} moved from ` +
-    `${args.recordedCommit} to ${args.currentCommit}; bb will not re-resolve a ` +
+    `${args.recordedCommit} to ${args.currentCommit}; sandy will not re-resolve a ` +
     `tag that changed. Remove the plugin and install it again to accept the new commit`
   );
 }
@@ -337,7 +337,7 @@ async function resolveGitRangeUpdate(args: {
       outcome: "unavailable",
       detail:
         `security check failed: recorded git tag "${args.intent.resolvedTag}" no longer exists in ${args.url}; ` +
-        "bb will not re-resolve a missing release tag. Restore the tag, or remove and install the plugin again",
+        "sandy will not re-resolve a missing release tag. Restore the tag, or remove and install the plugin again",
     };
   }
   const moved = movedGitTagDetail({
@@ -377,7 +377,7 @@ async function resolveGitRangeUpdate(args: {
     if (probes >= MAX_GIT_CANDIDATE_PROBES) {
       return {
         outcome: "unavailable",
-        detail: `no release of ${args.url} matching ${args.intent.range} runs on this bb within the newest ${MAX_GIT_CANDIDATE_PROBES} releases`,
+        detail: `no release of ${args.url} matching ${args.intent.range} runs on this sandy within the newest ${MAX_GIT_CANDIDATE_PROBES} releases`,
       };
     }
     probes += 1;
@@ -492,7 +492,7 @@ export async function resolveGitRange(args: {
     if (probes >= MAX_GIT_CANDIDATE_PROBES) {
       return {
         outcome: "unavailable",
-        detail: `no release of ${args.url} matching ${args.range} runs on this bb within the newest ${MAX_GIT_CANDIDATE_PROBES} releases`,
+        detail: `no release of ${args.url} matching ${args.range} runs on this sandy within the newest ${MAX_GIT_CANDIDATE_PROBES} releases`,
       };
     }
     probes += 1;
@@ -507,6 +507,6 @@ export async function resolveGitRange(args: {
     outcome: "unavailable",
     detail:
       firstProblem ??
-      `no release of ${args.url} matching ${args.range} runs on this bb`,
+      `no release of ${args.url} matching ${args.range} runs on this sandy`,
   };
 }

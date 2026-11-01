@@ -4,7 +4,7 @@ import {
   runtimePermissionPolicySchema,
   sessionOptionSelectionsSchema,
   serviceTierSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
 
 export const bridgeExecutionOptionsSchema = z

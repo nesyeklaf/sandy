@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
 import { afterEach, describe, expect, it } from "vitest";
 
 const run = promisify(execFile);
@@ -20,17 +20,17 @@ describe("native plugin server loading", () => {
     );
   });
 
-  it("resolves BB-provided externals in a native Node import", async () => {
-    const workDir = await mkdtemp(join(tmpdir(), "bb-native-plugin-load-"));
+  it("resolves SANDY-provided externals in a native Node import", async () => {
+    const workDir = await mkdtemp(join(tmpdir(), "sandy-native-plugin-load-"));
     tempDirs.push(workDir);
     const rootDir = join(workDir, "plugin");
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-native-externals",
+        name: "sandy-plugin-native-externals",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Native externals fixture",
           description: "Exercises native plugin server loading.",
           branding: { icon: "Zap" },
@@ -41,7 +41,7 @@ describe("native plugin server loading", () => {
     await writeFile(join(rootDir, "server.ts"), "throw new Error('source');");
     await writeFile(
       join(rootDir, "dist", "server.js"),
-      `import { defineRpcContract } from "@get-bb/plugin-sdk";
+      `import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import Database from "better-sqlite3";
 export default function plugin() {
   const database = new Database(":memory:");
@@ -71,22 +71,22 @@ export default function plugin() {
     ).href;
     const script = `
 import pino from "pino";
-import { upsertInstalledPlugin } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+import { upsertInstalledPlugin } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createPluginService } from ${JSON.stringify(runtimeUrl)};
 import { createAiServiceRegistry } from ${JSON.stringify(aiRegistryUrl)};
 const [rootDir, dataDir] = process.argv.slice(1);
 const db = createMigratedConnection();
 upsertInstalledPlugin(db, {
   id: "native-externals",
-  source: "git:github.com/acme/bb-plugin-native-externals@v1",
+  source: "git:github.com/acme/sandy-plugin-native-externals@v1",
   rootDir,
   version: "0.1.0",
   enabled: true,
   provenance: { kind: "direct" },
   sourceIntent: {
     kind: "git",
-    url: "https://github.com/acme/bb-plugin-native-externals",
+    url: "https://github.com/acme/sandy-plugin-native-externals",
     subdirectory: null,
     selector: { kind: "ref", ref: "v1", refKind: "branch" }
   },
@@ -146,16 +146,16 @@ process.stdout.write(JSON.stringify(result));
   });
 
   it("loads a TypeScript source plugin through the cache in native Node", async () => {
-    const workDir = await mkdtemp(join(tmpdir(), "bb-native-source-load-"));
+    const workDir = await mkdtemp(join(tmpdir(), "sandy-native-source-load-"));
     tempDirs.push(workDir);
     const rootDir = join(workDir, "plugin");
     await mkdir(rootDir, { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-native-source",
+        name: "sandy-plugin-native-source",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Native source fixture",
           description: "Exercises cached source plugin loading.",
           branding: { icon: "Zap" },
@@ -165,10 +165,10 @@ process.stdout.write(JSON.stringify(result));
     );
     await writeFile(
       join(rootDir, "server.ts"),
-      `import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
+      `import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 const value: string = "loaded";
-export default function plugin(bb: BbPluginApi) {
-  void bb;
+export default function plugin(sandy: SandyPluginApi) {
+  void sandy;
   globalThis.__nativeSourceResult = [value, typeof defineRpcContract];
 }
 `,
@@ -187,7 +187,7 @@ export default function plugin(bb: BbPluginApi) {
     ).href;
     const script = `
 import pino from "pino";
-import { createMigratedConnection } from "@bb/db/testing";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createPluginService } from ${JSON.stringify(serviceUrl)};
 import { createAiServiceRegistry } from ${JSON.stringify(aiRegistryUrl)};
 const [rootDir, dataDir] = process.argv.slice(1);
@@ -238,22 +238,22 @@ process.stdout.write(JSON.stringify(result));
   });
 
   it("preserves cross-plugin dynamic imports across source reloads", async () => {
-    const workDir = await mkdtemp(join(tmpdir(), "bb-native-source-reload-"));
+    const workDir = await mkdtemp(join(tmpdir(), "sandy-native-source-reload-"));
     tempDirs.push(workDir);
-    const importedDir = join(workDir, "bb-plugin-imported");
-    const importerDir = join(workDir, "bb-plugin-importer");
+    const importedDir = join(workDir, "sandy-plugin-imported");
+    const importerDir = join(workDir, "sandy-plugin-importer");
     await mkdir(importedDir, { recursive: true });
     await mkdir(importerDir, { recursive: true });
     const importedSharedSpecifier =
       process.platform === "win32"
-        ? "../bb-plugin-imported/shared.js"
+        ? "../sandy-plugin-imported/shared.js"
         : join(importedDir, "shared.js");
     const packageJson = (name: string) =>
       JSON.stringify({
         name,
         version: "0.1.0",
         type: "module",
-        bb: {
+        sandy: {
           name,
           description: "Native reload fixture.",
           branding: { icon: "Zap" },
@@ -262,11 +262,11 @@ process.stdout.write(JSON.stringify(result));
       });
     await writeFile(
       join(importedDir, "package.json"),
-      packageJson("bb-plugin-imported"),
+      packageJson("sandy-plugin-imported"),
     );
     await writeFile(
       join(importerDir, "package.json"),
-      packageJson("bb-plugin-importer"),
+      packageJson("sandy-plugin-importer"),
     );
     await writeFile(
       join(importedDir, "server.js"),
@@ -302,7 +302,7 @@ process.stdout.write(JSON.stringify(result));
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pino from "pino";
-import { createMigratedConnection } from "@bb/db/testing";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createPluginService } from ${JSON.stringify(serviceUrl)};
 import { createAiServiceRegistry } from ${JSON.stringify(aiRegistryUrl)};
 const [importedDir, importerDir, dataDir] = process.argv.slice(1);

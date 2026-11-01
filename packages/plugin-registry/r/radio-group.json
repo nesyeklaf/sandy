@@ -3,13 +3,13 @@
   "name": "radio-group",
   "type": "registry:ui",
   "title": "radio-group",
-  "description": "BB ui \"radio-group\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"radio-group\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-radio-group"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

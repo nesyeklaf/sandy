@@ -1,13 +1,13 @@
 import { MachineLifecycleNoticeContent } from "@/components/machines/MachineLifecycleNotice";
 import { useMemo, useState, type ComponentProps } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { Host, PermissionMode } from "@bb/domain";
-import type { SystemMachineProvider } from "@bb/server-contract";
-import type { HostPlatform } from "@bb/host-daemon-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { ResourceOverflowMenu } from "@bb/shared-ui/resource-list";
+import type { Host, PermissionMode } from "@sandy/domain";
+import type { SystemMachineProvider } from "@sandy/server-contract";
+import type { HostPlatform } from "@sandy/host-daemon-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { ResourceOverflowMenu } from "@sandy/shared-ui/resource-list";
 import { machineActions } from "@/components/machines/machine-actions";
 import { MachineLifecycleActions } from "@/components/machines/MachineLifecycleActions";
 import {

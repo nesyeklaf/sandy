@@ -15,7 +15,7 @@
     "icon": "Repeat"
   },
   {
-    "id": "bb--composer",
+    "id": "sandy--composer",
     "name": "Composer",
     "icon": "MessageSquare"
   },
@@ -55,12 +55,12 @@
     "icon": "Github"
   },
   {
-    "id": "bb--git",
+    "id": "sandy--git",
     "name": "Git",
     "icon": "GitBranch"
   },
   {
-    "id": "bb--github-pr-status",
+    "id": "sandy--github-pr-status",
     "name": "GitHub PR Status",
     "icon": "GitPullRequest"
   },
@@ -95,7 +95,7 @@
     "icon": "Laptop"
   },
   {
-    "id": "bb--provider-usage",
+    "id": "sandy--provider-usage",
     "name": "Provider usage",
     "icon": "ChartColumn"
   },
@@ -125,12 +125,12 @@
     "icon": "SideChat"
   },
   {
-    "id": "bb--connection-overview",
+    "id": "sandy--connection-overview",
     "name": "Connection overview [Experimental]",
     "icon": null
   },
   {
-    "id": "bb--storage-retention",
+    "id": "sandy--storage-retention",
     "name": "Storage & retention [Experimental]",
     "icon": null
   },
@@ -175,8 +175,8 @@
     "icon": "MessageSquarePlus"
   },
   {
-    "id": "bb-guide",
-    "name": "BB guide",
+    "id": "sandy-guide",
+    "name": "SANDY guide",
     "icon": "Explore"
   },
   {

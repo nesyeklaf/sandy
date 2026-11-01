@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { bbDesktopInfoSchema } from "../src/info.js";
+import { sandyDesktopInfoSchema } from "../src/info.js";
 
 const baseInfo = {
   platform: "macos",
   version: "0.0.31",
 } as const;
 
-describe("bbDesktopInfoSchema", () => {
+describe("sandyDesktopInfoSchema", () => {
   it("accepts a shell payload", () => {
-    expect(bbDesktopInfoSchema.safeParse(baseInfo).success).toBe(true);
+    expect(sandyDesktopInfoSchema.safeParse(baseInfo).success).toBe(true);
   });
 
   it("accepts linux", () => {
     expect(
-      bbDesktopInfoSchema.safeParse({
+      sandyDesktopInfoSchema.safeParse({
         ...baseInfo,
         platform: "linux",
       }).success,
@@ -22,7 +22,7 @@ describe("bbDesktopInfoSchema", () => {
 
   it("rejects win32", () => {
     expect(
-      bbDesktopInfoSchema.safeParse({
+      sandyDesktopInfoSchema.safeParse({
         ...baseInfo,
         platform: "win32",
       }).success,

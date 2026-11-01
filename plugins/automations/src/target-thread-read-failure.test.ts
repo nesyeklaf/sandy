@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { createScriptRunScope } from "./script-runner.js";
 import plugin from "./server.js";
 import { createAutomationService } from "./service.js";
@@ -69,15 +69,15 @@ async function createHost(
       },
     },
   });
-  await plugin(host.bb as unknown as Parameters<typeof plugin>[0]);
+  await plugin(host.sandy as unknown as Parameters<typeof plugin>[0]);
   return host;
 }
 
 function createService(host: Awaited<ReturnType<typeof createHost>>) {
   return createAutomationService({
-    bb: host.bb as never,
-    db: host.bb.storage.database(),
-    pluginDataDir: "/tmp/bb-automations-read-failure-test",
+    sandy: host.sandy as never,
+    db: host.sandy.storage.database(),
+    pluginDataDir: "/tmp/sandy-automations-read-failure-test",
     serverUrl: "http://127.0.0.1:38886",
     scriptRuns: createScriptRunScope(),
   });

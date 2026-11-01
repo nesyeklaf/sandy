@@ -1,12 +1,12 @@
 import type * as MonacoNs from "monaco-editor";
-import type { PluginCodeThemeData } from "@get-bb/plugin-sdk/app";
+import type { PluginCodeThemeData } from "@sandy-sdk/plugin-sdk/app";
 
 const TOKEN_COLOR = /^#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
 const WORKBENCH_COLOR = /^#([0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
 
 export function monacoThemeName(name: string): string {
   const safe = name.replace(/[^a-zA-Z0-9-]/g, "-");
-  return `bb-${safe}`;
+  return `sandy-${safe}`;
 }
 
 function tokenColor(value: string | undefined): string | undefined {

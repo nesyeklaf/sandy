@@ -4,14 +4,14 @@ name: Mobile E2E
 # integration harness backend). Label-gated on pull requests (`mobile-e2e`),
 # manual, and nightly — the macOS runner is slow and paid, and the Linux
 # `checks` / `tests` jobs in ci.yml already typecheck, lint and unit-test
-# @bb/mobile on every pull request (turbo picks the package up; the
+# @sandy/mobile on every pull request (turbo picks the package up; the
 # `packages` test shard covers it).
 #
 # The app is built once in Release: a Release build embeds the JS bundle and
 # never starts the dev launcher, so the flows run without Metro
-# (`BB_E2E_EMBEDDED_BUNDLE=1` → apps/mobile/e2e/subflows/launch-app.yaml
+# (`SANDY_E2E_EMBEDDED_BUNDLE=1` → apps/mobile/e2e/subflows/launch-app.yaml
 # uses `launchApp` instead of the dev-client deep link). The bundle is built
-# with `EXPO_PUBLIC_BB_E2E=1` so the app wipes its state on every launch and
+# with `EXPO_PUBLIC_SANDY_E2E=1` so the app wipes its state on every launch and
 # exposes the e2e-only affordances, exactly like the local Metro setup.
 on:
   pull_request:
@@ -42,7 +42,7 @@ env:
   #   curl -fsSL -o maestro.zip https://github.com/mobile-dev-inc/maestro/releases/download/cli-<ver>/maestro.zip && shasum -a 256 maestro.zip
   MAESTRO_SHA256: b3e561161904fb391875ca5834d5b22cf0b01c052dd1b408ad83e30d8f8951b3
   # The harness backend port the flows' env blocks point at.
-  BB_MOBILE_E2E_PORT: "41999"
+  SANDY_MOBILE_E2E_PORT: "41999"
   # Xcode DerivedData for the Release build measured 6.9 GB raw on a Mac
   # (Build/ 5.1 GB, of which Pods intermediates 2.4 GB) and the repository's
   # Actions cache quota is 10 GB shared with the Turbo caches, so the
@@ -58,7 +58,7 @@ jobs:
     # macOS runner time they do not have. Label gating and manual dispatch
     # keep working in forks.
     if: >-
-      github.repository == 'get-bb/bb'
+      github.repository == 'nesyeklaf/sandy'
       && (github.event_name != 'pull_request'
       || contains(github.event.pull_request.labels.*.name, 'mobile-e2e'))
     runs-on: blacksmith-6vcpu-macos-27
@@ -178,7 +178,7 @@ jobs:
         id: deriveddata-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/Library/Developer/Xcode/DerivedData/bb-*/Build
+          path: ~/Library/Developer/Xcode/DerivedData/sandy-*/Build
           key: ${{ steps.native-key.outputs.key }}-deriveddata
 
       - name: Prebuild and install pods
@@ -211,8 +211,8 @@ jobs:
           LANG: en_US.UTF-8
           CI: "1"
           NODE_OPTIONS: --max-old-space-size=8192
-          EXPO_PUBLIC_BB_E2E: "1"
-          EXPO_PUBLIC_BB_SERVER_URL: http://127.0.0.1:${{ env.BB_MOBILE_E2E_PORT }}
+          EXPO_PUBLIC_SANDY_E2E: "1"
+          EXPO_PUBLIC_SANDY_SERVER_URL: http://127.0.0.1:${{ env.SANDY_MOBILE_E2E_PORT }}
         run: |
           set -x
           rm -rf build-output
@@ -230,7 +230,7 @@ jobs:
             echo "No .app product in apps/mobile/build-output"; ls -la build-output; exit 1
           fi
           xcrun simctl install "$SIMULATOR_UDID" "$app"
-          xcrun simctl listapps "$SIMULATOR_UDID" | grep -A3 app.getbb.mobile || true
+          xcrun simctl listapps "$SIMULATOR_UDID" | grep -A3 app.sandy.mobile || true
 
       - name: Save CocoaPods
         if: always() && steps.build.outcome == 'success' && steps.pods-cache.outputs.cache-hit != 'true'
@@ -244,7 +244,7 @@ jobs:
         if: always() && env.CACHE_DERIVED_DATA == 'true' && steps.build.outcome == 'success' && steps.deriveddata-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/Library/Developer/Xcode/DerivedData/bb-*/Build
+          path: ~/Library/Developer/Xcode/DerivedData/sandy-*/Build
           key: ${{ steps.native-key.outputs.key }}-deriveddata
 
       # The harness backend (in-process server + host daemon, fake provider,
@@ -252,20 +252,20 @@ jobs:
       # its prerequisites (plugin SDK, native modules) first; the script
       # prints one JSON line when it is ready and keeps running.
       # Every flow drives the WebView shell, so the harness has to serve a
-      # built apps/app the way a bb server does.
+      # built apps/app the way a sandy server does.
       - name: Build the web app the shell renders
-        run: pnpm exec turbo run build --filter=@bb/app
+        run: pnpm exec turbo run build --filter=@sandy/app
 
       - name: Start the e2e backend
         env:
-          BB_MOBILE_E2E_SERVE_APP: "1"
+          SANDY_MOBILE_E2E_SERVE_APP: "1"
         run: |
           set -x
           mkdir -p e2e-artifacts
           # `--log-order=stream` because turbo groups task output in CI and
           # only flushes it when the task ends — a persistent task would keep
           # its readiness line buffered forever.
-          pnpm exec turbo run e2e:mobile-backend --filter=@bb/integration-tests --output-logs=full --log-order=stream > e2e-artifacts/backend.log 2>&1 &
+          pnpm exec turbo run e2e:mobile-backend --filter=@sandy/integration-tests --output-logs=full --log-order=stream > e2e-artifacts/backend.log 2>&1 &
           echo $! > e2e-artifacts/backend.pid
           # The server listens (and answers /health) before it finishes seeding
           # the project and threads the flows look for; the details JSON line is
@@ -292,11 +292,11 @@ jobs:
             exit 1
           fi
           grep -m1 '"serverUrl"' e2e-artifacts/backend.log
-          curl -fsS "http://127.0.0.1:$BB_MOBILE_E2E_PORT/health"
+          curl -fsS "http://127.0.0.1:$SANDY_MOBILE_E2E_PORT/health"
 
       - name: Run Maestro flows
         env:
-          SERVER_URL: http://127.0.0.1:${{ env.BB_MOBILE_E2E_PORT }}
+          SERVER_URL: http://127.0.0.1:${{ env.SANDY_MOBILE_E2E_PORT }}
           FLOWS: ${{ inputs.flows }}
           MAESTRO_CLI_NO_ANALYTICS: "true"
           MAESTRO_DISABLE_UPDATE_CHECK: "true"
@@ -309,7 +309,7 @@ jobs:
       - name: Collect simulator logs
         if: always()
         run: |
-          xcrun simctl spawn "$SIMULATOR_UDID" log show --last 30m --predicate 'process == "bb"' > e2e-artifacts/simulator-bb.log 2>&1 || true
+          xcrun simctl spawn "$SIMULATOR_UDID" log show --last 30m --predicate 'process == "sandy"' > e2e-artifacts/simulator-sandy.log 2>&1 || true
           cp -R "$HOME/.maestro/tests" e2e-artifacts/maestro-debug 2>/dev/null || true
 
       - name: Stop the e2e backend

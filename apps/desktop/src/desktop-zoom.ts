@@ -1,14 +1,14 @@
 import {
-  BB_DESKTOP_MAX_ZOOM_PERCENT,
-  BB_DESKTOP_MIN_ZOOM_PERCENT,
-  type BbDesktopZoomCommand,
-} from "@bb/desktop-contract";
+  SANDY_DESKTOP_MAX_ZOOM_PERCENT,
+  SANDY_DESKTOP_MIN_ZOOM_PERCENT,
+  type SandyDesktopZoomCommand,
+} from "@sandy/desktop-contract";
 
 const ZOOM_STEP_PERCENT = 10;
 
 export function nextZoomFactor(
   zoomFactor: number,
-  command: BbDesktopZoomCommand,
+  command: SandyDesktopZoomCommand,
 ): number {
   if (command === "reset") {
     return 1;
@@ -19,8 +19,8 @@ export function nextZoomFactor(
     ZOOM_STEP_PERCENT;
   return (
     Math.min(
-      BB_DESKTOP_MAX_ZOOM_PERCENT,
-      Math.max(BB_DESKTOP_MIN_ZOOM_PERCENT, percent),
+      SANDY_DESKTOP_MAX_ZOOM_PERCENT,
+      Math.max(SANDY_DESKTOP_MIN_ZOOM_PERCENT, percent),
     ) / 100
   );
 }

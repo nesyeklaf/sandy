@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import type { Thread } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Thread } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
+} from "@sandy/shared-ui/dialog";
 import { formatChildThreadCount } from "@/lib/child-thread-copy";
 
 export interface ThreadArchiveDialogTarget {

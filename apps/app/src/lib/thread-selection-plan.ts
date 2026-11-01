@@ -1,9 +1,9 @@
-import type { Thread } from "@bb/domain";
+import type { Thread } from "@sandy/domain";
 import {
   THREAD_CASCADE_LIST_MAX_IDS,
   type ThreadCascadeAction,
   type ThreadCascadeListResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { sdk } from "@/lib/sdk";
 
 export interface ThreadSelectionPlan {

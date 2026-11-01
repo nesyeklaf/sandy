@@ -1,5 +1,5 @@
-import { createBbSdk } from "@bb/sdk/core";
-import { createHttpTransport } from "@bb/sdk/node";
+import { createSandySdk } from "@sandy/sdk/core";
+import { createHttpTransport } from "@sandy/sdk/node";
 import { spawnSync } from "node:child_process";
 import {
   getEnvironment,
@@ -12,15 +12,15 @@ import {
   listStoredTurnCompletedKeys,
   replaceStoredProviderModelCatalog,
   updateHost,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   createHostJoinCodeResponseSchema,
   type CreateHostJoinCodeResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   HOST_DAEMON_PROTOCOL_VERSION,
   hostDaemonSessionOpenResponseSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -98,7 +98,7 @@ describe("public host management", () => {
         })
         .where(eq(hostDaemonSessions.id, latest.id))
         .run();
-      const sdk = createBbSdk({
+      const sdk = createSandySdk({
         transport: createHttpTransport({
           baseUrl: "http://localhost",
           runtime: "node",
@@ -175,13 +175,13 @@ describe("public host management", () => {
       );
       expect(release).not.toHaveBeenCalled();
       const credentialOf = (command: string) =>
-        /X-BB-Enrollment: ([^']+)/u.exec(command)?.[1] ?? "";
+        /X-SANDY-Enrollment: ([^']+)/u.exec(command)?.[1] ?? "";
       const credential = credentialOf(prepared.command);
-      expect(credential).toMatch(/^bbde_/u);
+      expect(credential).toMatch(/^sandyde_/u);
 
       const superseded = await harness.app.request("/install.sh", {
         headers: {
-          "X-BB-Enrollment": credentialOf(
+          "X-SANDY-Enrollment": credentialOf(
             ((await readJson(stale)) as { command: string }).command,
           ),
         },
@@ -190,13 +190,13 @@ describe("public host management", () => {
       expect(release).not.toHaveBeenCalled();
 
       const installer = await harness.app.request("/install.sh", {
-        headers: { "X-BB-Enrollment": credential },
+        headers: { "X-SANDY-Enrollment": credential },
       });
       expect(installer.status).toBe(200);
       const script = await installer.text();
-      expect(script).toContain("--bootstrap-env BB_ENROLLMENT");
+      expect(script).toContain("--bootstrap-env SANDY_ENROLLMENT");
       expect(script).toContain('"reconnect":true');
-      expect(script).toContain(`"dataDir":"/tmp/bb-host-data/${host.id}"`);
+      expect(script).toContain(`"dataDir":"/tmp/sandy-host-data/${host.id}"`);
       expect(script).toContain("new-access");
       expect(script).not.toContain("old-access");
       expect(release).toHaveBeenCalledOnce();
@@ -216,7 +216,7 @@ describe("public host management", () => {
         destroyedAt: null,
       });
       const reused = await harness.app.request("/install.sh", {
-        headers: { "X-BB-Enrollment": credential },
+        headers: { "X-SANDY-Enrollment": credential },
       });
       expect(reused.status).toBe(403);
       expect(reused.headers.get("content-type")).toContain(
@@ -290,7 +290,7 @@ describe("public host management", () => {
   it("preserves a renamed host across a daemon reconnect", async () => {
     await withTestHarness(async (harness) => {
       const issued = await createJoinCode(harness.app);
-      expect(issued.joinCode).toMatch(/^bbde_/u);
+      expect(issued.joinCode).toMatch(/^sandyde_/u);
       expect(issued.expiresAt).toBeGreaterThan(Date.now());
       expect(issued.expiresAt).toBeLessThanOrEqual(Date.now() + 15 * 60 * 1000);
       expect(getHost(harness.db, issued.hostId)).toBeNull();
@@ -340,7 +340,7 @@ describe("public host management", () => {
           },
           body: JSON.stringify({
             activeThreads: [],
-            dataDir: "/tmp/remote-bb",
+            dataDir: "/tmp/remote-sandy",
             hostId: issued.hostId,
             hostName: "Build Machine",
             instanceId: "instance-cloud-2",

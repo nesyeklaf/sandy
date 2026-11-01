@@ -3,7 +3,7 @@ import {
   exceedsPluginMetadataLimit,
   parsePersistedPluginMetadata,
   type JsonObject,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   DbConnection,
   DbQueryConnection,

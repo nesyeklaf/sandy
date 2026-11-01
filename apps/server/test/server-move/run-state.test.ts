@@ -2,14 +2,14 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { upsertHost } from "@bb/db";
-import { SERVER_MOVE_STEP_IDS, type ServerMoveStepId } from "@bb/domain";
-import type { HostDaemonOnlineRpcRequestMessage } from "@bb/host-daemon-contract";
-import { writeServerMovedFile } from "@bb/server-archive";
+import { upsertHost } from "@sandy/db";
+import { SERVER_MOVE_STEP_IDS, type ServerMoveStepId } from "@sandy/domain";
+import type { HostDaemonOnlineRpcRequestMessage } from "@sandy/host-daemon-contract";
+import { writeServerMovedFile } from "@sandy/server-archive";
 import type {
   ServerMoveStatus,
   ServerMoveStepStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, describe, expect, it } from "vitest";
 import { createServerMoveCoordinator } from "../../src/services/server-move/coordinator.js";
 import {
@@ -49,7 +49,7 @@ const BOOT_TIMINGS = {
   ...TEST_SERVER_MOVE_TIMINGS,
   recoveryProbeIntervalMs: 20,
 };
-const ORIGINAL_CONFIG = '{"config":{"BB_LOG_LEVEL":"info"}}\n';
+const ORIGINAL_CONFIG = '{"config":{"SANDY_LOG_LEVEL":"info"}}\n';
 const tempDirs: string[] = [];
 
 afterEach(async () => {
@@ -142,7 +142,7 @@ async function lockDataDir(harness: TestAppHarness): Promise<void> {
     toHostId: NEW,
     toHostName: "Desktop",
     serverUrl: DIRECT_URL,
-    oldCopyEntries: ["bb.db"],
+    oldCopyEntries: ["sandy.db"],
   });
 }
 
@@ -150,7 +150,7 @@ async function writeMovedConfig(harness: TestAppHarness): Promise<string> {
   const path = join(harness.config.dataDir, "config.json");
   await writeFile(
     path,
-    `${JSON.stringify({ config: { BB_LOG_LEVEL: "info" }, serverUrl: DIRECT_URL })}\n`,
+    `${JSON.stringify({ config: { SANDY_LOG_LEVEL: "info" }, serverUrl: DIRECT_URL })}\n`,
   );
   return path;
 }
@@ -385,7 +385,7 @@ describe("server move boot reconciliation", () => {
         runFile(harness, "switching", ALL_THROUGH_SWITCH, {
           configBackup: {
             path: configPath,
-            originalText: '{"config":{"BB_LOG_LEVEL":"debug"}}\n',
+            originalText: '{"config":{"SANDY_LOG_LEVEL":"debug"}}\n',
           },
           movedAt: 5_000,
           activationRequestedAt: 5_100,
@@ -401,7 +401,7 @@ describe("server move boot reconciliation", () => {
 
   it("never deletes a recorded work directory outside the data directory's move directory", () =>
     withTestHarness(async (harness) => {
-      const outside = await mkdtemp(join(tmpdir(), "bb-server-move-outside-"));
+      const outside = await mkdtemp(join(tmpdir(), "sandy-server-move-outside-"));
       tempDirs.push(outside);
       await writeFile(join(outside, "keep.txt"), "keep");
       await writeServerMoveRunFile(

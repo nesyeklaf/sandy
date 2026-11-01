@@ -3,8 +3,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
 import Database from "better-sqlite3";
-import type { PluginKvStorage } from "@get-bb/plugin-sdk";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import type { PluginKvStorage } from "@sandy-sdk/plugin-sdk";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Account } from "./contracts.js";
 import { AccountStore, QUOTA_MIGRATIONS, QuotaStore } from "./store.js";
@@ -32,13 +32,13 @@ function delayedAccountReads(kv: PluginKvStorage): PluginKvStorage {
 
 describe("AccountStore", () => {
   it("loads account metadata written before account UUIDs were stored", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-account-store-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-account-store-"));
     const host = createFakePluginHost({ pluginId: "account-pool", dataDir });
     const store = new AccountStore(
-      host.bb.storage.kv,
+      host.sandy.storage.kv,
       path.join(dataDir, "secrets"),
     );
-    await host.bb.storage.kv.set("accounts:v1", [
+    await host.sandy.storage.kv.set("accounts:v1", [
       {
         id: "11111111-1111-4111-8111-111111111111",
         provider: "claude",
@@ -63,11 +63,11 @@ describe("AccountStore", () => {
   });
 
   it("preserves both accounts added concurrently", async () => {
-    const dataDir = await mkdtemp(path.join(tmpdir(), "bb-account-store-"));
+    const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-account-store-"));
     const host = createFakePluginHost({ pluginId: "account-pool", dataDir });
     const secretsDir = path.join(dataDir, "secrets");
     const store = new AccountStore(
-      delayedAccountReads(host.bb.storage.kv),
+      delayedAccountReads(host.sandy.storage.kv),
       secretsDir,
     );
     await store.initialize();

@@ -9,8 +9,9 @@ import type {
   HostDaemonRpcCommand,
   HostDaemonRpcResultForCommand,
   HostDaemonCommandEnvironmentLane,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { performance } from "node:perf_hooks";
+import { markSpanFailed, withIncomingSpan } from "@sandy/telemetry";
 import {
   hostDaemonEnvironmentLaneForCommand,
   hostDaemonOnlineRpcResponseMessageSchema,
@@ -18,7 +19,7 @@ import {
   parseHostDaemonCommandResultForCommand,
   parseHostDaemonOnlineRpcResultForCommand,
   shouldFlushEventsBeforeReportingCommandResult,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   dispatchCommand,
   dispatchOnlineRpcCommand,
@@ -26,7 +27,7 @@ import {
   type CommandDispatchOptions,
 } from "./command-dispatch.js";
 import { isExpectedOnlineRpcFailureError } from "./command-dispatch-support.js";
-import { roundDurationMs } from "@bb/process-utils";
+import { roundDurationMs } from "@sandy/process-utils";
 import type { HostDaemonLogger } from "./logger.js";
 import { RuntimeManager } from "./runtime-manager.js";
 import type { PluginHostManager } from "./plugin-host-manager.js";
@@ -104,7 +105,24 @@ export class CommandRouter {
     this.logger = options.logger;
   }
 
-  async handleOnlineRpcRequest(
+  handleOnlineRpcRequest(
+    message: HostDaemonOnlineRpcRequestMessage,
+  ): Promise<HostDaemonOnlineRpcResponseMessage> {
+    return withIncomingSpan(
+      {
+        attributes: { "sandy.host_rpc.command": message.command.type },
+        name: `host-rpc ${message.command.type}`,
+        traceparent: message.traceparent,
+      },
+      async (span) => {
+        const response = await this.respondToOnlineRpcRequest(message);
+        if (!response.ok) markSpanFailed(span, response.errorCode);
+        return response;
+      },
+    );
+  }
+
+  private async respondToOnlineRpcRequest(
     message: HostDaemonOnlineRpcRequestMessage,
   ): Promise<HostDaemonOnlineRpcResponseMessage> {
     const handlerStartedAtMs = performance.now();

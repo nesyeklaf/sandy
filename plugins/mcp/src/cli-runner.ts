@@ -1,7 +1,7 @@
 import {
   experimental_hostToolchain as hostToolchain,
   experimental_spawnHostProcess as spawn,
-} from "@get-bb/plugin-sdk/process";
+} from "@sandy-sdk/plugin-sdk/process";
 import { homedir } from "node:os";
 import { createLimiter } from "./limiter.js";
 
@@ -10,11 +10,11 @@ const KILL_GRACE_MS = 2_000;
 const CLOSE_GRACE_MS = 1_000;
 export const MAX_CONCURRENT_CLI_PROCESSES = 8;
 const STRIPPED_ENVIRONMENT_KEYS = [
-  "BB_THREAD_ID",
-  "BB_PROJECT_ID",
-  "BB_ENVIRONMENT_ID",
-  "BB_THREAD_STORAGE",
-  "BB_SERVER_HEADERS",
+  "SANDY_THREAD_ID",
+  "SANDY_PROJECT_ID",
+  "SANDY_ENVIRONMENT_ID",
+  "SANDY_THREAD_STORAGE",
+  "SANDY_SERVER_HEADERS",
 ];
 
 export interface CliRunResult {
@@ -39,16 +39,16 @@ export type CliRunner = (
 export class CliUnavailableError extends Error {
   constructor() {
     super(
-      "The bb CLI could not be found on the bb server's machine, so MCP calls cannot run commands.",
+      "The sandy CLI could not be found on the sandy server's machine, so MCP calls cannot run commands.",
     );
     this.name = "CliUnavailableError";
   }
 }
 
-export async function resolveBbBinary(
+export async function resolveSandyBinary(
   env: NodeJS.ProcessEnv,
 ): Promise<string | null> {
-  return hostToolchain.resolve("bb", { env });
+  return hostToolchain.resolve("sandy", { env });
 }
 
 export function cliEnvironment(
@@ -57,7 +57,7 @@ export function cliEnvironment(
 ): NodeJS.ProcessEnv {
   const next: NodeJS.ProcessEnv = { ...env };
   for (const key of STRIPPED_ENVIRONMENT_KEYS) delete next[key];
-  next.BB_SERVER_URL = serverUrl;
+  next.SANDY_SERVER_URL = serverUrl;
   next.NO_COLOR = "1";
   next.FORCE_COLOR = "0";
   return next;
@@ -92,7 +92,7 @@ export function createCliRunner(options: {
   resolveBinary?: (env: NodeJS.ProcessEnv) => Promise<string | null>;
   maxConcurrent?: number;
 }): CliRunner {
-  const resolve = options.resolveBinary ?? resolveBbBinary;
+  const resolve = options.resolveBinary ?? resolveSandyBinary;
   const limiter = createLimiter(
     options.maxConcurrent ?? MAX_CONCURRENT_CLI_PROCESSES,
   );

@@ -2,9 +2,9 @@ import {
   cliCommand,
   defineCli,
   PluginCliError,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
-import type { ComposerDraft } from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
+import type { ComposerDraft } from "@sandy-sdk/plugin-sdk";
 import {
   promptLibraryRpcContract,
   promptTitleSchema,
@@ -37,15 +37,15 @@ const JSON_OPTION = {
   description: "Emit machine-readable JSON",
 } as const;
 
-export default function promptLibraryPlugin(bb: BbPluginApi): void {
-  const db = bb.storage.database();
-  bb.storage.migrate(db, STARRED_PROMPT_MIGRATIONS);
+export default function promptLibraryPlugin(sandy: SandyPluginApi): void {
+  const db = sandy.storage.database();
+  sandy.storage.migrate(db, STARRED_PROMPT_MIGRATIONS);
   const store = createStarredPromptStore(db);
 
   const controller = new AbortController();
   const index = createSearchIndex<SearchItem>();
   const historyCache = createHistoryCache(
-    (args) => bb.sdk.experimental_promptHistory.list(args),
+    (args) => sandy.sdk.experimental_promptHistory.list(args),
     async (entries) => {
       for (
         let offset = 0;
@@ -78,7 +78,7 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
   function refreshNames(): Promise<void> {
     if (namesPending !== null) return namesPending;
     if (Date.now() - namesRefreshedAt < 60_000) return Promise.resolve();
-    namesPending = bb.sdk.projects
+    namesPending = sandy.sdk.projects
       .list({ includePersonal: true, signal: controller.signal })
       .then((projects) => {
         names = new Map(projects.map((project) => [project.id, project.name]));
@@ -113,7 +113,7 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
       void loadHistory().catch(() => {});
     void refreshNames().catch(() => {});
   });
-  bb.onDispose(async () => {
+  sandy.onDispose(async () => {
     clearImmediate(warmup);
     controller.abort();
     await Promise.allSettled([refresh, namesPending]);
@@ -275,13 +275,13 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
     if (!store.setTitle(id, title)) {
       throw new PluginCliError(`Unknown starred prompt: ${id}`, {
         code: "unknown_prompt",
-        hint: "Run `bb prompts list` for starred prompt ids.",
+        hint: "Run `sandy prompts list` for starred prompt ids.",
       });
     }
     return { id, title };
   }
 
-  bb.rpc.register(promptLibraryRpcContract, {
+  sandy.rpc.register(promptLibraryRpcContract, {
     search,
     star: ({ prompt, title }) => ({
       id: star({ text: prompt.text, mentions: prompt.mentions }, title).id,
@@ -294,12 +294,12 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
     },
   });
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "prompts",
       summary: "Search previous prompts and manage starred prompts",
       description:
-        "Without a query, starred prompts appear before recent ones in the composer's Prompts… picker (Ctrl+R). Search matches titles and prompt text, with exact title matches first. A query otherwise ranks both in one list: prompts that start with the query first, then by match type (exact, word start, typo, inside a word, abbreviation), then starred prompts and prompts of the searching composer's kind (thread starts in the new-thread composer, follow-ups in a thread), then by relevance decayed by age. Previous prompts come from bb's prompt history.",
+        "Without a query, starred prompts appear before recent ones in the composer's Prompts… picker (Ctrl+R). Search matches titles and prompt text, with exact title matches first. A query otherwise ranks both in one list: prompts that start with the query first, then by match type (exact, word start, typo, inside a word, abbreviation), then starred prompts and prompts of the searching composer's kind (thread starts in the new-thread composer, follow-ups in a thread), then by relevance decayed by age. Previous prompts come from sandy's prompt history.",
       commands: {
         search: cliCommand({
           summary: "Search starred and previous prompts",
@@ -491,7 +491,7 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
           positionals: [
             {
               name: "id",
-              description: "Starred prompt id, as `bb prompts list` prints it",
+              description: "Starred prompt id, as `sandy prompts list` prints it",
               required: true,
             },
           ],
@@ -502,7 +502,7 @@ export default function promptLibraryPlugin(bb: BbPluginApi): void {
                 `Unknown starred prompt: ${positionals.id}`,
                 {
                   code: "unknown_prompt",
-                  hint: "Run `bb prompts list` for starred prompt ids.",
+                  hint: "Run `sandy prompts list` for starred prompt ids.",
                 },
               );
             }

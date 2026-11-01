@@ -31,10 +31,10 @@ async function writeVendoredPlugin(
     join(rootDir, "package.json"),
     `${JSON.stringify(
       overrides.manifest ?? {
-        name: "bb-plugin-legacy",
+        name: "sandy-plugin-legacy",
         version: "0.1.0",
-        engines: { bb: ">=0.9", bbPluginSdk: ">=0.2.0" },
-        bb: { server: "./server.ts" },
+        engines: { sandy: ">=0.9", sandyPluginSdk: ">=0.2.0" },
+        sandy: { server: "./server.ts" },
         dependencies: { zod: "^4.3.6" },
         devDependencies: { "@types/node": "^22.0.0", typescript: "^5.7.0" },
       },
@@ -49,8 +49,8 @@ async function writeVendoredPlugin(
         compilerOptions: {
           strict: true,
           paths: {
-            "@get-bb/plugin-sdk": ["./types/bb-plugin-sdk.d.ts"],
-            "@get-bb/plugin-sdk/app": ["./types/bb-plugin-sdk-app.d.ts"],
+            "@sandy-sdk/plugin-sdk": ["./types/sandy-plugin-sdk.d.ts"],
+            "@sandy-sdk/plugin-sdk/app": ["./types/sandy-plugin-sdk-app.d.ts"],
             "@/*": ["./*"],
           },
         },
@@ -61,8 +61,8 @@ async function writeVendoredPlugin(
     )}\n`,
   );
   const declarations = overrides.declarations ?? [
-    "bb-plugin-sdk.d.ts",
-    "bb-plugin-sdk-app.d.ts",
+    "sandy-plugin-sdk.d.ts",
+    "sandy-plugin-sdk-app.d.ts",
   ];
   if (declarations.length > 0) {
     await mkdir(join(rootDir, "types"), { recursive: true });
@@ -87,7 +87,7 @@ describe("migratePluginToPackageLayout", () => {
   let rootDir: string;
 
   beforeEach(async () => {
-    rootDir = await mkdtemp(join(tmpdir(), "bb-plugin-migrate-"));
+    rootDir = await mkdtemp(join(tmpdir(), "sandy-plugin-migrate-"));
   });
 
   afterEach(async () => {
@@ -105,14 +105,14 @@ describe("migratePluginToPackageLayout", () => {
     expect(result.changed).toBe(true);
     expect(result.pin).toEqual({ from: null, to: SDK_VERSION });
     expect(result.deletedFiles).toEqual([
-      "types/bb-plugin-sdk.d.ts",
-      "types/bb-plugin-sdk-app.d.ts",
+      "types/sandy-plugin-sdk.d.ts",
+      "types/sandy-plugin-sdk-app.d.ts",
     ]);
     expect(result.removedTypesDir).toBe(true);
 
     const manifest = await readJson(join(rootDir, "package.json"));
     const devDependencies = manifest.devDependencies as Record<string, string>;
-    expect(devDependencies["@get-bb/plugin-sdk"]).toBe(SDK_VERSION);
+    expect(devDependencies["@sandy-sdk/plugin-sdk"]).toBe(SDK_VERSION);
     expect(devDependencies.typescript).toBe("^5.7.0");
     expect(manifest.dependencies).toEqual({ zod: "^4.3.6" });
 
@@ -138,16 +138,16 @@ describe("migratePluginToPackageLayout", () => {
         (await readJson(join(rootDir, "package.json"))).engines as
           | Record<string, string>
           | undefined
-      )?.bbPluginSdk,
+      )?.sandyPluginSdk,
     ).toBe(">=0.4.3");
 
-    const newer = await mkdtemp(join(tmpdir(), "bb-plugin-migrate-newer-"));
+    const newer = await mkdtemp(join(tmpdir(), "sandy-plugin-migrate-newer-"));
     try {
       await writeVendoredPlugin(newer, {
         manifest: {
-          name: "bb-plugin-newer",
-          engines: { bbPluginSdk: ">=9.1.0" },
-          bb: { server: "./server.ts" },
+          name: "sandy-plugin-newer",
+          engines: { sandyPluginSdk: ">=9.1.0" },
+          sandy: { server: "./server.ts" },
         },
       });
       const result = await migratePluginToPackageLayout({
@@ -161,7 +161,7 @@ describe("migratePluginToPackageLayout", () => {
             string,
             string
           >
-        ).bbPluginSdk,
+        ).sandyPluginSdk,
       ).toBe(">=9.1.0");
     } finally {
       await rm(newer, { recursive: true, force: true });
@@ -184,9 +184,9 @@ describe("migratePluginToPackageLayout", () => {
     async (range, sdkVersion, raises) => {
       await writeVendoredPlugin(rootDir, {
         manifest: {
-          name: "bb-plugin-range",
-          engines: { bbPluginSdk: range },
-          bb: { server: "./server.ts" },
+          name: "sandy-plugin-range",
+          engines: { sandyPluginSdk: range },
+          sandy: { server: "./server.ts" },
         },
       });
       const result = await migratePluginToPackageLayout({
@@ -198,7 +198,7 @@ describe("migratePluginToPackageLayout", () => {
       );
       const manifest = await readJson(join(rootDir, "package.json"));
       expect(manifest.engines).toEqual({
-        bbPluginSdk: raises ? `>=${sdkVersion}` : range,
+        sandyPluginSdk: raises ? `>=${sdkVersion}` : range,
       });
     },
   );
@@ -242,10 +242,10 @@ describe("migratePluginToPackageLayout", () => {
   it("converges a half-migrated plugin instead of rejecting it", async () => {
     await writeVendoredPlugin(rootDir, {
       manifest: {
-        name: "bb-plugin-half",
-        engines: { bbPluginSdk: `>=${SDK_VERSION}` },
-        bb: { server: "./server.ts" },
-        devDependencies: { "@get-bb/plugin-sdk": SDK_VERSION },
+        name: "sandy-plugin-half",
+        engines: { sandyPluginSdk: `>=${SDK_VERSION}` },
+        sandy: { server: "./server.ts" },
+        devDependencies: { "@sandy-sdk/plugin-sdk": SDK_VERSION },
       },
     });
 
@@ -258,8 +258,8 @@ describe("migratePluginToPackageLayout", () => {
     expect(result.pin).toBeNull();
     expect(result.enginesFloor).toBeNull();
     expect(result.removedPathMaps).toEqual([
-      "@get-bb/plugin-sdk",
-      "@get-bb/plugin-sdk/app",
+      "@sandy-sdk/plugin-sdk",
+      "@sandy-sdk/plugin-sdk/app",
     ]);
     expect(await exists(join(rootDir, "types"))).toBe(false);
     expect((await resolvePluginSdkLayout(rootDir)).kind).toBe("package");
@@ -276,7 +276,7 @@ describe("migratePluginToPackageLayout", () => {
 
     expect(result.removedTypesDir).toBe(false);
     expect(await exists(join(rootDir, "types", "custom.d.ts"))).toBe(true);
-    expect(await exists(join(rootDir, "types", "bb-plugin-sdk.d.ts"))).toBe(
+    expect(await exists(join(rootDir, "types", "sandy-plugin-sdk.d.ts"))).toBe(
       false,
     );
     expect(result.removedIncludes).toEqual([]);
@@ -284,13 +284,13 @@ describe("migratePluginToPackageLayout", () => {
     expect(tsconfig.include).toEqual(["server.ts", "app.tsx", "types"]);
   });
 
-  it("removes the pre-rename @bb/plugin-sdk path maps too", async () => {
+  it("removes the pre-rename @sandy/plugin-sdk path maps too", async () => {
     await writeVendoredPlugin(rootDir, {
       tsconfig: {
         compilerOptions: {
           paths: {
-            "@bb/plugin-sdk": ["./types/bb-plugin-sdk.d.ts"],
-            "@bb/plugin-sdk/app": ["./types/bb-plugin-sdk-app.d.ts"],
+            "@sandy/plugin-sdk": ["./types/sandy-plugin-sdk.d.ts"],
+            "@sandy/plugin-sdk/app": ["./types/sandy-plugin-sdk-app.d.ts"],
             "@/*": ["./*"],
           },
         },
@@ -304,8 +304,8 @@ describe("migratePluginToPackageLayout", () => {
     });
 
     expect(result.removedPathMaps).toEqual([
-      "@bb/plugin-sdk",
-      "@bb/plugin-sdk/app",
+      "@sandy/plugin-sdk",
+      "@sandy/plugin-sdk/app",
     ]);
     const tsconfig = await readJson(join(rootDir, "tsconfig.json"));
     expect((tsconfig.compilerOptions as Record<string, unknown>).paths).toEqual(
@@ -318,11 +318,11 @@ describe("migratePluginToPackageLayout", () => {
     await writeVendoredPlugin(rootDir, {
       declarations: [],
       manifest: {
-        name: "bb-plugin-runtime-pin",
-        engines: { bbPluginSdk: `>=${SDK_VERSION}` },
-        bb: { server: "./server.ts" },
-        dependencies: { "@get-bb/plugin-sdk": SDK_VERSION, zod: "^4.3.6" },
-        devDependencies: { "@get-bb/plugin-sdk": "0.2.0" },
+        name: "sandy-plugin-runtime-pin",
+        engines: { sandyPluginSdk: `>=${SDK_VERSION}` },
+        sandy: { server: "./server.ts" },
+        dependencies: { "@sandy-sdk/plugin-sdk": SDK_VERSION, zod: "^4.3.6" },
+        devDependencies: { "@sandy-sdk/plugin-sdk": "0.2.0" },
       },
       tsconfig: { compilerOptions: { strict: true }, include: ["server.ts"] },
     });
@@ -337,7 +337,7 @@ describe("migratePluginToPackageLayout", () => {
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(manifest.dependencies).toEqual({ zod: "^4.3.6" });
     expect(manifest.devDependencies).toEqual({
-      "@get-bb/plugin-sdk": SDK_VERSION,
+      "@sandy-sdk/plugin-sdk": SDK_VERSION,
     });
   });
 
@@ -345,8 +345,8 @@ describe("migratePluginToPackageLayout", () => {
     await writeVendoredPlugin(rootDir, {
       declarations: [],
       manifest: {
-        name: "bb-plugin-pinless",
-        bb: { server: "./server.ts" },
+        name: "sandy-plugin-pinless",
+        sandy: { server: "./server.ts" },
         devDependencies: { typescript: "^5.7.0" },
       },
       tsconfig: { compilerOptions: { strict: true }, include: ["server.ts"] },
@@ -363,7 +363,7 @@ describe("migratePluginToPackageLayout", () => {
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(
       (manifest.devDependencies as Record<string, string>)[
-        "@get-bb/plugin-sdk"
+        "@sandy-sdk/plugin-sdk"
       ],
     ).toBe(SDK_VERSION);
   });
@@ -373,31 +373,31 @@ describe("migratePluginToPackageLayout", () => {
     await writeFile(
       join(rootDir, "server.ts"),
       [
-        'import { defineRpcContract, type BbPluginApi } from "@bb/plugin-sdk";',
-        "import type { Something } from '@bb/plugin-sdk/testing';",
-        'import { helper } from "@bb/plugin-sdk-extras";',
-        "// The @bb/plugin-sdk types are unquoted prose and stay as written.",
+        'import { defineRpcContract, type SandyPluginApi } from "@sandy/plugin-sdk";',
+        "import type { Something } from '@sandy/plugin-sdk/testing';",
+        'import { helper } from "@sandy/plugin-sdk-extras";',
+        "// The @sandy/plugin-sdk types are unquoted prose and stay as written.",
         "export const contract = defineRpcContract({});",
       ].join("\n") + "\n",
     );
     await writeFile(
       join(rootDir, "app.tsx"),
-      'import { definePluginApp } from "@bb/plugin-sdk/app";\n',
+      'import { definePluginApp } from "@sandy/plugin-sdk/app";\n',
     );
     await mkdir(join(rootDir, "lib"), { recursive: true });
     await writeFile(
       join(rootDir, "lib", "rpc.ts"),
-      'export type { RpcContract } from "@bb/plugin-sdk";\n',
+      'export type { RpcContract } from "@sandy/plugin-sdk";\n',
     );
     await mkdir(join(rootDir, "dist"), { recursive: true });
     await writeFile(
       join(rootDir, "dist", "server.ts"),
-      'import "@bb/plugin-sdk";\n',
+      'import "@sandy/plugin-sdk";\n',
     );
     await mkdir(join(rootDir, "node_modules", "dep"), { recursive: true });
     await writeFile(
       join(rootDir, "node_modules", "dep", "index.ts"),
-      'import "@bb/plugin-sdk";\n',
+      'import "@sandy/plugin-sdk";\n',
     );
 
     const result = await migratePluginToPackageLayout({
@@ -412,23 +412,23 @@ describe("migratePluginToPackageLayout", () => {
     ]);
     const server = await readFile(join(rootDir, "server.ts"), "utf8");
     expect(server).toContain(
-      'import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";',
+      'import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";',
     );
-    expect(server).toContain("from '@get-bb/plugin-sdk/testing';");
-    expect(server).toContain('from "@bb/plugin-sdk-extras";');
-    expect(server).toContain("// The @bb/plugin-sdk types are unquoted prose");
+    expect(server).toContain("from '@sandy-sdk/plugin-sdk/testing';");
+    expect(server).toContain('from "@sandy/plugin-sdk-extras";');
+    expect(server).toContain("// The @sandy/plugin-sdk types are unquoted prose");
     expect(await readFile(join(rootDir, "app.tsx"), "utf8")).toBe(
-      'import { definePluginApp } from "@get-bb/plugin-sdk/app";\n',
+      'import { definePluginApp } from "@sandy-sdk/plugin-sdk/app";\n',
     );
     expect(await readFile(join(rootDir, "lib", "rpc.ts"), "utf8")).toBe(
-      'export type { RpcContract } from "@get-bb/plugin-sdk";\n',
+      'export type { RpcContract } from "@sandy-sdk/plugin-sdk";\n',
     );
     expect(await readFile(join(rootDir, "dist", "server.ts"), "utf8")).toBe(
-      'import "@bb/plugin-sdk";\n',
+      'import "@sandy/plugin-sdk";\n',
     );
     expect(
       await readFile(join(rootDir, "node_modules", "dep", "index.ts"), "utf8"),
-    ).toBe('import "@bb/plugin-sdk";\n');
+    ).toBe('import "@sandy/plugin-sdk";\n');
 
     const second = await migratePluginToPackageLayout({
       rootDir,
@@ -440,7 +440,7 @@ describe("migratePluginToPackageLayout", () => {
 
   it("reports the import rewrites in a dry run without writing them", async () => {
     await writeVendoredPlugin(rootDir);
-    const source = 'import type { BbPluginApi } from "@bb/plugin-sdk";\n';
+    const source = 'import type { SandyPluginApi } from "@sandy/plugin-sdk";\n';
     await writeFile(join(rootDir, "server.ts"), source);
 
     const plan = await migratePluginToPackageLayout({
@@ -457,14 +457,14 @@ describe("migratePluginToPackageLayout", () => {
     await writeVendoredPlugin(rootDir, {
       declarations: [],
       manifest: {
-        name: "bb-plugin-imports-only",
-        engines: { bbPluginSdk: `>=${SDK_VERSION}` },
-        bb: { server: "./server.ts" },
-        devDependencies: { "@get-bb/plugin-sdk": SDK_VERSION },
+        name: "sandy-plugin-imports-only",
+        engines: { sandyPluginSdk: `>=${SDK_VERSION}` },
+        sandy: { server: "./server.ts" },
+        devDependencies: { "@sandy-sdk/plugin-sdk": SDK_VERSION },
       },
       tsconfig: { compilerOptions: { strict: true }, include: ["server.ts"] },
     });
-    await writeFile(join(rootDir, "server.ts"), 'import "@bb/plugin-sdk";\n');
+    await writeFile(join(rootDir, "server.ts"), 'import "@sandy/plugin-sdk";\n');
 
     const result = await migratePluginToPackageLayout({
       rootDir,
@@ -476,7 +476,7 @@ describe("migratePluginToPackageLayout", () => {
       { path: "server.ts", imports: 1 },
     ]);
     expect(await readFile(join(rootDir, "server.ts"), "utf8")).toBe(
-      'import "@get-bb/plugin-sdk";\n',
+      'import "@sandy-sdk/plugin-sdk";\n',
     );
   });
 
@@ -493,16 +493,16 @@ describe("migratePluginToPackageLayout", () => {
     expect(plan.changed).toBe(true);
     expect(plan.deletedFiles.length).toBe(2);
     expect(await readFile(join(rootDir, "package.json"), "utf8")).toBe(before);
-    expect(await exists(join(rootDir, "types", "bb-plugin-sdk.d.ts"))).toBe(
+    expect(await exists(join(rootDir, "types", "sandy-plugin-sdk.d.ts"))).toBe(
       true,
     );
   });
 
   it("refuses a symlinked types/ and changes nothing at all", async () => {
     await writeVendoredPlugin(rootDir, { declarations: [] });
-    const outside = await mkdtemp(join(tmpdir(), "bb-plugin-outside-"));
+    const outside = await mkdtemp(join(tmpdir(), "sandy-plugin-outside-"));
     try {
-      await writeFile(join(outside, "bb-plugin-sdk.d.ts"), "PRECIOUS\n");
+      await writeFile(join(outside, "sandy-plugin-sdk.d.ts"), "PRECIOUS\n");
       await symlink(outside, join(rootDir, "types"));
       const manifestBefore = await readFile(
         join(rootDir, "package.json"),
@@ -513,7 +513,7 @@ describe("migratePluginToPackageLayout", () => {
         migratePluginToPackageLayout({ rootDir, sdkVersion: SDK_VERSION }),
       ).rejects.toThrow(/symbolic link/);
 
-      expect(await readFile(join(outside, "bb-plugin-sdk.d.ts"), "utf8")).toBe(
+      expect(await readFile(join(outside, "sandy-plugin-sdk.d.ts"), "utf8")).toBe(
         "PRECIOUS\n",
       );
       expect(await readFile(join(rootDir, "package.json"), "utf8")).toBe(
@@ -542,7 +542,7 @@ describe("migratePluginToPackageLayout", () => {
     expect(await readFile(join(rootDir, "package.json"), "utf8")).toBe(
       manifestBefore,
     );
-    expect(await exists(join(rootDir, "types", "bb-plugin-sdk.d.ts"))).toBe(
+    expect(await exists(join(rootDir, "types", "sandy-plugin-sdk.d.ts"))).toBe(
       true,
     );
   });
@@ -552,7 +552,7 @@ describe("setPluginSdkPin", () => {
   let rootDir: string;
 
   beforeEach(async () => {
-    rootDir = await mkdtemp(join(tmpdir(), "bb-plugin-pin-"));
+    rootDir = await mkdtemp(join(tmpdir(), "sandy-plugin-pin-"));
   });
 
   afterEach(async () => {
@@ -564,11 +564,11 @@ describe("setPluginSdkPin", () => {
       join(rootDir, "package.json"),
       `${JSON.stringify(
         {
-          name: "bb-plugin-pinned",
-          engines: { bbPluginSdk: ">=0.2.0" },
-          bb: { server: "./server.ts" },
+          name: "sandy-plugin-pinned",
+          engines: { sandyPluginSdk: ">=0.2.0" },
+          sandy: { server: "./server.ts" },
           devDependencies: {
-            "@get-bb/plugin-sdk": "0.2.0",
+            "@sandy-sdk/plugin-sdk": "0.2.0",
             typescript: "^5.7.0",
           },
         },
@@ -590,10 +590,10 @@ describe("setPluginSdkPin", () => {
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(
       (manifest.devDependencies as Record<string, string>)[
-        "@get-bb/plugin-sdk"
+        "@sandy-sdk/plugin-sdk"
       ],
     ).toBe(SDK_VERSION);
-    expect((manifest.engines as Record<string, string>).bbPluginSdk).toBe(
+    expect((manifest.engines as Record<string, string>).sandyPluginSdk).toBe(
       ">=0.2.0",
     );
     expect(
@@ -606,9 +606,9 @@ describe("setPluginSdkPin", () => {
       join(rootDir, "package.json"),
       `${JSON.stringify(
         {
-          name: "bb-plugin-exact-runtime-dep",
-          bb: { server: "./server.ts" },
-          dependencies: { "@get-bb/plugin-sdk": SDK_VERSION },
+          name: "sandy-plugin-exact-runtime-dep",
+          sandy: { server: "./server.ts" },
+          dependencies: { "@sandy-sdk/plugin-sdk": SDK_VERSION },
         },
         null,
         2,
@@ -628,7 +628,7 @@ describe("setPluginSdkPin", () => {
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(manifest.dependencies).toBeUndefined();
     expect(manifest.devDependencies).toEqual({
-      "@get-bb/plugin-sdk": SDK_VERSION,
+      "@sandy-sdk/plugin-sdk": SDK_VERSION,
     });
     expect(
       await setPluginSdkPin({ rootDir, sdkVersion: SDK_VERSION }),
@@ -642,11 +642,11 @@ describe("setPluginSdkPin", () => {
       join(rootDir, "package.json"),
       `${JSON.stringify(
         {
-          name: "bb-plugin-toasty",
-          bb: { server: "./server.ts", app: "./app.tsx" },
+          name: "sandy-plugin-toasty",
+          sandy: { server: "./server.ts", app: "./app.tsx" },
           dependencies: { vaul: "^0.9.0", zod: "^4.3.6" },
           devDependencies: {
-            "@get-bb/plugin-sdk": SDK_VERSION,
+            "@sandy-sdk/plugin-sdk": SDK_VERSION,
             sonner: "^0.3.0",
             typescript: "^5.7.0",
           },
@@ -689,7 +689,7 @@ describe("setPluginSdkPin", () => {
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(manifest.dependencies).toEqual({ zod: "^4.3.6" });
     expect(manifest.devDependencies).toEqual({
-      "@get-bb/plugin-sdk": SDK_VERSION,
+      "@sandy-sdk/plugin-sdk": SDK_VERSION,
       sonner: hostSonner,
       vaul: hostVaul,
       typescript: "^5.7.0",
@@ -703,9 +703,9 @@ describe("setPluginSdkPin", () => {
     "allows an app plugin with no shim packages (dryRun: %s)",
     async (dryRun) => {
       const original = JSON.stringify({
-        name: "bb-plugin-pruned",
-        bb: { server: "./server.ts", app: "./app.tsx" },
-        devDependencies: { "@get-bb/plugin-sdk": SDK_VERSION },
+        name: "sandy-plugin-pruned",
+        sandy: { server: "./server.ts", app: "./app.tsx" },
+        devDependencies: { "@sandy-sdk/plugin-sdk": SDK_VERSION },
       });
       await writeFile(join(rootDir, "package.json"), original);
 
@@ -727,10 +727,10 @@ describe("setPluginSdkPin", () => {
       join(rootDir, "package.json"),
       `${JSON.stringify(
         {
-          name: "bb-plugin-headless",
-          bb: { server: "./server.ts" },
+          name: "sandy-plugin-headless",
+          sandy: { server: "./server.ts" },
           devDependencies: {
-            "@get-bb/plugin-sdk": SDK_VERSION,
+            "@sandy-sdk/plugin-sdk": SDK_VERSION,
             clsx: "^1.0.0",
           },
         },
@@ -754,7 +754,7 @@ describe("setPluginSdkPin", () => {
     ]);
     const manifest = await readJson(join(rootDir, "package.json"));
     expect(manifest.devDependencies).toEqual({
-      "@get-bb/plugin-sdk": SDK_VERSION,
+      "@sandy-sdk/plugin-sdk": SDK_VERSION,
       clsx: PLUGIN_SHIMMED_TYPE_DEPENDENCIES.clsx,
     });
   });

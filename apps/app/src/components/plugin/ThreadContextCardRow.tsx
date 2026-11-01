@@ -1,6 +1,6 @@
-import type { ExperimentalThreadContextCardRowProps } from "@get-bb/plugin-sdk";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { ExperimentalThreadContextCardRowProps } from "@sandy-sdk/plugin-sdk";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 
 const ACTION_REVEAL_CLASS =
   "relative hover:[&_[data-thread-context-card-row-trailing]]:invisible has-[:focus-visible]:[&_[data-thread-context-card-row-trailing]]:invisible has-[[data-state=open]]:[&_[data-thread-context-card-row-trailing]]:invisible hover:[&_[data-thread-context-card-row-action]]:opacity-100 has-[:focus-visible]:[&_[data-thread-context-card-row-action]]:opacity-100 has-[[data-state=open]]:[&_[data-thread-context-card-row-action]]:opacity-100";

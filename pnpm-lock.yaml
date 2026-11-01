@@ -34,7 +34,7 @@ patchedDependencies:
     hash: f5db5z5xon23qqwgpdyyzpga5u
     path: patches/oniguruma-to-es@4.3.4.patch
   react-native-webview@14.0.1:
-    hash: pa42giipqjf4cfw4ds4qiivfwm
+    hash: durqllps32z3c23be3hystzj5e
     path: patches/react-native-webview@14.0.1.patch
   sonner@1.7.4:
     hash: ywi4zh4oqnjpviiknloue4elvi
@@ -89,49 +89,49 @@ importers:
 
   apps/app:
     dependencies:
-      '@bb/client-core':
+      '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../../packages/core-ui
-      '@bb/desktop-contract':
+      '@sandy/desktop-contract':
         specifier: workspace:*
         version: link:../../packages/desktop-contract
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/fuzzy-match':
+      '@sandy/fuzzy-match':
         specifier: workspace:*
         version: link:../../packages/fuzzy-match
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/mobile-bridge':
+      '@sandy/mobile-bridge':
         specifier: workspace:*
         version: link:../../packages/mobile-bridge
-      '@bb/query-tags':
+      '@sandy/query-tags':
         specifier: workspace:*
         version: link:../../packages/query-tags
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      '@bb/templates':
+      '@sandy/templates':
         specifier: workspace:*
         version: link:../../packages/templates
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
       '@dnd-kit/core':
@@ -146,7 +146,7 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@pierre/diffs':
@@ -351,16 +351,16 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@bb/plugin-registry':
+      '@sandy/plugin-registry':
         specifier: workspace:*
         version: link:../../packages/plugin-registry
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@ladle/react':
@@ -399,34 +399,34 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
-      bb-plugin-ask-user-question:
+      sandy-plugin-ask-user-question:
         specifier: workspace:*
         version: link:../../plugins/ask-user-question
-      bb-plugin-automations:
+      sandy-plugin-automations:
         specifier: workspace:*
         version: link:../../plugins/automations
-      bb-plugin-bb--composer:
+      sandy-plugin-sandy--composer:
         specifier: workspace:*
         version: link:../../plugins/composer
-      bb-plugin-bb--git:
+      sandy-plugin-sandy--git:
         specifier: workspace:*
         version: link:../../plugins/git
-      bb-plugin-bb--github-pr-status:
+      sandy-plugin-sandy--github-pr-status:
         specifier: workspace:*
         version: link:../../plugins/github-pr-status
-      bb-plugin-bb-guide:
+      sandy-plugin-sandy-guide:
         specifier: workspace:*
-        version: link:../../plugins/bb-guide
-      bb-plugin-navigation:
+        version: link:../../plugins/sandy-guide
+      sandy-plugin-navigation:
         specifier: workspace:*
         version: link:../../plugins/navigation
-      bb-plugin-provider-pi:
+      sandy-plugin-provider-pi:
         specifier: workspace:*
         version: link:../../plugins/provider-pi
-      bb-plugin-secrets:
+      sandy-plugin-secrets:
         specifier: workspace:*
         version: link:../../plugins/secrets
-      bb-plugin-thread-list:
+      sandy-plugin-thread-list:
         specifier: workspace:*
         version: link:../../plugins/thread-list
       cacache:
@@ -471,49 +471,49 @@ importers:
 
   apps/cli:
     dependencies:
-      '@bb/client-core':
+      '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../../packages/core-ui
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../../packages/process-utils
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@bb/server-archive':
+      '@sandy/server-archive':
         specifier: workspace:*
         version: link:../../packages/server-archive
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/templates':
+      '@sandy/templates':
         specifier: workspace:*
         version: link:../../packages/templates
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
-      bb-plugin-bb--git:
+      sandy-plugin-sandy--git:
         specifier: workspace:*
         version: link:../../plugins/git
-      bb-plugin-bb--github-pr-status:
+      sandy-plugin-sandy--github-pr-status:
         specifier: workspace:*
         version: link:../../plugins/github-pr-status
       cli-table3:
@@ -532,10 +532,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@tailwindcss/node':
@@ -565,15 +565,15 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../../packages/process-utils
-      bb-app:
+      sandy-app:
         specifier: workspace:*
-        version: link:../../packages/bb-app
+        version: link:../../packages/sandy-app
       semver:
         specifier: ^7.7.0
         version: 7.7.4
@@ -584,28 +584,28 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/desktop-contract':
+      '@sandy/desktop-contract':
         specifier: workspace:*
         version: link:../../packages/desktop-contract
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/server-archive':
+      '@sandy/server-archive':
         specifier: workspace:*
         version: link:../../packages/server-archive
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -650,55 +650,58 @@ importers:
 
   apps/host-daemon:
     dependencies:
-      '@bb/agent-runtime':
+      '@sandy/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime
-      '@bb/async-cache':
+      '@sandy/async-cache':
         specifier: workspace:*
         version: link:../../packages/async-cache
-      '@bb/cli':
+      '@sandy/cli':
         specifier: workspace:*
         version: link:../cli
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/file-transfer':
+      '@sandy/file-transfer':
         specifier: workspace:*
         version: link:../../packages/file-transfer
-      '@bb/fuzzy-match':
+      '@sandy/fuzzy-match':
         specifier: workspace:*
         version: link:../../packages/fuzzy-match
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/host-watcher':
+      '@sandy/host-watcher':
         specifier: workspace:*
         version: link:../../packages/host-watcher
-      '@bb/host-workspace':
+      '@sandy/host-workspace':
         specifier: workspace:*
         version: link:../../packages/host-workspace
-      '@bb/local-open-targets':
+      '@sandy/local-open-targets':
         specifier: workspace:*
         version: link:../../packages/local-open-targets
-      '@bb/logger':
+      '@sandy/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../../packages/process-utils
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../../packages/provider-bridge-protocol
-      '@bb/server-archive':
+      '@sandy/server-archive':
         specifier: workspace:*
         version: link:../../packages/server-archive
-      '@bb/skill-index':
+      '@sandy/skill-index':
         specifier: workspace:*
         version: link:../../packages/skill-index
-      '@bb/text-utils':
+      '@sandy/telemetry':
+        specifier: workspace:*
+        version: link:../../packages/telemetry
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
       '@hono/node-server':
@@ -707,7 +710,7 @@ importers:
       '@parcel/watcher':
         specifier: 2.5.6
         version: 2.5.6
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../../packages/environment-provider-host
       mime-types:
@@ -723,8 +726,11 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(react@19.3.0)
       pino:
-        specifier: ^9.6.0
-        version: 9.14.0
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-opentelemetry-transport:
+        specifier: 4.0.2
+        version: 4.0.2(pino@10.4.0)
       pino-pretty:
         specifier: ^13.0.0
         version: 13.1.3
@@ -744,18 +750,21 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@bb/scripts':
+      '@sandy/scripts':
         specifier: workspace:*
         version: link:../../packages/scripts
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
       '@types/mime-types':
         specifier: ^3.0.1
         version: 3.0.1
@@ -783,22 +792,22 @@ importers:
 
   apps/mobile:
     dependencies:
-      '@bb/client-core':
+      '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../../packages/core-ui
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/mobile-bridge':
+      '@sandy/mobile-bridge':
         specifier: workspace:*
         version: link:../../packages/mobile-bridge
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
       '@expo/ui':
@@ -925,10 +934,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@tailwindcss/postcss':
@@ -973,58 +982,61 @@ importers:
 
   apps/server:
     dependencies:
-      '@bb/async-cache':
+      '@sandy/async-cache':
         specifier: workspace:*
         version: link:../../packages/async-cache
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../../packages/core-ui
-      '@bb/db':
+      '@sandy/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/file-transfer':
+      '@sandy/file-transfer':
         specifier: workspace:*
         version: link:../../packages/file-transfer
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/logger':
+      '@sandy/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../../packages/process-utils
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@bb/secret-storage':
+      '@sandy/secret-storage':
         specifier: workspace:*
         version: link:../../packages/secret-storage
-      '@bb/server-archive':
+      '@sandy/server-archive':
         specifier: workspace:*
         version: link:../../packages/server-archive
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/skill-index':
+      '@sandy/skill-index':
         specifier: workspace:*
         version: link:../../packages/skill-index
-      '@bb/templates':
+      '@sandy/telemetry':
+        specifier: workspace:*
+        version: link:../../packages/telemetry
+      '@sandy/templates':
         specifier: workspace:*
         version: link:../../packages/templates
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
       '@better-auth/api-key':
@@ -1033,7 +1045,7 @@ importers:
       '@better-auth/drizzle-adapter':
         specifier: ^1.6.23
         version: 1.6.23(@better-auth/core@1.6.23(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.6.5))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.2.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/react@19.3.0)(better-sqlite3@12.10.0)(kysely@0.29.3)(react@19.3.0))
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@hono/node-server':
@@ -1042,10 +1054,13 @@ importers:
       '@hono/node-ws':
         specifier: ^1.3.0
         version: 1.3.0(@hono/node-server@1.19.14(hono@4.11.9))(hono@4.11.9)
+      '@hono/otel':
+        specifier: 1.3.0
+        version: 1.3.0(hono@4.11.9)
       '@opentelemetry/api':
         specifier: 1.9.1
         version: 1.9.1
-      bb-plugin-bb--git:
+      sandy-plugin-sandy--git:
         specifier: workspace:*
         version: link:../../plugins/git
       better-auth:
@@ -1073,8 +1088,11 @@ importers:
         specifier: 11.16.0
         version: 11.16.0
       pino:
-        specifier: ^9.6.0
-        version: 9.14.0
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-opentelemetry-transport:
+        specifier: 4.0.2
+        version: 4.0.2(pino@10.4.0)
       pino-pretty:
         specifier: ^13.0.0
         version: 13.1.3
@@ -1091,19 +1109,19 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/agent-runtime':
+      '@sandy/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime
-      '@bb/client-core':
+      '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
-      '@bb/scripts':
+      '@sandy/scripts':
         specifier: workspace:*
         version: link:../../packages/scripts
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/better-sqlite3':
@@ -1145,7 +1163,7 @@ importers:
 
   examples/plugins/composer-customization:
     devDependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       '@types/react':
@@ -1163,10 +1181,10 @@ importers:
 
   examples/plugins/content-script:
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../../packages/tsconfig
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       typescript:
@@ -1175,7 +1193,7 @@ importers:
 
   examples/plugins/echo-provider:
     dependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       zod:
@@ -1197,7 +1215,7 @@ importers:
 
   examples/plugins/replacement-lab-alpha:
     devDependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       '@types/react':
@@ -1215,7 +1233,7 @@ importers:
 
   examples/plugins/replacement-lab-beta:
     devDependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       '@types/react':
@@ -1233,7 +1251,7 @@ importers:
 
   examples/plugins/slack-bot:
     devDependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       '@types/node':
@@ -1248,7 +1266,7 @@ importers:
 
   examples/plugins/thread-chat-demo:
     devDependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
       '@types/react':
@@ -1266,35 +1284,35 @@ importers:
 
   packages/agent-runtime:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../plugin-build
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.10
-      bb-plugin-scripted-echo-provider:
+      sandy-plugin-scripted-echo-provider:
         specifier: workspace:*
         version: link:../../tests/scripted-echo-provider
       tsrs:
@@ -1312,10 +1330,10 @@ importers:
 
   packages/async-cache:
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1331,7 +1349,7 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
 
-  packages/bb-app:
+  packages/sandy-app:
     dependencies:
       '@parcel/watcher':
         specifier: 2.5.6
@@ -1355,8 +1373,11 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       pino:
-        specifier: ^9.6.0
-        version: 9.14.0
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-opentelemetry-transport:
+        specifier: 4.0.2
+        version: 4.0.2(pino@10.4.0)
       pino-pretty:
         specifier: ^13.0.0
         version: 13.1.3
@@ -1367,22 +1388,22 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../sdk
-      '@bb/server-archive':
+      '@sandy/server-archive':
         specifier: workspace:*
         version: link:../server-archive
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1415,167 +1436,167 @@ importers:
 
   packages/bundled-plugins:
     dependencies:
-      bb-plugin-account-pool:
+      sandy-plugin-account-pool:
         specifier: workspace:*
         version: link:../../plugins/account-pool
-      bb-plugin-agent-annotations:
+      sandy-plugin-agent-annotations:
         specifier: workspace:*
         version: link:../../plugins/agent-annotations
-      bb-plugin-ask-user-question:
+      sandy-plugin-ask-user-question:
         specifier: workspace:*
         version: link:../../plugins/ask-user-question
-      bb-plugin-automations:
+      sandy-plugin-automations:
         specifier: workspace:*
         version: link:../../plugins/automations
-      bb-plugin-bb--composer:
+      sandy-plugin-sandy--composer:
         specifier: workspace:*
         version: link:../../plugins/composer
-      bb-plugin-bb--connection-overview:
+      sandy-plugin-sandy--connection-overview:
         specifier: workspace:*
         version: link:../../plugins/connection-overview
-      bb-plugin-bb--git:
+      sandy-plugin-sandy--git:
         specifier: workspace:*
         version: link:../../plugins/git
-      bb-plugin-bb--github-pr-status:
+      sandy-plugin-sandy--github-pr-status:
         specifier: workspace:*
         version: link:../../plugins/github-pr-status
-      bb-plugin-bb--mcp:
+      sandy-plugin-sandy--mcp:
         specifier: workspace:*
         version: link:../../plugins/mcp
-      bb-plugin-bb--prompt-library:
+      sandy-plugin-sandy--prompt-library:
         specifier: workspace:*
         version: link:../../plugins/prompt-library
-      bb-plugin-bb--provider-usage:
+      sandy-plugin-sandy--provider-usage:
         specifier: workspace:*
         version: link:../../plugins/provider-usage
-      bb-plugin-bb--storage-retention:
+      sandy-plugin-sandy--storage-retention:
         specifier: workspace:*
         version: link:../../plugins/storage-retention
-      bb-plugin-bb-guide:
+      sandy-plugin-sandy-guide:
         specifier: workspace:*
-        version: link:../../plugins/bb-guide
-      bb-plugin-browser-automation:
+        version: link:../../plugins/sandy-guide
+      sandy-plugin-browser-automation:
         specifier: workspace:*
         version: link:../../plugins/browser-automation
-      bb-plugin-concurrency-limit:
+      sandy-plugin-concurrency-limit:
         specifier: workspace:*
         version: link:../../plugins/concurrency-limit
-      bb-plugin-custom-instructions:
+      sandy-plugin-custom-instructions:
         specifier: workspace:*
         version: link:../../plugins/custom-instructions
-      bb-plugin-drafts:
+      sandy-plugin-drafts:
         specifier: workspace:*
         version: link:../../plugins/drafts
-      bb-plugin-environment-git-worktree:
+      sandy-plugin-environment-git-worktree:
         specifier: workspace:*
         version: link:../../plugins/environment-git-worktree
-      bb-plugin-environment-personal-workspace:
+      sandy-plugin-environment-personal-workspace:
         specifier: workspace:*
         version: link:../../plugins/environment-personal-workspace
-      bb-plugin-environment-project-checkout:
+      sandy-plugin-environment-project-checkout:
         specifier: workspace:*
         version: link:../../plugins/environment-project-checkout
-      bb-plugin-github:
+      sandy-plugin-github:
         specifier: workspace:*
         version: link:../../plugins/github
-      bb-plugin-inline-vis:
+      sandy-plugin-inline-vis:
         specifier: workspace:*
         version: link:../../plugins/inline-vis
-      bb-plugin-keep-awake:
+      sandy-plugin-keep-awake:
         specifier: workspace:*
         version: link:../../plugins/keep-awake
-      bb-plugin-memory:
+      sandy-plugin-memory:
         specifier: workspace:*
         version: link:../../plugins/memory
-      bb-plugin-monaco-editor:
+      sandy-plugin-monaco-editor:
         specifier: workspace:*
         version: link:../../plugins/monaco-editor
-      bb-plugin-navigation:
+      sandy-plugin-navigation:
         specifier: workspace:*
         version: link:../../plugins/navigation
-      bb-plugin-pdf-preview:
+      sandy-plugin-pdf-preview:
         specifier: workspace:*
         version: link:../../plugins/pdf-preview
-      bb-plugin-plugin-api-docs:
+      sandy-plugin-plugin-api-docs:
         specifier: workspace:*
         version: link:../../plugins/plugin-api-docs
-      bb-plugin-plugin-api-tester:
+      sandy-plugin-plugin-api-tester:
         specifier: workspace:*
         version: link:../../plugins/plugin-api-tester
-      bb-plugin-provider-acp:
+      sandy-plugin-provider-acp:
         specifier: workspace:*
         version: link:../../plugins/provider-acp
-      bb-plugin-provider-claude-code:
+      sandy-plugin-provider-claude-code:
         specifier: workspace:*
         version: link:../../plugins/provider-claude-code
-      bb-plugin-provider-codex:
+      sandy-plugin-provider-codex:
         specifier: workspace:*
         version: link:../../plugins/provider-codex
-      bb-plugin-provider-pi:
+      sandy-plugin-provider-pi:
         specifier: workspace:*
         version: link:../../plugins/provider-pi
-      bb-plugin-provider-retry:
+      sandy-plugin-provider-retry:
         specifier: workspace:*
         version: link:../../plugins/provider-retry
-      bb-plugin-push-notifications:
+      sandy-plugin-push-notifications:
         specifier: workspace:*
         version: link:../../plugins/push-notifications
-      bb-plugin-scheduled-send:
+      sandy-plugin-scheduled-send:
         specifier: workspace:*
         version: link:../../plugins/scheduled-send
-      bb-plugin-secrets:
+      sandy-plugin-secrets:
         specifier: workspace:*
         version: link:../../plugins/secrets
-      bb-plugin-side-chat:
+      sandy-plugin-side-chat:
         specifier: workspace:*
         version: link:../../plugins/side-chat
-      bb-plugin-simple-notes:
+      sandy-plugin-simple-notes:
         specifier: workspace:*
         version: link:../../plugins/docs
-      bb-plugin-tasks:
+      sandy-plugin-tasks:
         specifier: workspace:*
         version: link:../../plugins/tasks
-      bb-plugin-theme-preview:
+      sandy-plugin-theme-preview:
         specifier: workspace:*
         version: link:../../plugins/theme-preview
-      bb-plugin-thread-list:
+      sandy-plugin-thread-list:
         specifier: workspace:*
         version: link:../../plugins/thread-list
-      bb-plugin-workflows:
+      sandy-plugin-workflows:
         specifier: workspace:*
         version: link:../../plugins/workflows
 
   packages/client-core:
     dependencies:
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../core-ui
-      '@bb/desktop-contract':
+      '@sandy/desktop-contract':
         specifier: workspace:*
         version: link:../desktop-contract
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/fuzzy-match':
+      '@sandy/fuzzy-match':
         specifier: workspace:*
         version: link:../fuzzy-match
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../server-contract
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../text-utils
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../thread-view
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1590,10 +1611,10 @@ importers:
 
   packages/config:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
       fs-native-extensions:
@@ -1603,7 +1624,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1618,11 +1639,11 @@ importers:
 
   packages/core-ui:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1637,13 +1658,13 @@ importers:
 
   packages/db:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../text-utils
       better-sqlite3:
@@ -1656,7 +1677,7 @@ importers:
         specifier: ^5.0.9
         version: 5.1.6
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/better-sqlite3':
@@ -1680,17 +1701,17 @@ importers:
 
   packages/desktop-contract:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
@@ -1706,7 +1727,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1721,17 +1742,17 @@ importers:
 
   packages/environment-provider-host:
     dependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1749,10 +1770,10 @@ importers:
 
   packages/file-transfer:
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1774,7 +1795,7 @@ importers:
         specifier: ^0.5.2
         version: 0.5.2
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
@@ -1796,7 +1817,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
@@ -1808,13 +1829,13 @@ importers:
 
   packages/host-daemon-contract:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/hono-typed-routes':
+      '@sandy/hono-typed-routes':
         specifier: workspace:*
         version: link:../hono-typed-routes
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
       hono:
@@ -1824,10 +1845,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1842,20 +1863,20 @@ importers:
 
   packages/host-watcher:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
       '@parcel/watcher':
         specifier: 2.5.6
         version: 2.5.6
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1870,20 +1891,20 @@ importers:
 
   packages/host-workspace:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../environment-provider-host
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1898,17 +1919,17 @@ importers:
 
   packages/local-open-targets:
     dependencies:
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1926,12 +1947,18 @@ importers:
 
   packages/logger:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
       pino:
-        specifier: ^9.6.0
-        version: 9.14.0
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-opentelemetry-transport:
+        specifier: 4.0.2
+        version: 4.0.2(pino@10.4.0)
       pino-pretty:
         specifier: ^13.0.0
         version: 13.1.3
@@ -1939,7 +1966,10 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/telemetry':
+        specifier: workspace:*
+        version: link:../telemetry
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -1958,7 +1988,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
@@ -1973,13 +2003,13 @@ importers:
 
   packages/plugin-build:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
       es-module-lexer:
@@ -1992,7 +2022,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@tailwindcss/node':
@@ -2022,10 +2052,10 @@ importers:
 
   packages/plugin-registry:
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../plugin-build
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@dnd-kit/core':
@@ -2037,7 +2067,7 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
       '@radix-ui/react-accordion':
@@ -2176,31 +2206,31 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@bb/provider-bridge-acp':
+      '@sandy/provider-bridge-acp':
         specifier: workspace:*
         version: link:../provider-bridge-acp
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
-      '@bb/query-tags':
+      '@sandy/query-tags':
         specifier: workspace:*
         version: link:../query-tags
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../sdk
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../server-contract
-      '@bb/skill-index':
+      '@sandy/skill-index':
         specifier: workspace:*
         version: link:../skill-index
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@testing-library/react':
@@ -2267,7 +2297,7 @@ importers:
         specifier: 0.1.0
         version: 0.1.0
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/cross-spawn':
@@ -2291,23 +2321,23 @@ importers:
       '@agentclientprotocol/sdk':
         specifier: 1.7.0
         version: 1.7.0(zod@4.6.5)
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@modelcontextprotocol/sdk':
@@ -2328,13 +2358,13 @@ importers:
 
   packages/provider-bridge-protocol:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../text-utils
       semver:
@@ -2344,7 +2374,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2362,17 +2392,17 @@ importers:
 
   packages/provider-parity:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../thread-view
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2390,7 +2420,7 @@ importers:
 
   packages/query-tags:
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@tanstack/react-query':
@@ -2420,29 +2450,29 @@ importers:
 
   packages/scripts:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
-      '@bb/db':
+      '@sandy/db':
         specifier: workspace:*
         version: link:../db
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
-      '@bb/process-utils':
+      '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2463,22 +2493,22 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
-      '@bb/core-ui':
+      '@sandy/core-ui':
         specifier: workspace:*
         version: link:../core-ui
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../server-contract
-      '@bb/templates':
+      '@sandy/templates':
         specifier: workspace:*
         version: link:../templates
       ws:
@@ -2488,7 +2518,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2509,10 +2539,10 @@ importers:
 
   packages/secret-storage:
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2530,10 +2560,10 @@ importers:
 
   packages/server-archive:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../config
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
       tar:
@@ -2543,10 +2573,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2564,16 +2594,16 @@ importers:
 
   packages/server-contract:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/hono-typed-routes':
+      '@sandy/hono-typed-routes':
         specifier: workspace:*
         version: link:../hono-typed-routes
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../host-daemon-contract
-      '@bb/provider-bridge-protocol':
+      '@sandy/provider-bridge-protocol':
         specifier: workspace:*
         version: link:../provider-bridge-protocol
       hono:
@@ -2583,10 +2613,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2601,16 +2631,16 @@ importers:
 
   packages/shared-ui:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/fuzzy-match':
+      '@sandy/fuzzy-match':
         specifier: workspace:*
         version: link:../fuzzy-match
-      '@bb/thread-view':
+      '@sandy/thread-view':
         specifier: workspace:*
         version: link:../thread-view
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
       '@hugeicons/core-free-icons':
@@ -2635,10 +2665,10 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(react@19.3.0)
     devDependencies:
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@dnd-kit/core':
@@ -2789,7 +2819,47 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.10
+      tsrs:
+        specifier: 0.18.0-ts7.1.0-dev.20260929
+        version: 0.18.0-ts7.1.0-dev.20260929
+      typescript:
+        specifier: npm:@typescript/typescript6@^6.0.2
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: ^4.1.1
+        version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
+
+  packages/telemetry:
+    dependencies:
+      '@sandy/config':
+        specifier: workspace:*
+        version: link:../config
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
+      '@opentelemetry/exporter-metrics-otlp-proto':
+        specifier: 0.223.0
+        version: 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-proto':
+        specifier: 0.223.0
+        version: 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources':
+        specifier: 2.12.0
+        version: 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics':
+        specifier: 2.12.0
+        version: 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-node':
+        specifier: 2.12.0
+        version: 2.12.0(@opentelemetry/api@1.9.1)
+    devDependencies:
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2807,7 +2877,7 @@ importers:
 
   packages/templates:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
       gray-matter:
@@ -2820,7 +2890,7 @@ importers:
         specifier: ^7.7.4
         version: 7.8.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2841,14 +2911,14 @@ importers:
 
   packages/test-helpers:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2866,7 +2936,7 @@ importers:
 
   packages/text-utils:
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
@@ -2881,20 +2951,20 @@ importers:
 
   packages/thread-view:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../server-contract
-      '@bb/text-utils':
+      '@sandy/text-utils':
         specifier: workspace:*
         version: link:../text-utils
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -2911,7 +2981,7 @@ importers:
 
   plugins/account-pool:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@dnd-kit/core':
@@ -2930,10 +3000,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -2987,17 +3057,17 @@ importers:
 
   plugins/agent-annotations:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3048,17 +3118,17 @@ importers:
 
   plugins/ask-user-question:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3109,7 +3179,7 @@ importers:
 
   plugins/automations:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@tanstack/react-query':
@@ -3125,10 +3195,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3177,12 +3247,12 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
 
-  plugins/bb-guide:
+  plugins/sandy-guide:
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/better-sqlite3':
@@ -3212,17 +3282,17 @@ importers:
 
   plugins/browser-automation:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3276,7 +3346,7 @@ importers:
 
   plugins/composer:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@tiptap/core':
@@ -3325,10 +3395,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3373,17 +3443,17 @@ importers:
 
   plugins/concurrency-limit:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3438,10 +3508,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3490,10 +3560,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/better-sqlite3':
@@ -3523,7 +3593,7 @@ importers:
 
   plugins/docs:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
@@ -3584,10 +3654,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3641,10 +3711,10 @@ importers:
 
   plugins/drafts:
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3698,20 +3768,20 @@ importers:
 
   plugins/environment-git-worktree:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../../packages/environment-provider-host
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/react':
@@ -3748,10 +3818,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/better-sqlite3':
@@ -3781,20 +3851,20 @@ importers:
 
   plugins/environment-project-checkout:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../../packages/environment-provider-host
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/react':
@@ -3827,22 +3897,22 @@ importers:
 
   plugins/git:
     dependencies:
-      '@bb/async-cache':
+      '@sandy/async-cache':
         specifier: workspace:*
         version: link:../../packages/async-cache
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@tanstack/react-virtual':
         specifier: 3.14.20
         version: 3.14.20(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../../packages/environment-provider-host
       mime-types:
@@ -3858,16 +3928,16 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/react':
@@ -3912,17 +3982,17 @@ importers:
 
   plugins/github:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -3976,20 +4046,20 @@ importers:
 
   plugins/github-pr-status:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      bb-environment-provider-host:
+      sandy-environment-provider-host:
         specifier: workspace:*
         version: link:../../packages/environment-provider-host
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4031,17 +4101,17 @@ importers:
 
   plugins/inline-vis:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4092,17 +4162,17 @@ importers:
 
   plugins/keep-awake:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4166,10 +4236,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@modelcontextprotocol/client':
@@ -4202,17 +4272,17 @@ importers:
 
   plugins/memory:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4263,7 +4333,7 @@ importers:
 
   plugins/monaco-editor:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       monaco-editor:
@@ -4273,10 +4343,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4333,14 +4403,14 @@ importers:
 
   plugins/navigation:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4382,10 +4452,10 @@ importers:
 
   plugins/pdf-preview:
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4424,7 +4494,7 @@ importers:
 
   plugins/plugin-api-docs:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
@@ -4434,10 +4504,10 @@ importers:
         specifier: ^1.1.6
         version: 1.1.6(react@19.3.0)
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4476,10 +4546,10 @@ importers:
 
   plugins/plugin-api-tester:
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4518,17 +4588,17 @@ importers:
 
   plugins/prompt-library:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4579,10 +4649,10 @@ importers:
 
   plugins/provider-acp:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       smol-toml:
@@ -4595,7 +4665,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
       '@testing-library/dom':
@@ -4649,7 +4719,7 @@ importers:
       '@anthropic-ai/claude-agent-sdk':
         specifier: ^0.3.245
         version: 0.3.245(@anthropic-ai/sdk@0.93.0(zod@4.6.5))(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(zod@4.6.5)
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@modelcontextprotocol/sdk':
@@ -4662,7 +4732,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.93.0
         version: 0.93.0(zod@4.6.5)
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
       '@types/better-sqlite3':
@@ -4692,17 +4762,17 @@ importers:
 
   plugins/provider-codex:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
       '@testing-library/dom':
@@ -4753,17 +4823,17 @@ importers:
 
   plugins/provider-pi:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
       '@earendil-works/pi-ai':
@@ -4827,10 +4897,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/better-sqlite3':
@@ -4860,17 +4930,17 @@ importers:
 
   plugins/provider-usage:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4925,10 +4995,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -4982,14 +5052,14 @@ importers:
 
   plugins/scheduled-send:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5031,7 +5101,7 @@ importers:
 
   plugins/secrets:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
@@ -5044,10 +5114,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@types/better-sqlite3':
@@ -5086,17 +5156,17 @@ importers:
 
   plugins/side-chat:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5150,20 +5220,20 @@ importers:
 
   plugins/storage-retention:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:^
         version: link:../../packages/domain
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/react':
@@ -5202,7 +5272,7 @@ importers:
 
   plugins/tasks:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
@@ -5260,10 +5330,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5314,7 +5384,7 @@ importers:
 
   plugins/theme-preview:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
@@ -5327,10 +5397,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5384,7 +5454,7 @@ importers:
 
   plugins/thread-list:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@dnd-kit/core':
@@ -5409,10 +5479,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5469,7 +5539,7 @@ importers:
 
   plugins/workflows:
     dependencies:
-      '@bb/shared-ui':
+      '@sandy/shared-ui':
         specifier: workspace:*
         version: link:../../packages/shared-ui
       '@jitl/quickjs-singlefile-cjs-release-sync':
@@ -5491,10 +5561,10 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/plugin-build':
+      '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       '@testing-library/dom':
@@ -5545,37 +5615,37 @@ importers:
 
   tests/integration:
     dependencies:
-      '@bb/config':
+      '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@bb/db':
+      '@sandy/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/host-daemon':
+      '@sandy/host-daemon':
         specifier: workspace:*
         version: link:../../apps/host-daemon
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/sdk':
+      '@sandy/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@bb/server':
+      '@sandy/server':
         specifier: workspace:*
         version: link:../../apps/server
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
       '@hono/node-server':
         specifier: ^1.19.11
         version: 1.19.14(hono@4.12.28)
-      bb-plugin-bb--git:
+      sandy-plugin-sandy--git:
         specifier: workspace:*
         version: link:../../plugins/git
       drizzle-orm:
@@ -5585,7 +5655,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -5606,23 +5676,23 @@ importers:
 
   tests/qa:
     dependencies:
-      '@bb/domain':
+      '@sandy/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@bb/host-daemon-contract':
+      '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
-      '@bb/server-contract':
+      '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@bb/test-helpers':
+      '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@bb/tsconfig':
+      '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -5646,7 +5716,7 @@ importers:
 
   tests/scripted-echo-provider:
     dependencies:
-      '@get-bb/plugin-sdk':
+      '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
       zod:
@@ -7587,6 +7657,15 @@ packages:
       react: '*'
       react-native: '*'
 
+  '@grpc/grpc-js@1.14.7':
+    resolution: {integrity: sha512-W4W/fcBMGRVtG6dW2c7cw2mnpS3hvbBd+oQXjh2iYFTZDk1JJmcNqkM5KSaPubQpamlUUurrlb7G1s9NJeERmQ==}
+    engines: {node: '>=12.10.0'}
+
+  '@grpc/proto-loader@0.8.1':
+    resolution: {integrity: sha512-wtF6h+DY6M3YaDBPAmvuuA6jV8Sif9MjtOI5euKFWRgCDl5PeDpPsHR9u2l6St5ceY8AZgoNDww5+HvEsXFsGg==}
+    engines: {node: '>=6'}
+    hasBin: true
+
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
 
@@ -7606,6 +7685,11 @@ packages:
     peerDependencies:
       '@hono/node-server': ^1.19.2
       hono: ^4.6.0
+
+  '@hono/otel@1.3.0':
+    resolution: {integrity: sha512-x4L9U2O+Z9lD+EAKQfEWSX8iDIR/122IDM6sImGWoWF6KO1s+0icGncpDgwQjm1Iry+Kq94TdoYTpiMfOB5gzw==}
+    peerDependencies:
+      hono: '>=4.0.0'
 
   '@hugeicons/core-free-icons@4.3.4':
     resolution: {integrity: sha512-TMbzqGFD4XnEyVYut4sTzT7Wpq+Mghe7ChGd+R3bkyhJc31tcsfxtX8gmgrV3zIqn5dumsNJhvsX+h3OPjLMGQ==}
@@ -7847,6 +7931,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@js-sdsl/ordered-map@4.4.2':
+    resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
   '@ladle/react-context@1.0.1':
     resolution: {integrity: sha512-xVQ8siyOEQG6e4Knibes1uA3PTyXnqiMmfSmd5pIbkzeDty8NCBtYHhTXSlfmcDNEsw/G8OzNWo4VbyQAVDl2A==}
@@ -8102,6 +8189,14 @@ packages:
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
 
+  '@opentelemetry/api-logs@0.220.0':
+    resolution: {integrity: sha512-CmVa4ImJ+ynfrPMNaAXHET6Bhb44SwzmfyVJFq9ni2jgXJR/l7C6gfVFddNmHP+ZOkP9cf4f9DBe68qVLTHc9w==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/api-logs@0.223.0':
+    resolution: {integrity: sha512-Oepm6etVPFCn0VWB1t833iOTgz1eYBDUPxcrOR/XvwzD1+Ag9VzSPSrrKAFNJ/haatj+8CXbG47pZXvdNQKDJw==}
+    engines: {node: '>=8.0.0'}
+
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
@@ -8109,6 +8204,152 @@ packages:
   '@opentelemetry/api@1.9.1':
     resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
     engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/context-async-hooks@2.12.0':
+    resolution: {integrity: sha512-iK/1nD7mmZVkuYjVjkdFBiCvzntJdFny1S3CYbUYyOq7V5enL6XX+gJ7eh965L1LnS11VA8mQ7Ej/ck04SB0MQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/core@2.12.0':
+    resolution: {integrity: sha512-1HsSAuvT4/my0QrXWsyXFdWjKaPeCHsismKZgEEIb8NK13LP6DrMRlsUbvD/0F9mDWK3xDom9AMv3IscxgOnOQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/core@2.9.0':
+    resolution: {integrity: sha512-m2nckMT80NnmjTYSPjJQObBJ+8dgkoajEOUbznL8AHZ3T3yHRk2P7gI1PhEBc1+lOnrYE9UWrWHqJDsmqjmNbw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/exporter-logs-otlp-grpc@0.220.0':
+    resolution: {integrity: sha512-s0sRPCSlXYqlgObOpCftomJllp3LfUL9FobQ5csg2172ydVhSEnu1ptpsVBJadazs5nUNp7vDuLE03FAFWTLOQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/exporter-logs-otlp-http@0.220.0':
+    resolution: {integrity: sha512-8186thl+pTw64iz/qEEen5oJZoZ/gO73XruChdaGlYdWOdBIQ42r+vHLf6a7vIDqTD4b8ZOoMlyxptanECaI9A==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/exporter-logs-otlp-proto@0.220.0':
+    resolution: {integrity: sha512-8LZAxdJ0ENDAFwr4j0oY35mHBltiSzvlhdQAPGiC7p9VnxtuSq4SW1gfBAdW6t6hiQG6OwUl8w7KHaOdJPKHWg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/exporter-metrics-otlp-http@0.223.0':
+    resolution: {integrity: sha512-hNC8yai/+xCNyTuiOy6JFepXXA/sb/2jCzQRY7c2cUWz6owaidihlHUpO20B9/dj8JKPNo8rcn7ikTy7Cj+JaQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/exporter-metrics-otlp-proto@0.223.0':
+    resolution: {integrity: sha512-DlwYBlqUVlAQqGXOES1K92b6FyHwB2phwcsccXEQhE9Mz1CAEymQgyRwbPKjCbpySZE1ASy2s9t2kIQ1pU/tmg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/exporter-trace-otlp-proto@0.223.0':
+    resolution: {integrity: sha512-hCFhPuROokNpwLibKmeMRuBNjPtbL+Ja5y/e/KBl5p3QcaH7xBjkj8roIGgKwCNJ4WChRLBzfoaNM3QksogfWw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-exporter-base@0.220.0':
+    resolution: {integrity: sha512-CXYo8UD5Mn9YbgebO2EL4wejtA+gxLmLiu6HCk2KH2BR7XhFN6/6p1UlCb23DYCjeYkndevLHuejCCN1yx4+OQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-exporter-base@0.223.0':
+    resolution: {integrity: sha512-HlJMrJXjOqdQeoYNDHEvFTpaY2p9uWDK1GPl5AZ4wI5easzfoppTduOv47M8eiF+4ew42vfI/Xvt7THYgESnRw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-grpc-exporter-base@0.220.0':
+    resolution: {integrity: sha512-/eIkBPMBTIvM3x/0mDX4aJeSkYifYClnBPr68PL1h5LV4VQv4+SV6CGrpiZ4fIWDnobVmhTWCm1J/QRdAWUfvA==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-transformer@0.220.0':
+    resolution: {integrity: sha512-lXGrv7KXZ0gNH9SVNUaa6vv6phVYGvJxfXAlMbzbakiXru75f5MZl8Z7oqiMMQD77riVHJCFlQvbZs/VVN2/4A==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/otlp-transformer@0.223.0':
+    resolution: {integrity: sha512-oxmmPL5/MbSsO8K588V9n/XLIe7FZTK30Fo+/U/lAnt0ZIK/hoPM03n2WpSTZVbUBGTUE7aLyxnAzh7nE2PD4Q==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': ^1.3.0
+
+  '@opentelemetry/resources@2.12.0':
+    resolution: {integrity: sha512-+rSRoOdln6NhXTVcBdHSlZxJDNzwxadeweK2ltZO3tVtfp6aklABc06xclDk6ovRR+EiGgIcSbh/6NgjFhnb3A==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/resources@2.9.0':
+    resolution: {integrity: sha512-jyA5MBLQ+Dkl3+JsZkUoUvL7yHvU64kLsvpXKarWm6347Sl1t1bXFTFykUePNpT5WH5pm9a2Qtt03iIYQhZ1Fg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/sdk-logs@0.220.0':
+    resolution: {integrity: sha512-WywcTkQtv2iNmt+6y5Kcd4rzvx9bLVsBa2Nwcmg01IUaBTkTow3W4d9KE5vNBpEDtb9tp21WcRBY/lANRrApYA==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.4.0 <1.10.0'
+
+  '@opentelemetry/sdk-logs@0.223.0':
+    resolution: {integrity: sha512-ApiAfUiUh6fmJt1GbsBuoeDn8D8IL42UvGyPUr8o1Z89ZeIiOCE1rZ78KkIUjEX3OV8Oorl9ez5Qjo43ZynDyw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.4.0 <1.10.0'
+
+  '@opentelemetry/sdk-metrics@2.12.0':
+    resolution: {integrity: sha512-mVMaEHwCUJuY3S4Esn+nT0yQA3qCEGh+SOPJsXygU0Gl453WcsDNjtEa8EfdewMwoLyr1tlofB4fXytVpiXuow==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
+
+  '@opentelemetry/sdk-metrics@2.9.0':
+    resolution: {integrity: sha512-Xx8RGS4H5XEBl01WuCreMIpiah9cCXMbSkeuIePPdD2cUpq/vUzYmj8E/MK1OsbOc93FuAD4jfn2WOacKwLn7Q==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace-base@2.12.0':
+    resolution: {integrity: sha512-JOERgZCxRM06FEJ5kEWxlSRChah6MmXDx3KwCruqEv/iEyLkTokCSemf2y1w8oIHtfrr8EVTpzebq/31vn2Cpg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace-node@2.12.0':
+    resolution: {integrity: sha512-9DufH1IlmQMoKAfot5y/FhTP1RnmhLb5K6eKmJO/bvzPjYwPAazoiAUbTZFdPbqxOXN0FEbhZx/e6SB1Og4jmg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace@2.12.0':
+    resolution: {integrity: sha512-ImVuRQ6faOsTi1Wna88s2avgrrf/iDgXPigIeynkUhjstMuoQUDOJXgkez2j1mlU4btjXcXBGa+q7qKFYR3GsA==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
+
+  '@opentelemetry/sdk-trace@2.9.0':
+    resolution: {integrity: sha512-sGA19HvtrrSKYsseHphluH6j3p6Xa3fqc7c7y8f/7mYWejc1lyDFcpSdD1kYa50HCLUeEo4zA5bW0pniaPszuw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
   '@opentelemetry/semantic-conventions@1.40.0':
     resolution: {integrity: sha512-cifvXDhcqMwwTlTK04GBNeIe7yyo28Mfby85QXFe1Yk8nmi36Ab/5UQwptOx84SsoGNRg+EVSjwzfSZMy6pmlw==}
@@ -13819,6 +14060,9 @@ packages:
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
+  lodash.camelcase@4.3.0:
+    resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
+
   lodash.clonedeep@4.5.0:
     resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
 
@@ -14843,11 +15087,13 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  pino-abstract-transport@2.0.0:
-    resolution: {integrity: sha512-F63x5tizV6WCh4R6RHyi2Ml+M70DNRXt/+HANowMflpgGFMAym/VKm6G7ZOQRjqN7XbGxK1Lg9t6ZrtzOaivMw==}
-
   pino-abstract-transport@3.0.0:
     resolution: {integrity: sha512-wlfUczU+n7Hy/Ha5j9a/gZNy7We5+cXp8YL+X+PG8S0KXxw7n/JXA3c46Y0zQznIJ83URJiwy7Lh56WLokNuxg==}
+
+  pino-opentelemetry-transport@4.0.2:
+    resolution: {integrity: sha512-ig0F6+RgAzPOcavGLBGNLRS9YzKTw1VlHiJ8dr263y1ED/rcwKcjqzrF8+3L6N8NU7nH9QF7XdrqnH35GiZ2EQ==}
+    peerDependencies:
+      pino: ^10.0.0
 
   pino-pretty@13.1.3:
     resolution: {integrity: sha512-ttXRkkOz6WWC95KeY9+xxWL6AtImwbyMHrL1mSwqwW9u+vLp/WIElvHvCSDg0xO/Dzrggz1zv3rN5ovTRVowKg==}
@@ -14859,8 +15105,8 @@ packages:
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
 
-  pino@9.14.0:
-    resolution: {integrity: sha512-8OEwKp5juEvb/MjpIc4hjqfgCNysrS94RIOMXYvpYCdm/jglrKEiAYmiumbmGhCvs+IcInsphYDFwqrjr7398w==}
+  pino@10.4.0:
+    resolution: {integrity: sha512-bk1ZMTwG/Vymx+zPoa28MhNzucFvXJWp3csrSuxuHPSMeUettaCoQ5Jvg07mtC4JGNpcfTwz41oVCnNgBK9+vA==}
     hasBin: true
 
   pirates@4.0.7:
@@ -15364,9 +15610,8 @@ packages:
     resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
     engines: {node: '>= 20.19.0'}
 
-  real-require@0.2.0:
-    resolution: {integrity: sha512-57frrGM/OCTLqLOAh0mhVA9VBMHd+9U7Zb2THMGdBUoZVOtGbJzjxsYGDJ3A9AYYCP4hn6y1TVbaOfzWtm5GFg==}
-    engines: {node: '>= 12.13.0'}
+  real-require@1.0.0:
+    resolution: {integrity: sha512-P4nbQYQfePJxRSmY+v/KINxVucm4NF3p3s7pJveMTtom52FR4YGltUQLB8idDXwDDWW+eYrWDFbuzUnjoWHF7g==}
 
   recharts-scale@0.4.5:
     resolution: {integrity: sha512-kivNFO+0OcUNu7jQquLXAxz1FIwZj8nrj+YkOKc5694NbjCvcT6aSZiIzNzd2Kul4o4rTto8QVR9lMNtxD4G1w==}
@@ -16105,8 +16350,9 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  thread-stream@3.1.0:
-    resolution: {integrity: sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A==}
+  thread-stream@4.2.0:
+    resolution: {integrity: sha512-e2zZ96wSChazBsbENf/Pcm/4swHt2cEKQ92rhUjkL9GCKiTDJIaTBenjE/m9DXi0QBmTMDkFDdOomUy20A1tDQ==}
+    engines: {node: '>=20'}
 
   throat@5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
@@ -19227,6 +19473,18 @@ snapshots:
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
+  '@grpc/grpc-js@1.14.7':
+    dependencies:
+      '@grpc/proto-loader': 0.8.1
+      '@js-sdsl/ordered-map': 4.4.2
+
+  '@grpc/proto-loader@0.8.1':
+    dependencies:
+      lodash.camelcase: 4.3.0
+      long: 5.3.2
+      protobufjs: 7.6.6
+      yargs: 17.7.3
+
   '@hapi/hoek@9.3.0': {}
 
   '@hapi/topo@5.1.0':
@@ -19249,6 +19507,12 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@hono/otel@1.3.0(hono@4.11.9)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/semantic-conventions': 1.40.0
+      hono: 4.11.9
 
   '@hugeicons/core-free-icons@4.3.4': {}
 
@@ -19483,6 +19747,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@js-sdsl/ordered-map@4.4.2': {}
 
   '@ladle/react-context@1.0.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
@@ -19858,9 +20124,189 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
+  '@opentelemetry/api-logs@0.220.0':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+
+  '@opentelemetry/api-logs@0.223.0':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+
   '@opentelemetry/api@1.9.0': {}
 
   '@opentelemetry/api@1.9.1': {}
+
+  '@opentelemetry/context-async-hooks@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+
+  '@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/exporter-logs-otlp-grpc@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@grpc/grpc-js': 1.14.7
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-grpc-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.220.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/exporter-logs-otlp-http@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.220.0
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.220.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/exporter-logs-otlp-proto@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/otlp-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.220.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/exporter-metrics-otlp-http@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics': 2.12.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/exporter-metrics-otlp-proto@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/exporter-metrics-otlp-http': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.223.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/exporter-trace-otlp-proto@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/otlp-exporter-base': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace': 2.12.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/otlp-exporter-base@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.220.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/otlp-exporter-base@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.223.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/otlp-grpc-exporter-base@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@grpc/grpc-js': 1.14.7
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-transformer': 0.220.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/otlp-transformer@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.220.0
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace': 2.9.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/otlp-transformer@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.223.0
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace': 2.12.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/resources@2.9.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/sdk-logs@0.220.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.220.0
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/sdk-logs@0.223.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.223.0
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/sdk-metrics@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/sdk-metrics@2.9.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/sdk-trace-node@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/context-async-hooks': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
+
+  '@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
+
+  '@opentelemetry/sdk-trace@2.9.0(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions': 1.40.0
 
   '@opentelemetry/semantic-conventions@1.40.0': {}
 
@@ -25890,6 +26336,8 @@ snapshots:
 
   lodash-es@4.18.1: {}
 
+  lodash.camelcase@4.3.0: {}
+
   lodash.clonedeep@4.5.0: {}
 
   lodash.debounce@4.0.8: {}
@@ -27250,13 +27698,23 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  pino-abstract-transport@2.0.0:
-    dependencies:
-      split2: 4.2.0
-
   pino-abstract-transport@3.0.0:
     dependencies:
       split2: 4.2.0
+
+  pino-opentelemetry-transport@4.0.2(pino@10.4.0):
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.220.0
+      '@opentelemetry/exporter-logs-otlp-grpc': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-logs-otlp-http': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-logs-otlp-proto': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/otlp-grpc-exporter-base': 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.220.0(@opentelemetry/api@1.9.1)
+      pino: 10.4.0
+      pino-abstract-transport: 3.0.0
 
   pino-pretty@13.1.3:
     dependencies:
@@ -27281,19 +27739,19 @@ snapshots:
 
   pino-std-serializers@7.1.0: {}
 
-  pino@9.14.0:
+  pino@10.4.0:
     dependencies:
       '@pinojs/redact': 0.4.0
       atomic-sleep: 1.0.0
       on-exit-leak-free: 2.1.2
-      pino-abstract-transport: 2.0.0
+      pino-abstract-transport: 3.0.0
       pino-std-serializers: 7.1.0
       process-warning: 5.0.0
       quick-format-unescaped: 4.0.4
-      real-require: 0.2.0
+      real-require: 1.0.0
       safe-stable-stringify: 2.5.0
       sonic-boom: 4.2.1
-      thread-stream: 3.1.0
+      thread-stream: 4.2.0
 
   pirates@4.0.7: {}
 
@@ -27922,7 +28380,7 @@ snapshots:
   readdirp@5.0.0:
     optional: true
 
-  real-require@0.2.0: {}
+  real-require@1.0.0: {}
 
   recharts-scale@0.4.5:
     dependencies:
@@ -28833,9 +29291,9 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  thread-stream@3.1.0:
+  thread-stream@4.2.0:
     dependencies:
-      real-require: 0.2.0
+      real-require: 1.0.0
 
   throat@5.0.0: {}
 

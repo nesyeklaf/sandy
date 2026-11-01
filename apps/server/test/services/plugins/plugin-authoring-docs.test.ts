@@ -3,9 +3,9 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import ts from "typescript";
-import * as pluginSdkApp from "@get-bb/plugin-sdk/app";
+import * as pluginSdkApp from "@sandy-sdk/plugin-sdk/app";
 import {
-  type BbPluginApi,
+  type SandyPluginApi,
   type ExperimentalAppOverlayProps,
   type ExperimentalMessageMetadataProps,
   type PluginAppBuilder,
@@ -52,14 +52,14 @@ import {
   type ExperimentalThreadActionTabProps,
   type ThreadChatMessageAction,
   type ThreadChatProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 
 const FRONTEND_RUNTIME_EXPORT_NAMES = Object.keys(pluginSdkApp).sort();
 const REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
 
 const SKILL_ROOT = fileURLToPath(
   new URL(
-    "../../../../../plugins/bb-guide/skills/bb-plugin-authoring/",
+    "../../../../../plugins/sandy-guide/skills/sandy-plugin-authoring/",
     import.meta.url,
   ),
 );
@@ -148,12 +148,12 @@ const FRONTEND_TEST_EXPORT_NAMES = [
 );
 
 const PUBLIC_PLUGIN_SDK_EXPORT_NAMES = [
-  "bb-plugin-sdk.d.ts",
-  "bb-plugin-sdk-provider-bridge.d.ts",
-  "bb-plugin-sdk-provider-bridge-testing.d.ts",
-  "bb-plugin-sdk-provider-bridge-acp.d.ts",
-  "bb-plugin-sdk-host.d.ts",
-  "bb-plugin-sdk-testing.d.ts",
+  "sandy-plugin-sdk.d.ts",
+  "sandy-plugin-sdk-provider-bridge.d.ts",
+  "sandy-plugin-sdk-provider-bridge-testing.d.ts",
+  "sandy-plugin-sdk-provider-bridge-acp.d.ts",
+  "sandy-plugin-sdk-host.d.ts",
+  "sandy-plugin-sdk-testing.d.ts",
 ].flatMap((filename) =>
   declarationExportNames(
     readFileSync(
@@ -167,7 +167,7 @@ const PUBLIC_PLUGIN_SDK_EXPORT_NAMES = [
   ),
 );
 
-const BB_PLUGIN_API_KEYS = [
+const SANDY_PLUGIN_API_KEYS = [
   "pluginId",
   "log",
   "settings",
@@ -192,11 +192,11 @@ const BB_PLUGIN_API_KEYS = [
   "sdk",
   "onDispose",
   "onInstall",
-] as const satisfies readonly (keyof BbPluginApi)[];
+] as const satisfies readonly (keyof SandyPluginApi)[];
 
 type MissingApiKey = Exclude<
-  keyof BbPluginApi,
-  (typeof BB_PLUGIN_API_KEYS)[number]
+  keyof SandyPluginApi,
+  (typeof SANDY_PLUGIN_API_KEYS)[number]
 >;
 const _assertAllApiKeysListed: MissingApiKey extends never ? true : never =
   true;
@@ -651,7 +651,7 @@ const _assertAllThreadChatMessageActionFieldsListed: MissingThreadChatMessageAct
   : never = true;
 void _assertAllThreadChatMessageActionFieldsListed;
 
-describe("bb-plugin-authoring skill", () => {
+describe("sandy-plugin-authoring skill", () => {
   const skillEntry = readFileSync(SKILL_PATH, "utf8");
   const skill = readSkillTree();
 
@@ -693,24 +693,24 @@ describe("bb-plugin-authoring skill", () => {
   });
 
   it("has frontmatter naming the skill after its directory", () => {
-    expect(skillEntry).toMatch(/^---\nname: bb-plugin-authoring\n/);
+    expect(skillEntry).toMatch(/^---\nname: sandy-plugin-authoring\n/);
   });
 
-  it("documents every BbPluginApi property", () => {
-    for (const key of BB_PLUGIN_API_KEYS) {
-      expect(skill, `bb.${key} is not documented in the skill`).toContain(
-        `bb.${key}`,
+  it("documents every SandyPluginApi property", () => {
+    for (const key of SANDY_PLUGIN_API_KEYS) {
+      expect(skill, `sandy.${key} is not documented in the skill`).toContain(
+        `sandy.${key}`,
       );
     }
   });
 
-  it("documents every @get-bb/plugin-sdk/app runtime export", () => {
+  it("documents every @sandy-sdk/plugin-sdk/app runtime export", () => {
     for (const name of FRONTEND_RUNTIME_EXPORT_NAMES) {
       expect(skill, `${name} is not documented in the skill`).toContain(name);
     }
   });
 
-  it("accounts for every @get-bb/plugin-sdk/app type export", () => {
+  it("accounts for every @sandy-sdk/plugin-sdk/app type export", () => {
     for (const name of FRONTEND_TYPE_EXPORT_NAMES) {
       expect(skill, `${name} is not documented in the skill`).toContain(name);
     }

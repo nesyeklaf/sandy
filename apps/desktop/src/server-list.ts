@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { BbDesktopServerChoice } from "@bb/desktop-contract";
+import type { SandyDesktopServerChoice } from "@sandy/desktop-contract";
 import {
   BUILTIN_SERVER_NAME,
   type ServerTargetStore,
@@ -12,7 +12,7 @@ export function customServerId(url: string): string {
 export function buildDesktopServerChoices(
   store: ServerTargetStore | null,
   builtinServerUrl: string,
-): BbDesktopServerChoice[] {
+): SandyDesktopServerChoice[] {
   const target = store?.getTarget() ?? { kind: "builtin" };
   const customUrls = store?.getCustomServerUrls() ?? [];
   const showBuiltin =

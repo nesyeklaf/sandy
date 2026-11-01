@@ -1,4 +1,4 @@
-import { definePluginApp } from "@get-bb/plugin-sdk/app";
+import { definePluginApp } from "@sandy-sdk/plugin-sdk/app";
 
 function PluginApiTesterPanel() {
   return (

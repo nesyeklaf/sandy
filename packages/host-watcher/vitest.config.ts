@@ -8,7 +8,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: import.meta.dirname,
-      name: "@bb/host-watcher",
+      name: "@sandy/host-watcher",
       include: ["test/**/*.test.ts"],
     }),
   },

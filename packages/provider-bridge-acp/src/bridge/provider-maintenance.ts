@@ -1,4 +1,4 @@
-import { execHostFile, execPortableFile } from "@bb/process-utils";
+import { execHostFile, execPortableFile } from "@sandy/process-utils";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -10,12 +10,12 @@ import type {
   ProviderUsage,
   ProviderUsageResult,
   ProviderUsageWindow,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 import {
   clampPercent,
   resolveExecutablePath,
   versionFrom,
-} from "@bb/provider-bridge-protocol/bridge-kit";
+} from "@sandy/provider-bridge-protocol/bridge-kit";
 import { z } from "zod";
 import { readOpenCodeGoUsage } from "./opencode-usage.js";
 
@@ -332,7 +332,7 @@ function fetchDashboard(
       "Content-Type": "application/json",
       "Connect-Protocol-Version": "1",
       "x-cursor-client-type": "cli",
-      "x-cursor-client-version": "cli-bb-provider-acp",
+      "x-cursor-client-version": "cli-sandy-provider-acp",
     },
     body: "{}",
     signal: AbortSignal.timeout(USAGE_FETCH_TIMEOUT_MS),

@@ -1,13 +1,13 @@
 {
-  "appId": "dev.bb.desktop",
-  "productName": "bb",
+  "appId": "dev.sandy.desktop",
+  "productName": "sandy",
   "artifactName": "${productName}-${version}-${arch}.${ext}",
   "toolsets": {
     "appimage": "1.0.3"
   },
   "afterPack": "scripts/prepare-native-modules.cjs",
   "asar": true,
-  "asarUnpack": ["dist/bb-app-bridge.mjs", "node_modules/**"],
+  "asarUnpack": ["dist/sandy-app-bridge.mjs", "node_modules/**"],
   "directories": {
     "buildResources": "assets",
     "output": "release"
@@ -17,12 +17,12 @@
     "dist/**",
     "node_modules/**",
     {
-      "from": "node_modules/bb-app/server/dist/app-scaffold-template",
-      "to": "node_modules/bb-app/server/dist/app-scaffold-template",
+      "from": "node_modules/sandy-app/server/dist/app-scaffold-template",
+      "to": "node_modules/sandy-app/server/dist/app-scaffold-template",
       "filter": ["**/*"]
     },
     {
-      "from": "node_modules/bb-app/node_modules/npm/node_modules",
+      "from": "node_modules/sandy-app/node_modules/npm/node_modules",
       "to": "node_modules/npm/node_modules",
       "filter": ["**/*"]
     },
@@ -32,7 +32,7 @@
   "mac": {
     "category": "public.app-category.developer-tools",
     "extendInfo": {
-      "NSMicrophoneUsageDescription": "bb uses your microphone for voice input and sites you allow in the in-app browser."
+      "NSMicrophoneUsageDescription": "sandy uses your microphone for voice input and sites you allow in the in-app browser."
     },
     "minimumSystemVersion": "13.0.0",
     "entitlements": "build/entitlements.mac.plist",
@@ -55,7 +55,7 @@
   },
   "linux": {
     "category": "Development",
-    "executableName": "bb",
+    "executableName": "sandy",
     "icon": "assets/icon.png",
     "target": [{ "target": "AppImage", "arch": ["x64"] }]
   },

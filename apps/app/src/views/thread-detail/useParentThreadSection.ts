@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ThreadResponse } from "@bb/server-contract";
+import type { ThreadResponse } from "@sandy/server-contract";
 import type { ThreadPromptParentThreadSection } from "@/components/promptbox/banner/ThreadPromptContextBanner";
 import { useThread } from "@/hooks/queries/thread-queries";
 import { getThreadRoutePath } from "@/lib/route-paths";

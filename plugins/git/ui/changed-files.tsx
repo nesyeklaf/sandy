@@ -1,19 +1,19 @@
 import {
   experimental_InfoList as InfoList,
   experimental_useAppPanel as useAppPanel,
-  useBbNavigate,
-} from "@get-bb/plugin-sdk/app";
-import { DiffSizeBar, DiffStatsTally } from "@bb/shared-ui/diff-stats-tally";
-import { InfoListRow } from "@bb/shared-ui/info-list-row";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+  useSandyNavigate,
+} from "@sandy-sdk/plugin-sdk/app";
+import { DiffSizeBar, DiffStatsTally } from "@sandy/shared-ui/diff-stats-tally";
+import { InfoListRow } from "@sandy/shared-ui/info-list-row";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   formatOmittedChangedFilesLabel,
   selectWorkspaceChangedFilesSections,
   toChangeTally,
   type WorkspaceChangedFileSelection,
   type WorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
+} from "@sandy/shared-ui/workspace-change-summary";
 import { useCallback } from "react";
 import {
   GIT_DIFF_TAB_ID,
@@ -91,7 +91,7 @@ export function useChangedFileActions(
   environmentId: string,
 ): ChangedFileActions {
   const panel = useAppPanel();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const openDiff = useCallback(
     (target: { kind: "file"; path: string } | { kind: "commit"; sha: string }) =>
       panel.openTab({

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { serverMovedFileSchema } from "@bb/server-archive";
+import { serverMovedFileSchema } from "@sandy/server-archive";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   listOldCopyEntries,
@@ -14,7 +14,7 @@ import {
 const tempDirs: string[] = [];
 
 async function makeDataDir(): Promise<string> {
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-server-move-switch-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-server-move-switch-"));
   tempDirs.push(dataDir);
   return dataDir;
 }
@@ -31,7 +31,7 @@ describe("old server daemon config", () => {
     const path = join(dataDir, "config.json");
     const original = `${JSON.stringify(
       {
-        config: { BB_LOG_LEVEL: "debug" },
+        config: { SANDY_LOG_LEVEL: "debug" },
         customModels: [{ providerId: "codex", model: "gpt-test" }],
         machineCredential: "stale",
         serverHeaders: { "x-stale": "1" },
@@ -44,16 +44,16 @@ describe("old server daemon config", () => {
 
     const backup = await writeOldServerDaemonConfig({
       dataDir,
-      headers: { "x-bb-machine-access": "bbcm_laptop" },
+      headers: { "x-sandy-machine-access": "sandycm_laptop" },
       serverUrl: "https://laptop.getbb.test",
     });
 
     expect(JSON.parse(await readFile(path, "utf8"))).toEqual({
-      config: { BB_LOG_LEVEL: "debug" },
+      config: { SANDY_LOG_LEVEL: "debug" },
       customModels: [{ providerId: "codex", model: "gpt-test" }],
       connectMachineId: "machine-1",
       serverUrl: "https://laptop.getbb.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_laptop" },
+      serverHeaders: { "x-sandy-machine-access": "sandycm_laptop" },
     });
     if (process.platform !== "win32") {
       expect((await stat(path)).mode & 0o777).toBe(0o600);
@@ -123,7 +123,7 @@ describe("server moved targets", () => {
 describe("old copy entries", () => {
   it("keeps the daemon's config and env and passes the lock file schema", () => {
     const entries = listOldCopyEntries([
-      { path: "bb.db" },
+      { path: "sandy.db" },
       { path: "config.json" },
       { path: "env.json" },
       { path: "attachments" },
@@ -133,9 +133,9 @@ describe("old copy entries", () => {
 
     expect(entries).toEqual([
       "attachments",
-      "bb.db",
       "plugins/tasks/data.db",
       "plugins/tasks/secrets",
+      "sandy.db",
     ]);
     expect(
       serverMovedFileSchema.parse({

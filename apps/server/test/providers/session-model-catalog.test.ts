@@ -1,5 +1,5 @@
-import { threadScope } from "@bb/domain";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
+import { threadScope } from "@sandy/domain";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
 import { describe, expect, it } from "vitest";
 import { resolveSystemExecutionOptions } from "../../src/services/system/execution-options.js";
 import { internalAuthHeaders } from "../helpers/commands.js";
@@ -65,7 +65,7 @@ describe("session model catalogs", () => {
                   threadId: thread.id,
                   providerThreadId: scenario.providerThreadId,
                   scope: threadScope(),
-                  kind: "bb/provider-model-catalog",
+                  kind: "sandy/provider-model-catalog",
                   payload: {
                     models: modelList("live-model"),
                     selectedOnlyModels: [],

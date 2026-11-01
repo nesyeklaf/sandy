@@ -1,5 +1,5 @@
 {
-  "name": "@bb/test-helpers",
+  "name": "@sandy/test-helpers",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -21,11 +21,11 @@
     "typecheck": "tsrs --noEmit"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
+    "@sandy/domain": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2",

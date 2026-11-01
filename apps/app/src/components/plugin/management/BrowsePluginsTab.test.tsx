@@ -21,7 +21,7 @@ import { LocationProbe } from "@/test/location-probe";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { makeInstalledPlugin } from "@/test/fixtures/plugins";
 import { BrowsePluginsTab } from "./BrowsePluginsTab";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { PLUGINS_BROWSE_DESCRIPTION } from "../plugins-collection-copy";
 
 vi.mock("@/components/plugin/PluginNewThreadComposer", () => ({
@@ -45,13 +45,13 @@ const MEMORY_ENTRY: PluginCatalogSearchEntry = {
   publishedAt: "2026-08-20T00:00:00Z",
   source: "builtin:memory",
   repositoryUrl: null,
-  marketplace: "bb-official",
-  marketplaceDisplayName: "BB Official",
-  publisherKey: "bb-official",
-  publisherLabel: "BB Official",
+  marketplace: "sandy-official",
+  marketplaceDisplayName: "SANDY Official",
+  publisherKey: "sandy-official",
+  publisherLabel: "SANDY Official",
   official: true,
   author: {
-    name: "BB",
+    name: "SANDY",
     github: "get-bb",
     url: "https://github.com/get-bb",
   },
@@ -218,7 +218,7 @@ describe("BrowsePluginsTab", () => {
       "Tasks & Workflows",
     ]);
     expect(screen.getAllByText("Memory")).toHaveLength(2);
-    expect(screen.queryByText("BB Official plugins")).toBeNull();
+    expect(screen.queryByText("SANDY Official plugins")).toBeNull();
   });
 
   it("keeps the shelves mounted while a search is active", async () => {
@@ -282,9 +282,9 @@ describe("BrowsePluginsTab", () => {
       onOpenPlugin,
     );
 
-    fireEvent.click(await screen.findByRole("link", { name: "BB Official" }));
+    fireEvent.click(await screen.findByRole("link", { name: "SANDY Official" }));
     expect(screen.getByTestId("location").textContent).toBe(
-      "/plugins?category=memory-and-context&sort=recently-added&author=11%3Abb-official%3Agithub%3Aget-bb",
+      "/plugins?category=memory-and-context&sort=recently-added&author=14%3Asandy-official%3Agithub%3Aget-bb",
     );
     expect(onOpenPlugin).not.toHaveBeenCalled();
   });
@@ -673,7 +673,7 @@ describe("BrowsePluginsTab", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "New plugin" }));
     expect((await screen.findByTestId("inline-composer")).textContent).toBe(
-      "Create a new bb plugin that ",
+      "Create a new sandy plugin that ",
     );
     fireEvent.click(
       screen.getByText(
@@ -708,8 +708,8 @@ describe("BrowsePluginsTab", () => {
       expect.objectContaining({
         entryId: "memory",
         pluginId: "memory",
-        marketplace: "bb-official",
-        publisherLabel: "BB Official",
+        marketplace: "sandy-official",
+        publisherLabel: "SANDY Official",
         displayName: "Memory",
         icon: "Brain",
         iconUrl: null,

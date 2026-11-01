@@ -3,7 +3,7 @@
   "name": "use-media-query",
   "type": "registry:hook",
   "title": "use-media-query",
-  "description": "BB hook \"use-media-query\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY hook \"use-media-query\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "files": [
     {
       "path": "registry/components/ui/hooks/use-media-query.ts",

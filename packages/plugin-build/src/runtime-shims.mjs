@@ -1,4 +1,4 @@
-// The one list of modules `bb plugin build` swaps for host-runtime shims.
+// The one list of modules `sandy plugin build` swaps for host-runtime shims.
 //
 // Plain ESM on purpose: the build engine (build-plugin-app.ts) imports it as
 // a module, and two generator scripts that run under bare `node` before any
@@ -11,14 +11,14 @@
 // (#2072). The sibling runtime-shims.d.mts declares its shape for tsc.
 
 /** The SDK app subpath plugin sources import. */
-export const PLUGIN_SDK_APP_SPECIFIER = "@get-bb/plugin-sdk/app";
+export const PLUGIN_SDK_APP_SPECIFIER = "@sandy-sdk/plugin-sdk/app";
 
 /**
  * Legacy alias for {@link PLUGIN_SDK_APP_SPECIFIER}, kept so pre-rename plugin
  * sources still build. It resolves to the same runtime slot and the same
  * export list; a later change removes it.
  */
-export const LEGACY_PLUGIN_SDK_APP_SPECIFIER = "@bb/plugin-sdk/app";
+export const LEGACY_PLUGIN_SDK_APP_SPECIFIER = "@sandy/plugin-sdk/app";
 
 /**
  * The shared-ui icon module. Builtin plugins import it by package specifier;
@@ -26,16 +26,16 @@ export const LEGACY_PLUGIN_SDK_APP_SPECIFIER = "@bb/plugin-sdk/app";
  * runtime shim plugin routes both to the same host slot so no plugin bundle
  * carries a second hugeicons map.
  */
-export const SHARED_UI_ICON_SPECIFIER = "@bb/shared-ui/icon";
+export const SHARED_UI_ICON_SPECIFIER = "@sandy/shared-ui/icon";
 
 export const SHARED_UI_QUESTION_FORM_HOST_SPECIFIER =
-  "@bb/shared-ui/question-form-host";
+  "@sandy/shared-ui/question-form-host";
 
 export const SHARED_UI_VOICE_INPUT_TEXTAREA_SPECIFIER =
-  "@bb/shared-ui/voice-input-textarea";
+  "@sandy/shared-ui/voice-input-textarea";
 
 /**
- * Runtime slot on `globalThis.__bbPluginRuntime` per shimmed specifier.
+ * Runtime slot on `globalThis.__sandyPluginRuntime` per shimmed specifier.
  * Shim policy (plugin design §5.5), two admission rules:
  *
  * 1. Singleton/global behavior — one React, the portaling radix families
@@ -106,7 +106,7 @@ function packageNameOf(specifier) {
 
 /**
  * Shimmed modules that are not npm packages a plugin would install: the SDK
- * facade (pinned separately, as `@get-bb/plugin-sdk`) and the workspace-only
+ * facade (pinned separately, as `@sandy-sdk/plugin-sdk`) and the workspace-only
  * shared-ui icon module.
  */
 const NON_NPM_SHIM_PACKAGES = new Set([
@@ -131,7 +131,7 @@ export const RUNTIME_SHIM_NPM_SPECIFIERS = Object.freeze(
  * The npm packages a plugin must declare as type-only devDependencies (at the
  * host's version) for its shimmed imports to typecheck: every shimmed npm
  * package except React, whose declarations ship separately as `@types/react`
- * and `@types/react-dom` and which the scaffold pins on its own. `bb plugin
+ * and `@types/react-dom` and which the scaffold pins on its own. `sandy plugin
  * build` never bundles any of these, so none belongs in `dependencies`.
  */
 export const SHIMMED_TYPE_PACKAGES = Object.freeze(

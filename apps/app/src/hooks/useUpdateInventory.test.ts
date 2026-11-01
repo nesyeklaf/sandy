@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { makePluginListItem } from "@/test/fixtures/plugins";
 import {
   buildUpdateInventoryPlugins,
@@ -26,7 +26,7 @@ describe("buildUpdateInventoryPlugins", () => {
         outcome: "incompatible",
         blockedVersion: "0.9.0",
         blockedLabel: "0.9.0",
-        blockedReasons: ["engines.bb requires >=2.0.0"],
+        blockedReasons: ["engines.sandy requires >=2.0.0"],
       },
     });
     const current = makePluginListItem({
@@ -71,7 +71,7 @@ describe("buildUpdateInventoryPlugins", () => {
           kind: "blocked",
           plugin: blocked,
           version: "0.9.0",
-          reasons: ["engines.bb requires >=2.0.0"],
+          reasons: ["engines.sandy requires >=2.0.0"],
         },
         { kind: "update", plugin: tracking, version: "1.2.0" },
       ],
@@ -87,7 +87,7 @@ describe("buildUpdateInventoryPlugins", () => {
         availableLabel: "1.2.0",
         blockedVersion: "1.3.0",
         blockedLabel: "1.3.0",
-        blockedReasons: ["engines.bbPluginSdk requires ^3.0.0"],
+        blockedReasons: ["engines.sandyPluginSdk requires ^3.0.0"],
       },
     });
     expect(buildUpdateInventoryPlugins([plugin]).items).toEqual([

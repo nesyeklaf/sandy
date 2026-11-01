@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { PopoverContent } from "@bb/shared-ui/popover";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { PopoverContent } from "@sandy/shared-ui/popover";
 import { MicrophonePreferencesSplit } from "./MicrophonePreferencesSplit";
 
 export function MicrophonePreferencesPopoverContent({

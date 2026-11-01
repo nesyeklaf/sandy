@@ -7,7 +7,7 @@ import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { AppDeps } from "../types.js";
 import { ApiError } from "../errors.js";
 import {

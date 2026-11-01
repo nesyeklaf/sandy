@@ -8,9 +8,9 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { DropdownMenuItem } from "@bb/shared-ui/dropdown-menu";
-import { CompactLongPressMenu } from "@bb/shared-ui/compact-long-press-menu";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { DropdownMenuItem } from "@sandy/shared-ui/dropdown-menu";
+import { CompactLongPressMenu } from "@sandy/shared-ui/compact-long-press-menu";
 
 const LONG_PRESS_MS = 700;
 
@@ -251,8 +251,8 @@ describe("CompactLongPressMenu", () => {
   it("lets only the innermost menu open when the menus come from separately bundled copies", async () => {
     vi.useFakeTimers();
     const pluginBundleSpecifier =
-      "@bb/shared-ui/compact-long-press-menu?plugin-bundle";
-    const pluginBundleCopy: typeof import("@bb/shared-ui/compact-long-press-menu") =
+      "@sandy/shared-ui/compact-long-press-menu?plugin-bundle";
+    const pluginBundleCopy: typeof import("@sandy/shared-ui/compact-long-press-menu") =
       await import(pluginBundleSpecifier);
     expect(pluginBundleCopy.CompactLongPressMenu).not.toBe(
       CompactLongPressMenu,

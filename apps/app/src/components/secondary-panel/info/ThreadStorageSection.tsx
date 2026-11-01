@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { COARSE_POINTER_TEXT_SM_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { EmptyState } from "@bb/shared-ui/empty-state";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { COARSE_POINTER_TEXT_SM_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { EmptyState } from "@sandy/shared-ui/empty-state";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   describeLifecycleError,
   formatLifecycleErrorDescription,
@@ -18,7 +18,7 @@ import {
   InfoListMoreRow,
   InfoSection,
 } from "./info-list";
-import { InfoListRow } from "@bb/shared-ui/info-list-row";
+import { InfoListRow } from "@sandy/shared-ui/info-list-row";
 import {
   buildThreadStorageTree,
   flattenThreadStorageNode,

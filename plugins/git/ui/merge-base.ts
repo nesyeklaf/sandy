@@ -7,7 +7,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useGitBranches, useSetMergeBase } from "./queries.js";
-import type { GitBranchRefClassification } from "@bb/domain";
+import type { GitBranchRefClassification } from "@sandy/domain";
 import type { WorkspaceStatus } from "../contract.js";
 
 const overrides = new Map<string, string>();

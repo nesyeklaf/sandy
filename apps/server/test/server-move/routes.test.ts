@@ -5,20 +5,20 @@ import {
   HOST_DAEMON_PROTOCOL_VERSION,
   type HostDaemonOnlineRpcRequestMessage,
   type HostDaemonRpcCommand,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   extractServerArchive,
   readLastServerMoveFile,
   readServerMovedFile,
   writeLastServerMoveFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import {
   serverMoveStatusResponseSchema,
   serverMoveStatusSchema,
-} from "@bb/server-contract";
-import { setExperiments } from "@bb/db";
-import { defaultExperiments } from "@bb/domain";
-import { createDeferredPromise, makeTempDir } from "@bb/test-helpers";
+} from "@sandy/server-contract";
+import { setExperiments } from "@sandy/db";
+import { defaultExperiments } from "@sandy/domain";
+import { createDeferredPromise, makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import { readJson } from "../helpers/json.js";
 import {
@@ -145,7 +145,7 @@ describe("server move routes", () => {
               return {
                 ok: true,
                 result: inspectResult({
-                  bbAppVersion: harness.config.appVersion,
+                  sandyAppVersion: harness.config.appVersion,
                 }),
               };
             case "server_move.prepare":
@@ -254,7 +254,7 @@ describe("server move routes", () => {
       expect(
         (
           await harness.app.request(
-            `/internal/server-move/${started.moveId}/bb-app.tgz`,
+            `/internal/server-move/${started.moveId}/sandy-app.tgz`,
             { headers: daemonHeaders(NEW) },
           )
         ).status,
@@ -277,7 +277,7 @@ describe("server move routes", () => {
         archivePath: downloaded,
         destinationDir: await makeTempDir(),
       });
-      expect(manifest.entries.map((entry) => entry.path)).toContain("bb.db");
+      expect(manifest.entries.map((entry) => entry.path)).toContain("sandy.db");
 
       releasePrepare.resolve();
       await expect
@@ -337,7 +337,7 @@ describe("server move routes", () => {
           instanceId: "instance-worker",
           hostName: "Worker",
           platform: "linux",
-          dataDir: "/home/me/.bb-machines/laptop",
+          dataDir: "/home/me/.sandy-machines/laptop",
           localApiPort: 38_888,
           protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
           activeThreads: [],
@@ -423,10 +423,10 @@ describe("server move routes", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toBe("application/gzip");
       expect(response.headers.get("content-disposition")).toMatch(
-        /^attachment; filename="bb-server-\d{4}-\d{2}-\d{2}\.tar\.gz"$/u,
+        /^attachment; filename="sandy-server-\d{4}-\d{2}-\d{2}\.tar\.gz"$/u,
       );
       const bytes = Buffer.from(await response.arrayBuffer());
-      expect(response.headers.get("x-bb-archive-sha256")).toBe(
+      expect(response.headers.get("x-sandy-archive-sha256")).toBe(
         createHash("sha256").update(bytes).digest("hex"),
       );
       const exportPath = join(await makeTempDir(), "export.tar.gz");
@@ -439,7 +439,7 @@ describe("server move routes", () => {
         sourceDataDir: harness.config.dataDir,
         sourceServerHostId: OLD,
       });
-      expect(manifest.entries.map((entry) => entry.path)).toContain("bb.db");
+      expect(manifest.entries.map((entry) => entry.path)).toContain("sandy.db");
       await expect
         .poll(
           async () =>

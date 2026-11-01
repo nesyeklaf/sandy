@@ -17,7 +17,7 @@ import { expect, it, onTestFinished } from "vitest";
 it.skipIf(process.platform === "win32").each(["cached", "download", "invalid"])(
   "verifies the Bun archive before extraction: %s",
   (mode) => {
-    const root = mkdtempSync(join(tmpdir(), "bb-bun-bootstrap-\\windows-"));
+    const root = mkdtempSync(join(tmpdir(), "sandy-bun-bootstrap-\\windows-"));
     onTestFinished(() => rmSync(root, { recursive: true, force: true }));
     const platform = process.platform === "darwin" ? "darwin" : "linux";
     const arch = process.arch === "arm64" ? "aarch64" : "x64-baseline";
@@ -53,7 +53,7 @@ ${mode === "invalid" ? 'printf corrupt > "$1"' : 'cp "$RUNNER_TEMP/payload.zip" 
 `,
     );
     chmodSync(join(bin, "curl"), 0o755);
-    const install = join(root, "bb-bun-1.3.14");
+    const install = join(root, "sandy-bun-1.3.14");
     mkdirSync(install);
     writeFileSync(
       join(install, "archive.zip"),

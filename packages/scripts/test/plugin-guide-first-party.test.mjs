@@ -17,12 +17,12 @@ function manifestRows() {
     const path = `plugins/${entry.name}/package.json`;
     if (!entry.isDirectory() || !existsSync(resolve(root, path))) continue;
     const manifest = readJson(path);
-    if (manifest.bb === undefined) continue;
-    const icon = manifest.bb.branding?.icon ?? null;
-    const id = manifest.name.replace(/^bb-plugin-/u, "");
+    if (manifest.sandy === undefined) continue;
+    const icon = manifest.sandy.branding?.icon ?? null;
+    const id = manifest.name.replace(/^sandy-plugin-/u, "");
     rows.set(id, {
       id,
-      name: manifest.bb.name,
+      name: manifest.sandy.name,
       icon: icon === null || icon.startsWith("./") ? null : icon,
     });
   }
@@ -35,7 +35,7 @@ describe("Plugin Guide first-party plugins", () => {
     for (const row of readJson(tablePath)) {
       expect(
         row,
-        `${tablePath} row for ${row.id} must match plugins/*/package.json (id from the package name, bb.name, and a non-asset bb.branding.icon)`,
+        `${tablePath} row for ${row.id} must match plugins/*/package.json (id from the package name, sandy.name, and a non-asset sandy.branding.icon)`,
       ).toEqual(manifests.get(row.id));
     }
   });

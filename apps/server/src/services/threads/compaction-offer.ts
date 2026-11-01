@@ -2,8 +2,8 @@ import {
   getExperiments,
   getLatestTokenUsageRow,
   type DbConnection,
-} from "@bb/db";
-import type { ThreadContextWindowUsage } from "@bb/server-contract";
+} from "@sandy/db";
+import type { ThreadContextWindowUsage } from "@sandy/server-contract";
 import type { ProviderRegistryService } from "../providers/provider-registry.js";
 import { parseStoredEvent } from "./thread-data.js";
 

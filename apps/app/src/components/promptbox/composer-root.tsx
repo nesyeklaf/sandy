@@ -7,15 +7,20 @@ import {
 } from "react";
 import type {
   ExperimentalComposerContributions,
+  ExperimentalComposerMenuContribution,
   ExperimentalComposerEditor,
   ExperimentalComposerMenuEntryProps,
   ExperimentalComposerRootProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   ComposerActionsSlot,
   PluginComposerPlusMenuEntry,
 } from "@/components/plugin/PluginComposerActions";
 import { PluginComposerCommands } from "@/components/plugin/PluginComposerCommands";
+import {
+  PluginComposerMenuBindings,
+  type ComposerMenuComposers,
+} from "@/components/plugin/PluginComposerMenus";
 import {
   APP_COMPOSER_SELECTOR,
   composerOwnsCommand,
@@ -42,6 +47,8 @@ export interface ComposerRootHost {
     | ((layout: { height: number; isOpen: boolean }) => void)
     | null;
   runsPluginCommands: boolean;
+  menus: readonly ExperimentalComposerMenuContribution[];
+  menuComposers: ComposerMenuComposers;
   isFocusedPane: boolean;
 }
 
@@ -99,7 +106,7 @@ export function ComposerRoot({
     );
   }
   const { key, registerEditor, attachEditor, onFocusCommand } = host;
-  const { runsPluginCommands } = host;
+  const { runsPluginCommands, menus, menuComposers } = host;
   const { isFocusedPane } = host;
   const editorRef = useRef(editor);
   useLayoutEffect(() => {
@@ -193,6 +200,7 @@ export function ComposerRoot({
         <ComposerCommand command="composer.focus" run={onFocusCommand} />
       ) : null}
       {runsPluginCommands ? <PluginComposerCommands /> : null}
+      <PluginComposerMenuBindings menus={menus} composers={menuComposers} />
     </ComposerCommandOwnerProvider>
   );
 }

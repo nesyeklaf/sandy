@@ -2,8 +2,8 @@ import type { DesktopBrowserBroker } from "./desktop-browser-broker.js";
 import {
   CompetingTurnError,
   type AgentRuntimeBridgeLaunch,
-} from "@bb/agent-runtime";
-import type { AvailableModel } from "@bb/domain";
+} from "@sandy/agent-runtime";
+import type { AvailableModel } from "@sandy/domain";
 import type { EventSink } from "./event-sink.js";
 import {
   COMPETING_TURN_ERROR_CODE,
@@ -16,13 +16,13 @@ import {
   type HostDaemonInjectedSkillSource,
   type HostDaemonOnlineRpcCommand,
   type WorkspaceContext,
-} from "@bb/host-daemon-contract";
-import { BRIDGE_JSON_RPC_ERRORS } from "@bb/provider-bridge-protocol";
+} from "@sandy/host-daemon-contract";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy/provider-bridge-protocol";
 import type {
   CommandListResult,
   ProviderInstallationStatus,
-} from "@bb/provider-bridge-protocol";
-import { ensurePluginProcessDataDir } from "@bb/process-utils";
+} from "@sandy/provider-bridge-protocol";
+import { ensurePluginProcessDataDir } from "@sandy/process-utils";
 import type { InteractiveResolveCommandInput } from "./interactive-request-registry.js";
 import { RuntimeManager, type RuntimeEntry } from "./runtime-manager.js";
 import type { FetchProjectAttachment } from "./project-attachments.js";

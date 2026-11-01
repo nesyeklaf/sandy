@@ -1,6 +1,6 @@
-import { ExpandableText } from "@bb/shared-ui/expandable-text";
+import { ExpandableText } from "@sandy/shared-ui/expandable-text";
 import type { ReactNode } from "react";
-import type { SystemExecutionOptionsModelLoadError } from "@bb/server-contract";
+import type { SystemExecutionOptionsModelLoadError } from "@sandy/server-contract";
 import { useUrlAnchorClickHandler } from "@/lib/url-open-routing";
 
 interface ModelLoadErrorMessageProps {

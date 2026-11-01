@@ -1,6 +1,6 @@
 # Storage & retention
 
-A bundled, default-disabled plugin. Enable the `bb--storage-retention` plugin. Open Storage & retention in the sidebar.
+A bundled, default-disabled plugin. Enable the `sandy--storage-retention` plugin. Open Storage & retention in the sidebar.
 Both retention policies default to Never. The plugin owns policy, previews,
 hourly scheduling, run summaries, UI, and CLI commands. It uses public SDK thread
 rows to reconstruct archive/delete relationships and ordinary lifecycle actions.
@@ -13,12 +13,12 @@ Disabling the plugin stops retention; it does not stop core orphan maintenance.
 The machine page offers Clear archived files for whole storage folders, including
 small files, from archived, stopped, unpinned threads in the scan. Bulk clearing
 keeps conversations and uploaded attachments and requires confirmation. The
-matching CLI command is `bb storage clear-archived-files --machine HOST_ID --yes`.
+matching CLI command is `sandy storage clear-archived-files --machine HOST_ID --yes`.
 
-The Clean up section offers Remove instances for `~/.bb-dev` entries whose
+The Clean up section offers Remove instances for `~/.sandy-dev` entries whose
 source checkout no longer exists. The host re-verifies each checkout is missing,
 stops processes whose working directory is inside it, then removes the entry. The
-matching CLI command is `bb storage remove-dev-instances --machine HOST_ID --yes`.
+matching CLI command is `sandy storage remove-dev-instances --machine HOST_ID --yes`.
 Every development row's trash button removes that single entry immediately
 (`--instance NAME`), like the thread rows' trash button clears a thread's files.
 If the instance's dev server is running (fresh daemon lock), the row asks
@@ -26,22 +26,22 @@ If the instance's dev server is running (fresh daemon lock), the row asks
 removes it. The CLI's `--yes` covers that confirmation.
 
 Scans also run `git worktree list` in each project source on the machine and
-report linked worktrees that no live BB environment owns, such as ones agents
+report linked worktrees that no live SANDY environment owns, such as ones agents
 created with `git worktree add`. The Worktrees by project table counts them next
-to BB worktrees, and the Clean up section lists them with sizes. Removal runs
+to SANDY worktrees, and the Clean up section lists them with sizes. Removal runs
 `git worktree remove` on the host after rechecking that the worktree is unlocked,
 clean, and not detached on commits outside every branch and tag; branches are
 kept. Rows show the blockers found during the scan. Removing a kept worktree from
 its row asks "Remove anyway?" and runs `git worktree remove --force`; bulk removal
 never forces. The matching CLI command is
-`bb storage remove-external-worktrees --machine HOST_ID [--path PATH [--force]] --yes`.
+`sandy storage remove-external-worktrees --machine HOST_ID [--path PATH [--force]] --yes`.
 
 Large-file cleanup from the page starts a background job so slow folder walks
 can finish after the remote HTTP request returns. Each machine reports queued, running,
 completed, or failed status, including after navigation or reconnection. The
 `startClearLargeFiles({hostId})` RPC starts the job; pass null for all scanned
-online machines. `bb storage usage` exposes `largeFileCleanup` status. The
-`clearLargeFiles` RPC and `bb storage clear-large-files` continue to wait for
+online machines. `sandy storage usage` exposes `largeFileCleanup` status. The
+`clearLargeFiles` RPC and `sandy storage clear-large-files` continue to wait for
 completion and return deleted file/byte totals.
 
 Cached reports are snapshots; rescan to see external filesystem changes. Cleanup requests run in FIFO order, one at a time per machine; different machines
@@ -64,11 +64,11 @@ queues future archives, waits for the 30-second undo grace, and retries after
 reload, thread stop, or host reconnection. Unarchiving cancels cleanup; pinned
 threads are skipped. `deleteDevDataOnCheckoutRemoval` scans and removes development
 folders whose checkout is missing, including existing folders, while keeping
-existing and unidentified sources. Both are available through `bb storage retention`.
+existing and unidentified sources. Both are available through `sandy storage retention`.
 
 Development cleanup reconciles filesystem state on plugin startup, machine
 reconnect, and hourly. `experimental_environment.removed` re-measures only the
-removing machine's `~/.bb-dev`, queued behind any cleanup already
+removing machine's `~/.sandy-dev`, queued behind any cleanup already
 running there; missed events need no replay or removal-history tables.
 Offline/busy machines and failed cleanup retry on subsequent scans. Provider
 removal success does not prove the path was deleted; the host always checks
@@ -79,7 +79,7 @@ background jobs. `startCleanup` and `startClearArchivedFiles` start them; `host`
 and `hosts` report progress, with `maintenanceJobs` retaining a separate status per
 maintenance kind. `maintenance` remains the latest maintenance status. Individual
 thread/development cleanup uses `startEntryCleanup` and polls `entryCleanup` for
-queued/running/result status so waiting never holds a remote HTTP request open. The CLI offers `bb storage cleanup` for maintenance
+queued/running/result status so waiting never holds a remote HTTP request open. The CLI offers `sandy storage cleanup` for maintenance
 jobs and keeps synchronous cleanup commands for callers that need final totals.
 
 ## TODO

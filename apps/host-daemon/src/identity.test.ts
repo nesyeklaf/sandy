@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import { detectHostName, loadHostIdentity, persistHostId } from "./identity.js";
 
@@ -19,7 +19,7 @@ async function readFileOrNull(filePath: string): Promise<string | null> {
 
 describe("identity", () => {
   it("resolves a host ID once persisted and reuses it on subsequent runs", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-identity-");
+    const dataDir = await makeTempDir("sandy-host-daemon-identity-");
 
     const first = await loadHostIdentity({
       dataDir,
@@ -51,8 +51,8 @@ describe("identity", () => {
     );
   });
 
-  it("does not persist BB_HOST_ID until persistHostId is called", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-identity-env-");
+  it("does not persist SANDY_HOST_ID until persistHostId is called", async () => {
+    const dataDir = await makeTempDir("sandy-host-daemon-identity-env-");
 
     const identity = await loadHostIdentity({
       dataDir,
@@ -73,8 +73,8 @@ describe("identity", () => {
     ).resolves.toContain("host-provided");
   });
 
-  it("rejects a BB_HOST_ID that conflicts with a persisted host ID", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-identity-conflict-");
+  it("rejects a SANDY_HOST_ID that conflicts with a persisted host ID", async () => {
+    const dataDir = await makeTempDir("sandy-host-daemon-identity-conflict-");
 
     await persistHostId({ dataDir, hostId: "host-persisted" });
 

@@ -2,9 +2,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ThreadEvent } from "@bb/domain";
-import { getThreadEventScopeTurnId } from "@bb/domain";
-import { BRIDGE_JSON_RPC_ERRORS } from "@bb/provider-bridge-protocol";
+import type { ThreadEvent } from "@sandy/domain";
+import { getThreadEventScopeTurnId } from "@sandy/domain";
+import { BRIDGE_JSON_RPC_ERRORS } from "@sandy/provider-bridge-protocol";
 import {
   createScriptedEchoRequestRecord,
   createScriptedEchoRuntime,
@@ -28,7 +28,7 @@ describe("createAgentRuntime input accepted events", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "bb-runtime-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "sandy-runtime-test-"));
   });
 
   afterEach(() => {

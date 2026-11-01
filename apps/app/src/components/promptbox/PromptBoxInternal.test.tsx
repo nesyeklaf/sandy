@@ -14,11 +14,11 @@ import {
 } from "@/test/fixtures/composer-search";
 import { resolveThreadMentionDropTarget } from "@/lib/thread-mention-drop";
 import { sdk } from "@/lib/sdk";
-import type { PromptTextMention } from "@bb/domain";
-import { createDeferredPromise } from "@bb/test-helpers";
+import type { PromptTextMention } from "@sandy/domain";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import type { TiptapEditorHTMLElement } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { EditorView } from "@tiptap/pm/view";
 import {
   createRef,
@@ -61,8 +61,8 @@ import {
   emptyPromptDraftState,
   promptInputToDraft,
   type PromptDraftState,
-} from "@bb/client-core";
-import type { ComposerSubmitOptions } from "@get-bb/plugin-sdk/app";
+} from "@sandy/client-core";
+import type { ComposerSubmitOptions } from "@sandy-sdk/plugin-sdk/app";
 import { createCoreComposerActions } from "@/lib/plugin-composer-handle";
 import {
   getComposerInputLock,
@@ -105,12 +105,12 @@ import {
 import {
   promptMentionClipboardDataAttributes,
   serializedTextForPromptMentionResource,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type {
   PromptDraftAttachment,
   PromptMentionSuggestion,
   ProviderCommandSuggestion,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 
 vi.mock("@/hooks/usePromptMentions", async () =>
   (await import("@/test/fixtures/composer-search")).fakePromptMentionsModule(),
@@ -5563,8 +5563,8 @@ describe("ComposerBox prompt actions", () => {
       }
       pill.textContent = serializedText;
       return {
-        text: `Build a plugin capability like ${serializedText} using bb's Plugin Guide. `,
-        html: `Build a plugin capability like ${pill.outerHTML} using bb's Plugin Guide. `,
+        text: `Build a plugin capability like ${serializedText} using sandy's Plugin Guide. `,
+        html: `Build a plugin capability like ${pill.outerHTML} using sandy's Plugin Guide. `,
       };
     };
 
@@ -5591,8 +5591,8 @@ describe("ComposerBox prompt actions", () => {
       getPromptEditorElement().querySelectorAll(".prompt-mention-pill"),
     ).toHaveLength(2);
     expect(latestValue(changes)).toBe(
-      "Build a plugin capability like @Inline actions using bb's Plugin Guide. " +
-        "Build a plugin capability like @Thread side-panel tabs using bb's Plugin Guide. ",
+      "Build a plugin capability like @Inline actions using sandy's Plugin Guide. " +
+        "Build a plugin capability like @Thread side-panel tabs using sandy's Plugin Guide. ",
     );
   });
 
@@ -5677,7 +5677,7 @@ describe("ComposerBox prompt actions", () => {
     await selectPromptAction("Automation");
 
     await waitFor(() =>
-      expect(latestValue(changes)).toBe("Create a new bb automation to "),
+      expect(latestValue(changes)).toBe("Create a new sandy automation to "),
     );
     expect(latestChange(changes)?.mentions).toEqual([]);
   });
@@ -5686,16 +5686,16 @@ describe("ComposerBox prompt actions", () => {
     const project = {
       kind: "project",
       projectId: "proj_1",
-      label: "bb",
+      label: "sandy",
     } as const;
-    const { changes, promptBoxRef } = renderPromptBox("fix @bb", {
-      initialMentionRanges: [{ start: 4, end: 7, resource: project }],
+    const { changes, promptBoxRef } = renderPromptBox("fix @sandy", {
+      initialMentionRanges: [{ start: 4, end: 10, resource: project }],
     });
 
     await focusPromptEnd(promptBoxRef);
     await selectPromptAction("Plan");
 
-    await waitFor(() => expect(latestValue(changes)).toBe("/plan fix @bb"));
+    await waitFor(() => expect(latestValue(changes)).toBe("/plan fix @sandy"));
     expect(latestChange(changes)?.mentions).toEqual([
       {
         start: 0,
@@ -5712,7 +5712,7 @@ describe("ComposerBox prompt actions", () => {
       },
       {
         start: "/plan fix ".length,
-        end: "/plan fix @bb".length,
+        end: "/plan fix @sandy".length,
         resource: project,
       },
     ]);
@@ -5732,13 +5732,13 @@ describe("ComposerBox prompt actions", () => {
 
     await selectPromptAction("Plugin");
     await waitFor(() =>
-      expect(latestValue(changes)).toBe("Create a new bb plugin that wraps CI"),
+      expect(latestValue(changes)).toBe("Create a new sandy plugin that wraps CI"),
     );
     expect(latestChange(changes)?.mentions).toEqual([]);
 
     await selectPromptAction("Plugin");
 
-    expect(latestValue(changes)).toBe("Create a new bb plugin that wraps CI");
+    expect(latestValue(changes)).toBe("Create a new sandy plugin that wraps CI");
   });
 
   it("pastes prompt action command tokens as plan and goal pills", async () => {

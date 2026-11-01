@@ -1,9 +1,9 @@
-import { HOST_TAILWIND_VERSION } from "@bb/plugin-build/host-tailwind-version";
+import { HOST_TAILWIND_VERSION } from "@sandy/plugin-build/host-tailwind-version";
 import { useInsertionEffect } from "react";
 
-const CSS_MARKER = "data-bb-plugin-css";
-const CSS_PRELOAD_MARKER = "data-bb-plugin-css-preload";
-const CSS_PREFETCH_MARKER = "data-bb-plugin-css-prefetch";
+const CSS_MARKER = "data-sandy-plugin-css";
+const CSS_PRELOAD_MARKER = "data-sandy-plugin-css-preload";
+const CSS_PREFETCH_MARKER = "data-sandy-plugin-css-prefetch";
 const CSS_RELEASE_GRACE_MS = 1_500;
 
 interface PluginCssRecord {
@@ -47,7 +47,7 @@ function removeLink(link: HTMLLinkElement | null): void {
 }
 
 function warnLoadFailure(pluginId: string, url: string): void {
-  console.warn(`bb plugin "${pluginId}": failed to load stylesheet ${url}`);
+  console.warn(`sandy plugin "${pluginId}": failed to load stylesheet ${url}`);
 }
 
 function settle(

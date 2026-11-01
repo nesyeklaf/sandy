@@ -1,10 +1,10 @@
-import { APP_SURFACE_HEADER_NAME } from "@bb/config/app-surface";
+import { APP_SURFACE_HEADER_NAME } from "@sandy/config/app-surface";
 import {
   buildBridgeInjectionScript,
   type NativeShellHandshake,
-} from "@bb/mobile-bridge";
+} from "@sandy/mobile-bridge";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import { resetNativeShellForTests } from "@/lib/native-shell";
 import { appSurfaceRequestInit, getAppSurface } from "./app-surface";
 
@@ -53,7 +53,7 @@ describe("app surface request metadata", () => {
 
   it("marks Electron preload requests as desktop", () => {
     vi.stubGlobal("window", {
-      bbDesktop: createBbDesktopApi(desktopInfo),
+      sandyDesktop: createSandyDesktopApi(desktopInfo),
     });
 
     const init = appSurfaceRequestInit();
@@ -64,7 +64,7 @@ describe("app surface request metadata", () => {
     );
   });
 
-  it("marks requests from the bb mobile shell as mobile", () => {
+  it("marks requests from the sandy mobile shell as mobile", () => {
     const fakeWindow: Record<string, unknown> = {
       ReactNativeWebView: { postMessage: () => {} },
     };

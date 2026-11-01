@@ -13,18 +13,18 @@ import {
   markDiffViewedFile,
   updateEnvironmentMetadata,
   type DiffViewedFileScope,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   environmentStatusValues,
   type EnvironmentStatus,
   type WorkspaceDiffTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   publicApiRoutes,
   typedRoutes,
   type EnvironmentDiffQuery,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { Hono } from "hono";
 import type { AppDeps } from "../types.js";
 import { COMMAND_TIMEOUT_MS } from "../constants.js";
@@ -58,7 +58,7 @@ import { requireWorkspaceCommandTarget } from "../services/environments/workspac
 const LISTED_ENVIRONMENT_STATUSES: readonly EnvironmentStatus[] =
   environmentStatusValues.filter((status) => status !== "destroyed");
 
-const COMMIT_FALLBACK_MESSAGE = "bb: automated commit";
+const COMMIT_FALLBACK_MESSAGE = "sandy: automated commit";
 
 const AI_MAX_DIFF_BYTES = 32_000;
 const AI_MAX_FILE_LIST_BYTES = 4_000;

@@ -2,76 +2,75 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e40bda56-54a4-47f8-a417-6bbadf2e5b40">
     <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232">
-    <img alt="bb" src="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232" width="128">
+    <img alt="sandy" src="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232" width="128">
   </picture>
 </p>
 
-# bb
+# sandy
 
-[![npm version](https://img.shields.io/npm/v/bb-app.svg)](https://www.npmjs.com/package/bb-app)
-[![Join Discord](https://img.shields.io/badge/Discord-Join%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/kvBU6tJhcJ)
+[![npm version](https://img.shields.io/npm/v/sandy-app.svg)](https://www.npmjs.com/package/sandy-app)
 
-bb is an agentic IDE that builds itself. It can control, customize, and automate
+sandy is an agentic IDE that builds itself. It can control, customize, and automate
 itself, laying the groundwork for your own software factory.
 
 Every surface — the desktop app, web app, CLI, and HTTP API — is a first-class
-way to drive bb. Work runs in threads you can follow live, steer at any point,
+way to drive sandy. Work runs in threads you can follow live, steer at any point,
 or hand off to another agent.
 
 > [!NOTE]
-> bb is in active development. Core architecture is stable, but workflows
+> sandy is in active development. Core architecture is stable, but workflows
 > and surfaces are still evolving.
 
 <p align="center">
-  <img alt="bb desktop app showing a code review thread, dispatch panel, and task board" src="assets/app-screenshot.png" width="800">
+  <img alt="sandy desktop app showing a code review thread, dispatch panel, and task board" src="assets/app-screenshot.png" width="800">
 </p>
 
-## Use bb
+## Use sandy
 
 ### Download the desktop app
 
-The recommended way to start using bb is the desktop app:
+The recommended way to start using sandy is the desktop app:
 
-**[Download the latest desktop app](https://github.com/get-bb/bb/releases/tag/desktop-latest)**
+**[Download the latest desktop app](https://github.com/nesyeklaf/sandy/releases/tag/desktop-latest)**
 
 The desktop app supports macOS on Apple Silicon (arm64). The Linux x64 AppImage
 and the Windows x64 installer are alpha: expect problems, and please report
-them. Intel Mac users should run bb with `npx` instead. Native Windows needs
-[Git for Windows](https://git-scm.com/download/win), which bb uses for Git and
-for environment setup scripts. You can also run bb inside
+them. Intel Mac users should run sandy with `npx` instead. Native Windows needs
+[Git for Windows](https://git-scm.com/download/win), which sandy uses for Git and
+for environment setup scripts. You can also run sandy inside
 [WSL2 (Windows Subsystem for Linux)](https://learn.microsoft.com/windows/wsl/install):
 install WSL2 first, then run the `npx` command below from your WSL2 (Linux)
 shell.
 
 Early adopters can install
-**[bb Nightly](https://github.com/get-bb/bb/releases/tag/desktop-nightly)**
+**[sandy Nightly](https://github.com/nesyeklaf/sandy/releases/tag/desktop-nightly)**
 alongside the stable desktop app. It has a separate application identity,
 yellow icon, and auto-update feed.
 
 ### Or run it anywhere with npx
 
 ```bash
-npx bb-app@latest
+npx sandy-app@latest
 ```
 
 Then open `http://localhost:38886`.
 
-To control bb from outside bb with the `bb` CLI, open **Settings → General →
+To control sandy from outside sandy with the `sandy` CLI, open **Settings → General →
 Command line** and choose **Install**. See
-[The bb Command On PATH](./docs/configuration.md#the-bb-command-on-path).
+[The sandy Command On PATH](./docs/configuration.md#the-sandy-command-on-path).
 
 To run the newest automated build instead:
 
 ```bash
-npx bb-app@nightly
+npx sandy-app@nightly
 ```
 
-npm 12 and later block dependency install scripts by default. bb needs those
+npm 12 and later block dependency install scripts by default. sandy needs those
 scripts to build its native add-ons. If your npm version is 12 or later, allow
 the scripts for the install:
 
 ```bash
-npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher bb-app@latest
+npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app@latest
 ```
 
 Or set the policy once for all global installs:
@@ -80,15 +79,15 @@ Or set the policy once for all global installs:
 npm config set allow-scripts=better-sqlite3,node-pty,@parcel/watcher --location=user
 ```
 
-bb uses the provider CLI you already have authenticated.
+sandy uses the provider CLI you already have authenticated.
 
 For install requirements, provider setup, configuration, and package-focused
 docs, start with
-[`packages/bb-app`](./packages/bb-app/README.md).
+[`packages/sandy-app`](./packages/sandy-app/README.md).
 
 ## Development
 
-Use the development loop when working on bb itself:
+Use the development loop when working on sandy itself:
 
 ```bash
 pnpm dev
@@ -97,10 +96,10 @@ pnpm dev
 That starts the Vite app and proxies API and WebSocket traffic to a separate
 dev server. The launcher prints the actual ports at startup. Each checkout gets
 a data directory under
-`~/.bb-dev/<checkout-instance>/` and deterministic high ports derived from the
+`~/.sandy-dev/<checkout-instance>/` and deterministic high ports derived from the
 checkout path. The checkout instance id is the sanitized path to the checkout,
 relative to your home directory, plus a short hash suffix. Separate worktrees
-can run alongside each other and the packaged `npx bb-app@latest` instance.
+can run alongside each other and the packaged `npx sandy-app@latest` instance.
 
 To test the production bundle and serving path without switching to production
 data or ports, use:
@@ -110,7 +109,7 @@ pnpm start:worktree
 ```
 
 This builds the same optimized frontend and runtime artifacts as `pnpm start`,
-then serves the app from the BB server on the checkout-specific dev server port.
+then serves the app from the SANDY server on the checkout-specific dev server port.
 It keeps the normal checkout-specific dev data directory and host-daemon port.
 There is no Vite dev server or hot reload in this mode; rerun the command after
 source changes.
@@ -119,7 +118,7 @@ For the Electron desktop shell, keep `pnpm dev` running and start the desktop
 package in a second terminal:
 
 ```bash
-pnpm exec turbo run dev --filter=@bb/desktop
+pnpm exec turbo run dev --filter=@sandy/desktop
 ```
 
 The desktop shell connects to this checkout's running dev app. Stop each command
@@ -129,7 +128,7 @@ To use the dev app from another machine over Tailscale, start it with the
 Tailscale browser origin configured:
 
 ```bash
-BB_APP_URL=https://<machine>.<tailnet>.ts.net pnpm dev
+SANDY_APP_URL=https://<machine>.<tailnet>.ts.net pnpm dev
 ```
 
 Note the printed app port, then publish the loopback Vite listener in another
@@ -151,14 +150,14 @@ pnpm dev:remote
 
 This binds the Vite app to all IPv4 interfaces. The remote browser must also
 reach the printed server port for realtime updates, so put the machine's
-tailnet or WireGuard address in `BB_SERVER_BIND_HOST` (for example in
+tailnet or WireGuard address in `SANDY_SERVER_BIND_HOST` (for example in
 `.env.local`); the server refuses wildcard, LAN and public addresses. The
 server API is unauthenticated and permits command execution and file reads, so
 restrict the Vite port to Tailscale traffic with the host firewall when the LAN
 is not trusted.
 
 To access the production-style worktree server directly from another machine,
-set `BB_SERVER_BIND_HOST` to that address and run `pnpm start:worktree`.
+set `SANDY_SERVER_BIND_HOST` to that address and run `pnpm start:worktree`.
 
 To use the component storybook from another machine, run:
 
@@ -193,15 +192,15 @@ pnpm start
 ```
 
 That builds only the app, server, and host-daemon runtime artifacts, then runs
-the launcher directly against those workspace outputs. Use the `bb-app`
-tarball smoke task when validating the published `npx bb-app@latest` package
+the launcher directly against those workspace outputs. Use the `sandy-app`
+tarball smoke task when validating the published `npx sandy-app@latest` package
 layout.
 
 ```bash
-pnpm bb --help            # built CLI, targets the default/prod instance
+pnpm sandy --help            # built CLI, targets the default/prod instance
 pnpm reset                # clear production state
 
-pnpm bb:dev --help        # source CLI, targets this checkout's dev instance
+pnpm sandy:dev --help        # source CLI, targets this checkout's dev instance
 pnpm reset:dev            # clear this checkout's dev state
 
 pnpm reset:all            # clear both production and dev states
@@ -222,7 +221,7 @@ See [System overview](docs/system-overview.md) for runtime architecture, data mo
 - [Vision](docs/VISION.md)
 - [Platform support](docs/platform-support.md)
 - [Configuration](docs/configuration.md)
-- [Using bb on multiple devices](docs/multiple-devices.md)
+- [Using sandy on multiple devices](docs/multiple-devices.md)
 - [Worktrees and setup scripts](docs/worktrees.md)
 
 ## Contributing
@@ -233,9 +232,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ### `Could not locate the bindings file`
 
-bb uses native add-ons, for example `better-sqlite3` and `@parcel/watcher`. npm
+sandy uses native add-ons, for example `better-sqlite3` and `@parcel/watcher`. npm
 downloads or builds those binaries in a package install script. If npm does not
-run install scripts, the binaries are absent. bb then stops at startup with this
+run install scripts, the binaries are absent. sandy then stops at startup with this
 error:
 
 ```
@@ -247,19 +246,19 @@ There are two usual causes.
 
 The first cause is npm 12 or later. Since npm 12, npm blocks dependency install
 scripts by default and prints
-`npm warn install-scripts N packages had install scripts blocked`. Name bb's
+`npm warn install-scripts N packages had install scripts blocked`. Name sandy's
 native add-ons in `--allow-scripts` to let this one command run their install
 scripts:
 
 ```bash
-npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher bb-app@latest
+npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app@latest
 ```
 
 For a permanent install with the same setting, use:
 
 ```bash
-npm install -g --allow-scripts=better-sqlite3,node-pty,@parcel/watcher bb-app
-bb-app
+npm install -g --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app
+sandy-app
 ```
 
 To allow them for all global installs on this machine, run
@@ -271,14 +270,14 @@ The second cause is `ignore-scripts=true` in your `~/.npmrc`. Set the
 install scripts:
 
 ```bash
-npm_config_ignore_scripts=false npx bb-app@latest
+npm_config_ignore_scripts=false npx sandy-app@latest
 ```
 
 For a permanent install with the same setting, use:
 
 ```bash
-npm_config_ignore_scripts=false npm install -g bb-app
-bb-app
+npm_config_ignore_scripts=false npm install -g sandy-app
+sandy-app
 ```
 
 The environment variable applies to that one command only. Keep

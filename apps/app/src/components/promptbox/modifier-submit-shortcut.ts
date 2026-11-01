@@ -1,4 +1,4 @@
-import type { AppShortcut } from "@bb/domain";
+import type { AppShortcut } from "@sandy/domain";
 import {
   browserPlatform,
   formatAppShortcut,

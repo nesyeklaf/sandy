@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import type { MarkdownProps } from "@get-bb/plugin-sdk";
+import type { MarkdownProps } from "@sandy-sdk/plugin-sdk";
 import {
   MarkdownPreview,
   type MarkdownThreadMentions,

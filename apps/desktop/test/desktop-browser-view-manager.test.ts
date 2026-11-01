@@ -15,9 +15,9 @@ import {
   DESKTOP_BROWSER_BROKER_DESCRIPTOR_FILE,
   desktopBrowserRegistrationSchema,
   desktopBrowserChangedSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { BbDesktopBrowserViewBounds } from "@bb/desktop-contract";
+import type { SandyDesktopBrowserViewBounds } from "@sandy/desktop-contract";
 import { resolveDesktopBrowserAppCommand } from "../src/desktop-browser-shortcuts.js";
 import { createDesktopBrowserCdpAdapter } from "../src/desktop-browser-cdp-adapter.js";
 import { createDesktopBrowserBroker } from "../src/desktop-browser-broker.js";
@@ -41,9 +41,9 @@ import {
   type DesktopBrowserHostWindow,
 } from "../src/desktop-browser-view.js";
 import {
-  BB_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL,
-  BB_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
-  BB_DESKTOP_BROWSER_PAGE_WORLD_ID,
+  SANDY_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL,
+  SANDY_DESKTOP_BROWSER_PAGE_WORLD_ID,
 } from "../src/desktop-browser-ipc.js";
 
 function createDesktopBrowserViewManager(
@@ -751,7 +751,7 @@ const electronMock = vi.hoisted(() => {
   let nextWebContentsId = 1;
 
   class FakeWebContentsView {
-    public readonly boundsCalls: BbDesktopBrowserViewBounds[] = [];
+    public readonly boundsCalls: SandyDesktopBrowserViewBounds[] = [];
     public readonly webContents: FakeWebContents;
     public visible = false;
 
@@ -771,7 +771,7 @@ const electronMock = vi.hoisted(() => {
       nextWebContentsId += 1;
     }
 
-    setBounds(bounds: BbDesktopBrowserViewBounds): void {
+    setBounds(bounds: SandyDesktopBrowserViewBounds): void {
       this.boundsCalls.push(bounds);
     }
 
@@ -1111,10 +1111,10 @@ describe("browser page scripts", () => {
         world: "isolated",
         channel: "agent-annotations",
         expression:
-          "(bb.postMessage({ step: 1 }), Promise.resolve({ title: 'ok', skipped: undefined })) // trailing comment",
+          "(sandy.postMessage({ step: 1 }), Promise.resolve({ title: 'ok', skipped: undefined })) // trailing comment",
       }),
       {
-        __bbBrowserPage: {
+        __sandyBrowserPage: {
           postMessage: (channel: string, data: unknown) => {
             posted.push({ channel, data });
           },
@@ -1131,7 +1131,7 @@ describe("browser page scripts", () => {
         tabId: "browser:a",
         world: "main",
         channel: "agent-annotations",
-        expression: "bb === null ? missingPageValue.read : 1",
+        expression: "sandy === null ? missingPageValue.read : 1",
       }),
       {},
     );
@@ -1190,7 +1190,7 @@ describe("browser page scripts", () => {
     });
     expect(
       view.webContents.isolatedWorldCalls.map((call) => call.worldId),
-    ).toEqual([BB_DESKTOP_BROWSER_PAGE_WORLD_ID]);
+    ).toEqual([SANDY_DESKTOP_BROWSER_PAGE_WORLD_ID]);
 
     await expect(
       manager.evaluate({
@@ -1221,22 +1221,22 @@ describe("browser page scripts", () => {
     });
     const view = requireFakeView(0);
 
-    view.webContents.emitIpc(BB_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
+    view.webContents.emitIpc(SANDY_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
       channel: "agent-annotations",
       data: { type: "state", active: true },
     });
-    view.webContents.emitIpc(BB_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
+    view.webContents.emitIpc(SANDY_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
       channel: "",
       data: 1,
     });
-    view.webContents.emitIpc(BB_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
+    view.webContents.emitIpc(SANDY_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
       channel: "agent-annotations",
       data: { text: "a".repeat(1_000_001) },
     });
 
     const pushes = hostWindow.webContents.sentChannels.flatMap(
       (channel, index) =>
-        channel === BB_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL
+        channel === SANDY_DESKTOP_BROWSER_PAGE_MESSAGE_CHANNEL
           ? [hostWindow.webContents.sentPayloads[index]]
           : [],
     );
@@ -1872,7 +1872,7 @@ describe("DesktopBrowserCdpAdapter", () => {
     if (page === undefined) throw new Error("Expected a native CDP page");
     const focusedPushes = () =>
       hostWindow.webContents.sentChannels.filter(
-        (channel) => channel === "bb-desktop:browser:focused",
+        (channel) => channel === "sandy-desktop:browser:focused",
       ).length;
     try {
       page.attach();
@@ -1940,7 +1940,7 @@ describe("DesktopBrowserCdpAdapter", () => {
       await vi.advanceTimersByTimeAsync(0);
       expect(focusHostWebContents).toHaveBeenCalledExactlyOnceWith(92);
       expect(hostWindow.webContents.sentChannels).not.toContain(
-        "bb-desktop:browser:focused",
+        "sandy-desktop:browser:focused",
       );
     } finally {
       manager.destroyAll();
@@ -2143,7 +2143,7 @@ describe("DesktopBrowserViewManager", () => {
       const address = server.address();
       if (typeof address === "string" || address === null)
         throw new Error("Expected TCP address");
-      const dataDir = await mkdtemp(join(tmpdir(), "bb-native-origin-"));
+      const dataDir = await mkdtemp(join(tmpdir(), "sandy-native-origin-"));
       const frameSchema = z.union([
         desktopBrowserRegistrationSchema,
         desktopBrowserChangedSchema,
@@ -2187,7 +2187,7 @@ describe("DesktopBrowserViewManager", () => {
         const directory =
           daemon === "local"
             ? dataDir
-            : join(dataDir, ".bb-machines", new URL(serverUrl).host);
+            : join(dataDir, ".sandy-machines", new URL(serverUrl).host);
         await mkdir(directory, { recursive: true });
         await writeFile(
           join(directory, DESKTOP_BROWSER_BROKER_DESCRIPTOR_FILE),
@@ -2372,7 +2372,7 @@ describe("DesktopBrowserViewManager", () => {
       manager.subscribeAutomationTabs(notify);
       const pushes = hostWindow.webContents.sentPayloads.length;
       first.webContents.emitDidNavigate("https://example.com/redirected");
-      first.webContents.emitIpc(BB_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
+      first.webContents.emitIpc(SANDY_DESKTOP_BROWSER_GUEST_MESSAGE_CHANNEL, {
         channel: "background",
         data: { secret: "first server" },
       });
@@ -3658,7 +3658,7 @@ describe("DesktopBrowserViewManager", () => {
       frame: false,
       height: 4_000,
       show: false,
-      title: "bb sign in",
+      title: "sandy sign in",
       transparent: true,
       width: 10,
       webContents: childContents,
@@ -3696,14 +3696,14 @@ describe("DesktopBrowserViewManager", () => {
         webSecurity: true,
       },
     });
-    expect(popupWindow.titleCalls).toEqual(["bb browser popup"]);
+    expect(popupWindow.titleCalls).toEqual(["sandy browser popup"]);
     childContents.emitDidNavigate("https://accounts.google.com/oauth2/auth");
     expect(popupWindow.titleCalls.at(-1)).toBe(
-      "bb browser — https://accounts.google.com",
+      "sandy browser — https://accounts.google.com",
     );
     expect(childContents.emitPageTitleUpdated("Google Sign In")).toBe(true);
     expect(popupWindow.titleCalls.at(-1)).toBe(
-      "bb browser — https://accounts.google.com",
+      "sandy browser — https://accounts.google.com",
     );
     expect(popupContents.emitWindowOpen("https://example.com/nested")).toEqual({
       action: "deny",
@@ -4090,17 +4090,17 @@ describe("DesktopBrowserViewManager", () => {
     });
     const view = requireFakeView(0);
     expect(hostWindow.webContents.sentChannels).not.toContain(
-      "bb-desktop:browser:focused",
+      "sandy-desktop:browser:focused",
     );
 
     manager.focus({ hostWindow, tabId: "browser:a" });
     expect(hostWindow.webContents.sentChannels).not.toContain(
-      "bb-desktop:browser:focused",
+      "sandy-desktop:browser:focused",
     );
 
     view.webContents.emitFocus();
     expect(hostWindow.webContents.sentChannels).toContain(
-      "bb-desktop:browser:focused",
+      "sandy-desktop:browser:focused",
     );
     expect(hostWindow.webContents.sentPayloads.at(-1)).toEqual({
       tabId: "browser:a",

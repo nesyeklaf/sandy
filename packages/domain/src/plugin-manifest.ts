@@ -76,7 +76,7 @@ const pluginBrandingSchema = z
     },
   );
 
-const pluginBbManifestSchema = z
+const pluginSandyManifestSchema = z
   .object({
     name: requiredManifestString,
     description: requiredManifestString,
@@ -121,11 +121,11 @@ export const pluginPackageJsonSchema = z
     version: requiredManifestString,
     engines: z
       .object({
-        bb: requiredManifestString.optional(),
-        bbPluginSdk: requiredManifestString.optional(),
+        sandy: requiredManifestString.optional(),
+        sandyPluginSdk: requiredManifestString.optional(),
       })
       .optional(),
-    bb: pluginBbManifestSchema,
+    sandy: pluginSandyManifestSchema,
   })
   .passthrough();
 

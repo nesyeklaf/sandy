@@ -28,7 +28,7 @@ import {
   type PluginBuildToolchain,
 } from "./toolchain.js";
 
-const PLUGIN_SDK_HOST_RUNTIME_NAMESPACE = "bb-host-sdk-runtime";
+const PLUGIN_SDK_HOST_RUNTIME_NAMESPACE = "sandy-host-sdk-runtime";
 const HOST_STAGE_DIRECTORY_PREFIX = ".host-stage-";
 const HOST_STAGE_STALE_AFTER_MS = 60 * 60 * 1_000;
 
@@ -49,11 +49,11 @@ export const PLUGIN_CLI_OUTPUT_MAX_BYTES = 32 * 1024 * 1024;
 export function defineRpcContract(contract) { return contract; }
 ${PLUGIN_SDK_DEFINE_HOST_ENTRY_RUNTIME}`;
 
-const PLUGIN_SDK_HOST_FALLBACK_SPECIFIER = "@get-bb/plugin-sdk/host";
+const PLUGIN_SDK_HOST_FALLBACK_SPECIFIER = "@sandy-sdk/plugin-sdk/host";
 const PLUGIN_SDK_HOST_FALLBACK_EXPORTS: ReadonlySet<string> = new Set([
   "experimental_defineHostEntry",
 ]);
-const PLUGIN_SDK_HOST_FALLBACK_NAMESPACE = "bb-host-sdk-fallback";
+const PLUGIN_SDK_HOST_FALLBACK_NAMESPACE = "sandy-host-sdk-fallback";
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
@@ -235,8 +235,8 @@ function describeImportedNames(names: readonly string[]): string {
     .join(", ");
 }
 
-function privateBbImportError(specifier: string): string {
-  return `host entries cannot import private BB workspace package "${specifier}"; use @get-bb/plugin-sdk, Node APIs, or a regular plugin dependency`;
+function privateSandyImportError(specifier: string): string {
+  return `host entries cannot import private SANDY workspace package "${specifier}"; use @sandy-sdk/plugin-sdk, Node APIs, or a regular plugin dependency`;
 }
 
 async function owningPackageName(
@@ -285,9 +285,9 @@ async function readPluginHostConfig(rootDir: string): Promise<{
   } catch {
     throw new Error(`no readable valid package.json at ${packageJsonPath}`);
   }
-  if (!isRecord(json) || !isRecord(json.bb) || json.bb.host === undefined) {
+  if (!isRecord(json) || !isRecord(json.sandy) || json.sandy.host === undefined) {
     throw new Error(
-      `no host entry: ${packageJsonPath} has no "bb": { "host": "./host.ts" } field`,
+      `no host entry: ${packageJsonPath} has no "sandy": { "host": "./host.ts" } field`,
     );
   }
   const manifest = await validatePluginBuildManifest(
@@ -295,11 +295,11 @@ async function readPluginHostConfig(rootDir: string): Promise<{
     rootDir,
     packageJsonPath,
   );
-  const host = manifest.bb.host;
+  const host = manifest.sandy.host;
   if (host === undefined) {
     throw new Error(`no host entry in ${packageJsonPath}`);
   }
-  const hostEntry = await resolveManifestEntryFile(rootDir, host, "bb.host");
+  const hostEntry = await resolveManifestEntryFile(rootDir, host, "sandy.host");
   return {
     hostEntry,
     packageName: manifest.name,
@@ -337,7 +337,7 @@ async function removeStaleHostStageDirectories(distDir: string): Promise<void> {
 
 export async function buildPluginHost(
   rootDir: string,
-  bbVersion: string,
+  sandyVersion: string,
   toolchain: PluginBuildToolchain,
 ): Promise<PluginHostBuildResult> {
   const { hostEntry, packageName, pluginVersion } =
@@ -439,27 +439,27 @@ export async function buildPluginHost(
           },
         },
         {
-          name: "reject-private-bb-host-imports",
+          name: "reject-private-sandy-host-imports",
           setup(build) {
-            build.onResolve({ filter: /^@bb(?:\/|$)/ }, (args) => ({
-              errors: [{ text: privateBbImportError(args.path) }],
+            build.onResolve({ filter: /^@sandy(?:\/|$)/ }, (args) => ({
+              errors: [{ text: privateSandyImportError(args.path) }],
             }));
             build.onLoad({ filter: /\.[cm]?[jt]sx?$/ }, async (args) => {
               const owner = await owningPackageName(
                 args.path,
                 packageNameByDirectory,
               );
-              if (owner === "@bb" || owner?.startsWith("@bb/")) {
+              if (owner === "@sandy" || owner?.startsWith("@sandy/")) {
                 return {
-                  errors: [{ text: privateBbImportError(owner) }],
+                  errors: [{ text: privateSandyImportError(owner) }],
                 };
               }
               const source = await readFile(args.path, "utf8");
               const specifiers = sourceImportSpecifiers(source);
               for (const specifier of specifiers) {
-                if (specifier === "@bb" || specifier.startsWith("@bb/")) {
+                if (specifier === "@sandy" || specifier.startsWith("@sandy/")) {
                   return {
-                    errors: [{ text: privateBbImportError(specifier) }],
+                    errors: [{ text: privateSandyImportError(specifier) }],
                   };
                 }
               }
@@ -484,8 +484,8 @@ export async function buildPluginHost(
     for (const [input, metadata] of Object.entries(bundle.metafile.inputs)) {
       const importer = resolve(workingDir, input);
       const owner = await owningPackageName(importer, packageNameByDirectory);
-      if (owner === "@bb" || owner?.startsWith("@bb/"))
-        throw new Error(privateBbImportError(owner));
+      if (owner === "@sandy" || owner?.startsWith("@sandy/"))
+        throw new Error(privateSandyImportError(owner));
       const bundledImports = new Set(
         metadata.imports
           .filter((entry) => !entry.external)
@@ -497,7 +497,7 @@ export async function buildPluginHost(
           (specifier.startsWith(".") || isAbsolute(specifier)),
       );
       if (specifiers.length > 0)
-        skippedImports.set(`bb-host-imports:${skippedImports.size}`, {
+        skippedImports.set(`sandy-host-imports:${skippedImports.size}`, {
           importer,
           specifiers,
         });
@@ -516,7 +516,7 @@ export async function buildPluginHost(
             name: "validate-erased-host-imports",
             setup(build) {
               build.onResolve(
-                { filter: /.*/, namespace: "bb-host-imports" },
+                { filter: /.*/, namespace: "sandy-host-imports" },
                 async (args) => {
                   const resolved = await build.resolve(args.path, {
                     resolveDir: args.resolveDir,
@@ -528,12 +528,12 @@ export async function buildPluginHost(
                     : resolved;
                 },
               );
-              build.onResolve({ filter: /^bb-host-imports:/ }, (args) => ({
+              build.onResolve({ filter: /^sandy-host-imports:/ }, (args) => ({
                 path: args.path,
-                namespace: "bb-host-imports",
+                namespace: "sandy-host-imports",
               }));
               build.onLoad(
-                { filter: /.*/, namespace: "bb-host-imports" },
+                { filter: /.*/, namespace: "sandy-host-imports" },
                 (args) => {
                   const entry = skippedImports.get(args.path);
                   if (entry === undefined)
@@ -558,8 +558,8 @@ export async function buildPluginHost(
                     args.path,
                     packageNameByDirectory,
                   );
-                  if (owner === "@bb" || owner?.startsWith("@bb/"))
-                    return { errors: [{ text: privateBbImportError(owner) }] };
+                  if (owner === "@sandy" || owner?.startsWith("@sandy/"))
+                    return { errors: [{ text: privateSandyImportError(owner) }] };
                   return { contents: "", loader: "js" };
                 },
               );
@@ -578,7 +578,7 @@ export async function buildPluginHost(
           ...createPluginArtifactMeta({
             packageName,
             pluginVersion,
-            bbVersion,
+            sandyVersion,
           }),
           artifactDigest,
         },

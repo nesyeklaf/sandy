@@ -1,4 +1,4 @@
-import type { BbPluginApi, PluginAiServiceStatus } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, PluginAiServiceStatus } from "@sandy-sdk/plugin-sdk";
 import {
   claudeAiHostContract,
   type ClaudeAiTextResult,
@@ -8,11 +8,11 @@ const CLAUDE_TEXT_MODEL = "haiku";
 const COMPLETE_TIMEOUT_MS = 6_000;
 const HOST_CALL_GRACE_MS = 1_000;
 
-export function registerClaudeAiService(bb: BbPluginApi): void {
-  const host = bb.hosts.experimental_client({ contract: claudeAiHostContract });
+export function registerClaudeAiService(sandy: SandyPluginApi): void {
+  const host = sandy.hosts.experimental_client({ contract: claudeAiHostContract });
 
   async function primaryHostId(): Promise<string | null> {
-    return (await bb.sdk.system.config()).primaryHostId;
+    return (await sandy.sdk.system.config()).primaryHostId;
   }
 
   function textOrThrow(result: ClaudeAiTextResult): string {
@@ -20,7 +20,7 @@ export function registerClaudeAiService(bb: BbPluginApi): void {
     throw new Error(result.message);
   }
 
-  bb.experimental_aiServices.register({
+  sandy.experimental_aiServices.register({
     id: "claude-code",
     displayName: "Claude Code",
     async complete(prompt, { signal }) {

@@ -8,7 +8,7 @@ import {
 } from "./shell-save-file";
 
 const ROOT = "https://bee.example.test";
-const PREFIXED = "https://box.example.ts.net/bb";
+const PREFIXED = "https://box.example.ts.net/sandy";
 
 describe("resolveServerFileUrl", () => {
   it("accepts a url on the server's origin, inside or outside its prefix", () => {

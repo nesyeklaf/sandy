@@ -31,18 +31,18 @@ const SHARED_FIXTURE_ANCHORS: readonly FixtureAnchor[] = [
       "SIDEBAR_ROW_OPEN_IN_SPLIT_STATE_CLASS =",
     ],
     because:
-      "Mock thread and settings rows keep BB's shared row geometry and rest, hover, selected, and split states.",
+      "Mock thread and settings rows keep SANDY's shared row geometry and rest, hover, selected, and split states.",
   },
   {
     file: "apps/app/src/components/sidebar/SectionSidebar.tsx",
     mustContain: [
-      'from "@bb/shared-ui/button"',
+      'from "@sandy/shared-ui/button"',
       "PROJECT_LIST_ACTION_BUTTON_CLASS",
       "CHROME_SECTION_LABEL_CLASS",
       "SIDEBAR_STANDARD_ROW_PADDING_CLASS",
     ],
     because:
-      "Mock sidebars use BB's shared button primitive, section-label token, padding, and project-row anatomy.",
+      "Mock sidebars use SANDY's shared button primitive, section-label token, padding, and project-row anatomy.",
   },
   {
     file: "packages/shared-ui/src/components/ui/context-selection.ts",
@@ -94,7 +94,7 @@ const SHARED_FIXTURE_ANCHORS: readonly FixtureAnchor[] = [
       "--text-base:",
       "--spacing:",
       "--tracking-normal:",
-      "--bb-sidebar-row-height:",
+      "--sandy-sidebar-row-height:",
       "--icon-stroke-width:",
       "--radius:",
       "--shadow-x:",
@@ -103,16 +103,16 @@ const SHARED_FIXTURE_ANCHORS: readonly FixtureAnchor[] = [
       "--shadow-spread:",
       "--shadow-color:",
       "--shadow-opacity:",
-      "--bb-sidebar-open-in-split-background",
+      "--sandy-sidebar-open-in-split-background",
     ],
     because:
       "Every token the preview reads and lists must still be declared by the app's theme source of truth.",
   },
   {
     file: "apps/app/src/hooks/useTheme.ts",
-    mustContain: ['THEME_STORAGE_KEY = "bb.theme"'],
+    mustContain: ['THEME_STORAGE_KEY = "sandy.theme"'],
     because:
-      "The mode switch writes localStorage `bb.theme` and dispatches the storage event so Settings → Appearance stays synchronized.",
+      "The mode switch writes localStorage `sandy.theme` and dispatches the storage event so Settings → Appearance stays synchronized.",
   },
   {
     file: "apps/app/src/main.tsx",
@@ -150,7 +150,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
       file: "apps/app/src/components/secondary-panel/ThreadMetadataContent.tsx",
       mustContain: ['appearance="flat"', "<EnvironmentRow"],
       because:
-        "The open Info panel projects BB's flat metadata card and a representative environment row.",
+        "The open Info panel projects SANDY's flat metadata card and a representative environment row.",
     },
     {
       file: "plugins/git/ui/info/GitInfoRows.tsx",
@@ -188,7 +188,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
     {
       file: "apps/app/src/views/RootComposeHome.tsx",
       mustContain: ['ROOT_COMPOSE_MAX_WIDTH_CLASS = "max-w-[760px]"'],
-      because: "The New thread projection keeps BB's home column width.",
+      because: "The New thread projection keeps SANDY's home column width.",
     },
     {
       file: "apps/app/src/components/promptbox/NewThreadPromptBox.tsx",
@@ -208,7 +208,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
         "<SplitDivider",
       ],
       because:
-        "The Split projection keeps BB's pane identity, focus state, divider, and inactive-pane wash.",
+        "The Split projection keeps SANDY's pane identity, focus state, divider, and inactive-pane wash.",
     },
   ],
   settings: [
@@ -216,7 +216,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
       file: "apps/app/src/components/settings/SettingsSidebar.tsx",
       mustContain: ["activeSection === section.id"],
       because:
-        "The Appearance projection uses BB's settings navigation hierarchy and selected-row state.",
+        "The Appearance projection uses SANDY's settings navigation hierarchy and selected-row state.",
     },
     {
       file: "apps/app/src/components/settings/settings-sections.ts",
@@ -224,7 +224,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
         '{ icon: "Palette", id: "appearance", label: "Appearance" }',
       ],
       because:
-        "The settings navigation keeps Appearance as a first-class BB settings destination.",
+        "The settings navigation keeps Appearance as a first-class SANDY settings destination.",
     },
     {
       file: "apps/app/src/views/SettingsView.tsx",
@@ -232,12 +232,12 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
         '<SettingsSection title="Appearance">',
         '<SettingsWithControl label="Theme">',
         'label="Palette"',
-        "Palettes change bb's colors, including syntax colors in diffs and file previews.",
+        "Palettes change sandy's colors, including syntax colors in diffs and file previews.",
         'label="Favicon color"',
         "<SplitDimmingSetting />",
       ],
       because:
-        "The Appearance projection keeps BB's current theme, palette, favicon, and inactive-split controls.",
+        "The Appearance projection keeps SANDY's current theme, palette, favicon, and inactive-split controls.",
     },
     {
       file: "apps/app/src/components/ui/settings-section.tsx",
@@ -247,7 +247,7 @@ const VIEW_FIXTURE_ANCHORS: Record<string, readonly FixtureAnchor[]> = {
         "text-xs leading-snug text-subtle-foreground/75",
       ],
       because:
-        "The Appearance projection keeps BB's section card, responsive rows, and supporting-copy hierarchy.",
+        "The Appearance projection keeps SANDY's section card, responsive rows, and supporting-copy hierarchy.",
     },
   ],
 };

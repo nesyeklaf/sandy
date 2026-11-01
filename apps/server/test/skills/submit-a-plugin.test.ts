@@ -4,12 +4,12 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { derivePluginId } from "@bb/domain";
-import { makeTempDir } from "@bb/test-helpers";
+import { derivePluginId } from "@sandy/domain";
+import { makeTempDir } from "@sandy/test-helpers";
 
 const skillRoot = fileURLToPath(
   new URL(
-    "../../../../plugins/bb-guide/skills/submit-a-plugin/",
+    "../../../../plugins/sandy-guide/skills/submit-a-plugin/",
     import.meta.url,
   ),
 );
@@ -45,9 +45,9 @@ async function deriveWithSkill(packageName: string): Promise<string> {
 describe("submit-a-plugin skill", () => {
   it("derives dotted and underscored package ids with the product algorithm", async () => {
     for (const packageName of [
-      "@acme/bb-plugin-release.notes",
-      "@acme/bb-plugin-release_notes",
-      "bb_plugin_notes",
+      "@acme/sandy-plugin-release.notes",
+      "@acme/sandy-plugin-release_notes",
+      "sandy_plugin_notes",
     ]) {
       await expect(deriveWithSkill(packageName)).resolves.toBe(
         derivePluginId(packageName),
@@ -61,7 +61,7 @@ describe("submit-a-plugin skill", () => {
     const manifestPath = path.join(directory, "package.json");
     await writeFile(
       manifestPath,
-      JSON.stringify({ name: "bb-plugin-notes$(touch metadata-executed)" }),
+      JSON.stringify({ name: "sandy-plugin-notes$(touch metadata-executed)" }),
       "utf8",
     );
 
@@ -70,7 +70,7 @@ describe("submit-a-plugin skill", () => {
         cwd: directory,
         encoding: "utf8",
       }).trim(),
-    ).toBe(derivePluginId("bb-plugin-notes$(touch metadata-executed)"));
+    ).toBe(derivePluginId("sandy-plugin-notes$(touch metadata-executed)"));
     expect(existsSync(markerPath)).toBe(false);
   });
 

@@ -10,15 +10,15 @@ function readContextId(name: string): string | null {
 }
 
 export function contextProjectId(): string | null {
-  return readContextId("BB_PROJECT_ID");
+  return readContextId("SANDY_PROJECT_ID");
 }
 
 export function contextThreadId(): string | null {
-  return readContextId("BB_THREAD_ID");
+  return readContextId("SANDY_THREAD_ID");
 }
 
 export function contextEnvironmentId(): string | null {
-  return readContextId("BB_ENVIRONMENT_ID");
+  return readContextId("SANDY_ENVIRONMENT_ID");
 }
 
 export function createContextHostIdResolver(
@@ -28,8 +28,8 @@ export function createContextHostIdResolver(
     const environmentId = contextEnvironmentId();
     if (environmentId === null) return null;
     try {
-      const { createCliBbSdk } = await import("./client.js");
-      const lookup = createCliBbSdk(getUrl())
+      const { createCliSandySdk } = await import("./client.js");
+      const lookup = createCliSandySdk(getUrl())
         .environments.get({ environmentId })
         .then((environment) => environment.hostId);
       const timeout = new Promise<null>((resolve) => {
@@ -46,21 +46,21 @@ export function createContextHostIdResolver(
 export function missingProjectHint(): string {
   const projectId = contextProjectId();
   return projectId === null
-    ? "List project IDs with `bb project list`."
+    ? "List project IDs with `sandy project list`."
     : `This thread's project is ${projectId}; add --project ${projectId}.`;
 }
 
 export function missingThreadFlagHint(): string {
   const threadId = contextThreadId();
   return threadId === null
-    ? "List thread IDs with `bb thread list`."
+    ? "List thread IDs with `sandy thread list`."
     : `The current thread is ${threadId}; add --thread ${threadId}.`;
 }
 
 export function missingEnvironmentHint(): string {
   const environmentId = contextEnvironmentId();
   return environmentId === null
-    ? "List environment IDs with `bb environment list`."
+    ? "List environment IDs with `sandy environment list`."
     : `The current environment is ${environmentId}; add --environment ${environmentId}.`;
 }
 
@@ -70,14 +70,14 @@ export async function missingHostHint(
 ): Promise<string> {
   const hostId = await resolveHostId();
   return hostId === null
-    ? "List machine IDs with `bb machine list`."
+    ? "List machine IDs with `sandy machine list`."
     : `This thread runs on ${hostId}; add ${flag} ${hostId}.`;
 }
 
 export function missingThreadIdHint(): string {
   const threadId = contextThreadId();
   return threadId === null
-    ? "Pass a thread ID; --self is unavailable because BB_THREAD_ID is not set."
+    ? "Pass a thread ID; --self is unavailable because SANDY_THREAD_ID is not set."
     : `Add --self to target the current thread (${threadId}), or pass a thread ID.`;
 }
 

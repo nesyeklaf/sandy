@@ -1,9 +1,9 @@
-import { GIT_PLUGIN_ID } from "@bb/domain";
-import { gitRpcContract } from "bb-plugin-bb--git/rpc-contract";
+import { GIT_PLUGIN_ID } from "@sandy/domain";
+import { gitRpcContract } from "sandy-plugin-sandy--git/rpc-contract";
 import {
   createGitStatusHook,
   type GitStatusKeyedQuery,
-} from "bb-plugin-bb--git/status-state";
+} from "sandy-plugin-sandy--git/status-state";
 import { usePluginFrontendsSettled } from "@/lib/plugin-frontend-boot-state";
 import { usePluginFrontendRegistered } from "@/lib/plugin-slots";
 import {

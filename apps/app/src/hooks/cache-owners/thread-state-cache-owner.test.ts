@@ -1,9 +1,9 @@
-import type { ThreadListEntry, ThreadWithRuntime } from "@bb/domain";
-import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@bb/test-helpers/domain-fixtures";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
+import type { ThreadListEntry, ThreadWithRuntime } from "@sandy/domain";
+import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@sandy/test-helpers/domain-fixtures";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import { makeThreadListEntry as makeThreadListEntryFixture } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry as makeThreadListEntryFixture } from "@sandy/test-helpers/domain-fixtures";
 import {
   makeProjectWithThreadsResponse,
   makeSidebarBootstrapResponse,

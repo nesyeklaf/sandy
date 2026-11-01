@@ -9,7 +9,7 @@ import { useRefetchOnShowAndFocus } from "./refetch-on-show";
 import {
   experimental_useRpcKeyedQuery as useRpcKeyedQuery,
   experimental_useRpcMutation as useRpcMutation,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 export interface EnvironmentPullRequestState {
   isLoading: boolean;
@@ -49,7 +49,7 @@ export function useEnvironmentPullRequest(
   };
 }
 
-const MERGE_METHOD_STORAGE_KEY = "bb.pullRequest.mergeMethod";
+const MERGE_METHOD_STORAGE_KEY = "sandy.pullRequest.mergeMethod";
 
 function isMergeMethod(value: string | null): value is PullRequestMergeMethod {
   return value === "merge" || value === "squash" || value === "rebase";

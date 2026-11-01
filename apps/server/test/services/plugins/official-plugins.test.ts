@@ -7,10 +7,10 @@ import {
   getInstalledPluginRegistration,
   upsertInstalledPlugin,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { Logger } from "@bb/logger";
-import { derivePluginId } from "@bb/domain";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { Logger } from "@sandy/logger";
+import { derivePluginId } from "@sandy/domain";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -32,7 +32,7 @@ const fixtureRoot = resolve(
   "..",
   "fixtures",
   "plugins",
-  "bb-plugin-builtin-fixture",
+  "sandy-plugin-builtin-fixture",
 );
 const globals = globalThis as Record<string, unknown>;
 
@@ -101,7 +101,7 @@ describe("store-installed official plugins", () => {
   beforeEach(async () => {
     delete globals.__builtinFixtureLoads;
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-community-plugins-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-community-plugins-"));
   });
 
   afterEach(async () => {
@@ -160,14 +160,14 @@ describe("store-installed official plugins", () => {
   });
 
   it.each([true, false])(
-    "moves old BB Community provenance to BB Official when autoInstall is %s",
+    "moves old SANDY Community provenance to SANDY Official when autoInstall is %s",
     async (autoInstall) => {
       upsertInstalledPlugin(db, {
         id: "builtin-fixture",
         source: "builtin:fixture",
         provenance: {
           kind: "catalog",
-          marketplace: "bb-community",
+          marketplace: "sandy-community",
           entryId: "fixture",
         },
         sourceIntent: { kind: "builtin", name: "fixture" },
@@ -197,15 +197,15 @@ describe("store-installed official plugins", () => {
       ).toMatchObject({
         provenance: "catalog",
         catalogEntryId: "fixture",
-        catalogMarketplaceName: "bb-official",
+        catalogMarketplaceName: "sandy-official",
       });
       expect(service.list()).toMatchObject([
         {
           id: "builtin-fixture",
           provenance: "catalog",
           catalogEntryId: "fixture",
-          catalogMarketplaceName: "bb-official",
-          publisherLabel: "BB Official",
+          catalogMarketplaceName: "sandy-official",
+          publisherLabel: "SANDY Official",
           status: "running",
         },
       ]);

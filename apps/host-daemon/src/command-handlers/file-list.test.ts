@@ -1,4 +1,4 @@
-import { fuzzyMatchPaths } from "@bb/fuzzy-match";
+import { fuzzyMatchPaths } from "@sandy/fuzzy-match";
 import { describe, expect, it } from "vitest";
 import {
   finalizeListedFiles,

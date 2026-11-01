@@ -2,19 +2,19 @@ import type { PluginCatalogSearchEntry } from "@/hooks/queries/plugin-catalog-qu
 import { usePluginCollectionParams } from "./usePluginCollectionParams";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { Icon } from "@bb/shared-ui/icon";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { Icon } from "@sandy/shared-ui/icon";
 import { appToast } from "@/components/ui/app-toast";
-import bbLogoUrl from "../../../../../../assets/bb-logo.svg";
+import sandyLogoUrl from "../../../../../../assets/sandy-logo.svg";
 import { OpenPluginGuideButton } from "./OpenPluginGuideButton";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   ResourceCollectionViewport,
   ResourceListState,
   ResourceShelfAction,
   ResourceSourceShelf,
   ResourceTabDescription,
-} from "@bb/shared-ui/resource-list";
+} from "@sandy/shared-ui/resource-list";
 import { BrowseArchetypeCards } from "@/components/plugin/browse-hero/BrowseArchetypeCards";
 import { BrowseHeroCarousel } from "@/components/plugin/browse-hero/BrowseHeroCarousel";
 import { nextComposerRequestNonce } from "@/components/plugin/browse-hero/browse-hero-archetypes";
@@ -359,10 +359,10 @@ function BrowseShelf({
       description={shelf.description}
       hideDescriptionWhenNarrow
       leading={
-        shelf.key === "collection:bb-official" ? (
+        shelf.key === "collection:sandy-official" ? (
           <span
             className="size-4 shrink-0 bg-current text-foreground"
-            style={{ mask: `url(${bbLogoUrl}) center / contain no-repeat` }}
+            style={{ mask: `url(${sandyLogoUrl}) center / contain no-repeat` }}
             aria-hidden
           />
         ) : shelf.key === "collection:new-and-notable" ? (

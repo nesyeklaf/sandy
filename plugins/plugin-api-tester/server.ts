@@ -1,5 +1,5 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
-export default function plugin(bb: BbPluginApi) {
-  void bb;
+export default function plugin(sandy: SandyPluginApi) {
+  void sandy;
 }

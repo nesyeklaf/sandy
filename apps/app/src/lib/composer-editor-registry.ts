@@ -1,9 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { ComposerDraft } from "@get-bb/plugin-sdk";
+import type { ComposerDraft } from "@sandy-sdk/plugin-sdk";
 import type {
   ComposerEditorState,
   ComposerEditorSubmission,
-} from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import type { PluginComposerHost } from "@/components/plugin/plugin-composer-host";
 import { createKeyedListeners } from "./keyed-listeners";
 

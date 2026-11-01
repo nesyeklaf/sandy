@@ -9,13 +9,13 @@ import {
   noopNotifier,
   threads,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { DbConnection } from "@bb/db";
-import { defaultFeatureFlags } from "@bb/domain";
-import type { Thread } from "@bb/domain";
-import type { ThreadTimelineResponse } from "@bb/server-contract";
-import type { CorpusThread } from "@bb/test-helpers";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { DbConnection } from "@sandy/db";
+import { defaultFeatureFlags } from "@sandy/domain";
+import type { Thread } from "@sandy/domain";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
+import type { CorpusThread } from "@sandy/test-helpers";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { resolveRepoRelativeFile } from "./env-file-path.js";
@@ -35,11 +35,11 @@ import {
 } from "../../src/services/threads/timeline-output-shortening.js";
 import { timelineWindowTag } from "../../src/services/threads/timeline-window-tag.js";
 
-export const SNAPSHOT_MODE_ENV = "BB_PROVIDER_CORPUS_SNAPSHOT";
+export const SNAPSHOT_MODE_ENV = "SANDY_PROVIDER_CORPUS_SNAPSHOT";
 
-export const SNAPSHOT_ROWS_DIR_ENV = "BB_PROVIDER_CORPUS_SNAPSHOT_DIR";
+export const SNAPSHOT_ROWS_DIR_ENV = "SANDY_PROVIDER_CORPUS_SNAPSHOT_DIR";
 
-export const ALLOWLIST_FILE_ENV = "BB_PROVIDER_CORPUS_ALLOWLIST";
+export const ALLOWLIST_FILE_ENV = "SANDY_PROVIDER_CORPUS_ALLOWLIST";
 
 export function resolveSnapshotRowsDir(
   snapshotsDir: string,
@@ -343,7 +343,7 @@ export function unifiedJsonDiff(
   label: string,
   maxLines = 200,
 ): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-corpus-diff-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sandy-corpus-diff-"));
   try {
     const expectedPath = path.join(dir, "expected.json");
     const actualPath = path.join(dir, "actual.json");

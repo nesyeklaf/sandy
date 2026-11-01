@@ -40,9 +40,9 @@ describe("marketplace publisher labels", () => {
     ).toBe("Acme Plugins");
   });
 
-  it("refuses a reserved label to a marketplace that is not BB's", () => {
+  it("refuses a reserved label to a marketplace that is not SANDY's", () => {
     const labels = publisherLabels([
-      { marketplaceName: "acme", displayName: "BB Official" },
+      { marketplaceName: "acme", displayName: "SANDY Official" },
     ]);
 
     expect(
@@ -56,12 +56,12 @@ describe("marketplace publisher labels", () => {
     expect(
       marketplacePublisherLabel({
         marketplaceName: "acme",
-        displayName: "BB Community",
+        displayName: "SANDY Community",
       }),
     ).toBe("acme");
   });
 
-  it("keeps a store-installed bundled plugin on BB Official", () => {
+  it("keeps a store-installed bundled plugin on SANDY Official", () => {
     const labels = publisherLabels([
       { marketplaceName: "community", displayName: "Community Plugins" },
     ]);
@@ -73,10 +73,10 @@ describe("marketplace publisher labels", () => {
         catalogMarketplaceName: "community",
         labels,
       }),
-    ).toBe("BB Official");
+    ).toBe("SANDY Official");
   });
 
-  it("badges bundled plugins BB Official and user installs not at all", () => {
+  it("badges bundled plugins SANDY Official and user installs not at all", () => {
     const labels = publisherLabels([]);
 
     expect(
@@ -86,7 +86,7 @@ describe("marketplace publisher labels", () => {
         catalogMarketplaceName: null,
         labels,
       }),
-    ).toBe("BB Official");
+    ).toBe("SANDY Official");
     expect(
       pluginPublisherLabel({
         sourceKind: "git",

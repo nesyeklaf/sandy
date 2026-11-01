@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { defineRpcContract } from "@get-bb/plugin-sdk";
-import { createRpcQueryHooks } from "@get-bb/plugin-sdk/internal/rpc-query-host";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
+import { createRpcQueryHooks } from "@sandy-sdk/plugin-sdk/internal/rpc-query-host";
 import { MutationObserver, QueryObserver } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";

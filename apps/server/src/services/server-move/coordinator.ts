@@ -2,18 +2,18 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { rm, rmdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { AppSurface } from "@bb/config/app-surface";
-import { listNonDestroyedHostsByIds } from "@bb/db";
+import type { AppSurface } from "@sandy/config/app-surface";
+import { listNonDestroyedHostsByIds } from "@sandy/db";
 import {
   formatServerDataSize,
   SERVER_MOVE_STEP_IDS,
   type ServerMoveStepId,
-} from "@bb/domain";
-import { writeServerMovedFile } from "@bb/server-archive";
+} from "@sandy/domain";
+import { writeServerMovedFile } from "@sandy/server-archive";
 import type {
   ServerMovedErrorDetails,
   ServerMoveProgressMessage,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type {
   ServerMoveCheckItem,
   ServerMoveCheckRequest,
@@ -22,7 +22,7 @@ import type {
   ServerMoveStatus,
   ServerMoveStep,
   ServerMoveStepStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { ApiError } from "../../errors.js";
 import type { AppDeps } from "../../types.js";
 import { callHostOnlineRpc } from "../hosts/online-rpc.js";
@@ -33,8 +33,8 @@ import {
 } from "./checks.js";
 import type { ServerArchiveExport } from "./export.js";
 import type {
-  FullBbAppArtifact,
-  FullBbAppArtifactService,
+  FullSandyAppArtifact,
+  FullSandyAppArtifactService,
 } from "./full-artifact.js";
 import {
   setServerMoveFrozen,
@@ -97,7 +97,7 @@ export interface ServerMoveEnvironment {
   allowLoopbackServerUrl: boolean;
   deps: AppDeps;
   exportArchive(args: ServerMoveExportArgs): Promise<ServerArchiveExport>;
-  fullArtifact: FullBbAppArtifactService;
+  fullArtifact: FullSandyAppArtifactService;
   now(): number;
   plugins: ServerMovePluginControl;
   readServerDiskFreeBytes(): Promise<number | null>;
@@ -110,7 +110,7 @@ export interface ServerMoveEnvironment {
   timings: ServerMoveTimings;
 }
 
-export type ServerMoveDownloadKind = "archive" | "bb-app";
+export type ServerMoveDownloadKind = "archive" | "sandy-app";
 
 export interface ServerMoveDownload {
   path: string;
@@ -157,7 +157,7 @@ interface MoveRun {
   activationToken: string;
   archive: ServerArchiveExport | null;
   archiveExistingTargetServerData: boolean;
-  bbApp: FullBbAppArtifact | null;
+  sandyApp: FullSandyAppArtifact | null;
   configBackup: OldServerDaemonConfigBackup | null;
   finished: boolean;
   frozen: boolean;
@@ -192,9 +192,9 @@ const DAEMON_ERROR_SUMMARIES: Record<string, string> = {
   server_move_cancelled: "The machine cancelled the move",
   server_move_digest_mismatch: "The export was damaged in transit",
   server_move_download_failed: "The machine couldn't download the export",
-  server_move_install_failed: "Installing bb on the machine failed",
+  server_move_install_failed: "Installing sandy on the machine failed",
   server_move_rejected: "The machine rejected the move",
-  server_move_server_entry_unavailable: "The machine can't run the bb server",
+  server_move_server_entry_unavailable: "The machine can't run the sandy server",
   server_move_start_failed: "The new server didn't start",
 };
 
@@ -209,8 +209,8 @@ export function serverMoveArchiveDownloadPath(moveId: string): string {
   return `/internal/server-move/${encodeURIComponent(moveId)}/archive`;
 }
 
-export function serverMoveBbAppDownloadPath(moveId: string): string {
-  return `/internal/server-move/${encodeURIComponent(moveId)}/bb-app.tgz`;
+export function serverMoveSandyAppDownloadPath(moveId: string): string {
+  return `/internal/server-move/${encodeURIComponent(moveId)}/sandy-app.tgz`;
 }
 
 export function serverMoveDestinationStatusUrl(serverUrl: string): string {
@@ -290,7 +290,7 @@ function moveFromRunFile(run: ServerMoveRunFile): MoveRun {
     activationToken: run.activationToken,
     archive: null,
     archiveExistingTargetServerData: run.archiveExistingTargetServerData,
-    bbApp: null,
+    sandyApp: null,
     configBackup: run.configBackup,
     finished: true,
     frozen: false,
@@ -574,7 +574,7 @@ export function createServerMoveCoordinator(
     );
     if (inspect.dataDirHasServerData) {
       throw new Error(
-        `${targetName} already has bb server data in ${inspect.dataDir}`,
+        `${targetName} already has sandy server data in ${inspect.dataDir}`,
       );
     }
     if (!inspect.portAvailable) {
@@ -587,16 +587,16 @@ export function createServerMoveCoordinator(
       !move.archiveExistingTargetServerData
     ) {
       throw new Error(
-        `${targetName} has its own bb data at ${inspect.existingServerData.path}. Confirm archiving it, then start the move again.`,
+        `${targetName} has its own sandy data at ${inspect.existingServerData.path}. Confirm archiving it, then start the move again.`,
       );
     }
     const appVersion = deps.config.appVersion;
-    if (inspect.serverEntryAvailable && inspect.bbAppVersion === appVersion) {
+    if (inspect.serverEntryAvailable && inspect.sandyAppVersion === appVersion) {
       setStep(
         move,
         "update-target",
         "skipped",
-        `${targetName} already runs bb ${appVersion}`,
+        `${targetName} already runs sandy ${appVersion}`,
       );
       return;
     }
@@ -604,15 +604,15 @@ export function createServerMoveCoordinator(
       move,
       "update-target",
       "running",
-      `Packing bb ${appVersion} for ${targetName}`,
+      `Packing sandy ${appVersion} for ${targetName}`,
     );
-    const bbApp = await untilCancelled(move, environment.fullArtifact.build());
-    move.bbApp = bbApp;
+    const sandyApp = await untilCancelled(move, environment.fullArtifact.build());
+    move.sandyApp = sandyApp;
     setStep(
       move,
       "update-target",
       "done",
-      `bb ${bbApp.version} will be installed on ${targetName}`,
+      `sandy ${sandyApp.version} will be installed on ${targetName}`,
     );
   }
 
@@ -656,14 +656,14 @@ export function createServerMoveCoordinator(
             sha256: archive.sha256,
             sizeBytes: archive.sizeBytes,
           },
-          bbApp:
-            move.bbApp === null
+          sandyApp:
+            move.sandyApp === null
               ? null
               : {
-                  downloadPath: serverMoveBbAppDownloadPath(move.status.moveId),
-                  sha256: move.bbApp.sha256,
-                  sizeBytes: move.bbApp.sizeBytes,
-                  version: move.bbApp.version,
+                  downloadPath: serverMoveSandyAppDownloadPath(move.status.moveId),
+                  sha256: move.sandyApp.sha256,
+                  sizeBytes: move.sandyApp.sizeBytes,
+                  version: move.sandyApp.version,
                 },
           serverPort: environment.targetServerPort(),
           sourceDataDir: deps.config.dataDir,
@@ -1381,7 +1381,7 @@ export function createServerMoveCoordinator(
       if (move.status.targetHostId !== args.hostId) {
         return { outcome: "forbidden" };
       }
-      const artifact = args.kind === "archive" ? move.archive : move.bbApp;
+      const artifact = args.kind === "archive" ? move.archive : move.sandyApp;
       if (artifact === null) {
         return { outcome: "not_found" };
       }
@@ -1427,7 +1427,7 @@ export function createServerMoveCoordinator(
             blockers.push({
               id: "archive-existing-data-required",
               severity: "blocker",
-              title: `Confirm archiving the existing bb data on ${check.response.targetHostName}`,
+              title: `Confirm archiving the existing sandy data on ${check.response.targetHostName}`,
               detail: existingData.path,
             });
           }
@@ -1458,7 +1458,7 @@ export function createServerMoveCoordinator(
             archive: null,
             archiveExistingTargetServerData:
               request.archiveExistingTargetServerData,
-            bbApp: null,
+            sandyApp: null,
             configBackup: null,
             finished: false,
             frozen: false,

@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
-import { createScriptedEchoRuntime } from "@bb/agent-runtime/test";
-import { getThread, listEvents } from "@bb/db";
-import type { PromptInput, ThreadEvent } from "@bb/domain";
-import { groupHostDaemonEvents } from "@bb/host-daemon-contract";
+import { createScriptedEchoRuntime } from "@sandy/agent-runtime/test";
+import { getThread, listEvents } from "@sandy/db";
+import type { PromptInput, ThreadEvent } from "@sandy/domain";
+import { groupHostDaemonEvents } from "@sandy/host-daemon-contract";
 import { describe, expect, it, vi } from "vitest";
 import { appendClientTurnEvent } from "../../src/services/threads/thread-events.js";
 import { editThreadMessage } from "../../src/services/threads/thread-edit-message.js";
@@ -74,8 +74,8 @@ describe("checkpoint identity through runtime, ingestion, and editing", () => {
           runtime: {
             workspacePath: harness.config.dataDir,
             env: {
-              BB_CODEX_BRIDGE_APP_SERVER_COMMAND: process.execPath,
-              BB_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify([appServerPath]),
+              SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND: process.execPath,
+              SANDY_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify([appServerPath]),
             },
             onEvent: (event) => events.push(event),
           },

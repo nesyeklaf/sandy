@@ -1,7 +1,7 @@
 import {
   serverHealthResponseSchema,
   type ServerMoveHealth,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 
 export async function fetchServerMoveDestinationHealth(
   url: string,

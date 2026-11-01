@@ -7,7 +7,7 @@ import {
   type NativeImage,
 } from "electron";
 import { z } from "zod";
-import { BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL } from "./desktop-window-command-ipc.js";
+import { SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL } from "./desktop-window-command-ipc.js";
 
 const threadIdsSchema = z.array(z.string().min(1).max(256)).max(10000);
 const attentionThreadsSchema = z.object({
@@ -88,7 +88,7 @@ export function registerDesktopAttentionIpc(
   }
 
   ipcMain.on(
-    BB_DESKTOP_SET_ATTENTION_THREADS_CHANNEL,
+    SANDY_DESKTOP_SET_ATTENTION_THREADS_CHANNEL,
     (event, payload: unknown) => {
       if (!senderWindow(event)) return;
       const parsed = attentionThreadsSchema.safeParse(payload);

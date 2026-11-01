@@ -5,20 +5,20 @@ import {
   UPDATE_ACTION_ICON,
   UPDATE_STATE_PRESENTATION,
   type UpdateState,
-} from "@bb/domain/update-state";
-import { Button, type ButtonProps } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/domain/update-state";
+import { Button, type ButtonProps } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
+} from "@sandy/shared-ui/tooltip";
 import {
   ResourceActionButton,
   ResourceListState,
-} from "@bb/shared-ui/resource-list";
+} from "@sandy/shared-ui/resource-list";
 import { appToast } from "@/components/ui/app-toast";
 import { SettingsSection } from "@/components/ui/settings-section";
 import { useRetryHostUpdate } from "@/hooks/mutations/host-mutations";
@@ -377,7 +377,7 @@ function MachineRowNote({
   if (daemon === "updating") {
     return (
       <>
-        <RowStateCaption state="in-progress">Updating bb</RowStateCaption>
+        <RowStateCaption state="in-progress">Updating sandy</RowStateCaption>
         <RowStateControl live state="in-progress" />
       </>
     );
@@ -649,7 +649,7 @@ function blockedPluginReason(
 ): string {
   const version = item.version;
   return item.reasons.length === 0
-    ? `${version} isn’t compatible with this bb`
+    ? `${version} isn’t compatible with this sandy`
     : `${version}: ${item.reasons.join("; ")}`;
 }
 
@@ -714,7 +714,7 @@ function PluginUpdateRow({
               reason={
                 failure.detail.length > 0
                   ? failure.detail
-                  : `bb couldn’t activate ${failure.label} and restored ${plugin.version}.`
+                  : `sandy couldn’t activate ${failure.label} and restored ${plugin.version}.`
               }
             />
             <RowStateControl

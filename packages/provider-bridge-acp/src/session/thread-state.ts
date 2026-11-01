@@ -3,7 +3,7 @@ import type {
   ThreadSessionOption,
   ThreadSessionOptionValue,
   ThreadSessionOptionsState,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   AcpAvailableCommand,
   AcpBooleanConfigOption,

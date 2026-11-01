@@ -1,4 +1,4 @@
-import { Video } from "@bb/shared-ui/video";
+import { Video } from "@sandy/shared-ui/video";
 import {
   useCallback,
   useEffect,
@@ -8,13 +8,13 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "@bb/shared-ui/button";
-import { usePersistentOverlayFocus } from "@bb/shared-ui/responsive-overlay";
+import { Button } from "@sandy/shared-ui/button";
+import { usePersistentOverlayFocus } from "@sandy/shared-ui/responsive-overlay";
 import { usePortalScopeProps } from "@/lib/portal-scope";
 import { useBrowserDimmingOverlay } from "@/hooks/useBrowserDimmingModal";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { IMAGE_TRANSPARENCY_CHECKER_STYLE } from "@bb/shared-ui/lib/image-preview";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { IMAGE_TRANSPARENCY_CHECKER_STYLE } from "@sandy/shared-ui/lib/image-preview";
 import {
   constrainPanZoomOffset,
   createPanZoomTransform,

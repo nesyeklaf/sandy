@@ -5,12 +5,12 @@ import type {
   UiPreferenceEntry,
   UiPreferenceKey,
   UiPreferenceValue,
-} from "@bb/domain";
-import type { UiPreferencesResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { UiPreferencesResponse } from "@sandy/server-contract";
 import { appToast } from "@/components/ui/app-toast";
 import { invalidateUiPreferences } from "@/hooks/cache-owners/system-cache-effects";
 import { uiPreferencesQueryOptions } from "@/hooks/queries/system-queries";
-import { BbHttpError, sdk } from "../sdk";
+import { SandyHttpError, sdk } from "../sdk";
 
 type JotaiStore = ReturnType<typeof getDefaultStore>;
 
@@ -186,7 +186,7 @@ function refetchUiPreferences(
 }
 
 function isUiPreferenceConflict(error: unknown): boolean {
-  return error instanceof BbHttpError && error.status === 409;
+  return error instanceof SandyHttpError && error.status === 409;
 }
 
 async function writeUiPreference<Key extends UiPreferenceKey>(

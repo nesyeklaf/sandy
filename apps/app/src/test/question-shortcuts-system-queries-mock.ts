@@ -1,4 +1,4 @@
-import { defaultAppSettings, type AppKeybindings } from "@bb/domain";
+import { defaultAppSettings, type AppKeybindings } from "@sandy/domain";
 
 const NO_MODIFIERS = {
   mod: false,

@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { ExperimentalVendorPluginRoots } from "@get-bb/plugin-sdk/host";
+import type { ExperimentalVendorPluginRoots } from "@sandy-sdk/plugin-sdk/host";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveClaudeNativeRoots } from "./native-roots.js";
 
@@ -60,7 +60,7 @@ async function writePlugin(
 }
 
 beforeEach(async () => {
-  tempRoot = await mkdtemp(path.join(tmpdir(), "bb-claude-native-roots-"));
+  tempRoot = await mkdtemp(path.join(tmpdir(), "sandy-claude-native-roots-"));
 });
 
 afterEach(async () => {

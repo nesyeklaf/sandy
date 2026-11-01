@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { PromptInput, ThreadQueuedMessage } from "@bb/domain";
-import type { SendQueuedMessageMode } from "@bb/server-contract";
+import type { PromptInput, ThreadQueuedMessage } from "@sandy/domain";
+import type { SendQueuedMessageMode } from "@sandy/server-contract";
 import type {
   QueuedMessageGroupBoundaryRequest,
   QueuedMessageProcessingAction,
@@ -17,7 +17,7 @@ import {
   showMutationErrorToast,
 } from "@/lib/mutation-errors";
 import type { QueuedMessageReorderRequest } from "@/lib/queued-message-reorder";
-import { BbHttpError } from "@/lib/sdk";
+import { SandyHttpError } from "@/lib/sdk";
 import type { InlineQueuedMessageEditState } from "./useInlineQueuedMessageEditing";
 
 type QueuedMessageSendGuard = "current-head" | "exists" | "none";
@@ -166,7 +166,7 @@ export function useQueuedMessageActions({
       onSaveSuccess?.();
       dismissInlineQueuedMessageEditor();
     } catch (error) {
-      if (error instanceof BbHttpError && error.status === 404) {
+      if (error instanceof SandyHttpError && error.status === 404) {
         dismissInlineQueuedMessageEditor();
       }
       showMutationErrorToast({

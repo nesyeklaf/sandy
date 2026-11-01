@@ -5,16 +5,16 @@ import {
   insertEvents,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { DbConnection } from "@bb/db";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { DbConnection } from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   parseStoredThreadEvent,
   threadScope,
   turnScope,
-} from "@bb/domain";
-import type { Thread, ThreadEventScope, ThreadEventType } from "@bb/domain";
+} from "@sandy/domain";
+import type { Thread, ThreadEventScope, ThreadEventType } from "@sandy/domain";
 
 type InsertEventInput = Parameters<typeof insertEvents>[2][number];
 
@@ -255,7 +255,7 @@ function pushSyntheticTurn(
       item: {
         type: "toolCall",
         id: id("tool"),
-        tool: turn % 2 === 0 ? "Read" : "mcp__bb-bridge__bb_thread_list",
+        tool: turn % 2 === 0 ? "Read" : "mcp__sandy-bridge__sandy_thread_list",
         arguments: { path: `/workspace/project/src/module-${turn % 7}.ts` },
         status: "pending",
       },
@@ -273,7 +273,7 @@ function pushSyntheticTurn(
       item: {
         type: "toolCall",
         id: id("tool"),
-        tool: turn % 2 === 0 ? "Read" : "mcp__bb-bridge__bb_thread_list",
+        tool: turn % 2 === 0 ? "Read" : "mcp__sandy-bridge__sandy_thread_list",
         arguments: { path: `/workspace/project/src/module-${turn % 7}.ts` },
         status: "completed",
         result: { ok: true, lines: 120 + turn },

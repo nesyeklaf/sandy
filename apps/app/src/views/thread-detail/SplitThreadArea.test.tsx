@@ -20,9 +20,9 @@ import {
 } from "react";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
-import type { BbDesktopInfo } from "@bb/desktop-contract";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
+import type { SandyDesktopInfo } from "@sandy/desktop-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import {
@@ -45,7 +45,7 @@ import {
 } from "@/hooks/usePromptDraftStorage";
 import { useRouteState } from "@/hooks/useRouteState";
 import { registerPaneComposerFocus } from "@/lib/pane-composer-focus";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import {
   resetPluginSlotStoreForTest,
   setPluginSlotRegistrations,
@@ -218,7 +218,7 @@ function RootComposeFixture() {
   );
 }
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", async () => {
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", async () => {
   const React = await import("react");
   const subscribe = (listener: () => void) => {
     viewportState.listeners.add(listener);
@@ -935,7 +935,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   threadStore.clear();
   resetPluginSlotStoreForTest();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
   window.localStorage.clear();
   window.sessionStorage.clear();
 });
@@ -2587,11 +2587,11 @@ describe("SplitThreadArea", () => {
   });
 
   it("carves a plugin pane drag handle out of the macOS window-drag region", async () => {
-    const desktopInfo: BbDesktopInfo = {
+    const desktopInfo: SandyDesktopInfo = {
       platform: "macos",
       version: "0.0.0-test",
     };
-    window.bbDesktop = createBbDesktopApi(desktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(desktopInfo);
     setPluginSlotRegistrations(
       "docs",
       makePluginRegistrationSet({
@@ -2624,11 +2624,11 @@ describe("SplitThreadArea", () => {
   });
 
   it("makes only top-row split headers desktop window-drag regions", async () => {
-    const desktopInfo: BbDesktopInfo = {
+    const desktopInfo: SandyDesktopInfo = {
       platform: "macos",
       version: "0.0.0-test",
     };
-    window.bbDesktop = createBbDesktopApi(desktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(desktopInfo);
     setPluginSlotRegistrations(
       "test-plugin",
       makePluginRegistrationSet({
@@ -2697,22 +2697,22 @@ describe("SplitThreadArea", () => {
         ?.className;
     for (const path of ["top-left", "top-right"]) {
       expect(await paneClassName(path)).toContain(
-        "[--bb-content-bottom-inset:0px]",
+        "[--sandy-content-bottom-inset:0px]",
       );
     }
     for (const path of ["bottom-left", "bottom-right"]) {
       expect(await paneClassName(path)).not.toContain(
-        "--bb-content-bottom-inset",
+        "--sandy-content-bottom-inset",
       );
     }
   });
 
   it("reserves collapsed window-left chrome only for the structural top-left plugin pane", async () => {
-    const desktopInfo: BbDesktopInfo = {
+    const desktopInfo: SandyDesktopInfo = {
       platform: "macos",
       version: "0.0.0-test",
     };
-    window.bbDesktop = createBbDesktopApi(desktopInfo);
+    window.sandyDesktop = createSandyDesktopApi(desktopInfo);
     sidebarState.showing = false;
     setPluginSlotRegistrations(
       "test-plugin",
@@ -2744,11 +2744,11 @@ describe("SplitThreadArea", () => {
         .closest("header")
         ?.querySelector('[data-testid="app-page-header-content-row"]');
     expect((await contentRow("top-left"))?.className).toContain(
-      "pl-(--bb-macos-collapsed-top-left-reserve)",
+      "pl-(--sandy-macos-collapsed-top-left-reserve)",
     );
     for (const path of ["top-right", "bottom-left", "bottom-right"]) {
       expect((await contentRow(path))?.className).not.toContain(
-        "pl-(--bb-macos-collapsed-top-left-reserve)",
+        "pl-(--sandy-macos-collapsed-top-left-reserve)",
       );
     }
 

@@ -23,7 +23,7 @@ export const bundleTargets = [
   },
   {
     // The bootstrap the runtime spawns for EVERY bridge: it imports the
-    // bridge module out of a `bb.host` artifact and owns the process
+    // bridge module out of a `sandy.host` artifact and owns the process
     // boundary.
     banner: NODE_ESM_REQUIRE_BANNER,
     entryPoint: resolve(
@@ -34,29 +34,29 @@ export const bundleTargets = [
       "bridge-worker-entry.ts",
     ),
     label: "provider bridge worker",
-    outfile: resolve(packageRoot, "dist", "bb-provider-bridge-worker.mjs"),
+    outfile: resolve(packageRoot, "dist", "sandy-provider-bridge-worker.mjs"),
   },
   {
-    // Forked child that runs a plugin's `bb.host` entry (plugin-host-manager.ts).
+    // Forked child that runs a plugin's `sandy.host` entry (plugin-host-manager.ts).
     // Emitted next to the daemon bundle so defaultWorkerEntryPath resolves it as
     // a sibling in the packaged app.
     banner: NODE_ESM_REQUIRE_BANNER,
     entryPoint: resolve(packageRoot, "src", "plugin-host-worker.ts"),
     label: "plugin host worker",
-    outfile: resolve(packageRoot, "dist", "bb-plugin-host-worker.mjs"),
+    outfile: resolve(packageRoot, "dist", "sandy-plugin-host-worker.mjs"),
   },
   {
     banner: NODE_ESM_REQUIRE_BANNER,
     entryPoint: resolve(workspaceRoot, "apps", "cli", "src", "index.ts"),
     executable: true,
-    label: "bb cli",
-    outfile: resolve(packageRoot, "dist", "bb"),
+    label: "sandy cli",
+    outfile: resolve(packageRoot, "dist", "sandy"),
     // The CLI `import()`s each command group on demand; chunks land in
-    // dist/bb-chunks, which packages/bb-app ships next to this entry.
+    // dist/sandy-chunks, which packages/sandy-app ships next to this entry.
     splitting: true,
   },
   {
-    // Forked child that runs @parcel/watcher in isolation (BB_WATCHER_SUBPROCESS=1).
+    // Forked child that runs @parcel/watcher in isolation (SANDY_WATCHER_SUBPROCESS=1).
     // Emitted next to the daemon bundle so fork-channel resolves it as a sibling.
     banner: NODE_ESM_REQUIRE_BANNER,
     entryPoint: resolve(
@@ -68,6 +68,6 @@ export const bundleTargets = [
       "parcel-child-entry.ts",
     ),
     label: "parcel watcher child",
-    outfile: resolve(packageRoot, "dist", "bb-parcel-watcher-child.mjs"),
+    outfile: resolve(packageRoot, "dist", "sandy-parcel-watcher-child.mjs"),
   },
 ];

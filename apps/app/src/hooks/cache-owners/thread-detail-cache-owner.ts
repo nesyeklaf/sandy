@@ -1,9 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import type {
   ThreadResponse,
   ThreadWithIncludesResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   environmentQueryKey,
   hostQueryKey,

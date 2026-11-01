@@ -6,15 +6,15 @@ import type {
   AgentRuntime,
   AgentRuntimeBridgeLaunch,
   AgentRuntimeProviderSession,
-} from "@bb/agent-runtime";
+} from "@sandy/agent-runtime";
 import type {
   ClientTurnRequestId,
   AvailableModel,
   DynamicTool,
   PromptInput,
-} from "@bb/domain";
-import type { HostDaemonBridgeLaunch } from "@bb/host-daemon-contract";
-import type { HostWorkspace, ProvisionWorkspaceArgs } from "@bb/host-workspace";
+} from "@sandy/domain";
+import type { HostDaemonBridgeLaunch } from "@sandy/host-daemon-contract";
+import type { HostWorkspace, ProvisionWorkspaceArgs } from "@sandy/host-workspace";
 import { RuntimeManager } from "../../src/runtime-manager.js";
 import type { CommandDispatchOptions } from "../../src/command-dispatch-support.js";
 import type { FetchProjectAttachment } from "../../src/project-attachments.js";
@@ -394,7 +394,7 @@ export function createHarness(
         ...unexpectedProviderMaintenance,
         runtimeManager: manager,
         threadStorageRootPath:
-          overrides.threadStorageRootPath ?? "/tmp/bb-test-thread-storage",
+          overrides.threadStorageRootPath ?? "/tmp/sandy-test-thread-storage",
       };
     },
   };
@@ -411,7 +411,7 @@ export function makeDispatchOptions(
     fetchProjectAttachment: unexpectedProjectAttachmentFetch,
     fetchPluginHostArtifact: fetchDispatchTestArtifact,
     ...unexpectedProviderMaintenance,
-    threadStorageRootPath: "/tmp/bb-test-thread-storage",
+    threadStorageRootPath: "/tmp/sandy-test-thread-storage",
     ...overrides,
   };
 }
@@ -429,7 +429,7 @@ export const DISPATCH_TEST_ARTIFACT_BYTES = Buffer.from(
 const DISPATCH_TEST_ARTIFACT_DIGEST = createHash("sha256")
   .update(DISPATCH_TEST_ARTIFACT_BYTES)
   .digest("hex");
-const DISPATCH_TEST_DATA_DIR = "/tmp/bb-test-data";
+const DISPATCH_TEST_DATA_DIR = "/tmp/sandy-test-data";
 
 export async function* artifactBody(
   bytes: Uint8Array,

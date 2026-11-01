@@ -3,14 +3,14 @@
   "name": "menubar",
   "type": "registry:ui",
   "title": "menubar",
-  "description": "BB ui \"menubar\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"menubar\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-menubar"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/portal-scope",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/portal-scope",
+    "@sandy/utils"
   ],
   "files": [
     {

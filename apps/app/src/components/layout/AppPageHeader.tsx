@@ -8,12 +8,12 @@ import {
 import {
   COARSE_POINTER_HEADER_ICON_BUTTON_CLASS,
   COARSE_POINTER_HEADER_REDUCED_GLYPH_ICON_BUTTON_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   CHROME_ROW_CLASS,
   CHROME_ROW_HEIGHT_CLASS,
-  getBbDesktopInfo,
+  getSandyDesktopInfo,
   MACOS_CHROME_CONTROL_AXIS_CLASS,
   MACOS_TITLE_BAR_BAND_CLASS,
   MACOS_TITLE_BAR_COLLAPSED_SIDEBAR_RESERVE_CLASS,
@@ -24,9 +24,9 @@ import {
   MACOS_WINDOW_NO_DRAG_CLASS,
   shouldReserveMacosTrafficLights,
   shouldUseMacosDesktopChrome,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { useDesktopWindowState } from "@/hooks/useDesktopWindowState";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { scrollPageToTop } from "@/lib/page-scroll-to-top";
 import { resolveWindowTopLeftReserveClassName } from "./windowTopLeftReserve";
 
@@ -65,7 +65,7 @@ export function AppPageHeader({
   const handleScrollToTop = () => {
     if (localHeaderRef.current) scrollPageToTop(localHeaderRef.current);
   };
-  const [desktopInfo] = useState(getBbDesktopInfo);
+  const [desktopInfo] = useState(getSandyDesktopInfo);
   const desktopWindowState = useDesktopWindowState();
   const usesDesktopChrome = shouldUseMacosDesktopChrome(desktopInfo);
   const reserveMacosTrafficLights = shouldReserveMacosTrafficLights({

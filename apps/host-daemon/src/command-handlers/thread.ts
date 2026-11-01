@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { AgentRuntimeBridgeLaunch } from "@bb/agent-runtime";
-import { flattenPromptInputGroups } from "@bb/domain";
-import { killProcessesWithCwdUnder } from "@bb/process-utils";
+import type { AgentRuntimeBridgeLaunch } from "@sandy/agent-runtime";
+import { flattenPromptInputGroups } from "@sandy/domain";
+import { killProcessesWithCwdUnder } from "@sandy/process-utils";
 import {
   COMPETING_TURN_ERROR_CODE,
   type HostDaemonCommandResult,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { RuntimeEntry } from "../runtime-manager.js";
 import {
   CommandDispatchError,

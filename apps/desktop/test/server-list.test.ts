@@ -27,7 +27,7 @@ describe("buildDesktopServerChoices", () => {
     await store.setCustomServerUrl("https://work.example.test", {
       name: "Devbox",
     });
-    await store.setCustomServerUrl("https://bb.example.com/team", {
+    await store.setCustomServerUrl("https://sandy.example.com/team", {
       name: null,
     });
 
@@ -47,9 +47,9 @@ describe("buildDesktopServerChoices", () => {
         active: false,
       },
       {
-        id: customServerId("https://bb.example.com/team"),
-        name: "bb.example.com",
-        origin: "https://bb.example.com",
+        id: customServerId("https://sandy.example.com/team"),
+        name: "sandy.example.com",
+        origin: "https://sandy.example.com",
         kind: "custom",
         active: true,
       },

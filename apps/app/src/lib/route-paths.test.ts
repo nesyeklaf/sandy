@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import {
   getPluginConfigurationRoutePath,
   getPluginDetailRoutePath,
@@ -27,8 +27,8 @@ describe("route path helpers", () => {
       const suffix = "?from=bookmark#checkouts";
       expect(
         resolveRouteHref({
-          currentOrigin: "https://bb.example",
-          href: `https://bb.example${path}${suffix}`,
+          currentOrigin: "https://sandy.example",
+          href: `https://sandy.example${path}${suffix}`,
         }),
       ).toEqual({ path: `${path}${suffix}` });
     },
@@ -183,8 +183,8 @@ describe("route path helpers", () => {
   it("resolves same-origin hrefs to router paths", () => {
     expect(
       resolveRouteHref({
-        currentOrigin: "https://bb.local",
-        href: "https://bb.local/projects/proj_standard/threads/thr_standard?q=1",
+        currentOrigin: "https://sandy.local",
+        href: "https://sandy.local/projects/proj_standard/threads/thr_standard?q=1",
       }),
     ).toEqual({
       path: "/projects/proj_standard/threads/thr_standard?q=1",
@@ -194,13 +194,13 @@ describe("route path helpers", () => {
   it("rejects external and protocol-relative route-shaped hrefs", () => {
     expect(
       resolveRouteHref({
-        currentOrigin: "https://bb.local",
+        currentOrigin: "https://sandy.local",
         href: "https://example.test/projects/proj_standard/threads/thr_standard",
       }),
     ).toBeNull();
     expect(
       resolveRouteHref({
-        currentOrigin: "https://bb.local",
+        currentOrigin: "https://sandy.local",
         href: "//example.test/projects/proj_standard/threads/thr_standard",
       }),
     ).toBeNull();
@@ -209,13 +209,13 @@ describe("route path helpers", () => {
   it("rejects fragment-only and query-only hrefs", () => {
     expect(
       resolveRouteHref({
-        currentOrigin: "https://bb.local",
+        currentOrigin: "https://sandy.local",
         href: "#timeline-row",
       }),
     ).toBeNull();
     expect(
       resolveRouteHref({
-        currentOrigin: "https://bb.local",
+        currentOrigin: "https://sandy.local",
         href: "?panel=files",
       }),
     ).toBeNull();

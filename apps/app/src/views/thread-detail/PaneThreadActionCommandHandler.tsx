@@ -1,4 +1,4 @@
-import type { PluginThreadActionTarget } from "@get-bb/plugin-sdk";
+import type { PluginThreadActionTarget } from "@sandy-sdk/plugin-sdk";
 import { useIndexedAppCommandHandlers } from "@/components/commands/AppCommandProvider";
 import {
   CORE_THREAD_ACTION_OWNER,

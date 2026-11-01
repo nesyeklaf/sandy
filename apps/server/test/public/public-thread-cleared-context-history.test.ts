@@ -1,14 +1,14 @@
 import { expect, it } from "vitest";
-import { getAppSettings } from "@bb/db";
+import { getAppSettings } from "@sandy/db";
 import {
   defaultAppSettings,
   THREAD_CONTEXT_CLEAR_OPERATION,
   threadScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   threadConversationOutlineResponseSchema,
   threadTimelineResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { seedEvent, seedThreadFixture } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";

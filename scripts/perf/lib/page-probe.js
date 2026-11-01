@@ -1,5 +1,5 @@
 (() => {
-  if (window.__bbperf) return;
+  if (window.__sandyperf) return;
   const state = {
     longTasks: [],
     loafs: [],
@@ -266,7 +266,7 @@
     requestAnimationFrame(loop);
   };
 
-  window.__bbperf = {
+  window.__sandyperf = {
     arm,
     watch,
     watches: () => ({

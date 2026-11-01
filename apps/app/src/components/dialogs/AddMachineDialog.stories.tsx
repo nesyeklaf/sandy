@@ -22,9 +22,9 @@ const CONNECTED_HOST = makeHost({
   status: "connected",
 });
 const WINDOWS_ENROLLMENT_COMMAND =
-  "irm -Headers @{ 'X-BB-Enrollment' = 'bbde_TZpKWsJpWiPulVIRKNENmEVtvNwnEwDobjPFlnlsyCUUzorssgdxmgxUblRIWAUA' } 'https://bb.example.com/install.ps1' | iex";
+  "irm -Headers @{ 'X-SANDY-Enrollment' = 'sandyde_TZpKWsJpWiPulVIRKNENmEVtvNwnEwDobjPFlnlsyCUUzorssgdxmgxUblRIWAUA' } 'https://sandy.example.com/install.ps1' | iex";
 const ENROLLMENT_COMMAND =
-  "curl -fsSL -H 'X-BB-Enrollment: bbde_TZpKWsJpWiPulVIRKNENmEVtvNwnEwDobjPFlnlsyCUUzorssgdxmgxUblRIWAUA' 'https://bb.example.com/install.sh' | sh";
+  "curl -fsSL -H 'X-SANDY-Enrollment: sandyde_TZpKWsJpWiPulVIRKNENmEVtvNwnEwDobjPFlnlsyCUUzorssgdxmgxUblRIWAUA' 'https://sandy.example.com/install.sh' | sh";
 
 export function AccessGate() {
   return (
@@ -216,7 +216,7 @@ export function EnrollmentCommandState() {
         <DialogStage>
           <ManualMachineSetupView
             command={null}
-            errorMessage="The gate rejected this bb's credential (HTTP 401)"
+            errorMessage="The gate rejected this sandy's credential (HTTP 401)"
             onRetry={noop}
             onRegenerate={noop}
             connectedHost={null}

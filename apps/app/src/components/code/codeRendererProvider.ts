@@ -10,8 +10,8 @@ import {
   type PluginSourceCodeRendererSlot,
 } from "@/lib/plugin-slots";
 
-const SOURCE_CODE_RENDERER_STORAGE_KEY = "bb.appearance.sourceCodeRenderer";
-const DIFF_RENDERER_STORAGE_KEY = "bb.appearance.diffRenderer";
+const SOURCE_CODE_RENDERER_STORAGE_KEY = "sandy.appearance.sourceCodeRenderer";
+const DIFF_RENDERER_STORAGE_KEY = "sandy.appearance.diffRenderer";
 
 export const sourceCodeRendererProviderAtom = createReplacementPreferenceAtom(
   SOURCE_CODE_RENDERER_STORAGE_KEY,

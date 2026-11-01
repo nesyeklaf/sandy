@@ -3,12 +3,12 @@
   "name": "use-sidebar-reorder-dnd",
   "type": "registry:ui",
   "title": "use-sidebar-reorder-dnd",
-  "description": "BB ui \"use-sidebar-reorder-dnd\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"use-sidebar-reorder-dnd\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@dnd-kit/core"
   ],
   "registryDependencies": [
-    "@bb/use-reorder-dnd"
+    "@sandy/use-reorder-dnd"
   ],
   "files": [
     {

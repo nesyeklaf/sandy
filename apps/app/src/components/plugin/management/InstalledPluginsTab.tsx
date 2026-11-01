@@ -1,11 +1,11 @@
 import { usePluginEnabledMutation } from "@/components/plugin/usePluginEnabledMutation";
 import { useState } from "react";
-import { EmptyState } from "@bb/shared-ui/empty-state";
-import { Switch } from "@bb/shared-ui/switch";
-import { ResourceIconFrame } from "@bb/shared-ui/resource-list";
+import { EmptyState } from "@sandy/shared-ui/empty-state";
+import { Switch } from "@sandy/shared-ui/switch";
+import { ResourceIconFrame } from "@sandy/shared-ui/resource-list";
 import type { PluginListItem } from "@/hooks/queries/plugin-settings-queries";
 import { pluginNeedsAttention } from "@/hooks/usePluginAttention";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   pluginRowSignal,
   pluginRuntimeStatusPresentation,
@@ -41,7 +41,7 @@ export function InstalledPluginsTab({
 
   if (plugins.length === 0) {
     return (
-      <EmptyState message="No plugins installed. Browse the catalog, create a plugin, or run bb plugin install <source>." />
+      <EmptyState message="No plugins installed. Browse the catalog, create a plugin, or run sandy plugin install <source>." />
     );
   }
 
@@ -122,14 +122,14 @@ export function InstalledPluginRow({
             <PluginAuthorByline
               name={
                 plugin.provenance === "builtin"
-                  ? "BB Official"
+                  ? "SANDY Official"
                   : plugin.publisherLabel
               }
               github={null}
               official={plugin.provenance === "builtin"}
             >
               {plugin.provenance === "builtin"
-                ? "BB Official"
+                ? "SANDY Official"
                 : plugin.publisherLabel}
             </PluginAuthorByline>
           ) : null

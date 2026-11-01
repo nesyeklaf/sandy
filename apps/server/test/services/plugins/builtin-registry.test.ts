@@ -14,7 +14,6 @@ const UNPREFIXED_BUNDLED_PLUGIN_IDS = [
   "agent-annotations",
   "ask-user-question",
   "automations",
-  "bb-guide",
   "browser-automation",
   "concurrency-limit",
   "custom-instructions",
@@ -37,6 +36,7 @@ const UNPREFIXED_BUNDLED_PLUGIN_IDS = [
   "provider-pi",
   "provider-retry",
   "push-notifications",
+  "sandy-guide",
   "scheduled-send",
   "secrets",
   "side-chat",
@@ -48,7 +48,7 @@ const UNPREFIXED_BUNDLED_PLUGIN_IDS = [
 ];
 
 describe("bundled plugin ids", () => {
-  it("prefixes every bundled plugin added after the reservation with bb--", () => {
+  it("prefixes every bundled plugin added after the reservation with sandy--", () => {
     const unprefixed = BUNDLED_PLUGINS.map((plugin) => plugin.pluginId)
       .filter((pluginId) => !pluginId.startsWith(BUILTIN_PLUGIN_ID_PREFIX))
       .sort();
@@ -61,7 +61,7 @@ describe("bundled plugin artifact resolution", () => {
   let root: string;
 
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), "bb-builtin-resolution-"));
+    root = await mkdtemp(join(tmpdir(), "sandy-builtin-resolution-"));
   });
 
   afterEach(async () => {
@@ -87,7 +87,7 @@ describe("bundled plugin artifact resolution", () => {
   });
 
   it("loads the bundled artifacts shipped inside an installed package", async () => {
-    const moduleDir = join(root, "node_modules/bb-app/server/dist");
+    const moduleDir = join(root, "node_modules/sandy-app/server/dist");
     const packaged = join(moduleDir, "builtin-plugins");
     await writeBundle(packaged);
 
@@ -102,7 +102,7 @@ describe("bundled plugin artifact resolution", () => {
     const plugin = join(root, "plugins/connect");
     const catalog = join(
       root,
-      "apps/server/src/generated/bb-official-marketplace",
+      "apps/server/src/generated/sandy-official-marketplace",
     );
     await mkdir(plugin, { recursive: true });
     await mkdir(catalog, { recursive: true });

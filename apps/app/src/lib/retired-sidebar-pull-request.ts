@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import type { InstalledPlugin } from "@bb/server-contract";
+import type { InstalledPlugin } from "@sandy/server-contract";
 import {
   githubPrStatusRpcContract,
   type PullRequest,
-} from "bb-plugin-bb--github-pr-status/contract";
-import { GITHUB_PR_STATUS_PLUGIN_ID } from "bb-plugin-bb--github-pr-status/read-contract";
-import { useRefetchOnShowAndFocus } from "bb-plugin-bb--github-pr-status/refetch-on-show";
+} from "sandy-plugin-sandy--github-pr-status/contract";
+import { GITHUB_PR_STATUS_PLUGIN_ID } from "sandy-plugin-sandy--github-pr-status/read-contract";
+import { useRefetchOnShowAndFocus } from "sandy-plugin-sandy--github-pr-status/refetch-on-show";
 import { pluginListQueryOptions } from "@/hooks/queries/plugin-settings-queries";
 import { experimental_useRpcKeyedQuery as useRpcKeyedQuery } from "@/lib/plugin-sdk-hooks";
 

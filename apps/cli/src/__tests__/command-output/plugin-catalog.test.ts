@@ -23,10 +23,10 @@ const searchResult = {
   collections: [],
   source: "builtin:linear",
   repositoryUrl: null,
-  marketplace: "bb-official",
-  marketplaceDisplayName: "BB Official",
-  publisherKey: "bb-official",
-  publisherLabel: "BB Official",
+  marketplace: "sandy-official",
+  marketplaceDisplayName: "SANDY Official",
+  publisherKey: "sandy-official",
+  publisherLabel: "SANDY Official",
   official: true,
   author: null,
   installed: false,
@@ -80,7 +80,7 @@ const installedPlugin = {
   provenance: "catalog",
   isOrphanedBuiltin: false,
   catalogEntryId: "linear",
-  publisherLabel: "BB Community",
+  publisherLabel: "SANDY Community",
   sourceDisplay: "builtin · linear",
   updateState: {},
   enabled: true,
@@ -112,7 +112,7 @@ function json(value: object, status = 200): Response {
   });
 }
 
-describe("bb plugin catalog", () => {
+describe("sandy plugin catalog", () => {
   setupCommandOutputTestEnvironment();
   const register: CommandRegistrar = (program) =>
     registerPluginCommands(program, () => "http://server");
@@ -175,7 +175,7 @@ describe("bb plugin catalog", () => {
     const output = collectLogPayloads(vi.mocked(console.log)).join("\n");
     expect(output).toContain("Marketplace");
     expect(output).toContain("Acme Plugins");
-    expect(output).toContain("BB Official");
+    expect(output).toContain("SANDY Official");
   });
 
   it("adds an Installs column only once a listing reports counts", async () => {
@@ -246,7 +246,7 @@ describe("bb plugin catalog", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       json({ ok: true, plugin: installedPlugin }),
     );
-    const source = "https://github.com/acme/bb-plugin-linear";
+    const source = "https://github.com/acme/sandy-plugin-linear";
 
     await runCommand(["plugin", "install", source, "--yes"], register);
 
@@ -263,7 +263,7 @@ describe("bb plugin catalog", () => {
     vi.mocked(fetch).mockImplementation(async () =>
       json({ ok: true, plugin: installedPlugin }),
     );
-    const source = "git:github.com/acme/bb-plugins@main";
+    const source = "git:github.com/acme/sandy-plugins@main";
 
     await runCommand(
       ["plugin", "install", source, "--plugin", "linear", "--yes"],
@@ -303,7 +303,7 @@ describe("bb plugin catalog", () => {
       [
         "plugin",
         "install",
-        "git:github.com/acme/bb-plugins@^1.2.0",
+        "git:github.com/acme/sandy-plugins@^1.2.0",
         "--tag-prefix",
         "linear/",
         "--yes",
@@ -317,15 +317,15 @@ describe("bb plugin catalog", () => {
           (call) =>
             (JSON.parse(String(call[1]?.body)) as { source: string }).source,
         ),
-    ).toEqual(["git:github.com/acme/bb-plugins@semver:linear/:^1.2.0"]);
+    ).toEqual(["git:github.com/acme/sandy-plugins@semver:linear/:^1.2.0"]);
 
     const errorSpy = vi.mocked(console.error);
     for (const args of [
-      ["plugin", "install", "git:github.com/acme/bb-plugins", "--yes"],
+      ["plugin", "install", "git:github.com/acme/sandy-plugins", "--yes"],
       [
         "plugin",
         "install",
-        "git:github.com/acme/bb-plugins@semver:^1.2.0",
+        "git:github.com/acme/sandy-plugins@semver:^1.2.0",
         "--yes",
       ],
     ]) {
@@ -346,7 +346,7 @@ describe("bb plugin catalog", () => {
         [
           "plugin",
           "install",
-          "git:github.com/acme/bb-plugins@main",
+          "git:github.com/acme/sandy-plugins@main",
           "--plugin",
           "linear",
           "--subdirectory",
@@ -399,7 +399,7 @@ describe("bb plugin catalog", () => {
       entryId: "linear",
     });
     expect(collectLogPayloads(vi.mocked(console.log)).join("\n")).toContain(
-      "bundled with BB",
+      "bundled with SANDY",
     );
   });
 

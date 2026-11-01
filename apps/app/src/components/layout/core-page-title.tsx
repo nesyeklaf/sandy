@@ -3,12 +3,12 @@ import { matchPath } from "react-router-dom";
 import type {
   ExperimentalPageTitle,
   PluginNavPanelProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { usePluginList } from "@/hooks/queries/plugin-settings-queries";
 import { usePluginCatalogSearch } from "@/hooks/queries/plugin-catalog-queries";
 import { projectSkillsQueryKey } from "@/hooks/queries/query-keys";
 import { sdk } from "@/lib/sdk";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import {
   PLUGIN_DETAIL_ROUTE_PATH,
   SKILL_DETAIL_ROUTE_PATH,
@@ -31,7 +31,7 @@ function routeParameter(pattern: string, key: string, pathname: string) {
 export function useCorePageTitle({
   subPath,
 }: PluginNavPanelProps): ExperimentalPageTitle | null {
-  const { pathname, search } = new URL(subPath, "http://bb.local");
+  const { pathname, search } = new URL(subPath, "http://sandy.local");
   const pluginId = routeParameter(
     PLUGIN_DETAIL_ROUTE_PATH,
     "pluginId",
@@ -77,7 +77,7 @@ export function useCorePageTitle({
       : null;
   const trail = breadcrumbs.slice(1);
   if (shelf && trail.length === 1) trail.push({ label: shelf.label });
-  const sectionLabel = breadcrumbs[0]?.label ?? "BB";
+  const sectionLabel = breadcrumbs[0]?.label ?? "SANDY";
   const leaf = trail.at(-1)?.label ?? sectionLabel;
   return {
     ...(trail.length === 1 ? { title: leaf } : { breadcrumbs: trail }),

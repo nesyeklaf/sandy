@@ -1,26 +1,26 @@
 import path from "node:path";
-import type { HostDaemonOnlineRpcResult } from "@bb/host-daemon-contract";
+import type { HostDaemonOnlineRpcResult } from "@sandy/host-daemon-contract";
 import {
   CommandDispatchError,
   type CommandDispatchOptions,
   type CommandOf,
 } from "../command-dispatch-support.js";
 import { userExecutableProcessOptions } from "../user-executable-env.js";
-import type { WorkspaceGitOperation } from "@bb/domain";
+import type { WorkspaceGitOperation } from "@sandy/domain";
 import {
   listBranchOptions,
   refreshRemoteBranches,
-} from "bb-environment-provider-host/branch-options";
+} from "sandy-environment-provider-host/branch-options";
 import {
   detectGitRepoKind,
   readDefaultBranchRefs,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 import {
   detectLinkedWorktree,
   getCheckoutRef,
   getWorkspaceGitOperation,
   hasUncommittedChanges,
-} from "@bb/host-workspace";
+} from "@sandy/host-workspace";
 
 const NO_GIT_OPERATION: WorkspaceGitOperation = { kind: "none" };
 

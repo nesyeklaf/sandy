@@ -32,8 +32,8 @@ const NETWORK_KEYS = [
   "SSL_CERT_FILE",
   "SSL_CERT_DIR",
 ];
-const SHELL_START = "__BB_SHELL_ENV_START__";
-const SHELL_END = "__BB_SHELL_ENV_END__";
+const SHELL_START = "__SANDY_SHELL_ENV_START__";
+const SHELL_END = "__SANDY_SHELL_ENV_END__";
 const PROBE_TIMEOUT_MS = 3000;
 const PROBE_OUTPUT_MAX_CHARS = 1024 * 1024;
 
@@ -320,11 +320,11 @@ export class HostToolchain {
       options.cwd instanceof URL
         ? fileURLToPath(options.cwd)
         : (options.cwd ?? process.cwd());
-    if (command === "bb") {
+    if (command === "sandy") {
       for (const candidate of [
-        env.BB_CLI_LAUNCHER,
-        env.BB_CLI,
-        env.BB_CLI_DIR ? join(env.BB_CLI_DIR, "bb") : undefined,
+        env.SANDY_CLI_LAUNCHER,
+        env.SANDY_CLI,
+        env.SANDY_CLI_DIR ? join(env.SANDY_CLI_DIR, "sandy") : undefined,
       ]) {
         if (
           candidate?.trim() &&
@@ -345,7 +345,7 @@ export class HostToolchain {
         : pathExt,
     };
     const found =
-      command === "bb"
+      command === "sandy"
         ? path
             .split(delimiter)
             .filter(isAbsolute)
@@ -422,7 +422,7 @@ export class HostToolchain {
     }
     throw Object.assign(
       new Error(
-        "The Node runtime was removed and no replacement was found. Reinstall Node or restart bb with an available runtime.",
+        "The Node runtime was removed and no replacement was found. Reinstall Node or restart sandy with an available runtime.",
       ),
       { code: "ENOENT" },
     );
@@ -490,7 +490,7 @@ export class HostToolchain {
   }
 }
 
-const toolchainKey = Symbol.for("@bb/process-utils/host-toolchain");
+const toolchainKey = Symbol.for("@sandy/process-utils/host-toolchain");
 const shared: typeof globalThis & { [toolchainKey]?: HostToolchain } =
   globalThis;
 export const hostToolchain = (shared[toolchainKey] ??= new HostToolchain());

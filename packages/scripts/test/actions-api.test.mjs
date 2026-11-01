@@ -83,7 +83,7 @@ it.concurrent.for([
 );
 
 it("publishes incomplete diagnostics and fails the report when one job inventory remains unavailable", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "bb-ci-report-"));
+  const cwd = await mkdtemp(join(tmpdir(), "sandy-ci-report-"));
   onTestFinished(() => rm(cwd, { recursive: true, force: true }));
   const timestamp = new Date().toISOString();
   const server = createServer((request, response) => {

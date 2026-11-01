@@ -3,11 +3,11 @@
   "name": "textarea",
   "type": "registry:ui",
   "title": "textarea",
-  "description": "BB ui \"textarea\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"textarea\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

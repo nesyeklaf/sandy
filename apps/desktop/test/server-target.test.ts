@@ -183,7 +183,7 @@ describe("server target store", () => {
     expect(store.getTarget()).toEqual({ kind: "builtin" });
   });
 
-  it("opens a saved bb connect target as the built-in server and drops its connect fields", async () => {
+  it("opens a saved sandy connect target as the built-in server and drops its connect fields", async () => {
     const { files, fs } = createMemoryFs({
       "/tmp/t.json": JSON.stringify({
         connectServer: {

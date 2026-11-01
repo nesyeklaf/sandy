@@ -4,15 +4,15 @@ import {
   prependOlderTimelineRows,
   resolveLoadedTimelineSurfaceKey,
   type LoadedTimelineState,
-} from "@bb/client-core";
-import { getThread } from "@bb/db";
+} from "@sandy/client-core";
+import { getThread } from "@sandy/db";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
   type Thread,
-} from "@bb/domain";
-import type { TimelinePaginationCursor } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { TimelinePaginationCursor } from "@sandy/server-contract";
 import { buildThreadTimelineWithProfile } from "../../../src/services/threads/timeline.js";
 import { timelineWindowTag } from "../../../src/services/threads/timeline-window-tag.js";
 import { seedEvent, seedThreadFixture } from "../../helpers/seed.js";

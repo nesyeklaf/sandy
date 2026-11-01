@@ -3,12 +3,12 @@
   "name": "avatar",
   "type": "registry:ui",
   "title": "avatar",
-  "description": "BB ui \"avatar\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"avatar\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-avatar"
   ],
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

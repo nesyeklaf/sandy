@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Button } from "@bb/shared-ui/button";
-import { Input } from "@bb/shared-ui/input";
-import { Pill } from "@bb/shared-ui/pill";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { Input } from "@sandy/shared-ui/input";
+import { Pill } from "@sandy/shared-ui/pill";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
 
 export default {
   title: "Theme Tokens",

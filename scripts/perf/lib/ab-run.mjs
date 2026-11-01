@@ -26,7 +26,7 @@ import { SELECTORS, openThread, settle, threadReadyExpression } from "./ui.mjs";
 export const AB_SCENARIOS = ["switch", "scroll"];
 
 const MEASURE_COLLECTOR =
-  "window.__bbmeasures = []; new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (entry.name.startsWith('bb:')) window.__bbmeasures.push({ name: entry.name, duration: entry.duration, label: entry.detail?.bb?.label ?? null }) }).observe({ type: 'measure' });";
+  "window.__sandymeasures = []; new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (entry.name.startsWith('sandy:')) window.__sandymeasures.push({ name: entry.name, duration: entry.duration, label: entry.detail?.sandy?.label ?? null }) }).observe({ type: 'measure' });";
 const MENU_TRIGGER_POINT =
   "(() => { const node = [...document.querySelectorAll(\"button[aria-label='Thread actions']\")].find((candidate) => { const rect = candidate.getBoundingClientRect(); return rect.width > 0 && rect.height > 0 && !candidate.closest(" +
   JSON.stringify(SELECTORS.sidebarBody) +
@@ -81,10 +81,10 @@ export const visibleSidebarThreads = (browser) =>
 
 export const timedAction = async (browser, kind, readyExpression, act) => {
   await browser.evaluate(
-    "window.__bbperf.arm(" + JSON.stringify(readyExpression) + ", 20000)",
+    "window.__sandyperf.arm(" + JSON.stringify(readyExpression) + ", 20000)",
   );
   await act();
-  const result = await browser.evaluate("window.__bbperf.collectArmed()");
+  const result = await browser.evaluate("window.__sandyperf.collectArmed()");
   if (
     !result ||
     result.timedOut ||
@@ -176,11 +176,11 @@ const runScroll = async (browser, plan, samples) => {
 const measureFirstLoad = async (browser, plan, samples) => {
   await browser
     .waitForExpression(
-      "Boolean(window.__bbperf.watches().results.startThread?.paintedMs)",
+      "Boolean(window.__sandyperf.watches().results.startThread?.paintedMs)",
       { timeoutMs: 5000, description: "start thread painted" },
     )
     .catch(() => null);
-  const { results } = await browser.evaluate("window.__bbperf.watches()");
+  const { results } = await browser.evaluate("window.__sandyperf.watches()");
   samples.push({
     kind: "load",
     visit: "first",
@@ -267,7 +267,7 @@ const runVariant = async (options, variant, plan) => {
       : null;
     if (options.scrolling) await runScroll(browser, plan, samples);
     else await runSwitches(options, browser, plan, samples);
-    const measures = await browser.evaluate("window.__bbmeasures");
+    const measures = await browser.evaluate("window.__sandymeasures");
     const breakdown =
       trace === null
         ? null

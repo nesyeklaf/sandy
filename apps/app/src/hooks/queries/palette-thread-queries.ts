@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { ThreadListResponse } from "@bb/server-contract";
+import type { ThreadListResponse } from "@sandy/server-contract";
 import { useThreadListRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { sdk } from "@/lib/sdk";
 import { threadListQueryKey } from "./query-keys";

@@ -10,12 +10,12 @@ import {
   type ServiceTier,
   threadParentNotificationsSchema,
   type ThreadParentNotifications,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   DEFAULT_THREAD_WAIT_POLL_INTERVAL_MS,
   DEFAULT_THREAD_WAIT_TIMEOUT_MS,
-} from "@bb/sdk";
-import type { BbSdk } from "@bb/sdk/node";
+} from "@sandy/sdk";
+import type { SandySdk } from "@sandy/sdk/node";
 import { parseDurationMs } from "../../duration.js";
 
 export const THREAD_WAIT_EXIT_CODE_TIMEOUT = 2;
@@ -25,7 +25,7 @@ export const DEFAULT_THREAD_WAIT_TIMEOUT_SECONDS =
   DEFAULT_THREAD_WAIT_TIMEOUT_MS / 1000;
 
 export const SERVICE_TIER_HELP =
-  "Service tier id the provider lists for the model, such as default or fast (see `bb provider models`)";
+  "Service tier id the provider lists for the model, such as default or fast (see `sandy provider models`)";
 export const PERMISSION_MODE_HELP =
   "Permission mode: accept-edits, auto, or full";
 export const PARENT_NOTIFICATIONS_HELP =
@@ -114,7 +114,7 @@ async function clientAttachmentMimeType(
 export async function uploadClientAttachmentInputs(args: {
   input: PromptInput[];
   resolveProjectId: () => Promise<string>;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<PromptInput[]> {
   const clientPaths = args.input.map((item) =>
     item.type === "localImage" || item.type === "localFile"

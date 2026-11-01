@@ -1,7 +1,7 @@
 import { getConnInfo } from "@hono/node-server/conninfo";
 import type { Context } from "hono";
 
-export const TRUSTED_REMOTE_ADDRESS_CONTEXT_KEY = "bbTrustedRemoteAddress";
+export const TRUSTED_REMOTE_ADDRESS_CONTEXT_KEY = "sandyTrustedRemoteAddress";
 
 interface TrustedRemoteAddressReader {
   get(key: typeof TRUSTED_REMOTE_ADDRESS_CONTEXT_KEY): string | undefined;

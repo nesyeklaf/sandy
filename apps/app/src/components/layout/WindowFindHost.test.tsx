@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import { WindowFindHost } from "./WindowFindHost";
 
@@ -44,7 +44,7 @@ const desktopInfo = {
 
 function renderFindHost() {
   const openWindowFind = vi.fn();
-  window.bbDesktop = { ...createBbDesktopApi(desktopInfo), openWindowFind };
+  window.sandyDesktop = { ...createSandyDesktopApi(desktopInfo), openWindowFind };
   render(
     <AppCommandProvider>
       <WindowFindHost />
@@ -66,7 +66,7 @@ describe("WindowFindHost", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-    delete window.bbDesktop;
+    delete window.sandyDesktop;
   });
 
   it("opens the desktop find bar on the chord", () => {

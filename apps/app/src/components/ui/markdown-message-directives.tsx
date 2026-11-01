@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Nodes, Paragraph, Parent, RootContent } from "mdast";
 import type {} from "mdast-util-to-hast";
-import type { PluginMessageDirectiveProps } from "@get-bb/plugin-sdk";
+import type { PluginMessageDirectiveProps } from "@sandy-sdk/plugin-sdk";
 import { SKIP, visit } from "unist-util-visit";
 import type {} from "remark-parse";
 import { directive as directiveSyntax } from "micromark-extension-directive";
@@ -16,7 +16,7 @@ import type { PluginMessageDirectiveSlot } from "@/lib/plugin-slots.js";
 
 export const MESSAGE_DIRECTIVE_MOUNT_LIMIT = 32;
 
-const MESSAGE_DIRECTIVE_HAST_NAME = "bb-message-directive";
+const MESSAGE_DIRECTIVE_HAST_NAME = "sandy-message-directive";
 const MESSAGE_DIRECTIVE_INDEX_PROPERTY = "dataDirectiveIndex";
 
 type MessageDirectiveRegistryEntry = ResolvedMessageDirective;
@@ -68,7 +68,7 @@ interface MessageDirectiveElementProps {
 declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
-      "bb-message-directive": MessageDirectiveElementProps;
+      "sandy-message-directive": MessageDirectiveElementProps;
     }
   }
 }

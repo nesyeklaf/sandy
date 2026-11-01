@@ -59,7 +59,7 @@ afterEach(() => {
   appQueryClient.clear();
   document.head
     .querySelectorAll(
-      'link[rel="modulepreload"], link[data-bb-plugin-css-prefetch]',
+      'link[rel="modulepreload"], link[data-sandy-plugin-css-prefetch]',
     )
     .forEach((link) => link.remove());
   vi.useRealTimers();
@@ -72,7 +72,7 @@ afterEach(() => {
 
 describe("usePluginFrontendBoot", () => {
   it("downloads priority bundles and starts the runtime before route paint", async () => {
-    const plugins = ["bb--composer", "thread-list", "navigation", "other"].map(
+    const plugins = ["sandy--composer", "thread-list", "navigation", "other"].map(
       (id) =>
         makeInstalledPlugin({
           id,
@@ -103,12 +103,12 @@ describe("usePluginFrontendBoot", () => {
         (link) => link.getAttribute("href"),
       ),
     ).toEqual([
-      "/plugins/bb--composer.js",
+      "/plugins/sandy--composer.js",
       "/plugins/thread-list.js",
       "/plugins/navigation.js",
     ]);
     expect(
-      document.head.querySelectorAll("link[data-bb-plugin-css-prefetch]"),
+      document.head.querySelectorAll("link[data-sandy-plugin-css-prefetch]"),
     ).toHaveLength(3);
     expect(mocks.bootPluginFrontends).toHaveBeenCalledTimes(1);
   });

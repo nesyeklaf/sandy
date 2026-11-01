@@ -1,4 +1,4 @@
-bb's composer: the prompt box you type into in every thread, on the New thread screen, and when editing queued or sent messages.
+sandy's composer: the prompt box you type into in every thread, on the New thread screen, and when editing queued or sent messages.
 
 ## What you get
 
@@ -10,10 +10,10 @@ bb's composer: the prompt box you type into in every thread, on the New thread s
 
 ## How it works
 
-bb renders its composer through `app.slots.experimental_composer`, and this plugin is the composer it ships. bb keeps the draft, uploads, history, pickers and sending; the plugin draws the box with `experimental_useComposerRenderer()` and bb's host components.
+sandy renders its composer through `app.slots.experimental_composer`, and this plugin is the composer it ships. sandy keeps the draft, uploads, history, pickers and sending; the plugin draws the box with `experimental_useComposerRenderer()` and sandy's host components.
 
 Switch composers under Settings → Appearance → Composer. With no composer plugin enabled, threads show no composer.
 
 ## Make your own
 
-Copy `plugins/composer`, change its id, and edit `src/PromptBoxInternal.tsx`. The copy builds outside bb's repository: it uses only the published plugin SDK, npm packages and bb's registry components. A composer you install wins over this one under Automatic.
+Copy `plugins/composer`, change its id, and edit `src/PromptBoxInternal.tsx`. The copy builds outside sandy's repository: it uses only the published plugin SDK, npm packages and sandy's registry components. A composer you install wins over this one under Automatic.

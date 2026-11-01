@@ -1,0 +1,8 @@
+Card("Release checklist", [
+  Row([Metric("Builds", "128", note: "this week", source: "illustrative"), Metric("Failures", "3", tone: "bad", source: "illustrative"), Metric("Build p95", "4.2 s", tone: "good", source: "illustrative")]),
+  Callout("Releases freeze **Thursday noon**; merge before then.", tone: "warn", title: "Freeze"),
+  Tabs(["Steps", "Details"], [
+    Steps([{title: "Design", status: "done"}, {title: "Build", detail: "API first", status: "current"}, {title: "Ship", detail: "After the freeze"}]),
+    KeyValue({Branch: "feat/catalog", Owner: "Sam", Status: Badge("In review", tone: "info")})
+  ])
+])

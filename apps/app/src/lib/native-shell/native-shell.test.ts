@@ -5,9 +5,9 @@ import {
   buildBridgeEventScript,
   parsePageToShellMessage,
   type NativeShellHandshake,
-} from "@bb/mobile-bridge";
+} from "@sandy/mobile-bridge";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { defaultExperiments } from "@bb/domain";
+import { defaultExperiments } from "@sandy/domain";
 import { appQueryClient } from "../app-query-client";
 import { systemConfigQueryKey } from "@/hooks/queries/query-keys";
 import {
@@ -70,7 +70,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   appQueryClient.removeQueries({ queryKey: systemConfigQueryKey() });
-  Reflect.deleteProperty(window as unknown as Record<string, unknown>, "bb");
+  Reflect.deleteProperty(window as unknown as Record<string, unknown>, "sandy");
   Reflect.deleteProperty(
     window as unknown as Record<string, unknown>,
     "ReactNativeWebView",
@@ -100,7 +100,7 @@ describe("getNativeShell", () => {
   });
 
   it("ignores a global that is not a usable bridge", () => {
-    Object.defineProperty(window, "bb", {
+    Object.defineProperty(window, "sandy", {
       configurable: true,
       value: { native: { post: "not a function" } },
     });
@@ -137,7 +137,7 @@ it("applies native bottom insets to portaled UI and updates them when the safe a
     createElement(MemoryRouter, null, createElement(NativeShellReporter)),
   );
   expect(
-    document.documentElement.style.getPropertyValue("--bb-safe-area-bottom"),
+    document.documentElement.style.getPropertyValue("--sandy-safe-area-bottom"),
   ).toBe("24px");
   act(() => {
     new Function(
@@ -149,11 +149,11 @@ it("applies native bottom insets to portaled UI and updates them when the safe a
     )(window);
   });
   expect(
-    document.documentElement.style.getPropertyValue("--bb-safe-area-bottom"),
+    document.documentElement.style.getPropertyValue("--sandy-safe-area-bottom"),
   ).toBe("0px");
   unmount();
   expect(
-    document.documentElement.style.getPropertyValue("--bb-safe-area-bottom"),
+    document.documentElement.style.getPropertyValue("--sandy-safe-area-bottom"),
   ).toBe("");
 });
 
@@ -175,7 +175,7 @@ describe("application link compatibility", () => {
       if (bridgeVersion === 2) {
         await waitFor(() =>
           expect(error).toHaveBeenCalledWith("Couldn't open application link", {
-            description: "Update the BB mobile app to open application links.",
+            description: "Update the SANDY mobile app to open application links.",
           }),
         );
         expect(posted).toEqual([]);

@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { ExecFileException } from "node:child_process";
-import { execHostFileBuffer, runVcsProcess } from "@bb/process-utils";
-import type { GitCheckoutRef, WorkspaceGitOperation } from "@bb/domain";
+import { execHostFileBuffer, runVcsProcess } from "@sandy/process-utils";
+import type { GitCheckoutRef, WorkspaceGitOperation } from "@sandy/domain";
 import {
   createGitCommandFailedError,
   detectGitSource,
@@ -16,7 +16,7 @@ import {
   runGit,
   trimOutput,
   WorkspaceError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 function toExecError(error: unknown): ExecFileException | undefined {
   return error instanceof Error ? (error as ExecFileException) : undefined;

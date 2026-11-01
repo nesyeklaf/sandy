@@ -3,17 +3,17 @@
   "name": "question-form",
   "type": "registry:ui",
   "title": "question-form",
-  "description": "BB ui \"question-form\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"question-form\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/icon",
-    "@bb/overflow-fade",
-    "@bb/question-form-draft",
-    "@bb/question-form-host",
-    "@bb/question-form-state",
-    "@bb/use-pointer-coarse",
-    "@bb/utils",
-    "@bb/voice-input-textarea"
+    "@sandy/button",
+    "@sandy/icon",
+    "@sandy/overflow-fade",
+    "@sandy/question-form-draft",
+    "@sandy/question-form-host",
+    "@sandy/question-form-state",
+    "@sandy/use-pointer-coarse",
+    "@sandy/utils",
+    "@sandy/voice-input-textarea"
   ],
   "files": [
     {

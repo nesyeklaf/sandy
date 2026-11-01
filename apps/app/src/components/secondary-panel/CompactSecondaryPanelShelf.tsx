@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { usePersistentOverlayFocus } from "@bb/shared-ui/responsive-overlay";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { usePersistentOverlayFocus } from "@sandy/shared-ui/responsive-overlay";
 import { APP_OVERLAY_LAYER } from "@/components/ui/app-overlay-layers";
 import { hasTextSelectionWithin } from "@/components/ui/gesture-dom";
 import { useHorizontalDismissDrag } from "@/components/ui/use-horizontal-dismiss-drag";
@@ -137,7 +137,7 @@ export function CompactSecondaryPanelShelf({
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelId}
-      data-bb-portaled-overlay=""
+      data-sandy-portaled-overlay=""
       tabIndex={-1}
       inert={!open}
       data-testid="secondary-panel-shelf"
@@ -149,7 +149,7 @@ export function CompactSecondaryPanelShelf({
             : APP_OVERLAY_LAYER.secondaryPanel,
       }}
       className={cn(
-        "fixed inset-y-0 right-0 flex h-(--bb-shell-height) flex-col overflow-hidden border-l border-border-seam bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[var(--bb-safe-area-bottom,env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] outline-none",
+        "fixed inset-y-0 right-0 flex h-(--sandy-shell-height) flex-col overflow-hidden border-l border-border-seam bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[var(--sandy-safe-area-bottom,env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] outline-none",
         "w-(--secondary-panel-width-mobile) data-[state=full]:w-full data-[state=full]:border-l-0",
         SHELF_TRANSITION_CLASS,
         "data-[state=closed]:invisible data-[state=closed]:[transition:visibility_0s_linear_220ms]",

@@ -42,7 +42,7 @@ const chromeCandidates = () => {
 };
 
 export const resolveChrome = (explicit) => {
-  const requested = explicit ?? process.env.BB_PERF_CHROME;
+  const requested = explicit ?? process.env.SANDY_PERF_CHROME;
   if (requested) {
     const candidate = resolve(requested);
     if (!existsSync(candidate))
@@ -52,7 +52,7 @@ export const resolveChrome = (explicit) => {
   const candidate = chromeCandidates().find((path) => path && existsSync(path));
   if (!candidate)
     throw new Error(
-      "Chrome/Chromium was not found. Pass --chrome or set BB_PERF_CHROME.",
+      "Chrome/Chromium was not found. Pass --chrome or set SANDY_PERF_CHROME.",
     );
   return candidate;
 };

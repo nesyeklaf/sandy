@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
-import type { ThreadListEntry } from "@bb/domain";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import type { ThreadListEntry } from "@sandy/domain";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import { afterEach, expect, it, vi } from "vitest";
 import { appToast } from "@/components/ui/app-toast";
 import { request } from "@/lib/api";

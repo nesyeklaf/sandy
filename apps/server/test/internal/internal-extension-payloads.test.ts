@@ -1,17 +1,17 @@
 import { eq } from "drizzle-orm";
-import { events } from "@bb/db";
-import { threadScope, turnScope, type ExtensionKind } from "@bb/domain";
+import { events } from "@sandy/db";
+import { threadScope, turnScope, type ExtensionKind } from "@sandy/domain";
 import {
   groupHostDaemonEvents,
   type HostDaemonEventEnvelope,
-} from "@bb/host-daemon-contract";
-import { threadTimelineResponseSchema } from "@bb/server-contract";
+} from "@sandy/host-daemon-contract";
+import { threadTimelineResponseSchema } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { EXTENSION_PAYLOAD_MAX_BYTES } from "../../src/internal/extension-payloads.js";
 import { buildPluginProviderRegistration } from "../../src/services/providers/plugin-provider-registration.js";
 import { resolvePendingThreadSessionOptions } from "../../src/services/threads/thread-session-options.js";
-import { validatePluginProviderDeclaration } from "@get-bb/plugin-sdk/internal/host-policy";
+import { validatePluginProviderDeclaration } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { internalAuthHeaders } from "../helpers/commands.js";
 import { readJson } from "../helpers/json.js";
 import { minimalProviderRegistration } from "../helpers/provider-registry.js";
@@ -528,7 +528,7 @@ describe("extension kind ownership at ingest", () => {
     }
   });
 
-  it("accepts bb's own thread state kinds from any provider and serves them on the timeline", async () => {
+  it("accepts sandy's own thread state kinds from any provider and serves them on the timeline", async () => {
     const { harness, session, thread } = await setup();
     try {
       const response = await post(harness, session.id, [
@@ -540,7 +540,7 @@ describe("extension kind ownership at ingest", () => {
               { name: "web", description: "", inputHint: "query" },
             ],
           },
-          "bb/provider-commands",
+          "sandy/provider-commands",
         ),
         extensionStateEvent(
           thread.id,
@@ -559,7 +559,7 @@ describe("extension kind ownership at ingest", () => {
               },
             ],
           },
-          "bb/session-options",
+          "sandy/session-options",
         ),
       ]);
       expect(response.status).toBe(200);
@@ -630,7 +630,7 @@ describe("extension kind ownership at ingest", () => {
               { type: "boolean", id: "web", label: "Web", value: false },
             ],
           },
-          "bb/session-options",
+          "sandy/session-options",
         );
       const patch = (sessionOptions: Record<string, unknown>) =>
         harness.app.request(`/api/v1/threads/${thread.id}`, {
@@ -687,7 +687,7 @@ describe("extension kind ownership at ingest", () => {
         extensionStateEvent(
           thread.id,
           { selections: { mode: "build" } },
-          "bb/session-option-selections",
+          "sandy/session-option-selections",
         ),
       ]);
       expect(forged.status).toBe(200);
@@ -700,14 +700,14 @@ describe("extension kind ownership at ingest", () => {
     }
   });
 
-  it("replaces a bb thread state whose payload does not match bb's schema with provider/unhandled", async () => {
+  it("replaces a sandy thread state whose payload does not match sandy's schema with provider/unhandled", async () => {
     const { harness, session, thread } = await setup();
     try {
       const response = await post(harness, session.id, [
         extensionStateEvent(
           thread.id,
           { commands: [{ description: "nameless" }] },
-          "bb/provider-commands",
+          "sandy/provider-commands",
         ),
       ]);
       expect(response.status).toBe(200);

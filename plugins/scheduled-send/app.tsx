@@ -28,7 +28,7 @@ import {
   useComposer,
   type ComposerSendMenuItem,
   type PluginComposerApi,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   DEFAULT_SCHEDULE_PRESET_ID,
   MAX_SCHEDULE_AHEAD_MS,
@@ -107,7 +107,7 @@ function resolveScheduleOption(
     : { ok: true, at: preset.at };
 }
 
-const SCHEDULE_SELECTION_STORAGE_KEY = "bb:scheduled-send:selection:v1";
+const SCHEDULE_SELECTION_STORAGE_KEY = "sandy:scheduled-send:selection:v1";
 
 function readScheduleSelection(now: number): {
   optionId: ScheduleOptionId;

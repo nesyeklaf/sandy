@@ -1,5 +1,5 @@
-import { pluginCommandId, type PluginCommandId } from "@bb/domain";
-import type { PluginCommandContext } from "@get-bb/plugin-sdk";
+import { pluginCommandId, type PluginCommandId } from "@sandy/domain";
+import type { PluginCommandContext } from "@sandy-sdk/plugin-sdk";
 import type { AppPanelController } from "@/lib/app-fixed-tab-navigation";
 import {
   createPluginPanelController,

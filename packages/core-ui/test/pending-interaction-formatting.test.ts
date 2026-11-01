@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PendingInteraction, PendingInteractionPayload } from "@bb/domain";
+import type { PendingInteraction, PendingInteractionPayload } from "@sandy/domain";
 import {
   buildPendingInteractionApprovalResolution,
   formatPendingInteractionApprovalResolutionOutcome,

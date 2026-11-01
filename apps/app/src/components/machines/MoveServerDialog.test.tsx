@@ -8,13 +8,13 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { SERVER_MOVE_STEP_IDS } from "@bb/domain";
-import { BbHttpError } from "@bb/sdk/browser";
+import { SERVER_MOVE_STEP_IDS } from "@sandy/domain";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import type {
   ServerMoveCheckResponse,
   ServerMoveStatus,
-} from "@bb/server-contract";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/server-contract";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
@@ -39,7 +39,7 @@ function checkResponse(
     targetHostId: TARGET.id,
     targetHostName: TARGET.name,
     serverUrl: null,
-    targetDataDir: "/home/sawyer/.bb-machines/laptop",
+    targetDataDir: "/home/sawyer/.sandy-machines/laptop",
     existingTargetServerData: null,
     items: [],
     canMove: true,
@@ -280,18 +280,18 @@ describe("MoveServerDialog", () => {
     });
   });
 
-  it("requires confirming that the existing bb data on the machine gets archived", async () => {
+  it("requires confirming that the existing sandy data on the machine gets archived", async () => {
     vi.mocked(sdk.experimental_server.checkMove).mockResolvedValue(
       checkResponse({
         existingTargetServerData: {
-          path: "/Users/sawyer/.bb",
+          path: "/Users/sawyer/.sandy",
           sizeBytes: 5 * 1024 * 1024,
         },
         items: [
           {
             id: "existing-server-data",
             severity: "warning",
-            title: "desk already has bb server data",
+            title: "desk already has sandy server data",
             detail: null,
           },
         ],
@@ -303,7 +303,7 @@ describe("MoveServerDialog", () => {
     renderDialog();
 
     const confirmation = await screen.findByRole("checkbox", {
-      name: /Archive the existing bb data at \/Users\/sawyer\/\.bb/u,
+      name: /Archive the existing sandy data at \/Users\/sawyer\/\.sandy/u,
     });
     expect(screen.getByText(/^5\.0 MB\./u)).toBeDefined();
     checkAddress();
@@ -333,7 +333,7 @@ describe("MoveServerDialog", () => {
   it("surfaces a failed check inline and lets the user check again", async () => {
     vi.mocked(sdk.experimental_server.checkMove)
       .mockRejectedValueOnce(
-        new BbHttpError({
+        new SandyHttpError({
           status: 500,
           code: "host_rpc_timeout",
           message: "desk did not answer in time",
@@ -367,7 +367,7 @@ describe("MoveServerDialog", () => {
       checkResponse(),
     );
     vi.mocked(sdk.experimental_server.startMove).mockRejectedValue(
-      new BbHttpError({
+      new SandyHttpError({
         status: 400,
         code: "server_move_blocked",
         message: "The move is blocked",

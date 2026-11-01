@@ -1,15 +1,15 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import {
   createFakePluginHost,
   makeHostResponse,
   type ExperimentalFakeHostRpcCall,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GitHubPullRequestView } from "./contract.js";
 import plugin, { environmentChangeEffect } from "./server.js";
 
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["get"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["get"]>
 >;
 
 function environment(overrides: Partial<Environment> = {}): Environment {
@@ -21,7 +21,7 @@ function environment(overrides: Partial<Environment> = {}): Environment {
     path: "/work/env-1",
     isGitRepo: true,
     isWorktree: true,
-    branchName: "bb/pr",
+    branchName: "sandy/pr",
     baseBranch: null,
     defaultBranch: "main",
     mergeBaseBranch: null,
@@ -44,12 +44,12 @@ function view(
     number: 7,
     title: "Ship it",
     state: "OPEN",
-    url: "https://github.com/acme/bb/pull/7",
+    url: "https://github.com/acme/sandy/pull/7",
     isDraft: false,
     autoMerge: false,
     inMergeQueue: false,
     baseRefName: "main",
-    headRefName: "bb/pr",
+    headRefName: "sandy/pr",
     headRefOid: null,
     updatedAt: "2026-10-01T00:00:00Z",
     checks: [],
@@ -69,7 +69,7 @@ async function setup(options: {
   const environments = options.environments ?? { "env-1": environment() };
   const sdkCalls: string[] = [];
   const fake = createFakePluginHost({
-    pluginId: "bb--github-pr-status",
+    pluginId: "sandy--github-pr-status",
     sdk: {
       environments: {
         get: async ({ environmentId }: { environmentId: string }) => {
@@ -94,7 +94,7 @@ async function setup(options: {
       options.callHost ??
       ((call) =>
         call.method === "upstream"
-          ? { oid: null, branchName: "bb/pr" }
+          ? { oid: null, branchName: "sandy/pr" }
           : call.method === "views"
             ? (call.input as { reads: unknown[] }).reads.map(() => ({
                 outcome: "found",
@@ -102,7 +102,7 @@ async function setup(options: {
               }))
             : { ok: true }),
   });
-  await plugin(fake.bb);
+  await plugin(fake.sandy);
   return Object.assign(fake, { sdkCalls });
 }
 
@@ -116,7 +116,7 @@ describe("GitHub PR Status server", () => {
       keys: ["env-1"],
     });
     const next = await fake.harness.reload(plugin);
-    const before = next.bb.storage
+    const before = next.sandy.storage
       .database()
       .prepare("SELECT total_changes() AS n")
       .get();
@@ -125,7 +125,7 @@ describe("GitHub PR Status server", () => {
       keys: ["env-1"],
     });
     expect(
-      next.bb.storage.database().prepare("SELECT total_changes() AS n").get(),
+      next.sandy.storage.database().prepare("SELECT total_changes() AS n").get(),
     ).toEqual(before);
     await next.harness.dispose();
   });
@@ -138,14 +138,14 @@ describe("GitHub PR Status server", () => {
     await fake.harness.callRpc("pullRequests", {
       keys: ["env-1"],
     });
-    fake.bb.storage
+    fake.sandy.storage
       .database()
       .prepare("UPDATE snapshots SET content = ?")
       .run(content);
 
     const next = await fake.harness.reload(plugin);
     expect(
-      next.bb.storage.database().prepare("SELECT url FROM snapshots").all(),
+      next.sandy.storage.database().prepare("SELECT url FROM snapshots").all(),
     ).toEqual([]);
     await expect(
       next.harness.callRpc("pullRequests", { keys: ["env-1"] }),
@@ -191,7 +191,7 @@ describe("GitHub PR Status server", () => {
       callHost: (call) => {
         if (call.hostId === "host-2") throw new Error("Host is suspended");
         if (call.method === "upstream")
-          return { oid: null, branchName: "bb/pr" };
+          return { oid: null, branchName: "sandy/pr" };
         return (call.input as { reads: unknown[] }).reads.map(() => ({
           outcome: "found",
           pullRequest: view(),
@@ -326,9 +326,9 @@ describe("GitHub PR Status server", () => {
     const fake = await setup({
       callHost: (call) =>
         call.method === "upstream"
-          ? { oid: null, branchName: "bb/pr" }
+          ? { oid: null, branchName: "sandy/pr" }
           : call.method === "upstream"
-            ? { oid: null, branchName: "bb/pr" }
+            ? { oid: null, branchName: "sandy/pr" }
             : call.method === "views"
               ? (call.input as { reads: unknown[] }).reads.map(() => ({
                   outcome: "found",

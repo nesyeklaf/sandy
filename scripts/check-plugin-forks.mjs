@@ -31,8 +31,8 @@ const USAGE =
   "Copies each forkable built-in plugin (scripts/forkable-plugins.json) out of\n" +
   "the monorepo the way a fork would: the component registry items its @/\n" +
   "imports name are written into the copy, and it installs published packages\n" +
-  "plus a packed @get-bb/plugin-sdk. Then it runs the copy's typecheck, tests,\n" +
-  "and `bb plugin build`. Plugins run --concurrency at a time (default: up to\n" +
+  "plus a packed @sandy-sdk/plugin-sdk. Then it runs the copy's typecheck, tests,\n" +
+  "and `sandy plugin build`. Plugins run --concurrency at a time (default: up to\n" +
   "4), and every failure is reported at the end. --changed-from selects changed\n" +
   "plugins only when every changed file belongs to a forkable plugin; shared or\n" +
   "unknown changes run all plugins. --shard partitions the selection across\n" +
@@ -142,8 +142,8 @@ async function step(log, label, command, commandArgs, options = {}) {
 }
 
 function cliEnv(dataDir) {
-  const env = { ...process.env, BB_DATA_DIR: dataDir };
-  delete env.BB_CLI;
+  const env = { ...process.env, SANDY_DATA_DIR: dataDir };
+  delete env.SANDY_CLI;
   return env;
 }
 
@@ -263,7 +263,7 @@ async function checkPlugin(pluginDir, workDir, sdkTarball, log) {
     `${JSON.stringify(forked.manifest, null, 2)}\n`,
   );
   log.push(
-    `  package.json: @get-bb/plugin-sdk from the packed SDK, registry packages in place of @bb/shared-ui${
+    `  package.json: @sandy-sdk/plugin-sdk from the packed SDK, registry packages in place of @sandy/shared-ui${
       forked.droppedDevDependencies.length > 0
         ? `; dropped workspace tooling ${forked.droppedDevDependencies.join(", ")}`
         : ""
@@ -299,7 +299,7 @@ async function checkPlugin(pluginDir, workDir, sdkTarball, log) {
   await step(log, "test", "npm", ["test"], { cwd: target });
   await step(
     log,
-    "bb plugin build",
+    "sandy plugin build",
     process.execPath,
     [
       join(repoRoot, "apps", "cli", "dist", "index.js"),
@@ -307,16 +307,16 @@ async function checkPlugin(pluginDir, workDir, sdkTarball, log) {
       "build",
       target,
     ],
-    { cwd: target, env: cliEnv(join(workDir, "bb-data")) },
+    { cwd: target, env: cliEnv(join(workDir, "sandy-data")) },
   );
-  for (const artifact of manifest.bb?.app === undefined
+  for (const artifact of manifest.sandy?.app === undefined
     ? ["server.js"]
     : ["server.js", "app.js", "app.css"]) {
     await stat(join(target, "dist", artifact));
   }
 }
 
-const workDir = await mkdtemp(join(tmpdir(), "bb-plugin-fork-"));
+const workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-fork-"));
 const evidenceDir =
   process.env.GITHUB_ACTIONS === "true" && process.env.RUNNER_TEMP
     ? join(process.env.RUNNER_TEMP, "plugin-fork-evidence")
@@ -331,7 +331,7 @@ try {
   const printLog = { push: (line) => console.log(line) };
   await step(
     printLog,
-    "Build @get-bb/plugin-sdk and the bb CLI",
+    "Build @sandy-sdk/plugin-sdk and the sandy CLI",
     "pnpm",
     [
       "exec",
@@ -339,8 +339,8 @@ try {
       "run",
       "build",
       "build:types",
-      "--filter=@get-bb/plugin-sdk",
-      "--filter=@bb/cli",
+      "--filter=@sandy-sdk/plugin-sdk",
+      "--filter=@sandy/cli",
       "--output-logs=errors-only",
     ],
     { cwd: repoRoot },
@@ -348,7 +348,7 @@ try {
   const packed = JSON.parse(
     await step(
       printLog,
-      "Pack @get-bb/plugin-sdk",
+      "Pack @sandy-sdk/plugin-sdk",
       "npm",
       ["pack", "--json", "--ignore-scripts", "--pack-destination", workDir],
       { cwd: join(repoRoot, "packages", "plugin-sdk") },

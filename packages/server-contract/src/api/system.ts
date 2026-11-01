@@ -11,6 +11,7 @@ import {
   appKeybindingOverridesSchema,
   appKeybindingsSchema,
   appThemeSchema,
+  customThemeNameSchema,
   availableModelSchema,
   experimentsSchema,
   featureFlagsSchema,
@@ -18,9 +19,10 @@ import {
   permissionModeSchema,
   pluginThemeMetaSchema,
   providerInfoSchema,
-} from "@bb/domain";
-import { providerHealthSchema as providerHealthSchema } from "@bb/provider-bridge-protocol/provider-maintenance";
-import { hostPlatformSchema } from "@bb/host-daemon-contract/local";
+  themeKitInputSchema,
+} from "@sandy/domain";
+import { providerHealthSchema as providerHealthSchema } from "@sandy/provider-bridge-protocol/provider-maintenance";
+import { hostPlatformSchema } from "@sandy/host-daemon-contract/local";
 import { machineEnvironmentSetSchema } from "./machine-environment.js";
 import { systemVoiceTranscriptionResponseSchema } from "./system-voice.js";
 import {
@@ -138,8 +140,8 @@ export interface SystemVoiceTranscriptionForm {
   [key: string]: string | Blob;
 }
 
-export { providerInfoSchema as systemProviderInfoSchema } from "@bb/domain";
-export type { ProviderInfo as SystemProviderInfo } from "@bb/domain";
+export { providerInfoSchema as systemProviderInfoSchema } from "@sandy/domain";
+export type { ProviderInfo as SystemProviderInfo } from "@sandy/domain";
 
 export type SystemVoiceTranscriptionResponse = z.infer<
   typeof systemVoiceTranscriptionResponseSchema
@@ -187,6 +189,27 @@ export type SetAiServiceSelectionRequest = z.infer<
   typeof setAiServiceSelectionRequestSchema
 >;
 
+export const CLIENT_ERROR_SOURCES = [
+  "react-caught",
+  "react-uncaught",
+  "window-error",
+  "unhandled-rejection",
+] as const;
+export type ClientErrorSource = (typeof CLIENT_ERROR_SOURCES)[number];
+export const CLIENT_ERROR_MESSAGE_MAX_LENGTH = 2_000;
+export const CLIENT_ERROR_STACK_MAX_LENGTH = 16_000;
+
+export const clientErrorReportSchema = z
+  .object({
+    source: z.enum(CLIENT_ERROR_SOURCES),
+    message: z.string().min(1).max(CLIENT_ERROR_MESSAGE_MAX_LENGTH),
+    stack: z.string().max(CLIENT_ERROR_STACK_MAX_LENGTH).nullable(),
+    componentStack: z.string().max(CLIENT_ERROR_STACK_MAX_LENGTH).nullable(),
+    path: z.string().min(1).max(CLIENT_ERROR_MESSAGE_MAX_LENGTH),
+  })
+  .strict();
+export type ClientErrorReport = z.infer<typeof clientErrorReportSchema>;
+
 export const testAiServiceRequestSchema = z
   .object({ task: aiTextTaskSchema })
   .strict();
@@ -233,7 +256,7 @@ export const serverAccessStatusSchema = z.object({
   ),
   defaultProviderId: z.string(),
   effectiveUrl: z.string().nullable(),
-  urlSource: z.enum(["setting", "BB_EXTERNAL_URL"]).nullable(),
+  urlSource: z.enum(["setting", "SANDY_EXTERNAL_URL"]).nullable(),
 });
 export type ServerAccessStatus = z.infer<typeof serverAccessStatusSchema>;
 
@@ -275,6 +298,28 @@ export const themeCatalogResponseSchema = z.object({
   active: appThemeSchema,
 });
 export type ThemeCatalogResponse = z.infer<typeof themeCatalogResponseSchema>;
+
+export const createThemeRequestSchema = z.object({
+  name: customThemeNameSchema,
+  kit: themeKitInputSchema,
+  overwrite: z.boolean().default(false),
+});
+export type CreateThemeRequest = z.input<typeof createThemeRequestSchema>;
+
+export const createThemeResponseSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  css: z.string(),
+  issues: z.array(
+    z.object({
+      severity: z.enum(["error", "warning"]),
+      mode: z.enum(["light", "dark", "both"]),
+      token: z.string(),
+      message: z.string(),
+    }),
+  ),
+});
+export type CreateThemeResponse = z.infer<typeof createThemeResponseSchema>;
 
 export const systemCliCommandShadowSchema = z.object({
   path: z.string().min(1),

@@ -1,7 +1,7 @@
 import type {
   ServerMoveCheckItem,
   ServerMoveCheckResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   MoveServerDialogView,
   type MoveServerDialogViewProps,
@@ -50,7 +50,7 @@ function checkResult(
     targetHostId: "host_desk",
     targetHostName: "desk",
     serverUrl: null,
-    targetDataDir: "/home/michael/.bb-machines/macbook-pro",
+    targetDataDir: "/home/michael/.sandy-machines/macbook-pro",
     existingTargetServerData: null,
     items: [RUNNING_TURNS, SCHEDULES, TIMEZONE],
     canMove: true,
@@ -199,20 +199,20 @@ export function ExistingData() {
     <StoryCard labelWidth="220px">
       <StoryRow
         label="needs confirmation"
-        hint="desk already has its own bb server data; it is archived, never merged, and only after the user says so"
+        hint="desk already has its own sandy server data; it is archived, never merged, and only after the user says so"
       >
         <Stage
           startAllowed={false}
           result={checkResult({
             existingTargetServerData: {
-              path: "/Users/michael/.bb",
+              path: "/Users/michael/.sandy",
               sizeBytes: 412 * 1024 * 1024,
             },
             items: [
               {
                 id: "existing-server-data",
                 severity: "warning",
-                title: "desk already has bb server data",
+                title: "desk already has sandy server data",
                 detail: null,
               },
               RUNNING_TURNS,
@@ -225,14 +225,14 @@ export function ExistingData() {
           archiveConfirmed
           result={checkResult({
             existingTargetServerData: {
-              path: "/Users/michael/.bb",
+              path: "/Users/michael/.sandy",
               sizeBytes: 412 * 1024 * 1024,
             },
             items: [
               {
                 id: "existing-server-data",
                 severity: "warning",
-                title: "desk already has bb server data",
+                title: "desk already has sandy server data",
                 detail: null,
               },
             ],

@@ -4,7 +4,7 @@ import SmilePlusIcon from "@hugeicons/core-free-icons/SmilePlusIcon";
 import type { Attachment, Task, TaskThread } from "../../shared/contract.js";
 import { errorMessage } from "../../shared/errors.js";
 import type { DelegationRpcContract } from "../../delegate/contract.js";
-import { useBbNavigate, useRpc } from "@get-bb/plugin-sdk/app";
+import { useSandyNavigate, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import {
   selectLabels,
   selectPresets,
@@ -348,7 +348,7 @@ function TaskDetail({ task }: { task: Task }) {
   };
 
   const mentionItems = useMentionItems();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
 
   const descriptionValue =
     draft && draft.taskId === task.id ? draft.markdown : task.description;

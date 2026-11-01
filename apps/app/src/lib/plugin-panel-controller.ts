@@ -4,7 +4,7 @@ import type {
   ExperimentalPanelTabs,
   ExperimentalTabReference,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   getPluginFixedTabOwnerId,
   getThreadFixedTabOwnerId,

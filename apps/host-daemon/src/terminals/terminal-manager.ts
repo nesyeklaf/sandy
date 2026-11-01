@@ -3,7 +3,7 @@ import {
   hostToolchain,
   killProcessGroup,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { operationEnvironment } from "../operation-environment.js";
 import { accessSync, chmodSync, constants, existsSync } from "node:fs";
 import { access, stat } from "node:fs/promises";
@@ -11,10 +11,10 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { spawn as spawnPty } from "node-pty";
-import type { TerminalSessionCloseReason } from "@bb/domain";
-import type { HostDaemonDaemonWsMessage } from "@bb/host-daemon-contract";
-import { HOST_DAEMON_TERMINAL_EXIT_RETENTION_MS } from "@bb/host-daemon-contract/protocol";
-import { displayWidth, truncateToWidth } from "@bb/text-utils";
+import type { TerminalSessionCloseReason } from "@sandy/domain";
+import type { HostDaemonDaemonWsMessage } from "@sandy/host-daemon-contract";
+import { HOST_DAEMON_TERMINAL_EXIT_RETENTION_MS } from "@sandy/host-daemon-contract/protocol";
+import { displayWidth, truncateToWidth } from "@sandy/text-utils";
 import type { HostDaemonServerTerminalMessage } from "../server-connection-support.js";
 import type { HostDaemonLogger } from "../logger.js";
 import { RuntimeManager } from "../runtime-manager.js";
@@ -418,7 +418,7 @@ function buildTerminalEnv(args: BuildTerminalEnvArgs): NodeJS.ProcessEnv {
   return {
     ...sanitizeInheritedChildProcessEnv({ env: process.env }),
     ...args.shellEnv,
-    BB_TERMINAL_SESSION_ID: args.terminalId,
+    SANDY_TERMINAL_SESSION_ID: args.terminalId,
     COLORTERM: "truecolor",
     DISABLE_AUTO_TITLE: "true",
     FORCE_HYPERLINK: "1",

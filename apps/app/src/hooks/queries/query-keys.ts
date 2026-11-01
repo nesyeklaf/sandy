@@ -2,7 +2,7 @@ import type {
   ThreadListFilters,
   ThreadSearchFilters,
   EnvironmentFilePreviewSource,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   DEFAULT_THREAD_STORAGE_FILE_LIST_OPTIONS,
   type ThreadStorageFileListOptions,
@@ -1052,6 +1052,10 @@ export function hostPathExistenceQueryKey(
 
 export function hostPathExistenceQueryKeyPrefix(): HostPathExistenceQueryKeyPrefix {
   return [HOST_PATH_EXISTENCE_QUERY_KEY];
+}
+
+export function allProjectSkillsQueryKey() {
+  return [PROJECT_SKILLS_QUERY_KEY] as const;
 }
 
 export function projectSkillsQueryKey(projectId: string) {

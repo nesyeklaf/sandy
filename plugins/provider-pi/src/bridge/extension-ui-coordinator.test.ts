@@ -1,4 +1,4 @@
-import { PLUGIN_INTERACTION_MAX_TITLE_LENGTH } from "@get-bb/plugin-sdk/provider-bridge";
+import { PLUGIN_INTERACTION_MAX_TITLE_LENGTH } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { expect, it } from "vitest";
 import type {
   InteractionUiRequest,

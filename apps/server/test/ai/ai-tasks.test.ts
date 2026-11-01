@@ -1,4 +1,4 @@
-import { setAiServiceSelection } from "@bb/db";
+import { setAiServiceSelection } from "@sandy/db";
 import { describe, expect, it } from "vitest";
 import { createAiServiceRegistry } from "../../src/services/ai/ai-service-registry.js";
 import {

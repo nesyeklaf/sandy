@@ -27,12 +27,12 @@ import {
   threadEventSchema,
   toolCallRequestSchema,
   toolCallResponseSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
-import type { Endpoint } from "@bb/hono-typed-routes";
+import type { Endpoint } from "@sandy/hono-typed-routes";
 import { hostPlatformSchema } from "./local.js";
 
-const HOST_DAEMON_WEBSOCKET_PROTOCOL = "bb-host-daemon.v1";
+const HOST_DAEMON_WEBSOCKET_PROTOCOL = "sandy-host-daemon.v1";
 
 export const hostDaemonActiveThreadSchema = z.object({
   threadId: z.string().min(1),
@@ -333,6 +333,7 @@ const hostDaemonOnlineRpcRequestMessageSchema = z
     type: z.literal("host-rpc.request"),
     requestId: hostDaemonOnlineRpcRequestIdSchema,
     command: hostDaemonRpcCommandSchema,
+    traceparent: z.string().min(1).optional(),
   })
   .strict();
 

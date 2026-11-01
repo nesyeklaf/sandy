@@ -29,7 +29,7 @@ export const COMPACT_SHEET_CONTENT_STYLE: React.CSSProperties = {
   maxWidth: "none",
 };
 
-const DRAWER_KEYBOARD_INSET_PROPERTY = "--bb-drawer-keyboard-inset";
+const DRAWER_KEYBOARD_INSET_PROPERTY = "--sandy-drawer-keyboard-inset";
 const DRAWER_KEYBOARD_MIN_OVERLAP_PX = 80;
 
 function resetDrawerKeyboardStyles(drawerElement: HTMLElement | null): void {
@@ -426,7 +426,7 @@ type PersistentDrawerStack = {
   handleKeyDown: (event: KeyboardEvent) => void;
 };
 
-const PERSISTENT_DRAWER_STACK_KEY = Symbol.for("bb.persistent-drawer-stack.v1");
+const PERSISTENT_DRAWER_STACK_KEY = Symbol.for("sandy.persistent-drawer-stack.v1");
 
 function isPersistentDrawerStack(
   value: unknown,
@@ -464,7 +464,7 @@ function activeElementIsInAnotherOverlay(
   panel: HTMLElement,
 ): boolean {
   const overlay = activeElement?.closest<HTMLElement>(
-    "[data-bb-portaled-overlay]",
+    "[data-sandy-portaled-overlay]",
   );
   return overlay !== null && overlay !== undefined && overlay !== panel;
 }
@@ -856,14 +856,14 @@ export function PersistentResponsiveDrawerShell({
         }
         aria-describedby={describedBy}
         aria-modal={open || undefined}
-        data-bb-portaled-overlay=""
+        data-sandy-portaled-overlay=""
         data-persistent-drawer-content=""
         data-state={open ? "open" : "closed"}
         inert={!open}
         role="dialog"
         tabIndex={-1}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[calc(92dvh-var(--bb-drawer-keyboard-inset,0px))] flex-col rounded-t-xl border bg-background pb-[var(--bb-safe-area-bottom,env(safe-area-inset-bottom))] outline-none",
+          "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[calc(92dvh-var(--sandy-drawer-keyboard-inset,0px))] flex-col rounded-t-xl border bg-background pb-[var(--sandy-safe-area-bottom,env(safe-area-inset-bottom))] outline-none",
           contentClassName,
         )}
         style={{

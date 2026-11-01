@@ -1,4 +1,4 @@
-import type { InstalledPlugin } from "@bb/server-contract";
+import type { InstalledPlugin } from "@sandy/server-contract";
 import type { PluginListItem } from "@/hooks/queries/plugin-settings-queries";
 import type { PluginRegistrationSet } from "@/lib/plugin-slots";
 

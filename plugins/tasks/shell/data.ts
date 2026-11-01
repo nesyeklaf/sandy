@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { experimental_useRpcQuery, useRpc } from "@get-bb/plugin-sdk/app";
+import { experimental_useRpcQuery, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type {
   PluginRpcResult,
   StandardSchemaV1InferInput,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { z } from "zod";
 import {
   TASK_STATUSES,
@@ -97,8 +97,8 @@ export const selectPresets = (result: TasksResult<"listPresets">) =>
   result.presets;
 export const selectMachines = (result: TasksResult<"listMachines">) =>
   result.machines;
-export const selectBbProjects = (result: TasksResult<"listBbProjects">) =>
-  result.bbProjects;
+export const selectSandyProjects = (result: TasksResult<"listSandyProjects">) =>
+  result.sandyProjects;
 const selectFolders = (result: TasksResult<"listFolders">) => result.folders;
 const selectSummary = (result: TasksResult<"sidebarSummary">) =>
   result.projects;

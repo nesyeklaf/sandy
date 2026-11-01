@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import setupTmpdirSandbox from "../../../vitest.global-tmpdir.ts";
 
-const ACTIVE = Symbol.for("@bb/vitest-tmpdir-sandbox");
+const ACTIVE = Symbol.for("@sandy/vitest-tmpdir-sandbox");
 
 function detachLiveSandbox() {
   const liveSandbox = globalThis[ACTIVE];

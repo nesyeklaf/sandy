@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { isPathWithinDirectory } from "@bb/process-utils";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import { RootSubscription } from "./root-subscription.js";
 import { toWatchErrorMessage } from "./watch-error.js";
 import { watchPathChanges } from "./watch-path.js";

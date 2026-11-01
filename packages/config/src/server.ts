@@ -1,4 +1,4 @@
-import type { FeatureFlags } from "@bb/domain";
+import type { FeatureFlags } from "@sandy/domain";
 import type { AppSurface } from "./app-surface.js";
 import {
   loadCommonConfig,
@@ -13,21 +13,21 @@ import {
   resolveEnvLoader,
 } from "./env.js";
 import {
-  BB_APP_URL_ENV,
-  BB_APP_SURFACE_ENV,
-  BB_APP_VERSION_ENV,
-  BB_EXTERNAL_URL_ENV,
-  BB_INHERITED_SKILLS_ROOTS_ENV,
-  BB_SERVER_BIND_HOST_ENV,
-  BB_SERVER_LAUNCH_ID_ENV,
-  BB_CLI_LAUNCHER_ENV,
-  BB_PERF_DIAGNOSTICS_ENV,
-  BB_SKIP_ONBOARDING_ENV,
-  DEFAULT_BB_APP_URL,
-  DEFAULT_BB_APP_SURFACE,
-  DEFAULT_BB_APP_VERSION,
-  DEFAULT_BB_EXTERNAL_URL,
-  DEFAULT_BB_SERVER_BIND_HOST,
+  SANDY_APP_URL_ENV,
+  SANDY_APP_SURFACE_ENV,
+  SANDY_APP_VERSION_ENV,
+  SANDY_EXTERNAL_URL_ENV,
+  SANDY_INHERITED_SKILLS_ROOTS_ENV,
+  SANDY_SERVER_BIND_HOST_ENV,
+  SANDY_SERVER_LAUNCH_ID_ENV,
+  SANDY_CLI_LAUNCHER_ENV,
+  SANDY_PERF_DIAGNOSTICS_ENV,
+  SANDY_SKIP_ONBOARDING_ENV,
+  DEFAULT_SANDY_APP_URL,
+  DEFAULT_SANDY_APP_SURFACE,
+  DEFAULT_SANDY_APP_VERSION,
+  DEFAULT_SANDY_EXTERNAL_URL,
+  DEFAULT_SANDY_SERVER_BIND_HOST,
 } from "./env-vars.js";
 import { loadFeatureFlags } from "./feature-flags.js";
 import { assignIfDefined } from "./objects.js";
@@ -36,18 +36,18 @@ import { loadServerPortConfig, type ServerPortConfig } from "./server-port.js";
 
 export interface ServerConfig
   extends CommonConfig, DatabaseConfig, ServerPortConfig {
-  BB_APP_URL: string;
-  BB_APP_SURFACE: AppSurface;
-  BB_APP_VERSION: string;
-  BB_DEV_APP_PORT?: number;
-  BB_EXTERNAL_URL: string;
-  BB_HOST_DAEMON_PORT: number;
-  BB_INHERITED_SKILLS_ROOTS: string[];
-  BB_SERVER_BIND_HOST: string[];
-  BB_SERVER_LAUNCH_ID?: string;
-  BB_CLI_LAUNCHER?: string;
-  BB_PERF_DIAGNOSTICS: boolean;
-  BB_SKIP_ONBOARDING: boolean;
+  SANDY_APP_URL: string;
+  SANDY_APP_SURFACE: AppSurface;
+  SANDY_APP_VERSION: string;
+  SANDY_DEV_APP_PORT?: number;
+  SANDY_EXTERNAL_URL: string;
+  SANDY_HOST_DAEMON_PORT: number;
+  SANDY_INHERITED_SKILLS_ROOTS: string[];
+  SANDY_SERVER_BIND_HOST: string[];
+  SANDY_SERVER_LAUNCH_ID?: string;
+  SANDY_CLI_LAUNCHER?: string;
+  SANDY_PERF_DIAGNOSTICS: boolean;
+  SANDY_SKIP_ONBOARDING: boolean;
   featureFlags: FeatureFlags;
 }
 
@@ -91,57 +91,57 @@ export function loadServerConfig(
     ...commonConfig,
     ...databaseConfig,
     ...serverPortConfig,
-    BB_APP_URL: readEnvVarWithDefault({
+    SANDY_APP_URL: readEnvVarWithDefault({
       context: loader.context,
-      defaultValue: DEFAULT_BB_APP_URL,
-      definition: BB_APP_URL_ENV,
+      defaultValue: DEFAULT_SANDY_APP_URL,
+      definition: SANDY_APP_URL_ENV,
       env: loader.env,
     }),
-    BB_APP_SURFACE: readEnvVarWithDefault({
+    SANDY_APP_SURFACE: readEnvVarWithDefault({
       context: loader.context,
-      defaultValue: DEFAULT_BB_APP_SURFACE,
-      definition: BB_APP_SURFACE_ENV,
+      defaultValue: DEFAULT_SANDY_APP_SURFACE,
+      definition: SANDY_APP_SURFACE_ENV,
       env: loader.env,
     }),
-    BB_APP_VERSION: readEnvVarWithDefault({
+    SANDY_APP_VERSION: readEnvVarWithDefault({
       context: loader.context,
-      defaultValue: DEFAULT_BB_APP_VERSION,
-      definition: BB_APP_VERSION_ENV,
+      defaultValue: DEFAULT_SANDY_APP_VERSION,
+      definition: SANDY_APP_VERSION_ENV,
       env: loader.env,
     }),
-    BB_EXTERNAL_URL: readEnvVarWithDefault({
+    SANDY_EXTERNAL_URL: readEnvVarWithDefault({
       context: loader.context,
-      defaultValue: DEFAULT_BB_EXTERNAL_URL,
-      definition: BB_EXTERNAL_URL_ENV,
+      defaultValue: DEFAULT_SANDY_EXTERNAL_URL,
+      definition: SANDY_EXTERNAL_URL_ENV,
       env: loader.env,
     }),
-    BB_HOST_DAEMON_PORT: loadHostDaemonPortValue({
+    SANDY_HOST_DAEMON_PORT: loadHostDaemonPortValue({
       env: loader.env,
       homeDir: loader.context.homeDir,
       mode: loader.mode,
       repoRoot: args.repoRoot,
     }),
-    BB_INHERITED_SKILLS_ROOTS: readEnvVarWithDefault({
+    SANDY_INHERITED_SKILLS_ROOTS: readEnvVarWithDefault({
       context: loader.context,
       defaultValue: [],
-      definition: BB_INHERITED_SKILLS_ROOTS_ENV,
+      definition: SANDY_INHERITED_SKILLS_ROOTS_ENV,
       env: loader.env,
     }),
-    BB_SERVER_BIND_HOST: readEnvVarWithDefault({
+    SANDY_SERVER_BIND_HOST: readEnvVarWithDefault({
       context: loader.context,
-      defaultValue: DEFAULT_BB_SERVER_BIND_HOST,
-      definition: BB_SERVER_BIND_HOST_ENV,
+      defaultValue: DEFAULT_SANDY_SERVER_BIND_HOST,
+      definition: SANDY_SERVER_BIND_HOST_ENV,
       env: loader.env,
     }),
-    BB_PERF_DIAGNOSTICS: readEnvVarWithDefault({
+    SANDY_PERF_DIAGNOSTICS: readEnvVarWithDefault({
       context: loader.context,
-      definition: BB_PERF_DIAGNOSTICS_ENV,
+      definition: SANDY_PERF_DIAGNOSTICS_ENV,
       env: loader.env,
       defaultValue: false,
     }),
-    BB_SKIP_ONBOARDING: readEnvVarWithDefault({
+    SANDY_SKIP_ONBOARDING: readEnvVarWithDefault({
       context: loader.context,
-      definition: BB_SKIP_ONBOARDING_ENV,
+      definition: SANDY_SKIP_ONBOARDING_ENV,
       env: loader.env,
       defaultValue: false,
     }),
@@ -153,25 +153,25 @@ export function loadServerConfig(
   };
 
   assignIfDefined({
-    key: "BB_DEV_APP_PORT",
+    key: "SANDY_DEV_APP_PORT",
     target: config,
-    value: devAppConfig.BB_DEV_APP_PORT,
+    value: devAppConfig.SANDY_DEV_APP_PORT,
   });
   assignIfDefined({
-    key: "BB_CLI_LAUNCHER",
+    key: "SANDY_CLI_LAUNCHER",
     target: config,
     value: readOptionalEnvVar({
       context: loader.context,
-      definition: BB_CLI_LAUNCHER_ENV,
+      definition: SANDY_CLI_LAUNCHER_ENV,
       env: loader.env,
     }),
   });
   assignIfDefined({
-    key: "BB_SERVER_LAUNCH_ID",
+    key: "SANDY_SERVER_LAUNCH_ID",
     target: config,
     value: readOptionalEnvVar({
       context: loader.context,
-      definition: BB_SERVER_LAUNCH_ID_ENV,
+      definition: SANDY_SERVER_LAUNCH_ID_ENV,
       env: loader.env,
     }),
   });

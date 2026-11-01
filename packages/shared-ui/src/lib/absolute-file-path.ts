@@ -5,7 +5,7 @@ import {
   isWindowsHostPath,
   joinHostPath,
   normalizeHostPath,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 interface ResolveAbsoluteFilePathArgs {
   path: string;

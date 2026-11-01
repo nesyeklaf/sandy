@@ -1,8 +1,8 @@
 import { useId, type ReactNode } from "react";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { ListLoadingPlaceholder } from "@bb/shared-ui/list-loading-placeholder";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { ListLoadingPlaceholder } from "@sandy/shared-ui/list-loading-placeholder";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { PaletteModeChip } from "./PaletteModeChip";
 import { PALETTE_INPUT_CLASS, PaletteInputBand } from "./PaletteInputBand";
 

@@ -7,16 +7,16 @@ import type {
   PromptMentionResource,
   PromptTextMention,
   ThreadQueuedMessage,
-} from "@bb/domain";
-import { makeThreadQueuedMessage } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/domain";
+import { makeThreadQueuedMessage } from "@sandy/test-helpers/domain-fixtures";
 import {
   formatEnvironmentDisplay,
   type EnvironmentDisplayHostContext,
-} from "@bb/core-ui";
+} from "@sandy/core-ui";
 import type {
   SystemExecutionOptionsModelLoadError,
   ThreadContextWindowUsage,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   FollowUpPromptBox,
   type FollowUpSubmitMode,
@@ -44,11 +44,11 @@ import type { CompactBeforeSendOffer } from "@/components/promptbox/CompactBefor
 import {
   formatWorkspaceCheckoutDisplay,
   type WorkspaceCheckoutDisplay,
-} from "@bb/shared-ui/lib/workspace-checkout-display";
+} from "@sandy/shared-ui/lib/workspace-checkout-display";
 import type { PickerOption } from "@/components/pickers/OptionPicker";
 import {
   selectWorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
+} from "@sandy/shared-ui/workspace-change-summary";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
 import {
   GitSegmentFixtureProvider,
@@ -73,15 +73,15 @@ import {
   promptDraftToInput,
   type PromptDraftState,
   queuedInputToDraft,
-} from "@bb/client-core";
-import type { WorkspaceStatus } from "bb-plugin-bb--git/contract";
+} from "@sandy/client-core";
+import type { WorkspaceStatus } from "sandy-plugin-sandy--git/contract";
 
 export default {
   title: "promptbox/Follow Up Prompt Box",
 };
 
 const noop = () => {};
-const STORY_BRANCH_NAME = "bb/design-system-polish";
+const STORY_BRANCH_NAME = "sandy/design-system-polish";
 
 const baseExecution = makeExecutionControlsProps({
   provider: {
@@ -137,7 +137,7 @@ interface EnvironmentSummaryArgs {
 function makeEnvironmentSummary({
   environment,
   host,
-  projectName = PROJECT_NAMES.bb,
+  projectName = PROJECT_NAMES.sandy,
   machineName,
   hasMultipleMachines = false,
   hostType = "persistent",

@@ -6,12 +6,12 @@ import {
 export type ClientChannel = "web" | "desktop";
 
 export function clientChannel(): ClientChannel | null {
-  if ("bbDesktop" in window) return "desktop";
+  if ("sandyDesktop" in window) return "desktop";
   if (
-    "bb" in window &&
-    typeof window.bb === "object" &&
-    window.bb !== null &&
-    "native" in window.bb
+    "sandy" in window &&
+    typeof window.sandy === "object" &&
+    window.sandy !== null &&
+    "native" in window.sandy
   )
     return null;
   return "web";
@@ -28,11 +28,11 @@ export function notificationPermission():
 const SEEN_LOCK_MS = 60_000;
 
 function focusLockName(threadId: string): string {
-  return `bb-notifications-focus-${threadId}`;
+  return `sandy-notifications-focus-${threadId}`;
 }
 
 function seenLockName(id: string): string {
-  return `bb-notifications-seen-${id}`;
+  return `sandy-notifications-seen-${id}`;
 }
 
 export function createClientDelivery(
@@ -82,17 +82,17 @@ export function createClientDelivery(
   function display(message: ClientNotification): void {
     if (disposed || notificationPermission() !== "granted") return;
     const isMacDesktop =
-      "bbDesktop" in window &&
-      typeof window.bbDesktop === "object" &&
-      window.bbDesktop !== null &&
-      "platform" in window.bbDesktop &&
-      window.bbDesktop.platform === "macos";
+      "sandyDesktop" in window &&
+      typeof window.sandyDesktop === "object" &&
+      window.sandyDesktop !== null &&
+      "platform" in window.sandyDesktop &&
+      window.sandyDesktop.platform === "macos";
     const notification = new Notification(message.title, {
       body: message.body,
       ...(isMacDesktop
         ? {}
         : { icon: new URL("/icon-192.png", window.location.origin).href }),
-      tag: `bb-${message.threadId ?? message.id}`,
+      tag: `sandy-${message.threadId ?? message.id}`,
     });
     active.add(notification);
     notification.onclose = () => active.delete(notification);
@@ -100,13 +100,13 @@ export function createClientDelivery(
       if (disposed) return;
       window.focus();
       if (
-        "bbDesktop" in window &&
-        typeof window.bbDesktop === "object" &&
-        window.bbDesktop !== null &&
-        "focusWindow" in window.bbDesktop &&
-        typeof window.bbDesktop.focusWindow === "function"
+        "sandyDesktop" in window &&
+        typeof window.sandyDesktop === "object" &&
+        window.sandyDesktop !== null &&
+        "focusWindow" in window.sandyDesktop &&
+        typeof window.sandyDesktop.focusWindow === "function"
       ) {
-        window.bbDesktop.focusWindow();
+        window.sandyDesktop.focusWindow();
       }
       if (message.threadId !== null) navigate(message.threadId);
       notification.close();
@@ -129,7 +129,7 @@ export function createClientDelivery(
     const message = parsed.data;
     const claim = async () => {
       if (disposed) return;
-      const key = `bb.push-notifications.seen.${channel}`;
+      const key = `sandy.push-notifications.seen.${channel}`;
       let ids: string[] = [];
       try {
         const stored: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
@@ -164,7 +164,7 @@ export function createClientDelivery(
       }
     };
     if (navigator.locks)
-      await navigator.locks.request(`bb-notifications-${channel}`, claim);
+      await navigator.locks.request(`sandy-notifications-${channel}`, claim);
     else await claim();
   }
 

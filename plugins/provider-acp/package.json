@@ -1,16 +1,16 @@
 {
-  "name": "bb-plugin-provider-acp",
+  "name": "sandy-plugin-provider-acp",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Run bb threads with ACP agents (supports Cursor, opencode, omp and more).",
+  "description": "Run sandy threads with ACP agents (supports Cursor, opencode, omp and more).",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.90"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.90"
   },
-  "bb": {
+  "sandy": {
     "name": "ACP providers",
-    "description": "Run bb threads with ACP agents (supports Cursor, opencode, omp and more).",
+    "description": "Run sandy threads with ACP agents (supports Cursor, opencode, omp and more).",
     "branding": {
       "icon": "./icons/acp.svg",
       "experimental_icons": {
@@ -94,16 +94,16 @@
     ]
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.12",
@@ -121,8 +121,8 @@
     "vitest": "^4.1.1"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "smol-toml": "^1.7.1",
     "yaml": "^2.9.0",
     "zod": "^4.3.6"

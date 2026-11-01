@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { CLI_LAUNCHER_MARKER } from "@bb/config/cli-command";
+import { CLI_LAUNCHER_MARKER } from "@sandy/config/cli-command";
 import {
   createCliCommandService,
   MACHINE_CLI_SHIM_MARKER,
@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 function scratchDir(): string {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "bb-cli-command-")));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "sandy-cli-command-")));
   scratchDirs.push(dir);
   return dir;
 }
@@ -60,7 +60,7 @@ function createUnixFixture(
   args: { pathDirectories?: (home: string) => string[] } = {},
 ): UnixFixture {
   const home = join(scratchDir(), "home");
-  const launcherPath = join(home, ".bb", "bin", "bb");
+  const launcherPath = join(home, ".sandy", "bin", "sandy");
   const localBin = join(home, ".local", "bin");
   writeExecutable(launcherPath, `#!/bin/sh\n# ${CLI_LAUNCHER_MARKER}\n`);
   return {
@@ -88,12 +88,12 @@ const NOT_INSTALLED = {
   supported: true,
 };
 
-describe("bb command on PATH", () => {
+describe("sandy command on PATH", () => {
   posixIt(
     "links the launcher into a PATH folder and removes it again",
     async () => {
       const fixture = createUnixFixture();
-      const link = join(fixture.localBin, "bb");
+      const link = join(fixture.localBin, "sandy");
 
       await expect(fixture.service.getStatus()).resolves.toEqual(NOT_INSTALLED);
       await expect(fixture.service.install()).resolves.toEqual({
@@ -116,19 +116,19 @@ describe("bb command on PATH", () => {
 
     await expect(fixture.service.install()).resolves.toEqual({
       ...NOT_INSTALLED,
-      installedPath: join(fixture.localBin, "bb"),
+      installedPath: join(fixture.localBin, "sandy"),
       onPath: false,
     });
   });
 
-  posixIt("refuses to install behind another bb that runs first", async () => {
+  posixIt("refuses to install behind another sandy that runs first", async () => {
     const fixture = createUnixFixture({
       pathDirectories: (home) => [
         join(home, "tools"),
         join(home, ".local", "bin"),
       ],
     });
-    const foreign = join(fixture.home, "tools", "bb");
+    const foreign = join(fixture.home, "tools", "sandy");
     writeExecutable(foreign, "#!/bin/sh\necho babashka\n");
 
     await expect(fixture.service.getStatus()).resolves.toEqual({
@@ -138,27 +138,27 @@ describe("bb command on PATH", () => {
     await expect(fixture.service.install()).rejects.toMatchObject({
       body: {
         code: "cli_command_blocked",
-        message: `Another bb at ${foreign} comes first on your PATH. Remove it, or run bb's command directly at ${fixture.launcherPath}.`,
+        message: `Another sandy at ${foreign} comes first on your PATH. Remove it, or run sandy's command directly at ${fixture.launcherPath}.`,
       },
       status: 409,
     });
-    expect(existsSync(join(fixture.localBin, "bb"))).toBe(false);
+    expect(existsSync(join(fixture.localBin, "sandy"))).toBe(false);
     expect(readFileSync(foreign, "utf8")).toBe("#!/bin/sh\necho babashka\n");
   });
 
-  posixIt("recognises a bb that npm already put on PATH", async () => {
+  posixIt("recognises a sandy that npm already put on PATH", async () => {
     const fixture = createUnixFixture({
       pathDirectories: (home) => [join(home, "npm", "bin")],
     });
-    const packageRoot = join(fixture.home, "npm", "lib", "bb-app");
-    writeExecutable(join(packageRoot, "dist", "bb.js"), "");
+    const packageRoot = join(fixture.home, "npm", "lib", "sandy-app");
+    writeExecutable(join(packageRoot, "dist", "sandy.js"), "");
     writeFileSync(
       join(packageRoot, "package.json"),
-      JSON.stringify({ name: "bb-app" }),
+      JSON.stringify({ name: "sandy-app" }),
     );
-    const npmBin = join(fixture.home, "npm", "bin", "bb");
+    const npmBin = join(fixture.home, "npm", "bin", "sandy");
     mkdirSync(dirname(npmBin));
-    symlinkSync(join(packageRoot, "dist", "bb.js"), npmBin);
+    symlinkSync(join(packageRoot, "dist", "sandy.js"), npmBin);
 
     await expect(fixture.service.getStatus()).resolves.toEqual({
       ...NOT_INSTALLED,
@@ -166,16 +166,16 @@ describe("bb command on PATH", () => {
     });
     await expect(fixture.service.install()).rejects.toMatchObject({
       body: {
-        message: `bb is already on your PATH at ${npmBin}, installed by npm.`,
+        message: `sandy is already on your PATH at ${npmBin}, installed by npm.`,
       },
     });
   });
 
   posixIt(
-    "recognises the command a bb machine install added and leaves it",
+    "recognises the command a sandy machine install added and leaves it",
     async () => {
       const fixture = createUnixFixture();
-      const machineShim = join(fixture.localBin, "bb");
+      const machineShim = join(fixture.localBin, "sandy");
       writeExecutable(
         machineShim,
         `#!/bin/sh\nprintf '%s\\n' '${MACHINE_CLI_SHIM_MARKER}' >&2\nexit 1\n`,
@@ -201,7 +201,7 @@ describe("bb command on PATH", () => {
     },
   );
 
-  posixIt("ignores the bb that npx puts on PATH for the run", async () => {
+  posixIt("ignores the sandy that npx puts on PATH for the run", async () => {
     const fixture = createUnixFixture({
       pathDirectories: (home) => [
         join(home, ".npm", "_npx", "abc", "node_modules", ".bin"),
@@ -209,23 +209,23 @@ describe("bb command on PATH", () => {
       ],
     });
     writeExecutable(
-      join(fixture.home, ".npm", "_npx", "abc", "node_modules", ".bin", "bb"),
+      join(fixture.home, ".npm", "_npx", "abc", "node_modules", ".bin", "sandy"),
       "#!/bin/sh\n",
     );
 
     await expect(fixture.service.install()).resolves.toMatchObject({
-      installedPath: join(fixture.localBin, "bb"),
+      installedPath: join(fixture.localBin, "sandy"),
       onPath: true,
     });
   });
 
   posixIt(
-    "repoints a link left by a bb that used another data directory",
+    "repoints a link left by a sandy that used another data directory",
     async () => {
       const fixture = createUnixFixture();
-      const otherLauncher = join(fixture.home, "other-data", "bin", "bb");
+      const otherLauncher = join(fixture.home, "other-data", "bin", "sandy");
       writeExecutable(otherLauncher, `#!/bin/sh\n# ${CLI_LAUNCHER_MARKER}\n`);
-      const link = join(fixture.localBin, "bb");
+      const link = join(fixture.localBin, "sandy");
       mkdirSync(fixture.localBin, { recursive: true });
       symlinkSync(otherLauncher, link);
 
@@ -242,13 +242,13 @@ describe("bb command on PATH", () => {
 
     await expect(fixture.service.install()).rejects.toMatchObject({
       body: {
-        message: `The bb command launcher at ${fixture.launcherPath} is missing. Restart bb, then try again.`,
+        message: `The sandy command launcher at ${fixture.launcherPath} is missing. Restart sandy, then try again.`,
       },
     });
-    expect(existsSync(join(fixture.localBin, "bb"))).toBe(false);
+    expect(existsSync(join(fixture.localBin, "sandy"))).toBe(false);
   });
 
-  it("is unavailable when bb runs without a launcher, such as a source checkout", async () => {
+  it("is unavailable when sandy runs without a launcher, such as a source checkout", async () => {
     const service = createCliCommandService({
       env: {},
       homeDir: scratchDir(),
@@ -268,13 +268,13 @@ describe("bb command on PATH", () => {
   });
 });
 
-describe("bb command on the Windows PATH", () => {
+describe("sandy command on the Windows PATH", () => {
   function createWindowsFixture(initialPath: string | Error): {
     service: CliCommandService;
     userPath: () => string;
     writes: () => number;
   } {
-    const launcherPath = join(scratchDir(), "bb.cmd");
+    const launcherPath = join(scratchDir(), "sandy.cmd");
     writeFileSync(launcherPath, `@echo off\r\nrem ${CLI_LAUNCHER_MARKER}\r\n`);
     let value = initialPath instanceof Error ? "" : initialPath;
     let writes = 0;

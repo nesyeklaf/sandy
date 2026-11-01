@@ -1,27 +1,27 @@
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 
 import { createStore } from "../api";
 import { registerMentions } from ".";
 
 function setup() {
-  const { bb, harness } = createFakePluginHost({ pluginId: "tasks" });
-  const store = createStore(bb);
-  registerMentions(bb, store);
+  const { sandy, harness } = createFakePluginHost({ pluginId: "tasks" });
+  const store = createStore(sandy);
+  registerMentions(sandy, store);
   const provider = harness.registrations.mentionProviders[0];
   if (!provider) throw new Error("task mention provider was not registered");
-  return { bb, harness, provider, store };
+  return { sandy, harness, provider, store };
 }
 
 describe("@task mention provider", () => {
   it("searches partial keys and title words, ranks the composer's linked project first, and caps results", async () => {
-    const { bb, harness, provider, store } = setup();
+    const { sandy, harness, provider, store } = setup();
     try {
       const linked = store.tasks.createProject({
         name: "Linked project",
         prefix: "TSK",
         color: "blue",
-        linkedBbProjectId: "proj_linked",
+        linkedSandyProjectId: "proj_linked",
       });
       const other = store.tasks.createProject({
         name: "Other project",
@@ -38,13 +38,13 @@ describe("@task mention provider", () => {
         title: "Ship keyboard shortcuts",
         status: "todo",
       });
-      bb.storage
+      sandy.storage
         .database()
         .prepare<[string, string]>(
           "UPDATE tasks SET updated_at = ? WHERE id = ?",
         )
         .run("2026-07-15T18:00:00.000Z", linkedTask.id);
-      bb.storage
+      sandy.storage
         .database()
         .prepare<[string, string]>(
           "UPDATE tasks SET updated_at = ? WHERE id = ?",
@@ -172,17 +172,17 @@ describe("@task mention provider", () => {
       );
       expect(context).toContain("MEN-2 · Verify mention output — Done");
       expect(context).toMatch(/- 01[0-9A-HJKMNP-TV-Z]{24} · acceptance\.md/);
-      expect(context).toContain("Fetch with: bb tasks attachment get ");
+      expect(context).toContain("Fetch with: sandy tasks attachment get ");
       expect(context).toContain("Sawyer · User");
       expect(context).toContain("thr_worker · Mention worker · Working");
       expect(context).toContain(
-        "You can act on this task with the bb tasks CLI.",
+        "You can act on this task with the sandy tasks CLI.",
       );
       expect(context).toContain(
-        "first run: bb tasks attach MEN-1 (attaches THIS thread so the task shows you as working)",
+        "first run: sandy tasks attach MEN-1 (attaches THIS thread so the task shows you as working)",
       );
-      expect(context).toContain("bb tasks comment MEN-1 --body ...");
-      expect(context).toContain("bb tasks update MEN-1 --status ...");
+      expect(context).toContain("sandy tasks comment MEN-1 --body ...");
+      expect(context).toContain("sandy tasks update MEN-1 --status ...");
     } finally {
       await harness.dispose();
     }

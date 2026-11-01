@@ -72,13 +72,13 @@ export default {
           const link = threadLinkSelector(thread);
           await browser.reveal(link);
           await browser.evaluate(
-            "window.__bbperf.arm(" +
+            "window.__sandyperf.arm(" +
               JSON.stringify(threadReadyExpression(thread)) +
               ", 20000)",
           );
           await browser.click(link);
           const result = await browser.evaluate(
-            "window.__bbperf.collectArmed()",
+            "window.__sandyperf.collectArmed()",
           );
           ledger.record(
             "thread-switch: " + thread.id + " (" + visit + ") became usable",

@@ -4,24 +4,24 @@ import {
   resolveEnvLoader,
   type EnvLoaderArgs,
 } from "./env.js";
-import { BB_LOG_LEVEL_ENV } from "./env-vars.js";
-import { resolveRuntimeDataDir, type BbRuntimeMode } from "./runtime.js";
+import { SANDY_LOG_LEVEL_ENV } from "./env-vars.js";
+import { resolveRuntimeDataDir, type SandyRuntimeMode } from "./runtime.js";
 
 export interface LogLevelConfig {
-  BB_LOG_LEVEL: string;
+  SANDY_LOG_LEVEL: string;
 }
 
 type LoadLogLevelConfigArgs = EnvLoaderArgs;
 
 export interface CommonConfig extends LogLevelConfig {
-  BB_DATA_DIR: string;
+  SANDY_DATA_DIR: string;
 }
 
 export interface LoadCommonConfigArgs extends EnvLoaderArgs {
   repoRoot?: string;
 }
 
-function resolveDefaultLogLevel(mode: BbRuntimeMode): string {
+function resolveDefaultLogLevel(mode: SandyRuntimeMode): string {
   return mode === "prod" ? DEFAULTS.logLevel.prod : DEFAULTS.logLevel.dev;
 }
 
@@ -30,10 +30,10 @@ export function loadLogLevelConfig(
 ): LogLevelConfig {
   const loader = resolveEnvLoader(args);
   return {
-    BB_LOG_LEVEL: readEnvVarWithDefault({
+    SANDY_LOG_LEVEL: readEnvVarWithDefault({
       context: loader.context,
       defaultValue: resolveDefaultLogLevel(loader.mode),
-      definition: BB_LOG_LEVEL_ENV,
+      definition: SANDY_LOG_LEVEL_ENV,
       env: loader.env,
     }),
   };
@@ -51,7 +51,7 @@ export function loadCommonConfig(
 
   return {
     ...logLevelConfig,
-    BB_DATA_DIR: resolveRuntimeDataDir({
+    SANDY_DATA_DIR: resolveRuntimeDataDir({
       env: loader.env,
       homeDir: loader.context.homeDir,
       mode: loader.mode,

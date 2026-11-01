@@ -1,5 +1,5 @@
 import { useCallback, useMemo, type ReactNode } from "react";
-import type { ComposerView } from "@get-bb/plugin-sdk";
+import type { ComposerView } from "@sandy-sdk/plugin-sdk";
 import { useAppCommandContext } from "@/components/commands/AppCommandProvider";
 import {
   PluginComposerHostProvider,

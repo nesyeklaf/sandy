@@ -7,7 +7,7 @@ import {
   useThreadSwitchTrace,
 } from "./thread-switch-trace";
 
-const CLOCK_KEY = Symbol.for("bb.perf-trace.clock.v1");
+const CLOCK_KEY = Symbol.for("sandy.perf-trace.clock.v1");
 
 function recordMeasureNames(): string[] {
   const names: string[] = [];
@@ -15,7 +15,7 @@ function recordMeasureNames(): string[] {
   vi.spyOn(performance, "measure").mockImplementation((name, options) => {
     const label =
       typeof options === "object" && options !== null
-        ? (options.detail as { bb: { label: string } }).bb.label
+        ? (options.detail as { sandy: { label: string } }).sandy.label
         : "";
     names.push(`${name}@${label}`);
     return original(name, options);
@@ -36,7 +36,7 @@ function fakeWindow(pathname: string) {
   });
   const navigate = (url: string) => {
     const event = Object.assign(new Event("navigate"), {
-      destination: { url: `https://bb.test${url}` },
+      destination: { url: `https://sandy.test${url}` },
     });
     navigation.dispatchEvent(event);
   };
@@ -60,14 +60,14 @@ describe("thread switch trace", () => {
 
     navigate("/threads/thr_new");
     const view = render(<Screen threadId="thr_new" ready={false} />);
-    expect(names).toEqual(["bb:switch:input@thr_new", "bb:switch:render@thr_new"]);
+    expect(names).toEqual(["sandy:switch:input@thr_new", "sandy:switch:render@thr_new"]);
 
     view.rerender(<Screen threadId="thr_new" ready />);
     await vi.waitFor(() => expect(names).toHaveLength(5));
     expect(names.slice(2)).toEqual([
-      "bb:switch:timeline@thr_new",
-      "bb:switch:paint@thr_new",
-      "bb:switch@thr_new",
+      "sandy:switch:timeline@thr_new",
+      "sandy:switch:paint@thr_new",
+      "sandy:switch@thr_new",
     ]);
   });
 
@@ -89,9 +89,9 @@ describe("thread switch trace", () => {
     render(<Screen threadId="thr_first" ready />);
     render(<Screen threadId="thr_second" ready />);
 
-    await vi.waitFor(() => expect(names).toContain("bb:switch@thr_second"));
+    await vi.waitFor(() => expect(names).toContain("sandy:switch@thr_second"));
     expect(names.filter((name) => name.endsWith("@thr_first"))).toEqual([
-      "bb:switch:input@thr_first",
+      "sandy:switch:input@thr_first",
     ]);
   });
 });

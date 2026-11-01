@@ -1,4 +1,4 @@
-import { parseApplicationUrl } from "@bb/domain/application-url";
+import { parseApplicationUrl } from "@sandy/domain/application-url";
 import {
   openApplicationUrl,
   useApplicationLinksEnabled,
@@ -32,7 +32,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import type {
   Components,
   ExtraProps,
@@ -44,7 +44,7 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { ImageLightbox } from "./image-lightbox.js";
-import { getWrappedImageIndex } from "@bb/shared-ui/lib/image-preview";
+import { getWrappedImageIndex } from "@sandy/shared-ui/lib/image-preview";
 import { InlineImageGalleryContext } from "./inline-image-gallery-context.js";
 import { remarkInlineDollarMath } from "./markdown-inline-dollar-math.js";
 import { normalizeMathFences } from "./markdown-math-fences.js";
@@ -55,14 +55,14 @@ import {
   type RehypeKatex,
 } from "./markdown-katex-loader.js";
 import { CopyButton } from "./copy-button.js";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { LINE_WRAP_LABEL } from "@/lib/code-overflow-mode";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
+} from "@sandy/shared-ui/tooltip";
 import { WorkspaceOpenTargetIcon } from "@/components/workspace-open-target/WorkspaceOpenTargetIcon";
 import { RouteAnchor } from "./app-route-anchor.js";
 import {
@@ -128,14 +128,14 @@ import {
 } from "./markdown-incremental-pieces.js";
 import { normalizePromptBlockquoteBoundaries } from "./markdown-prompt-blockquote-boundaries.js";
 import { MarkdownMermaidDiagram } from "./markdown-mermaid-diagram.js";
-import type { PromptTextMention } from "@bb/domain";
+import type { PromptTextMention } from "@sandy/domain";
 import { usePreferredTheme, type Theme } from "@/hooks/useTheme";
 import {
   rewriteLocalhostLinkHref,
   useRewriteLocalhostLinksPreference,
 } from "@/lib/localhost-link-rewrite-preference";
 import { resolveRouteHref } from "@/lib/route-paths";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import remarkDirective from "remark-directive";
 import { PromptMentionPill } from "@/components/thread/timeline/ConversationMessageMentions.js";
 import {
@@ -895,7 +895,7 @@ function MarkdownCodeBlock({
       </div>
       <pre
         className={cn(
-          "bb-code-highlight px-3 pb-3 pt-1",
+          "sandy-code-highlight px-3 pb-3 pt-1",
           softWrap
             ? "whitespace-pre-wrap [overflow-wrap:anywhere]"
             : "overflow-x-auto",
@@ -1546,15 +1546,15 @@ function buildMarkdownComponents({
   };
 
   if (hasThreadMentions) {
-    components["bb-thread-mention"] = ThreadMentionElement;
+    components["sandy-thread-mention"] = ThreadMentionElement;
   }
 
   if (hasPromptMentions) {
-    components["bb-prompt-mention"] = PromptMentionElement;
+    components["sandy-prompt-mention"] = PromptMentionElement;
   }
 
   if (hasMessageDirectives) {
-    components["bb-message-directive"] = MessageDirectiveElement;
+    components["sandy-message-directive"] = MessageDirectiveElement;
   }
 
   return components;

@@ -7,8 +7,8 @@ import {
 } from "./scope-plugin-utilities.js";
 
 const ROOTS = pluginScopeRoots("demo");
-const OWNED = ':where([data-bb-plugin="demo"])';
-const PORTAL = ":where([data-bb-plugin-root]:not([data-bb-plugin]))";
+const OWNED = ':where([data-sandy-plugin="demo"])';
+const PORTAL = ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))";
 
 function both(selector: string): string {
   return `${OWNED} ${selector},${OWNED}${selector},${PORTAL} ${selector},${PORTAL}${selector}`;
@@ -28,8 +28,8 @@ function scopeUtilities(utilities: string): string {
 describe("scopePluginUtilities", () => {
   it("preserves owned and anonymous portal roots", () => {
     expect(pluginScopeRoots("demo")).toEqual([
-      '[data-bb-plugin="demo"]',
-      "[data-bb-plugin-root]:not([data-bb-plugin])",
+      '[data-sandy-plugin="demo"]',
+      "[data-sandy-plugin-root]:not([data-sandy-plugin])",
     ]);
   });
 

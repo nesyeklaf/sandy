@@ -2,10 +2,10 @@ import {
   defineRpcContract,
   type StandardSchemaV1,
   type StandardSchemaV1Issue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { EnvironmentPullRequest } from "./contract.js";
 
-export const GITHUB_PR_STATUS_PLUGIN_ID = "bb--github-pr-status";
+export const GITHUB_PR_STATUS_PLUGIN_ID = "sandy--github-pr-status";
 export const PULL_REQUESTS_MAX_KEYS = 200;
 const VENDOR = GITHUB_PR_STATUS_PLUGIN_ID;
 

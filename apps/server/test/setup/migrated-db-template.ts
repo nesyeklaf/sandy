@@ -1,3 +1,3 @@
-import { setupMigratedConnectionTemplate } from "@bb/db/testing";
+import { setupMigratedConnectionTemplate } from "@sandy/db/testing";
 
 export default setupMigratedConnectionTemplate;

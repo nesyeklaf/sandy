@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { experimental_REASONING_PRESENTATION as REASONING_PRESENTATION } from "@get-bb/plugin-sdk/provider-bridge";
-import { experimental_createDeltaAssembler as createDeltaAssembler } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_REASONING_PRESENTATION as REASONING_PRESENTATION } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import { experimental_createDeltaAssembler as createDeltaAssembler } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type {
   DeltaAssembler,
   ThreadEvent,
-} from "@get-bb/plugin-sdk/provider-bridge/testing";
+} from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import type { ServerNotification as CodexServerNotification } from "./generated/codex-app-server/schema/ServerNotification.js";
 import type { RateLimitSnapshot } from "./generated/codex-app-server/schema/v2/RateLimitSnapshot.js";
 import type { Turn } from "./generated/codex-app-server/schema/v2/Turn.js";
@@ -125,10 +125,10 @@ function createHarness(): CodexEquivalenceHarness {
       });
     },
     turnId(codexTurnId) {
-      return assembler.getBbTurnId(THREAD_ID, codexTurnId) ?? "";
+      return assembler.getSandyTurnId(THREAD_ID, codexTurnId) ?? "";
     },
     itemId(codexItemId) {
-      return assembler.getBbItemId(THREAD_ID, codexItemId) ?? "";
+      return assembler.getSandyItemId(THREAD_ID, codexItemId) ?? "";
     },
   };
 }
@@ -885,7 +885,7 @@ describe("codex item translation", () => {
           type: "dynamicToolCall",
           id: "dyn-1",
           namespace: null,
-          tool: "bb_test_ping",
+          tool: "sandy_test_ping",
           arguments: {},
           status: "completed",
           contentItems: [{ type: "inputText", text: "PONG_FROM_TOOL" }],
@@ -899,7 +899,7 @@ describe("codex item translation", () => {
         type: "item/completed",
         item: expect.objectContaining({
           type: "toolCall",
-          tool: "bb_test_ping",
+          tool: "sandy_test_ping",
           status: "completed",
           result: "PONG_FROM_TOOL",
           durationMs: 3,
@@ -908,11 +908,11 @@ describe("codex item translation", () => {
     );
   });
 
-  it("stamps bb-injected tool calls with server bb and the definition's presentation", () => {
+  it("stamps sandy-injected tool calls with server sandy and the definition's presentation", () => {
     const harness = createHarness();
     harness.translator.configureInjectedTools([
       {
-        name: "bb_workflow_run",
+        name: "sandy_workflow_run",
         presentation: {
           label: {
             pending: "Starting workflow",
@@ -929,9 +929,9 @@ describe("codex item translation", () => {
         startedAtMs: 0,
         item: {
           type: "dynamicToolCall",
-          id: "dyn-bb-1",
+          id: "dyn-sandy-1",
           namespace: null,
-          tool: "bb_workflow_run",
+          tool: "sandy_workflow_run",
           arguments: { name: "review" },
           status: "inProgress",
           contentItems: null,
@@ -945,9 +945,9 @@ describe("codex item translation", () => {
         type: "item/started",
         item: {
           type: "toolCall",
-          id: harness.itemId("dyn-bb-1"),
-          server: "bb",
-          tool: "bb_workflow_run",
+          id: harness.itemId("dyn-sandy-1"),
+          server: "sandy",
+          tool: "sandy_workflow_run",
           arguments: { name: "review" },
           status: "pending",
           presentation: {
@@ -1017,7 +1017,7 @@ describe("codex item translation", () => {
           type: "dynamicToolCall",
           id: "dyn-err-1",
           namespace: null,
-          tool: "bb_test_ping",
+          tool: "sandy_test_ping",
           arguments: {},
           status: "failed",
           contentItems: [{ type: "inputText", text: "permission denied" }],
@@ -1051,7 +1051,7 @@ describe("codex item translation", () => {
           type: "dynamicToolCall",
           id: "dyn-img-1",
           namespace: null,
-          tool: "bb_test_image",
+          tool: "sandy_test_image",
           arguments: {},
           status: "failed",
           contentItems: [

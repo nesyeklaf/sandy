@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { randomUUID } from "node:crypto";
 import dns from "node:dns/promises";
 import fs from "node:fs/promises";
@@ -65,8 +65,8 @@ function waitFor(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-export default function connectionOverview(bb: BbPluginApi) {
-  const settings = bb.settings.define({
+export default function connectionOverview(sandy: SandyPluginApi) {
+  const settings = sandy.settings.define({
     [EXTRA_ALLOWED_HOSTS]: {
       type: "string",
       label: "Additional allowed hosts",
@@ -90,13 +90,13 @@ export default function connectionOverview(bb: BbPluginApi) {
       default: "",
     },
   });
-  const store = createStore(bb.storage.database(), bb.storage.migrate);
+  const store = createStore(sandy.storage.database(), sandy.storage.migrate);
   const book = createHostnameBook();
   const unsubscribe = subscribeHostnameChannels(book);
   let allowedHosts = allowedHostSet("");
   let resolvers = new Set<string>();
   let bindSubnets: readonly Cidr[] = wireguardSubnets(linuxInterfaces);
-  const host = bb.hosts.experimental_client({
+  const host = sandy.hosts.experimental_client({
     contract: hostConnectionsContract,
   });
   const activeSources = new Set<string>([SERVER_SOURCE_ID]);
@@ -110,7 +110,7 @@ export default function connectionOverview(bb: BbPluginApi) {
       isAllowed: (hostname) => allowedHosts.has(normalizeHost(hostname)),
       thirdPartyProcesses: THIRD_PARTY_PROCESSES,
     });
-    bb.rpc.experimental_invalidate([OVERVIEW_TAG]);
+    sandy.rpc.experimental_invalidate([OVERVIEW_TAG]);
   }
   settings.onChange(() => void refreshAllowlist());
 
@@ -133,7 +133,7 @@ export default function connectionOverview(bb: BbPluginApi) {
 
   const requestPeers = createRequestPeerCollector({
     store,
-    read: (after) => bb.server.internal_DO_NOT_USE_requestPeers({ after }),
+    read: (after) => sandy.server.internal_DO_NOT_USE_requestPeers({ after }),
     bindSubnets: () => bindSubnets,
     serverPid: process.pid,
   });
@@ -141,7 +141,7 @@ export default function connectionOverview(bb: BbPluginApi) {
   const alerter = createAlerter({
     store,
     send: async (notification) => {
-      await bb.sdk.plugins.callRpc({
+      await sandy.sdk.plugins.callRpc({
         pluginId: NOTIFICATIONS_PLUGIN_ID,
         method: "notifications.send",
         input: notification,
@@ -150,9 +150,9 @@ export default function connectionOverview(bb: BbPluginApi) {
       });
     },
     onSendFailed: (error) =>
-      bb.log.warn(`connection overview: alert not sent: ${String(error)}`),
+      sandy.log.warn(`connection overview: alert not sent: ${String(error)}`),
     onSendDeferred: (error) =>
-      bb.log.info(
+      sandy.log.info(
         `connection overview: alert deferred to the next sweep: ${String(error)}`,
       ),
   });
@@ -178,7 +178,7 @@ export default function connectionOverview(bb: BbPluginApi) {
     book.sweep();
   }
 
-  bb.background.service("collector", {
+  sandy.background.service("collector", {
     async start(signal) {
       await refreshAllowlist();
       const serverDriver: SourceDriver | null =
@@ -191,7 +191,7 @@ export default function connectionOverview(bb: BbPluginApi) {
                 signal,
                 excludedRoots: () => new Set(daemonRoots.values()),
                 onError: (error) =>
-                  bb.log.warn(`connection sampler: ${String(error)}`),
+                  sandy.log.warn(`connection sampler: ${String(error)}`),
               });
               return {
                 sourceId: SERVER_SOURCE_ID,
@@ -230,7 +230,7 @@ export default function connectionOverview(bb: BbPluginApi) {
             }),
           });
         try {
-          const hosts = await bb.sdk.hosts.list();
+          const hosts = await sandy.sdk.hosts.list();
           activeSources.clear();
           activeSources.add(SERVER_SOURCE_ID);
           for (const hostId of daemonRoots.keys())
@@ -259,23 +259,23 @@ export default function connectionOverview(bb: BbPluginApi) {
             });
           }
         } catch (error) {
-          bb.log.warn(
+          sandy.log.warn(
             `connection overview: host list failed: ${String(error)}`,
           );
         }
         try {
           requestPeers.pull();
         } catch (error) {
-          bb.log.warn(
+          sandy.log.warn(
             `connection overview: request peers failed: ${String(error)}`,
           );
         }
         await Promise.all(drivers.map((driver) => collector.pull(driver)));
-        bb.rpc.experimental_invalidate([OVERVIEW_TAG]);
+        sandy.rpc.experimental_invalidate([OVERVIEW_TAG]);
         alerter
           .start()
           ?.catch((error: unknown) =>
-            bb.log.warn(
+            sandy.log.warn(
               `connection overview: alert sweep failed: ${String(error)}`,
             ),
           );
@@ -289,6 +289,6 @@ export default function connectionOverview(bb: BbPluginApi) {
   });
 
   const health = () => collector.health(activeSources);
-  registerCli(bb, { store, health });
-  registerOverviewRpc(bb, { store, health });
+  registerCli(sandy, { store, health });
+  registerOverviewRpc(sandy, { store, health });
 }

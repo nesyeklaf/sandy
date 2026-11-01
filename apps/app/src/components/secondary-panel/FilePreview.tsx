@@ -11,7 +11,7 @@ import {
 } from "react";
 import { FilePreviewScrollPositionContext } from "./filePreviewScrollPositionContext";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,18 +20,18 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@bb/shared-ui/dropdown-menu";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/shared-ui/dropdown-menu";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { useElementWidth } from "@/hooks/useElementWidth";
 import { SourceCodeHost } from "@/components/code/SourceCodeHost";
 import {
   COARSE_POINTER_COMPACT_ICON_SIZE_SHRINK_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
 import { CopyButton } from "@/components/ui/copy-button.js";
-import { Icon } from "@bb/shared-ui/icon";
-import { OpenInEditorButton } from "@bb/shared-ui/open-in-editor-button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { OpenInEditorButton } from "@sandy/shared-ui/open-in-editor-button";
 import { useAppCommandShortcut } from "@/components/commands/AppCommandProvider";
 import { AppCommandShortcutHint } from "@/components/commands/AppCommandShortcutHint";
 import type { MarkdownLinkRouting } from "@/components/ui/markdown-link-routing.js";
@@ -42,22 +42,22 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
+} from "@sandy/shared-ui/tooltip";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
-import { formatByteSize } from "@bb/shared-ui/lib/format-byte-size";
+import { formatByteSize } from "@sandy/shared-ui/lib/format-byte-size";
 import { saveFile } from "@/lib/save-file";
 import { openUrlInExternalBrowser } from "@/lib/url-open-routing";
 import type {
   FilePreviewLineRange,
   UnsupportedFilePreviewReason,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   DEFAULT_CODE_OVERFLOW_MODE,
   LINE_WRAP_LABEL,
   type CodeOverflowMode,
   type CodeOverflowModeChangeHandler,
 } from "@/lib/code-overflow-mode";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { SecondaryPanelSelectionActions } from "./SecondaryPanelSelectionActions.js";
 import {
   FILE_PREVIEW_WRAPPER_STYLE,

@@ -30,21 +30,21 @@ export function resolveDesktopBridgePath(
       return join(
         `${args.paths.appPath}.unpacked`,
         "dist",
-        "bb-app-bridge.mjs",
+        "sandy-app-bridge.mjs",
       );
     }
 
-    return join(args.paths.resourcesPath, "app", "dist", "bb-app-bridge.mjs");
+    return join(args.paths.resourcesPath, "app", "dist", "sandy-app-bridge.mjs");
   }
 
-  return join(args.paths.appPath, "dist", "bb-app-bridge.mjs");
+  return join(args.paths.appPath, "dist", "sandy-app-bridge.mjs");
 }
 
 export function resolveDesktopMachineInstallerPath(bridgePath: string): string {
   return join(
     dirname(dirname(bridgePath)),
     "node_modules",
-    "bb-app",
+    "sandy-app",
     "server",
     "dist",
     "assets",

@@ -4,7 +4,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registerComposerPlugin } from "@/test/fixtures/composer-plugin";
 import { ComposerTestProviders } from "@/test/fixtures/composer-test-providers";
-import { defaultAppSettings, type AppShortcut } from "@bb/domain";
+import { defaultAppSettings, type AppShortcut } from "@sandy/domain";
 import {
   AppCommandProvider,
   useAppCommandHandler,
@@ -43,8 +43,8 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@/lib/bb-desktop", () => ({
-  getBbDesktopInfo: () => null,
+vi.mock("@/lib/sandy-desktop", () => ({
+  getSandyDesktopInfo: () => null,
 }));
 
 vi.mock("@/lib/plugin-sdk-hooks", async (importOriginal) => ({

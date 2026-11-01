@@ -10,7 +10,7 @@ import {
 import type { SampleGap, SampleReply, SocketRow } from "./contract.js";
 import { PROVIDER_BRIDGE_PROCESS } from "./allowlist.js";
 
-const PROVIDER_BRIDGE_ENTRY = "bb-provider-bridge-worker.mjs";
+const PROVIDER_BRIDGE_ENTRY = "sandy-provider-bridge-worker.mjs";
 
 export interface ProcFs {
   readdir(path: string): Promise<string[]>;

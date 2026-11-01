@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { ThreadListEntry } from "@bb/domain";
+import type { ThreadListEntry } from "@sandy/domain";
 import type {
   ProjectBranchesResponse,
   SidebarBootstrapResponse,
   ThreadResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   makeProjectWithThreadsResponse,
   makeSidebarBootstrapResponse,
@@ -27,7 +27,7 @@ import {
 } from "./query-placeholders";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { HttpError } from "@/lib/api";
-import { BbHttpError } from "@/lib/sdk";
+import { SandyHttpError } from "@/lib/sdk";
 import { isTransientReadError, requireEnabledQueryArg } from "./query-helpers";
 
 describe("requireEnabledQueryArg", () => {
@@ -76,7 +76,7 @@ describe("isTransientReadError", () => {
     ).toBe(false);
     expect(
       isTransientReadError(
-        new BbHttpError({
+        new SandyHttpError({
           status: 404,
           message: "Not found",
           body: { error: "Not found" },

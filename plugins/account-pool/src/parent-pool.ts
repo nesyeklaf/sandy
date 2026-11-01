@@ -5,10 +5,10 @@ import {
   type PoolAvailability,
 } from "./contracts.js";
 
-export const PARENT_URL_ENV = "BB_ACCOUNT_POOL_PARENT_URL";
-export const PARENT_TOKEN_ENV = "BB_ACCOUNT_POOL_PARENT_TOKEN";
+export const PARENT_URL_ENV = "SANDY_ACCOUNT_POOL_PARENT_URL";
+export const PARENT_TOKEN_ENV = "SANDY_ACCOUNT_POOL_PARENT_TOKEN";
 export const AVAILABILITY_PATH = "/availability";
-export const HUB_TOKEN_HEADER = "x-bb-account-pool-token";
+export const HUB_TOKEN_HEADER = "x-sandy-account-pool-token";
 
 const DEFAULT_AVAILABILITY_TTL_MS = 30_000;
 const AVAILABILITY_TIMEOUT_MS = 2_000;

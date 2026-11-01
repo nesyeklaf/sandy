@@ -12,8 +12,8 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
-import { createMigratedConnection } from "@bb/db/testing";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -49,18 +49,18 @@ describe("mutable plugin host build policy", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-host-build-policy-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-host-build-policy-"));
     service = createService("0.9.0");
-    rootDir = join(workDir, "bb-plugin-host-policy");
+    rootDir = join(workDir, "sandy-plugin-host-policy");
     artifactPath = join(rootDir, "dist", "host.js");
     metaPath = join(rootDir, "dist", "host.meta.json");
     await mkdir(rootDir, { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-host-policy",
+        name: "sandy-plugin-host-policy",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Host policy fixture",
           description: "Host build lifecycle fixture.",
           branding: { icon: "Zap" },
@@ -181,13 +181,13 @@ describe("mutable plugin host build policy", () => {
     );
   });
 
-  it("rebuilds after bb is upgraded", async () => {
+  it("rebuilds after sandy is upgraded", async () => {
     await service.stop();
     service = createService("0.9.1");
     await service.start();
 
     expect(JSON.parse(await readFile(metaPath, "utf8"))).toMatchObject({
-      builtWith: { bbVersion: "0.9.1" },
+      builtWith: { sandyVersion: "0.9.1" },
     });
   });
 });

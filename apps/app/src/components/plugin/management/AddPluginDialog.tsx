@@ -4,8 +4,8 @@ import {
   type PluginCatalogInstallPlan,
   type PluginCatalogResolvedSource,
   type PluginInstallJob,
-} from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
+} from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
+} from "@sandy/shared-ui/dialog";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
 import { pluginAdminErrorMessage } from "@/lib/plugin-admin-error";
 import { applyPluginInstallJob } from "@/hooks/cache-owners/plugin-cache-owner";
 import { useCatalogInstallPlan } from "@/hooks/queries/plugin-catalog-queries";
@@ -196,7 +196,7 @@ function ThirdPartySourceDisclosure({
       <p className="text-2xs text-subtle-foreground">
         Listed by{" "}
         <span className="text-foreground">{plan.marketplaceDisplayName}</span>,
-        a third-party marketplace that BB does not review.
+        a third-party marketplace that SANDY does not review.
       </p>
       <dl className="space-y-0.5">
         <div className="flex gap-2">
@@ -283,7 +283,7 @@ function AddPluginDialogContent({
             ? "Install from a Git repository or a local path."
             : thirdParty
               ? "Install this plugin from the source its marketplace lists."
-              : "Install this plugin, bundled with BB."}
+              : "Install this plugin, bundled with SANDY."}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3">
@@ -307,7 +307,7 @@ function AddPluginDialogContent({
             <Input
               value={sourceText}
               autoFocus
-              placeholder="https://github.com/owner/bb-plugin-name"
+              placeholder="https://github.com/owner/sandy-plugin-name"
               aria-label="Plugin source"
               className="h-8 font-mono text-xs"
               onChange={(event) => setSourceText(event.target.value)}

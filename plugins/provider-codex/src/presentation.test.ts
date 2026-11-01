@@ -181,7 +181,7 @@ describe("every codex lifecycle delta carries a presentation", () => {
         type: "dynamicToolCall",
         id: "d1",
         namespace: null,
-        tool: "bb_workflow_run",
+        tool: "sandy_workflow_run",
         arguments: {},
         status: "inProgress",
         contentItems: null,
@@ -213,8 +213,8 @@ describe("every codex lifecycle delta carries a presentation", () => {
       item: {
         type: "webSearch",
         id: "ws1",
-        query: "bb",
-        action: { type: "search", query: "bb", queries: null },
+        query: "sandy",
+        action: { type: "search", query: "sandy", queries: null },
       },
     },
     {

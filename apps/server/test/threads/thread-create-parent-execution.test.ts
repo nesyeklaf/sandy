@@ -1,5 +1,5 @@
-import { setDisabledProviderIds, upsertProjectExecutionDefaults } from "@bb/db";
-import type { ReasoningLevel } from "@bb/domain";
+import { setDisabledProviderIds, upsertProjectExecutionDefaults } from "@sandy/db";
+import type { ReasoningLevel } from "@sandy/domain";
 import { availableModelFixture } from "../helpers/available-models.js";
 import { seedModelCatalog } from "../helpers/provider-model-catalogs.js";
 import { describe, expect, it } from "vitest";

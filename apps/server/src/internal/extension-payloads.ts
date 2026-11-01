@@ -1,12 +1,12 @@
-import { getThread } from "@bb/db";
-import type { ExtensionKind, JsonValue, ThreadEvent } from "@bb/domain";
-import { coreThreadStateSchema, parseExtensionKind } from "@bb/domain";
-import type { HostDaemonEventEnvelope } from "@bb/host-daemon-contract";
+import { getThread } from "@sandy/db";
+import type { ExtensionKind, JsonValue, ThreadEvent } from "@sandy/domain";
+import { coreThreadStateSchema, parseExtensionKind } from "@sandy/domain";
+import type { HostDaemonEventEnvelope } from "@sandy/host-daemon-contract";
 import type {
   StandardSchemaV1,
   StandardSchemaV1Issue,
   StandardSchemaV1Result,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { AppDeps } from "../types.js";
 
 export const EXTENSION_PAYLOAD_MAX_BYTES = 64 * 1024;

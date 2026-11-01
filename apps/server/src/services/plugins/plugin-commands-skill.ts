@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { pluginCliCall } from "@bb/domain/plugin-cli";
-import { PLUGIN_CLI_OUTPUT_MAX_BYTES } from "@get-bb/plugin-sdk";
+import { pluginCliCall } from "@sandy/domain/plugin-cli";
+import { PLUGIN_CLI_OUTPUT_MAX_BYTES } from "@sandy-sdk/plugin-sdk";
 import type { PluginCliCommandInfo } from "./plugin-api.js";
 
 export interface PluginCliContribution {
@@ -26,13 +26,13 @@ function renderPluginCommandsSkill(
   contributions: readonly PluginCliContribution[],
 ): string {
   const sections = contributions.map((contribution) => {
-    const direct = `bb ${contribution.name}`;
+    const direct = `sandy ${contribution.name}`;
     const invocation = pluginCliCall(contribution.pluginId, contribution.name);
     const lines = [
       `## ${invocation} — ${contribution.summary}`,
       "",
       `Contributed by plugin \`${contribution.pluginId}\`. Run \`${invocation} --help\` for details.`,
-      `\`bb plugin run ${contribution.pluginId} <args...>\` is always available.`,
+      `\`sandy plugin run ${contribution.pluginId} <args...>\` is always available.`,
     ];
     if (contribution.commands.length > 0) {
       lines.push("");
@@ -49,12 +49,12 @@ function renderPluginCommandsSkill(
   return [
     "---",
     `name: ${SKILL_NAME}`,
-    "description: Discover CLI commands contributed by installed BB plugins and their invocation paths.",
+    "description: Discover CLI commands contributed by installed SANDY plugins and their invocation paths.",
     "---",
     "",
     "# Plugin Commands",
     "",
-    "Installed BB plugins contribute commands; core-name collisions use the explicit plugin-id form while others use a top-level `bb` subcommand.",
+    "Installed SANDY plugins contribute commands; core-name collisions use the explicit plugin-id form while others use a top-level `sandy` subcommand.",
     `Combined stdout and stderr is capped at ${PLUGIN_CLI_OUTPUT_MAX_BYTES} UTF-8 bytes. Above-limit`,
     "results fail atomically as `plugin_cli_output_too_large` and are never clipped;",
     "use pagination or file/streaming commands for large results.",

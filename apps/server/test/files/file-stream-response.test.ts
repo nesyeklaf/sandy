@@ -68,7 +68,7 @@ describe.each(["local", "daemon"] as const)(
     }
 
     beforeEach(async () => {
-      directory = await mkdtemp(join(tmpdir(), "bb-file-response-"));
+      directory = await mkdtemp(join(tmpdir(), "sandy-file-response-"));
       opened.length = 0;
       await prepare(bytes);
     });
@@ -85,7 +85,7 @@ describe.each(["local", "daemon"] as const)(
     ) {
       return createFileStreamResponse({
         source,
-        request: new Request("http://bb.test/recording.mp4", {
+        request: new Request("http://sandy.test/recording.mp4", {
           headers,
           method,
           signal,

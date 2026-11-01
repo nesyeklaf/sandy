@@ -1,6 +1,6 @@
-import { getEnvironment, getThread } from "@bb/db";
-import { threadProviderModelCatalogStateSchema } from "@bb/domain";
-import type { HostDaemonEventEnvelope } from "@bb/host-daemon-contract";
+import { getEnvironment, getThread } from "@sandy/db";
+import { threadProviderModelCatalogStateSchema } from "@sandy/domain";
+import type { HostDaemonEventEnvelope } from "@sandy/host-daemon-contract";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { getLastProviderThreadId } from "../threads/thread-events.js";
 

@@ -10,7 +10,7 @@ const repositoryRoot = resolve(import.meta.dirname, "../../..");
 function bundledSdkSpecifiers(bundle: string): string[] {
   const specifiers = new Set<string>();
   for (const match of bundle.matchAll(
-    /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'](@get-bb\/plugin-sdk[^"']*)["']/gu,
+    /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'](@sandy-sdk\/plugin-sdk[^"']*)["']/gu,
   )) {
     specifiers.add(match[1] ?? "");
   }
@@ -57,7 +57,7 @@ describe("builtin server artifacts", () => {
       const bundle = await readFile(built.jsPath, "utf8");
       expect(
         bundledSdkSpecifiers(bundle).filter(
-          (specifier) => specifier !== "@get-bb/plugin-sdk",
+          (specifier) => specifier !== "@sandy-sdk/plugin-sdk",
         ),
       ).toEqual([]);
 
@@ -98,7 +98,7 @@ describe("builtin server artifacts", () => {
       const bundle = await readFile(built.jsPath, "utf8");
       expect(
         bundledSdkSpecifiers(bundle).filter(
-          (specifier) => specifier !== "@get-bb/plugin-sdk",
+          (specifier) => specifier !== "@sandy-sdk/plugin-sdk",
         ),
       ).toEqual([]);
     },

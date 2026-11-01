@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { InternalDoNotUsePluginRequestPeer } from "@get-bb/plugin-sdk";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import type { InternalDoNotUsePluginRequestPeer } from "@sandy-sdk/plugin-sdk";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import { registerCli } from "./cli.js";
 import {
@@ -17,19 +17,19 @@ afterEach(async () => {
 });
 
 async function harness() {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-request-peers-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-request-peers-"));
   cleanups.push(() => rm(dataDir, { recursive: true, force: true }));
   const host = createFakePluginHost({
-    pluginId: "bb--connection-overview",
+    pluginId: "sandy--connection-overview",
     dataDir,
   });
   const store = createStore(
-    host.bb.storage.database(),
-    host.bb.storage.migrate,
+    host.sandy.storage.database(),
+    host.sandy.storage.migrate,
   );
   const collector = createRequestPeerCollector({
     store,
-    read: (after) => host.bb.server.internal_DO_NOT_USE_requestPeers({ after }),
+    read: (after) => host.sandy.server.internal_DO_NOT_USE_requestPeers({ after }),
     bindSubnets: () => [],
     serverPid: 4242,
   });
@@ -142,7 +142,7 @@ describe("request peer collector without a saved read", () => {
         },
       },
       read: (after) =>
-        host.bb.server.internal_DO_NOT_USE_requestPeers({ after }),
+        host.sandy.server.internal_DO_NOT_USE_requestPeers({ after }),
       bindSubnets: () => [],
       serverPid: 4242,
     });
@@ -154,10 +154,10 @@ describe("request peer collector without a saved read", () => {
   });
 });
 
-describe("bb connections incoming", () => {
+describe("sandy connections incoming", () => {
   it("lists request peers and leaves them out of the outgoing list", async () => {
     const { host, store, collector, add } = await harness();
-    registerCli(host.bb, {
+    registerCli(host.sandy, {
       store,
       health: () => [],
       now: () => 1_000_000 + 60_000,

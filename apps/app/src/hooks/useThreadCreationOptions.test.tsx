@@ -4,11 +4,11 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type {
   SystemExecutionOptionsResponse,
   SystemProviderStatesResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
-import type { ProviderModelCatalogScope } from "@bb/domain";
+import type { ProviderModelCatalogScope } from "@sandy/domain";
 import type { QueryClient } from "@tanstack/react-query";
 import {
   hostsQueryKey,
@@ -22,8 +22,8 @@ import {
   providerListCacheKey,
   writeCachedProviderList,
 } from "@/lib/provider-list-cache";
-import { createDeferredPromise } from "@bb/test-helpers";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
+import { createDeferredPromise } from "@sandy/test-helpers";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
 import {
   modelCatalogCacheKey,
   readCachedModelCatalog,
@@ -429,7 +429,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("keeps the selected remembered provider branded while models load", () => {
-    window.localStorage.setItem("bb.promptbox.provider", "codex");
+    window.localStorage.setItem("sandy.promptbox.provider", "codex");
     writeCachedProviderList(
       providerListCacheKey({ environmentId: null, hostId: null }),
       rememberedProviders(),
@@ -452,7 +452,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("does not switch away from a provider when its failed plugin response arrives", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", "codex");
+    window.localStorage.setItem("sandy.promptbox.provider", "codex");
     writeCachedProviderList(
       providerListCacheKey({ environmentId: null, hostId: null }),
       rememberedProviders(),
@@ -613,7 +613,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("applies a fork provider, model, and reasoning seed atomically", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", GLOBAL_PROVIDER_ID);
+    window.localStorage.setItem("sandy.promptbox.provider", GLOBAL_PROVIDER_ID);
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
       providerExecutionOptionsResponse(args?.providerId),
     );
@@ -661,7 +661,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("restores each provider's model and reasoning selection", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", GLOBAL_PROVIDER_ID);
+    window.localStorage.setItem("sandy.promptbox.provider", GLOBAL_PROVIDER_ID);
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
       providerExecutionOptionsResponse(args?.providerId),
     );
@@ -733,7 +733,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("remembers agent options per provider and moves off a model they rule out", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", GLOBAL_PROVIDER_ID);
+    window.localStorage.setItem("sandy.promptbox.provider", GLOBAL_PROVIDER_ID);
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
       daybreakExecutionOptionsResponse(args?.providerId),
     );
@@ -793,7 +793,7 @@ describe("useThreadCreationOptions", () => {
 
   it("uses the thread's own option values in a component-local composer instead of remembered ones", async () => {
     window.localStorage.setItem(
-      `bb.promptbox.session-options-${GLOBAL_PROVIDER_ID}-1`,
+      `sandy.promptbox.session-options-${GLOBAL_PROVIDER_ID}-1`,
       JSON.stringify({ daybreak: true }),
     );
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
@@ -847,7 +847,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("remembers the new-thread service tier per provider", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", GLOBAL_PROVIDER_ID);
+    window.localStorage.setItem("sandy.promptbox.provider", GLOBAL_PROVIDER_ID);
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
       providerExecutionOptionsResponse(args?.providerId),
     );
@@ -1121,35 +1121,35 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("routes root-composer provider discovery through the selected project host", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", GLOBAL_PROVIDER_ID);
+    window.localStorage.setItem("sandy.promptbox.provider", GLOBAL_PROVIDER_ID);
     window.localStorage.setItem(
-      `bb.promptbox.model-${GLOBAL_PROVIDER_ID}-1`,
+      `sandy.promptbox.model-${GLOBAL_PROVIDER_ID}-1`,
       "global-model",
     );
     window.localStorage.setItem(
-      `bb.promptbox.service-tier-${GLOBAL_PROVIDER_ID}-1`,
+      `sandy.promptbox.service-tier-${GLOBAL_PROVIDER_ID}-1`,
       "default",
     );
     window.localStorage.setItem(
-      `bb.promptbox.reasoning-${GLOBAL_PROVIDER_ID}-1`,
+      `sandy.promptbox.reasoning-${GLOBAL_PROVIDER_ID}-1`,
       "high",
     );
     window.localStorage.setItem(
-      "bb.promptbox.permission-mode",
+      "sandy.promptbox.permission-mode",
       "workspace-write",
     );
     window.localStorage.setItem(
-      "bb.promptbox.environment",
+      "sandy.promptbox.environment",
       "host:global-host:worktree",
     );
 
-    setProjectScopedValue("bb.promptbox.provider", PROJECT_PROVIDER_ID);
-    setProjectScopedValue("bb.promptbox.model", "project-model");
-    setProjectScopedValue("bb.promptbox.service-tier", "fast");
-    setProjectScopedValue("bb.promptbox.reasoning", "low");
-    setProjectScopedValue("bb.promptbox.permission-mode", "readonly");
+    setProjectScopedValue("sandy.promptbox.provider", PROJECT_PROVIDER_ID);
+    setProjectScopedValue("sandy.promptbox.model", "project-model");
+    setProjectScopedValue("sandy.promptbox.service-tier", "fast");
+    setProjectScopedValue("sandy.promptbox.reasoning", "low");
+    setProjectScopedValue("sandy.promptbox.permission-mode", "readonly");
     setProjectScopedValue(
-      "bb.promptbox.environment",
+      "sandy.promptbox.environment",
       "host:project-host:local",
     );
 
@@ -1312,10 +1312,10 @@ describe("useThreadCreationOptions", () => {
       result.current.setEnvironmentSelectionValue("host:project-host:worktree");
     });
 
-    expect(window.localStorage.getItem("bb.promptbox.environment")).toBeNull();
+    expect(window.localStorage.getItem("sandy.promptbox.environment")).toBeNull();
     expect(
       window.localStorage.getItem(
-        getProjectScopedStorageKey("bb.promptbox.environment", PROJECT_ID),
+        getProjectScopedStorageKey("sandy.promptbox.environment", PROJECT_ID),
       ),
     ).toBe("host:project-host:worktree");
   });
@@ -1323,7 +1323,7 @@ describe("useThreadCreationOptions", () => {
   it("migrates a stored legacy worktree selection to the worktree provider", () => {
     const { wrapper } = createQueryClientTestHarness();
     window.localStorage.setItem(
-      getProjectScopedStorageKey("bb.promptbox.environment", PROJECT_ID),
+      getProjectScopedStorageKey("sandy.promptbox.environment", PROJECT_ID),
       "host:project-host:worktree",
     );
 
@@ -1722,7 +1722,7 @@ describe("useThreadCreationOptions", () => {
 
   it("latches the initial ready provider instead of resolving it again after a machine switch", async () => {
     window.localStorage.setItem(
-      "bb.promptbox.environment",
+      "sandy.promptbox.environment",
       "provider:project-checkout",
     );
     vi.mocked(sdk.system.providerStates).mockImplementation(async (args) =>
@@ -1783,7 +1783,7 @@ describe("useThreadCreationOptions", () => {
   });
 
   it("loads the fallback provider's catalog when the stored provider is no longer offered", async () => {
-    window.localStorage.setItem("bb.promptbox.provider", "removed-provider");
+    window.localStorage.setItem("sandy.promptbox.provider", "removed-provider");
     vi.mocked(sdk.system.executionOptions).mockImplementation(async (args) =>
       args?.providerId === "removed-provider"
         ? {
@@ -1809,7 +1809,7 @@ describe("useThreadCreationOptions", () => {
         ["global-default", "global-remembered"],
       );
     });
-    expect(window.localStorage.getItem("bb.promptbox.provider")).toContain(
+    expect(window.localStorage.getItem("sandy.promptbox.provider")).toContain(
       "removed-provider",
     );
     expect(

@@ -6,9 +6,9 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import type { ExperimentalSidebarNavigationPlacement } from "@get-bb/plugin-sdk";
-import { Button } from "@bb/shared-ui/button";
-import { Popover, PopoverAnchor } from "@bb/shared-ui/popover";
+import type { ExperimentalSidebarNavigationPlacement } from "@sandy-sdk/plugin-sdk";
+import { Button } from "@sandy/shared-ui/button";
+import { Popover, PopoverAnchor } from "@sandy/shared-ui/popover";
 import { PluginReplacementSlot } from "@/components/plugin/PluginReplacementSlot";
 import { appToast } from "@/components/ui/app-toast";
 import { schedulePluginFrontendReconcile } from "@/lib/plugin-frontend-lazy";
@@ -178,7 +178,7 @@ export function SidebarNavigationProviderMount({
           description:
             fallback === null
               ? `${slot.title} (${pluginId}) stopped working.`
-              : `${slot.title} (${pluginId}) stopped working, so bb drew ${fallback.title} instead.`,
+              : `${slot.title} (${pluginId}) stopped working, so sandy drew ${fallback.title} instead.`,
         });
       }}
     />

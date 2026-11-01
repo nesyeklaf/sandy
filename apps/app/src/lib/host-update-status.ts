@@ -1,5 +1,5 @@
-import type { Host } from "@bb/domain";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract/protocol";
+import type { Host } from "@sandy/domain";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract/protocol";
 
 const HOST_UPDATE_STALL_THRESHOLD_MS = 2 * 60 * 1000;
 

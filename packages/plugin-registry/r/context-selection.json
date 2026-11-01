@@ -3,7 +3,7 @@
   "name": "context-selection",
   "type": "registry:ui",
   "title": "context-selection",
-  "description": "BB ui \"context-selection\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"context-selection\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "files": [
     {
       "path": "registry/components/ui/context-selection.ts",

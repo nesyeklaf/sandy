@@ -14,7 +14,7 @@ import {
 import {
   selectWorkspaceChangedFilesSection,
   type WorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
+} from "@sandy/shared-ui/workspace-change-summary";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
 import {
   GitSegmentFixtureProvider,
@@ -23,7 +23,7 @@ import {
 import type {
   WorkspaceFileStatus,
   WorkspaceStatus,
-} from "bb-plugin-bb--git/contract";
+} from "sandy-plugin-sandy--git/contract";
 
 export default {
   title: "promptbox/banner/Context Banner",
@@ -94,12 +94,12 @@ const dirtyUncommittedStatus: WorkspaceStatus = {
     fileCount: promptboxBannerFiles.length,
   },
   branch: {
-    currentBranch: "bb/promptbox-stories",
+    currentBranch: "sandy/promptbox-stories",
     defaultBranch: "main",
   },
   checkout: {
     kind: "branch",
-    branchName: "bb/promptbox-stories",
+    branchName: "sandy/promptbox-stories",
     headSha: null,
   },
   mergeBase: null,
@@ -233,12 +233,12 @@ const dirtyUncommittedManyStatus: WorkspaceStatus = {
     fileCount: dirtyUncommittedManyFiles.length,
   },
   branch: {
-    currentBranch: "bb/promptbox-stories",
+    currentBranch: "sandy/promptbox-stories",
     defaultBranch: "main",
   },
   checkout: {
     kind: "branch",
-    branchName: "bb/promptbox-stories",
+    branchName: "sandy/promptbox-stories",
     headSha: null,
   },
   mergeBase: null,
@@ -256,7 +256,7 @@ const untrackedOnlyStatus: WorkspaceStatus = {
         deletions: null,
       },
       {
-        path: "apps/app/scripts/dev-bb-worktree.sh",
+        path: "apps/app/scripts/dev-sandy-worktree.sh",
         status: "??",
         insertions: null,
         deletions: null,
@@ -268,12 +268,12 @@ const untrackedOnlyStatus: WorkspaceStatus = {
     fileCount: 2,
   },
   branch: {
-    currentBranch: "bb/promptbox-stories",
+    currentBranch: "sandy/promptbox-stories",
     defaultBranch: "main",
   },
   checkout: {
     kind: "branch",
-    branchName: "bb/promptbox-stories",
+    branchName: "sandy/promptbox-stories",
     headSha: null,
   },
   mergeBase: null,
@@ -290,12 +290,12 @@ const committedUnmergedStatus: WorkspaceStatus = {
     fileCount: 0,
   },
   branch: {
-    currentBranch: "bb/promptbox-stories",
+    currentBranch: "sandy/promptbox-stories",
     defaultBranch: "main",
   },
   checkout: {
     kind: "branch",
-    branchName: "bb/promptbox-stories",
+    branchName: "sandy/promptbox-stories",
     headSha: null,
   },
   mergeBase: {
@@ -734,7 +734,7 @@ export function Overview() {
       >
         <Row
           section={uncommittedManySection}
-          initiallyExpandedSection="bb--git/changed-files"
+          initiallyExpandedSection="sandy--git/changed-files"
         />
       </StoryRow>
       <StoryRow
@@ -743,7 +743,7 @@ export function Overview() {
       >
         <Row
           section={untrackedSection}
-          initiallyExpandedSection="bb--git/changed-files"
+          initiallyExpandedSection="sandy--git/changed-files"
         />
       </StoryRow>
       <StoryRow

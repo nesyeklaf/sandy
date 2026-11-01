@@ -16,8 +16,8 @@ import {
   gitBranchOptionsSchema,
   type GitBranchOptions,
   GIT_PLUGIN_ID,
-} from "@bb/domain";
-import { listPreferredTestModels } from "@bb/test-helpers";
+} from "@sandy/domain";
+import { listPreferredTestModels } from "@sandy/test-helpers";
 import {
   type CreateProjectRequest,
   type CreateThreadRequest,
@@ -40,7 +40,7 @@ import {
   threadResponseSchema,
   threadTimelineResponseSchema,
   THREAD_EVENT_LIST_PAGE_SIZE,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   type ThreadGitDiffResponse,
   gitDiffResultSchema,
@@ -51,9 +51,9 @@ import {
   type GitFilesResult,
   type GitPatchResult,
   type GitStatusResult,
-} from "bb-plugin-bb--git/contract";
+} from "sandy-plugin-sandy--git/contract";
 import { z } from "zod";
-import { createNodeBbSdk } from "@bb/sdk/node";
+import { createNodeSandySdk } from "@sandy/sdk/node";
 
 export interface CreateHostThreadOptions {
   execution?: ThreadExecutionRequestOptions;
@@ -263,7 +263,7 @@ function callGitPlugin(
   method: string,
   input: JsonValue,
 ): Promise<unknown> {
-  return createNodeBbSdk({ baseUrl }).plugins.callRpc({
+  return createNodeSandySdk({ baseUrl }).plugins.callRpc({
     pluginId: GIT_PLUGIN_ID,
     method,
     input,

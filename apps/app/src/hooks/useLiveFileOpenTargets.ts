@@ -1,4 +1,4 @@
-import type { ExperimentalLiveFileTarget } from "@get-bb/plugin-sdk";
+import type { ExperimentalLiveFileTarget } from "@sandy-sdk/plugin-sdk";
 import { useLocalOpenTargets } from "@/hooks/useLocalOpenTargets";
 import { useResolvedLiveFileTarget } from "@/hooks/useResolvedLiveFileTarget";
 

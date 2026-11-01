@@ -1,4 +1,4 @@
-import { hostToolchain } from "@bb/process-utils";
+import { hostToolchain } from "@sandy/process-utils";
 import { openApplicationUrl } from "./application-url.js";
 import { createDesktopLogger } from "./desktop-logger.js";
 import { registerServerChoiceIpc } from "./server-choice-ipc.js";
@@ -26,23 +26,23 @@ import {
 import {
   APP_SURFACE_DESKTOP,
   APP_SURFACE_ENV_NAME,
-} from "@bb/config/app-surface";
-import { findMachineServiceFile } from "@bb/config/machine-service";
+} from "@sandy/config/app-surface";
+import { findMachineServiceFile } from "@sandy/config/machine-service";
 import {
   appCommandIdSchema,
   type AppCommandId,
   type AppKeybindings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
-  bbDesktopBrowserImportCookiesRequestSchema,
-  bbDesktopThemeSchema,
-  type BbDesktopInfo,
-  type BbDesktopWindowState,
-} from "@bb/desktop-contract";
+  sandyDesktopBrowserImportCookiesRequestSchema,
+  sandyDesktopThemeSchema,
+  type SandyDesktopInfo,
+  type SandyDesktopWindowState,
+} from "@sandy/desktop-contract";
 import {
   serverMessageLenientSchema,
   type ClientMessage,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { z } from "zod";
 import { registerDesktopClipboardIpc } from "./desktop-clipboard.js";
 import { registerDesktopAttentionIpc } from "./desktop-attention.js";
@@ -61,11 +61,11 @@ import {
   runMachineInstaller,
 } from "./moved-machine-service.js";
 import {
-  resolveBbAppProcessRuntime,
-  type BbAppProcess,
-  type BbAppProcessExit,
-  startBbAppProcess,
-} from "./bb-process.js";
+  resolveSandyAppProcessRuntime,
+  type SandyAppProcess,
+  type SandyAppProcessExit,
+  startSandyAppProcess,
+} from "./sandy-process.js";
 import { openExistingServerDialog } from "./existing-server-dialog.js";
 import {
   readForeignRuntimeDetails,
@@ -93,7 +93,7 @@ import {
   writeOwnedRuntimePidFile,
 } from "./owned-runtime-supervisor.js";
 import {
-  probeBbServer,
+  probeSandyServer,
   waitForCompatibleServer,
   type CompatibleServerProbeResult,
   type ServerProbeResult,
@@ -104,7 +104,7 @@ import {
   createServerMovedWatcher,
   createServerMoveNoticeStore,
   ensureServerMovedRuntime,
-  hasLiveBbAppLauncher,
+  hasLiveSandyAppLauncher,
   openServerMoveTarget,
   probeLocalServerMove,
   readServerMovedLock,
@@ -150,33 +150,33 @@ import {
 import { registerDesktopContextMenu } from "./desktop-context-menu.js";
 import {
   getDesktopVersion,
-  resolveBbDesktopPlatform,
+  resolveSandyDesktopPlatform,
 } from "./desktop-platform.js";
 import {
   DESKTOP_RELEASE_CHANNEL,
   DESKTOP_RELEASE_INFO,
 } from "./desktop-release.js";
 import {
-  BB_DESKTOP_GET_INFO_CHANNEL,
-  BB_DESKTOP_INFO_CHANGED_CHANNEL,
-  BB_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
-  BB_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
-  BB_DESKTOP_SET_THEME_CHANNEL,
-  BB_DESKTOP_ZOOM_COMMAND_CHANNEL,
+  SANDY_DESKTOP_GET_INFO_CHANNEL,
+  SANDY_DESKTOP_INFO_CHANGED_CHANNEL,
+  SANDY_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
+  SANDY_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
+  SANDY_DESKTOP_SET_THEME_CHANNEL,
+  SANDY_DESKTOP_ZOOM_COMMAND_CHANNEL,
 } from "./desktop-ipc-channels.js";
 import {
-  BB_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
-  BB_DESKTOP_APP_COMMAND_CHANNEL,
-  BB_DESKTOP_OPEN_WINDOW_FIND_CHANNEL,
-  BB_DESKTOP_RELOAD_WINDOW_CHANNEL,
-  BB_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
-  BB_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
-  BB_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL,
-  BB_DESKTOP_GET_WINDOW_STATE_CHANNEL,
-  BB_DESKTOP_OPEN_NEW_TAB_CHANNEL,
-  BB_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL,
-  BB_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL,
-  BB_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
+  SANDY_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
+  SANDY_DESKTOP_APP_COMMAND_CHANNEL,
+  SANDY_DESKTOP_OPEN_WINDOW_FIND_CHANNEL,
+  SANDY_DESKTOP_RELOAD_WINDOW_CHANNEL,
+  SANDY_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
+  SANDY_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
+  SANDY_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL,
+  SANDY_DESKTOP_GET_WINDOW_STATE_CHANNEL,
+  SANDY_DESKTOP_OPEN_NEW_TAB_CHANNEL,
+  SANDY_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL,
+  SANDY_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL,
+  SANDY_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
   CLOSE_WINDOW_REQUEST_TIMEOUT_MS,
 } from "./desktop-window-command-ipc.js";
 import {
@@ -199,19 +199,19 @@ import {
 } from "./desktop-browser-broker.js";
 import { createDesktopBrowserBrokerClient } from "./desktop-browser-broker-client.js";
 import {
-  bbDesktopBrowserTabRefSchema,
-  bbDesktopZoomCommandSchema,
-  bbDesktopWindowFindRequestSchema,
-  type BbDesktopZoomCommand,
-} from "@bb/desktop-contract";
+  sandyDesktopBrowserTabRefSchema,
+  sandyDesktopZoomCommandSchema,
+  sandyDesktopWindowFindRequestSchema,
+  type SandyDesktopZoomCommand,
+} from "@sandy/desktop-contract";
 import { nextZoomFactor } from "./desktop-zoom.js";
 import {
-  BB_DESKTOP_BROWSER_TARGET_CHANNEL,
-  BB_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
-  BB_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
-  BB_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
-  BB_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
+  SANDY_DESKTOP_BROWSER_TARGET_CHANNEL,
+  SANDY_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
+  SANDY_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
+  SANDY_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
+  SANDY_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
 } from "./desktop-browser-ipc.js";
 import { parseDesktopSystemConfig } from "./desktop-system-config.js";
 import { resolveDesktopReloadShortcut } from "./desktop-reload-shortcut.js";
@@ -236,7 +236,7 @@ import {
 } from "./log-viewer-contract.js";
 import {
   ATTACH_PROBE_TIMEOUT_MS,
-  DEFAULT_BB_SERVER_URL,
+  DEFAULT_SANDY_SERVER_URL,
   PROCESS_LOG_LINE_LIMIT,
   STARTUP_POLL_INTERVAL_MS,
   STARTUP_TIMEOUT_MS,
@@ -251,7 +251,7 @@ const FOREIGN_RUNTIME_KILL_TIMEOUT_MS = 3_000;
 const REMOTE_SYSTEM_CONFIG_POLL_INTERVAL_MS = 5 * 60 * 1000;
 
 interface DesktopRuntime {
-  bbProcess: BbAppProcess | null;
+  sandyProcess: SandyAppProcess | null;
   ownership: RuntimeOwnership;
   serverUrl: string;
   userDataPath: string | null;
@@ -285,7 +285,7 @@ interface StartOwnedRuntimeArgs {
 }
 
 interface OwnedRuntime {
-  bbProcess: BbAppProcess;
+  sandyProcess: SandyAppProcess;
   runtime: DesktopRuntime;
 }
 
@@ -305,7 +305,7 @@ type StartupRaceResult =
   | ServerProbeStartupRaceResult;
 
 interface ProcessExitedStartupRaceResult {
-  exit: BbAppProcessExit;
+  exit: SandyAppProcessExit;
   kind: "process-exited";
 }
 
@@ -367,14 +367,14 @@ const splitNavigationCommandsByWebContentsId = new Map<
   number,
   readonly AppCommandId[]
 >();
-let bbAppLoaded = false;
+let sandyAppLoaded = false;
 let startupErrorPage: StartupErrorPage | null = null;
 let startupActionPending = false;
 let stoppingForQuit = false;
 let quitting = false;
 let serverTargetStore: ServerTargetStore | null = null;
 let serverTargetGeneration = 0;
-let builtinServerUrl: string = DEFAULT_BB_SERVER_URL;
+let builtinServerUrl: string = DEFAULT_SANDY_SERVER_URL;
 let desktopBridgePath: string | null = null;
 let desktopUserDataPath: string | null = null;
 let builtinDataDir: string | null = null;
@@ -387,9 +387,9 @@ let serverUrlDialogPreloadPath: string | null = null;
 let existingServerDialogPreloadPath: string | null = null;
 
 function resolveDesktopServerUrl(args: ResolveDesktopServerUrlArgs): string {
-  const rawPort = args.env.BB_SERVER_PORT?.trim();
+  const rawPort = args.env.SANDY_SERVER_PORT?.trim();
   if (rawPort === undefined || rawPort.length === 0) {
-    return DEFAULT_BB_SERVER_URL;
+    return DEFAULT_SANDY_SERVER_URL;
   }
 
   const port = Number(rawPort);
@@ -397,11 +397,11 @@ function resolveDesktopServerUrl(args: ResolveDesktopServerUrlArgs): string {
     return `http://127.0.0.1:${port}`;
   }
 
-  throw new Error("BB_SERVER_PORT must be a valid TCP port");
+  throw new Error("SANDY_SERVER_PORT must be a valid TCP port");
 }
 
 function resolveDesktopWindowUrl(args: ResolveDesktopWindowUrlArgs): string {
-  const rawAppUrl = args.env.BB_DESKTOP_APP_URL?.trim();
+  const rawAppUrl = args.env.SANDY_DESKTOP_APP_URL?.trim();
   if (rawAppUrl === undefined || rawAppUrl.length === 0) {
     return args.serverUrl;
   }
@@ -409,10 +409,10 @@ function resolveDesktopWindowUrl(args: ResolveDesktopWindowUrlArgs): string {
   try {
     parsedAppUrl = new URL(rawAppUrl);
   } catch {
-    throw new Error("BB_DESKTOP_APP_URL must be a valid URL");
+    throw new Error("SANDY_DESKTOP_APP_URL must be a valid URL");
   }
   if (parsedAppUrl.protocol !== "http:" && parsedAppUrl.protocol !== "https:") {
-    throw new Error("BB_DESKTOP_APP_URL must be an http(s) URL");
+    throw new Error("SANDY_DESKTOP_APP_URL must be an http(s) URL");
   }
   return rawAppUrl;
 }
@@ -420,16 +420,16 @@ function resolveDesktopWindowUrl(args: ResolveDesktopWindowUrlArgs): string {
 function readDesktopAboutFacts(applicationName: string): DesktopAboutFacts {
   return {
     applicationName,
-    buildDate: process.env.BB_DESKTOP_BUILD_DATE ?? "",
+    buildDate: process.env.SANDY_DESKTOP_BUILD_DATE ?? "",
     channel: DESKTOP_RELEASE_CHANNEL,
-    commit: process.env.BB_DESKTOP_COMMIT ?? "",
+    commit: process.env.SANDY_DESKTOP_COMMIT ?? "",
     electronVersion: process.versions.electron,
     osArch: arch(),
     osRelease: release(),
     osType: osType(),
     platform: process.platform,
-    pluginSdkVersion: process.env.BB_DESKTOP_PLUGIN_SDK_VERSION ?? "",
-    version: getDesktopVersion(process.env.BB_DESKTOP_VERSION),
+    pluginSdkVersion: process.env.SANDY_DESKTOP_PLUGIN_SDK_VERSION ?? "",
+    version: getDesktopVersion(process.env.SANDY_DESKTOP_VERSION),
   };
 }
 
@@ -455,11 +455,11 @@ async function showAboutDialog(): Promise<void> {
   }
 }
 
-function getCurrentDesktopInfo(): BbDesktopInfo | null {
+function getCurrentDesktopInfo(): SandyDesktopInfo | null {
   return {
-    platform: resolveBbDesktopPlatform(process.platform),
+    platform: resolveSandyDesktopPlatform(process.platform),
     serverDaemonLogsAvailable: true,
-    version: getDesktopVersion(process.env.BB_DESKTOP_VERSION),
+    version: getDesktopVersion(process.env.SANDY_DESKTOP_VERSION),
   };
 }
 
@@ -471,7 +471,7 @@ function resolveApplicationWindow(
 
 function zoomWebContents(
   target: WebContents | null | undefined,
-  command: BbDesktopZoomCommand,
+  command: SandyDesktopZoomCommand,
 ): void {
   if (!target) {
     return;
@@ -527,18 +527,18 @@ function sendDesktopInfoChanged(): void {
     if (applicationWindowWebContentsIds.has(browserWindow.webContents.id)) {
       sendToApplicationRenderer(
         browserWindow,
-        BB_DESKTOP_INFO_CHANGED_CHANNEL,
+        SANDY_DESKTOP_INFO_CHANGED_CHANNEL,
         info,
       );
     } else {
-      browserWindow.webContents.send(BB_DESKTOP_INFO_CHANGED_CHANNEL, info);
+      browserWindow.webContents.send(SANDY_DESKTOP_INFO_CHANGED_CHANNEL, info);
     }
   }
 }
 
 function getDesktopWindowState(
   browserWindow: Pick<DesktopBrowserWindow, "isFullScreen"> | null,
-): BbDesktopWindowState {
+): SandyDesktopWindowState {
   return {
     isFullScreen: browserWindow?.isFullScreen() ?? false,
   };
@@ -546,7 +546,7 @@ function getDesktopWindowState(
 
 function getSenderDesktopWindowState(
   event: IpcMainInvokeEvent,
-): BbDesktopWindowState {
+): SandyDesktopWindowState {
   return getDesktopWindowState(resolveApplicationWindow(event.sender));
 }
 
@@ -555,7 +555,7 @@ function sendDesktopWindowStateChanged(
 ): void {
   sendToApplicationRenderer(
     browserWindow as BrowserWindow,
-    BB_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
+    SANDY_DESKTOP_WINDOW_STATE_CHANGED_CHANNEL,
     getDesktopWindowState(browserWindow),
   );
 }
@@ -563,9 +563,9 @@ function sendDesktopWindowStateChanged(
 const desktopLogger = createDesktopLogger({ logDir: formatLogDirectory() });
 
 function resolveDataDirFromEnv(args: ResolveDataDirFromEnvArgs): string {
-  const rawDataDir = args.env.BB_DATA_DIR?.trim();
+  const rawDataDir = args.env.SANDY_DATA_DIR?.trim();
   if (rawDataDir === undefined || rawDataDir.length === 0) {
-    return join(args.homeDir, ".bb");
+    return join(args.homeDir, ".sandy");
   }
   if (rawDataDir === "~") {
     return args.homeDir;
@@ -586,7 +586,7 @@ function formatLogDirectory(): string {
   );
 }
 
-function formatExitResult(result: BbAppProcessExit): string {
+function formatExitResult(result: SandyAppProcessExit): string {
   if (result.code !== null) {
     return `exit code ${result.code}`;
   }
@@ -622,7 +622,7 @@ function requestRendererWindowClose(browserWindow: BrowserWindow): void {
   );
   sendToApplicationRenderer(
     browserWindow,
-    BB_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
+    SANDY_DESKTOP_CLOSE_WINDOW_REQUEST_CHANNEL,
     null,
   );
 }
@@ -709,7 +709,7 @@ function refreshApplicationMenu(): void {
     if (applicationWindowWebContentsIds.has(browserWindow.webContents.id)) {
       sendToApplicationRenderer(
         browserWindow,
-        BB_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
+        SANDY_DESKTOP_SERVER_CHOICES_CHANGED_CHANNEL,
         choices,
       );
     }
@@ -732,12 +732,12 @@ function refreshApplicationMenu(): void {
       if (browserWindow !== null) {
         sendToApplicationRenderer(
           browserWindow,
-          BB_DESKTOP_OPEN_NEW_TAB_CHANNEL,
+          SANDY_DESKTOP_OPEN_NEW_TAB_CHANNEL,
           null,
         );
         sendToApplicationRenderer(
           browserWindow,
-          BB_DESKTOP_APP_COMMAND_CHANNEL,
+          SANDY_DESKTOP_APP_COMMAND_CHANNEL,
           "panel.newTab",
         );
       }
@@ -747,7 +747,7 @@ function refreshApplicationMenu(): void {
       if (browserWindow !== null) {
         sendToApplicationRenderer(
           browserWindow,
-          BB_DESKTOP_APP_COMMAND_CHANNEL,
+          SANDY_DESKTOP_APP_COMMAND_CHANNEL,
           "thread.new",
         );
       }
@@ -757,7 +757,7 @@ function refreshApplicationMenu(): void {
       if (browserWindow !== null) {
         sendToApplicationRenderer(
           browserWindow,
-          BB_DESKTOP_APP_COMMAND_CHANNEL,
+          SANDY_DESKTOP_APP_COMMAND_CHANNEL,
           "panel.reopenClosedTab",
         );
       }
@@ -767,7 +767,7 @@ function refreshApplicationMenu(): void {
       if (browserWindow !== null) {
         sendToApplicationRenderer(
           browserWindow,
-          BB_DESKTOP_APP_COMMAND_CHANNEL,
+          SANDY_DESKTOP_APP_COMMAND_CHANNEL,
           "settings.open",
         );
       }
@@ -1034,14 +1034,14 @@ async function ensureBuiltinRuntimeAttached(): Promise<boolean> {
     return false;
   }
 
-  const existingProbe = await probeBbServer({
+  const existingProbe = await probeSandyServer({
     serverUrl: builtinServerUrl,
     timeoutMs: ATTACH_PROBE_TIMEOUT_MS,
   });
 
   if (existingProbe.kind === "compatible") {
     setCurrentRuntime({
-      bbProcess: null,
+      sandyProcess: null,
       ownership: "attached",
       serverUrl: existingProbe.serverUrl,
       userDataPath: null,
@@ -1096,7 +1096,7 @@ async function activateLocalServerMove(move: DesktopServerMove): Promise<void> {
   localServerMove = move;
   stopServerMovedWatcher();
   desktopLogger.info(
-    `[desktop] this computer's bb server moved to ${move.toHostName}; the app now opens that server and runs this computer as a regular machine`,
+    `[desktop] this computer's sandy server moved to ${move.toHostName}; the app now opens that server and runs this computer as a regular machine`,
   );
   await applyServerMove({
     move,
@@ -1159,7 +1159,7 @@ function connectMovedMachine(args: {
     await ensureServerMovedRuntime({
       hasLocalRuntime: () => currentRuntime !== null,
       async isLocalAddressFree() {
-        const probe = await probeBbServer({
+        const probe = await probeSandyServer({
           serverUrl: builtinServerUrl,
           timeoutMs: ATTACH_PROBE_TIMEOUT_MS,
         });
@@ -1203,7 +1203,7 @@ async function confirmLocalServerMove(
     async hasLiveLocalLauncher() {
       return (
         currentRuntime?.ownership === "spawned" ||
-        (await hasLiveBbAppLauncher({ dataDir }))
+        (await hasLiveSandyAppLauncher({ dataDir }))
       );
     },
     intervalMs: SERVER_MOVE_COMMIT_INTERVAL_MS,
@@ -1297,7 +1297,7 @@ async function handleWatchedServerMove(move: DesktopServerMove): Promise<void> {
     await activateLocalServerMove(move);
   } catch (error) {
     desktopLogger.warn(
-      `[desktop] could not switch to the moved bb server: ${error instanceof Error ? error.message : String(error)}`,
+      `[desktop] could not switch to the moved sandy server: ${error instanceof Error ? error.message : String(error)}`,
     );
     return;
   }
@@ -1348,7 +1348,7 @@ async function runStartupAction(
       actions: [],
       details: error instanceof Error ? error.message : String(error),
       logs: "",
-      title: "Could not open bb",
+      title: "Could not open sandy",
     });
   } finally {
     startupActionPending = false;
@@ -1384,7 +1384,7 @@ async function loadServerMovedView(move: DesktopServerMove): Promise<void> {
       ? "The old copy on this computer is locked after the move."
       : "The old copy on this computer was deleted.",
     logs: "",
-    title: `bb moved to ${move.toHostName}`,
+    title: `sandy moved to ${move.toHostName}`,
   });
 }
 
@@ -1425,17 +1425,17 @@ async function applyServerTarget(): Promise<void> {
           { id: "choose-server", label: "Choose server…" },
         ],
         details:
-          `Could not connect to the local bb server on ${process.platform === "darwin" ? "this Mac" : "this computer"}. ` +
-          "Check that the port is free or that a compatible bb server is running.",
+          `Could not connect to the local sandy server on ${process.platform === "darwin" ? "this Mac" : "this computer"}. ` +
+          "Check that the port is free or that a compatible sandy server is running.",
         logs: "",
-        title: "Could not connect to bb server",
+        title: "Could not connect to sandy server",
       });
       refreshApplicationMenu();
       return;
     }
     const localServerUrl = currentRuntime?.serverUrl ?? builtinServerUrl;
     startSystemConfigSync(localServerUrl);
-    await loadBbApp(
+    await loadSandyApp(
       resolveDesktopWindowUrl({
         env: process.env,
         serverUrl: localServerUrl,
@@ -1467,7 +1467,7 @@ async function loadRemoteServerTarget(
   if (!loaded || !isCurrent()) {
     return loaded;
   }
-  bbAppLoaded = true;
+  sandyAppLoaded = true;
   startRemoteSystemConfigSync(serverUrl);
   return true;
 }
@@ -1581,7 +1581,7 @@ async function loadLogViewerWindow(
     minHeight: 520,
     minWidth: 840,
     show: false,
-    title: "bb - Local Logs",
+    title: "sandy - Local Logs",
     titleBarStyle: "default",
     webPreferences: {
       contextIsolation: true,
@@ -1681,13 +1681,13 @@ async function loadWindowUrl(args: LoadWindowUrlArgs): Promise<void> {
 }
 
 async function loadLoadingView(): Promise<void> {
-  bbAppLoaded = false;
+  sandyAppLoaded = false;
   await loadWindowUrl({
     url: createLocalViewUrl({
       viewModel: {
         kind: "loading",
-        message: "Starting local services and opening the bb workspace.",
-        title: "Opening bb",
+        message: "Starting local services and opening the sandy workspace.",
+        title: "Opening sandy",
       },
     }),
   });
@@ -1697,7 +1697,7 @@ async function loadStartupError(args: LoadStartupErrorArgs): Promise<void> {
   desktopLogger.error(
     args.logs.length === 0
       ? `[desktop] ${args.title}: ${args.details}`
-      : `[desktop] ${args.title}: ${args.details}\nbb-app output:\n${args.logs}`,
+      : `[desktop] ${args.title}: ${args.details}\nsandy-app output:\n${args.logs}`,
   );
   await loadActionView({
     ...args,
@@ -1709,7 +1709,7 @@ async function loadStartupError(args: LoadStartupErrorArgs): Promise<void> {
 }
 
 async function loadActionView(args: LoadStartupErrorArgs): Promise<void> {
-  bbAppLoaded = false;
+  sandyAppLoaded = false;
   const url = createLocalViewUrl({
     viewModel: {
       actions: args.actions,
@@ -1727,8 +1727,8 @@ async function loadActionView(args: LoadStartupErrorArgs): Promise<void> {
   await loading;
 }
 
-async function loadBbApp(serverUrl: string): Promise<void> {
-  bbAppLoaded = true;
+async function loadSandyApp(serverUrl: string): Promise<void> {
+  sandyAppLoaded = true;
   await loadWindowUrl({ url: serverUrl });
   if (shouldOpenDevTools()) {
     desktopWindowFactory?.openDevTools();
@@ -1736,7 +1736,7 @@ async function loadBbApp(serverUrl: string): Promise<void> {
 }
 
 function shouldOpenDevTools(): boolean {
-  return process.env.BB_DESKTOP_OPEN_DEVTOOLS === "1";
+  return process.env.SANDY_DESKTOP_OPEN_DEVTOOLS === "1";
 }
 
 async function createApplicationWindow(
@@ -1750,7 +1750,7 @@ async function createApplicationWindow(
     initialUrl: args.initialUrl,
     stateKey: args.stateKey,
   });
-  if (bbAppLoaded && shouldOpenDevTools()) {
+  if (sandyAppLoaded && shouldOpenDevTools()) {
     browserWindow.webContents.openDevTools({ mode: "detach" });
   }
   return browserWindow;
@@ -1765,7 +1765,7 @@ async function stopOwnedRuntime(): Promise<void> {
 
   setCurrentRuntime(null);
   try {
-    await runtime.bbProcess?.stop({
+    await runtime.sandyProcess?.stop({
       killSignal: "SIGKILL",
       killTimeoutMs: OWNED_RUNTIME_KILL_TIMEOUT_MS,
       signal: "SIGTERM",
@@ -1822,8 +1822,8 @@ function registerDesktopInfoIpc(): void {
   registerDesktopWindowFocusIpc(applicationWindowWebContentsIds);
   registerDesktopAttentionIpc(applicationWindowWebContentsIds);
   registerDesktopClipboardIpc(applicationWindowWebContentsIds);
-  ipcMain.on(BB_DESKTOP_ZOOM_COMMAND_CHANNEL, (event, payload: unknown) => {
-    const parsed = bbDesktopZoomCommandSchema.safeParse(payload);
+  ipcMain.on(SANDY_DESKTOP_ZOOM_COMMAND_CHANNEL, (event, payload: unknown) => {
+    const parsed = sandyDesktopZoomCommandSchema.safeParse(payload);
     if (parsed.success) {
       zoomWebContents(
         resolveApplicationWindow(event.sender)?.webContents,
@@ -1831,20 +1831,20 @@ function registerDesktopInfoIpc(): void {
       );
     }
   });
-  ipcMain.handle(BB_DESKTOP_GET_INFO_CHANNEL, () => {
+  ipcMain.handle(SANDY_DESKTOP_GET_INFO_CHANNEL, () => {
     return getCurrentDesktopInfo();
   });
-  ipcMain.handle(BB_DESKTOP_GET_WINDOW_STATE_CHANNEL, (event) => {
+  ipcMain.handle(SANDY_DESKTOP_GET_WINDOW_STATE_CHANNEL, (event) => {
     return getSenderDesktopWindowState(event);
   });
-  ipcMain.handle(BB_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL, async () => {
+  ipcMain.handle(SANDY_DESKTOP_OPEN_SERVER_DAEMON_LOGS_CHANNEL, async () => {
     await openLocalLogs();
   });
-  ipcMain.handle(BB_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL, async () => {
+  ipcMain.handle(SANDY_DESKTOP_OPEN_DATA_DIRECTORY_CHANNEL, async () => {
     await openDataDirectory();
   });
   ipcMain.on(
-    BB_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
+    SANDY_DESKTOP_SET_SPLIT_NAVIGATION_ENABLED_CHANNEL,
     (event, enabled: unknown, directionalCommands: unknown) => {
       if (
         !applicationWindowWebContentsIds.has(event.sender.id) ||
@@ -1871,8 +1871,8 @@ function registerDesktopInfoIpc(): void {
       }
     },
   );
-  ipcMain.on(BB_DESKTOP_SET_THEME_CHANNEL, (_event, payload: unknown) => {
-    const parsed = bbDesktopThemeSchema.safeParse(payload);
+  ipcMain.on(SANDY_DESKTOP_SET_THEME_CHANNEL, (_event, payload: unknown) => {
+    const parsed = sandyDesktopThemeSchema.safeParse(payload);
     if (!parsed.success) {
       return;
     }
@@ -1895,7 +1895,7 @@ function registerDesktopInfoIpc(): void {
     void runStartupAction(action.data, resolveApplicationWindow(event.sender));
   });
 
-  ipcMain.on(BB_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL, (event, payload) => {
+  ipcMain.on(SANDY_DESKTOP_CLOSE_WINDOW_RESPONSE_CHANNEL, (event, payload) => {
     const pending = pendingCloseWindowRequests.get(event.sender.id);
     if (pending !== undefined) {
       clearTimeout(pending);
@@ -1906,7 +1906,7 @@ function registerDesktopInfoIpc(): void {
     }
   });
   ipcMain.handle(
-    BB_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
+    SANDY_DESKTOP_OPEN_APPLICATION_URL_CHANNEL,
     async (event, value: unknown) => {
       const owner = resolveApplicationWindow(event.sender);
       if (
@@ -1920,7 +1920,7 @@ function registerDesktopInfoIpc(): void {
   );
 
   ipcMain.on(
-    BB_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
+    SANDY_DESKTOP_OPEN_EXTERNAL_URL_CHANNEL,
     (_event, payload: unknown) => {
       const url = resolveDesktopExternalUrl(payload);
       if (url !== null) {
@@ -1972,7 +1972,7 @@ function registerDesktopBrowserWindowLifecycle({
 async function spawnOwnedRuntime(
   args: StartOwnedRuntimeArgs,
 ): Promise<OwnedRuntime> {
-  const bbProcess = startBbAppProcess({
+  const sandyProcess = startSandyAppProcess({
     bridgePath: args.bridgePath,
     cwd: homedir(),
     env: {
@@ -1980,7 +1980,7 @@ async function spawnOwnedRuntime(
       [APP_SURFACE_ENV_NAME]: APP_SURFACE_DESKTOP,
     },
     logLineLimit: PROCESS_LOG_LINE_LIMIT,
-    runtime: resolveBbAppProcessRuntime({
+    runtime: resolveSandyAppProcessRuntime({
       env: process.env,
       isPackaged: app.isPackaged,
       platform: process.platform,
@@ -1988,20 +1988,20 @@ async function spawnOwnedRuntime(
     }),
   });
   const runtime: DesktopRuntime = {
-    bbProcess,
+    sandyProcess,
     ownership: "spawned",
     serverUrl: args.serverUrl,
     userDataPath: args.userDataPath,
   };
   await writeOwnedRuntimePidFile({
     bridgePath: args.bridgePath,
-    pid: bbProcess.pid,
+    pid: sandyProcess.pid,
     serverUrl: args.serverUrl,
     userDataPath: args.userDataPath,
   });
   setCurrentRuntime(runtime);
 
-  void bbProcess.exit.then((exit) => {
+  void sandyProcess.exit.then((exit) => {
     void clearOwnedRuntimePidFile({ userDataPath: args.userDataPath });
     if (quitting || currentRuntime !== runtime) {
       return;
@@ -2009,26 +2009,26 @@ async function spawnOwnedRuntime(
     setCurrentRuntime(null);
     if (localServerMove !== null) {
       desktopLogger.warn(
-        `[desktop] the Electron-owned bb-app process that runs this computer as a machine stopped with ${formatExitResult(exit)}`,
+        `[desktop] the Electron-owned sandy-app process that runs this computer as a machine stopped with ${formatExitResult(exit)}`,
       );
       return;
     }
     void loadStartupError({
-      details: `The Electron-owned bb-app process stopped with ${formatExitResult(
+      details: `The Electron-owned sandy-app process stopped with ${formatExitResult(
         exit,
       )}.`,
-      logs: bbProcess.logs.text(),
+      logs: sandyProcess.logs.text(),
       actions: [],
-      title: "bb stopped",
+      title: "sandy stopped",
     });
   });
-  return { bbProcess, runtime };
+  return { sandyProcess, runtime };
 }
 
 async function startOwnedRuntime(
   args: StartOwnedRuntimeArgs,
 ): Promise<DesktopRuntime | null> {
-  const { bbProcess, runtime } = await spawnOwnedRuntime(args);
+  const { sandyProcess, runtime } = await spawnOwnedRuntime(args);
 
   const raceResult = await Promise.race<StartupRaceResult>([
     waitForCompatibleServer({
@@ -2039,7 +2039,7 @@ async function startOwnedRuntime(
       kind: "server-probe",
       result,
     })),
-    bbProcess.exit.then((exit) => ({
+    sandyProcess.exit.then((exit) => ({
       exit,
       kind: "process-exited",
     })),
@@ -2047,12 +2047,12 @@ async function startOwnedRuntime(
 
   if (raceResult.kind === "process-exited") {
     await loadStartupError({
-      details: `bb-app exited before the server was ready with ${formatExitResult(
+      details: `sandy-app exited before the server was ready with ${formatExitResult(
         raceResult.exit,
       )}.`,
-      logs: bbProcess.logs.text(),
+      logs: sandyProcess.logs.text(),
       actions: [],
-      title: "Could not start bb",
+      title: "Could not start sandy",
     });
     setCurrentRuntime(null);
     return null;
@@ -2065,11 +2065,11 @@ async function startOwnedRuntime(
   await loadStartupError({
     details:
       raceResult.result.kind === "incompatible"
-        ? `Port ${args.serverUrl} is responding, but it does not look like bb: ${raceResult.result.reason}.`
-        : `Timed out waiting for bb at ${args.serverUrl}: ${raceResult.result.reason}.`,
-    logs: bbProcess.logs.text(),
+        ? `Port ${args.serverUrl} is responding, but it does not look like sandy: ${raceResult.result.reason}.`
+        : `Timed out waiting for sandy at ${args.serverUrl}: ${raceResult.result.reason}.`,
+    logs: sandyProcess.logs.text(),
     actions: [],
-    title: "Could not start bb",
+    title: "Could not start sandy",
   });
   await stopOwnedRuntime();
   return null;
@@ -2085,16 +2085,16 @@ function shouldAskBeforeAttaching(): boolean {
   if (!app.isPackaged || existingServerDialogPreloadPath === null) {
     return false;
   }
-  if (process.env.BB_DESKTOP_ATTACH_WITHOUT_PROMPT === "1") {
+  if (process.env.SANDY_DESKTOP_ATTACH_WITHOUT_PROMPT === "1") {
     return false;
   }
-  return (process.env.BB_DESKTOP_APP_URL ?? "").trim().length === 0;
+  return (process.env.SANDY_DESKTOP_APP_URL ?? "").trim().length === 0;
 }
 
 async function waitForServerToStop(serverUrl: string): Promise<boolean> {
   const deadline = Date.now() + FOREIGN_RUNTIME_STOP_TIMEOUT_MS;
   while (Date.now() <= deadline) {
-    const probe = await probeBbServer({
+    const probe = await probeSandyServer({
       serverUrl,
       timeoutMs: ATTACH_PROBE_TIMEOUT_MS,
     });
@@ -2148,40 +2148,40 @@ async function decideOnExistingServer(
   if (stopResult.kind === "unverified") {
     await loadStartupError({
       details:
-        `The bb at ${probe.serverUrl} records process ${String(stopResult.pid)}, but that ` +
-        "process no longer matches the record. bb did not stop it. Stop it yourself, then open bb again.",
+        `The sandy at ${probe.serverUrl} records process ${String(stopResult.pid)}, but that ` +
+        "process no longer matches the record. sandy did not stop it. Stop it yourself, then open sandy again.",
       logs: "",
       actions: [],
-      title: "Could not stop the running bb",
+      title: "Could not stop the running sandy",
     });
     return "quit";
   }
   if (stopResult.kind === "still-running") {
     await loadStartupError({
-      details: `bb could not stop process ${String(stopResult.pid)}, even after SIGKILL.`,
+      details: `sandy could not stop process ${String(stopResult.pid)}, even after SIGKILL.`,
       logs: "",
       actions: [],
-      title: "Could not stop the running bb",
+      title: "Could not stop the running sandy",
     });
     return "quit";
   }
   if (stopResult.kind === "replaced") {
     await loadStartupError({
       details:
-        `Another bb started at ${probe.serverUrl} while the question was open, so bb stopped nothing. ` +
-        "Open bb again to see the copy that runs now.",
+        `Another sandy started at ${probe.serverUrl} while the question was open, so sandy stopped nothing. ` +
+        "Open sandy again to see the copy that runs now.",
       logs: "",
       actions: [],
-      title: "Could not stop the running bb",
+      title: "Could not stop the running sandy",
     });
     return "quit";
   }
   if (!(await waitForServerToStop(probe.serverUrl))) {
     await loadStartupError({
-      details: `The bb at ${probe.serverUrl} stopped, but the address is still in use.`,
+      details: `The sandy at ${probe.serverUrl} stopped, but the address is still in use.`,
       logs: "",
       actions: [],
-      title: "Could not stop the running bb",
+      title: "Could not stop the running sandy",
     });
     return "quit";
   }
@@ -2189,7 +2189,7 @@ async function decideOnExistingServer(
 }
 
 async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
-  const existingProbe = await probeBbServer({
+  const existingProbe = await probeSandyServer({
     serverUrl: args.serverUrl,
     timeoutMs: ATTACH_PROBE_TIMEOUT_MS,
   });
@@ -2208,7 +2208,7 @@ async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
         userDataPath: args.userDataPath,
       });
       if (freshRuntime !== null) {
-        await loadBbApp(freshRuntime.serverUrl);
+        await loadSandyApp(freshRuntime.serverUrl);
         startSystemConfigSync(freshRuntime.serverUrl);
         refreshApplicationMenu();
       }
@@ -2216,12 +2216,12 @@ async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
     }
 
     setCurrentRuntime({
-      bbProcess: null,
+      sandyProcess: null,
       ownership: "attached",
       serverUrl: existingProbe.serverUrl,
       userDataPath: null,
     });
-    await loadBbApp(
+    await loadSandyApp(
       resolveDesktopWindowUrl({
         env: process.env,
         serverUrl: existingProbe.serverUrl,
@@ -2234,7 +2234,7 @@ async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
 
   if (existingProbe.kind === "incompatible") {
     await loadStartupError({
-      details: `Port ${args.serverUrl} is already in use, but it is not a compatible bb server: ${existingProbe.reason}.`,
+      details: `Port ${args.serverUrl} is already in use, but it is not a compatible sandy server: ${existingProbe.reason}.`,
       logs: "",
       actions: [],
       title: "Port conflict",
@@ -2248,7 +2248,7 @@ async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
     userDataPath: args.userDataPath,
   });
   if (runtime !== null) {
-    await loadBbApp(runtime.serverUrl);
+    await loadSandyApp(runtime.serverUrl);
     startSystemConfigSync(runtime.serverUrl);
     refreshApplicationMenu();
   }
@@ -2257,7 +2257,7 @@ async function initializeRuntime(args: InitializeRuntimeArgs): Promise<void> {
 async function runDesktopApp(): Promise<void> {
   const applicationName = app.isPackaged
     ? DESKTOP_RELEASE_INFO.applicationName
-    : "bb-dev";
+    : "sandy-dev";
   app.setName(applicationName);
   installAboutPanel(applicationName);
 
@@ -2317,8 +2317,8 @@ async function runDesktopApp(): Promise<void> {
 
   app.setAppUserModelId(
     DESKTOP_RELEASE_CHANNEL === "nightly"
-      ? "dev.bb.desktop.nightly"
-      : "dev.bb.desktop",
+      ? "dev.sandy.desktop.nightly"
+      : "dev.sandy.desktop",
   );
   if (app.isPackaged) {
     await hostToolchain.refresh();
@@ -2330,7 +2330,7 @@ async function runDesktopApp(): Promise<void> {
   }
 
   const paths = createDesktopPathContext();
-  const devIcon = !paths.isPackaged || process.env.BB_DESKTOP_DEV_ICON === "1";
+  const devIcon = !paths.isPackaged || process.env.SANDY_DESKTOP_DEV_ICON === "1";
   const iconPath = resolveDesktopIconPath({
     devIcon,
     packagedIconFileName: DESKTOP_RELEASE_INFO.iconFileName,
@@ -2369,7 +2369,7 @@ async function runDesktopApp(): Promise<void> {
   const userDataPath = app.getPath("userData");
   desktopUserDataPath = userDataPath;
 
-  assertPathExists({ label: "bb-app bridge", path: bridgePath });
+  assertPathExists({ label: "sandy-app bridge", path: bridgePath });
   assertPathExists({
     label: "existing server dialog preload script",
     path: resolvedExistingServerDialogPreloadPath,
@@ -2421,21 +2421,21 @@ async function runDesktopApp(): Promise<void> {
   desktopFindViewManager = createDesktopFindViewManager({
     preloadPath: findBarPreloadPath,
   });
-  ipcMain.on(BB_DESKTOP_OPEN_WINDOW_FIND_CHANNEL, (event, payload: unknown) => {
+  ipcMain.on(SANDY_DESKTOP_OPEN_WINDOW_FIND_CHANNEL, (event, payload: unknown) => {
     if (
       !applicationWindowWebContentsIds.has(event.sender.id) ||
       event.senderFrame !== event.sender.mainFrame
     ) {
       return;
     }
-    const parsed = bbDesktopWindowFindRequestSchema.safeParse(payload);
+    const parsed = sandyDesktopWindowFindRequestSchema.safeParse(payload);
     const browserWindow = resolveApplicationWindow(event.sender);
     if (!parsed.success || browserWindow === null) {
       return;
     }
     desktopFindViewManager?.open(browserWindow, parsed.data);
   });
-  ipcMain.on(BB_DESKTOP_RELOAD_WINDOW_CHANNEL, (event) => {
+  ipcMain.on(SANDY_DESKTOP_RELOAD_WINDOW_CHANNEL, (event) => {
     if (
       !applicationWindowWebContentsIds.has(event.sender.id) ||
       event.senderFrame !== event.sender.mainFrame
@@ -2459,7 +2459,7 @@ async function runDesktopApp(): Promise<void> {
       }
       sendToApplicationRenderer(
         browserWindow,
-        BB_DESKTOP_APP_COMMAND_CHANNEL,
+        SANDY_DESKTOP_APP_COMMAND_CHANNEL,
         command,
       );
     },
@@ -2504,17 +2504,17 @@ async function runDesktopApp(): Promise<void> {
     browserImport: browserImportService,
   });
   ipcMain.handle(
-    BB_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
+    SANDY_DESKTOP_BROWSER_LIST_IMPORT_SOURCES_CHANNEL,
     async (event) => {
       if (!applicationWindowWebContentsIds.has(event.sender.id)) return null;
       return { sources: await browserImportService.listSources() };
     },
   );
   ipcMain.handle(
-    BB_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
+    SANDY_DESKTOP_BROWSER_IMPORT_COOKIES_CHANNEL,
     async (event, payload: unknown) => {
       const parsed =
-        bbDesktopBrowserImportCookiesRequestSchema.safeParse(payload);
+        sandyDesktopBrowserImportCookiesRequestSchema.safeParse(payload);
       if (
         !parsed.success ||
         !applicationWindowWebContentsIds.has(event.sender.id)
@@ -2532,7 +2532,7 @@ async function runDesktopApp(): Promise<void> {
     },
   );
   ipcMain.on(
-    BB_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
+    SANDY_DESKTOP_BROWSER_OPEN_FULL_DISK_ACCESS_SETTINGS_CHANNEL,
     (event) => {
       if (
         !applicationWindowWebContentsIds.has(event.sender.id) ||
@@ -2544,15 +2544,15 @@ async function runDesktopApp(): Promise<void> {
       );
     },
   );
-  ipcMain.handle(BB_DESKTOP_BROWSER_TARGET_CHANNEL, (event) => {
+  ipcMain.handle(SANDY_DESKTOP_BROWSER_TARGET_CHANNEL, (event) => {
     return applicationWindowWebContentsIds.has(event.sender.id)
       ? (desktopBrowserBroker?.getTarget(event.sender.id) ?? null)
       : null;
   });
   ipcMain.handle(
-    BB_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
+    SANDY_DESKTOP_BROWSER_GET_CONTROL_CHANNEL,
     (event, payload: unknown) => {
-      const parsed = bbDesktopBrowserTabRefSchema.safeParse(payload);
+      const parsed = sandyDesktopBrowserTabRefSchema.safeParse(payload);
       return parsed.success &&
         applicationWindowWebContentsIds.has(event.sender.id)
         ? (desktopBrowserBroker?.getControl(
@@ -2563,9 +2563,9 @@ async function runDesktopApp(): Promise<void> {
     },
   );
   ipcMain.on(
-    BB_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
+    SANDY_DESKTOP_BROWSER_RELEASE_CONTROL_CHANNEL,
     (event, payload: unknown) => {
-      const parsed = bbDesktopBrowserTabRefSchema.safeParse(payload);
+      const parsed = sandyDesktopBrowserTabRefSchema.safeParse(payload);
       if (
         parsed.success &&
         applicationWindowWebContentsIds.has(event.sender.id)
@@ -2651,6 +2651,6 @@ void runDesktopApp().catch((error) => {
     details: message,
     logs: "",
     actions: [],
-    title: "Could not open bb",
+    title: "Could not open sandy",
   });
 });

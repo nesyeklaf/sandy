@@ -8,7 +8,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BB_PI_EXTENSION_SOURCE } from "./bb-pi-extension.js";
+import { SANDY_PI_EXTENSION_SOURCE } from "./sandy-pi-extension.js";
 import { closeAllPiCatalogs, getPiCatalog } from "./catalog.js";
 import { PI_BRIDGE_ARGS_ENV, PI_BRIDGE_COMMAND_ENV } from "./rpc-child.js";
 import { fakePiPath } from "./test-support.js";
@@ -26,12 +26,12 @@ afterEach(async () => {
 
 describe("pi catalog child generations", () => {
   it("re-reads model scope after the catalog child restarts", async () => {
-    const workspace = mkdtempSync(join(tmpdir(), "bb-pi-catalog-"));
+    const workspace = mkdtempSync(join(tmpdir(), "sandy-pi-catalog-"));
     tempDirs.push(workspace);
-    const extensionPath = join(workspace, "bb-extension.mjs");
+    const extensionPath = join(workspace, "sandy-extension.mjs");
     const spawnCounterPath = join(workspace, "spawns.txt");
     const processLogPath = join(workspace, "processes.txt");
-    writeFileSync(extensionPath, BB_PI_EXTENSION_SOURCE);
+    writeFileSync(extensionPath, SANDY_PI_EXTENSION_SOURCE);
 
     process.env[PI_BRIDGE_COMMAND_ENV] = process.execPath;
     process.env[PI_BRIDGE_ARGS_ENV] = JSON.stringify([fakePiPath]);
@@ -86,17 +86,17 @@ interface FakeCatalogPaths {
 }
 
 function setUpFakeCatalog(env: Record<string, string>): FakeCatalogPaths {
-  const workspace = mkdtempSync(join(tmpdir(), "bb-pi-catalog-"));
+  const workspace = mkdtempSync(join(tmpdir(), "sandy-pi-catalog-"));
   tempDirs.push(workspace);
   const paths: FakeCatalogPaths = {
     workspace,
-    extensionPath: join(workspace, "bb-extension.mjs"),
+    extensionPath: join(workspace, "sandy-extension.mjs"),
     modelsPath: join(workspace, "models.json"),
     refreshLogPath: join(workspace, "refreshes.txt"),
     spawnCounterPath: join(workspace, "spawns.txt"),
     processLogPath: join(workspace, "processes.txt"),
   };
-  writeFileSync(paths.extensionPath, BB_PI_EXTENSION_SOURCE);
+  writeFileSync(paths.extensionPath, SANDY_PI_EXTENSION_SOURCE);
   writeFileSync(paths.modelsPath, JSON.stringify([FAKE_MODEL]));
   process.env[PI_BRIDGE_COMMAND_ENV] = process.execPath;
   process.env[PI_BRIDGE_ARGS_ENV] = JSON.stringify([fakePiPath]);
@@ -131,7 +131,7 @@ describe("pi catalog freshness", () => {
     const toolsPath = join(paths.workspace, "previous-session-tools.json");
     writeFileSync(toolsPath, "[]");
     rmSync(toolsPath);
-    process.env.PI_BB_TOOLS_FILE = toolsPath;
+    process.env.PI_SANDY_TOOLS_FILE = toolsPath;
 
     const catalog = await getPiCatalog(paths.workspace, paths.extensionPath);
 

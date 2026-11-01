@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import * as react from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import clsx from "clsx";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   createPluginFrontendPageLifecycle,
   installPluginRuntime,
@@ -106,15 +106,15 @@ describe("loadPluginFrontend", () => {
 });
 
 describe("installPluginRuntime", () => {
-  type RuntimeHost = typeof globalThis & { __bbPluginRuntime?: unknown };
+  type RuntimeHost = typeof globalThis & { __sandyPluginRuntime?: unknown };
 
   afterEach(() => {
-    delete (globalThis as RuntimeHost).__bbPluginRuntime;
+    delete (globalThis as RuntimeHost).__sandyPluginRuntime;
   });
 
   it("exposes the app's eager runtime modules, exactly once", () => {
     installPluginRuntime();
-    const runtime = (globalThis as RuntimeHost).__bbPluginRuntime as Record<
+    const runtime = (globalThis as RuntimeHost).__sandyPluginRuntime as Record<
       string,
       unknown
     >;
@@ -157,13 +157,13 @@ describe("installPluginRuntime", () => {
     });
 
     installPluginRuntime();
-    expect((globalThis as RuntimeHost).__bbPluginRuntime).toBe(runtime);
+    expect((globalThis as RuntimeHost).__sandyPluginRuntime).toBe(runtime);
   });
 
   it("provides @pierre/diffs only to bundles that import it, downloading the bundle meanwhile", async () => {
     const pierreSlots = () =>
       Object.keys(
-        (globalThis as RuntimeHost).__bbPluginRuntime as Record<string, unknown>,
+        (globalThis as RuntimeHost).__sandyPluginRuntime as Record<string, unknown>,
       ).filter((slot) => slot.startsWith("pierre"));
     const slotsAtImport: string[][] = [];
     const importModule = vi.fn(async () => {
@@ -190,7 +190,7 @@ describe("installPluginRuntime", () => {
       ["prefetch differ"],
       ["pierreDiffs", "pierreDiffsReact"],
     ]);
-    const runtime = (globalThis as RuntimeHost).__bbPluginRuntime as Record<
+    const runtime = (globalThis as RuntimeHost).__sandyPluginRuntime as Record<
       string,
       unknown
     >;

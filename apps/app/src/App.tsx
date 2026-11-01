@@ -6,7 +6,7 @@ import { LazyThreadDetailView } from "./views/thread-detail/LazyThreadDetailView
 import { LazyRootComposeView } from "./views/LazyRootComposeView";
 import { useRouteState } from "./hooks/useRouteState";
 import { lazy, Suspense, useEffect } from "react";
-import { parseMessageLink } from "@bb/client-core";
+import { parseMessageLink } from "@sandy/client-core";
 import {
   matchPath,
   Navigate,
@@ -303,7 +303,7 @@ export function AppRoutes() {
             element={
               <Navigate
                 to={getPluginConfigurationRoutePath({
-                  pluginId: "bb--provider-usage",
+                  pluginId: "sandy--provider-usage",
                 })}
                 replace
               />

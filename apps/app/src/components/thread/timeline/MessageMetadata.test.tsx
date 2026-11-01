@@ -10,7 +10,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ExperimentalMessageMetadataProps } from "@get-bb/plugin-sdk";
+import type { ExperimentalMessageMetadataProps } from "@sandy-sdk/plugin-sdk";
 import type { PluginMessageMetadataSlot } from "@/lib/plugin-slots";
 import { usePluginId } from "../../plugin/plugin-context";
 import { resetAllCrashedPluginSlotsForTest } from "../../plugin/PluginSlotMount";

@@ -19,13 +19,13 @@ const coldLoad = async (context, label, url, specs, names) => {
       browser.resetNetwork();
       await browser.navigate(url);
       await browser.waitForExpression(
-        "Object.keys(window.__bbperf.watches().results).length === " +
+        "Object.keys(window.__sandyperf.watches().results).length === " +
           names.length +
           " && " +
           names
             .map(
               (name) =>
-                "Boolean(window.__bbperf.watches().results['" +
+                "Boolean(window.__sandyperf.watches().results['" +
                 name +
                 "'].paintedMs)",
             )
@@ -42,9 +42,9 @@ const coldLoad = async (context, label, url, specs, names) => {
   });
   const watches = await browser.readWatches(names, ledger, label);
   const [paints, lcp, navigation] = await Promise.all([
-    browser.evaluate("window.__bbperf.paintTimings()"),
-    browser.evaluate("window.__bbperf.largestContentfulPaint()"),
-    browser.evaluate("window.__bbperf.navigationTiming()"),
+    browser.evaluate("window.__sandyperf.paintTimings()"),
+    browser.evaluate("window.__sandyperf.largestContentfulPaint()"),
+    browser.evaluate("window.__sandyperf.navigationTiming()"),
   ]);
   const network = browser.networkSummary();
   ledger.record(

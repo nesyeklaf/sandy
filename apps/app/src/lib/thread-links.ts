@@ -3,12 +3,12 @@ import {
   GENERATED_ID_SUFFIX_LENGTH,
   isRawThreadId,
   PERSONAL_PROJECT_ID,
-} from "@bb/domain";
-import type { ExperimentalComposerThreadLinkTarget } from "@get-bb/plugin-sdk";
+} from "@sandy/domain";
+import type { ExperimentalComposerThreadLinkTarget } from "@sandy-sdk/plugin-sdk";
 import {
   THREAD_MENTION_RESOLVE_MAX_IDS,
   type ResolveThreadMentionsResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 const threadPathPattern = new RegExp(
   `^/(?:projects/(proj_[${GENERATED_ID_ALPHABET}]{${GENERATED_ID_SUFFIX_LENGTH}})/)?threads/([^/]+)/?$`,

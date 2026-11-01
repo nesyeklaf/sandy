@@ -1,6 +1,6 @@
 @import "@fontsource-variable/inter";
 @import "@/components/ui/theme.css";
-@import "@bb/plugin-build/host-tailwind.css";
+@import "@sandy/plugin-build/host-tailwind.css";
 
 @layer base {
   /*
@@ -28,24 +28,24 @@
    * variable is the single switch both they and the shell root read.
    */
   :root {
-    --bb-app-chrome-row-height: 3rem;
-    --bb-chrome-control-gap: 0.25rem;
-    --bb-panel-chrome-padding: 1rem;
-    --bb-shell-height: 100dvh;
-    --bb-window-frame-top: 0px;
-    --bb-window-frame-lip: 0px;
-    --bb-window-frame-leading-lip: 0px;
+    --sandy-app-chrome-row-height: 3rem;
+    --sandy-chrome-control-gap: 0.25rem;
+    --sandy-panel-chrome-padding: 1rem;
+    --sandy-shell-height: 100dvh;
+    --sandy-window-frame-top: 0px;
+    --sandy-window-frame-lip: 0px;
+    --sandy-window-frame-leading-lip: 0px;
     --secondary-panel-width-mobile: min(76vw, 320px);
-    --bb-sidebar-rail-padding: var(--bb-frame-rail-padding);
-    --bb-sidebar-control-size: var(--bb-frame-rail-control-size);
-    --bb-sidebar-control-icon-size: 16px;
+    --sandy-sidebar-rail-padding: var(--sandy-frame-rail-padding);
+    --sandy-sidebar-control-size: var(--sandy-frame-rail-control-size);
+    --sandy-sidebar-control-icon-size: 16px;
   }
 
   @media (width < 48rem) and (pointer: coarse) {
     :root {
-      --bb-sidebar-rail-padding: 12px;
-      --bb-sidebar-control-size: 36px;
-      --bb-sidebar-control-icon-size: 20px;
+      --sandy-sidebar-rail-padding: 12px;
+      --sandy-sidebar-control-size: 36px;
+      --sandy-sidebar-control-icon-size: 20px;
     }
   }
 
@@ -64,23 +64,23 @@
     app-region: no-drag;
   }
 
-  html.bb-app-shell-root {
-    height: var(--bb-shell-height);
+  html.sandy-app-shell-root {
+    height: var(--sandy-shell-height);
   }
 
-  body.bb-app-shell,
-  body.bb-app-shell #root {
+  body.sandy-app-shell,
+  body.sandy-app-shell #root {
     height: 100%;
   }
 
   @media (display-mode: standalone) {
     :root {
-      --bb-shell-height: 100lvh;
+      --sandy-shell-height: 100lvh;
     }
   }
 
-  html.bb-app-shell-root,
-  body.bb-app-shell {
+  html.sandy-app-shell-root,
+  body.sandy-app-shell {
     overflow: hidden;
     /*
      * Suppress vertical rubber-banding without blocking the native horizontal
@@ -440,7 +440,7 @@
    * toast in the stack.
    */
   :where(
-    [data-sonner-toast].bb-app-toast[data-expanded="false"][data-front="false"]
+    [data-sonner-toast].sandy-app-toast[data-expanded="false"][data-front="false"]
   ) {
     overflow: hidden;
     border-radius: var(--radius-md);
@@ -594,7 +594,7 @@
   }
 }
 
-@keyframes bb-search-flash {
+@keyframes sandy-search-flash {
   0%,
   25% {
     background-color: var(--state-hover);
@@ -604,13 +604,13 @@
   }
 }
 
-.bb-search-flash {
+.sandy-search-flash {
   border-radius: var(--radius-lg, 0.5rem);
   background-color: var(--state-hover);
-  animation: bb-search-flash 1.6s ease-out forwards;
+  animation: sandy-search-flash 1.6s ease-out forwards;
 }
 
-@keyframes bb-settings-search-flash {
+@keyframes sandy-settings-search-flash {
   0%,
   25% {
     background-color: var(--state-hover);
@@ -622,18 +622,18 @@
   }
 }
 
-[data-settings-anchor].bb-search-flash {
+[data-settings-anchor].sandy-search-flash {
   box-shadow: 0 0 0 0.5rem var(--state-hover);
-  animation-name: bb-settings-search-flash;
+  animation-name: sandy-settings-search-flash;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bb-search-flash {
+  .sandy-search-flash {
     animation: none;
   }
 }
 
-@keyframes bb-count-flash {
+@keyframes sandy-count-flash {
   0%,
   35% {
     background-color: var(--foreground);
@@ -641,48 +641,48 @@
   }
 }
 
-@keyframes bb-count-roll-in {
+@keyframes sandy-count-roll-in {
   from {
     opacity: 0;
     transform: translateY(100%);
   }
 }
 
-@keyframes bb-count-roll-out {
+@keyframes sandy-count-roll-out {
   to {
     opacity: 0;
     transform: translateY(-100%);
   }
 }
 
-.bb-count-flash {
-  animation: bb-count-flash 1.2s ease-out;
+.sandy-count-flash {
+  animation: sandy-count-flash 1.2s ease-out;
 }
 
-.bb-count-roll-in {
-  animation: bb-count-roll-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+.sandy-count-roll-in {
+  animation: sandy-count-roll-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bb-count-roll-out {
-  animation: bb-count-roll-out 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.sandy-count-roll-out {
+  animation: sandy-count-roll-out 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bb-count-roll-in {
+  .sandy-count-roll-in {
     animation: none;
   }
 
-  .bb-count-roll-out {
+  .sandy-count-roll-out {
     display: none;
   }
 }
 
-/* Browse hero (Plugins → Browse plugins): the archetype chips orbiting the mini bb
+/* Browse hero (Plugins → Browse plugins): the archetype chips orbiting the mini sandy
  * window drift slowly so the hero reads as alive without competing with the
  * composer sitting in the middle of it. Duration and delay are per-chip custom
  * properties so each chip drifts out of phase with its neighbours from one
  * shared rule. */
-@keyframes bb-hero-drift {
+@keyframes sandy-hero-drift {
   0%,
   100% {
     transform: translate3d(0, 0, 0);
@@ -692,16 +692,16 @@
   }
 }
 
-.bb-hero-chip {
-  animation: bb-hero-drift var(--bb-hero-drift-duration, 6s) ease-in-out
+.sandy-hero-chip {
+  animation: sandy-hero-drift var(--sandy-hero-drift-duration, 6s) ease-in-out
     infinite;
-  animation-delay: var(--bb-hero-drift-delay, 0s);
+  animation-delay: var(--sandy-hero-drift-delay, 0s);
 }
 
 /* Autoplay progress for the active slide segment. The element is keyed by slide
  * in React, so a slide change remounts it and restarts the animation from zero
  * rather than needing an imperative reset. */
-@keyframes bb-hero-progress {
+@keyframes sandy-hero-progress {
   from {
     transform: scaleX(0);
   }
@@ -710,23 +710,23 @@
   }
 }
 
-.bb-hero-progress-fill {
+.sandy-hero-progress-fill {
   transform-origin: left center;
-  animation: bb-hero-progress var(--bb-hero-slide-duration, 5s) linear forwards;
+  animation: sandy-hero-progress var(--sandy-hero-slide-duration, 5s) linear forwards;
 }
 
-.bb-hero-progress-fill[data-paused="true"] {
+.sandy-hero-progress-fill[data-paused="true"] {
   animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bb-hero-chip {
+  .sandy-hero-chip {
     animation: none;
   }
 
   /* No autoplay under reduced motion, so the segment shows a resting full
    * state instead of an animation frozen at zero width. */
-  .bb-hero-progress-fill {
+  .sandy-hero-progress-fill {
     animation: none;
     transform: scaleX(1);
   }

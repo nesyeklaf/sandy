@@ -1,7 +1,7 @@
-import { getStoredProviderModelCatalog, updateHost } from "@bb/db";
-import type { JsonValue, ProviderFork } from "@bb/domain";
-import type { HostDaemonOnlineRpcRequestMessage } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { getStoredProviderModelCatalog, updateHost } from "@sandy/db";
+import type { JsonValue, ProviderFork } from "@sandy/domain";
+import type { HostDaemonOnlineRpcRequestMessage } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import {
   resolveSystemExecutionOptions,

@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { shellSingleQuote, waitForSetupMarkerCount } from "@bb/test-helpers";
+import { shellSingleQuote, waitForSetupMarkerCount } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import {
   createHostThread,
@@ -41,7 +41,7 @@ describe.sequential("fake provider fresh-environment fanout integration", () => 
               content: "setup project\n",
             },
             {
-              relativePath: ".bb-env-setup.sh",
+              relativePath: ".sandy-env-setup.sh",
               content:
                 [
                   "set -euo pipefail",

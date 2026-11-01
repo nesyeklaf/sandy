@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAsyncTtlMemo } from "../src/index.js";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 
 describe("createAsyncTtlMemo", () => {
   it("starts TTL at completion and shares cold and refresh bursts", async () => {

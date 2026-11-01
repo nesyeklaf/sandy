@@ -25,7 +25,7 @@ import {
 } from "../../src/data/events.js";
 import { advanceLiveEventPruning } from "../../src/data/resolved-item-pruning.js";
 import { getThreadEventRewriteGeneration } from "../../src/data/event-rewrite-generation.js";
-import { THREAD_CONTEXT_CLEAR_OPERATION, turnScope } from "@bb/domain";
+import { THREAD_CONTEXT_CLEAR_OPERATION, turnScope } from "@sandy/domain";
 import { createMigratedConnection } from "../../src/testing.js";
 
 function setup() {
@@ -581,7 +581,7 @@ describe("thread pruning", () => {
 
   it("resumes after a competing writer and preserves the current latest snapshot after truncation", () => {
     let f = setup();
-    const directory = mkdtempSync(join(tmpdir(), "bb-pruning-concurrent-"));
+    const directory = mkdtempSync(join(tmpdir(), "sandy-pruning-concurrent-"));
     const path = join(directory, "fixture.db");
     let writer: ReturnType<typeof createConnection> | undefined;
     try {

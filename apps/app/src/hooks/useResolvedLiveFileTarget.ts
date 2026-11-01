@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import type { ExperimentalLiveFileTarget } from "@get-bb/plugin-sdk";
-import type { OpenInTargetContext } from "@bb/host-daemon-contract";
-import type { Environment } from "@bb/domain";
-import type { ThreadStorageLocationResponse } from "@bb/server-contract";
+import type { ExperimentalLiveFileTarget } from "@sandy-sdk/plugin-sdk";
+import type { OpenInTargetContext } from "@sandy/host-daemon-contract";
+import type { Environment } from "@sandy/domain";
+import type { ThreadStorageLocationResponse } from "@sandy/server-contract";
 import { useEnvironment } from "@/hooks/queries/environment-queries";
 import { useThreadStorageLocation } from "@/hooks/queries/thread-panel-queries";
 import { useHostDaemon } from "@/hooks/useHostDaemon";

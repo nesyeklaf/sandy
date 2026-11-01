@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { Command } from "commander";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { outputJson } from "./helpers.js";
 
 interface VoiceTranscribeOptions {
@@ -18,7 +18,7 @@ export function registerVoiceCommands(
   const voice = program.command("voice").description("Voice input utilities");
   voice
     .command("transcribe <file>")
-    .description("Transcribe an audio file with BB's configured voice service")
+    .description("Transcribe an audio file with SANDY's configured voice service")
     .option("--prompt <text>", "Optional transcription context")
     .option("--type <mime>", "Audio MIME type", "audio/webm")
     .option("--json", "Print machine-readable JSON output")
@@ -28,7 +28,7 @@ export function registerVoiceCommands(
         const blob = new File([bytes], basename(path), {
           type: opts.type ?? "audio/webm",
         });
-        const result = await createCliBbSdk(getUrl()).system.transcribeVoice({
+        const result = await createCliSandySdk(getUrl()).system.transcribeVoice({
           file: blob,
           ...(opts.prompt ? { prompt: opts.prompt } : {}),
         });

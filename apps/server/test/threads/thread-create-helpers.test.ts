@@ -6,9 +6,9 @@ import {
   deleteThreadSection,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { DEFAULT_MANAGED_BRANCH_PREFIX } from "@bb/domain";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { DEFAULT_MANAGED_BRANCH_PREFIX } from "@sandy/domain";
 import { ApiError } from "../../src/errors.js";
 import {
   buildSuggestedBranchName,
@@ -40,7 +40,7 @@ describe("buildSuggestedBranchName", () => {
         title: null,
         threadId: "thr_abc123def456",
       }),
-    ).toBe("bb/thr_abc123def456");
+    ).toBe("sandy/thr_abc123def456");
   });
 
   it("includes a sanitized slug before the full thread ID", () => {
@@ -50,7 +50,7 @@ describe("buildSuggestedBranchName", () => {
         title: "Fix login flow!",
         threadId: "thr_abc123def456",
       }),
-    ).toBe("bb/fix-login-flow-thr_abc123def456");
+    ).toBe("sandy/fix-login-flow-thr_abc123def456");
   });
 
   it("falls back to the full thread ID when the slug is empty after sanitizing", () => {
@@ -60,7 +60,7 @@ describe("buildSuggestedBranchName", () => {
         title: "!!!",
         threadId: "thr_abc123def456",
       }),
-    ).toBe("bb/thr_abc123def456");
+    ).toBe("sandy/thr_abc123def456");
   });
 
   it("applies a configured prefix to both branch name shapes", () => {

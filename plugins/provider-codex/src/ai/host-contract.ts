@@ -1,4 +1,4 @@
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 export const codexAiFailureCodeSchema = z.enum([

@@ -1,6 +1,6 @@
-import type { ThreadEventItemPresentation } from "@bb/domain";
-import { isNamespacedGlyph, isPluginOwnedIconPath } from "@bb/domain";
-import type { PluginRowPresentation } from "@get-bb/plugin-sdk";
+import type { ThreadEventItemPresentation } from "@sandy/domain";
+import { isNamespacedGlyph, isPluginOwnedIconPath } from "@sandy/domain";
+import type { PluginRowPresentation } from "@sandy-sdk/plugin-sdk";
 
 export const GENERIC_PLUGIN_GLYPH = "Toolbox";
 

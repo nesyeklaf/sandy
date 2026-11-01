@@ -1,4 +1,4 @@
-import type { WorkspaceOpenTargetCapabilities } from "@bb/host-daemon-contract";
+import type { WorkspaceOpenTargetCapabilities } from "@sandy/host-daemon-contract";
 
 export const FULL_FILE_OPEN_CAPABILITIES: WorkspaceOpenTargetCapabilities = {
   openDirectory: true,

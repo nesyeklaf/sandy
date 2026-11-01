@@ -1,4 +1,4 @@
-import { HOST_TAILWIND_VERSION } from "@bb/plugin-build/host-tailwind-version";
+import { HOST_TAILWIND_VERSION } from "@sandy/plugin-build/host-tailwind-version";
 import type { PluginUpdateJobs } from "../services/plugins/plugin-update-jobs.js";
 import { timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
@@ -10,7 +10,7 @@ import type {
   ExperimentalPluginWebSocket,
   ExperimentalPluginWebSocketHandlers,
   PluginCliExecutionResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { ServerRuntimeConfig } from "../types.js";
 import { ApiError } from "../errors.js";
 import {
@@ -56,11 +56,11 @@ import {
   pluginSettingsUpdateRequestSchema,
   pluginTokenRequestSchema,
   pluginUpdateCheckRequestSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 interface PluginRoutesDeps {
   config: Pick<ServerRuntimeConfig, "serverPort" | "appUrl" | "devAppPort">;
-  db: import("@bb/db").DbConnection;
+  db: import("@sandy/db").DbConnection;
   hostStylesheet: HostStylesheet | null;
 }
 
@@ -254,7 +254,7 @@ async function tokenAuthProblem(
   id: string,
 ): Promise<WireAuthProblem | null> {
   const presented =
-    context.req.header("x-bb-plugin-token") ?? context.req.query("token");
+    context.req.header("x-sandy-plugin-token") ?? context.req.query("token");
   const expected = await plugins.httpToken(id);
   if (
     expected === undefined ||
@@ -264,8 +264,8 @@ async function tokenAuthProblem(
     return {
       status: 401,
       error:
-        'missing or invalid plugin token — send it as the "x-bb-plugin-token" header ' +
-        "or ?token=; print it with `bb plugin token " +
+        'missing or invalid plugin token — send it as the "x-sandy-plugin-token" header ' +
+        "or ?token=; print it with `sandy plugin token " +
         `${id}\``,
     };
   }

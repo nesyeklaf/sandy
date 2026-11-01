@@ -5,17 +5,17 @@ import {
   countAppliedMigrations,
   getExperiments,
   type DbConnection,
-} from "@bb/db";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+} from "@sandy/db";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import {
   listServerOwnedEntries,
   writeServerArchive,
   type ServerArchiveSourceFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import type { ServerLogger } from "../../types.js";
 import { listOldCopyEntries } from "./switch.js";
 
-const SERVER_DATABASE_ARCHIVE_PATH = "bb.db";
+const SERVER_DATABASE_ARCHIVE_PATH = "sandy.db";
 const SNAPSHOT_DIR_NAME = "snapshot";
 
 export interface ExportServerArchiveArgs {
@@ -99,7 +99,7 @@ export async function exportServerArchive(
       files,
       manifest: {
         createdAt: args.now,
-        bbVersion: args.appVersion,
+        sandyVersion: args.appVersion,
         protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
         migrationCount,
         sourceDataDir: args.dataDir,

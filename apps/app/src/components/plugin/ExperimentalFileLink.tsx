@@ -7,13 +7,13 @@ import {
 import type {
   ExperimentalFileLinkProps,
   ExperimentalFileOpenOptions,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import { RouteAnchor } from "@/components/ui/app-route-anchor";
 import { useAppNavigationHost } from "@/lib/app-navigation-host";
 import { normalizeExperimentalFileOpenOptions } from "@/lib/live-file-navigation";

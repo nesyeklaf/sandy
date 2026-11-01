@@ -5,8 +5,8 @@ import {
   type AppFixedTabDestination,
 } from "@/lib/app-fixed-tab-navigation";
 import { useOptionalPaneContext } from "@/views/thread-detail/PaneContext";
-import type { TerminalSession } from "@bb/server-contract";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import type { TerminalSession } from "@sandy/server-contract";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { PluginSettingsPage } from "@/components/plugin/PluginSettings";
 import {
   PLUGINS_BROWSE_PANEL_STATE_ID,
@@ -24,9 +24,9 @@ import {
   createPluginDetailFixedPanelTab,
   type PluginDetailFixedPanelTab,
 } from "@/lib/fixed-panel-tabs-state";
-import { setSecondaryPanelTabsInState } from "@bb/client-core";
+import { setSecondaryPanelTabsInState } from "@sandy/client-core";
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 import { useSetPluginEnabled } from "@/components/plugin/useSetPluginEnabled";
 import {
   Suspense,
@@ -38,16 +38,16 @@ import {
   type ReactNode,
 } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import "@bb/shared-ui/icon-extended";
+import "@sandy/shared-ui/icon-extended";
 import { useMutation } from "@tanstack/react-query";
-import { buildPluginEditThreadPrompt } from "@bb/shared-ui/resource-edit-prompt";
+import { buildPluginEditThreadPrompt } from "@sandy/shared-ui/resource-edit-prompt";
 import { appToast } from "@/components/ui/app-toast";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
 import { useScrollOverflowState } from "@/components/thread/timeline/useScrollOverflowState";
 import {
   ConfirmDeleteDialog,
   ConfirmDeleteDialogContent,
-} from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/confirm-delete-dialog";
 import { AddPluginDialog } from "@/components/plugin/management/AddPluginDialog";
 import { resolvePluginDetailKey } from "@/components/plugin/management/installed-plugin-catalog";
 import {
@@ -56,8 +56,8 @@ import {
   pluginDetailLocation,
   withoutPluginListing,
 } from "@/components/plugin/plugin-detail-key";
-import { ResourceListState } from "@bb/shared-ui/resource-list";
-import { Skeleton } from "@bb/shared-ui/skeleton";
+import { ResourceListState } from "@sandy/shared-ui/resource-list";
+import { Skeleton } from "@sandy/shared-ui/skeleton";
 import { PluginsOverview } from "@/components/plugin/PluginsOverview";
 import {
   CatalogPluginDetail,
@@ -87,7 +87,7 @@ import {
   getRootComposeRoutePath,
 } from "@/lib/route-paths";
 import { getToolsOwnedCollectionRoutePath } from "@/components/tools/tools-navigation";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { SkillsLibrary } from "@/components/tools/SkillsLibrary";
 import { pluginToast } from "@/components/plugin/PluginNotificationDescription";
 import {
@@ -260,7 +260,7 @@ function PluginDetailToolView({ detailKey }: { detailKey: string }) {
     onSuccess: (_data, deletedPlugin) => {
       const isLocal = pluginIsLocalSource(deletedPlugin);
       pluginToast.success(
-        isLocal ? "Plugin removed from bb" : "Plugin uninstalled",
+        isLocal ? "Plugin removed from sandy" : "Plugin uninstalled",
         deletedPlugin,
         "catalog",
       );
@@ -446,7 +446,7 @@ function PluginDetailToolView({ detailKey }: { detailKey: string }) {
               <ConfirmDeleteDialogContent
                 title={
                   pluginIsLocalSource(deleteTarget)
-                    ? "Remove plugin from bb?"
+                    ? "Remove plugin from sandy?"
                     : "Uninstall plugin?"
                 }
                 description={pluginRemovalDescription(deleteTarget)}
@@ -627,7 +627,7 @@ export function PluginsView({ detailKey }: { detailKey?: string } = {}) {
   }, [activePluginId, closeTab, isPanelOpen]);
   useAppCommandHandler("panel.close", closeActiveTab);
   useEffect(() => {
-    return getBbDesktopInfo()?.onCloseWindowRequest?.(closeActiveTab);
+    return getSandyDesktopInfo()?.onCloseWindowRequest?.(closeActiveTab);
   }, [closeActiveTab]);
   const presentPanelTab = usePanelTabPresenter({
     tabs: detailTabs,

@@ -1,9 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { ThreadListEntry, ThreadWithRuntime } from "@bb/domain";
+import type { ThreadListEntry, ThreadWithRuntime } from "@sandy/domain";
 import type {
   UpdateThreadRequest,
   ThreadArchiveAllResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   sidebarNavigationQueryKey,
   threadQueryKey,

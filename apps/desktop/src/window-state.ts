@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import {
-  BB_DESKTOP_MIN_ZOOM_PERCENT,
-  BB_DESKTOP_MAX_ZOOM_PERCENT,
-} from "@bb/desktop-contract";
+  SANDY_DESKTOP_MIN_ZOOM_PERCENT,
+  SANDY_DESKTOP_MAX_ZOOM_PERCENT,
+} from "@sandy/desktop-contract";
 import { mkdir, readFile, writeFile, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { screen } from "electron";
@@ -41,8 +41,8 @@ const persistedWindowStateFileSchema = z.object({
   windows: z.array(persistedWindowStateEntrySchema),
   zoomFactor: z
     .number()
-    .min(BB_DESKTOP_MIN_ZOOM_PERCENT / 100)
-    .max(BB_DESKTOP_MAX_ZOOM_PERCENT / 100)
+    .min(SANDY_DESKTOP_MIN_ZOOM_PERCENT / 100)
+    .max(SANDY_DESKTOP_MAX_ZOOM_PERCENT / 100)
     .catch(1),
 });
 

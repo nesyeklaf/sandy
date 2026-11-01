@@ -11,8 +11,8 @@ import {
   type SecureStorageLike,
 } from "./secure-storage";
 
-export const PROFILE_INDEX_STORAGE_KEY = "bb.profiles.index";
-const PROFILE_STORAGE_KEY_PREFIX = "bb.profile.";
+export const PROFILE_INDEX_STORAGE_KEY = "sandy.profiles.index";
+const PROFILE_STORAGE_KEY_PREFIX = "sandy.profile.";
 
 export function profileStorageKey(profileId: string): string {
   return `${PROFILE_STORAGE_KEY_PREFIX}${profileId}`;

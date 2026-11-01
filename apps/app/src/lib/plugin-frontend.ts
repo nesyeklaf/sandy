@@ -1,5 +1,5 @@
-import * as questionFormHost from "@bb/shared-ui/question-form-host";
-import * as voiceInputTextarea from "@bb/shared-ui/voice-input-textarea";
+import * as questionFormHost from "@sandy/shared-ui/question-form-host";
+import * as voiceInputTextarea from "@sandy/shared-ui/voice-input-textarea";
 import * as react from "react";
 import * as reactDom from "react-dom";
 import * as reactDomClient from "react-dom/client";
@@ -20,9 +20,9 @@ import * as vaul from "vaul";
 import * as clsx from "clsx";
 import * as tailwindMerge from "tailwind-merge";
 import * as classVarianceAuthority from "class-variance-authority";
-import * as sharedUiIcon from "@bb/shared-ui/icon";
-import { createDebouncedCallbackScheduler } from "@bb/domain";
-import { BbHttpError } from "@bb/sdk/browser";
+import * as sharedUiIcon from "@sandy/shared-ui/icon";
+import { createDebouncedCallbackScheduler } from "@sandy/domain";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import type { QueryClient } from "@tanstack/react-query";
 import { markEnabledPluginListStale } from "@/hooks/cache-owners/plugin-cache-owner";
 import { pluginListQueryOptions } from "@/hooks/queries/plugin-settings-queries";
@@ -37,8 +37,8 @@ import type {
   PluginContentScriptDisposer,
   PluginContentScriptRegistration,
   PluginSdkApp,
-} from "@get-bb/plugin-sdk";
-import { normalizePluginThreadRowStatus } from "@get-bb/plugin-sdk/internal/composer-customization-validation";
+} from "@sandy-sdk/plugin-sdk";
+import { normalizePluginThreadRowStatus } from "@sandy-sdk/plugin-sdk/internal/composer-customization-validation";
 import { resetCrashedPluginSlots } from "@/components/plugin/PluginSlotMount";
 import { runWithPluginDomIsolationAsync } from "./foreign-dom-mutation-guard";
 import {
@@ -52,7 +52,7 @@ import {
   collectPluginAppRegistrations,
   isPluginAppDefinition,
 } from "./plugin-app-definition";
-import { setPluginAssetIcons } from "@bb/shared-ui/icon-registry";
+import { setPluginAssetIcons } from "@sandy/shared-ui/icon-registry";
 import { setPluginLogoUrls, type PluginLogoUrls } from "./plugin-logos";
 import { createRetryingModuleLoader } from "./plugin-frontend-lazy";
 import {
@@ -190,7 +190,7 @@ export async function loadPluginFrontend(
   }
 }
 
-interface BbPluginRuntime {
+interface SandyPluginRuntime {
   react: unknown;
   reactDom: unknown;
   reactDomClient: unknown;
@@ -219,11 +219,11 @@ interface BbPluginRuntime {
   voiceInputTextarea: typeof voiceInputTextarea;
 }
 
-type RuntimeHost = typeof globalThis & { __bbPluginRuntime?: BbPluginRuntime };
+type RuntimeHost = typeof globalThis & { __sandyPluginRuntime?: SandyPluginRuntime };
 
-export function installPluginRuntime(): BbPluginRuntime {
+export function installPluginRuntime(): SandyPluginRuntime {
   const host = globalThis as RuntimeHost;
-  host.__bbPluginRuntime ??= {
+  host.__sandyPluginRuntime ??= {
     react,
     reactDom,
     reactDomClient,
@@ -252,7 +252,7 @@ export function installPluginRuntime(): BbPluginRuntime {
     questionFormHost,
     voiceInputTextarea,
   };
-  return host.__bbPluginRuntime;
+  return host.__sandyPluginRuntime;
 }
 
 const lazyRuntimeGroups = [
@@ -264,8 +264,8 @@ const lazyRuntimeGroups = [
     }),
   },
 ] satisfies {
-  slots: (keyof BbPluginRuntime)[];
-  load: () => Promise<Partial<BbPluginRuntime>>;
+  slots: (keyof SandyPluginRuntime)[];
+  load: () => Promise<Partial<SandyPluginRuntime>>;
 }[];
 
 export async function fetchFrontendCandidates(
@@ -279,7 +279,7 @@ export async function fetchFrontendCandidates(
   } catch (error) {
     setServerPluginsStarting(false);
     if (
-      error instanceof BbHttpError &&
+      error instanceof SandyHttpError &&
       (error.status === 401 || error.status === 403)
     ) {
       setPluginLogoUrls(new Map());
@@ -367,7 +367,7 @@ async function runWithConcurrencyLimit<T>(
 }
 
 function appendPluginImportRetry(url: string, retryCount: number): string {
-  return `${url}${url.includes("?") ? "&" : "?"}bb_retry=${retryCount}`;
+  return `${url}${url.includes("?") ? "&" : "?"}sandy_retry=${retryCount}`;
 }
 
 interface PluginFrontendReconcileState {
@@ -549,20 +549,20 @@ async function mountWithTimeout(
             if (controller.signal.aborted) return;
             if (typeof threadId !== "string") {
               deps.warn(
-                `bb plugin "${pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
+                `sandy plugin "${pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
               );
               return;
             }
             const normalizedThreadId = threadId.trim();
             if (normalizedThreadId.length === 0) {
               deps.warn(
-                `bb plugin "${pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
+                `sandy plugin "${pluginId}": contentScript.experimental_setThreadRowStatus: "threadId" must be a non-empty string`,
               );
               return;
             }
             const normalizedStatus = normalizePluginThreadRowStatus(
               status,
-              (reason) => deps.warn(`bb plugin "${pluginId}": ${reason}`),
+              (reason) => deps.warn(`sandy plugin "${pluginId}": ${reason}`),
             );
             if (normalizedStatus === undefined) return;
             setPluginThreadRowStatus(
@@ -873,7 +873,7 @@ async function reconcileCandidate(
     const definition = record.module.default;
     if (!isPluginAppDefinition(definition)) {
       throw new Error(
-        "the bundle's default export is not definePluginApp(...) from @get-bb/plugin-sdk/app",
+        "the bundle's default export is not definePluginApp(...) from @sandy-sdk/plugin-sdk/app",
       );
     }
     collected = collectPluginAppRegistrations(definition, (message) => {

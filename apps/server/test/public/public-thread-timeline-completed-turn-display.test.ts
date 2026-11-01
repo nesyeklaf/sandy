@@ -4,7 +4,7 @@ import {
   mergeLoadedTimelineWithLatest,
   prependOlderTimelineRows,
   resolveLoadedTimelineSurfaceKey,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   defaultAppSettings,
   defaultFeatureFlags,
@@ -12,14 +12,14 @@ import {
   threadScope,
   turnScope,
   type AppSettings,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   threadConversationOutlineResponseSchema,
   threadTimelineResponseSchema,
   timelineTurnSummaryDetailsResponseSchema,
   type TimelinePaginationCursor,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { seedEvent, seedThreadFixture } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";

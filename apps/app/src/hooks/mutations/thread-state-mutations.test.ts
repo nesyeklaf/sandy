@@ -1,15 +1,15 @@
 import { MutationObserver } from "@tanstack/react-query";
-import type { ThreadListEntry, ThreadWithRuntime } from "@bb/domain";
-import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@bb/test-helpers/domain-fixtures";
+import type { ThreadListEntry, ThreadWithRuntime } from "@sandy/domain";
+import { makeThreadWithRuntime as makeThreadWithRuntimeFixture } from "@sandy/test-helpers/domain-fixtures";
 import type {
   SidebarBootstrapResponse,
   ThreadResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAppQueryClient } from "@/lib/query-client";
 import { sdk } from "@/lib/sdk";
-import { createDeferredPromise } from "@bb/test-helpers";
-import { makeThreadListEntry as makeThreadListEntryFixture } from "@bb/test-helpers/domain-fixtures";
+import { createDeferredPromise } from "@sandy/test-helpers";
+import { makeThreadListEntry as makeThreadListEntryFixture } from "@sandy/test-helpers/domain-fixtures";
 import { makeThreadResponse as makeThreadResponseFixture } from "@/test/fixtures/thread-responses";
 import {
   makeProjectWithThreadsResponse,

@@ -5,12 +5,12 @@ import {
   type EnvironmentRow,
   type DbTransaction,
   type DbNotifier,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   threadScope,
   type ProvisioningTranscriptEntry,
   type Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   AppDeps,
   LoggedPendingInteractionWorkSessionDeps,

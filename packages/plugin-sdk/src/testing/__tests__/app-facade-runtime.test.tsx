@@ -6,25 +6,25 @@ import {
   experimental_Icon,
   experimental_usePluginId,
   experimental_useQuestionFormHost,
-  useBbContext,
+  useSandyContext,
 } from "../../app.js";
 import { installTestPluginRuntime, loadPluginApp, renderSlot } from "../app.js";
 
 interface RuntimeHost {
-  __bbPluginRuntime?: unknown;
+  __sandyPluginRuntime?: unknown;
 }
 
 const host = globalThis as RuntimeHost;
-const runtimeAtImport = host.__bbPluginRuntime;
+const runtimeAtImport = host.__sandyPluginRuntime;
 const Icon = experimental_Icon;
 
 afterEach(() => {
   cleanup();
-  host.__bbPluginRuntime = runtimeAtImport;
+  host.__sandyPluginRuntime = runtimeAtImport;
 });
 
 function ContextProbe() {
-  const context = useBbContext();
+  const context = useSandyContext();
   return (
     <p>
       <Icon name="Folder" aria-label="folder" />
@@ -33,7 +33,7 @@ function ContextProbe() {
   );
 }
 
-describe("@get-bb/plugin-sdk/app without a runtime at import time", () => {
+describe("@sandy-sdk/plugin-sdk/app without a runtime at import time", () => {
   it("loaded before any runtime was installed", () => {
     expect(runtimeAtImport).toBeUndefined();
   });
@@ -47,7 +47,7 @@ describe("@get-bb/plugin-sdk/app without a runtime at import time", () => {
       });
     });
 
-    expect(definition.__bbPluginApp).toBe(true);
+    expect(definition.__sandyPluginApp).toBe(true);
     const app = await loadPluginApp(definition);
     expect(app.homepageSections.map((section) => section.id)).toEqual([
       "probe",
@@ -68,9 +68,9 @@ describe("@get-bb/plugin-sdk/app without a runtime at import time", () => {
   });
 
   it("names the missing runtime when a hook runs without one", () => {
-    host.__bbPluginRuntime = undefined;
+    host.__sandyPluginRuntime = undefined;
     expect(() => render(<ContextProbe />)).toThrow(
-      /useBbContext needs the bb app's plugin runtime/,
+      /useSandyContext needs the sandy app's plugin runtime/,
     );
   });
 
@@ -120,7 +120,7 @@ describe("@get-bb/plugin-sdk/app without a runtime at import time", () => {
 describe("registered page title test host", () => {
   it("evaluates registered hooks in the slot scope and clears the result on unmount", () => {
     function usePageTitle({ subPath }: { subPath: string }) {
-      const { projectId } = useBbContext();
+      const { projectId } = useSandyContext();
       return { title: `${projectId}/${subPath}` };
     }
     const slot = renderSlot(

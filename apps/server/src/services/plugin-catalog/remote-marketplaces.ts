@@ -5,9 +5,9 @@ import {
   listPluginMarketplaces,
   setInstalledPluginDirectProvenance,
   type DbConnection,
-} from "@bb/db";
+} from "@sandy/db";
 
-export const LEGACY_COMMUNITY_MARKETPLACE_NAME = "bb-community";
+export const LEGACY_COMMUNITY_MARKETPLACE_NAME = "sandy-community";
 
 export function removeRemoteMarketplaces(db: DbConnection): string[] {
   const removed: string[] = [];

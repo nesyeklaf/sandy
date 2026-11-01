@@ -2,13 +2,13 @@
 
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { defaultExperiments } from "@bb/domain";
+import { defaultExperiments } from "@sandy/domain";
 import type {
   ReceivedThreadTimelineSignal,
   ThreadTimelineReadResponse,
   ThreadTimelineResponse,
-} from "@bb/server-contract";
-import { COMPACT_VIEWPORT_QUERY } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/server-contract";
+import { COMPACT_VIEWPORT_QUERY } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { useThreadTimelineRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { sdk } from "@/lib/sdk";
 import { wsManager } from "@/lib/ws";

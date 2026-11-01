@@ -5,7 +5,7 @@ import {
   readServerMovedFile,
   writeServerImportFile,
   writeServerMovedFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import { describe, expect, it } from "vitest";
 import { writeIncomingMoveState } from "./move-state.js";
 import {
@@ -22,7 +22,7 @@ import {
   prepareCommand,
   readJson,
   registerServerMoveFixtureCleanup,
-  writeBbAppRuntime,
+  writeSandyAppRuntime,
   writeFileWithDirs,
   writeLauncherMovedMode,
   type Fixture,
@@ -31,10 +31,10 @@ import {
 registerServerMoveFixtureCleanup();
 
 describe("ServerMoveService.prepare", () => {
-  it("installs bb-app, imports the archive, keeps this machine's credentials, starts the pending server, and answers a repeated prepare with the same server", async () => {
+  it("installs sandy-app, imports the archive, keeps this machine's credentials, starts the pending server, and answers a repeated prepare with the same server", async () => {
     const installed: Buffer[] = [];
     const fixture = await createFixture({
-      installBbApp: async (tarballPath) => {
+      installSandyApp: async (tarballPath) => {
         installed.push(await readFile(tarballPath));
       },
     });
@@ -45,17 +45,17 @@ describe("ServerMoveService.prepare", () => {
     await writeFile(
       join(fixture.dataDir, "config.json"),
       JSON.stringify({
-        serverUrl: "https://bb.example.test",
-        serverHeaders: { "x-bb-machine-access": "bbcm_target" },
-        machineCredential: "bbcm_target",
+        serverUrl: "https://sandy.example.test",
+        serverHeaders: { "x-sandy-machine-access": "sandycm_target" },
+        machineCredential: "sandycm_target",
         connectMachineId: "machine-target",
       }),
     );
     const command = await prepareCommand(fixture, {
-      bbApp: {
-        downloadPath: `/internal/server-move/${MOVE_ID}/bb-app.tgz`,
-        sha256: fixture.source.bbAppSha256,
-        sizeBytes: fixture.source.bbAppSizeBytes,
+      sandyApp: {
+        downloadPath: `/internal/server-move/${MOVE_ID}/sandy-app.tgz`,
+        sha256: fixture.source.sandyAppSha256,
+        sizeBytes: fixture.source.sandyAppSizeBytes,
         version: "1.0.0",
       },
     });
@@ -68,12 +68,12 @@ describe("ServerMoveService.prepare", () => {
     });
     expect(fixture.isPendingServerRunning(result.pid)).toBe(true);
     expect(installed.map((bytes) => bytes.toString("utf8"))).toEqual([
-      "full bb-app package",
+      "full sandy-app package",
     ]);
     expect(await exists(join(fixture.dataDir, "host-artifact.sha256"))).toBe(
       false,
     );
-    expect(await readFile(join(fixture.dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(fixture.dataDir, "sandy.db"), "utf8")).toBe(
       "sqlite database bytes",
     );
     expect(
@@ -83,10 +83,10 @@ describe("ServerMoveService.prepare", () => {
       ),
     ).toBe("attachment");
     expect(await readJson(join(fixture.dataDir, "config.json"))).toEqual({
-      config: { BB_LOG_LEVEL: "info" },
-      serverUrl: "https://bb.example.test",
-      serverHeaders: { "x-bb-machine-access": "bbcm_target" },
-      machineCredential: "bbcm_target",
+      config: { SANDY_LOG_LEVEL: "info" },
+      serverUrl: "https://sandy.example.test",
+      serverHeaders: { "x-sandy-machine-access": "sandycm_target" },
+      machineCredential: "sandycm_target",
       connectMachineId: "machine-target",
     });
     expect(await readServerImportFile(fixture.dataDir)).toEqual({
@@ -94,12 +94,12 @@ describe("ServerMoveService.prepare", () => {
       kind: "move",
       moveId: MOVE_ID,
       activationToken: ACTIVATION_TOKEN,
-      sourceDataDir: "/Users/me/.bb",
+      sourceDataDir: "/Users/me/.sandy",
       sourceServerHostId: "host-source",
       targetHostId: "host-target",
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
       importedEntries: expect.arrayContaining([
-        "bb.db",
+        "sandy.db",
         "config.json",
         "attachments/project/a.txt",
         "plugins/tasks/data.db",
@@ -109,11 +109,11 @@ describe("ServerMoveService.prepare", () => {
     });
     expect(fixture.launches).toEqual([
       {
-        bbServerEntry: join(fixture.packageRoot, "dist", "bb-server.js"),
+        sandyServerEntry: join(fixture.packageRoot, "dist", "sandy-server.js"),
         dataDir: fixture.dataDir,
         serverPort: command.serverPort,
         hostDaemonPort: 38_887,
-        env: expect.objectContaining({ BB_HOST_DAEMON_PORT: "38887" }),
+        env: expect.objectContaining({ SANDY_HOST_DAEMON_PORT: "38887" }),
         logPath: join(
           fixture.dataDir,
           "logs",
@@ -148,7 +148,7 @@ describe("ServerMoveService.prepare", () => {
   it("fails on a digest mismatch and leaves the target data dir untouched", async () => {
     const fixture = await createFixture();
     const originalConfig = JSON.stringify({
-      serverUrl: "https://bb.example.test",
+      serverUrl: "https://sandy.example.test",
     });
     await writeFile(join(fixture.dataDir, "config.json"), originalConfig);
     const command = await prepareCommand(fixture);
@@ -160,7 +160,7 @@ describe("ServerMoveService.prepare", () => {
       }),
     ).rejects.toMatchObject({ code: "server_move_digest_mismatch" });
 
-    expect(await exists(join(fixture.dataDir, "bb.db"))).toBe(false);
+    expect(await exists(join(fixture.dataDir, "sandy.db"))).toBe(false);
     expect(await exists(join(fixture.dataDir, "server-import.json"))).toBe(
       false,
     );
@@ -176,16 +176,16 @@ describe("ServerMoveService.prepare", () => {
   it("abort stops the pending server, restores config backups, and un-archives standalone data", async () => {
     const fixture = await createFixture();
     const originalConfig = {
-      config: { BB_LOG_LEVEL: "debug" },
-      serverUrl: "https://bb.example.test",
-      machineCredential: "bbcm_target",
+      config: { SANDY_LOG_LEVEL: "debug" },
+      serverUrl: "https://sandy.example.test",
+      machineCredential: "sandycm_target",
     };
     await writeFile(
       join(fixture.dataDir, "config.json"),
       JSON.stringify(originalConfig),
     );
     await writeFileWithDirs(
-      join(fixture.homeDir, ".bb", "bb.db"),
+      join(fixture.homeDir, ".sandy", "sandy.db"),
       "standalone server",
     );
     const command = await prepareCommand(fixture, {
@@ -193,10 +193,10 @@ describe("ServerMoveService.prepare", () => {
     });
 
     const result = await fixture.service.prepare(command);
-    expect(await exists(join(fixture.homeDir, ".bb"))).toBe(false);
+    expect(await exists(join(fixture.homeDir, ".sandy"))).toBe(false);
     expect(
       (await readdir(fixture.homeDir)).some((name) =>
-        name.startsWith(".bb.before-move-"),
+        name.startsWith(".sandy.before-move-"),
       ),
     ).toBe(true);
 
@@ -208,7 +208,7 @@ describe("ServerMoveService.prepare", () => {
     expect(await readJson(join(fixture.dataDir, "config.json"))).toEqual(
       originalConfig,
     );
-    expect(await exists(join(fixture.dataDir, "bb.db"))).toBe(false);
+    expect(await exists(join(fixture.dataDir, "sandy.db"))).toBe(false);
     expect(await exists(join(fixture.dataDir, "attachments"))).toBe(false);
     expect(await exists(join(fixture.dataDir, "server-import-backup"))).toBe(
       false,
@@ -219,7 +219,7 @@ describe("ServerMoveService.prepare", () => {
     expect(await exists(join(fixture.dataDir, "server-move-incoming"))).toBe(
       false,
     );
-    expect(await readFile(join(fixture.homeDir, ".bb", "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(fixture.homeDir, ".sandy", "sandy.db"), "utf8")).toBe(
       "standalone server",
     );
     await expect(
@@ -227,14 +227,14 @@ describe("ServerMoveService.prepare", () => {
     ).resolves.toEqual({ ok: true });
   });
 
-  it("refuses to archive ~/.bb while bb is running from it", async () => {
+  it("refuses to archive ~/.sandy while sandy is running from it", async () => {
     const fixture = await createFixture();
     await writeFileWithDirs(
-      join(fixture.homeDir, ".bb", "bb.db"),
+      join(fixture.homeDir, ".sandy", "sandy.db"),
       "standalone server",
     );
-    await writeBbAppRuntime({
-      dataDir: join(fixture.homeDir, ".bb"),
+    await writeSandyAppRuntime({
+      dataDir: join(fixture.homeDir, ".sandy"),
       serverPort: 38_886,
     });
     const command = await prepareCommand(fixture, {
@@ -243,10 +243,10 @@ describe("ServerMoveService.prepare", () => {
 
     await expect(fixture.service.prepare(command)).rejects.toMatchObject({
       code: "server_move_rejected",
-      message: `bb is running from ${join(fixture.homeDir, ".bb")} on this machine (pid ${process.pid}). Quit bb there first, then start the move again.`,
+      message: `sandy is running from ${join(fixture.homeDir, ".sandy")} on this machine (pid ${process.pid}). Quit sandy there first, then start the move again.`,
     });
     expect(fixture.source.archiveRequests).toEqual([]);
-    expect(await readFile(join(fixture.homeDir, ".bb", "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(fixture.homeDir, ".sandy", "sandy.db"), "utf8")).toBe(
       "standalone server",
     );
 
@@ -260,11 +260,11 @@ describe("ServerMoveService.prepare", () => {
       },
     });
     await writeFileWithDirs(
-      join(stopped.homeDir, ".bb", "bb.db"),
+      join(stopped.homeDir, ".sandy", "sandy.db"),
       "standalone server",
     );
-    await writeBbAppRuntime({
-      dataDir: join(stopped.homeDir, ".bb"),
+    await writeSandyAppRuntime({
+      dataDir: join(stopped.homeDir, ".sandy"),
       serverPort: 38_886,
     });
     await expect(
@@ -272,7 +272,7 @@ describe("ServerMoveService.prepare", () => {
         await prepareCommand(stopped, { archiveExistingServerData: true }),
       ),
     ).resolves.toMatchObject({ pid: expect.any(Number) });
-    expect(await exists(join(stopped.homeDir, ".bb"))).toBe(false);
+    expect(await exists(join(stopped.homeDir, ".sandy"))).toBe(false);
   });
 });
 
@@ -307,7 +307,7 @@ describe("ServerMoveService in launcher-managed moved mode", () => {
       movedFile: true,
     },
     {
-      name: "the recorded pid is not bb-app",
+      name: "the recorded pid is not sandy-app",
       processOps: {
         isRunning: () => true,
         readIdentity: async () => ({
@@ -403,7 +403,7 @@ describe("ServerMoveService in launcher-managed moved mode", () => {
     expect(await exists(join(fixture.dataDir, "server-import.json"))).toBe(
       false,
     );
-    expect(await exists(join(fixture.dataDir, "bb.db"))).toBe(false);
+    expect(await exists(join(fixture.dataDir, "sandy.db"))).toBe(false);
     expect(await exists(join(fixture.dataDir, "server-moved.json"))).toBe(true);
     expect(await exists(join(fixture.dataDir, "server-move-incoming"))).toBe(
       false,
@@ -414,7 +414,7 @@ describe("ServerMoveService in launcher-managed moved mode", () => {
 describe("ServerMoveService own data dir guards", () => {
   it("blocks while an old server copy is still listed, then clears after delete_old_copy", async () => {
     const fixture = await createFixture();
-    await writeFile(join(fixture.dataDir, "bb.db"), "old server");
+    await writeFile(join(fixture.dataDir, "sandy.db"), "old server");
     await writeFileWithDirs(
       join(fixture.dataDir, "attachments", "a.txt"),
       "old attachment",
@@ -422,7 +422,7 @@ describe("ServerMoveService own data dir guards", () => {
     await writeLauncherMovedMode({
       dataDir: fixture.dataDir,
       serverPort: 38_886,
-      oldCopyEntries: ["bb.db", "attachments"],
+      oldCopyEntries: ["sandy.db", "attachments"],
     });
     const inspect = () =>
       fixture.service.inspect({
@@ -432,7 +432,7 @@ describe("ServerMoveService own data dir guards", () => {
       });
 
     expect((await inspect()).dataDirHasServerData).toBe(true);
-    await rm(join(fixture.dataDir, "bb.db"));
+    await rm(join(fixture.dataDir, "sandy.db"));
     expect((await inspect()).dataDirHasServerData).toBe(true);
 
     await expect(fixture.service.deleteOldCopy()).resolves.toEqual({
@@ -466,11 +466,11 @@ describe("ServerMoveService own data dir guards", () => {
     const fixture = await createFixture();
     const { dataDir } = fixture;
     const originalConfig = {
-      config: { BB_LOG_LEVEL: "debug" },
-      serverUrl: "https://bb.example.test",
-      machineCredential: "bbcm_target",
+      config: { SANDY_LOG_LEVEL: "debug" },
+      serverUrl: "https://sandy.example.test",
+      machineCredential: "sandycm_target",
     };
-    await writeFileWithDirs(join(dataDir, "bb.db"), "crashed import database");
+    await writeFileWithDirs(join(dataDir, "sandy.db"), "crashed import database");
     await writeFileWithDirs(
       join(dataDir, "attachments", "crashed", "a.txt"),
       "crashed attachment",
@@ -478,7 +478,7 @@ describe("ServerMoveService own data dir guards", () => {
     await writeFileWithDirs(
       join(dataDir, "config.json"),
       JSON.stringify({
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
         serverUrl: "http://127.0.0.1:39999",
       }),
     );
@@ -490,7 +490,7 @@ describe("ServerMoveService own data dir guards", () => {
       join(dataDir, "server-import-journal.json"),
       JSON.stringify({
         version: 1,
-        entries: ["attachments/crashed/a.txt", "config.json", "bb.db"],
+        entries: ["attachments/crashed/a.txt", "config.json", "sandy.db"],
         preexistingEntries: ["config.json"],
       }),
     );
@@ -524,23 +524,23 @@ describe("ServerMoveService own data dir guards", () => {
     expect(await exists(join(dataDir, "server-import-journal.json"))).toBe(
       false,
     );
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "sqlite database bytes",
     );
     expect(
       await readJson(join(dataDir, "server-import-backup", "config.json")),
     ).toEqual(originalConfig);
     expect(await readJson(join(dataDir, "config.json"))).toEqual({
-      config: { BB_LOG_LEVEL: "info" },
-      serverUrl: "https://bb.example.test",
-      machineCredential: "bbcm_target",
+      config: { SANDY_LOG_LEVEL: "info" },
+      serverUrl: "https://sandy.example.test",
+      machineCredential: "sandycm_target",
     });
   });
 
   it("rolls back a crashed manual import in this data directory so it doesn't block a move", async () => {
     const fixture = await createFixture();
     const { dataDir } = fixture;
-    await writeFileWithDirs(join(dataDir, "bb.db"), "half-imported database");
+    await writeFileWithDirs(join(dataDir, "sandy.db"), "half-imported database");
     await writeFileWithDirs(
       join(dataDir, "attachments", "project", "a.txt"),
       "half-imported attachment",
@@ -549,7 +549,7 @@ describe("ServerMoveService own data dir guards", () => {
       join(dataDir, "server-import-journal.json"),
       JSON.stringify({
         version: 1,
-        entries: ["attachments/project/a.txt", "bb.db"],
+        entries: ["attachments/project/a.txt", "sandy.db"],
         preexistingEntries: [],
       }),
     );
@@ -565,7 +565,7 @@ describe("ServerMoveService own data dir guards", () => {
       fixture.service.prepare(await prepareCommand(fixture)),
     ).resolves.toMatchObject({ pid: expect.any(Number) });
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "sqlite database bytes",
     );
     expect(
@@ -579,8 +579,8 @@ describe("ServerMoveService own data dir guards", () => {
   it("keeps a finished manual import whose journal outlived its marker and refuses the move", async () => {
     const fixture = await createFixture();
     const { dataDir } = fixture;
-    const importedEntries = ["attachments/project/a.txt", "bb.db"];
-    await writeFileWithDirs(join(dataDir, "bb.db"), "imported database");
+    const importedEntries = ["attachments/project/a.txt", "sandy.db"];
+    await writeFileWithDirs(join(dataDir, "sandy.db"), "imported database");
     await writeFileWithDirs(
       join(dataDir, "attachments", "project", "a.txt"),
       "imported attachment",
@@ -598,7 +598,7 @@ describe("ServerMoveService own data dir guards", () => {
       kind: "manual",
       moveId: null,
       activationToken: null,
-      sourceDataDir: "/Users/me/.bb",
+      sourceDataDir: "/Users/me/.sandy",
       sourceServerHostId: "host-source",
       targetHostId: null,
       serverUrl: null,
@@ -618,7 +618,7 @@ describe("ServerMoveService own data dir guards", () => {
       fixture.service.prepare(await prepareCommand(fixture)),
     ).rejects.toMatchObject({ code: "server_move_archive_server_data_exists" });
 
-    expect(await readFile(join(dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(dataDir, "sandy.db"), "utf8")).toBe(
       "imported database",
     );
     expect(
@@ -634,10 +634,10 @@ describe("ServerMoveService own data dir guards", () => {
     expect(fixture.launches).toEqual([]);
   });
 
-  it("hides ~/.bb when it is this daemon's data dir and refuses to archive it", async () => {
+  it("hides ~/.sandy when it is this daemon's data dir and refuses to archive it", async () => {
     const fixture = await createFixture();
-    await writeFile(join(fixture.dataDir, "bb.db"), "old server");
-    await symlink(fixture.dataDir, join(fixture.homeDir, ".bb"));
+    await writeFile(join(fixture.dataDir, "sandy.db"), "old server");
+    await symlink(fixture.dataDir, join(fixture.homeDir, ".sandy"));
 
     const result = await fixture.service.inspect({
       type: "server_move.inspect",
@@ -660,10 +660,10 @@ describe("ServerMoveService own data dir guards", () => {
     );
     expect(
       (await readdir(fixture.homeDir)).filter((name) =>
-        name.startsWith(".bb.before-move-"),
+        name.startsWith(".sandy.before-move-"),
       ),
     ).toEqual([]);
-    expect(await readFile(join(fixture.dataDir, "bb.db"), "utf8")).toBe(
+    expect(await readFile(join(fixture.dataDir, "sandy.db"), "utf8")).toBe(
       "old server",
     );
   });
@@ -674,8 +674,8 @@ describe("ServerMoveService.deleteOldCopy", () => {
     const fixture = await createFixture();
     const { dataDir } = fixture;
     for (const file of [
-      "bb.db",
-      "bb.db-wal",
+      "sandy.db",
+      "sandy.db-wal",
       "attachments/project/a.txt",
       "plugins/tasks/data.db",
       "plugins/tasks/host-data/cache.json",
@@ -698,7 +698,7 @@ describe("ServerMoveService.deleteOldCopy", () => {
       toHostId: "host-target",
       toHostName: "studio",
       serverUrl: "https://studio.example.test",
-      oldCopyEntries: ["bb.db", "attachments", "plugins/tasks/data.db"],
+      oldCopyEntries: ["sandy.db", "attachments", "plugins/tasks/data.db"],
     };
     await writeServerMovedFile(dataDir, marker);
 
@@ -707,8 +707,8 @@ describe("ServerMoveService.deleteOldCopy", () => {
     });
 
     for (const removed of [
-      "bb.db",
-      "bb.db-wal",
+      "sandy.db",
+      "sandy.db-wal",
       "attachments",
       "plugins/tasks/data.db",
     ]) {
@@ -735,21 +735,21 @@ describe("ServerMoveService.deleteOldCopy", () => {
 
   it("reports nothing deleted when this data dir has no moved-server lock", async () => {
     const fixture = await createFixture();
-    await writeFile(join(fixture.dataDir, "bb.db"), "content");
+    await writeFile(join(fixture.dataDir, "sandy.db"), "content");
 
     await expect(fixture.service.deleteOldCopy()).resolves.toEqual({
       deleted: false,
     });
-    expect(await exists(join(fixture.dataDir, "bb.db"))).toBe(true);
+    expect(await exists(join(fixture.dataDir, "sandy.db"))).toBe(true);
   });
 });
 
 describe("ServerMoveService.inspect and probe", () => {
   it("reports the target machine's server-move readiness", async () => {
     const fixture = await createFixture({
-      env: { BB_SERVER_MOVE_SERVICE_MANAGER: "none", BB_APP_VERSION: "1.2.3" },
+      env: { SANDY_SERVER_MOVE_SERVICE_MANAGER: "none", SANDY_APP_VERSION: "1.2.3" },
     });
-    await writeFileWithDirs(join(fixture.homeDir, ".bb", "bb.db"), "12345");
+    await writeFileWithDirs(join(fixture.homeDir, ".sandy", "sandy.db"), "12345");
     await writeFileWithDirs(join(fixture.homeDir, ".codex", "auth.json"), "{}");
     await writeFileWithDirs(join(fixture.homeDir, "tools", "bin", "gh"), "");
 
@@ -770,9 +770,9 @@ describe("ServerMoveService.inspect and probe", () => {
       dataDir: fixture.dataDir,
       platform: "linux",
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      bbAppVersion: "1.2.3",
+      sandyAppVersion: "1.2.3",
       serverEntryAvailable: true,
-      existingServerData: { path: join(fixture.homeDir, ".bb"), sizeBytes: 5 },
+      existingServerData: { path: join(fixture.homeDir, ".sandy"), sizeBytes: 5 },
       dataDirHasServerData: false,
       portAvailable: true,
       ghAuthenticated: null,

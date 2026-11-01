@@ -1,10 +1,10 @@
-import { openSession, updateHost } from "@bb/db";
-import type { JsonValue } from "@bb/domain";
+import { openSession, updateHost } from "@sandy/db";
+import type { JsonValue } from "@sandy/domain";
 import {
   HOST_DAEMON_PROTOCOL_VERSION,
   type HostDaemonOnlineRpcRequestMessage,
-} from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import { handleDaemonSocketClosed } from "../../src/internal/session-owner-side-effects.js";
 import { installProviderModelCatalogPrewarm } from "../../src/services/providers/provider-model-catalog-prewarm.js";
@@ -76,7 +76,7 @@ function openDaemonSession(harness: TestAppHarness, hostId: string): string {
     hostId,
     instanceId: `instance-${hostId}`,
     hostName: "Test Host",
-    dataDir: `/tmp/bb-host-data/${hostId}`,
+    dataDir: `/tmp/sandy-host-data/${hostId}`,
     protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
     heartbeatIntervalMs: 5_000,
     leaseTimeoutMs: 30_000,

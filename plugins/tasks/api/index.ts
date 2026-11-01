@@ -1,4 +1,4 @@
-import type { BbPluginApi, PluginRpcHandlers } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, PluginRpcHandlers } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   createTasksStore,
@@ -87,8 +87,8 @@ export interface TasksApiStore {
   sidebarSummary(): SidebarProjectSummary[];
 }
 
-export function createStore(bb: BbPluginApi): TasksApiStore {
-  const database = bb.storage.database();
+export function createStore(sandy: SandyPluginApi): TasksApiStore {
+  const database = sandy.storage.database();
   const tasks = createTasksStore(database);
 
   return {
@@ -198,44 +198,44 @@ function taskFailure(error: TasksDomainFailure) {
   return { ok: false as const, error: error.detail };
 }
 
-function invalidate(bb: BbPluginApi, tags: readonly string[]): void {
-  bb.rpc.experimental_invalidate([...new Set(tags)]);
+function invalidate(sandy: SandyPluginApi, tags: readonly string[]): void {
+  sandy.rpc.experimental_invalidate([...new Set(tags)]);
 }
 
 export function invalidateTaskChanged(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   task: { id: string; projectId: string },
 ): void {
-  invalidate(bb, taskChangedTags(task));
+  invalidate(sandy, taskChangedTags(task));
 }
 
-export function invalidateComments(bb: BbPluginApi, taskId: string): void {
-  invalidate(bb, [commentsTag(taskId)]);
+export function invalidateComments(sandy: SandyPluginApi, taskId: string): void {
+  invalidate(sandy, [commentsTag(taskId)]);
 }
 
-export function invalidateThreads(bb: BbPluginApi, taskId: string): void {
-  invalidate(bb, threadsChangedTags(taskId));
+export function invalidateThreads(sandy: SandyPluginApi, taskId: string): void {
+  invalidate(sandy, threadsChangedTags(taskId));
 }
 
-export function invalidateProjects(bb: BbPluginApi): void {
-  invalidate(bb, [PROJECTS_TAG]);
+export function invalidateProjects(sandy: SandyPluginApi): void {
+  invalidate(sandy, [PROJECTS_TAG]);
 }
 
 export function invalidateFolders(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   options: { projectsMoved: boolean },
 ): void {
-  invalidate(bb, [
+  invalidate(sandy, [
     FOLDERS_TAG,
     ...(options.projectsMoved ? [PROJECTS_TAG] : []),
   ]);
 }
 
 export function invalidateProjectTasks(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   projectId: string,
 ): void {
-  invalidate(bb, projectTasksChangedTags(projectId));
+  invalidate(sandy, projectTasksChangedTags(projectId));
 }
 
 function apiTask(store: TasksApiStore, task: StoredTask): Task {
@@ -389,7 +389,7 @@ interface AgentThreadInfo {
 }
 
 async function resolveAgentThreadInfo(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   comments: readonly StoredComment[],
 ): Promise<Map<string, AgentThreadInfo>> {
   const threadIds = new Set<string>();
@@ -402,7 +402,7 @@ async function resolveAgentThreadInfo(
   await Promise.all(
     [...threadIds].map(async (threadId) => {
       try {
-        const thread = await bb.sdk.threads.get({ threadId });
+        const thread = await sandy.sdk.threads.get({ threadId });
         const isSideChat = isSideChatShapedThread(thread);
         const title = isSideChat
           ? undefined
@@ -420,7 +420,7 @@ async function resolveAgentThreadInfo(
 }
 
 async function resolveProviderBadges(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   threadInfo: ReadonlyMap<string, AgentThreadInfo>,
 ): Promise<Map<string, CommentProvider>> {
   const providerIds = new Set(
@@ -428,9 +428,9 @@ async function resolveProviderBadges(
   );
   const badges = new Map<string, CommentProvider>();
   if (providerIds.size === 0) return badges;
-  let providers: Awaited<ReturnType<typeof bb.sdk.providers.list>>;
+  let providers: Awaited<ReturnType<typeof sandy.sdk.providers.list>>;
   try {
-    providers = await bb.sdk.providers.list();
+    providers = await sandy.sdk.providers.list();
   } catch {
     return badges;
   }
@@ -460,7 +460,7 @@ interface CreateCommentInput {
 }
 
 export async function createComment(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   input: CreateCommentInput,
 ): Promise<StoredComment> {
@@ -475,11 +475,11 @@ export async function createComment(
     }),
   );
 
-  invalidateComments(bb, input.taskId);
+  invalidateComments(sandy, input.taskId);
   if (!input.notify) return comment;
 
   const deliver = async (): Promise<StoredComment> => {
-    const notifiedCount = await deliverCommentToLatestAgent(bb, store.tasks, {
+    const notifiedCount = await deliverCommentToLatestAgent(sandy, store.tasks, {
       taskId: comment.taskId,
       commentId: comment.id,
       body: comment.body,
@@ -488,13 +488,13 @@ export async function createComment(
     const updated = store.transaction(() =>
       store.tasks.updateComment(comment.id, { notifiedCount }),
     );
-    invalidateComments(bb, input.taskId);
+    invalidateComments(sandy, input.taskId);
     return updated;
   };
 
   if (input.awaitDelivery) return deliver();
   void deliver().catch((error) => {
-    bb.log.warn(
+    sandy.log.warn(
       `failed to update comment notification ${comment.id}: ${errorMessage(error)}`,
     );
   });
@@ -506,7 +506,7 @@ interface TaskPullRequestsResult {
   unavailableThreadIds: string[];
 }
 
-const GITHUB_PR_STATUS_PLUGIN_ID = "bb--github-pr-status";
+const GITHUB_PR_STATUS_PLUGIN_ID = "sandy--github-pr-status";
 const PULL_REQUEST_KEYS_PER_READ = 200;
 
 const environmentPullRequestsSchema = z.record(
@@ -529,7 +529,7 @@ const environmentPullRequestsSchema = z.record(
 type EnvironmentPullRequests = z.infer<typeof environmentPullRequestsSchema>;
 
 async function readEnvironmentPullRequests(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   environmentIds: readonly string[],
 ): Promise<EnvironmentPullRequests> {
   const rows: EnvironmentPullRequests = {};
@@ -545,7 +545,7 @@ async function readEnvironmentPullRequests(
     try {
       Object.assign(
         rows,
-        await bb.sdk.plugins.callRpc({
+        await sandy.sdk.plugins.callRpc({
           pluginId: GITHUB_PR_STATUS_PLUGIN_ID,
           method: "pullRequests",
           input: { keys },
@@ -553,14 +553,14 @@ async function readEnvironmentPullRequests(
         }),
       );
     } catch (error) {
-      bb.log.debug(`pull request lookup failed: ${errorMessage(error)}`);
+      sandy.log.debug(`pull request lookup failed: ${errorMessage(error)}`);
     }
   }
   return rows;
 }
 
 async function listTaskPullRequests(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   taskId: string,
 ): Promise<TaskPullRequestsResult> {
@@ -571,7 +571,7 @@ async function listTaskPullRequests(
   await Promise.all(
     taskThreads.map(async (taskThread) => {
       try {
-        const thread = await bb.sdk.threads.get({
+        const thread = await sandy.sdk.threads.get({
           threadId: taskThread.threadId,
         });
         if (!thread.environmentId) return;
@@ -585,7 +585,7 @@ async function listTaskPullRequests(
   );
 
   const byUrl = new Map<string, TaskPullRequest>();
-  const rows = await readEnvironmentPullRequests(bb, [
+  const rows = await readEnvironmentPullRequests(sandy, [
     ...threadIdsByEnvironment.keys(),
   ]);
   for (const [environmentId, threadIds] of threadIdsByEnvironment) {
@@ -632,32 +632,32 @@ async function listTaskPullRequests(
 }
 
 export function registerHandlers(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
 ): PluginRpcHandlers<typeof tasksRpcContract> {
   return {
     createFolder(input) {
       const folder = store.tasks.createFolder(input);
-      invalidateFolders(bb, { projectsMoved: false });
+      invalidateFolders(sandy, { projectsMoved: false });
       return { folder };
     },
     renameFolder(input) {
       const folder = store.tasks.updateFolder(input.folderId, {
         name: input.name,
       });
-      invalidateFolders(bb, { projectsMoved: false });
+      invalidateFolders(sandy, { projectsMoved: false });
       return { folder };
     },
     moveFolder(input) {
       const folder = store.tasks.updateFolder(input.folderId, {
         parentFolderId: input.parentFolderId,
       });
-      invalidateFolders(bb, { projectsMoved: false });
+      invalidateFolders(sandy, { projectsMoved: false });
       return { folder };
     },
     deleteFolder(input) {
       const result = store.tasks.deleteFolder(input.folderId);
-      if (result.deleted) invalidateFolders(bb, { projectsMoved: true });
+      if (result.deleted) invalidateFolders(sandy, { projectsMoved: true });
       return result;
     },
     listFolders() {
@@ -665,13 +665,13 @@ export function registerHandlers(
     },
     createProject(input) {
       const project = store.tasks.createProject(input);
-      invalidateProjects(bb);
+      invalidateProjects(sandy);
       return { project };
     },
     updateProject(input) {
       const { projectId, ...changes } = input;
       const project = store.tasks.updateProject(projectId, changes);
-      invalidateProjects(bb);
+      invalidateProjects(sandy);
       return { project };
     },
     renameProjectPrefix(input) {
@@ -685,7 +685,7 @@ export function registerHandlers(
         const project = store.tasks.updateProject(input.projectId, {
           prefix: input.prefix,
         });
-        invalidateProjectTasks(bb, project.id);
+        invalidateProjectTasks(sandy, project.id);
         return { ok: true, project };
       } catch (error) {
         if (error instanceof TasksDomainFailure) return taskFailure(error);
@@ -706,8 +706,8 @@ export function registerHandlers(
         const attachments = attachmentsForTasks(store.tasks, taskIds);
         const deleted = store.tasks.deleteProject(input.projectId);
         if (deleted) {
-          await removeAttachmentBlobs(bb, store.tasks, attachments);
-          invalidateProjectTasks(bb, input.projectId);
+          await removeAttachmentBlobs(sandy, store.tasks, attachments);
+          invalidateProjectTasks(sandy, input.projectId);
         }
         return { ok: true, deleted };
       } catch (error) {
@@ -735,7 +735,7 @@ export function registerHandlers(
           replaceTaskLabels(store, created.id, input.labelIds);
           return apiTask(store, created);
         });
-        invalidateTaskChanged(bb, task);
+        invalidateTaskChanged(sandy, task);
         return { ok: true, task };
       } catch (error) {
         if (error instanceof TasksDomainFailure) return taskFailure(error);
@@ -807,7 +807,7 @@ export function registerHandlers(
           };
         });
 
-        invalidate(bb, [
+        invalidate(sandy, [
           ...taskChangedTags(result.task),
           ...(result.task.parentTaskId === current.parentTaskId
             ? []
@@ -828,8 +828,8 @@ export function registerHandlers(
       const attachments = attachmentsForTasks(store.tasks, [input.taskId]);
       const deleted = store.tasks.deleteTask(input.taskId);
       if (deleted && task) {
-        await removeAttachmentBlobs(bb, store.tasks, attachments);
-        invalidate(bb, [
+        await removeAttachmentBlobs(sandy, store.tasks, attachments);
+        invalidate(sandy, [
           ...taskChangedTags(task),
           ...subtasks.flatMap(taskChangedTags),
           ...(subtasks.length > 0 ? [TASK_META_TAG] : []),
@@ -889,8 +889,8 @@ export function registerHandlers(
         }
         return { task: apiTask(store, moved), statusChanged };
       });
-      invalidateTaskChanged(bb, result.task);
-      if (result.statusChanged) invalidateComments(bb, result.task.id);
+      invalidateTaskChanged(sandy, result.task);
+      if (result.statusChanged) invalidateComments(sandy, result.task.id);
       return { ok: true, task: result.task };
     },
     moveTaskToProject(input) {
@@ -909,7 +909,7 @@ export function registerHandlers(
         return { task: apiTask(store, outcome.task), moved: outcome.moved };
       });
       if (result.moved.length > 0) {
-        invalidate(bb, [
+        invalidate(sandy, [
           PROJECTS_TAG,
           TASK_META_TAG,
           ...taskChangedTags(current),
@@ -923,7 +923,7 @@ export function registerHandlers(
     },
     createLabel(input) {
       const label = store.tasks.createLabel(input);
-      invalidate(bb, [labelsTag(label.projectId)]);
+      invalidate(sandy, [labelsTag(label.projectId)]);
       return { label };
     },
     updateLabel(input) {
@@ -931,14 +931,14 @@ export function registerHandlers(
         name: input.name,
         color: input.color,
       });
-      invalidate(bb, [labelsTag(label.projectId)]);
+      invalidate(sandy, [labelsTag(label.projectId)]);
       return { label };
     },
     deleteLabel(input) {
       const label = store.tasks.getLabel(input.labelId);
       const deleted = store.tasks.deleteLabel(input.labelId);
       if (deleted && label) {
-        invalidate(bb, [
+        invalidate(sandy, [
           labelsTag(label.projectId),
           projectTag(label.projectId),
           ALL_TASKS_TAG,
@@ -959,7 +959,7 @@ export function registerHandlers(
       );
     },
     async createComment(input) {
-      const comment = await createComment(bb, store, {
+      const comment = await createComment(sandy, store, {
         taskId: input.taskId,
         kind: "user",
         authorName: "You",
@@ -973,8 +973,8 @@ export function registerHandlers(
     },
     async listComments(input) {
       const comments = store.tasks.listComments(input.taskId);
-      const threadInfo = await resolveAgentThreadInfo(bb, comments);
-      const providerBadges = await resolveProviderBadges(bb, threadInfo);
+      const threadInfo = await resolveAgentThreadInfo(sandy, comments);
+      const providerBadges = await resolveProviderBadges(sandy, threadInfo);
       return {
         comments: comments.map((comment) => {
           const info =
@@ -1014,7 +1014,7 @@ export function registerHandlers(
     async deleteAttachment(input) {
       try {
         const attachment = await deleteAttachmentById(
-          bb,
+          sandy,
           store.tasks,
           input.attachmentId,
           {
@@ -1048,7 +1048,7 @@ export function registerHandlers(
       return { cards: store.tasks.listTaskCardMeta(input.projectId ?? null) };
     },
     async listTaskPullRequests(input) {
-      const result = await listTaskPullRequests(bb, store, input.taskId);
+      const result = await listTaskPullRequests(sandy, store, input.taskId);
       if (result.pullRequests.some(isActivePullRequest))
         tasksWithActivePullRequests(store).add(input.taskId);
       else tasksWithActivePullRequests(store).delete(input.taskId);
@@ -1056,7 +1056,7 @@ export function registerHandlers(
     },
     createPreset(input) {
       const preset = store.tasks.createPreset({ ...input, builtin: false });
-      invalidate(bb, [PRESETS_TAG]);
+      invalidate(sandy, [PRESETS_TAG]);
       return { preset };
     },
     updatePreset(input) {
@@ -1067,19 +1067,19 @@ export function registerHandlers(
           ? { ...changes, baseBranch: null, machineId: null }
           : changes,
       );
-      invalidate(bb, [PRESETS_TAG]);
+      invalidate(sandy, [PRESETS_TAG]);
       return { preset };
     },
     deletePreset(input) {
       const deleted = store.tasks.deletePreset(input.presetId);
-      if (deleted) invalidate(bb, [PRESETS_TAG]);
+      if (deleted) invalidate(sandy, [PRESETS_TAG]);
       return { deleted };
     },
     listPresets() {
       return { presets: store.tasks.listPresets() };
     },
     async listMachines() {
-      const machines = await bb.sdk.hosts.list();
+      const machines = await sandy.sdk.hosts.list();
       return {
         machines: machines.map((machine) => ({
           id: machine.id,
@@ -1092,7 +1092,7 @@ export function registerHandlers(
       const limit = Math.min(input.limit ?? MAX_THREAD_SEARCH_RESULTS, 10);
       const candidates =
         query.length >= 2
-          ? await bb.sdk.threads.search({
+          ? await sandy.sdk.threads.search({
               query,
               limitPerGroup: String(MAX_THREAD_SEARCH_RESULTS),
             })
@@ -1102,7 +1102,7 @@ export function registerHandlers(
             (result) => result.thread,
           )
         : (
-            await bb.sdk.threads.list({
+            await sandy.sdk.threads.list({
               limit: MAX_THREAD_SEARCH_RESULTS,
             })
           ).filter((thread) => {
@@ -1123,10 +1123,10 @@ export function registerHandlers(
           })),
       };
     },
-    async listBbProjects() {
-      const projects = await bb.sdk.projects.list({ includePersonal: true });
+    async listSandyProjects() {
+      const projects = await sandy.sdk.projects.list({ includePersonal: true });
       return {
-        bbProjects: projects.map((project) => ({
+        sandyProjects: projects.map((project) => ({
           id: project.id,
           name: project.name,
         })),
@@ -1141,16 +1141,16 @@ export function registerHandlers(
   };
 }
 
-export function registerTasksApi(bb: BbPluginApi, store: TasksApiStore): void {
-  bb.rpc.register(tasksRpcContract, registerHandlers(bb, store));
-  bb.rpc.experimental_whileWatched("listTaskPullRequests", (read, signal) => {
+export function registerTasksApi(sandy: SandyPluginApi, store: TasksApiStore): void {
+  sandy.rpc.register(tasksRpcContract, registerHandlers(sandy, store));
+  sandy.rpc.experimental_whileWatched("listTaskPullRequests", (read, signal) => {
     if (!("input" in read)) return;
     const { taskId } = tasksRpcContract.listTaskPullRequests.input.parse(
       read.input,
     );
     const timer = setInterval(() => {
       if (tasksWithActivePullRequests(store).has(taskId))
-        invalidate(bb, [pullRequestsTag(taskId)]);
+        invalidate(sandy, [pullRequestsTag(taskId)]);
     }, ACTIVE_PULL_REQUEST_REFRESH_MS);
     signal.addEventListener("abort", () => clearInterval(timer), {
       once: true,

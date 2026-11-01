@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { experimental_useExperiment } from "@get-bb/plugin-sdk/app";
+import { experimental_useExperiment } from "@sandy-sdk/plugin-sdk/app";
 import { useSidebarData } from "../model/use-sidebar-data.js";
 import { SIDEBAR_CONTENT_SELECTOR } from "../ui/sidebar.js";
 import { SIDEBAR_WINDOWED_NAV_ATTRIBUTE } from "../list/sidebarThreadShortcuts.js";

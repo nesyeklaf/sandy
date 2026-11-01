@@ -1,0 +1,5 @@
+Card("Patch the lockfiles", [Approval([
+  {kind: "write", target: "services/api/package-lock.json"},
+  {kind: "write", target: "services/web/package-lock.json"},
+  {kind: "external", target: "MR !412 comment", detail: "Summary of the patched advisories", revert: "Delete the comment"}
+])])

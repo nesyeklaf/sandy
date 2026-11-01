@@ -1,3 +1,3 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
-export default function navigation(_bb: BbPluginApi) {}
+export default function navigation(_sandy: SandyPluginApi) {}

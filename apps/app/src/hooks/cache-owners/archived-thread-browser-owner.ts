@@ -1,8 +1,8 @@
-import type { ChangedMessage } from "@bb/domain";
-import type { BbDesktopBrowserApi } from "@bb/desktop-contract";
+import type { ChangedMessage } from "@sandy/domain";
+import type { SandyDesktopBrowserApi } from "@sandy/desktop-contract";
 
 interface ArchivedThreadBrowserOwnerArgs {
-  desktopBrowser: BbDesktopBrowserApi | null;
+  desktopBrowser: SandyDesktopBrowserApi | null;
   readArchivedAt: (threadId: string) => Promise<number | null>;
 }
 

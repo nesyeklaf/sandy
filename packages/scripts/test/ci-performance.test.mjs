@@ -21,7 +21,7 @@ it("rejects a missing lockfile snapshot before starting CI jobs", ({
   skip,
 }) => {
   skip(process.platform === "win32", "the preflight runs on Linux");
-  const root = mkdtempSync(join(tmpdir(), "bb-ci-broken-lockfile-"));
+  const root = mkdtempSync(join(tmpdir(), "sandy-ci-broken-lockfile-"));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(
     join(root, "package.json"),
@@ -58,7 +58,7 @@ it("isolates failed cache restores while preserving healthy caches through a rea
     process.platform === "win32",
     "this fixture invokes pnpm through its POSIX executable",
   );
-  const root = mkdtempSync(join(tmpdir(), "bb-ci-cache-fallback-"));
+  const root = mkdtempSync(join(tmpdir(), "sandy-ci-cache-fallback-"));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(
     join(root, "package.json"),
@@ -147,7 +147,7 @@ it("isolates failed cache restores while preserving healthy caches through a rea
 }, 30_000);
 
 it("checks both sides of plugin renames and falls back to full coverage for shared or unavailable changes", () => {
-  const root = mkdtempSync(join(tmpdir(), "bb-ci-selection-"));
+  const root = mkdtempSync(join(tmpdir(), "sandy-ci-selection-"));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const git = (...args) =>
     execFileSync("git", args, {
@@ -310,7 +310,7 @@ it("reads every cache inventory page and refuses malformed inventories before pl
 });
 
 it("drops Turbo cache entries the job's run summaries do not name, and keeps everything when there is no summary", () => {
-  const root = mkdtempSync(join(tmpdir(), "bb-turbo-prune-"));
+  const root = mkdtempSync(join(tmpdir(), "sandy-turbo-prune-"));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const cache = join(root, "cache");
   const runs = join(root, "runs");

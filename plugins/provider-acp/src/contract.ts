@@ -1,6 +1,6 @@
-import { defineRpcContract } from "@get-bb/plugin-sdk";
-import { experimental_nativeRootsHostContract } from "@get-bb/plugin-sdk/host";
-import { experimental_acpAgentProbeSchema } from "@get-bb/plugin-sdk/provider-bridge/acp";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
+import { experimental_nativeRootsHostContract } from "@sandy-sdk/plugin-sdk/host";
+import { experimental_acpAgentProbeSchema } from "@sandy-sdk/plugin-sdk/provider-bridge/acp";
 import { z } from "zod";
 
 export const acpHostContract = defineRpcContract({

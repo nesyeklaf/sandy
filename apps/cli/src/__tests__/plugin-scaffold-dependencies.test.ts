@@ -5,8 +5,8 @@ import {
   PLUGIN_SERVER_EXTERNALS,
   RUNTIME_SLOT_BY_SPECIFIER,
   SHIMMED_TYPE_PACKAGES,
-} from "@bb/plugin-build";
-import { scaffoldPlugin } from "@bb/templates/plugin-scaffold";
+} from "@sandy/plugin-build";
+import { scaffoldPlugin } from "@sandy/templates/plugin-scaffold";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const DIRS_WITHOUT_BUNDLED_SOURCE = new Set([
@@ -86,12 +86,12 @@ async function scaffoldWithDependencies(workDir: string): Promise<{
   dependencies: string[];
   devDependencies: string[];
 }> {
-  const packageName = "bb-plugin-deps";
+  const packageName = "sandy-plugin-deps";
   const targetDir = join(workDir, packageName);
   await scaffoldPlugin({
     targetDir,
     packageName,
-    bbVersion: "0.9.0",
+    sandyVersion: "0.9.0",
   });
   const manifest: {
     dependencies?: Record<string, string>;
@@ -108,7 +108,7 @@ describe("scaffold dependency classification", () => {
   let workDir: string;
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-scaffold-deps-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-scaffold-deps-"));
   });
 
   afterEach(async () => {

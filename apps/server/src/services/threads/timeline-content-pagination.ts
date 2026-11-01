@@ -2,7 +2,7 @@ import {
   timelineRowChildren,
   withTimelineRowChildren,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 export interface TimelineContentPage {
   partialRowsSourceSeqEnd: number | null;

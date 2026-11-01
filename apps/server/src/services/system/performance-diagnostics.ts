@@ -1,5 +1,5 @@
-import { getExperiments, type DbConnection } from "@bb/db";
-import { startPerformanceDiagnostics } from "@bb/process-utils";
+import { getExperiments, type DbConnection } from "@sandy/db";
+import { startPerformanceDiagnostics } from "@sandy/process-utils";
 import type { ServerLogger } from "../../types.js";
 import type { NotificationHub } from "../../ws/hub.js";
 

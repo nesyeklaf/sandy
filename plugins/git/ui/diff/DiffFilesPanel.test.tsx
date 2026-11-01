@@ -11,7 +11,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import {
   renderSlot,
   type PluginRpcTestHandlers,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import {
   gitPatchKey,
   type DiffFileEntry,
@@ -28,7 +28,7 @@ import type { DiffPatchState } from "./diff-data.js";
 import { DiffFilesPanel } from "./DiffFilesPanel.js";
 import { makeDiffFileEntry } from "./diff-file-fixtures.js";
 import { useDiffFilesCollapseControls } from "./diffFilesStore.js";
-import type { DiffViewedFile } from "@bb/server-contract";
+import type { DiffViewedFile } from "@sandy/server-contract";
 
 vi.mock("@tanstack/react-virtual", () => ({
   useVirtualizer: ({ count }: { count: number }) => ({
@@ -136,7 +136,7 @@ function renderPanel(
     {
       rpc: rpc as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
     },
   );
   return {
@@ -424,7 +424,7 @@ it("requests an edited file and a newly added file in one batch", async () => {
     {
       rpc: rpc as PluginRpcTestHandlers<typeof gitRpcContract>,
       experimental_rpcContract: gitRpcContract,
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
     },
   );
   await waitFor(() => expect(patchOf("a.ts").textContent).toBe("patch:a.ts"));

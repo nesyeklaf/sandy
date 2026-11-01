@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { experimental_makePanelController } from "@get-bb/plugin-sdk/testing";
+import { experimental_makePanelController } from "@sandy-sdk/plugin-sdk/testing";
 
 import { expect, it, vi } from "vitest";
-import { loadPluginApp } from "@get-bb/plugin-sdk/testing/app";
-import { collectPluginAppRegistrations } from "@get-bb/plugin-sdk/internal/plugin-app-collector";
+import { loadPluginApp } from "@sandy-sdk/plugin-sdk/testing/app";
+import { collectPluginAppRegistrations } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 import gitApp from "./app.js";
 
 const app = await loadPluginApp(() => import("./app.js"));

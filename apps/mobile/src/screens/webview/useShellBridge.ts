@@ -6,7 +6,7 @@ import {
   type NativeScreen,
   type PageToShellMessage,
   type ShellToPageEvent,
-} from "@bb/mobile-bridge";
+} from "@sandy/mobile-bridge";
 import { useCallback, useMemo, useRef } from "react";
 import { Linking, Platform, Share } from "react-native";
 import type { WebView, WebViewMessageEvent } from "react-native-webview";

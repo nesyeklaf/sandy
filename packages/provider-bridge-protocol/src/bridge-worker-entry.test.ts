@@ -22,7 +22,7 @@ async function createFixture(bridgeSource: string): Promise<{
   bridgeModulePath: string;
   dataDir: string;
 }> {
-  const dir = await mkdtemp(join(tmpdir(), "bb-bridge-bootstrap-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-bridge-bootstrap-"));
   tempDirs.push(dir);
   const bridgeModulePath = join(dir, "artifact.mjs");
   await writeFile(bridgeModulePath, bridgeSource);
@@ -173,7 +173,7 @@ it("tees both sides of the runtime wire when record mode is on", async () => {
   const result = await runWorker(
     [fixture.bridgeModulePath, "provider-fixture", fixture.dataDir],
     '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"thread/start","params":{"threadId":"thr_rec"}}\n',
-    { BB_PROVIDER_BRIDGE_RECORD_DIR: recordDir },
+    { SANDY_PROVIDER_BRIDGE_RECORD_DIR: recordDir },
   );
 
   expect(result.code).toBe(0);

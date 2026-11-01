@@ -1,4 +1,4 @@
 export const MOBILE_APP_SURFACE_HEADER = {
-  name: "x-bb-app-surface",
+  name: "x-sandy-app-surface",
   value: "mobile",
 } as const;

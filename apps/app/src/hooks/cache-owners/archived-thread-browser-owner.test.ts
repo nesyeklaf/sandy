@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ChangedMessage, ThreadChangeKind } from "@bb/domain";
+import type { ChangedMessage, ThreadChangeKind } from "@sandy/domain";
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserSetThreadDiscardedRequest,
-} from "@bb/desktop-contract";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserSetThreadDiscardedRequest,
+} from "@sandy/desktop-contract";
 import { createArchivedThreadBrowserOwner } from "./archived-thread-browser-owner";
 
 function threadChanged(
@@ -15,13 +15,13 @@ function threadChanged(
 
 function createDesktopBrowser(threadIdsWithTabs: string[] = []) {
   const setThreadDiscarded =
-    vi.fn<(request: BbDesktopBrowserSetThreadDiscardedRequest) => void>();
+    vi.fn<(request: SandyDesktopBrowserSetThreadDiscardedRequest) => void>();
   const listThreadIdsWithTabs = vi.fn(async () => threadIdsWithTabs);
   return {
     desktopBrowser: {
       setThreadDiscarded,
       listThreadIdsWithTabs,
-    } as Partial<BbDesktopBrowserApi> as BbDesktopBrowserApi,
+    } as Partial<SandyDesktopBrowserApi> as SandyDesktopBrowserApi,
     listThreadIdsWithTabs,
     setThreadDiscarded,
   };
@@ -104,7 +104,7 @@ describe("createArchivedThreadBrowserOwner", () => {
     expect(setThreadDiscarded).not.toHaveBeenCalled();
 
     const olderReadArchivedAt = vi.fn(async () => 1_000);
-    for (const shell of [{} as BbDesktopBrowserApi, null]) {
+    for (const shell of [{} as SandyDesktopBrowserApi, null]) {
       const owner = createArchivedThreadBrowserOwner({
         desktopBrowser: shell,
         readArchivedAt: olderReadArchivedAt,

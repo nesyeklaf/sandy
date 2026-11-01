@@ -1,0 +1,17 @@
+e = Load("data/experiment/keep-alive.json")
+primary = e.metrics.find(m => m.name == e.primary)
+mean = xs => sum(xs) / xs.length
+change = (mean(primary.after) - mean(primary.before)) / mean(primary.before) * 100
+apart = max(primary.after) < min(primary.before) || max(primary.before) < min(primary.after)
+verdict = apart ? (change <= -e.threshold ? "Confirmed" : "Rejected") : "Unclear"
+Card("Experiment: " + e.name, [
+  Text("**Hypothesis:** " + e.hypothesis),
+  Benchmark(e.metrics),
+  Row([
+    Badge(verdict, tone: "info"),
+    Text(`${e.primary} went from ${round(mean(primary.before))} to ${round(mean(primary.after))} ${primary.unit} (${change > 0 ? "+" : ""}${round(change)} %) over ${e.runs} runs each; ${apart ? "the runs of the two sides do not overlap" : "the runs of the two sides overlap"}. The target was ${e.threshold} % lower.`)
+  ]),
+  KeyValue({"Tip commit": e.commit.sha, Branch: e.commit.branch, "Commits on it": e.commit.commits, "Merged into main": e.commit.merged ? "Yes" : "No", "Pushed to origin": e.commit.pushed ? "Yes" : "No"}),
+  verdict == "Confirmed" ? Button("Open a PR for " + e.commit.branch, icon: "GitPullRequest") : Button("Keep " + e.commit.branch + " for later"),
+  verdict == "Confirmed" ? null : Button("Delete " + e.commit.branch + " (" + e.commit.commits + " commits exist only there)", variant: "destructive", icon: "Trash2")
+])

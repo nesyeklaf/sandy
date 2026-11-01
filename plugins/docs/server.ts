@@ -7,11 +7,11 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliContext,
   type PluginCliResult,
   type PluginRpcHandlers,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   MAX_TREE_ENTRIES,
@@ -44,7 +44,7 @@ import {
 const DEFAULT_DIR = "~/Notes";
 const PREVIEW_LENGTH = 100;
 const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
-const SYNC_STATE_FILE = ".bb-docs-state.json";
+const SYNC_STATE_FILE = ".sandy-docs-state.json";
 const SYNC_STATE_VERSION = 1;
 const MENTION_SUMMARY_TTL_MS = 10_000;
 const PREVIEW_RENEW_BEFORE_MS = 2 * 60_000;
@@ -68,21 +68,21 @@ const DOCS_STATUS_DESCRIPTION = [
   "Exit 3: local and remote changes conflict.",
   "Exit 4: changes present.",
   "",
-  "Exit 4 is a successful status result. Review the output, then run bb docs push separately.",
+  "Exit 4 is a successful status result. Review the output, then run sandy docs push separately.",
 ].join("\n");
 
 const DEPRECATED_MUTATION_WARNING =
-  "Deprecated: direct Docs mutations will be removed; use bb docs pull, edit local files, then bb docs push.";
+  "Deprecated: direct Docs mutations will be removed; use sandy docs pull, edit local files, then sandy docs push.";
 
 const DEPRECATED_DELETION_WARNING =
-  "Deprecated: direct Docs mutations will be removed; use bb docs pull, edit local files, then bb docs push --delete.";
+  "Deprecated: direct Docs mutations will be removed; use sandy docs pull, edit local files, then sandy docs push --delete.";
 
 const VAULT_OPTION = {
   type: "string",
   placeholder: "id",
   aliases: ["vault-id", "vaultId"],
   description:
-    "Vault ID from `bb docs vaults`; defaults to the first configured vault",
+    "Vault ID from `sandy docs vaults`; defaults to the first configured vault",
 } as const;
 
 const WORKSPACE_HOST_OPTION = {
@@ -218,7 +218,7 @@ function hostArgs(vault: Vault): { hostId?: string } {
 
 function syncEntryFromFile(
   relativePath: string,
-  file: Awaited<ReturnType<BbPluginApi["sdk"]["files"]["read"]>>,
+  file: Awaited<ReturnType<SandyPluginApi["sdk"]["files"]["read"]>>,
 ): SyncStateEntry {
   return {
     remotePath: relativePath,
@@ -336,11 +336,11 @@ function waitForDelay(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 export default async function plugin(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   watchVault: WatchVault = watchNativeVault,
 ) {
-  const db = bb.storage.database();
-  bb.storage.migrate(db, [
+  const db = sandy.storage.database();
+  sandy.storage.migrate(db, [
     `CREATE TABLE IF NOT EXISTS vaults (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -408,14 +408,14 @@ export default async function plugin(
   if (seededDefaultVault) {
     const vault = getVault("personal");
     try {
-      await bb.sdk.files.mkdir({ path: vault.rootPath, recursive: true });
+      await sandy.sdk.files.mkdir({ path: vault.rootPath, recursive: true });
     } catch (error) {
-      bb.log.warn(`could not create default vault: ${errorMessage(error)}`);
+      sandy.log.warn(`could not create default vault: ${errorMessage(error)}`);
     }
   }
 
   function listVaultPaths(vault: Vault, signal?: AbortSignal) {
-    return bb.sdk.files.listPaths({
+    return sandy.sdk.files.listPaths({
       ...hostArgs(vault),
       path: vault.rootPath,
       includeFiles: true,
@@ -465,7 +465,7 @@ export default async function plugin(
             const index = nextIndex++;
             const notePath = markdownPaths[index]!;
             try {
-              const file = await bb.sdk.files.read({
+              const file = await sandy.sdk.files.read({
                 ...hostArgs(vault),
                 path: absolutePath(vault, notePath),
                 rootPath: vault.rootPath,
@@ -546,9 +546,9 @@ export default async function plugin(
       }
       return changed;
     },
-    warn: (message) => bb.log.warn(message),
+    warn: (message) => sandy.log.warn(message),
   });
-  bb.onDispose(() => {
+  sandy.onDispose(() => {
     mentionLifetime.abort();
     mentionSummaries.clear();
     watches.stopAll();
@@ -598,7 +598,7 @@ export default async function plugin(
     try {
       const [{ entries, truncated }, hosts] = await Promise.all([
         listEntries(vault),
-        bb.sdk.hosts.list(),
+        sandy.sdk.hosts.list(),
       ]);
       const notes = await listNoteSummaries(vault, entries);
       treeSummaries.set(
@@ -619,7 +619,7 @@ export default async function plugin(
       return {
         vaults: listVaults(),
         vault,
-        hosts: await bb.sdk.hosts.list().catch(() => []),
+        hosts: await sandy.sdk.hosts.list().catch(() => []),
         entries: [],
         entryOrder: listEntryOrder(vault.id),
         notes: [],
@@ -632,7 +632,7 @@ export default async function plugin(
   async function readFile(vaultId: string | undefined, rawPath: unknown) {
     const vault = getVault(vaultId);
     const relativePath = requireVaultPath(rawPath);
-    const file = await bb.sdk.files.read({
+    const file = await sandy.sdk.files.read({
       ...hostArgs(vault),
       path: absolutePath(vault, relativePath),
       rootPath: vault.rootPath,
@@ -652,7 +652,7 @@ export default async function plugin(
     const relativePath = requireVaultPath(args.rawPath);
     if (typeof args.content !== "string")
       throw new Error('"content" must be a string');
-    const result = await bb.sdk.files.write({
+    const result = await sandy.sdk.files.write({
       ...hostArgs(vault),
       path: absolutePath(vault, relativePath),
       rootPath: vault.rootPath,
@@ -686,7 +686,7 @@ export default async function plugin(
   }
 
   function invalidate(tags: string[]): void {
-    bb.rpc.experimental_invalidate([...new Set(tags)]);
+    sandy.rpc.experimental_invalidate([...new Set(tags)]);
   }
 
   function treeChangedBy(
@@ -782,7 +782,7 @@ export default async function plugin(
       };
     }
     if (source.kind === "workspace" && source.environmentId) {
-      const environment = await bb.sdk.environments.get({
+      const environment = await sandy.sdk.environments.get({
         environmentId: source.environmentId,
       });
       if (!environment.path) {
@@ -797,11 +797,11 @@ export default async function plugin(
     if (source.kind === "workspace" && source.projectId) {
       const hostId =
         source.experimental_hostId ??
-        (await bb.sdk.system.config()).primaryHostId;
+        (await sandy.sdk.system.config()).primaryHostId;
       if (!hostId) {
-        throw new Error("This bb has no server machine yet");
+        throw new Error("This sandy has no server machine yet");
       }
-      const project = await bb.sdk.projects.get({
+      const project = await sandy.sdk.projects.get({
         projectId: source.projectId,
       });
       const matchingSources = project.sources.filter(
@@ -833,7 +833,7 @@ export default async function plugin(
         throw new Error("Thread-storage files require a thread ID");
       }
       const relativePath = requireThreadStoragePath(filePath);
-      const storage = await bb.sdk.threads.storageLocation({
+      const storage = await sandy.sdk.threads.storageLocation({
         threadId: source.threadId,
       });
       if (!isAbsoluteHostPath(storage.storageRootPath)) {
@@ -891,7 +891,7 @@ export default async function plugin(
   }
 
   async function moveWithinVault(vault: Vault, from: string, to: string) {
-    await bb.sdk.files.move({
+    await sandy.sdk.files.move({
       ...hostArgs(vault),
       sourcePath: absolutePath(vault, from),
       destinationPath: absolutePath(vault, to),
@@ -940,7 +940,7 @@ export default async function plugin(
     const vault = getVault(vaultId);
     const relativePath = requireVaultPath(rawPath);
     return serializeVault(vault.id, async () => {
-      await bb.sdk.files.remove({
+      await sandy.sdk.files.remove({
         ...hostArgs(vault),
         path: absolutePath(vault, relativePath),
         rootPath: vault.rootPath,
@@ -971,9 +971,9 @@ export default async function plugin(
   async function readExistingFile(
     vault: Vault,
     relativePath: string,
-  ): Promise<Awaited<ReturnType<typeof bb.sdk.files.read>> | null> {
+  ): Promise<Awaited<ReturnType<typeof sandy.sdk.files.read>> | null> {
     try {
-      return await bb.sdk.files.read({
+      return await sandy.sdk.files.read({
         ...hostArgs(vault),
         path: absolutePath(vault, relativePath),
         rootPath: vault.rootPath,
@@ -1253,7 +1253,7 @@ export default async function plugin(
     for (const directory of [...directories].sort()) {
       if (currentByPath.get(directory)?.kind === "directory") continue;
       try {
-        await bb.sdk.files.mkdir({
+        await sandy.sdk.files.mkdir({
           ...hostArgs(vault),
           path: absolutePath(vault, directory),
           rootPath: vault.rootPath,
@@ -1366,7 +1366,7 @@ export default async function plugin(
         return lease;
       if (previewLeases.get(key) !== cached) return previewLease(vault);
     }
-    const next = bb.sdk.files.createPreview({
+    const next = sandy.sdk.files.createPreview({
       ...hostArgs(vault),
       rootPath: vault.rootPath,
     });
@@ -1576,7 +1576,7 @@ export default async function plugin(
     async createFolder(input) {
       const vault = getVault(input.vaultId);
       const relativePath = requireVaultPath(input.path);
-      await bb.sdk.files.mkdir({
+      await sandy.sdk.files.mkdir({
         ...hostArgs(vault),
         path: absolutePath(vault, relativePath),
         rootPath: vault.rootPath,
@@ -1641,7 +1641,7 @@ export default async function plugin(
         throw new Error('"rootPath" must be absolute');
       const hostId = optionalString(input.hostId) ?? null;
       const resolvedRoot = normalizeHostRoot(rootPath);
-      await bb.sdk.files.mkdir({
+      await sandy.sdk.files.mkdir({
         ...hostIdArgs(hostId),
         path: resolvedRoot,
         recursive: true,
@@ -1713,7 +1713,7 @@ export default async function plugin(
     async preparePreview(input) {
       const vault = getVault(input.vaultId);
       const relativePath = requireVaultPath(input.path);
-      await bb.sdk.files.read({
+      await sandy.sdk.files.read({
         ...hostArgs(vault),
         path: absolutePath(vault, relativePath),
         rootPath: vault.rootPath,
@@ -1728,8 +1728,8 @@ export default async function plugin(
         rootPath: target.rootPath,
       };
       const [file, preview] = await Promise.all([
-        bb.sdk.files.read(args),
-        bb.sdk.files.createPreview({
+        sandy.sdk.files.read(args),
+        sandy.sdk.files.createPreview({
           ...hostIdArgs(target.hostId),
           rootPath: target.rootPath,
         }),
@@ -1747,7 +1747,7 @@ export default async function plugin(
     },
     async saveOpenedFile(input) {
       const target = await resolveOpenerFile(input.source, input.path);
-      const result = await bb.sdk.files.write({
+      const result = await sandy.sdk.files.write({
         ...hostIdArgs(target.hostId),
         path: target.path,
         rootPath: target.rootPath,
@@ -1765,10 +1765,10 @@ export default async function plugin(
     },
   };
 
-  bb.rpc.register(docsRpcContract, handlers);
+  sandy.rpc.register(docsRpcContract, handlers);
 
   async function readHttpInput<Schema extends z.ZodType>(
-    context: Parameters<Parameters<BbPluginApi["http"]["route"]>[2]>[0],
+    context: Parameters<Parameters<SandyPluginApi["http"]["route"]>[2]>[0],
     schema: Schema,
   ): Promise<
     { ok: true; value: z.output<Schema> } | { ok: false; response: Response }
@@ -1817,7 +1817,7 @@ export default async function plugin(
     schema: Schema,
     handle: (input: z.output<Schema>) => object | Promise<object>,
   ): void {
-    bb.http.route(
+    sandy.http.route(
       "POST",
       routePath,
       async (context) => {
@@ -1854,9 +1854,9 @@ export default async function plugin(
   ): Promise<string | undefined> {
     if (args.workspaceHostId) return args.workspaceHostId;
     if (!context.threadId) return undefined;
-    const thread = await bb.sdk.threads.get({ threadId: context.threadId });
+    const thread = await sandy.sdk.threads.get({ threadId: context.threadId });
     if (!thread.environmentId) return undefined;
-    const environment = await bb.sdk.environments.get({
+    const environment = await sandy.sdk.environments.get({
       environmentId: thread.environmentId,
     });
     return environment.hostId;
@@ -1866,9 +1866,9 @@ export default async function plugin(
     rootPath: string,
     hostId: string | undefined,
     relativePath: string,
-  ): Promise<Awaited<ReturnType<typeof bb.sdk.files.read>> | null> {
+  ): Promise<Awaited<ReturnType<typeof sandy.sdk.files.read>> | null> {
     try {
-      return await bb.sdk.files.read({
+      return await sandy.sdk.files.read({
         ...hostIdArgs(hostId),
         path: localFilePath(rootPath, relativePath),
         rootPath,
@@ -1936,7 +1936,7 @@ export default async function plugin(
     state: SyncState,
     expectedSha256: string | null,
   ): Promise<void> {
-    const result = await bb.sdk.files.write({
+    const result = await sandy.sdk.files.write({
       ...hostIdArgs(hostId),
       path: localFilePath(rootPath, SYNC_STATE_FILE),
       rootPath,
@@ -2118,13 +2118,13 @@ export default async function plugin(
     const deleted: string[] = [];
     const deletedDirectories: string[] = [];
     try {
-      await bb.sdk.files.mkdir({
+      await sandy.sdk.files.mkdir({
         ...hostIdArgs(hostId),
         path: rootPath,
         recursive: true,
       });
       for (const directory of snapshot.directories) {
-        await bb.sdk.files.mkdir({
+        await sandy.sdk.files.mkdir({
           ...hostIdArgs(hostId),
           path: localFilePath(rootPath, directory),
           rootPath,
@@ -2132,7 +2132,7 @@ export default async function plugin(
         });
       }
       for (const write of writes) {
-        const result = await bb.sdk.files.write({
+        const result = await sandy.sdk.files.write({
           ...hostIdArgs(hostId),
           path: localFilePath(rootPath, write.file.localPath),
           rootPath,
@@ -2159,7 +2159,7 @@ export default async function plugin(
             `Local file changed during pull: ${deletion.path}; rerun pull to recover`,
           );
         }
-        await bb.sdk.files.remove({
+        await sandy.sdk.files.remove({
           ...hostIdArgs(hostId),
           path: localFilePath(rootPath, deletion.path),
           rootPath,
@@ -2173,7 +2173,7 @@ export default async function plugin(
           right.localeCompare(left),
       )) {
         try {
-          await bb.sdk.files.remove({
+          await sandy.sdk.files.remove({
             ...hostIdArgs(hostId),
             path: localFilePath(rootPath, directory),
             rootPath,
@@ -2237,7 +2237,7 @@ export default async function plugin(
     const existing = await readSyncState(rootPath, hostId);
     if (!existing) {
       throw new Error(
-        `${SYNC_STATE_FILE} was not found; run bb docs pull first`,
+        `${SYNC_STATE_FILE} was not found; run sandy docs pull first`,
       );
     }
     if (args.vaultId && args.vaultId !== existing.state.vault.id) {
@@ -2249,7 +2249,7 @@ export default async function plugin(
       existing.state.vault.id,
       existing.state.scope,
     );
-    const listing = await bb.sdk.files.listPaths({
+    const listing = await sandy.sdk.files.listPaths({
       ...hostIdArgs(hostId),
       path: rootPath,
       includeFiles: true,
@@ -2278,7 +2278,7 @@ export default async function plugin(
       });
     const localFiles = new Map<
       string,
-      Awaited<ReturnType<typeof bb.sdk.files.read>>
+      Awaited<ReturnType<typeof sandy.sdk.files.read>>
     >();
     for (const entry of localPaths) {
       if (entry.kind !== "file") continue;
@@ -2709,7 +2709,7 @@ export default async function plugin(
     ]),
   );
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "docs",
       summary: "Discover and safely sync Docs vaults",
@@ -2769,7 +2769,7 @@ export default async function plugin(
                 }),
                 context,
               );
-              const file = await bb.sdk.files.read({
+              const file = await sandy.sdk.files.read({
                 ...hostIdArgs(hostId),
                 path: candidatePath,
                 rootPath: (path.win32.isAbsolute(candidatePath) &&
@@ -2881,7 +2881,7 @@ export default async function plugin(
           positionals: [
             {
               name: "id",
-              description: "Vault ID from `bb docs vaults`",
+              description: "Vault ID from `sandy docs vaults`",
               required: true,
             },
           ],
@@ -2941,7 +2941,7 @@ export default async function plugin(
         pull: cliCommand({
           summary: "Pull one file, a folder subtree, or a whole vault",
           description:
-            "Writes the scope into a workspace directory with a .bb-docs-state.json manifest. Edit the files with ordinary tools, then run bb docs status and bb docs push.",
+            "Writes the scope into a workspace directory with a .sandy-docs-state.json manifest. Edit the files with ordinary tools, then run sandy docs status and sandy docs push.",
           suggestFor: ["fetch", "clone", "checkout"],
           positionals: [
             {
@@ -3090,7 +3090,7 @@ export default async function plugin(
         write: cliCommand({
           summary: "Deprecated: write a UTF-8 file directly",
           description:
-            "Use bb docs pull, edit the files, then bb docs push instead.",
+            "Use sandy docs pull, edit the files, then sandy docs push instead.",
           positionals: [
             {
               name: "path",
@@ -3127,7 +3127,7 @@ export default async function plugin(
         mkdir: cliCommand({
           summary: "Deprecated: create a folder directly",
           description:
-            "Use bb docs pull, create the directory locally, then bb docs push instead.",
+            "Use sandy docs pull, create the directory locally, then sandy docs push instead.",
           positionals: [
             {
               name: "path",
@@ -3153,7 +3153,7 @@ export default async function plugin(
         move: cliCommand({
           summary: "Deprecated: move a path directly",
           description:
-            "Use bb docs pull, move the file locally, then bb docs push --delete instead.",
+            "Use sandy docs pull, move the file locally, then sandy docs push --delete instead.",
           positionals: [
             {
               name: "from",
@@ -3185,7 +3185,7 @@ export default async function plugin(
         remove: cliCommand({
           summary: "Deprecated: remove a file or directory directly",
           description:
-            "Use bb docs pull, delete the file locally, then bb docs push --delete instead.",
+            "Use sandy docs pull, delete the file locally, then sandy docs push --delete instead.",
           aliases: ["rm"],
           positionals: [
             {
@@ -3221,7 +3221,7 @@ export default async function plugin(
     }),
   );
 
-  bb.ui.registerMentionProvider({
+  sandy.ui.registerMentionProvider({
     id: "note",
     label: "Docs",
     async search({ query }) {
@@ -3258,13 +3258,13 @@ export default async function plugin(
         context:
           `Docs document (${vaultId}/${relativePath}):\nSHA-256: ${file.sha256}\n\n${file.content}` +
           (proposal
-            ? `\n\nDocs proposal metadata:\n${JSON.stringify(proposal)}\nUse bb docs propose with this version and current document hash to propose a revision; do not push over the user's document.`
-            : "\n\nProposal version: none. Use bb docs propose to suggest changes for approval."),
+            ? `\n\nDocs proposal metadata:\n${JSON.stringify(proposal)}\nUse sandy docs propose with this version and current document hash to propose a revision; do not push over the user's document.`
+            : "\n\nProposal version: none. Use sandy docs propose to suggest changes for approval."),
       };
     },
   });
 
-  bb.rpc.experimental_whileWatched("listNotes", (read, signal) => {
+  sandy.rpc.experimental_whileWatched("listNotes", (read, signal) => {
     if (!("input" in read)) return;
     const input = docsRpcContract.listNotes.input.safeParse(read.input);
     if (!input.success) return;
@@ -3276,7 +3276,7 @@ export default async function plugin(
     if (vault) watches.retain(vault.id, signal);
   });
 
-  bb.rpc.experimental_whileWatched("readDocument", (read, signal) => {
+  sandy.rpc.experimental_whileWatched("readDocument", (read, signal) => {
     if (!("input" in read)) return;
     const input = docsRpcContract.readDocument.input.safeParse(read.input);
     if (!input.success) return;

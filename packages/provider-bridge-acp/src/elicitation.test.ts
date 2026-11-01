@@ -514,7 +514,7 @@ describe("planAcpElicitation", () => {
     ).toHaveLength(10);
     expect(planAcpElicitation(form(ompQuestions(11), "Pick", []))).toEqual({
       kind: "unsupported",
-      reason: "bb shows at most 10 questions and this form has 11",
+      reason: "sandy shows at most 10 questions and this form has 11",
     });
   });
 
@@ -523,7 +523,7 @@ describe("planAcpElicitation", () => {
       planAcpElicitation({ mode: "url", url: "https://example.com" }),
     ).toEqual({
       kind: "unsupported",
-      reason: 'bb does not offer the "url" elicitation mode',
+      reason: 'sandy does not offer the "url" elicitation mode',
     });
     expect(
       planAcpElicitation(
@@ -538,11 +538,11 @@ describe("planAcpElicitation", () => {
       ),
     ).toEqual({
       kind: "unsupported",
-      reason: "bb shows at most 10 questions and this form has 11",
+      reason: "sandy shows at most 10 questions and this form has 11",
     });
     expect(planAcpElicitation(form({ nested: { type: "object" } }))).toEqual({
       kind: "unsupported",
-      reason: 'bb cannot show the field "nested"',
+      reason: 'sandy cannot show the field "nested"',
     });
   });
 });

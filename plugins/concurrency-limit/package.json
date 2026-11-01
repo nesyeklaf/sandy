@@ -1,16 +1,16 @@
 {
-  "name": "bb-plugin-concurrency-limit",
+  "name": "sandy-plugin-concurrency-limit",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Control the number of concurrent threads that are running in bb",
+  "description": "Control the number of concurrent threads that are running in sandy",
   "engines": {
-    "bb": ">=0.0",
-    "bbPluginSdk": ">=0.4.102"
+    "sandy": ">=0.0",
+    "sandyPluginSdk": ">=0.4.102"
   },
-  "bb": {
+  "sandy": {
     "name": "Concurrency limit",
-    "description": "Control the number of concurrent threads that are running in bb",
+    "description": "Control the number of concurrent threads that are running in sandy",
     "branding": {
       "icon": "Limitation"
     },
@@ -19,21 +19,21 @@
     "host": "./host.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
-    "@bb/shared-ui": "workspace:*",
+    "@sandy/shared-ui": "workspace:*",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.12",

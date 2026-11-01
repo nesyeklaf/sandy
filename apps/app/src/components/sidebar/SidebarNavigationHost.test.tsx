@@ -20,10 +20,10 @@ import {
 import type {
   ExperimentalSidebarNavigationProps,
   PluginAppBuilder,
-} from "@get-bb/plugin-sdk/app";
-import { collectPluginAppRegistrations } from "@get-bb/plugin-sdk/internal/plugin-app-collector";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+} from "@sandy-sdk/plugin-sdk/app";
+import { collectPluginAppRegistrations } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
@@ -106,7 +106,7 @@ function registerPlugin(setup: (app: PluginAppBuilder) => void) {
   act(() =>
     setPluginSlotRegistrations(
       "compact",
-      collectPluginAppRegistrations({ __bbPluginApp: true, setup }),
+      collectPluginAppRegistrations({ __sandyPluginApp: true, setup }),
     ),
   );
 }
@@ -115,7 +115,7 @@ function registerDocsPanel() {
   setPluginSlotRegistrations(
     "garden",
     collectPluginAppRegistrations({
-      __bbPluginApp: true,
+      __sandyPluginApp: true,
       setup(app) {
         app.slots.navPanel({
           id: "docs",
@@ -510,7 +510,7 @@ describe("sidebar navigation providers", () => {
     expect(screen.getByTestId("sidebar-navigation-list")).toBeDefined();
   });
 
-  it("opens bb's customize editor beside a plugin's navigation", async () => {
+  it("opens sandy's customize editor beside a plugin's navigation", async () => {
     registerPlugin((app) =>
       app.slots.experimental_sidebarNavigation({
         id: "nav",
@@ -546,7 +546,7 @@ describe("sidebar navigation providers", () => {
       "Sidebar navigation plugin crashed",
       {
         description:
-          "Broken rail (compact) stopped working, so bb drew Rail instead.",
+          "Broken rail (compact) stopped working, so sandy drew Rail instead.",
       },
     );
   });

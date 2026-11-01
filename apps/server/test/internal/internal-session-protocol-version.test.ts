@@ -2,12 +2,12 @@ import {
   HOST_DAEMON_COMPATIBLE_PROTOCOL_VERSIONS,
   HOST_DAEMON_PROTOCOL_VERSION,
   type HostDaemonInternalSchema,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { Hono } from "hono";
 import { hc } from "hono/client";
 import { describe, expect, it } from "vitest";
-import { getHost, setAppSettings, updateHost, upsertHost } from "@bb/db";
-import { defaultAppSettings } from "@bb/domain";
+import { getHost, setAppSettings, updateHost, upsertHost } from "@sandy/db";
+import { defaultAppSettings } from "@sandy/domain";
 import {
   createTestDaemonHostKey,
   startTestServer,

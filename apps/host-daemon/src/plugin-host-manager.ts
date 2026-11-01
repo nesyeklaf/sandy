@@ -3,7 +3,7 @@ import {
   createPluginProcessTempDir,
   ensurePluginProcessDataDir,
   sanitizeInheritedChildProcessEnv,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { operationEnvironment } from "./operation-environment.js";
 import type { ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -15,9 +15,9 @@ import type { Readable } from "node:stream";
 import type {
   HostDaemonOnlineRpcCommand,
   HostDaemonOnlineRpcResult,
-} from "@bb/host-daemon-contract";
-import type { HostPathWatchChange, HostWatcher } from "@bb/host-watcher";
-import { jsonValueSchema, type JsonValue } from "@bb/domain";
+} from "@sandy/host-daemon-contract";
+import type { HostPathWatchChange, HostWatcher } from "@sandy/host-watcher";
+import { jsonValueSchema, type JsonValue } from "@sandy/domain";
 import type { HostDaemonLogger } from "./logger.js";
 import {
   ensureCachedPluginHostArtifact,
@@ -150,7 +150,7 @@ function workerLogContext(worker: WorkerState): Record<string, unknown> {
 
 function defaultWorkerEntryPath(): string {
   const candidates = [
-    "./bb-plugin-host-worker.mjs",
+    "./sandy-plugin-host-worker.mjs",
     "./plugin-host-worker.js",
     "./plugin-host-worker.ts",
   ];
@@ -447,7 +447,7 @@ export class PluginHostManager {
     });
     const tempDir = await createPluginProcessTempDir({
       pluginId: command.pluginId,
-      prefix: "bb-host",
+      prefix: "sandy-host",
     });
     const shellPath = this.options.shellEnv?.().PATH;
     const startedAtMs = performance.now();

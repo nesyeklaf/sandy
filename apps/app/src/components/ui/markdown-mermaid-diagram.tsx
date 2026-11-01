@@ -13,10 +13,10 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Button } from "@bb/shared-ui/button";
+} from "@sandy/shared-ui/dialog";
+import { Button } from "@sandy/shared-ui/button";
 import { CopyButton } from "./copy-button.js";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 import { loadMermaid } from "./markdown-mermaid-loader.js";
 import {
   buildMermaidRenderCacheKey,
@@ -29,7 +29,7 @@ import {
 } from "./markdown-mermaid-render-cache.js";
 import { useAppThemeEpoch } from "@/hooks/useAppTheme";
 import type { Theme } from "@/hooks/useTheme";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   createPanZoomTransform,
   usePanZoom,
@@ -94,7 +94,7 @@ type MermaidDiagramContainerProps = ComponentPropsWithoutRef<"div"> & {
 };
 
 const MERMAID_THEME: MermaidTheme = "base";
-const MERMAID_RENDER_ID_PREFIX = "bb-mermaid";
+const MERMAID_RENDER_ID_PREFIX = "sandy-mermaid";
 const MERMAID_RENDER_ID_SAFE_CHARACTER_PATTERN = /[^a-zA-Z0-9_-]/gu;
 const MERMAID_DIAGRAM_SCALE_LIMITS: PanZoomScaleLimits = { max: 4, min: 0.5 };
 const MERMAID_DIAGRAM_SCALE_STEP = 0.25;

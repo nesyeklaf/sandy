@@ -1,0 +1,223 @@
+/*
+ * Marks under a message: one card per mark, tinted by its kind. Note amber,
+ * comment for agents blue, tag green, link violet.
+ */
+
+.sandy-anchors-below {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sandy-anchor-card {
+  --c: oklch(0.75 0.14 80);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklab, var(--c) 45%, transparent);
+  border-left: 3px solid var(--c);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--c) 10%, transparent);
+  font-size: 13px;
+}
+
+.sandy-anchor-card[data-kind="comment"] {
+  --c: oklch(0.7 0.14 250);
+}
+
+.sandy-anchor-card[data-kind="tag"] {
+  --c: oklch(0.72 0.15 150);
+}
+
+.sandy-anchor-card[data-kind="link"],
+.sandy-anchor-card[data-kind="explain"] {
+  --c: oklch(0.7 0.16 300);
+}
+
+.sandy-anchor-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--c) 80%, var(--foreground));
+}
+
+.sandy-anchor-quote {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+  color: var(--muted-foreground);
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sandy-anchor-input {
+  width: 100%;
+  resize: vertical;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.sandy-anchor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sandy-anchor-actions button {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sandy-anchor-actions button[type="submit"] {
+  background: var(--c);
+  border-color: var(--c);
+  color: oklch(0.2 0 0);
+}
+
+.sandy-anchor-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sandy-anchor-error {
+  color: var(--destructive, oklch(0.65 0.2 25));
+  font-size: 12px;
+}
+
+.sandy-anchor-tools {
+  float: right;
+  display: inline-flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.sandy-anchor-card:hover .sandy-anchor-tools,
+.sandy-anchor-card:focus-within .sandy-anchor-tools {
+  opacity: 1;
+}
+
+.sandy-anchor-tools button {
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sandy-anchor-tools button:hover {
+  color: var(--foreground);
+}
+
+.sandy-anchor-body {
+  white-space: pre-wrap;
+}
+
+.sandy-anchor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sandy-anchor-tag {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--c) 22%, transparent);
+  font-size: 11px;
+}
+
+.sandy-anchor-card[data-kind="bookmark"] {
+  --c: oklch(0.75 0.14 80);
+  padding: 4px 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sandy-anchor-tools {
+    transition: none;
+  }
+}
+
+.sandy-anchor-pending {
+  color: var(--muted-foreground);
+  animation: sandy-anchor-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes sandy-anchor-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sandy-anchor-pending {
+    animation: none;
+  }
+}
+
+.sandy-marks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.sandy-marks-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sandy-marks-filters button {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.sandy-marks-filters button[aria-pressed="true"] {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+
+.sandy-marks-scope {
+  margin-left: auto;
+}
+
+.sandy-marks-empty {
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+.sandy-marks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sandy-marks-item {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}

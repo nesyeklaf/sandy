@@ -4,7 +4,7 @@ import {
   type QueryClient,
   type QueryObserverResult,
 } from "@tanstack/react-query";
-import type { ThreadTimelineResponse, TimelineRow } from "@bb/server-contract";
+import type { ThreadTimelineResponse, TimelineRow } from "@sandy/server-contract";
 import {
   areTimelinePaginationCursorsEqual,
   buildLoadedTimelineState,
@@ -13,13 +13,13 @@ import {
   recoverLoadedTimelineAfterStaleCursor,
   resolveLoadedTimelineSurfaceKey,
   type LoadedTimelineState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { hasThreadTimelineUnseenEvents } from "@/hooks/cache-owners/thread-timeline-unseen-events";
 import { useConnectionAwareQueryState } from "@/hooks/queries/connection-aware-query-state";
 import { threadTimelineQueryKey } from "@/hooks/queries/query-keys";
 import { isTransientReadError } from "@/hooks/queries/query-helpers";
 import { useThreadTimeline } from "@/hooks/queries/thread-panel-queries";
-import { BbHttpError, sdk } from "@/lib/sdk";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 
 type TimelineQueryResultProp =
   keyof QueryObserverResult<ThreadTimelineResponse>;
@@ -105,7 +105,7 @@ function retainLoadedTimeline(
 
 function isStaleTimelinePaginationCursorError(error: Error): boolean {
   return (
-    error instanceof BbHttpError &&
+    error instanceof SandyHttpError &&
     error.status === 400 &&
     error.code === "invalid_request"
   );

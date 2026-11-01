@@ -1,10 +1,10 @@
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import {
   isBackgroundAgentTaskType,
   isBackgroundCommandTaskType,
   LOCAL_WORKFLOW_TASK_TYPE,
   requireThreadEventScopeTurnId,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { parseCompactionLifecycleEvent } from "./compaction-lifecycle.js";
 import {
   parseBackgroundTaskLifecycleEvent,
@@ -71,7 +71,7 @@ import {
   upsertProvisioningOperation,
   upsertThreadOperationMessage,
 } from "./operation-projection.js";
-import type { ActiveThinking } from "@bb/domain";
+import type { ActiveThinking } from "@sandy/domain";
 import type {
   BuildEventProjectionMessagesOptions,
   BuildEventProjectionOptions,

@@ -19,7 +19,7 @@ import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
 import { LazyPluginDiff, LazyPluginSourceCode } from "./lazy-plugin-renderers";
 
 const downloads = await vi.hoisted(async () => {
-  const { createDeferredPromise } = await import("@bb/test-helpers");
+  const { createDeferredPromise } = await import("@sandy/test-helpers");
   return {
     adapters: createDeferredPromise<void>(),
     renderers: createDeferredPromise<void>(),
@@ -36,12 +36,12 @@ vi.mock("./PluginSourceCode", async (original) => {
   await downloads.adapters.promise;
   return original();
 });
-vi.mock("@/components/code/BbDiff", async () => {
+vi.mock("@/components/code/SandyDiff", async () => {
   downloads.started.add("diff renderer");
   await downloads.renderers.promise;
   return { default: () => <p>Diff ready</p> };
 });
-vi.mock("@/components/code/BbSourceCode", async () => {
+vi.mock("@/components/code/SandySourceCode", async () => {
   downloads.started.add("source renderer");
   await downloads.renderers.promise;
   return { default: () => <p>Source ready</p> };

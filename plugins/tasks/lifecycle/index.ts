@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import {
   invalidateComments,
   invalidateThreads,
@@ -10,7 +10,7 @@ import { errorMessage } from "../shared/errors";
 
 const TERMINAL_LIVE_STATUSES = new Set<TaskThreadLiveStatus>(["completed"]);
 
-type SdkThread = Awaited<ReturnType<BbPluginApi["sdk"]["threads"]["get"]>>;
+type SdkThread = Awaited<ReturnType<SandyPluginApi["sdk"]["threads"]["get"]>>;
 
 function liveStatusFromThread(thread: SdkThread): TaskThreadLiveStatus {
   if (thread.status === "error") return "failed";
@@ -55,7 +55,7 @@ function sdkErrorCode(error: unknown): string | undefined {
 }
 
 function transitionThread(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   thread: TaskThread,
   liveStatus: TaskThreadLiveStatus,
@@ -79,37 +79,37 @@ function transitionThread(
     }
   });
 
-  invalidateThreads(bb, thread.taskId);
-  invalidateComments(bb, thread.taskId);
+  invalidateThreads(sandy, thread.taskId);
+  invalidateComments(sandy, thread.taskId);
 }
 
 function transitionTrackedThread(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   threadId: string,
   liveStatus: TaskThreadLiveStatus,
 ): void {
   for (const thread of store.tasks.listTaskThreadsByThreadId(threadId)) {
-    transitionThread(bb, store, thread, liveStatus);
+    transitionThread(sandy, store, thread, liveStatus);
   }
 }
 
 async function reconcileTrackedThread(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   trackedThread: TaskThread,
 ): Promise<void> {
   try {
-    const thread = await bb.sdk.threads.get({
+    const thread = await sandy.sdk.threads.get({
       threadId: trackedThread.threadId,
     });
-    transitionThread(bb, store, trackedThread, liveStatusFromThread(thread));
+    transitionThread(sandy, store, trackedThread, liveStatusFromThread(thread));
   } catch (error) {
     if (sdkErrorCode(error) === "thread_not_found") {
-      transitionThread(bb, store, trackedThread, "completed");
+      transitionThread(sandy, store, trackedThread, "completed");
       return;
     }
-    bb.log.warn(
+    sandy.log.warn(
       `Could not reconcile task thread ${trackedThread.threadId}: ${errorMessage(
         error,
       )}`,
@@ -118,7 +118,7 @@ async function reconcileTrackedThread(
 }
 
 async function reconcileTrackedThreads(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
 ): Promise<void> {
   const nonTerminalThreads = trackedThreads(store).filter(
@@ -126,29 +126,29 @@ async function reconcileTrackedThreads(
   );
 
   for (const trackedThread of nonTerminalThreads) {
-    await reconcileTrackedThread(bb, store, trackedThread);
+    await reconcileTrackedThread(sandy, store, trackedThread);
   }
 }
 
 export async function registerLifecycle(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
 ): Promise<void> {
-  bb.events.on("thread.created", ({ thread }) => {
-    transitionTrackedThread(bb, store, thread.id, liveStatusFromThread(thread));
+  sandy.events.on("thread.created", ({ thread }) => {
+    transitionTrackedThread(sandy, store, thread.id, liveStatusFromThread(thread));
   });
-  bb.events.on("thread.active", ({ thread }) => {
-    transitionTrackedThread(bb, store, thread.id, "working");
+  sandy.events.on("thread.active", ({ thread }) => {
+    transitionTrackedThread(sandy, store, thread.id, "working");
   });
-  bb.events.on("thread.idle", ({ thread }) => {
-    transitionTrackedThread(bb, store, thread.id, "idle");
+  sandy.events.on("thread.idle", ({ thread }) => {
+    transitionTrackedThread(sandy, store, thread.id, "idle");
   });
-  bb.events.on("thread.failed", ({ thread }) => {
-    transitionTrackedThread(bb, store, thread.id, "failed");
+  sandy.events.on("thread.failed", ({ thread }) => {
+    transitionTrackedThread(sandy, store, thread.id, "failed");
   });
-  bb.events.on("thread.deleted", ({ thread }) => {
-    transitionTrackedThread(bb, store, thread.id, "completed");
+  sandy.events.on("thread.deleted", ({ thread }) => {
+    transitionTrackedThread(sandy, store, thread.id, "completed");
   });
 
-  await reconcileTrackedThreads(bb, store);
+  await reconcileTrackedThreads(sandy, store);
 }

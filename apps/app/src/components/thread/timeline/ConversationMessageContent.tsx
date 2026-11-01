@@ -10,10 +10,10 @@ import type {
   TimelineConversationAttachments,
   TimelineRowBase,
   TimelineUserConversationRow,
-} from "@bb/server-contract";
-import type { PromptTextMention } from "@bb/domain";
-import { fileNameFromPath } from "@bb/thread-view";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/server-contract";
+import type { PromptTextMention } from "@sandy/domain";
+import { fileNameFromPath } from "@sandy/thread-view";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   MarkdownPreview,
   type MarkdownThreadMentions,
@@ -23,11 +23,11 @@ import {
   parseLocalFileHref,
   resolveRelativeLocalFileHref,
 } from "@/components/ui/markdown-local-file-link.js";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import {
   computeMutedPrefixLength,
   parseAutomationDueMessage,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import type { TimelineTitleActionResolver } from "./TimelineTitleView.js";
 import type {
   ThreadTimelineAddToChatHandler,
@@ -61,8 +61,8 @@ import {
   boundedMarkdownPreview,
   closeUnterminatedMarkdownCodeSpan,
   USER_MESSAGE_CHAR_CAP,
-} from "@bb/client-core";
-import { turnRequestLabel } from "@bb/client-core";
+} from "@sandy/client-core";
+import { turnRequestLabel } from "@sandy/client-core";
 import { resolveStreamingMarkdown } from "./streaming-markdown-split.js";
 import { TurnRequestLabel } from "./TurnRequestLabel.js";
 import {
@@ -78,7 +78,7 @@ import {
   type MessageProseSelection,
 } from "./SelectableMessageProse.js";
 import type { ThreadTimelinePluginMessageAction } from "./types.js";
-import type { PromptDraftAttachment } from "@bb/client-core";
+import type { PromptDraftAttachment } from "@sandy/client-core";
 import { buildMarkdownMessageLinkRouting } from "@/components/ui/markdown-message-link-routing";
 import { markStreamTrace } from "@/lib/stream-trace";
 
@@ -394,7 +394,7 @@ function UserConversationMessage({
       : initiator === "system"
         ? {
             sourceKind: "system" as const,
-            sourceName: "BB",
+            sourceName: "SANDY",
             sourceProjectId: null,
             sourceThreadId: null,
             sourceIsPluginSideChat: false,
@@ -532,7 +532,7 @@ function AssistantConversationMessage({
 }: AssistantConversationMessageProps) {
   useLayoutEffect(() => {
     if (streaming) {
-      markStreamTrace("bb:stream-row-commit", {
+      markStreamTrace("sandy:stream-row-commit", {
         rowId: id,
         threadId: threadId ?? null,
         textLength: text.length,

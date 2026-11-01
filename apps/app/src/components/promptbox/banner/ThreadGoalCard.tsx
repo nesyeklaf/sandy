@@ -1,6 +1,6 @@
-import type { ThreadTimelineGoal, ThreadTimelineGoalStatus } from "@bb/domain";
+import type { ThreadTimelineGoal, ThreadTimelineGoalStatus } from "@sandy/domain";
 import { CollapsibleActiveStackCard } from "@/components/promptbox/banner/CollapsibleActiveStackCard";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) {

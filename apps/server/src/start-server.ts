@@ -3,11 +3,12 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ServerConfig } from "@bb/config/server";
-import { toOptionalString } from "@bb/config/strings";
-import { BB_LOOPBACK_HOST } from "@bb/config/runtime";
-import { createLogger } from "@bb/logger";
-import { getAppSettings, getDisabledProviderIds, setAppSettings } from "@bb/db";
+import type { ServerConfig } from "@sandy/config/server";
+import { toOptionalString } from "@sandy/config/strings";
+import { SANDY_LOOPBACK_HOST } from "@sandy/config/runtime";
+import { createLogger } from "@sandy/logger";
+import { startTelemetry } from "@sandy/telemetry";
+import { getAppSettings, getDisabledProviderIds, setAppSettings } from "@sandy/db";
 import { initDb } from "./db.js";
 import { createApp } from "./server.js";
 import { PendingInteractionLifecycle } from "./services/interactions/pending-interactions.js";
@@ -22,7 +23,7 @@ import {
   createCliCommandService,
   createWindowsUserPath,
 } from "./services/system/cli-command.js";
-import { createBbAppManagedConfigReloader } from "./services/system/bb-app-managed-config.js";
+import { createSandyAppManagedConfigReloader } from "./services/system/sandy-app-managed-config.js";
 import { startGatedPerformanceDiagnostics } from "./services/system/performance-diagnostics.js";
 import { startEventLoopStallMonitor } from "./services/system/event-loop-stall-monitor.js";
 import {
@@ -60,7 +61,7 @@ import {
 
 interface StartHttpListenerArgs {
   fetch: Parameters<typeof serve>[0]["fetch"];
-  serverConfig: Pick<ServerConfig, "BB_SERVER_BIND_HOST" | "BB_SERVER_PORT">;
+  serverConfig: Pick<ServerConfig, "SANDY_SERVER_BIND_HOST" | "SANDY_SERVER_PORT">;
   logger: Pick<ServerLogger, "warn">;
   extraListenerRetryMs?: number;
 }
@@ -68,13 +69,13 @@ interface StartHttpListenerArgs {
 export const EXTRA_LISTENER_RETRY_MS = 10_000;
 
 export function startHttpListeners(args: StartHttpListenerArgs) {
-  const port = args.serverConfig.BB_SERVER_PORT;
+  const port = args.serverConfig.SANDY_SERVER_PORT;
   const loopback = serve({
-    hostname: BB_LOOPBACK_HOST,
+    hostname: SANDY_LOOPBACK_HOST,
     port,
     fetch: args.fetch,
   });
-  const extras = args.serverConfig.BB_SERVER_BIND_HOST.map((hostname) => {
+  const extras = args.serverConfig.SANDY_SERVER_BIND_HOST.map((hostname) => {
     const server = serve({ hostname, port, fetch: args.fetch });
     let retry: ReturnType<typeof setTimeout> | null = null;
     server.on("error", (error: unknown) => {
@@ -134,23 +135,24 @@ export function startServerPlugins(
 }
 
 export async function runServer(serverConfig: ServerConfig): Promise<void> {
+  const telemetry = startTelemetry({ component: "server" });
   const logger = createLogger({
     component: "server",
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
   });
   await refuseInterruptedServerImport({
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     logger,
   });
   let diagnosticsEnabled = () => false;
   const db = initDb(serverConfig.databasePath, {
     slowQueryThresholdMs: () => (diagnosticsEnabled() ? 25 : 100),
     slowQueryDiagnosticsEnabled: () => diagnosticsEnabled(),
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     logger,
   });
   const serverImport = await applyServerImportAtBoot({
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     db,
     logger,
     now: Date.now(),
@@ -158,12 +160,12 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   const pendingServerMove = serverImport.pendingMove;
   if (pendingServerMove === null) {
     await repairLastServerMoveHostName({
-      dataDir: serverConfig.BB_DATA_DIR,
+      dataDir: serverConfig.SANDY_DATA_DIR,
       db,
       logger,
     });
   }
-  if (serverConfig.BB_SKIP_ONBOARDING) {
+  if (serverConfig.SANDY_SKIP_ONBOARDING) {
     const settings = getAppSettings(db);
     if (settings.onboardingCompletedAt === null) {
       setAppSettings(db, {
@@ -175,7 +177,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   const serverMoveRun =
     pendingServerMove === null
       ? await reconcileServerMoveRunAtBoot({
-          dataDir: serverConfig.BB_DATA_DIR,
+          dataDir: serverConfig.SANDY_DATA_DIR,
           logger,
           now: Date.now(),
         })
@@ -183,7 +185,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   const hub = new NotificationHub();
   const watchInterests = new WatchInterestCoordinator({ db, hub });
   const lifecycleDedupers = createLifecycleDedupers();
-  const appUrl = toOptionalString(serverConfig.BB_APP_URL);
+  const appUrl = toOptionalString(serverConfig.SANDY_APP_URL);
 
   const selfDir = dirname(fileURLToPath(import.meta.url));
   const appDir = resolve(selfDir, "../../app");
@@ -192,16 +194,16 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   const staticDir =
     isProduction && existsSync(appDistDir) ? appDistDir : undefined;
   const runtimeConfig: ServerRuntimeConfig = {
-    appVersion: serverConfig.BB_APP_VERSION,
+    appVersion: serverConfig.SANDY_APP_VERSION,
     builtinSkillsRootPath: resolveBuiltinSkillsRootPath(),
     customModels: [],
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     featureFlags: serverConfig.featureFlags,
-    hostDaemonPort: serverConfig.BB_HOST_DAEMON_PORT,
-    inheritedSkillsRootPaths: serverConfig.BB_INHERITED_SKILLS_ROOTS,
+    hostDaemonPort: serverConfig.SANDY_HOST_DAEMON_PORT,
+    inheritedSkillsRootPaths: serverConfig.SANDY_INHERITED_SKILLS_ROOTS,
     isDevelopment: !isProduction,
-    performanceDiagnosticsAvailable: serverConfig.BB_PERF_DIAGNOSTICS,
-    serverPort: serverConfig.BB_SERVER_PORT,
+    performanceDiagnosticsAvailable: serverConfig.SANDY_PERF_DIAGNOSTICS,
+    serverPort: serverConfig.SANDY_SERVER_PORT,
     sharedSkillRoots: { user: [], project: [] },
   };
 
@@ -220,11 +222,11 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   if (appUrl !== undefined) {
     runtimeConfig.appUrl = appUrl;
   }
-  if (serverConfig.BB_DEV_APP_PORT !== undefined) {
-    runtimeConfig.devAppPort = serverConfig.BB_DEV_APP_PORT;
+  if (serverConfig.SANDY_DEV_APP_PORT !== undefined) {
+    runtimeConfig.devAppPort = serverConfig.SANDY_DEV_APP_PORT;
   }
-  if (serverConfig.BB_SERVER_LAUNCH_ID !== undefined) {
-    runtimeConfig.launchId = serverConfig.BB_SERVER_LAUNCH_ID;
+  if (serverConfig.SANDY_SERVER_LAUNCH_ID !== undefined) {
+    runtimeConfig.launchId = serverConfig.SANDY_SERVER_LAUNCH_ID;
   }
   const terminalSessions = new TerminalSessionLifecycle({
     config: runtimeConfig,
@@ -232,14 +234,14 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
     hub,
     logger,
   });
-  const bbAppManagedConfig = await createBbAppManagedConfigReloader({
+  const sandyAppManagedConfig = await createSandyAppManagedConfigReloader({
     config: runtimeConfig,
     hub,
     logger,
   });
 
   const machineAuth = await createMachineAuthService({
-    dataDir: serverConfig.BB_DATA_DIR,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     db,
     logger,
   });
@@ -270,7 +272,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
   const cliCommand = createCliCommandService({
     env: process.env,
     homeDir: homedir(),
-    launcherPath: serverConfig.BB_CLI_LAUNCHER ?? null,
+    launcherPath: serverConfig.SANDY_CLI_LAUNCHER ?? null,
     platform: process.platform,
     windowsUserPath: createWindowsUserPath(process.env),
   });
@@ -283,7 +285,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
     serverMove,
   } = createApp(
     {
-      bbAppManagedConfig,
+      sandyAppManagedConfig,
       cliCommand,
       config: runtimeConfig,
       db,
@@ -303,7 +305,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
     },
     {
       serverMove: {
-        appSurface: serverConfig.BB_APP_SURFACE,
+        appSurface: serverConfig.SANDY_APP_SURFACE,
         manualImportPending: serverImport.manualImportPending,
         pending: pendingServerMove,
         restoredRun: serverMoveRun,
@@ -331,8 +333,8 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
     { sessions: serverImport.importedDaemonSessions },
   );
   const performanceDiagnostics = await startGatedPerformanceDiagnostics({
-    allowed: serverConfig.BB_PERF_DIAGNOSTICS,
-    dataDir: serverConfig.BB_DATA_DIR,
+    allowed: serverConfig.SANDY_PERF_DIAGNOSTICS,
+    dataDir: serverConfig.SANDY_DATA_DIR,
     db,
     hub,
     logger,
@@ -394,14 +396,14 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
 
   logger.info(
     {
-      bindAddresses: [BB_LOOPBACK_HOST, ...serverConfig.BB_SERVER_BIND_HOST],
-      port: serverConfig.BB_SERVER_PORT,
-      dataDir: serverConfig.BB_DATA_DIR,
+      bindAddresses: [SANDY_LOOPBACK_HOST, ...serverConfig.SANDY_SERVER_BIND_HOST],
+      port: serverConfig.SANDY_SERVER_PORT,
+      dataDir: serverConfig.SANDY_DATA_DIR,
     },
     "Server listening",
   );
   pluginService.bindSdk({
-    baseUrl: `http://127.0.0.1:${serverConfig.BB_SERVER_PORT}`,
+    baseUrl: `http://127.0.0.1:${serverConfig.SANDY_SERVER_PORT}`,
   });
   let sweepInterval: ReturnType<typeof setInterval> | null = null;
   if (pendingServerMove === null) {
@@ -459,6 +461,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
       const closeServers = Promise.all(servers.map(closeHttpListener));
       await closeWebSockets();
       await closeServers;
+      await telemetry.shutdown();
     })();
     return shutdownPromise;
   };
@@ -476,6 +479,7 @@ export async function runServer(serverConfig: ServerConfig): Promise<void> {
     if (pluginService.handleUncaughtException(error)) return;
     const message =
       error instanceof Error ? (error.stack ?? error.message) : String(error);
+    logger.fatal({ err: error }, "Uncaught exception");
     process.stderr.write(`${message}\n`);
     process.exit(1);
   });

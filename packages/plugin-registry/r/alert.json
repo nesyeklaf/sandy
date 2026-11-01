@@ -3,12 +3,12 @@
   "name": "alert",
   "type": "registry:ui",
   "title": "alert",
-  "description": "BB ui \"alert\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"alert\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "class-variance-authority"
   ],
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -2,7 +2,7 @@
 
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import {
   createPluginPanelFixedPanelTab,
   createThreadInfoFixedPanelTab,
@@ -99,7 +99,7 @@ describe("ThreadSecondaryPanel plugin frontend priority", () => {
 
     view.show(infoFixedTab, true);
     expect(frontendPriorityPluginIds(THREAD_PATH)).toEqual([
-      "bb--composer",
+      "sandy--composer",
       "thread-list",
       "navigation",
     ]);

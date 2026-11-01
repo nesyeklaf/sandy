@@ -1,11 +1,11 @@
 import {
   sidebarBootstrapResponseSchema,
   type SidebarBootstrapResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { createLastKnownCache } from "@/lib/last-known-cache";
 
 const sidebarBootstrapCache = createLastKnownCache({
-  prefix: "bb.sidebar-bootstrap",
+  prefix: "sandy.sidebar-bootstrap",
   version: "1",
   schema: sidebarBootstrapResponseSchema,
 });

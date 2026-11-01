@@ -7,7 +7,7 @@ import {
 import { getPreferencesStorage, getProfileStore } from "@/lib/native";
 import { getAppProfileClientRegistry } from "./client-registry";
 
-const env: E2eEnv = { EXPO_PUBLIC_BB_E2E: process.env.EXPO_PUBLIC_BB_E2E };
+const env: E2eEnv = { EXPO_PUBLIC_SANDY_E2E: process.env.EXPO_PUBLIC_SANDY_E2E };
 
 export const e2eModeEnabled = isE2eModeEnabled(env, __DEV__);
 

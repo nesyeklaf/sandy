@@ -15,9 +15,9 @@ async function workspace(
   kind: "setup" | "teardown",
   script: string,
 ): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "bb-core-hooks-"));
+  const directory = await mkdtemp(join(tmpdir(), "sandy-core-hooks-"));
   directories.push(directory);
-  await writeFile(join(directory, `.bb-env-${kind}.sh`), script);
+  await writeFile(join(directory, `.sandy-env-${kind}.sh`), script);
   return directory;
 }
 
@@ -77,7 +77,7 @@ describe("core environment scripts", () => {
     ).toBe(await realpath(workspacePath));
     expect(output).toContain("second");
     expect(output).toContain("stderr");
-    expect(output).toContain("Running .bb-env-setup.sh");
+    expect(output).toContain("Running .sandy-env-setup.sh");
   });
 
   it("surfaces output before setup failure", async () => {
@@ -199,27 +199,27 @@ describe("core environment scripts", () => {
 
   it("accepts a stopped script only when its whole process tree is confirmed gone", async () => {
     await expect(
-      assertScriptProcessTreeStopped(undefined, ".bb-env-setup.sh"),
+      assertScriptProcessTreeStopped(undefined, ".sandy-env-setup.sh"),
     ).resolves.toBeUndefined();
     await expect(
       assertScriptProcessTreeStopped(
         Promise.resolve({ treeTermination: "confirmed" }),
-        ".bb-env-setup.sh",
+        ".sandy-env-setup.sh",
       ),
     ).resolves.toBeUndefined();
     await expect(
       assertScriptProcessTreeStopped(
         Promise.resolve({ treeTermination: "unverified" }),
-        ".bb-env-setup.sh",
+        ".sandy-env-setup.sh",
       ),
     ).rejects.toBeInstanceOf(LifecycleScriptTerminationUnverifiedError);
     await expect(
       assertScriptProcessTreeStopped(
         Promise.reject(new Error("Process did not exit after termination")),
-        ".bb-env-teardown.sh",
+        ".sandy-env-teardown.sh",
       ),
     ).rejects.toThrow(
-      ".bb-env-teardown.sh was stopped, but bb could not confirm that all of its processes exited",
+      ".sandy-env-teardown.sh was stopped, but sandy could not confirm that all of its processes exited",
     );
   });
 
@@ -227,15 +227,15 @@ describe("core environment scripts", () => {
     expect(
       buildLifecycleScriptCommand({
         kind: "setup",
-        scriptName: ".bb-env-setup.sh",
+        scriptName: ".sandy-env-setup.sh",
         platform: "win32",
-        scriptPath: "C:\\src\\repo\\.bb-env-setup.sh",
+        scriptPath: "C:\\src\\repo\\.sandy-env-setup.sh",
         windowsBashPath: "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
       }),
     ).toEqual({
       command: "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
-      args: ["C:\\src\\repo\\.bb-env-setup.sh"],
-      text: "bash .bb-env-setup.sh",
+      args: ["C:\\src\\repo\\.sandy-env-setup.sh"],
+      text: "bash .sandy-env-setup.sh",
       pathPrefix: ["C:\\Program Files\\Git\\usr\\bin"],
     });
   });
@@ -244,12 +244,12 @@ describe("core environment scripts", () => {
     expect(() =>
       buildLifecycleScriptCommand({
         kind: "teardown",
-        scriptName: ".bb-env-teardown.sh",
+        scriptName: ".sandy-env-teardown.sh",
         platform: "win32",
-        scriptPath: "C:\\src\\repo\\.bb-env-teardown.sh",
+        scriptPath: "C:\\src\\repo\\.sandy-env-teardown.sh",
         windowsBashPath: null,
       }),
-    ).toThrow(".bb-env-teardown.sh needs Git for Windows");
+    ).toThrow(".sandy-env-teardown.sh needs Git for Windows");
   });
 
   it("skips absent scripts", async () => {

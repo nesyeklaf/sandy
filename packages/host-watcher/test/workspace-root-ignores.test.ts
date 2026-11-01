@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import parcelWatcher from "@parcel/watcher";
-import { createDeferredPromise, initRepo, makeTempDir } from "@bb/test-helpers";
+import { createDeferredPromise, initRepo, makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { watchWorkspaceStatus } from "../src/watch-status.js";
 import type { WorkspaceStatusChangeEvent } from "../src/watch-status-types.js";
@@ -29,7 +29,7 @@ async function buildUmbrellaRoot(args: {
   root: string;
   nestedDirCount: number;
 }> {
-  const root = await makeTempDir("bb-1779-umbrella-");
+  const root = await makeTempDir("sandy-1779-umbrella-");
   if (args.gitRoot) {
     await initRepo(root);
   }
@@ -190,7 +190,7 @@ describe("workspace root watch events inside nested heavy directories (#1779)", 
         "apps",
         "child-0",
         ".git",
-        "bb-marker",
+        "sandy-marker",
       );
       const readyFile = path.join(realRoot, "apps", "child-0", "ready.txt");
       const visibleFile = path.join(realRoot, "apps", "child-0", "visible.txt");

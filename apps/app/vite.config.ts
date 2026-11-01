@@ -11,7 +11,7 @@ import { sharedUiEnvSeam } from "./vite-shared-ui-seam.js";
 import { cachedReactCompiler } from "./vite-react-compiler.js";
 
 const appDir = dirname(fileURLToPath(import.meta.url));
-const profiling = process.env.BB_APP_PROFILING === "1";
+const profiling = process.env.SANDY_APP_PROFILING === "1";
 
 export const sharedViteConfig = {
   plugins: [

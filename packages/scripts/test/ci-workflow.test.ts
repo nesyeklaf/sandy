@@ -39,7 +39,7 @@ it("rejects a pnpm version that disagrees with the root manifest", ({
     process.platform === "win32",
     "install-pnpm.sh runs only on Linux and macOS CI runners",
   );
-  const fixture = mkdtempSync(join(tmpdir(), "bb-pnpm-version-"));
+  const fixture = mkdtempSync(join(tmpdir(), "sandy-pnpm-version-"));
   onTestFinished(() => rmSync(fixture, { force: true, recursive: true }));
   const fakeBin = resolve(fixture, "bin");
   mkdirSync(fakeBin);
@@ -81,7 +81,7 @@ it.each([
   "installs pnpm safely with %s",
   (scenario, cached, corrupt, exitCode) => {
     if (process.platform === "win32") return;
-    const dir = mkdtempSync(join(tmpdir(), "bb-pnpm-cache-"));
+    const dir = mkdtempSync(join(tmpdir(), "sandy-pnpm-cache-"));
     onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
     const bin = join(dir, "bin");
     const install = join(dir, "pnpm-9.15.0", "bin");

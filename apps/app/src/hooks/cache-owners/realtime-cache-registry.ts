@@ -8,7 +8,7 @@ import type {
   ThreadEventType,
   ThreadStatusChangeMetadata,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   getCachedGlobalThreadListInvalidationQueryKeys,
   getCachedProjectThreadListInvalidationQueryKeys,

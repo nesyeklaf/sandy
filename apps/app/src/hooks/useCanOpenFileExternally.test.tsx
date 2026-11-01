@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
-import { makeEnvironment } from "@bb/test-helpers/domain-fixtures";
-import type { OpenInTargetContext } from "@bb/host-daemon-contract";
+import { makeEnvironment } from "@sandy/test-helpers/domain-fixtures";
+import type { OpenInTargetContext } from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCanOpenFileExternally } from "./useCanOpenFileExternally";
 import type { LiveFileRoot } from "./useResolvedLiveFileTarget";

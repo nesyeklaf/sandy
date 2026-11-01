@@ -19,7 +19,7 @@ export interface PerfTraceSpan {
 }
 
 const INPUT_WINDOW_MS = 1000;
-const TRACK_GROUP = "bb";
+const TRACK_GROUP = "sandy";
 const PHASE_TRACKS: Record<PerfTraceKind, string> = {
   switch: "Thread switch",
   open: "Overlay open",
@@ -32,7 +32,7 @@ interface PerfTraceClock {
   nextSpanId: number;
 }
 
-const CLOCK_KEY = Symbol.for("bb.perf-trace.clock.v1");
+const CLOCK_KEY = Symbol.for("sandy.perf-trace.clock.v1");
 
 function isPerfTraceClock(value: unknown): value is PerfTraceClock {
   return (
@@ -94,7 +94,7 @@ function emit(
     start,
     end: Math.max(start, end),
     detail: {
-      bb: detail,
+      sandy: detail,
       devtools: {
         dataType: "track-entry",
         track,
@@ -118,7 +118,7 @@ export function startPerfTraceSpan(
   const enabled = canMeasure();
   let last = startedAt;
   let open = true;
-  const phaseName = (phase: string) => `bb:${kind}:${phase}`;
+  const phaseName = (phase: string) => `sandy:${kind}:${phase}`;
   const detail = (phase: string): PerfTraceDetail => ({
     interaction: kind,
     id,
@@ -142,7 +142,7 @@ export function startPerfTraceSpan(
       if (!open) return;
       mark(phase);
       open = false;
-      if (enabled) emit(`bb:${kind}`, startedAt, last, TOTAL_TRACK, detail("total"));
+      if (enabled) emit(`sandy:${kind}`, startedAt, last, TOTAL_TRACK, detail("total"));
     },
     abandon() {
       open = false;

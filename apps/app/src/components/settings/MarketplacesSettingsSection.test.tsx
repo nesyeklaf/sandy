@@ -10,8 +10,8 @@ import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { MarketplacesSettingsSection } from "./MarketplacesSettingsSection";
 
 const OFFICIAL = {
-  name: "bb-official",
-  displayName: "BB Official",
+  name: "sandy-official",
+  displayName: "SANDY Official",
   description: null,
   official: true,
   sourceKind: "path",
@@ -104,7 +104,7 @@ describe("MarketplacesSettingsSection", () => {
       target: { value: "git:https://github.com/acme/agent-plugins.git@main" },
     });
     fireEvent.change(screen.getByLabelText("Marketplace subdirectory"), {
-      target: { value: " bb " },
+      target: { value: " sandy " },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
@@ -116,7 +116,7 @@ describe("MarketplacesSettingsSection", () => {
       );
       expect(JSON.parse(String(post?.init?.body))).toEqual({
         source: "git:https://github.com/acme/agent-plugins.git@main",
-        subdirectory: "bb",
+        subdirectory: "sandy",
       });
     });
   });
@@ -130,7 +130,7 @@ describe("MarketplacesSettingsSection", () => {
       target: { value: "git:https://github.com/acme/agent-plugins.git" },
     });
     fireEvent.change(screen.getByLabelText("Marketplace subdirectory"), {
-      target: { value: "bb" },
+      target: { value: "sandy" },
     });
     fireEvent.change(screen.getByLabelText("Marketplace source"), {
       target: { value: "path:/work/acme-marketplace" },
@@ -157,7 +157,7 @@ describe("MarketplacesSettingsSection", () => {
         ...ACME,
         sourceKind: "git",
         source: "git:https://acme.test/repo.git@main",
-        subdirectory: "bb",
+        subdirectory: "sandy",
       },
     ]);
     const { wrapper } = createQueryClientTestHarness();
@@ -165,7 +165,7 @@ describe("MarketplacesSettingsSection", () => {
 
     expect(
       await screen.findByText(
-        "git:https://acme.test/repo.git@main · subdirectory bb",
+        "git:https://acme.test/repo.git@main · subdirectory sandy",
       ),
     ).toBeTruthy();
   });
@@ -196,13 +196,13 @@ describe("MarketplacesSettingsSection", () => {
     });
   });
 
-  it("offers Remove only for marketplaces other than bb-official", async () => {
+  it("offers Remove only for marketplaces other than sandy-official", async () => {
     stubFetch([OFFICIAL, ACME]);
     const { wrapper } = createQueryClientTestHarness();
     render(<MarketplacesSettingsSection />, { wrapper });
 
     await screen.findByText("Acme Plugins");
-    expect(screen.queryByRole("button", { name: "Remove BB Official" })).toBe(
+    expect(screen.queryByRole("button", { name: "Remove SANDY Official" })).toBe(
       null,
     );
     expect(

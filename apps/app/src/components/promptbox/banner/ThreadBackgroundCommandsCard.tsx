@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { isBackgroundAgentTaskType } from "@bb/domain";
-import type { TimelineWorkflowWorkRow } from "@bb/server-contract";
+import { isBackgroundAgentTaskType } from "@sandy/domain";
+import type { TimelineWorkflowWorkRow } from "@sandy/server-contract";
 import { useResizeObserver } from "usehooks-ts";
 import {
   PROMPT_STACK_CARD_HEADER_BUTTON_CLASS,
@@ -8,22 +8,22 @@ import {
   PromptStackCard,
 } from "@/components/promptbox/banner/PromptStackCard";
 import { LiveDurationText } from "@/components/thread/timeline/LiveDurationText";
-import { Icon } from "@bb/shared-ui/icon";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { Icon } from "@sandy/shared-ui/icon";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   activityIconClass,
   activityMetaClass,
   activityRowClass,
   activityTextClass,
-} from "@bb/shared-ui/activity-row-styles";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/activity-row-styles";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PROMPT_STACK_DISCLOSURE_TRIGGER_CLASS,
   PromptStackCountSlot,
   PromptStackHoverChevron,
   useDisclosureFocusHandoff,
   AnimatedDisclosureBody,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 
 const BODY_ID = "thread-background-commands-card-body";
 const TOGGLE_ID = "thread-background-commands-card-toggle";

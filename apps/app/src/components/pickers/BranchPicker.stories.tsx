@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   BranchPicker,
   type BranchPickerProps,
-} from "@bb/shared-ui/branch-picker";
+} from "@sandy/shared-ui/branch-picker";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
 
 export default {
@@ -13,16 +13,16 @@ const branches = [
   "main",
   "develop",
   "staging",
-  "bb/feat/review-flow",
-  "bb/fix/timeline-pagination",
-  "bb/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
+  "sandy/feat/review-flow",
+  "sandy/fix/timeline-pagination",
+  "sandy/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
 ] as const;
 
 const remoteBranches = [
   "origin/main",
   "origin/develop",
   "origin/release/1.3",
-  "origin/bb/feat/review-flow",
+  "origin/sandy/feat/review-flow",
   "upstream/main",
 ] as const;
 
@@ -53,11 +53,11 @@ const mergeBasePicker: BranchPickerStoryConfig = {
 };
 
 const longBranchPicker: BranchPickerStoryConfig = {
-  value: "bb/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
+  value: "sandy/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
   triggerLabel:
-    "bb/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
+    "sandy/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
   triggerTitle:
-    "Branch: bb/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
+    "Branch: sandy/implement-server-daemon-protocol-simplification-thr_qfk8ksbxkk",
   defaultOpen: true,
   modal: false,
 };

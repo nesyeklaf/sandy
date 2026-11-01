@@ -1,7 +1,7 @@
 import type {
   ExperimentalThreadTocBand,
   ExperimentalThreadTocSelection,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 
 export const TOC_MAX_BAND_LANES = 3;
 

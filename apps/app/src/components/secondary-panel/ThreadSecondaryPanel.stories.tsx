@@ -12,8 +12,8 @@ import {
   type SecondaryPanelFixedTab,
   type SecondaryPanelRenderableTab,
 } from "./ThreadSecondaryPanel";
-import { Icon } from "@bb/shared-ui/icon";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { Icon } from "@sandy/shared-ui/icon";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
@@ -30,7 +30,7 @@ import {
   serializeSidebarSplitState,
   sidebarSplitStorageKey,
 } from "./sidebarSplitLayout";
-import type { WorkspaceFile } from "@bb/server-contract";
+import type { WorkspaceFile } from "@sandy/server-contract";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
 import {
   ThreadMetadataContent,

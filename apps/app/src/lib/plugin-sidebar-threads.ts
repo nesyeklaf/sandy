@@ -1,11 +1,11 @@
-import type { ThreadListEntry } from "@bb/domain";
-import type { PluginSidebarThread } from "@get-bb/plugin-sdk";
+import type { ThreadListEntry } from "@sandy/domain";
+import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk";
 import {
   getThreadListIndicatorLabel,
   resolveThreadListIndicator,
   threadListIndicatorStateForThread,
-} from "@bb/client-core";
-import { isThreadRead } from "@bb/client-core";
+} from "@sandy/client-core";
+import { isThreadRead } from "@sandy/client-core";
 import {
   EMPTY_TITLE_MENTION_RESOURCES,
   resolveThreadTitleDisplayText,

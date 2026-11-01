@@ -5,13 +5,13 @@ import {
   listIdleThreadsWithQueuedMessages,
   listQueuedThreadMessages,
   updateHost,
-} from "@bb/db";
-import { applyEnvironmentLifecycleEvent } from "@bb/db/internal-environment-lifecycle";
+} from "@sandy/db";
+import { applyEnvironmentLifecycleEvent } from "@sandy/db/internal-environment-lifecycle";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   type EnvironmentStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { readJson } from "../helpers/json.js";
 import {

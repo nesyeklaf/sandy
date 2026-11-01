@@ -1,7 +1,7 @@
 import {
   definePluginApp,
   experimental_useComposerRenderer as useComposerRenderer,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { PromptBoxInternal } from "./src/PromptBoxInternal";
 import "./src/composer.css";
 
@@ -15,7 +15,7 @@ export default definePluginApp((app) => {
     id: "composer",
     title: "Composer",
     description:
-      "bb's composer: rich text, @-mentions, slash commands, voice and attachments.",
+      "sandy's composer: rich text, @-mentions, slash commands, voice and attachments.",
     component: Composer,
   });
 });

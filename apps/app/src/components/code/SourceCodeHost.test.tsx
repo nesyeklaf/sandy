@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai";
 import { AUTOMATIC_REPLACEMENT_PROVIDER } from "@/lib/plugin-replacement-preference";
 import { sourceCodeRendererProviderAtom } from "./codeRendererProvider";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PluginSourceCodeRendererProps } from "@get-bb/plugin-sdk";
+import type { PluginSourceCodeRendererProps } from "@sandy-sdk/plugin-sdk";
 import {
   resetPluginSlotStoreForTest,
   setPluginSlotRegistrations,
@@ -15,19 +15,19 @@ import { SelectionAddToChatContext } from "@/components/thread/SelectionAddToCha
 import { SourceCodeHost } from "./SourceCodeHost";
 import { makePluginRegistrationSet } from "@/test/fixtures/plugins";
 
-const bbSourceCode = vi.hoisted(() => ({
+const sandySourceCode = vi.hoisted(() => ({
   lastProps: null as Record<string, unknown> | null,
 }));
 
-vi.mock("./BbSourceCode", async () => {
+vi.mock("./SandySourceCode", async () => {
   const React = await import("react");
   return {
     default: (props: Record<string, unknown>) => {
-      bbSourceCode.lastProps = props;
+      sandySourceCode.lastProps = props;
       return React.createElement(
         "div",
-        { "data-testid": "bb-source-code" },
-        "bb source",
+        { "data-testid": "sandy-source-code" },
+        "sandy source",
       );
     },
   };
@@ -53,7 +53,7 @@ beforeEach(() => {
     sourceCodeRendererProviderAtom,
     AUTOMATIC_REPLACEMENT_PROVIDER,
   );
-  bbSourceCode.lastProps = null;
+  sandySourceCode.lastProps = null;
   received.length = 0;
   resetPluginSlotStoreForTest();
 });
@@ -66,7 +66,7 @@ afterEach(() => {
 });
 
 describe("SourceCodeHost", () => {
-  it("hands the replacement resolved semantic props, not BB's host-only inputs", async () => {
+  it("hands the replacement resolved semantic props, not SANDY's host-only inputs", async () => {
     registerSourceCodeRenderer((props) => {
       received.push(props);
       return <div data-testid="plugin-source">plugin source</div>;
@@ -95,7 +95,7 @@ describe("SourceCodeHost", () => {
     expect(Object.keys(props ?? {})).not.toContain("scrollToHighlightedLines");
   });
 
-  it("loads BB's renderer only when the replacement delegates", async () => {
+  it("loads SANDY's renderer only when the replacement delegates", async () => {
     registerSourceCodeRenderer(({ path, Original }) =>
       path.endsWith(".md") ? <div>plugin source</div> : <Original />,
     );
@@ -109,22 +109,22 @@ describe("SourceCodeHost", () => {
       />,
     );
 
-    expect(await screen.findByTestId("bb-source-code")).toBeDefined();
-    expect(bbSourceCode.lastProps?.cacheKey).toBe("rev-2:src/app.ts");
-    expect(bbSourceCode.lastProps?.scrollToHighlightedLines).toBe(true);
+    expect(await screen.findByTestId("sandy-source-code")).toBeDefined();
+    expect(sandySourceCode.lastProps?.cacheKey).toBe("rev-2:src/app.ts");
+    expect(sandySourceCode.lastProps?.scrollToHighlightedLines).toBe(true);
   });
 
-  it("resolves presentation defaults for BB's renderer", async () => {
+  it("resolves presentation defaults for SANDY's renderer", async () => {
     render(<SourceCodeHost content={CONTENT} path="src/app.ts" />);
 
-    await screen.findByTestId("bb-source-code");
-    expect(bbSourceCode.lastProps?.overflow).toBe("scroll");
-    expect(bbSourceCode.lastProps?.highlightedLines).toBeNull();
+    await screen.findByTestId("sandy-source-code");
+    expect(sandySourceCode.lastProps?.overflow).toBe("scroll");
+    expect(sandySourceCode.lastProps?.highlightedLines).toBeNull();
   });
 });
 
 describe("experimental_SourceCode", () => {
-  it("shares the replacement with BB's own surfaces", async () => {
+  it("shares the replacement with SANDY's own surfaces", async () => {
     registerSourceCodeRenderer((props) => {
       received.push(props);
       return <div data-testid="plugin-source">plugin source</div>;
@@ -135,7 +135,7 @@ describe("experimental_SourceCode", () => {
     await screen.findByTestId("plugin-source");
     expect(received.at(-1)?.content).toBe(CONTENT);
     expect(received.at(-1)?.highlightedLines).toBeNull();
-    expect(bbSourceCode.lastProps).toBeNull();
+    expect(sandySourceCode.lastProps).toBeNull();
   });
 
   it("offers Add to chat only inside a thread", async () => {
@@ -143,8 +143,8 @@ describe("experimental_SourceCode", () => {
     const { unmount } = render(
       <PluginSourceCode content={CONTENT} path="src/app.ts" />,
     );
-    await screen.findByTestId("bb-source-code");
-    expect(bbSourceCode.lastProps?.onSelectionAddToChat).toBeUndefined();
+    await screen.findByTestId("sandy-source-code");
+    expect(sandySourceCode.lastProps?.onSelectionAddToChat).toBeUndefined();
     unmount();
 
     render(
@@ -152,7 +152,7 @@ describe("experimental_SourceCode", () => {
         <PluginSourceCode content={CONTENT} path="src/app.ts" />
       </SelectionAddToChatContext.Provider>,
     );
-    await screen.findByTestId("bb-source-code");
-    expect(bbSourceCode.lastProps?.onSelectionAddToChat).toBe(addToChat);
+    await screen.findByTestId("sandy-source-code");
+    expect(sandySourceCode.lastProps?.onSelectionAddToChat).toBe(addToChat);
   });
 });

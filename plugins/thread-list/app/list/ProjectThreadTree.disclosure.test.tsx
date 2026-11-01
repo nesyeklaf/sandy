@@ -8,7 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   installTestPluginRuntime,
   renderSlot,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { SidebarRenameProvider } from "../rows/SidebarInlineRename.js";
 
 installTestPluginRuntime();

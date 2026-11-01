@@ -1,4 +1,4 @@
-import type { PluginEnvironmentProviderProgress } from "@get-bb/plugin-sdk/environment-provider";
+import type { PluginEnvironmentProviderProgress } from "@sandy-sdk/plugin-sdk/environment-provider";
 import { z } from "zod";
 import type { ProgressCallback } from "./transcript.js";
 

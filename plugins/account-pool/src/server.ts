@@ -12,7 +12,7 @@ import {
 } from "./upstream-transport.js";
 import path from "node:path";
 import { z } from "zod";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { registerPoolCli } from "./cli.js";
 import {
   accountPoolConfigSchema,
@@ -94,17 +94,17 @@ export function helloResponse(): Response {
 export function createAccountPoolPlugin(
   options: AccountPoolPluginOptions = {},
 ) {
-  return async function accountPoolPlugin(bb: BbPluginApi): Promise<void> {
+  return async function accountPoolPlugin(sandy: SandyPluginApi): Promise<void> {
     const storedConfig = z
       .record(z.string(), z.unknown())
-      .parse((await bb.storage.kv.get("config")) ?? {});
+      .parse((await sandy.storage.kv.get("config")) ?? {});
     const hasRemovedSettings =
       "cacheMissDebug" in storedConfig || "cacheMissMinTokens" in storedConfig;
     delete storedConfig.cacheMissDebug;
     delete storedConfig.cacheMissMinTokens;
     let currentSettings = accountPoolConfigSchema.parse(storedConfig);
     if (hasRemovedSettings) {
-      await bb.storage.kv.set("config", currentSettings);
+      await sandy.storage.kv.set("config", currentSettings);
     }
     const config: AccountPoolConfigController = {
       get: () => currentSettings,
@@ -114,34 +114,34 @@ export function createAccountPoolPlugin(
           ...currentSettings,
           ...update,
         });
-        await bb.storage.kv.set("config", next);
+        await sandy.storage.kv.set("config", next);
         currentSettings = next;
-        bb.realtime.publish(ACCOUNT_POOL_CONFIG_CHANGED, {});
+        sandy.realtime.publish(ACCOUNT_POOL_CONFIG_CHANGED, {});
         return next;
       },
     };
     const secretDir = path.join(
-      bb.server.experimental_dataDir,
+      sandy.server.experimental_dataDir,
       "plugins",
-      bb.pluginId,
+      sandy.pluginId,
       "secrets",
       "accounts",
     );
-    const accounts = new AccountStore(bb.storage.kv, secretDir);
+    const accounts = new AccountStore(sandy.storage.kv, secretDir);
     await accounts.initialize();
     const now = options.now ?? Date.now;
     const hubTokens = new HubTokenStore(secretDir, now);
     await hubTokens.initialize();
-    const enrolledHosts = await bb.sdk.hosts.list();
+    const enrolledHosts = await sandy.sdk.hosts.list();
     await hubTokens.prune(enrolledHosts.map((host) => host.id));
-    const routing = new RoutingStore(bb.storage.kv, now);
+    const routing = new RoutingStore(sandy.storage.kv, now);
     const parentPool = readParentPool(options.env ?? process.env);
     const proxyingParent = (): ParentPool | null =>
       parentPool !== null && currentSettings.parentMode === "proxy"
         ? parentPool
         : null;
-    const db = bb.storage.database();
-    bb.storage.migrate(db, QUOTA_MIGRATIONS);
+    const db = sandy.storage.database();
+    sandy.storage.migrate(db, QUOTA_MIGRATIONS);
     const quotas = new QuotaStore(db);
     const transport =
       options.fetch === undefined ? createUpstreamTransport() : null;
@@ -165,19 +165,19 @@ export function createAccountPoolPlugin(
       maxAffinityBindings: options.maxAffinityBindings,
       getParentRoute: proxyingParent,
       onUpstreamError: (provider, error) =>
-        bb.log.warn(
+        sandy.log.warn(
           `Account Pooler ${provider} transport failed: ${transportErrorCode(error)}.`,
         ),
       onAccountsChanged: () =>
-        bb.realtime.publish(ACCOUNT_POOL_ACCOUNTS_CHANGED, {}),
+        sandy.realtime.publish(ACCOUNT_POOL_ACCOUNTS_CHANGED, {}),
       onOAuthRefresh: (provider, accountId, outcome, detail) => {
         const message = `Account Pooler ${provider} account ${accountId} OAuth refresh ${outcome}: ${detail}`;
-        if (outcome === "succeeded") bb.log.info(message);
-        else bb.log.warn(message);
+        if (outcome === "succeeded") sandy.log.info(message);
+        else sandy.log.warn(message);
       },
     });
     if (transport !== null) {
-      bb.onDispose(async () => {
+      sandy.onDispose(async () => {
         await hub.stop();
         await transport.destroy();
       });
@@ -193,7 +193,7 @@ export function createAccountPoolPlugin(
               ? {}
               : { ttlMs: options.availabilityTtlMs }),
             onError: (error) =>
-              bb.log.warn(
+              sandy.log.warn(
                 `Account Pooler could not read parent availability: ${error instanceof Error ? error.message : String(error)}.`,
               ),
           });
@@ -211,11 +211,11 @@ export function createAccountPoolPlugin(
       hub,
       hubTokens,
       routing,
-      () => bb.sdk.hosts.list(),
+      () => sandy.sdk.hosts.list(),
       async (hostId) =>
-        (await bb.sdk.system.providerStates({ hostId })).providers,
+        (await sandy.sdk.system.providerStates({ hostId })).providers,
       now,
-      () => bb.realtime.publish(ACCOUNT_POOL_ACCOUNTS_CHANGED, {}),
+      () => sandy.realtime.publish(ACCOUNT_POOL_ACCOUNTS_CHANGED, {}),
       (accountId) => hub.refreshUsage(accountId, true),
       parentStatus,
     );
@@ -234,8 +234,8 @@ export function createAccountPoolPlugin(
       addAccount: (authenticated) => operations.addCodexOAuth(authenticated),
     });
     if ((await accounts.list()).every((account) => !account.enabled)) {
-      bb.status.needsConfiguration(
-        "Add and enable a Claude or Codex account with `bb pool account add`.",
+      sandy.status.needsConfiguration(
+        "Add and enable a Claude or Codex account with `sandy pool account add`.",
       );
     }
     const routedProviderSchema = z.enum(["claude", "codex"]);
@@ -248,10 +248,10 @@ export function createAccountPoolPlugin(
       requestId: string;
     }): Promise<RetryAvailability> => {
       const provider = routedProviderSchema.safeParse(
-        await bb.storage.kv.get(`retry-route:${input.threadId}`),
+        await sandy.storage.kv.get(`retry-route:${input.threadId}`),
       );
       if (!provider.success) return { kind: "not-routed" };
-      const events = await bb.sdk.threads.events.list({
+      const events = await sandy.sdk.threads.events.list({
         threadId: input.threadId,
         types: ["client/turn/requested"],
         order: "desc",
@@ -265,7 +265,7 @@ export function createAccountPoolPlugin(
         modelFamily(request.data.execution.model),
       );
     };
-    bb.rpc.register(
+    sandy.rpc.register(
       retryAvailabilityContract,
       { [retryAvailabilityMethod]: retryAvailability },
       {
@@ -274,12 +274,12 @@ export function createAccountPoolPlugin(
           "Account Pooler retry availability for routed failed turns.",
       },
     );
-    registerUsageSource(bb, hub);
-    bb.rpc.register(
+    registerUsageSource(sandy, hub);
+    sandy.rpc.register(
       accountPoolRpcContract,
       createRpcHandlers(operations, login, codexLogin, config),
     );
-    registerPoolCli(bb, operations, login, codexLogin, config);
+    registerPoolCli(sandy, operations, login, codexLogin, config);
     const canServe = async (provider: PoolProvider): Promise<boolean> => {
       if (!(await operations.isRoutingEnabled(provider))) return false;
       if (proxyingParent() !== null && availability !== null) {
@@ -291,7 +291,7 @@ export function createAccountPoolPlugin(
       {
         name: PARENT_URL_ENV,
         value: { serverPath: HUB_BASE_PATH },
-        reason: "Account Pooler hub for nested bb servers on this machine",
+        reason: "Account Pooler hub for nested sandy servers on this machine",
       },
       {
         name: PARENT_TOKEN_ENV,
@@ -304,7 +304,7 @@ export function createAccountPoolPlugin(
         name,
         value: "",
         reason:
-          "Account Pooler is isolated from the parent bb server's pool on this instance",
+          "Account Pooler is isolated from the parent sandy server's pool on this instance",
       }));
     const contributeFor =
       (
@@ -318,7 +318,7 @@ export function createAccountPoolPlugin(
         if (!bypassed && (await canServe(provider))) {
           const token = await hubTokens.forHost(context.hostId);
           if (threadId !== null) {
-            await bb.storage.kv.set(`retry-route:${threadId}`, provider);
+            await sandy.storage.kv.set(`retry-route:${threadId}`, provider);
             if (provider === "claude") {
               await routing.recordRouted(threadId, context.hostId);
             }
@@ -326,7 +326,7 @@ export function createAccountPoolPlugin(
           return [...(await serving(token)), ...markerEntries(token)];
         }
         if (threadId !== null) {
-          await bb.storage.kv.delete(`retry-route:${threadId}`);
+          await sandy.storage.kv.delete(`retry-route:${threadId}`);
         }
         return parentPool === null ? [] : neutralized(provider);
       };
@@ -349,10 +349,10 @@ export function createAccountPoolPlugin(
             statusMessage:
               proxyingParent() === null
                 ? "Credentials are provided by the Account Pooler hub."
-                : "Credentials are proxied to the parent bb server's Account Pooler.",
+                : "Credentials are proxied to the parent sandy server's Account Pooler.",
           }
         : null;
-    bb.providers.experimental_contributeEnv(
+    sandy.providers.experimental_contributeEnv(
       "claude-code",
       contributeFor("claude", async (token) => [
         {
@@ -380,10 +380,10 @@ export function createAccountPoolPlugin(
         ...(await subscriptionCacheEntries()),
       ]),
     );
-    bb.providers.experimental_contributeEnvHealth("claude-code", () =>
+    sandy.providers.experimental_contributeEnvHealth("claude-code", () =>
       proxiedHealth("claude"),
     );
-    bb.providers.experimental_contributeEnv(
+    sandy.providers.experimental_contributeEnv(
       "codex",
       contributeFor("codex", async (token) => [
         {
@@ -398,14 +398,14 @@ export function createAccountPoolPlugin(
         },
       ]),
     );
-    bb.providers.experimental_contributeEnvHealth("codex", () =>
+    sandy.providers.experimental_contributeEnvHealth("codex", () =>
       proxiedHealth("codex"),
     );
-    bb.onDispose(async () => {
+    sandy.onDispose(async () => {
       codexLogin.dispose();
       let timer: ReturnType<typeof setTimeout> | null = null;
       try {
-        const inspection = inspectDisableState(bb, operations);
+        const inspection = inspectDisableState(sandy, operations);
         const timeout = new Promise<typeof DISPOSE_INSPECTION_TIMEOUT>(
           (resolve) => {
             timer = setTimeout(
@@ -417,12 +417,12 @@ export function createAccountPoolPlugin(
         );
         const result = await Promise.race([inspection, timeout]);
         if (result === DISPOSE_INSPECTION_TIMEOUT) {
-          bb.log.debug("Account Pooler disable inspection timed out.");
+          sandy.log.debug("Account Pooler disable inspection timed out.");
           return;
         }
-        if (result !== null) bb.log.warn(result);
+        if (result !== null) sandy.log.warn(result);
       } catch (error) {
-        bb.log.debug(
+        sandy.log.debug(
           `Account Pooler disable inspection skipped: ${error instanceof Error ? error.message : String(error)}`,
         );
       } finally {
@@ -430,7 +430,7 @@ export function createAccountPoolPlugin(
       }
     });
     for (const route of ["/v1/messages", "/v1/messages/count_tokens"]) {
-      bb.http.route(
+      sandy.http.route(
         "POST",
         route,
         (context) => hub.handle(context.req.raw, "claude", route),
@@ -443,20 +443,20 @@ export function createAccountPoolPlugin(
       "/v1/images/edits",
       "/v1/alpha/search",
     ]) {
-      bb.http.route(
+      sandy.http.route(
         "POST",
         route,
         (context) => hub.handle(context.req.raw, "codex", route),
         { auth: "none" },
       );
     }
-    bb.http.route(
+    sandy.http.route(
       "GET",
       "/v1/models",
       (context) => hub.handle(context.req.raw, "codex", "/v1/models"),
       { auth: "none" },
     );
-    bb.http.route(
+    sandy.http.route(
       "GET",
       AVAILABILITY_PATH,
       async (context) => {
@@ -472,7 +472,7 @@ export function createAccountPoolPlugin(
       },
       { auth: "none" },
     );
-    bb.http.route(
+    sandy.http.route(
       "GET",
       "/retry-availability",
       async (context) => {
@@ -490,27 +490,27 @@ export function createAccountPoolPlugin(
       },
       { auth: "none" },
     );
-    bb.http.route("HEAD", "/api/hello", () => helloResponse(), {
+    sandy.http.route("HEAD", "/api/hello", () => helloResponse(), {
       auth: "none",
     });
-    bb.background.service("hub", {
+    sandy.background.service("hub", {
       start: (signal) => hub.start(signal),
     });
   };
 }
 
 async function inspectDisableState(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   operations: PoolOperations,
 ): Promise<string | null> {
-  const installed = await bb.sdk.plugins.list();
+  const installed = await sandy.sdk.plugins.list();
   const disabled =
-    installed.plugins.find((plugin) => plugin.id === bb.pluginId)?.enabled ===
+    installed.plugins.find((plugin) => plugin.id === sandy.pluginId)?.enabled ===
     false;
   if (!disabled) return null;
   const warnings = await operations.routedThreadsWithoutLocalLogin();
   if (warnings.length === 0) return null;
-  return `Account Pooler disabled with ${warnings.length} recently routed thread${warnings.length === 1 ? "" : "s"} on machines without a local Claude login. Run bb pool status before disabling to inspect them.`;
+  return `Account Pooler disabled with ${warnings.length} recently routed thread${warnings.length === 1 ? "" : "s"} on machines without a local Claude login. Run sandy pool status before disabling to inspect them.`;
 }
 
 export default createAccountPoolPlugin();

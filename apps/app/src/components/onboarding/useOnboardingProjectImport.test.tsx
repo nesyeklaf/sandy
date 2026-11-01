@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { createStore, Provider } from "jotai";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -73,7 +73,7 @@ describe("onboarding project imports", () => {
   it.each(["proj_existing", PERSONAL_PROJECT_ID])(
     "preserves the returning choice %s",
     async (selected) => {
-      window.localStorage.setItem("bb.root-compose.project-id", selected);
+      window.localStorage.setItem("sandy.root-compose.project-id", selected);
       const view = arrange();
       await act(() => view.result.current.importProjects("host_local", repos));
       expect(view.result.current.selection[0]).toBe(selected);

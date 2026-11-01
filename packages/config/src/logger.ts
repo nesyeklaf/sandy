@@ -4,9 +4,10 @@ import {
   type LoadCommonConfigArgs,
   type LogLevelConfig,
 } from "./common.js";
+import { loadOtlpConfig, type OtlpConfig } from "./otlp.js";
 
-interface LoggerConfig extends LogLevelConfig {
-  BB_DATA_DIR: string;
+interface LoggerConfig extends LogLevelConfig, OtlpConfig {
+  SANDY_DATA_DIR: string;
 }
 
 interface LoadLoggerConfigArgs extends LoadCommonConfigArgs {
@@ -16,12 +17,14 @@ interface LoadLoggerConfigArgs extends LoadCommonConfigArgs {
 export function loadLoggerConfig(
   args: LoadLoggerConfigArgs = {},
 ): LoggerConfig {
+  const otlpConfig = loadOtlpConfig(args);
   if (args.dataDir !== undefined) {
     return {
       ...loadLogLevelConfig(args),
-      BB_DATA_DIR: args.dataDir,
+      ...otlpConfig,
+      SANDY_DATA_DIR: args.dataDir,
     };
   }
 
-  return loadCommonConfig(args);
+  return { ...loadCommonConfig(args), ...otlpConfig };
 }

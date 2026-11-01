@@ -1,8 +1,10 @@
 import { fstatSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { isSpanContextValid, trace } from "@opentelemetry/api";
 import pino from "pino";
 import type { Logger } from "pino";
-import { loadLoggerConfig } from "@bb/config/logger";
+import { loadLoggerConfig } from "@sandy/config/logger";
+import { otlpServiceName, otlpSignalUrl } from "@sandy/config/otlp";
 
 export type { Logger };
 
@@ -21,6 +23,18 @@ function sanitizeComponentName(component: string): string {
   }
 
   return trimmed.replace(/[^a-zA-Z0-9._-]+/gu, "-");
+}
+
+function activeTraceFields(): Record<string, string | number> {
+  const spanContext = trace.getActiveSpan()?.spanContext();
+  if (spanContext === undefined || !isSpanContextValid(spanContext)) {
+    return {};
+  }
+  return {
+    trace_id: spanContext.traceId,
+    span_id: spanContext.spanId,
+    trace_flags: spanContext.traceFlags,
+  };
 }
 
 function stdoutIsPlainFile(): boolean {
@@ -52,16 +66,17 @@ function pruneRotatedLogFiles(logDir: string, component: string): void {
 export function createLogger(options: CreateLoggerOptions): Logger {
   const component = sanitizeComponentName(options.component);
   const loggerConfig = loadLoggerConfig({ dataDir: options.dataDir });
-  const dataDir = loggerConfig.BB_DATA_DIR;
+  const dataDir = loggerConfig.SANDY_DATA_DIR;
   const logDir = join(dataDir, "logs");
   mkdirSync(logDir, { recursive: true });
   pruneRotatedLogFiles(logDir, component);
   const loggerOptions = {
-    level: loggerConfig.BB_LOG_LEVEL,
+    level: loggerConfig.SANDY_LOG_LEVEL,
     base: {
       component,
       ...(options.base ?? {}),
     },
+    mixin: activeTraceFields,
     serializers: {
       err: pino.stdSerializers.errWithCause,
       error: pino.stdSerializers.errWithCause,
@@ -77,7 +92,7 @@ export function createLogger(options: CreateLoggerOptions): Logger {
         limit: { count: ROTATED_LOG_FILE_COUNT },
         size: "10m",
       },
-      level: loggerConfig.BB_LOG_LEVEL,
+      level: loggerConfig.SANDY_LOG_LEVEL,
     },
   ];
 
@@ -90,7 +105,31 @@ export function createLogger(options: CreateLoggerOptions): Logger {
         singleLine: true,
         translateTime: "SYS:HH:MM:ss",
       },
-      level: loggerConfig.BB_LOG_LEVEL,
+      level: loggerConfig.SANDY_LOG_LEVEL,
+    });
+  }
+
+  if (loggerConfig.SANDY_OTLP_ENDPOINT !== null) {
+    targets.push({
+      target: "pino-opentelemetry-transport",
+      options: {
+        loggerName: component,
+        serviceVersion: loggerConfig.SANDY_APP_VERSION,
+        resourceAttributes: {
+          "service.name": otlpServiceName(component),
+          "service.version": loggerConfig.SANDY_APP_VERSION,
+        },
+        logRecordProcessorOptions: {
+          recordProcessorType: "batch",
+          exporterOptions: {
+            protocol: "http/protobuf",
+            protobufExporterOptions: {
+              url: otlpSignalUrl(loggerConfig.SANDY_OTLP_ENDPOINT, "logs"),
+            },
+          },
+        },
+      },
+      level: loggerConfig.SANDY_LOG_LEVEL,
     });
   }
 

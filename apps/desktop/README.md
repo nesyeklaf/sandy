@@ -1,18 +1,18 @@
-# @bb/desktop
+# @sandy/desktop
 
-macOS, Linux, and Windows Electron shell for bb. The desktop app loads the existing bb
-web UI and uses the packaged `bb-app` launcher for server and host-daemon
+macOS, Linux, and Windows Electron shell for sandy. The desktop app loads the existing sandy
+web UI and uses the packaged `sandy-app` launcher for server and host-daemon
 lifecycle.
 
 ## Browser address interaction checks
 
-Run `pnpm exec turbo run smoke:browser-address --filter=@bb/desktop` from the
+Run `pnpm exec turbo run smoke:browser-address --filter=@sandy/desktop` from the
 repository root. On Linux, run it under `xvfb-run -a` or an active display.
 The smoke test mounts the production address input beside a real Electron
 `WebContentsView`, checks repeated focus transfers, first and second clicks,
 drag selection, keyboard focus, and replacing the selected URL by typing.
 It uses a temporary profile and removes it when finished. It needs no running
-BB server or user data. CI runs it alongside the desktop tests.
+SANDY server or user data. CI runs it alongside the desktop tests.
 
 ## Development
 
@@ -20,31 +20,31 @@ From the repo root, run `pnpm dev` in one terminal for the source server and
 live UI updates. In a second terminal, start the Electron shell:
 
 ```bash
-pnpm exec turbo run dev --filter=@bb/desktop
+pnpm exec turbo run dev --filter=@sandy/desktop
 ```
 
-The dev script builds `bb-app`, compiles the Electron main/preload files, and
+The dev script builds `sandy-app`, compiles the Electron main/preload files, and
 opens Electron directly. By default it uses the same checkout-scoped
-`~/.bb-dev/<checkout-instance>` data directory and deterministic high ports as
+`~/.sandy-dev/<checkout-instance>` data directory and deterministic high ports as
 `pnpm dev`; it prints the resolved data dir, server URL, and
 Electron user-data dir at startup. It intentionally overwrites inherited
-`BB_DATA_DIR`, `BB_SERVER_PORT`, `BB_SERVER_URL`, and `BB_HOST_DAEMON_PORT` so a
-desktop dev run launched from an existing bb session still targets the current
-checkout. Set `BB_DESKTOP_USER_DATA_DIR` to override only Electron's user-data
+`SANDY_DATA_DIR`, `SANDY_SERVER_PORT`, `SANDY_SERVER_URL`, and `SANDY_HOST_DAEMON_PORT` so a
+desktop dev run launched from an existing sandy session still targets the current
+checkout. Set `SANDY_DESKTOP_USER_DATA_DIR` to override only Electron's user-data
 directory.
 
 The launcher probes the checkout's Vite app port at startup and adapts:
 
 - **`pnpm dev` is already running** (Vite reachable): the shell loads the Vite
-  dev URL, so you get live source and HMR for `@bb/app` changes — no rebuild
+  dev URL, so you get live source and HMR for `@sandy/app` changes — no rebuild
   needed. It still attaches to the same running server/daemon for all API/WS
   traffic. The launcher prints `app <url> (Vite dev server — live reload)`. This
   is the fast loop for iterating on the desktop UI.
-- **`pnpm dev` is not running**: the shell starts its own `bb-app` runtime and
+- **`pnpm dev` is not running**: the shell starts its own `sandy-app` runtime and
   loads the built UI it serves, so you must rebuild (re-run this task) to pick up
-  source changes. The launcher prints `app (own bb-app runtime — …)`.
+  source changes. The launcher prints `app (own sandy-app runtime — …)`.
 
-The override is plumbed via `BB_DESKTOP_APP_URL`, which the launcher only sets
+The override is plumbed via `SANDY_DESKTOP_APP_URL`, which the launcher only sets
 when Vite is confirmed reachable; it is never set in packaged builds, so
 production always loads the server's own built UI.
 
@@ -53,11 +53,11 @@ packaged runtime and keeps native dependencies rebuilt for Electron's bundled
 Node runtime:
 
 ```bash
-pnpm exec turbo run start --filter=@bb/desktop
+pnpm exec turbo run start --filter=@sandy/desktop
 ```
 
 Electron is pinned to `44.9.3`. macOS builds require macOS 13 (Ventura) or
-newer. The bundled `bb-app` runtime uses `better-sqlite3@13.0.3`, whose N-API
+newer. The bundled `sandy-app` runtime uses `better-sqlite3@13.0.3`, whose N-API
 binaries work with Electron without an ABI-specific rebuild. The packaging
 hook opens an in-memory database with Electron before accepting the packaged
 SQLite module; older ABI-specific modules still use the prebuild fallback.
@@ -101,10 +101,10 @@ Files are saved on the machine running the desktop app, including downloads
 initiated in desktop browser automation tabs.
 
 ```bash
-pnpm exec turbo run typecheck --filter=@bb/desktop --filter=bb-app
-pnpm exec turbo run build --filter=@bb/desktop
-pnpm exec turbo run test --filter=@bb/desktop --filter=bb-app --force
-pnpm exec turbo run dev --filter=@bb/desktop
+pnpm exec turbo run typecheck --filter=@sandy/desktop --filter=sandy-app
+pnpm exec turbo run build --filter=@sandy/desktop
+pnpm exec turbo run test --filter=@sandy/desktop --filter=sandy-app --force
+pnpm exec turbo run dev --filter=@sandy/desktop
 ```
 
 The desktop tests include an Electron startup smoke that opens a real window.
@@ -114,8 +114,8 @@ command in `xvfb-run -a`, as CI does.
 ## Packaging
 
 ```bash
-pnpm exec turbo run desktop:build --filter=@bb/desktop
-pnpm exec turbo run smoke:packaged --filter=@bb/desktop
+pnpm exec turbo run desktop:build --filter=@sandy/desktop
+pnpm exec turbo run smoke:packaged --filter=@sandy/desktop
 ```
 
 Artifacts are written under `apps/desktop/release/`. The macOS build is Apple
@@ -129,8 +129,8 @@ as CI sets for workflow-artifact-only builds), artifacts remain unsigned and
 macOS shows the normal Gatekeeper warning on first launch.
 
 For local verification without publishing, use
-`pnpm exec turbo run package --filter=@bb/desktop` on macOS, or
-`pnpm exec turbo run package:linux --filter=@bb/desktop` on Linux.
+`pnpm exec turbo run package --filter=@sandy/desktop` on macOS, or
+`pnpm exec turbo run package:linux --filter=@sandy/desktop` on Linux.
 
 npm's bundled dependencies are copied through an explicit `files` entry into
 `node_modules/npm/node_modules`, including nested dependency versions. pnpm's
@@ -145,12 +145,12 @@ publishing. This requires a native target host (macOS arm64 or Linux x64).
 verification without opening a desktop window:
 
 ```bash
-pnpm exec turbo run smoke:packaged-npm --filter=@bb/desktop
-pnpm exec turbo run smoke:packaged-npm --filter=@bb/desktop -- /absolute/path/to/bb.app/Contents/MacOS/bb
+pnpm exec turbo run smoke:packaged-npm --filter=@sandy/desktop
+pnpm exec turbo run smoke:packaged-npm --filter=@sandy/desktop -- /absolute/path/to/sandy.app/Contents/MacOS/sandy
 ```
 
 On Linux, the optional argument is the executable inside `linux-unpacked/` or
-an extracted AppImage. The check resolves npm from packaged `bb-app`, audits
+an extracted AppImage. The check resolves npm from packaged `sandy-app`, audits
 required dependency edges and version ranges in npm's entire bundled tree using
 both CJS and ESM resolution, rejects paths outside packaged resources, imports npm's ESM display
 dependencies, and verifies its version. It then uses bundled Electron and npm
@@ -161,7 +161,7 @@ HOME/cache/config, and disabled lifecycle scripts. No system Node/npm or user
 store is used by the child processes. It also hashes ASAR and unpacked resources
 before and after to reject bundle mutations. Fixtures are removed afterward.
 
-The bb-app tarball smoke covers a different packaging pipeline and cannot
+The sandy-app tarball smoke covers a different packaging pipeline and cannot
 detect Electron artifact omissions. A source build or `npm --version` alone
 does not verify a desktop plugin dependency install.
 
@@ -173,13 +173,13 @@ root, install with `pnpm install --frozen-lockfile --ignore-scripts`, then build
 an unpacked app, an installer, or smoke test the current packaged output with:
 
 ```powershell
-pnpm exec turbo run package:win --filter=@bb/desktop
-pnpm exec turbo run desktop:build:win --filter=@bb/desktop
-pnpm exec turbo run smoke:packaged --filter=@bb/desktop
+pnpm exec turbo run package:win --filter=@sandy/desktop
+pnpm exec turbo run desktop:build:win --filter=@sandy/desktop
+pnpm exec turbo run smoke:packaged --filter=@sandy/desktop
 ```
 
-`desktop:build:win` writes `release/bb-<version>-x64.exe`, a one-click per-user
-NSIS installer that installs to `%LOCALAPPDATA%\Programs\bb` (`bb-nightly` on
+`desktop:build:win` writes `release/sandy-<version>-x64.exe`, a one-click per-user
+NSIS installer that installs to `%LOCALAPPDATA%\Programs\sandy` (`sandy-nightly` on
 the nightly channel) without elevation.
 Without a signing certificate the installer is unsigned, so Windows SmartScreen
 warns before running it. electron-builder signs it when `WIN_CSC_LINK` (a
@@ -200,9 +200,9 @@ From the repo root, build an unpacked app, an AppImage distribution, or smoke
 test the current packaged output with:
 
 ```bash
-pnpm exec turbo run package:linux --filter=@bb/desktop
-pnpm exec turbo run desktop:build:linux --filter=@bb/desktop
-pnpm exec turbo run smoke:packaged --filter=@bb/desktop
+pnpm exec turbo run package:linux --filter=@sandy/desktop
+pnpm exec turbo run desktop:build:linux --filter=@sandy/desktop
+pnpm exec turbo run smoke:packaged --filter=@sandy/desktop
 ```
 
 Running an AppImage normally requires FUSE and, on some distributions, the
@@ -213,7 +213,7 @@ Linux users whose window manager supplies all window controls can remove the
 native Electron title bar with `--no-window-frame`:
 
 ```bash
-./bb-x86_64.AppImage --no-window-frame
+./sandy-x86_64.AppImage --no-window-frame
 ```
 
 The native frame remains the default. Changing this startup option requires a
@@ -223,7 +223,7 @@ Linux users can opt into a transparent Electron window with
 `--transparent-window`:
 
 ```bash
-./bb-x86_64.AppImage --transparent-window
+./sandy-x86_64.AppImage --transparent-window
 ```
 
 The window remains opaque by default. Transparency also requires a compositor
@@ -241,9 +241,9 @@ updates; install a new build by hand.
 
 ## Releasing
 
-`bb-app` and `@bb/desktop` versions are LOCKED in lockstep. The desktop package
-depends on `bb-app: workspace:*`, and the displayed release version string must
-match `packages/bb-app/package.json`.
+`sandy-app` and `@sandy/desktop` versions are LOCKED in lockstep. The desktop package
+depends on `sandy-app: workspace:*`, and the displayed release version string must
+match `packages/sandy-app/package.json`.
 
 To bump for a release:
 
@@ -255,7 +255,7 @@ Then commit and ship through the normal `sawyer-next` → `main` flow. You can a
 use `--patch`, `--minor`, or `--major` instead of an explicit version.
 
 CI enforces this lockstep. Direct edits that leave
-`packages/bb-app/package.json` and `apps/desktop/package.json` with different
+`packages/sandy-app/package.json` and `apps/desktop/package.json` with different
 versions fail the build. Never edit either package version directly for a
 release; use `scripts/bump-version.mjs` so both files move together.
 
@@ -273,10 +273,10 @@ wait on the Apple signing secrets.
 
 ## Nightly channel
 
-The scheduled `publish-bb-app.yml` workflow runs from `main` every day at
+The scheduled `publish-sandy-app.yml` workflow runs from `main` every day at
 3:00 AM Pacific (`America/Los_Angeles`, including daylight-saving changes). It
 derives a unique version such as `0.34.1-nightly.<run-id>.<attempt>` without
-committing that version, publishes `bb-app` with the npm `nightly` dist-tag,
+committing that version, publishes `sandy-app` with the npm `nightly` dist-tag,
 and builds the desktop app from that same lockstep version.
 
 To publish or dry-run the channel manually from `main`, dispatch the same
@@ -290,32 +290,32 @@ nightly channel stays below `latest` until the next scheduled run.
 
 The nightly desktop is a separate installation:
 
-- product name: `bb Nightly`
-- bundle identifier: `dev.bb.desktop.nightly`
-- Linux binary name: `bb-nightly`, so it never shadows stable `bb` on PATH
+- product name: `sandy Nightly`
+- bundle identifier: `dev.sandy.desktop.nightly`
+- Linux binary name: `sandy-nightly`, so it never shadows stable `sandy` on PATH
 - release: `desktop-nightly`
-- Windows install directory: `%LOCALAPPDATA%\Programs\bb-nightly`
+- Windows install directory: `%LOCALAPPDATA%\Programs\sandy-nightly`
   `desktop-version-linux.json` (Linux), and `desktop-version-windows.json`
   (Windows)
 - icon: `assets/icon-nightly.icns` and `assets/icon-nightly.png`
 
 Download it from
-[`desktop-nightly`](https://github.com/get-bb/bb/releases/tag/desktop-nightly)
+[`desktop-nightly`](https://github.com/nesyeklaf/sandy/releases/tag/desktop-nightly)
 or run the CLI build with:
 
 ```bash
-npx bb-app@nightly
+npx sandy-app@nightly
 ```
 
 Stable and nightly desktop bundles can coexist. Electron-owned preferences,
 window state, and process supervision use separate application data
-directories; the embedded bb runtime still uses the normal `~/.bb` data and
+directories; the embedded sandy runtime still uses the normal `~/.sandy` data and
 default server port unless the corresponding environment variables are
 overridden.
 
-Nightly builds set `BB_DESKTOP_RELEASE_CHANNEL=nightly` at build time. The value
+Nightly builds set `SANDY_DESKTOP_RELEASE_CHANNEL=nightly` at build time. The value
 is baked into the Electron main/preload bundles and selects the nightly product
-identity and yellow icon. Omit the variable (or set it to
+identity and violet icon. Omit the variable (or set it to
 `latest`) for stable and local builds.
 
 ## About panel
@@ -332,8 +332,8 @@ the facts into the bundles:
 
 | Variable                | Default when unset                                    |
 | ----------------------- | ----------------------------------------------------- |
-| `BB_DESKTOP_COMMIT`     | `GITHUB_SHA`, else `git rev-parse HEAD`, else unknown |
-| `BB_DESKTOP_BUILD_DATE` | The build's own timestamp, ISO 8601                   |
+| `SANDY_DESKTOP_COMMIT`     | `GITHUB_SHA`, else `git rev-parse HEAD`, else unknown |
+| `SANDY_DESKTOP_BUILD_DATE` | The build's own timestamp, ISO 8601                   |
 
 The plugin SDK version is read from `packages/plugin-sdk/package.json` at build
 time. A checkout with no git metadata reports `Commit: unknown` rather than
@@ -372,28 +372,28 @@ publishing nightly desktop assets.
 To verify a downloaded or unpacked build:
 
 ```bash
-spctl --assess --verbose /path/to/bb.app
-codesign --verify --deep --strict --verbose=2 /path/to/bb.app
+spctl --assess --verbose /path/to/sandy.app
+codesign --verify --deep --strict --verbose=2 /path/to/sandy.app
 ```
 
 ## Debugging
 
 Use the View menu to toggle DevTools. To open them automatically on launch, set
-`BB_DESKTOP_OPEN_DEVTOOLS=1`:
+`SANDY_DESKTOP_OPEN_DEVTOOLS=1`:
 
 ```bash
-BB_DESKTOP_OPEN_DEVTOOLS=1 apps/desktop/release/mac-arm64/bb.app/Contents/MacOS/bb
+SANDY_DESKTOP_OPEN_DEVTOOLS=1 apps/desktop/release/mac-arm64/sandy.app/Contents/MacOS/sandy
 ```
 
-Unpackaged runs use `assets/icon-dev.png` for the Dock and window icon. Set
-`BB_DESKTOP_DEV_ICON=1` to use it in a packaged build too; `pnpm
+Unpackaged runs use `assets/icon-dev.png` (the blue mark) for the Dock and window icon. Set
+`SANDY_DESKTOP_DEV_ICON=1` to use it in a packaged build too; `pnpm
 desktop:worktree` sets it. The bundle's own icon in Finder is unchanged.
 
 Desktop main-process logs are written immediately to `desktop.log` under
-`~/.bb/logs/` or `$BB_DATA_DIR/logs/` when `BB_DATA_DIR` is set, including
+`~/.sandy/logs/` or `$SANDY_DATA_DIR/logs/` when `SANDY_DATA_DIR` is set, including
 updater and startup failures from launches without a terminal.
 Logs append across launches and rotate at 10 MiB into `desktop.1.log` through
-`desktop.4.log`. When bb-app exits, its captured output is saved
+`desktop.4.log`. When sandy-app exits, its captured output is saved
 with the error. Logging failures fall back to stderr without interrupting
 startup.
 
@@ -404,24 +404,24 @@ remote server does not fetch its logs. Use **Open Logs Folder** to inspect
 rotated files. Scripts and agents can read the same files from the data
 directory.
 
-To verify attach-if-found manually, start a compatible bb first, then launch the
+To verify attach-if-found manually, start a compatible sandy first, then launch the
 desktop app:
 
 ```bash
-npx bb-app@latest
-pnpm exec turbo run dev --filter=@bb/desktop
+npx sandy-app@latest
+pnpm exec turbo run dev --filter=@sandy/desktop
 ```
 
 The desktop supervisor handles normal quits plus `SIGINT` and `SIGTERM`, and it
-writes a PID file so the next launch can reap a stale Electron-owned `bb-app`
+writes a PID file so the next launch can reap a stale Electron-owned `sandy-app`
 launcher. Hard crashes such as process aborts, segfaults, or kernel-level kills
 cannot run cleanup in the crashing process; the startup PID-file reap is the
 recovery path for those cases.
 
 ### Saved servers
 
-Use **bb → Desktop Settings → Server → Add Server…** to save and switch to
-another machine's HTTP(S) bb server URL. **Window → Server** opens the same
+Use **sandy → Desktop Settings → Server → Add Server…** to save and switch to
+another machine's HTTP(S) sandy server URL. **Window → Server** opens the same
 menu. Both native dialogs accept an optional friendly name (up to 64 characters).
 The menu shows that name, or the URL hostname and port when unnamed. Saved URLs
 remain in the menu across restarts; adding an existing URL
@@ -433,7 +433,7 @@ saved entries.
 **This Mac** / **This Computer**. Clearing its URL removes
 that entry and, with Show This Mac/Computer checked, switches an active custom
 target to the built-in server. Other
-saved servers remain available. A saved bb connect choice from an older build
+saved servers remain available. A saved sandy connect choice from an older build
 opens the built-in server instead. Existing single-server preferences are
 loaded automatically into the saved list in `<userData>/server-target.json`.
 
@@ -454,7 +454,7 @@ do not discard saved URLs, and names for absent URLs are ignored and pruned on
 the next save.
 
 The app command palette lists **Switch to <server>** for each inactive choice
-from this same Server menu. The optional `window.bbDesktop`
+from this same Server menu. The optional `window.sandyDesktop`
 `getServerChoices`, `onServerChoicesChange`, and `selectServer` methods expose
 only `{id, name, active}`; custom server IDs are opaque hashes. Selection is
 validated against native choices and runs the menu's existing window
@@ -482,8 +482,8 @@ The native menus, renderer Server popup, and app palette use the same choices.
 
 ### Server moves
 
-After `bb server move`, the old computer's data dir (`~/.bb` or
-`$BB_DATA_DIR`) contains `server-moved.json`. The desktop app reads it at
+After `sandy server move`, the old computer's data dir (`~/.sandy` or
+`$SANDY_DATA_DIR`) contains `server-moved.json`. The desktop app reads it at
 startup, whenever the built-in server target loads, and while that target is active.
 While the target is active, the app watches the data dir. If `fs.watch` fails,
 for example with `ENOSPC`, the app checks the file every 2 seconds instead
@@ -499,15 +499,15 @@ the custom server URL `serverUrl`. When a move finishes while the app is open,
 the app waits up to 60 seconds for the new `/health` endpoint before it
 switches the window.
 
-The app shows "Your bb server moved to <toHostName>" once for each `moveId`
-(`<userData>/server-move-notice.json`). It still starts its own `bb-app`
-launcher unless another bb process answers the local server port. The launcher
+The app shows "Your sandy server moved to <toHostName>" once for each `moveId`
+(`<userData>/server-move-notice.json`). It still starts its own `sandy-app`
+launcher unless another sandy process answers the local server port. The launcher
 runs this computer as a regular machine, and quitting the app stops it. The app logs a warning and ignores an invalid lock.
 
 On startup, a saved built-in server choice also switches to the moved server;
 it never starts the old copy automatically. A different saved remote server
 choice remains selected. Explicitly picking the built-in server while the move
-lock exists shows "bb moved to <toHostName>" with **Open <toHostName>** and
+lock exists shows "sandy moved to <toHostName>" with **Open <toHostName>** and
 **Choose server…**. The screen explains whether the old copy is locked or was
 deleted. Selecting the built-in server does not unlock the old copy or remove
 its background machine service.
@@ -515,5 +515,5 @@ its background machine service.
 Startup error screens list their actions as buttons. Any screen where
 retrying can help shows **Try again**. **Choose server…** opens the Server menu,
 where the user can select the built-in server if needed. Fatal errors have no buttons. The renderer sends the chosen
-action on `bb-desktop:startup-action`. The main process accepts only actions
+action on `sandy-desktop:startup-action`. The main process accepts only actions
 from the error page that is currently loaded in an app window's main frame.

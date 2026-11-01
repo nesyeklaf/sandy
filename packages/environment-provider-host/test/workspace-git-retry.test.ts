@@ -5,8 +5,8 @@ import { runGit, WorkspaceError } from "../src/workspace-git.js";
 
 const spawnMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@get-bb/plugin-sdk/host", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@get-bb/plugin-sdk/host")>();
+vi.mock("@sandy-sdk/plugin-sdk/host", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@sandy-sdk/plugin-sdk/host")>();
   return { ...actual, experimental_spawnPortableOutputProcess: spawnMock };
 });
 

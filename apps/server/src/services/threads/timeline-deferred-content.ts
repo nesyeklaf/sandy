@@ -1,6 +1,6 @@
-import type { TimelineRow, TimelineRowStatus } from "@bb/server-contract";
-import { sliceUtf16Head } from "@bb/text-utils";
-import { parseSentThreadMessage } from "@bb/thread-view";
+import type { TimelineRow, TimelineRowStatus } from "@sandy/server-contract";
+import { sliceUtf16Head } from "@sandy/text-utils";
+import { parseSentThreadMessage } from "@sandy/thread-view";
 
 export const TIMELINE_DEFERRED_CONTENT_MIN_CHARS = 1_000;
 

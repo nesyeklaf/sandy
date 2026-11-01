@@ -1,4 +1,4 @@
-import type { TimelineRow } from "@bb/server-contract";
+import type { TimelineRow } from "@sandy/server-contract";
 import type {
   EventProjection,
   EventProjectionMessage,

@@ -1,5 +1,5 @@
 {
-  "name": "@bb/provider-parity",
+  "name": "@sandy/provider-parity",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -19,12 +19,12 @@
     "rerecord": "node --conditions=source --import tsx src/rerecord.ts"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
-    "@bb/provider-bridge-protocol": "workspace:*",
-    "@bb/thread-view": "workspace:*"
+    "@sandy/domain": "workspace:*",
+    "@sandy/provider-bridge-protocol": "workspace:*",
+    "@sandy/thread-view": "workspace:*"
   },
   "devDependencies": {
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2",

@@ -5,14 +5,14 @@ import {
 } from "./provider-commands.js";
 
 describe("toProviderCommandsState", () => {
-  it("hides bb-managed, terminal-only, internal, and bb-injected commands", () => {
+  it("hides sandy-managed, terminal-only, internal, and sandy-injected commands", () => {
     const state = toProviderCommandsState(
       [
         "model",
         "doctor",
         "__remote-workflow",
-        "bb-global-skills:bb-cli",
-        "bb-global-skills-1a2b3c4d:secrets",
+        "sandy-global-skills:sandy-cli",
+        "sandy-global-skills-1a2b3c4d:secrets",
         "frontend-design:frontend-design",
         "simplify",
         "init",

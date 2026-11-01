@@ -1,18 +1,18 @@
-import { firstPerIdentity, resolveSkillPath } from "@bb/skill-index";
+import { firstPerIdentity, resolveSkillPath } from "@sandy/skill-index";
 import { createHash, randomUUID } from "node:crypto";
 import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { resolveDataDirSkillsRootPath } from "@bb/config/skill-storage-paths";
-import type { AgentRuntimeSkillRoot } from "@bb/agent-runtime";
+import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths";
+import type { AgentRuntimeSkillRoot } from "@sandy/agent-runtime";
 import {
   hostDaemonSkillTreeManifestSchema,
   type HostDaemonInjectedSkillSource,
   type HostDaemonSkillTreeFile,
   type HostDaemonSkillTreeManifest,
-} from "@bb/host-daemon-contract";
-import { hashSkillTreeFiles } from "@bb/host-daemon-contract/skill-tree";
-import { isPathWithinDirectory } from "@bb/process-utils";
+} from "@sandy/host-daemon-contract";
+import { hashSkillTreeFiles } from "@sandy/host-daemon-contract/skill-tree";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import { SKILL_FILE_NAME } from "./command-discovery.js";
 import { isFsErrorWithCode } from "./fs-errors.js";
 import { runInSerialLane } from "./serial-lane.js";
@@ -24,7 +24,7 @@ import {
   hashFile,
   takeExactBytes,
   writeVerifiedFile,
-} from "@bb/file-transfer";
+} from "@sandy/file-transfer";
 
 const STAGING_ROOT_SEGMENTS = ["runtime", "global-skills"] as const;
 const STORE_ROOT_SEGMENTS = ["runtime", "skill-store"] as const;
@@ -41,7 +41,7 @@ const SKILL_NAME_PATTERN = /^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 const MAX_STAGED_SKILL_FILES = 1_000;
 const MAX_STAGED_SKILL_DEPTH = 24;
 export const EMPTY_SKILL_CATALOG_HASH = createHash("sha256")
-  .update("bb-global-skills-v1-empty")
+  .update("sandy-global-skills-v1-empty")
   .digest("hex");
 
 export interface InjectedSkillsLogger {
@@ -469,7 +469,7 @@ export function scheduleSkillStoreGc(
 
 function hashCollectedTrees(trees: readonly CollectedSkillTree[]): string {
   const hash = createHash("sha256");
-  hash.update("bb-global-skills-v1");
+  hash.update("sandy-global-skills-v1");
   for (const tree of trees) {
     hash.update("\0skill\0");
     hash.update(tree.source.name);

@@ -1,7 +1,7 @@
 import { flushSync } from "react-dom";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { Button } from "@bb/shared-ui/button";
-import type { FollowUpSubmitMode, PromptDraftState } from "@bb/client-core";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import type { FollowUpSubmitMode, PromptDraftState } from "@sandy/client-core";
 import {
   memo,
   useCallback,
@@ -20,9 +20,9 @@ import type {
   PromptTextMention,
   ThreadRuntimeDisplayStatus,
   ThreadTimelineActivePromptMode,
-} from "@bb/domain";
-import type { ComposerView, PluginComposerScope } from "@get-bb/plugin-sdk";
-import type { ComposerSubmitExtras } from "@get-bb/plugin-sdk/internal/composer-handle";
+} from "@sandy/domain";
+import type { ComposerView, PluginComposerScope } from "@sandy-sdk/plugin-sdk";
+import type { ComposerSubmitExtras } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import type { ComposerTextEffectSource } from "@/lib/composer-text-effects";
 import { modifierSubmitShortcutLabel } from "./modifier-submit-shortcut";
 import { isKeyboardFocusTarget } from "@/components/layout/useMobileVisualViewportHeight";
@@ -57,8 +57,8 @@ import {
   type ExecutionPermissionConfig,
 } from "@/components/promptbox/ExecutionControls";
 import { useBottomAnchoredScroll } from "@/components/ui/bottom-anchored-scroll-body.js";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import { ThreadTimelineScrollToBottomButton } from "@/views/thread-detail/ThreadTimelineScrollToBottomButton";
 import { ThreadContextWindowIndicator } from "@/components/thread/timeline";
 import { formatCompactTokenCount } from "@/components/thread/timeline/thread-context-window-usage";
@@ -126,7 +126,7 @@ const MOBILE_KEYBOARD_VIEWPORT_MIN_DELTA_PX = 80;
 const MOBILE_FOCUS_EXPANSION_FALLBACK_MS = 350;
 const MOBILE_KEYBOARD_DISMISSAL_FALLBACK_MS = 750;
 
-export type { FollowUpSubmitMode } from "@bb/client-core";
+export type { FollowUpSubmitMode } from "@sandy/client-core";
 
 export interface FollowUpComposerProps {
   history: HistoryConfig;

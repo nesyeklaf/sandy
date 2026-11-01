@@ -13,11 +13,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   checkRecordedCellReplay,
   RECORDED_CONFORMANCE_CELLS,
-} from "@bb/provider-bridge-protocol/conformance";
+} from "@sandy/provider-bridge-protocol/conformance";
 import {
   compareParity,
   type ParityAllowlistEntry,
-} from "@bb/provider-bridge-protocol/testing";
+} from "@sandy/provider-bridge-protocol/testing";
 import {
   RECORDINGS_ROOT,
   ROW_COUNTS_PATH,
@@ -187,7 +187,7 @@ describe("allowlist", () => {
       {
         kind: "turn",
         id: "#1",
-        children: [{ kind: "work", id: "#3", toolName: "bb:AskUserQuestion" }],
+        children: [{ kind: "work", id: "#3", toolName: "sandy:AskUserQuestion" }],
       },
       { kind: "conversation", id: "#5", text: "answer" },
     ];

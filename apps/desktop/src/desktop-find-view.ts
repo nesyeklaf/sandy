@@ -2,11 +2,11 @@ import { WebContentsView, ipcMain, type IpcMainEvent } from "electron";
 
 import type { z } from "zod";
 import {
-  BB_DESKTOP_FIND_BAR_ACTIVATE_CHANNEL,
-  BB_DESKTOP_FIND_BAR_CLOSE_CHANNEL,
-  BB_DESKTOP_FIND_BAR_QUERY_CHANNEL,
-  BB_DESKTOP_FIND_BAR_RESULT_CHANNEL,
-  BB_DESKTOP_FIND_BAR_STEP_CHANNEL,
+  SANDY_DESKTOP_FIND_BAR_ACTIVATE_CHANNEL,
+  SANDY_DESKTOP_FIND_BAR_CLOSE_CHANNEL,
+  SANDY_DESKTOP_FIND_BAR_QUERY_CHANNEL,
+  SANDY_DESKTOP_FIND_BAR_RESULT_CHANNEL,
+  SANDY_DESKTOP_FIND_BAR_STEP_CHANNEL,
   findBarQueryRequestSchema,
   findBarStepRequestSchema,
   type FindBarResult,
@@ -16,7 +16,7 @@ import {
   FIND_BAR_VIEW_WIDTH,
   createFindBarViewUrl,
 } from "./find-bar-view.js";
-import type { BbDesktopWindowFindRequest } from "@bb/desktop-contract";
+import type { SandyDesktopWindowFindRequest } from "@sandy/desktop-contract";
 
 export interface FindViewBounds {
   height: number;
@@ -62,7 +62,7 @@ export interface FindViewHostWindow {
 export interface DesktopFindViewManager {
   open(
     hostWindow: FindViewHostWindow,
-    request: BbDesktopWindowFindRequest,
+    request: SandyDesktopWindowFindRequest,
   ): void;
   close(hostWindow: FindViewHostWindow): void;
   layout(hostWindow: FindViewHostWindow): void;
@@ -131,7 +131,7 @@ export function createDesktopFindViewManager({
       ) {
         return;
       }
-      entry.view.webContents.send(BB_DESKTOP_FIND_BAR_RESULT_CHANNEL, {
+      entry.view.webContents.send(SANDY_DESKTOP_FIND_BAR_RESULT_CHANNEL, {
         activeMatchOrdinal: Math.max(0, result.activeMatchOrdinal),
         matches: Math.max(0, result.matches),
       } satisfies FindBarResult);
@@ -220,7 +220,7 @@ export function createDesktopFindViewManager({
   }
 
   registerViewCommand(
-    BB_DESKTOP_FIND_BAR_QUERY_CHANNEL,
+    SANDY_DESKTOP_FIND_BAR_QUERY_CHANNEL,
     findBarQueryRequestSchema,
     ({ entry, request }) => {
       entry.query = request.text;
@@ -236,7 +236,7 @@ export function createDesktopFindViewManager({
   );
 
   registerViewCommand(
-    BB_DESKTOP_FIND_BAR_STEP_CHANNEL,
+    SANDY_DESKTOP_FIND_BAR_STEP_CHANNEL,
     findBarStepRequestSchema,
     ({ entry, request }) => {
       if (entry.query.length === 0) {
@@ -249,7 +249,7 @@ export function createDesktopFindViewManager({
     },
   );
 
-  ipcMain.on(BB_DESKTOP_FIND_BAR_CLOSE_CHANNEL, (event) => {
+  ipcMain.on(SANDY_DESKTOP_FIND_BAR_CLOSE_CHANNEL, (event) => {
     const entry = entryForEvent(event);
     if (entry === null) {
       return;
@@ -267,7 +267,7 @@ export function createDesktopFindViewManager({
       entry.visible = true;
       entry.view.setVisible(true);
       entry.view.webContents.focus();
-      entry.view.webContents.send(BB_DESKTOP_FIND_BAR_ACTIVATE_CHANNEL);
+      entry.view.webContents.send(SANDY_DESKTOP_FIND_BAR_ACTIVATE_CHANNEL);
     },
     close(hostWindow) {
       const entry = entriesByHostId.get(hostWindow.webContents.id);

@@ -14,14 +14,14 @@ const PLUGIN_SURFACES = [
 export type PluginSurface = (typeof PLUGIN_SURFACES)[number];
 
 const DEFAULT_SURFACE_PROVIDERS: Record<PluginSurface, string | null> = {
-  composer: "bb--composer",
+  composer: "sandy--composer",
   "thread-list": "thread-list",
   "sidebar-navigation": "navigation",
   "thread-panel-tab": null,
 };
 
 const surfaceProviderCache = createLastKnownCache({
-  prefix: "bb.plugin-surface-provider",
+  prefix: "sandy.plugin-surface-provider",
   version: "2",
   schema: z.object({ pluginId: z.string().min(1).nullable() }),
 });

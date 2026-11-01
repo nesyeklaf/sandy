@@ -1,8 +1,8 @@
-import type { ChangedMessage } from "@bb/domain";
+import type { ChangedMessage } from "@sandy/domain";
 
-export type BbRealtimeUnsubscribe = () => void;
+export type SandyRealtimeUnsubscribe = () => void;
 
-export type BbRealtimeEventName =
+export type SandyRealtimeEventName =
   | "thread:changed"
   | "project:changed"
   | "environment:changed"
@@ -23,71 +23,71 @@ export type EnvironmentRealtimeEvent = Extract<
 export type HostRealtimeEvent = Extract<ChangedMessage, { entity: "host" }>;
 export type SystemRealtimeEvent = Extract<ChangedMessage, { entity: "system" }>;
 
-export type BbRealtimeConnectionState =
+export type SandyRealtimeConnectionState =
   | "connecting"
   | "connected"
   | "disconnected";
 
-export interface BbRealtimeConnectionEvent {
+export interface SandyRealtimeConnectionEvent {
   reconnectDelayMs: number | null;
   reconnected: boolean;
-  state: BbRealtimeConnectionState;
+  state: SandyRealtimeConnectionState;
 }
 
-export interface BbRealtimeEventMap {
+export interface SandyRealtimeEventMap {
   "thread:changed": ThreadRealtimeEvent;
   "project:changed": ProjectRealtimeEvent;
   "environment:changed": EnvironmentRealtimeEvent;
   "host:changed": HostRealtimeEvent;
   "system:changed": SystemRealtimeEvent;
   "system:config-changed": SystemRealtimeEvent;
-  "realtime:connection": BbRealtimeConnectionEvent;
+  "realtime:connection": SandyRealtimeConnectionEvent;
 }
 
-export type BbRealtimeCallback<TEventName extends BbRealtimeEventName> = (
-  event: BbRealtimeEventMap[TEventName],
+export type SandyRealtimeCallback<TEventName extends SandyRealtimeEventName> = (
+  event: SandyRealtimeEventMap[TEventName],
 ) => void;
 
 export interface ThreadRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"thread:changed">;
+  callback: SandyRealtimeCallback<"thread:changed">;
   event: "thread:changed";
   threadId?: string;
 }
 
 export interface ProjectRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"project:changed">;
+  callback: SandyRealtimeCallback<"project:changed">;
   event: "project:changed";
   projectId?: string;
 }
 
 export interface EnvironmentRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"environment:changed">;
+  callback: SandyRealtimeCallback<"environment:changed">;
   environmentId?: string;
   event: "environment:changed";
 }
 
 export interface HostRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"host:changed">;
+  callback: SandyRealtimeCallback<"host:changed">;
   event: "host:changed";
   hostId?: string;
 }
 
 export interface SystemRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"system:changed">;
+  callback: SandyRealtimeCallback<"system:changed">;
   event: "system:changed";
 }
 
 export interface SystemConfigRealtimeSubscribeArgs {
-  callback: BbRealtimeCallback<"system:config-changed">;
+  callback: SandyRealtimeCallback<"system:config-changed">;
   event: "system:config-changed";
 }
 
 export interface RealtimeConnectionSubscribeArgs {
-  callback: BbRealtimeCallback<"realtime:connection">;
+  callback: SandyRealtimeCallback<"realtime:connection">;
   event: "realtime:connection";
 }
 
-export type BbRealtimeSubscribeArgsUnion =
+export type SandyRealtimeSubscribeArgsUnion =
   | ThreadRealtimeSubscribeArgs
   | ProjectRealtimeSubscribeArgs
   | EnvironmentRealtimeSubscribeArgs
@@ -96,12 +96,12 @@ export type BbRealtimeSubscribeArgsUnion =
   | SystemConfigRealtimeSubscribeArgs
   | RealtimeConnectionSubscribeArgs;
 
-export type BbRealtimeSubscribeArgs<
-  TEventName extends BbRealtimeEventName = BbRealtimeEventName,
-> = Extract<BbRealtimeSubscribeArgsUnion, { event: TEventName }>;
+export type SandyRealtimeSubscribeArgs<
+  TEventName extends SandyRealtimeEventName = SandyRealtimeEventName,
+> = Extract<SandyRealtimeSubscribeArgsUnion, { event: TEventName }>;
 
-export interface BbRealtime {
-  subscribe<TEventName extends BbRealtimeEventName>(
-    args: BbRealtimeSubscribeArgs<TEventName>,
-  ): BbRealtimeUnsubscribe;
+export interface SandyRealtime {
+  subscribe<TEventName extends SandyRealtimeEventName>(
+    args: SandyRealtimeSubscribeArgs<TEventName>,
+  ): SandyRealtimeUnsubscribe;
 }

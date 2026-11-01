@@ -1,5 +1,5 @@
 import remend from "remend";
-import { closeUnterminatedMarkdownCodeSpan } from "@bb/client-core";
+import { closeUnterminatedMarkdownCodeSpan } from "@sandy/client-core";
 import {
   closesAnyIndentMarkdownFence,
   isMarkdownListLikeLine,

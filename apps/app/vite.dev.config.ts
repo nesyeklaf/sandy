@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { loadViteDevConfig } from "@bb/config/vite-dev";
+import { loadViteDevConfig } from "@sandy/config/vite-dev";
 import { sharedViteConfig } from "./vite.config.js";
 
 const viteDevConfig = loadViteDevConfig();
@@ -13,8 +13,8 @@ export default defineConfig({
     transformer: "lightningcss",
   },
   define: {
-    __BB_DEV_WS_BROWSER_HOST_PORT__: devWebSocketBrowserHostPortDefine,
-    __BB_DEV_APP_BROWSER_HOST_PORT__: JSON.stringify(viteDevConfig.appPort),
+    __SANDY_DEV_WS_BROWSER_HOST_PORT__: devWebSocketBrowserHostPortDefine,
+    __SANDY_DEV_APP_BROWSER_HOST_PORT__: JSON.stringify(viteDevConfig.appPort),
   },
   server: {
     allowedHosts: [".ts.net"],

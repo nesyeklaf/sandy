@@ -6,7 +6,7 @@ import {
   SYSTEM_CHANGE_KINDS,
   THREAD_CHANGE_KINDS,
   type ThreadChangeKind,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NotificationHub } from "../../src/ws/hub.js";
 import { createMockHubSocket } from "../helpers/mock-hub-socket.js";
@@ -138,7 +138,7 @@ describe("NotificationHub", () => {
     } as const;
     const pullRequest = {
       kind: "plugin-read",
-      pluginId: "bb--github-pr-status",
+      pluginId: "sandy--github-pr-status",
       method: "pullRequests",
       read: { key: "environment-1" },
     } as const;

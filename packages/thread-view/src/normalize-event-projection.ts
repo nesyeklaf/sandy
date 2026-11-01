@@ -1,5 +1,5 @@
 import { getProjectionEntryMessages } from "./event-projection-flatten.js";
-import { isLegacyDelegationToolCall } from "@bb/domain";
+import { isLegacyDelegationToolCall } from "@sandy/domain";
 import {
   getFirstStringField,
   getMessageStartedAt,

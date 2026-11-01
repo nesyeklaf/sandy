@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ExperimentalThreadRowMetadataDataInput,
   ExperimentalThreadRowMetadataProps,
-} from "@get-bb/plugin-sdk";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+} from "@sandy-sdk/plugin-sdk";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import {
   removePluginSlotRegistrations,

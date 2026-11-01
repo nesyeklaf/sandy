@@ -1,19 +1,19 @@
 import { performance } from "node:perf_hooks";
-import { getAppSettings, getLatestThreadSequence, getThread } from "@bb/db";
+import { getAppSettings, getLatestThreadSequence, getThread } from "@sandy/db";
 import {
   DEFAULT_COMPLETED_TURN_DISPLAY,
   type AppSettings,
   type CompletedTurnDisplay,
   type Thread,
   type ThreadTimelineSubscriptionTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   computeThreadTimelineDelta,
   isThreadTimelineDelta,
   type ThreadTimelineReadResponse,
   type ThreadTimelineResponse,
   type ThreadTimelineSignal,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 import type { ThreadTimelineSubscriber } from "../../ws/hub.js";
 import { resolveProviderPlanCommand } from "../providers/provider-plan-command.js";

@@ -1,6 +1,6 @@
-import { invalidateTags, pluginTagScope } from "@bb/query-tags";
+import { invalidateTags, pluginTagScope } from "@sandy/query-tags";
 import type { QueryClient } from "@tanstack/react-query";
-import { assertNever } from "@bb/core-ui";
+import { assertNever } from "@sandy/core-ui";
 import {
   createDebouncedCallbackScheduler,
   type ChangedMessage,
@@ -11,8 +11,8 @@ import {
   type ThreadEventType,
   type ThreadChangeMetadata,
   type ThreadChangeKind,
-} from "@bb/domain";
-import type { RealtimeSubscriptionTarget } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { RealtimeSubscriptionTarget } from "@sandy/server-contract";
 import {
   invalidateRealtimeQueriesAfterServerReconnect,
   invalidateRealtimeQueriesFetchedBeforeInitialConnect,

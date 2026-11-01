@@ -1,25 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { getTimelineGroupingContext } from "../../../src/services/threads/timeline-context-order.js";
-import { prependOlderTimelineRows } from "@bb/client-core";
+import { prependOlderTimelineRows } from "@sandy/client-core";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
   threadTimelineReadResponseSchema,
   threadTimelineResponseSchema,
   type TimelineRow,
-} from "@bb/server-contract";
-import { defaultFeatureFlags } from "@bb/domain";
+} from "@sandy/server-contract";
+import { defaultFeatureFlags } from "@sandy/domain";
 import { createTestAppHarness } from "../../helpers/test-app.js";
 import {
   mergeLoadedTimelineWithLatest,
   buildLoadedTimelineState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
-} from "@bb/domain";
-import type { ClientTurnRequestId, Thread } from "@bb/domain";
+} from "@sandy/domain";
+import type { ClientTurnRequestId, Thread } from "@sandy/domain";
 import {
   createConnection,
   createProject,
@@ -27,13 +27,13 @@ import {
   insertEvents,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { DbConnection } from "@bb/db";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { DbConnection } from "@sandy/db";
 import type {
   ThreadTimelineResponse,
   TimelinePaginationCursor,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   buildThreadTimelineWithProfile,
   type ThreadTimelineWindow,

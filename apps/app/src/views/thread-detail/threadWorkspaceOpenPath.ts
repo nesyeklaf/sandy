@@ -1,6 +1,6 @@
-import type { Environment } from "@bb/domain";
-import type { OpenInTargetContext } from "@bb/host-daemon-contract";
-import type { ExperimentalFileOpenOptions } from "@get-bb/plugin-sdk";
+import type { Environment } from "@sandy/domain";
+import type { OpenInTargetContext } from "@sandy/host-daemon-contract";
+import type { ExperimentalFileOpenOptions } from "@sandy-sdk/plugin-sdk";
 import type { LiveFileRoot } from "@/hooks/useResolvedLiveFileTarget";
 
 interface ResolveThreadWorkspaceOpenPathArgs {

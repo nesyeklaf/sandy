@@ -3,11 +3,11 @@ import {
   experimental_InfoList as InfoList,
   experimental_InfoSection as InfoSection,
   type ExperimentalThreadInfoProps,
-} from "@get-bb/plugin-sdk/app";
-import { InfoListRow, InfoRowTime } from "@bb/shared-ui/info-list-row";
+} from "@sandy-sdk/plugin-sdk/app";
+import { InfoListRow, InfoRowTime } from "@sandy/shared-ui/info-list-row";
 import { InfoListRail, InfoSubheading } from "./info-parts.js";
 import { toast } from "sonner";
-import { selectWorkspaceAheadCommits } from "@bb/shared-ui/workspace-change-summary";
+import { selectWorkspaceAheadCommits } from "@sandy/shared-ui/workspace-change-summary";
 import {
   ChangedFilesList,
   ChangedFilesTally,

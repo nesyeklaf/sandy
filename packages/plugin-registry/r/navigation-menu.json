@@ -3,14 +3,14 @@
   "name": "navigation-menu",
   "type": "registry:ui",
   "title": "navigation-menu",
-  "description": "BB ui \"navigation-menu\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"navigation-menu\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-navigation-menu",
     "class-variance-authority"
   ],
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

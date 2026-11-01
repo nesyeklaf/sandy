@@ -1,0 +1,19 @@
+$prediction = ""
+$revealed = false
+$verdict = null
+result = Load("data/predict/pr-214-result.json")
+typed = ($prediction || "").trim()
+stage = $revealed ? "Revealed" : (typed == "" ? "Asked" : "Predicted")
+Card("PR 214: predict, then look", [
+  Row([Text("**" + result.question + "**"), Badge(stage, tone: "info")]),
+  $revealed ? Stack([
+    Text("Your prediction, locked:\n\n> " + $prediction),
+    Benchmark([result.measured]),
+    Text(result.explanation),
+    Form([Choice($verdict, ["Right", "Partly", "Off"], label: "How close was your prediction?")]),
+    Badge($verdict == null ? "Not graded yet" : "Prediction: " + $verdict, tone: $verdict == null ? "neutral" : "info")
+  ]) : Stack([
+    Form([TextArea($prediction, label: "Your prediction, one sentence", placeholder: "Say a number if you can")]),
+    typed == "" ? Text("The result unlocks once you have written a prediction.") : Button("Lock my prediction and show the result", Set($revealed, true), variant: "primary")
+  ])
+])

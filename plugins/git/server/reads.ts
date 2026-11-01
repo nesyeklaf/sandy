@@ -1,7 +1,7 @@
 import {
   experimental_PluginRpcRefusal,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import {
   GIT_DIFF_MAX_DIFF_BYTES,
   GIT_DIFF_MAX_FILE_LIST_BYTES,
@@ -19,15 +19,15 @@ import {
   joinHostPath,
   resolveEnvironmentMergeBaseBranch,
   type GitBranchOptions,
-} from "@bb/domain";
-import { createAsyncTtlMemo } from "@bb/async-cache";
+} from "@sandy/domain";
+import { createAsyncTtlMemo } from "@sandy/async-cache";
 
 const READ_CACHE_TTL_MS = 3_000;
 const READ_CACHE_MAX_ENTRIES = 1_024;
 const HOST_CALL_TIMEOUT_MS = 30_000;
 
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["get"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["get"]>
 >;
 
 interface ReadyGitEnvironment {
@@ -182,8 +182,8 @@ export interface GitReads {
   clearHostCaches(hostId: string): void;
 }
 
-function createHostClient(bb: BbPluginApi) {
-  const host = bb.hosts.experimental_client({ contract: gitHostContract });
+function createHostClient(sandy: SandyPluginApi) {
+  const host = sandy.hosts.experimental_client({ contract: gitHostContract });
   return {
     call<Method extends keyof typeof gitHostContract & string>(
       method: Method,
@@ -212,10 +212,10 @@ function resolveFileSideRef(query: GitFileSideQuery): string | null {
 }
 
 export function createGitReads(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   freshness: (environmentId: string, shared: boolean) => GitReadFreshness,
 ): GitReads {
-  const host = createHostClient(bb);
+  const host = createHostClient(sandy);
   const statusCache = createReadMemo<GitStatusResult>();
   const filesCache = createReadMemo<GitFilesResult>();
 
@@ -223,7 +223,7 @@ export function createGitReads(
     environmentId: string,
   ): Promise<Environment> {
     try {
-      return await bb.sdk.environments.get({ environmentId });
+      return await sandy.sdk.environments.get({ environmentId });
     } catch (error) {
       if (httpStatusOf(error) === 404) {
         throw new experimental_PluginRpcRefusal({
@@ -357,7 +357,7 @@ export function createGitReads(
       }
       const ref = resolveFileSideRef(query);
       try {
-        const file = await bb.sdk.files.read({
+        const file = await sandy.sdk.files.read({
           hostId: environment.hostId,
           path,
           rootPath,

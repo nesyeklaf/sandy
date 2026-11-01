@@ -13,9 +13,9 @@ import {
   retainedEventOutputs,
   threads,
   threadPruningCursors,
-} from "@bb/db";
-import { threadScope } from "@bb/domain";
-import type { PluginHookName } from "@get-bb/plugin-sdk";
+} from "@sandy/db";
+import { threadScope } from "@sandy/domain";
+import type { PluginHookName } from "@sandy-sdk/plugin-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   setPluginHookProvider,

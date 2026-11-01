@@ -34,7 +34,7 @@ describe("message clipboard boundary", () => {
       credentialUrl.href,
     );
     const element = document.createElement("meta");
-    element.name = "bb-message";
+    element.name = "sandy-message";
     element.content = metadata;
     expect(readMessageClipboardHtml(element.outerHTML)).toBeNull();
   });

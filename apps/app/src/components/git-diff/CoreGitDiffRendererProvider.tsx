@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import {
   GitDiffRendererProvider,
   type GitDiffRenderers,
-} from "@bb/shared-ui/git-diff/renderers";
+} from "@sandy/shared-ui/git-diff/renderers";
 import { DiffHost } from "@/components/code/DiffHost";
 import { CopyButton } from "@/components/ui/copy-button";
 import { ImageLightbox } from "@/components/ui/image-lightbox";

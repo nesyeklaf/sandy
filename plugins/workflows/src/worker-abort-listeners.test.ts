@@ -1,5 +1,5 @@
 import { getEventListeners } from "node:events";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { expect, it } from "vitest";
 import { migrations } from "./data.js";
 import { createWorkflowService } from "./service.js";
@@ -18,10 +18,10 @@ async function eventually(assertion: () => void): Promise<void> {
 }
 
 it("does not retain abort listeners from completed worker polls", async () => {
-  const { bb, harness } = createFakePluginHost({ pluginId: "workflows" });
-  const db = bb.storage.database();
-  bb.storage.migrate(db, migrations);
-  const service = createWorkflowService(bb, db);
+  const { sandy, harness } = createFakePluginHost({ pluginId: "workflows" });
+  const db = sandy.storage.database();
+  sandy.storage.migrate(db, migrations);
+  const service = createWorkflowService(sandy, db);
   const controller = new AbortController();
   const worker = service.runWorker(controller.signal);
 
@@ -36,7 +36,7 @@ it("does not retain abort listeners from completed worker polls", async () => {
 });
 
 it("removes the worker abort listener after a run finishes", async () => {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "workflows",
     sdk: {
       threads: {
@@ -58,9 +58,9 @@ it("removes the worker abort listener after a run finishes", async () => {
       },
     },
   });
-  const db = bb.storage.database();
-  bb.storage.migrate(db, migrations);
-  const service = createWorkflowService(bb, db);
+  const db = sandy.storage.database();
+  sandy.storage.migrate(db, migrations);
+  const service = createWorkflowService(sandy, db);
   const run = await service.start({
     projectId: "project-test",
     originThreadId: "origin",

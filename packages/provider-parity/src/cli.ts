@@ -22,7 +22,7 @@ import {
   describeParityValue,
   normalizeParityEvents,
   normalizeParityRows,
-} from "@bb/provider-bridge-protocol/testing";
+} from "@sandy/provider-bridge-protocol/testing";
 
 interface CliArgs {
   oldRoot: string;

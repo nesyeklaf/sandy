@@ -1,5 +1,5 @@
 {
-  "name": "@bb/host-watcher",
+  "name": "@sandy/host-watcher",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -14,16 +14,16 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "typecheck": "tsrs --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "bench": "cross-env BB_WATCHER_ROOT_RECOVERY_BENCHMARK=1 vitest run --config vitest.config.ts test/root-recovery-benchmark.test.ts"
+    "bench": "cross-env SANDY_WATCHER_ROOT_RECOVERY_BENCHMARK=1 vitest run --config vitest.config.ts test/root-recovery-benchmark.test.ts"
   },
   "dependencies": {
-    "@bb/domain": "workspace:*",
-    "@bb/process-utils": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/process-utils": "workspace:*",
     "@parcel/watcher": "2.5.6"
   },
   "devDependencies": {
-    "@bb/test-helpers": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2"

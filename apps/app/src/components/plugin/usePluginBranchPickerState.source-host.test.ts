@@ -1,4 +1,4 @@
-import type { ProjectSource } from "@bb/domain";
+import type { ProjectSource } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { resolvePluginBranchHostId } from "./usePluginBranchPickerState";
 

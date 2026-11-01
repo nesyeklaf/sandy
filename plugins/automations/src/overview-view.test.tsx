@@ -8,7 +8,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { installTestPluginRuntime } from "@get-bb/plugin-sdk/testing/app";
+import { installTestPluginRuntime } from "@sandy-sdk/plugin-sdk/testing/app";
 import { AutomationOverviewView } from "../overview-view.js";
 import type {
   AutomationResponse,
@@ -55,7 +55,7 @@ const INSTALLED_AUTOMATIONS: AutomationsOverviewResponse["automations"] = [
       createdAt: 1_700_000_000_000,
       updatedAt: 1_700_000_000_000,
     },
-    project: { id: "proj_1", name: "bb" },
+    project: { id: "proj_1", name: "sandy" },
   },
 ];
 
@@ -199,7 +199,7 @@ describe("AutomationOverviewView", () => {
           execution: { ...healthyAutomation.execution, prompt: "" },
           problem: "missing-agent-prompt",
         },
-        project: { id: "proj_1", name: "bb" },
+        project: { id: "proj_1", name: "sandy" },
       },
       {
         automation: {
@@ -208,7 +208,7 @@ describe("AutomationOverviewView", () => {
           name: "Unreadable automation",
           problem: "invalid-stored-data",
         },
-        project: { id: "proj_1", name: "bb" },
+        project: { id: "proj_1", name: "sandy" },
       },
       ...INSTALLED_AUTOMATIONS,
     ];
@@ -375,15 +375,15 @@ describe("AutomationOverviewView", () => {
     expect(rowTitles()).toEqual(["Nightly digest"]);
 
     fireEvent.pointerDown(screen.getByRole("button", { name: "Filters" }));
-    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "bb" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "sandy" }));
     expect(
-      screen.getByRole("menuitemcheckbox", { name: "bb" }).ariaChecked,
+      screen.getByRole("menuitemcheckbox", { name: "sandy" }).ariaChecked,
     ).toBe("true");
     expect(rowTitles()).toEqual(["Nightly digest"]);
 
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Paused" }));
     expect(
-      screen.getByRole("menuitemcheckbox", { name: "bb" }).ariaChecked,
+      screen.getByRole("menuitemcheckbox", { name: "sandy" }).ariaChecked,
     ).toBe("true");
     expect(
       screen.getByRole("menuitemcheckbox", { name: "Paused" }).ariaChecked,
@@ -399,14 +399,14 @@ describe("AutomationOverviewView", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(
       screen.getByRole("button", {
-        name: "Filters: Projects: bb; Status: Paused",
+        name: "Filters: Projects: sandy; Status: Paused",
       }),
     ).toBeTruthy();
 
     fireEvent.pointerDown(screen.getByRole("button", { name: /^Filters/ }));
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Paused" }));
     expect(
-      screen.getByRole("menuitemcheckbox", { name: "bb" }).ariaChecked,
+      screen.getByRole("menuitemcheckbox", { name: "sandy" }).ariaChecked,
     ).toBe("true");
     expect(rowTitles()).toEqual(["Nightly digest"]);
     expect(

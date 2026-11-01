@@ -1,0 +1,33 @@
+[
+  {
+    "n": 1,
+    "title": "Token bucket per host",
+    "status": "done"
+  },
+  {
+    "n": 2,
+    "title": "Honour Retry-After in safeGet",
+    "status": "done"
+  },
+  {
+    "n": 3,
+    "title": "Route search and geocode through the limiter",
+    "status": "failed",
+    "note": "2 tests in web/web.test.ts fail after 2 attempts: the bucket is never refilled under fake timers."
+  },
+  {
+    "n": 4,
+    "title": "Keep 429s out of the cache",
+    "status": "running"
+  },
+  {
+    "n": 5,
+    "title": "Show “rate limited, retrying” in Map",
+    "status": "queued"
+  },
+  {
+    "n": 6,
+    "title": "Document the limits in the README",
+    "status": "queued"
+  }
+]

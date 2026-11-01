@@ -1,7 +1,7 @@
 import { emitPluginEnvironmentRemoved } from "../plugins/plugin-thread-events.js";
 import { withHostCleanup } from "../hosts/cleanup-context.js";
 import { findHostDataDir } from "../lib/entity-lookup.js";
-import { getLatestThreadSequence, updateThread } from "@bb/db";
+import { getLatestThreadSequence, updateThread } from "@sandy/db";
 import {
   assertEnvironmentPathAvailable,
   findBlockingEnvironmentPathClaim,
@@ -43,7 +43,7 @@ import {
   type DbQueryConnection,
   threads,
   markHostEnvironmentsDestroyed,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   canonicalizeHostPath,
   isAbsoluteHostPath,
@@ -57,14 +57,14 @@ import {
   type SystemThreadProvisioningStatus,
   type ThreadStatus,
   threadScope,
-} from "@bb/domain";
-import { type ThreadResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import { type ThreadResponse } from "@sandy/server-contract";
 import {
   type PluginEnvironmentProviderCreateContext,
   type PluginEnvironmentProviderCreateResult,
   type PluginEnvironmentProviderProgress,
   type PluginEnvironmentProviderRestoreContext,
-} from "@get-bb/plugin-sdk/environment-provider";
+} from "@sandy-sdk/plugin-sdk/environment-provider";
 import {
   type ThreadProvisioningDeps,
   ensureWorkspaceReadyEventInTransaction,
@@ -83,7 +83,7 @@ import {
   applyLoggedEnvironmentLifecycleEventInTransaction,
 } from "./lifecycle-outcome.js";
 import { buildEnvironmentProvisionCommand } from "../threads/thread-create-helpers.js";
-import { recordProvisionedEnvironmentWorkspace } from "@bb/db/internal-environment-lifecycle";
+import { recordProvisionedEnvironmentWorkspace } from "@sandy/db/internal-environment-lifecycle";
 import { type AppDeps } from "../../types.js";
 import {
   appendThreadProvisioningEvent,
@@ -790,7 +790,7 @@ function writeEnvironmentTeardownFailure(
     .set({
       teardownStatus: "failed",
       teardownMessage: exhausted
-        ? `Needs recovery: ${message} Inspect the workspace, then run bb environment cleanup ${environmentId} --recover.`
+        ? `Needs recovery: ${message} Inspect the workspace, then run sandy environment cleanup ${environmentId} --recover.`
         : message,
       retireAt: exhausted
         ? null
@@ -994,7 +994,7 @@ export function cleanupEnvironment(deps: Deps, environmentId: string): boolean {
     throw new ApiError(
       409,
       "invalid_request",
-      `Needs recovery. Inspect the workspace, then run bb environment cleanup ${environmentId} --recover.`,
+      `Needs recovery. Inspect the workspace, then run sandy environment cleanup ${environmentId} --recover.`,
     );
   writeEnvironment(deps, environmentId, { retireAt: Date.now() });
   void sweepProviderEnvironment(deps, environmentId).catch((error) => {
@@ -1856,7 +1856,7 @@ async function runEnvironmentProvisionCommand(
     if (existing !== undefined && existing.finishedAt === null) {
       interruptUnrecoverableEnvironmentProvisioning(deps, {
         environmentId: environment.id,
-        reason: `An earlier setup has an unknown outcome. Archive its threads, inspect the workspace, then run bb environment cleanup ${environment.id} --recover.`,
+        reason: `An earlier setup has an unknown outcome. Archive its threads, inspect the workspace, then run sandy environment cleanup ${environment.id} --recover.`,
       });
       return;
     }

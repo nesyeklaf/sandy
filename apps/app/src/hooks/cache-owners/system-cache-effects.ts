@@ -1,9 +1,9 @@
 import type { QueryKey } from "@tanstack/react-query";
-import type { Environment, Host } from "@bb/domain";
+import type { Environment, Host } from "@sandy/domain";
 import type {
   SystemConfigResponse,
   SystemProviderCatalogEntry,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   allEnvironmentFilePreviewQueryKeyPrefix,
   allEnvironmentQueryKeyPrefix,

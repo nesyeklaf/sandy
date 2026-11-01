@@ -12,7 +12,7 @@ import {
   type ExperimentalPluginBrowserPage,
   type ExperimentalPluginBrowserToolbarActionProps,
   type JsonValue,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   ANNOTATION_MENTION_PROVIDER_ID,
   annotationMentionLabel,
@@ -39,7 +39,7 @@ function readTheme(): Record<string, string> {
   for (const token of THEME_TOKENS) {
     const value = computed.getPropertyValue(`--${token}`).trim();
     if (value.length > 0) {
-      theme[`--bb-${token}`] = value;
+      theme[`--sandy-${token}`] = value;
     }
   }
   return theme;

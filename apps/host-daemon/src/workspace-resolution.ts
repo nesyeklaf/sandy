@@ -1,7 +1,7 @@
 import type {
   HostDaemonInjectedSkillSource,
   WorkspaceContext,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { RuntimeEntry, RuntimeManager } from "./runtime-manager.js";
 import {
   ExpectedCommandDispatchError,
@@ -9,7 +9,7 @@ import {
 } from "./command-dispatch-support.js";
 import {
   workspaceResolutionFailureFromError,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 
 interface ResolveWorkspaceForCommandArgs {
   environmentId: string;

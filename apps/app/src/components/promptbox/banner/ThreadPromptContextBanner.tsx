@@ -2,7 +2,7 @@ import {
   experimental_THREAD_CONTEXT_SEGMENT_GROUPS,
   type ExperimentalThreadContextSegmentInput,
   type ExperimentalThreadContextSegmentProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   CORE_THREAD_CONTEXT_OWNER,
   ThreadContextSegmentMount,
@@ -39,7 +39,7 @@ import type {
   EnvironmentStatus,
   PendingInteraction,
   ThreadRuntimeDisplayStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   PromptStackCard,
   PROMPT_STACK_CARD_HEADER_BUTTON_CLASS,
@@ -52,13 +52,13 @@ import {
   activityIconClass,
   activityRowClass,
   activityTextClass,
-} from "@bb/shared-ui/activity-row-styles";
-import { formatPendingInteractionSummary } from "@bb/core-ui";
+} from "@sandy/shared-ui/activity-row-styles";
+import { formatPendingInteractionSummary } from "@sandy/core-ui";
 import { InlinePendingInteractionContext } from "@/components/thread/pending-interactions/PendingInteractionShell";
 import { ThreadPendingInteractionBanners } from "@/components/thread/pending-interactions/ThreadPendingInteractionBanner";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { useThreadContextKind } from "@/components/plugin/PluginThreadContextCard";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 import {
   AnimatedBody,
   AnimatedDisclosureBody,
@@ -67,17 +67,17 @@ import {
   PromptStackCountSlot,
   SectionToggleButton,
   useDisclosureFocusHandoff,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 import {
   BannerActionSlot,
   PromptBannerActionButton,
-} from "@bb/shared-ui/prompt-banner-actions";
+} from "@sandy/shared-ui/prompt-banner-actions";
 import {
   ThreadTitle,
   useThreadTitleDisplayText,
 } from "@/components/thread/ThreadTitleMentions";
 import { childThreadNoun } from "@/lib/child-thread-copy";
-import { SIDEBAR_WORKING_STATUS_COLOR_CLASS } from "@bb/shared-ui/sidebar-row-classes";
+import { SIDEBAR_WORKING_STATUS_COLOR_CLASS } from "@sandy/shared-ui/sidebar-row-classes";
 
 export interface ThreadPromptParentThreadSection {
   parentThreadTitle: string;

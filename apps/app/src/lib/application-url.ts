@@ -5,7 +5,7 @@ import {
 import {
   createApplicationLinkApprovals,
   APPLICATION_LINK_APPROVALS_STORAGE_KEY,
-} from "@bb/domain/application-link-approvals";
+} from "@sandy/domain/application-link-approvals";
 import { useQuery } from "@tanstack/react-query";
 import { systemConfigQueryOptions } from "@/hooks/queries/system-queries";
 import { appQueryClient } from "./app-query-client";
@@ -13,8 +13,8 @@ import {
   createApplicationUrlOpener,
   type ApplicationUrl,
   type ApplicationUrlDecision,
-} from "@bb/domain/application-url";
-import { getBbDesktopInfo } from "./bb-desktop";
+} from "@sandy/domain/application-url";
+import { getSandyDesktopInfo } from "./sandy-desktop";
 import { getNativeShell } from "./native-shell";
 import { appToast } from "@/components/ui/app-toast";
 
@@ -104,17 +104,17 @@ export function openApplicationUrl(url: string): void {
 }
 
 async function dispatchApplicationUrl(url: string): Promise<void> {
-  const desktop = getBbDesktopInfo();
+  const desktop = getSandyDesktopInfo();
   if (desktop !== null) {
     if (!desktop.openApplicationUrl)
-      throw new Error("Update the BB desktop app to open application links.");
+      throw new Error("Update the SANDY desktop app to open application links.");
     await desktop.openApplicationUrl(url);
     return;
   }
   const native = getNativeShell();
   if (native !== null) {
     if (native.handshake.bridgeVersion < 3)
-      throw new Error("Update the BB mobile app to open application links.");
+      throw new Error("Update the SANDY mobile app to open application links.");
     await native.request("open-application", { url });
     return;
   }

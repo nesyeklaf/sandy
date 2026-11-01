@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { CORE_COMMAND_GROUPS } from "../command-groups.js";
-import { readBbAppVersion } from "./bb-app-version.js";
+import { readSandyAppVersion } from "./sandy-app-version.js";
 
 const execFileAsync = promisify(execFile);
 const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -29,11 +29,11 @@ export async function resolve(specifier, context, nextResolve) {
 const REGISTER_HOOKS_SOURCE = `
 import { register } from "node:module";
 register(new URL("./resolve-hooks.mjs", import.meta.url), {
-  data: { logPath: process.env.BB_STARTUP_GRAPH_LOG },
+  data: { logPath: process.env.SANDY_STARTUP_GRAPH_LOG },
 });
 `;
 
-const STRIPPED_ENV_KEYS = new Set(["BB_CLI", "BB_APP_VERSION"]);
+const STRIPPED_ENV_KEYS = new Set(["SANDY_CLI", "SANDY_APP_VERSION"]);
 
 const cliPackageJsonSchema = z.object({
   scripts: z.object({ build: z.string() }),
@@ -46,7 +46,7 @@ interface CliRun {
   urls: string[];
 }
 
-describe("bb startup module graph", () => {
+describe("sandy startup module graph", () => {
   let tempDir: string;
   let registerHooksPath: string;
   let distEntry: string;
@@ -80,9 +80,9 @@ describe("bb startup module graph", () => {
         ([key]) => !STRIPPED_ENV_KEYS.has(key),
       ),
     );
-    env.BB_CLI_REEXEC = "1";
-    env.BB_STARTUP_GRAPH_LOG = logPath;
-    if (serverUrl !== undefined) env.BB_SERVER_URL = serverUrl;
+    env.SANDY_CLI_REEXEC = "1";
+    env.SANDY_STARTUP_GRAPH_LOG = logPath;
+    if (serverUrl !== undefined) env.SANDY_SERVER_URL = serverUrl;
     const entryArgs =
       entry === "source"
         ? [
@@ -112,7 +112,7 @@ describe("bb startup module graph", () => {
   it("answers --version from commander and node builtins alone", async () => {
     const run = await runCli("source", ["--version"]);
 
-    expect(run.stdout.trim()).toBe(await readBbAppVersion());
+    expect(run.stdout.trim()).toBe(await readSandyAppVersion());
 
     expect(loaded(run, "/apps/cli/src/index.ts")).toHaveLength(1);
     expect(loaded(run, "/commander/")).not.toHaveLength(0);
@@ -137,10 +137,10 @@ describe("bb startup module graph", () => {
     }
   }, 30_000);
 
-  it("loads only the named command group for `bb thread`", async () => {
+  it("loads only the named command group for `sandy thread`", async () => {
     const run = await runCli("source", ["thread", "--help"]);
 
-    expect(run.stdout).toContain("Usage: bb thread");
+    expect(run.stdout).toContain("Usage: sandy thread");
     expect(loaded(run, "/apps/cli/src/commands/thread/index.ts")).toHaveLength(
       1,
     );
@@ -192,7 +192,7 @@ describe("bb startup module graph", () => {
       );
     }, 60_000);
 
-    it("is how @bb/cli#build builds the shipped CLI", async () => {
+    it("is how @sandy/cli#build builds the shipped CLI", async () => {
       const packageJson = cliPackageJsonSchema.parse(
         JSON.parse(await readFile(join(cliRoot, "package.json"), "utf8")),
       );
@@ -202,7 +202,7 @@ describe("bb startup module graph", () => {
     it("answers --version from the entry and its shared chunks alone", async () => {
       const run = await runCli("dist", ["--version"]);
 
-      expect(run.stdout.trim()).toBe(await readBbAppVersion());
+      expect(run.stdout.trim()).toBe(await readSandyAppVersion());
       expect(loaded(run, pathToFileURL(distEntry).href)).toHaveLength(1);
 
       const chunks = loaded(run, chunkDirUrl);
@@ -215,13 +215,13 @@ describe("bb startup module graph", () => {
     it("does not print Node's NO_COLOR warning when a harness also sets FORCE_COLOR", async () => {
       const env: NodeJS.ProcessEnv = {
         ...process.env,
-        BB_CLI_REEXEC: "1",
-        BB_SERVER_URL: "http://127.0.0.1:1",
+        SANDY_CLI_REEXEC: "1",
+        SANDY_SERVER_URL: "http://127.0.0.1:1",
         FORCE_COLOR: "1",
         NO_COLOR: "1",
       };
-      delete env.BB_PROJECT_ID;
-      delete env.BB_THREAD_ID;
+      delete env.SANDY_PROJECT_ID;
+      delete env.SANDY_THREAD_ID;
       const { stdout, stderr } = await execFileAsync(
         process.execPath,
         [distEntry, "status"],
@@ -232,10 +232,10 @@ describe("bb startup module graph", () => {
       expect(stderr).toBe("");
     }, 30_000);
 
-    it("loads only the thread chunk for `bb thread`", async () => {
+    it("loads only the thread chunk for `sandy thread`", async () => {
       const run = await runCli("dist", ["thread", "--help"]);
 
-      expect(run.stdout).toContain("Usage: bb thread");
+      expect(run.stdout).toContain("Usage: sandy thread");
       expect(loaded(run, `${chunkDirUrl}thread-`)).toHaveLength(1);
 
       const otherGroups = CORE_COMMAND_GROUPS.map((group) => group.name).filter(
@@ -262,7 +262,7 @@ describe("bb startup module graph", () => {
                     {
                       name: "inspect",
                       summary: "Inspect a fixture",
-                      usage: "bb fixture inspect <id>",
+                      usage: "sandy fixture inspect <id>",
                     },
                   ],
                 },
@@ -306,7 +306,7 @@ describe("bb startup module graph", () => {
             ["fixture", "inspect", helpFlag],
             serverUrl,
           );
-          expect(run.stdout).toBe("bb fixture inspect <id>\n");
+          expect(run.stdout).toBe("sandy fixture inspect <id>\n");
         }
         expect(pluginCalls).toBe(0);
 

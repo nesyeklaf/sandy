@@ -1,25 +1,25 @@
 {
   "expo": {
-    "name": "bb",
-    "slug": "bb-app",
-    "owner": "bb-team",
+    "name": "sandy",
+    "slug": "sandy-app",
+    "owner": "sandy-team",
     "version": "0.39.0",
-    "scheme": "bb",
+    "scheme": "sandy",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "app.getbb.mobile",
+      "bundleIdentifier": "app.sandy.mobile",
       "supportsTablet": true,
       "icon": {
         "light": "./assets/icon.png",
         "dark": "./assets/ios-icon-dark.png"
       },
       "infoPlist": {
-        "NSLocalNetworkUsageDescription": "bb connects to a bb server on your local network or tailnet.",
-        "NSCameraUsageDescription": "bb attaches photos you take to your prompts.",
-        "NSMicrophoneUsageDescription": "bb records voice input and transcribes it into your prompt.",
-        "NSPhotoLibraryUsageDescription": "bb attaches photos you pick to your prompts.",
+        "NSLocalNetworkUsageDescription": "sandy connects to a sandy server on your local network or tailnet.",
+        "NSCameraUsageDescription": "sandy attaches photos you take to your prompts.",
+        "NSMicrophoneUsageDescription": "sandy records voice input and transcribes it into your prompt.",
+        "NSPhotoLibraryUsageDescription": "sandy attaches photos you pick to your prompts.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
@@ -27,7 +27,7 @@
       }
     },
     "android": {
-      "package": "app.getbb.mobile",
+      "package": "app.sandy.mobile",
       "permissions": ["android.permission.MODIFY_AUDIO_SETTINGS"],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",

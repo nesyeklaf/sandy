@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { isBbManagedWorkspacePath } from "./workspace-paths.js";
+import { isSandyManagedWorkspacePath } from "./workspace-paths.js";
 
-const dataDir = "/home/user/.bb";
+const dataDir = "/home/user/.sandy";
 
-describe("isBbManagedWorkspacePath", () => {
+describe("isSandyManagedWorkspacePath", () => {
   it("recognises a worktree under a plugin's host data directory", () => {
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/plugins/environment-git-worktree/host-data/worktrees/thr_abc-1/repo`,
       }),
@@ -15,7 +15,7 @@ describe("isBbManagedWorkspacePath", () => {
 
   it("recognises a personal workspace under a plugin's host data directory", () => {
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/plugins/environment-personal-workspace/host-data/personal-workspaces/thr_abc`,
       }),
@@ -24,13 +24,13 @@ describe("isBbManagedWorkspacePath", () => {
 
   it("recognises the pre-plugin workspace roots", () => {
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/worktrees/env_abc/repo`,
       }),
     ).toBe(true);
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/personal-workspaces/env_abc`,
       }),
@@ -39,50 +39,50 @@ describe("isBbManagedWorkspacePath", () => {
 
   it("leaves plugin storage that is not process data alone", () => {
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/plugins/some-plugin/source/index.ts`,
       }),
     ).toBe(false);
     expect(
-      isBbManagedWorkspacePath({ dataDir, path: `${dataDir}/plugins` }),
+      isSandyManagedWorkspacePath({ dataDir, path: `${dataDir}/plugins` }),
     ).toBe(false);
   });
 
   it("leaves paths outside the data directory alone", () => {
     expect(
-      isBbManagedWorkspacePath({ dataDir, path: "/home/user/code/repo" }),
+      isSandyManagedWorkspacePath({ dataDir, path: "/home/user/code/repo" }),
     ).toBe(false);
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
-        path: "/home/user/.bb-other/worktrees/env_abc",
+        path: "/home/user/.sandy-other/worktrees/env_abc",
       }),
     ).toBe(false);
   });
 
   it("recognises managed roots on a Windows host in any spelling", () => {
-    const windowsDataDir = "C:\\Users\\me\\.bb";
+    const windowsDataDir = "C:\\Users\\me\\.sandy";
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir: windowsDataDir,
-        path: "c:/users/me/.bb/plugins/environment-git-worktree/host-data/worktrees/thr_abc-1/repo",
+        path: "c:/users/me/.sandy/plugins/environment-git-worktree/host-data/worktrees/thr_abc-1/repo",
       }),
     ).toBe(true);
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir: windowsDataDir,
-        path: "C:\\Users\\me\\.bb\\worktrees\\env_abc\\repo",
+        path: "C:\\Users\\me\\.sandy\\worktrees\\env_abc\\repo",
       }),
     ).toBe(true);
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir: windowsDataDir,
-        path: "C:\\Users\\me\\.bb\\plugins\\some-plugin\\source\\index.ts",
+        path: "C:\\Users\\me\\.sandy\\plugins\\some-plugin\\source\\index.ts",
       }),
     ).toBe(false);
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir: windowsDataDir,
         path: "C:\\Users\\me\\code\\repo",
       }),
@@ -91,7 +91,7 @@ describe("isBbManagedWorkspacePath", () => {
 
   it("does not treat a sibling prefix as a managed root", () => {
     expect(
-      isBbManagedWorkspacePath({
+      isSandyManagedWorkspacePath({
         dataDir,
         path: `${dataDir}/worktrees-backup/env_abc`,
       }),

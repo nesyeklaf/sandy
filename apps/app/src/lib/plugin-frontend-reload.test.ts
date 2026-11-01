@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { HOST_TAILWIND_VERSION } from "@bb/plugin-build/host-tailwind-version";
-import type { PluginComposerThreadRowStatus } from "@get-bb/plugin-sdk";
+import { HOST_TAILWIND_VERSION } from "@sandy/plugin-build/host-tailwind-version";
+import type { PluginComposerThreadRowStatus } from "@sandy-sdk/plugin-sdk";
 import { QueryClient } from "@tanstack/react-query";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -122,8 +122,8 @@ function autoLoadPluginStylesheets(): {
       for (const node of record.addedNodes) {
         if (
           !(node instanceof HTMLLinkElement) ||
-          (!node.hasAttribute("data-bb-plugin-css") &&
-            !node.hasAttribute("data-bb-plugin-css-preload"))
+          (!node.hasAttribute("data-sandy-plugin-css") &&
+            !node.hasAttribute("data-sandy-plugin-css-preload"))
         ) {
           continue;
         }
@@ -375,7 +375,7 @@ describe("reconcilePluginFrontends", () => {
     ]);
     expect(container.textContent).toContain("cold panel body:notes/today.md");
     expect(
-      document.head.querySelector('link[data-bb-plugin-css="hello"]'),
+      document.head.querySelector('link[data-sandy-plugin-css="hello"]'),
     ).not.toBeNull();
 
     act(() => root.unmount());
@@ -389,7 +389,7 @@ describe("reconcilePluginFrontends", () => {
     const deps = makeDeps([candidate("shell-owner", "v1")]);
     const events: string[] = [];
     const stylesheetIsActive = () =>
-      document.head.querySelector('link[data-bb-plugin-css="shell-owner"]') !==
+      document.head.querySelector('link[data-sandy-plugin-css="shell-owner"]') !==
       null;
     deps.applyCss = applyPluginCss;
     deps.retainCss = retainPluginCss;
@@ -442,7 +442,7 @@ describe("reconcilePluginFrontends", () => {
       `/api/v1/plugins/hello/assets/app.css?h=${version}&host-tailwind=${HOST_TAILWIND_VERSION}`;
     const links = () => [
       ...document.head.querySelectorAll<HTMLLinkElement>(
-        'link[data-bb-plugin-css="hello"]',
+        'link[data-sandy-plugin-css="hello"]',
       ),
     ];
     const hrefs = () => links().map((link) => link.getAttribute("href"));
@@ -455,7 +455,7 @@ describe("reconcilePluginFrontends", () => {
     await flushAsyncWork();
     expect(deps.setRegistrations).not.toHaveBeenCalled();
     document.head
-      .querySelector('link[data-bb-plugin-css-preload="hello"]')
+      .querySelector('link[data-sandy-plugin-css-preload="hello"]')
       ?.dispatchEvent(new Event("load"));
     await act(async () => {
       await bootV1;
@@ -541,7 +541,7 @@ describe("reconcilePluginFrontends", () => {
     const hrefs = () =>
       [
         ...document.head.querySelectorAll<HTMLLinkElement>(
-          'link[data-bb-plugin-css="hello"]',
+          'link[data-sandy-plugin-css="hello"]',
         ),
       ].map((link) => link.getAttribute("href"));
     const container = document.createElement("div");
@@ -565,7 +565,7 @@ describe("reconcilePluginFrontends", () => {
     expect(hrefs()).toEqual([sheet("v1"), sheet("v2")]);
 
     document.head
-      .querySelector('link[data-bb-plugin-css="hello"][href*="h=v2"]')
+      .querySelector('link[data-sandy-plugin-css="hello"][href*="h=v2"]')
       ?.dispatchEvent(new Event("load"));
     expect(hrefs()).toEqual([sheet("v2")]);
 
@@ -600,7 +600,7 @@ describe("reconcilePluginFrontends", () => {
       `/api/v1/plugins/${pluginId}/assets/app.css?h=${version}&host-tailwind=${HOST_TAILWIND_VERSION}`;
     const links = (pluginId: string) => [
       ...document.head.querySelectorAll<HTMLLinkElement>(
-        `link[data-bb-plugin-css="${pluginId}"]`,
+        `link[data-sandy-plugin-css="${pluginId}"]`,
       ),
     ];
     const hrefs = (pluginId: string) =>
@@ -613,7 +613,7 @@ describe("reconcilePluginFrontends", () => {
     const boot = reconcilePluginFrontends(state, deps);
     await flushAsyncWork();
     for (const preload of document.head.querySelectorAll(
-      "link[data-bb-plugin-css-preload]",
+      "link[data-sandy-plugin-css-preload]",
     )) {
       preload.dispatchEvent(new Event("load"));
     }
@@ -779,7 +779,7 @@ describe("reconcilePluginFrontends", () => {
     );
     expect(deps.importModule).toHaveBeenNthCalledWith(
       2,
-      "/api/v1/plugins/hello/assets/app.js?h=v1&bb_retry=1",
+      "/api/v1/plugins/hello/assets/app.js?h=v1&sandy_retry=1",
     );
     expect(state.records.get("hello")?.status).toBe("loaded");
   });
@@ -800,8 +800,8 @@ describe("reconcilePluginFrontends", () => {
 
     expect(deps.importModule.mock.calls.map(([url]) => url)).toEqual([
       "/api/v1/plugins/hello/assets/app.js?h=v1",
-      "/api/v1/plugins/hello/assets/app.js?h=v1&bb_retry=1",
-      "/api/v1/plugins/hello/assets/app.js?h=v1&bb_retry=2",
+      "/api/v1/plugins/hello/assets/app.js?h=v1&sandy_retry=1",
+      "/api/v1/plugins/hello/assets/app.js?h=v1&sandy_retry=2",
     ]);
     expect(state.records.get("hello")?.status).toBe("loaded");
     expect(deps.setRegistrations).toHaveBeenCalledWith(
@@ -1439,7 +1439,7 @@ describe("applyPluginCss", () => {
   function links(pluginId: string): HTMLLinkElement[] {
     return [
       ...document.head.querySelectorAll<HTMLLinkElement>(
-        `link[data-bb-plugin-css="${pluginId}"]`,
+        `link[data-sandy-plugin-css="${pluginId}"]`,
       ),
     ];
   }
@@ -1447,7 +1447,7 @@ describe("applyPluginCss", () => {
   function preloads(pluginId: string): HTMLLinkElement[] {
     return [
       ...document.head.querySelectorAll<HTMLLinkElement>(
-        `link[data-bb-plugin-css-preload="${pluginId}"]`,
+        `link[data-sandy-plugin-css-preload="${pluginId}"]`,
       ),
     ];
   }
@@ -1462,7 +1462,7 @@ describe("applyPluginCss", () => {
     prefetchPluginCss("/assets/prefetched.css");
     expect(
       document
-        .querySelector("link[data-bb-plugin-css-prefetch]")
+        .querySelector("link[data-sandy-plugin-css-prefetch]")
         ?.getAttribute("href"),
     ).toBe(`/assets/prefetched.css?host-tailwind=${HOST_TAILWIND_VERSION}`);
     applyPluginCss("hello", "/assets/app.css?h=aaa");
@@ -1755,24 +1755,24 @@ describe("applyPluginCss", () => {
     ]);
   });
 
-  it("never ties app-wide bb.themes palette CSS to plugin UI mounts", async () => {
+  it("never ties app-wide sandy.themes palette CSS to plugin UI mounts", async () => {
     vi.useFakeTimers();
     const paletteCss = ":root { --canvas: rebeccapurple; }";
     applyAppThemeCss(paletteCss);
-    const palette = document.getElementById("bb-app-theme");
+    const palette = document.getElementById("sandy-app-theme");
     expect(palette?.textContent).toBe(paletteCss);
 
     applyPluginCss("palette-owner", "/assets/app.css?h=palette-owner");
     preloads("palette-owner")[0]?.dispatchEvent(new Event("load"));
     expect(links("palette-owner")).toHaveLength(0);
-    expect(document.getElementById("bb-app-theme")).toBe(palette);
+    expect(document.getElementById("sandy-app-theme")).toBe(palette);
     expect(palette?.textContent).toBe(paletteCss);
 
     const release = retainPluginCss("palette-owner");
     release();
     await vi.advanceTimersByTimeAsync(1_500);
     expect(links("palette-owner")).toHaveLength(0);
-    expect(document.getElementById("bb-app-theme")).toBe(palette);
+    expect(document.getElementById("sandy-app-theme")).toBe(palette);
     expect(palette?.textContent).toBe(paletteCss);
 
     applyAppThemeCss("");

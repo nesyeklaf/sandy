@@ -6,14 +6,14 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { experimental_Icon as Icon } from "@get-bb/plugin-sdk/app";
+import { experimental_Icon as Icon } from "@sandy-sdk/plugin-sdk/app";
 import { HOVER_REVEAL_NO_HOVER_VISIBLE_CLASS } from "@/components/ui/hover-reveal";
 import { cn } from "@/lib/utils";
 import {
   definePluginApp,
   experimental_usePluginId,
   Markdown,
-  useBbContext,
+  useSandyContext,
   useComposer,
   useRpc,
   type ComposerDraft,
@@ -21,7 +21,7 @@ import {
   type ComposerInsertPart,
   type PluginComposerScope,
   type StandardSchemaV1InferOutput,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   promptScopeSchema,
   type PromptScope,
@@ -257,7 +257,7 @@ function PromptLibraryPopup() {
   const composer = useComposer();
   const rpc = useRpc<typeof promptLibraryRpcContract>();
   const pluginId = experimental_usePluginId();
-  const context = useBbContext();
+  const context = useSandyContext();
   const kind = composerKind(composer.scope);
   const targets = scopeTargets(composer.scope, context.projectId);
   const availableScopes = scopesFor(kind).filter(

@@ -2,9 +2,9 @@ import type { Storage } from "./storage.js";
 import {
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { policySchema } from "./contract.js";
 import type { Service } from "./service.js";
 
@@ -48,11 +48,11 @@ async function output(work: () => Promise<unknown>): Promise<PluginCliResult> {
   }
 }
 export function registerCli(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   service: Service,
   storage: Storage,
 ) {
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "storage",
       summary: "Inspect storage and manage thread retention (JSON output)",
@@ -228,13 +228,13 @@ export function registerCli(
         }),
         "remove-external-worktrees": cliCommand({
           summary:
-            "Remove git worktrees of project repositories that BB did not create, keeping branches and skipping worktrees with uncommitted changes, locked worktrees, or commits on no branch",
+            "Remove git worktrees of project repositories that SANDY did not create, keeping branches and skipping worktrees with uncommitted changes, locked worktrees, or commits on no branch",
           options: {
             machine: MACHINE,
             path: {
               type: "string",
               description:
-                "Remove only this worktree path from the last scan (default: every worktree created outside BB)",
+                "Remove only this worktree path from the last scan (default: every worktree created outside SANDY)",
             },
             force: {
               type: "boolean",
@@ -296,13 +296,13 @@ export function registerCli(
         }),
         "remove-dev-instances": cliCommand({
           summary:
-            "Remove ~/.bb-dev instances whose source checkout no longer exists, stopping servers still running from them",
+            "Remove ~/.sandy-dev instances whose source checkout no longer exists, stopping servers still running from them",
           options: {
             machine: MACHINE,
             instance: {
               type: "string",
               description:
-                "Remove only this ~/.bb-dev entry, stopping its dev server first if it is running (default: every instance with a missing checkout)",
+                "Remove only this ~/.sandy-dev entry, stopping its dev server first if it is running (default: every instance with a missing checkout)",
             },
             yes: YES,
           },

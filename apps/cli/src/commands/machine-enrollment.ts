@@ -1,4 +1,4 @@
-import { execHostFile } from "@bb/process-utils";
+import { execHostFile } from "@sandy/process-utils";
 import { randomUUID } from "node:crypto";
 import {
   mkdir,
@@ -12,7 +12,7 @@ import {
 import { homedir, hostname } from "node:os";
 import { join, resolve } from "node:path";
 import { createServer } from "node:net";
-import { mutateManagedJsonFile } from "@bb/config/managed-json-file";
+import { mutateManagedJsonFile } from "@sandy/config/managed-json-file";
 import { z } from "zod";
 
 const serverUrlSchema = z
@@ -131,20 +131,20 @@ export async function enrollMachine(
   const home = runtime.homeDir ?? homedir();
   const serverUrl = normalizeUrl(bootstrap.serverUrl);
   const dataDir = resolve(
-    env.BB_DATA_DIR ??
+    env.SANDY_DATA_DIR ??
       bootstrap.dataDir ??
       join(
         home,
-        ".bb-machines",
+        ".sandy-machines",
         new URL(bootstrap.serverUrl).host.replace(/[^a-zA-Z0-9.-]/gu, "-"),
       ),
   );
   if (
-    dataDir === resolve(home, ".bb") &&
+    dataDir === resolve(home, ".sandy") &&
     (await readOptional(join(dataDir, "host-id")))?.trim() !== bootstrap.hostId
   )
     throw new Error(
-      "Machine enrollment cannot use the default BB data directory",
+      "Machine enrollment cannot use the default SANDY data directory",
     );
   const existingAuth = await readOptional(join(dataDir, "auth.json"));
   if (existingAuth !== null) {
@@ -197,11 +197,11 @@ export async function enrollMachine(
     throw new Error("Refusing to overwrite a different machine identity");
   async function prepareRuntime(): Promise<void> {
     await reservePort(dataDir);
-    const launcher = join(dataDir, "npm", "bin", "bb-app");
+    const launcher = join(dataDir, "npm", "bin", "sandy-app");
     try {
       await access(launcher);
     } catch {
-      const result = await execHostFile("sh", ["-c", "command -v bb-app"], {
+      const result = await execHostFile("sh", ["-c", "command -v sandy-app"], {
         env,
       }).catch(() => null);
       if (result?.stdout.trim()) {

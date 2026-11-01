@@ -1,21 +1,21 @@
 import type { RequestPeerSnapshot } from "../request-peers.js";
-import type { EnvironmentRemoval } from "@bb/domain";
+import type { EnvironmentRemoval } from "@sandy/domain";
 import type { MachineEnrollmentService } from "../machines/machine-services.js";
 import type { AiServiceRegistry } from "../ai/ai-service-registry.js";
-import type { DbConnection, HostRow } from "@bb/db";
+import type { DbConnection, HostRow } from "@sandy/db";
 import type {
   DynamicTool,
   PendingInteraction,
   Thread,
   ThreadQueuedMessage,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonContributedEnvEntry,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type {
   PluginApplyUpdateResult,
   PluginRuntimeStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { ServerLogger } from "../../types.js";
 import type { NotificationHub } from "../../ws/hub.js";
 import type {
@@ -77,7 +77,7 @@ export interface PluginServiceDeps {
    */
   onPluginUnregistered?: (pluginId: string) => void;
   /**
-   * Backs `bb.experimental_hooks.recheck()`: schedules a re-attempt of
+   * Backs `sandy.experimental_hooks.recheck()`: schedules a re-attempt of
    * every plugin-queued row. Omitted only by isolated plugin tests, which have
    * no thread queue — the call is then a no-op, exactly as it was when core
    * drove this signal itself and no app had registered a listener.
@@ -108,7 +108,7 @@ export interface PluginServiceDeps {
   retiredBundledPlugins?: readonly RetiredBundledPlugin[];
   watchBuiltinPluginSources?: boolean;
   loadTimeoutMs?: number;
-  /** How long an install waits for `bb.onInstall` handlers. Defaults to 30s. */
+  /** How long an install waits for `sandy.onInstall` handlers. Defaults to 30s. */
   installHandlerTimeoutMs?: number;
   serviceStopTimeoutMs?: number;
   serviceRestartBaseMs?: number;
@@ -138,7 +138,7 @@ export interface PluginServiceDeps {
   onArtifactMaterialize?: (args: { path: string }) => void;
   callPluginHost?: (args: {
     pluginId: string;
-    contract: import("@get-bb/plugin-sdk").PluginRpcContract;
+    contract: import("@sandy-sdk/plugin-sdk").PluginRpcContract;
     method: string;
     input: unknown;
     hostId: string;
@@ -215,7 +215,7 @@ export interface PluginThreadEventEmitter {
   emitEnvironmentRemoved(removal: EnvironmentRemoval): void;
   emitThreadEvents(threadId: string): void;
   emitTerminalInput(
-    terminal: import("@bb/server-contract").TerminalSession,
+    terminal: import("@sandy/server-contract").TerminalSession,
   ): void;
   emitHostDeleted(host: HostRow): void;
   emitThreadCreated(thread: Thread): void;

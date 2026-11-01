@@ -2,7 +2,7 @@ import type {
   ProviderComposerCommand,
   PromptMentionCommandTrigger,
   ProviderComposerAction,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export type ProviderPromptActionCommand = ProviderComposerCommand;
 

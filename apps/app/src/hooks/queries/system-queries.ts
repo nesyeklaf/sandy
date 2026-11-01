@@ -4,18 +4,18 @@ import type {
   PermissionMode,
   ProviderInfo,
   ProviderModelCatalogScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { SYSTEM_EXECUTION_OPTIONS_QUERY_KEY } from "@/hooks/queries/query-keys";
-import { permissionModeValues } from "@bb/domain";
+import { permissionModeValues } from "@sandy/domain";
 import type {
   SystemCliCommandStatus,
   SystemCliSkillsStatusResponse,
   SystemExecutionOptionsResponse,
   SystemProvidersQuery,
   SystemProviderStatesResponse,
-} from "@bb/server-contract";
-import type { ProviderCliStatusResponse } from "@bb/host-daemon-contract";
-import { BbHttpError, sdk } from "@/lib/sdk";
+} from "@sandy/server-contract";
+import type { ProviderCliStatusResponse } from "@sandy/host-daemon-contract";
+import { SandyHttpError, sdk } from "@/lib/sdk";
 import { isAbortLikeError } from "@/lib/mutation-errors";
 import {
   modelCatalogCacheKey,
@@ -179,7 +179,7 @@ function shouldRetrySystemExecutionOptions(
     return false;
   }
 
-  if (error instanceof BbHttpError) {
+  if (error instanceof SandyHttpError) {
     return error.status === 408 || error.status === 429 || error.status >= 500;
   }
 

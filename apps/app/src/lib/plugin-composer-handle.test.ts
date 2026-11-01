@@ -1,15 +1,15 @@
-import { appendQuoteAndAttachmentsToDraft } from "@bb/client-core";
+import { appendQuoteAndAttachmentsToDraft } from "@sandy/client-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PromptTextMention } from "@bb/domain";
-import type { PromptDraftState } from "@bb/client-core";
-import type { ComposerEditorState } from "@get-bb/plugin-sdk/internal/composer-handle";
+import type { PromptTextMention } from "@sandy/domain";
+import type { PromptDraftState } from "@sandy/client-core";
+import type { ComposerEditorState } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import {
   clearComposerEditorBridge,
   publishComposerEditorBridge,
   type ComposerEditorBridge,
 } from "./composer-editor-registry";
-import { createComposerHandleBinding } from "@get-bb/plugin-sdk/internal/composer-handle";
-import type { PluginComposerScope } from "@get-bb/plugin-sdk";
+import { createComposerHandleBinding } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
+import type { PluginComposerScope } from "@sandy-sdk/plugin-sdk";
 import {
   notifyComposerSubmitted,
   subscribeComposerSubmitted,
@@ -111,7 +111,7 @@ const MENTIONS: PromptTextMention[] = [
       kind: "plugin",
       pluginId: "github",
       icon: null,
-      itemId: "pr:get-bb/bb#1",
+      itemId: "pr:nesyeklaf/sandy#1",
       label: "PR #1",
     },
   },
@@ -180,7 +180,7 @@ describe("composer handle", () => {
     expect(mentions[3]).toMatchObject({
       pluginId: "github",
       provider: "pr",
-      id: "get-bb/bb#1",
+      id: "nesyeklaf/sandy#1",
     });
 
     const destination = makeTarget(emptyDraft);

@@ -4,12 +4,12 @@ import {
   turnScope,
   type PromptInput,
   type TurnRequestTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   threadMessageResponseSchema,
   threadTimelineResponseSchema,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import type { AppDeps } from "../../src/types.js";
 import { readJson } from "../helpers/json.js";

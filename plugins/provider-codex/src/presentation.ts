@@ -5,7 +5,7 @@ import {
   experimental_presentationTitle as presentationTitle,
   experimental_toolPresentation as toolPresentation,
   experimental_withTitle as withTitle,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 
 const SHELL_WRAPPER_PATTERN =
   /^(?:\S*\/)?(?:sh|bash|zsh)\s+(?:-lc|-c)\s+([\s\S]+)$/;
@@ -170,7 +170,7 @@ export function macOsPermissionPresentation(
   const detail =
     requested.length === 0
       ? "No macOS capability was requested."
-      : `Requested: ${requested.join(", ")}. bb cannot grant macOS permissions; the approval covers the command only.`;
+      : `Requested: ${requested.join(", ")}. sandy cannot grant macOS permissions; the approval covers the command only.`;
   return { ...presentation, detail: presentationDetail(detail) };
 }
 

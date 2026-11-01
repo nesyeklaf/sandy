@@ -20,7 +20,7 @@ const selected =
 
 // Resolves from this repo's own devDependencies; no download here.
 const toolchain = await resolvePluginBuildToolchain(
-  resolve(repositoryRoot, "node_modules/.bb-toolchain"),
+  resolve(repositoryRoot, "node_modules/.sandy-toolchain"),
 );
 
 for (const plugin of selected) {
@@ -31,14 +31,14 @@ for (const plugin of selected) {
   }
 }
 
-const bbPackage = JSON.parse(
+const sandyPackage = JSON.parse(
   await readFile(
-    resolve(repositoryRoot, "packages/bb-app/package.json"),
+    resolve(repositoryRoot, "packages/sandy-app/package.json"),
     "utf8",
   ),
 );
-if (typeof bbPackage.version !== "string") {
-  throw new Error("packages/bb-app/package.json is missing a version");
+if (typeof sandyPackage.version !== "string") {
+  throw new Error("packages/sandy-app/package.json is missing a version");
 }
 
 for (const plugin of selected) {
@@ -50,14 +50,14 @@ for (const plugin of selected) {
 
   const server = await buildPluginServer(
     rootDirectory,
-    bbPackage.version,
+    sandyPackage.version,
     toolchain,
   );
-  const app = manifest.bb?.app
-    ? await buildPluginApp(rootDirectory, bbPackage.version, toolchain)
+  const app = manifest.sandy?.app
+    ? await buildPluginApp(rootDirectory, sandyPackage.version, toolchain)
     : null;
-  const host = manifest.bb?.host
-    ? await buildPluginHost(rootDirectory, bbPackage.version, toolchain)
+  const host = manifest.sandy?.host
+    ? await buildPluginHost(rootDirectory, sandyPackage.version, toolchain)
     : null;
   const outputs = [server.jsPath, server.metaPath];
   if (app !== null) {

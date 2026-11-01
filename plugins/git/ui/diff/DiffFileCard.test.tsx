@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 import type {
   DiffFileContentsResult,
   RequestDiffFileContents,
-} from "@bb/shared-ui/git-diff/card-body";
+} from "@sandy/shared-ui/git-diff/card-body";
 import type { DiffFileEntry } from "../../contract.js";
 import type { DiffPatchState } from "./diff-data.js";
 import { DiffFileCard, type DiffFileCardProps } from "./DiffFileCard.js";
@@ -170,13 +170,13 @@ describe("DiffFileCard", () => {
     expect(onLoadPatch).not.toHaveBeenCalled();
   });
 
-  it("renders a loaded patch through bb's diff viewer with the panel presentation", async () => {
+  it("renders a loaded patch through sandy's diff viewer with the panel presentation", async () => {
     renderCard({
       entry: buildEntry(),
       patchState: { status: "loaded", patch: TEXT_PATCH },
     });
 
-    const diff = await screen.findByTestId("bb-diff");
+    const diff = await screen.findByTestId("sandy-diff");
     expect(diff.textContent).toBe(TEXT_PATCH);
     expect(diff.getAttribute("data-path")).toBe("src/file.ts");
     expect(diff.getAttribute("data-view")).toBe("unified");

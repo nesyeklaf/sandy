@@ -3,19 +3,20 @@ import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { scanSkillFiles, SKILL_FILE_NAME } from "@bb/skill-index";
-import { parseSkillMetadata } from "@bb/skill-index/metadata";
-import { resolveDataDirSkillsRootPath } from "@bb/config/skill-storage-paths";
+import { scanSkillFiles, SKILL_FILE_NAME } from "@sandy/skill-index";
+import { parseSkillMetadata } from "@sandy/skill-index/metadata";
+import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths";
+import type { SandySkillSourceId } from "@sandy/domain";
 import type {
   HostDaemonInjectedSkillSource,
   HostDaemonSkillTreeFile,
-} from "@bb/host-daemon-contract";
-import { hashSkillTreeFiles } from "@bb/host-daemon-contract/skill-tree";
+} from "@sandy/host-daemon-contract";
+import { hashSkillTreeFiles } from "@sandy/host-daemon-contract/skill-tree";
 import { z } from "zod";
 import type { ServerLogger } from "../../types.js";
 import { joinHostPathSegments } from "../lib/host-path.js";
 
-const LEGACY_REGISTRY_PROVENANCE_FILE_NAME = ".bb-registry-skill.json";
+const LEGACY_REGISTRY_PROVENANCE_FILE_NAME = ".sandy-registry-skill.json";
 
 const SKILL_NAME_PATTERN = /^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 
@@ -40,6 +41,7 @@ const skillFrontmatterSchema = z
 export interface ResolveInjectedSkillSourcesArgs {
   additionalSkillsRootPaths?: readonly string[];
   dataDir: string;
+  disabledSources?: ReadonlySet<SandySkillSourceId>;
   pluginSkillRoots?: readonly PluginSkillRoot[];
   pluginSkillSelections?: ReadonlyMap<string, ReadonlySet<string>>;
   projectSkillSources?: readonly ProjectInjectedSkillSource[];
@@ -557,20 +559,28 @@ export async function resolveSkillCatalogEntries(
   args: ResolveInjectedSkillSourcesArgs,
 ): Promise<ResolvedSkillCatalogEntry[]> {
   const { skillTreeRegistry } = args;
-  const projectSources = [...(args.projectSkillSources ?? [])];
-  const sharedProjectSources = (args.sharedSkillSources ?? []).filter(
+  const disabledSources = args.disabledSources ?? new Set<SandySkillSourceId>();
+  const projectSources = disabledSources.has("sandy-project")
+    ? []
+    : [...(args.projectSkillSources ?? [])];
+  const sharedSources = disabledSources.has("shared")
+    ? []
+    : (args.sharedSkillSources ?? []);
+  const sharedProjectSources = sharedSources.filter(
     (source) => source.sourceType === "shared-project",
   );
-  const sharedUserSources = (args.sharedSkillSources ?? []).filter(
+  const sharedUserSources = sharedSources.filter(
     (source) => source.sourceType === "shared-user",
   );
 
-  const dataDirSources = await readSkillsRoot({
-    logger,
-    skillTreeRegistry,
-    skillsRootPath: resolveDataDirSkillsRootPath(args.dataDir),
-    sourceType: "data-dir",
-  });
+  const dataDirSources = disabledSources.has("sandy-user")
+    ? []
+    : await readSkillsRoot({
+        logger,
+        skillTreeRegistry,
+        skillsRootPath: resolveDataDirSkillsRootPath(args.dataDir),
+        sourceType: "data-dir",
+      });
   const inheritedSourceGroups = await Promise.all(
     (args.additionalSkillsRootPaths ?? []).map((skillsRootPath) =>
       readSkillsRoot({
@@ -602,7 +612,10 @@ export async function resolveSkillCatalogEntries(
     configuredUserSources,
   );
   const pluginSourceGroups = await Promise.all(
-    (args.pluginSkillRoots ?? []).map(async ({ pluginId, rootPath }) => ({
+    (disabledSources.has("sandy-plugins")
+      ? []
+      : (args.pluginSkillRoots ?? [])
+    ).map(async ({ pluginId, rootPath }) => ({
       pluginId,
       sources: (
         await readSkillsRoot({

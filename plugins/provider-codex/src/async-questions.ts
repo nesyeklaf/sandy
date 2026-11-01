@@ -1,5 +1,5 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
-import { PLUGIN_INTERACTION_MAX_TITLE_LENGTH } from "@get-bb/plugin-sdk/provider-bridge";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
+import { PLUGIN_INTERACTION_MAX_TITLE_LENGTH } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import {
   CODEX_ASYNC_QUESTION_EXTENSION_KIND,
   codexAsyncQuestionStateSchema,
@@ -24,14 +24,14 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function registerAsyncQuestions(bb: BbPluginApi): void {
+export function registerAsyncQuestions(sandy: SandyPluginApi): void {
   const threadWork = new Map<string, Promise<void>>();
 
   function enqueue(threadId: string, work: () => Promise<void>): void {
     const next = (threadWork.get(threadId) ?? Promise.resolve())
       .then(work)
       .catch((error: unknown) => {
-        bb.log.warn(
+        sandy.log.warn(
           `async question handling failed for thread ${threadId}: ${errorMessage(error)}`,
         );
       });
@@ -44,10 +44,10 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
   async function readNewQuestions(
     threadId: string,
   ): Promise<CodexAsyncQuestionState[]> {
-    let cursor = (await bb.storage.kv.get<number>(cursorKey(threadId))) ?? 0;
+    let cursor = (await sandy.storage.kv.get<number>(cursorKey(threadId))) ?? 0;
     const questions: CodexAsyncQuestionState[] = [];
     for (;;) {
-      const page = await bb.sdk.threads.events.list({
+      const page = await sandy.sdk.threads.events.list({
         threadId,
         afterSeq: String(cursor),
         order: "asc",
@@ -66,7 +66,7 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
       }
       if (page.length < EVENT_PAGE_SIZE) break;
     }
-    await bb.storage.kv.set(cursorKey(threadId), cursor);
+    await sandy.storage.kv.set(cursorKey(threadId), cursor);
     return questions;
   }
 
@@ -74,7 +74,7 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
     threadId: string,
     state: CodexAsyncQuestionState,
   ): Promise<void> {
-    const result = await bb.ui.requestInput({
+    const result = await sandy.ui.requestInput({
       threadId,
       rendererId: CODEX_ASYNC_QUESTION_RENDERER_ID,
       title: truncateCodePoints(
@@ -93,7 +93,7 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
     });
     if (result.outcome !== "submitted") return;
     const response = asyncQuestionResponseSchema.parse(result.value);
-    await bb.sdk.threads.send({
+    await sandy.sdk.threads.send({
       threadId,
       mode: "auto",
       input: [
@@ -106,12 +106,12 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
     });
   }
 
-  bb.events.on("experimental_thread.events", ({ thread }) => {
+  sandy.events.on("experimental_thread.events", ({ thread }) => {
     if (thread.providerId !== CODEX_PROVIDER_ID) return;
     enqueue(thread.id, async () => {
       for (const state of await readNewQuestions(thread.id)) {
         void ask(thread.id, state).catch((error: unknown) => {
-          bb.log.warn(
+          sandy.log.warn(
             `async question handling failed for thread ${thread.id}: ${errorMessage(error)}`,
           );
         });
@@ -119,7 +119,7 @@ export function registerAsyncQuestions(bb: BbPluginApi): void {
     });
   });
 
-  bb.events.on("thread.deleted", ({ thread }) => {
-    void bb.storage.kv.delete(cursorKey(thread.id));
+  sandy.events.on("thread.deleted", ({ thread }) => {
+    void sandy.storage.kv.delete(cursorKey(thread.id));
   });
 }

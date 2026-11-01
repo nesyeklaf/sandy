@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { JsonObject, ProviderRecoveryKind } from "@bb/domain";
+import type { JsonObject, ProviderRecoveryKind } from "@sandy/domain";
 import { createAgentRuntime } from "../runtime.js";
 import type {
   AgentRuntime,
@@ -94,7 +94,7 @@ export function createScriptedEchoLaunch(
   const pluginId = options.pluginId ?? "provider-scripted-echo";
   return {
     pluginId,
-    dataDir: mkdtempSync(join(tmpdir(), `bb-${pluginId}-data-`)),
+    dataDir: mkdtempSync(join(tmpdir(), `sandy-${pluginId}-data-`)),
     source: {
       kind: "artifact",
       digest: options.digest ?? "scripted-echo",
@@ -205,7 +205,7 @@ export interface ScriptedEchoProcessLog {
 
 export function createScriptedEchoProcessLog(): ScriptedEchoProcessLog {
   const path = join(
-    mkdtempSync(join(tmpdir(), "bb-scripted-echo-process-log-")),
+    mkdtempSync(join(tmpdir(), "sandy-scripted-echo-process-log-")),
     "process.log",
   );
   return {
@@ -237,7 +237,7 @@ export interface ScriptedEchoRequestRecord {
 
 export function createScriptedEchoRequestRecord(): ScriptedEchoRequestRecord {
   const path = join(
-    mkdtempSync(join(tmpdir(), "bb-scripted-echo-record-")),
+    mkdtempSync(join(tmpdir(), "sandy-scripted-echo-record-")),
     "requests.jsonl",
   );
   const read = (): RecordedBridgeRequest[] => {

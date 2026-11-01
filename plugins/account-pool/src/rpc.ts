@@ -1,4 +1,4 @@
-import { defineRpcContract, type PluginRpcHandlers } from "@get-bb/plugin-sdk";
+import { defineRpcContract, type PluginRpcHandlers } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   accountAddInputSchema,

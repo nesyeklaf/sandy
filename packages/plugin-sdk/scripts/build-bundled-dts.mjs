@@ -1,10 +1,10 @@
-// Generates the self-contained `.d.ts` bundles that `bb plugin new` ships into
-// a scaffolded plugin's `types/` directory, so authors get real BbPluginApi /
-// @get-bb/plugin-sdk/app types WITHOUT the (unpublished) @bb/* workspace packages
+// Generates the self-contained `.d.ts` bundles that `sandy plugin new` ships into
+// a scaffolded plugin's `types/` directory, so authors get real SandyPluginApi /
+// @sandy-sdk/plugin-sdk/app types WITHOUT the (unpublished) @sandy/* workspace packages
 // on disk.
 //
-// rollup-plugin-dts flattens @get-bb/plugin-sdk's own contracts plus every @bb/*
-// type it references (BbSdk, PromptInput, ThreadResponse, …) into the root
+// rollup-plugin-dts flattens @sandy-sdk/plugin-sdk's own contracts plus every @sandy/*
+// type it references (SandySdk, PromptInput, ThreadResponse, …) into the root
 // file. Testing subpaths reuse that already-portable root declaration through
 // the package's own public name instead of flattening the same contracts a
 // second time. Genuine npm packages remain external imports and resolve from
@@ -12,7 +12,7 @@
 //
 // The output, bundled-types/*.d.ts, is NOT committed. It is the package's
 // published `types` surface and a build output of the turbo task
-// `@get-bb/plugin-sdk#build:types`; @bb/templates reads it at scaffold-embed
+// `@sandy-sdk/plugin-sdk#build:types`; @sandy/templates reads it at scaffold-embed
 // time by file path (no package edge, to avoid a dependency cycle), and the
 // in-repo plugins typecheck against it. Unchanged files are not rewritten so
 // mtimes stay stable for watchers.
@@ -65,7 +65,7 @@ const outputs = Object.fromEntries(
 // from the scaffold's devDependencies rather than being inlined.
 const EXTERNAL = [
   /^@tanstack\/react-query($|\/)/,
-  /^@get-bb\/plugin-sdk$/,
+  /^@sandy-sdk\/plugin-sdk$/,
   /^node:/,
   /^@testing-library\/react($|\/)/,
   /^better-sqlite3/,
@@ -75,9 +75,9 @@ const EXTERNAL = [
   /^zod($|\/)/,
 ];
 
-/** Resolve any `@bb/<pkg>[/<sub>]` to its `source` export target on disk. */
-function resolveBbSource(id) {
-  const match = /^@bb\/([^/]+)(\/.*)?$/.exec(id);
+/** Resolve any `@sandy/<pkg>[/<sub>]` to its `source` export target on disk. */
+function resolveSandySource(id) {
+  const match = /^@sandy\/([^/]+)(\/.*)?$/.exec(id);
   if (!match) return null;
   const pkgDir = path.join(pkgsDir, match[1]);
   const manifestPath = path.join(pkgDir, "package.json");
@@ -93,7 +93,7 @@ function resolveBbSource(id) {
 }
 
 const inlineWorkspace = {
-  name: "inline-bb-workspace",
+  name: "inline-sandy-workspace",
   resolveId(id, importer) {
     // Redirect server-contract's non-portable modules to their loose stubs,
     // whether imported by bare specifier or by a sibling's relative path.
@@ -107,7 +107,7 @@ const inlineWorkspace = {
     }
     const stub = STUBBED_MODULES.get(id);
     if (stub) return stub;
-    return resolveBbSource(id);
+    return resolveSandySource(id);
   },
 };
 
@@ -138,12 +138,12 @@ async function bundle(input) {
 }
 
 const HEADER = [
-  "// Portable type declarations for `@get-bb/plugin-sdk`. Unpublished BB",
+  "// Portable type declarations for `@sandy-sdk/plugin-sdk`. Unpublished SANDY",
   "// workspace contracts are flattened; public subpaths may reuse the",
-  "// package root without requiring any other @bb/* package.",
+  "// package root without requiring any other @sandy/* package.",
   "//",
-  "// Confused by the API, or need a symbol that isn't here? Clone the BB repo",
-  "// and read the real source: https://github.com/get-bb/bb",
+  "// Confused by the API, or need a symbol that isn't here? Clone the SANDY repo",
+  "// and read the real source: https://github.com/nesyeklaf/sandy",
 ].join("\n");
 
 function generateBundle(entry) {

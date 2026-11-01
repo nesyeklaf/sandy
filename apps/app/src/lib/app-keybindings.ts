@@ -1,5 +1,5 @@
-import type { AppCommandContext, AppKeybinding, AppShortcut } from "@bb/domain";
-import { isMacKeyboardPlatform } from "@bb/domain";
+import type { AppCommandContext, AppKeybinding, AppShortcut } from "@sandy/domain";
+import { isMacKeyboardPlatform } from "@sandy/domain";
 
 export interface AppShortcutPresentation {
   ariaKeyshortcuts: string;

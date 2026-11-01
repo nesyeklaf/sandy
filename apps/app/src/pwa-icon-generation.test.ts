@@ -10,7 +10,7 @@ const execFileAsync = promisify(execFile);
 
 it("checks generated icons during generation and rejects stale assets", async () => {
   const appDir = resolve(import.meta.dirname, "..");
-  const fixture = await mkdtemp(join(tmpdir(), "bb-pwa-icons-"));
+  const fixture = await mkdtemp(join(tmpdir(), "sandy-pwa-icons-"));
   try {
     await mkdir(join(fixture, "scripts"));
     await cp(join(appDir, "public"), join(fixture, "public"), {
@@ -18,6 +18,10 @@ it("checks generated icons during generation and rejects stale assets", async ()
     });
     const generator = join(fixture, "scripts/generate-pwa-icons.mjs");
     await cp(join(appDir, "scripts/generate-pwa-icons.mjs"), generator);
+    await cp(
+      join(appDir, "scripts/brand-marks.mjs"),
+      join(fixture, "scripts/brand-marks.mjs"),
+    );
     await symlink(
       join(appDir, "node_modules"),
       join(fixture, "node_modules"),

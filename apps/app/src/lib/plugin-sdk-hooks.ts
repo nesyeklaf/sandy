@@ -1,8 +1,8 @@
-import { experimental_PluginRpcCallError } from "@get-bb/plugin-sdk";
+import { experimental_PluginRpcCallError } from "@sandy-sdk/plugin-sdk";
 import {
   createRpcQueryHooks,
   type RpcQueryHost,
-} from "@get-bb/plugin-sdk/internal/rpc-query-host";
+} from "@sandy-sdk/plugin-sdk/internal/rpc-query-host";
 import { subscribeComposerSubmitted } from "./composer-submissions";
 import {
   useCallback,
@@ -19,7 +19,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import type {
-  BbContext,
+  SandyContext,
   ComposerView,
   PluginComposerApi,
   PluginComposerScope,
@@ -36,7 +36,7 @@ import type {
   ExperimentalFixedTabTargetState,
   ExperimentalPluginFixedTabReference,
   JsonValue,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   PluginContext,
   PluginSlotOwnershipContext,
@@ -53,7 +53,7 @@ import {
   subscribeComposerEditorBridges,
   useComposerEditorBridge,
 } from "@/lib/composer-editor-registry";
-import { createComposerHandleBinding } from "@get-bb/plugin-sdk/internal/composer-handle";
+import { createComposerHandleBinding } from "@sandy-sdk/plugin-sdk/internal/composer-handle";
 import {
   composerHandleController,
   listedComposerHandles,
@@ -70,7 +70,7 @@ import {
   type PromptDraftController,
   type PromptDraftScope,
 } from "@/hooks/usePromptDraftStorage";
-import { emptyPromptDraftState, isPromptDraftEmpty } from "@bb/client-core";
+import { emptyPromptDraftState, isPromptDraftEmpty } from "@sandy/client-core";
 import { useRouteState } from "@/hooks/useRouteState";
 import { useServerConnectionState } from "@/hooks/useServerConnectionState";
 import { wsManager } from "@/lib/ws";
@@ -88,7 +88,7 @@ import {
 export {
   isAutomationEditRoutePath,
   useSdk,
-  useBbNavigate,
+  useSandyNavigate,
   usePluginCanOpenFileExternally,
 } from "./plugin-navigation-hooks";
 type FetchLike = (
@@ -327,7 +327,7 @@ export function useEnvironmentProviders(): PluginEnvironmentProvidersState {
   );
 }
 
-export function useBbContext(): BbContext {
+export function useSandyContext(): SandyContext {
   const { projectId, threadId } = useRouteState();
   return useMemo(
     () => ({ projectId: projectId ?? null, threadId: threadId ?? null }),
@@ -349,7 +349,7 @@ function useExperimentalAppPanel(): ExperimentalPanelController {
 
 function useExperimentalFixedTabTarget<Target extends JsonValue>(
   tab:
-    | import("@get-bb/plugin-sdk").ExperimentalTabTargetReference<Target>
+    | import("@sandy-sdk/plugin-sdk").ExperimentalTabTargetReference<Target>
     | ExperimentalPluginFixedTabReference<Target>,
 ): ExperimentalFixedTabTargetState<Target> | null {
   const pluginId = usePluginId();

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { PluginProviderOptionsContext } from "@get-bb/plugin-sdk";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import type { PluginProviderOptionsContext } from "@sandy-sdk/plugin-sdk";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import claudeCodePlugin from "../server.js";
 
 function loadClaudeCodePlugin() {
   const host = createFakePluginHost({ pluginId: "provider-claude-code" });
-  claudeCodePlugin(host.bb);
+  claudeCodePlugin(host.sandy);
   const declaration = host.harness.registrations.providerRegistrations.find(
     (entry) => entry.id === "claude-code",
   );

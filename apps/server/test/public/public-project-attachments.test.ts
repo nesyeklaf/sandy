@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { uploadedPromptAttachmentSchema } from "@bb/server-contract";
+import { uploadedPromptAttachmentSchema } from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { seedHostSession, seedProjectWithSource } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";
@@ -40,7 +40,7 @@ describe("public project attachments", () => {
         {
           bytes: new Uint8Array([0, 255, 1, 128, 13, 10]),
           filename: "payload.bin",
-          mimeType: "application/x-bb-binary",
+          mimeType: "application/x-sandy-binary",
           type: "localFile" as const,
         },
       ];

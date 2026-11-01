@@ -2,12 +2,12 @@ import { useCallback } from "react";
 import type {
   PluginMessageDirectiveProps,
   ExperimentalThreadActionTabProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   experimental_useAppPanel,
   experimental_useRpcQuery,
-  useBbNavigate,
-} from "@get-bb/plugin-sdk/app";
+  useSandyNavigate,
+} from "@sandy-sdk/plugin-sdk/app";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,7 +65,7 @@ function OpenInTasksButton({
   label: string;
   subPath?: string;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   return (
     <Button
       className="relative z-10 size-8 shrink-0"
@@ -118,7 +118,7 @@ function embedAriaLabel(task: Task): string {
 }
 
 export function TaskDirectiveCard({ attributes }: PluginMessageDirectiveProps) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const panel = experimental_useAppPanel();
   const taskKey = attributes.key?.trim() ?? "";
   const fallbackTitle = attributes.title?.trim() || null;

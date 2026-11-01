@@ -5,15 +5,15 @@ import { createStore, Provider } from "jotai";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
-  BbNavigate,
-  PluginBrowserBbSdk,
+  SandyNavigate,
+  PluginBrowserSandySdk,
   PluginThreadAction,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   installTestPluginRuntime,
   renderSlot,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { makePluginProject, sdkResult } from "../model/fixtures.js";
 import {
   preferenceValueAtom,
@@ -21,8 +21,8 @@ import {
 } from "../preferences/preferences-sync.js";
 
 installTestPluginRuntime();
-const { experimental_useAppPanel, useBbNavigate, useSdk } =
-  await import("@get-bb/plugin-sdk/app");
+const { experimental_useAppPanel, useSandyNavigate, useSdk } =
+  await import("@sandy-sdk/plugin-sdk/app");
 const { moveThreadAction } = await import("./moveThreadAction.js");
 
 afterEach(() => {
@@ -63,8 +63,8 @@ function Probe({ collected }: { collected: { current: Collected | null } }) {
   const useData = moveThreadAction.useData;
   if (useData === undefined) throw new Error("Move reads its destinations");
   const data = useData({ threadIds: [] });
-  const sdk: PluginBrowserBbSdk = useSdk();
-  const navigate: BbNavigate = useBbNavigate();
+  const sdk: PluginBrowserSandySdk = useSdk();
+  const navigate: SandyNavigate = useSandyNavigate();
   const experimental_panel = experimental_useAppPanel();
   collected.current = {
     item: (thread) =>

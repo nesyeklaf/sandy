@@ -2,10 +2,10 @@ import { PluginBrandIcon } from "@/components/ui/plugin-icon";
 import { useCallback, useEffect, useState } from "react";
 import {
   definePluginApp,
-  useBbNavigate,
+  useSandyNavigate,
   useSdk,
-  type PluginBrowserBbSdk,
-} from "@get-bb/plugin-sdk/app";
+  type PluginBrowserSandySdk,
+} from "@sandy-sdk/plugin-sdk/app";
 import { copyPluginSurfaceAgentReference } from "./src/agent-reference";
 import { firstPartyPluginId } from "./src/plugin-icons";
 import { ProductMap } from "./src/product-map";
@@ -18,7 +18,7 @@ export interface PluginReference {
 }
 
 export async function loadPluginReferences(
-  sdk: Pick<PluginBrowserBbSdk, "plugins">,
+  sdk: Pick<PluginBrowserSandySdk, "plugins">,
   signal: AbortSignal,
 ): Promise<ReadonlyMap<string, PluginReference>> {
   const [installed, catalog] = await Promise.all([
@@ -67,7 +67,7 @@ function usePluginReferences(): ReadonlyMap<string, PluginReference> {
 
 function PluginApiMapPage({ subPath }: { subPath: string }) {
   const plugins = usePluginReferences();
-  const bbNavigate = useBbNavigate();
+  const sandyNavigate = useSandyNavigate();
   const pluginPageHref = useCallback(
     (displayName: string) => {
       const id = firstPartyPluginId(displayName);
@@ -94,12 +94,12 @@ function PluginApiMapPage({ subPath }: { subPath: string }) {
   );
   const onSlideChange = useCallback(
     (slideId: string) => {
-      bbNavigate.toPluginPanel("plugin-api", {
+      sandyNavigate.toPluginPanel("plugin-api", {
         subPath: slideId,
         replace: true,
       });
     },
-    [bbNavigate],
+    [sandyNavigate],
   );
   return (
     <div className="@container/guide-page flex h-full min-h-0 min-w-0 flex-1">

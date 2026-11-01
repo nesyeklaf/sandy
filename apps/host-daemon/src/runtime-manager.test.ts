@@ -3,16 +3,16 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import type { AgentRuntime, AgentRuntimeOptions } from "@bb/agent-runtime";
-import { type ThreadEvent, threadScope, turnScope } from "@bb/domain";
-import type { HostDaemonInjectedSkillSource } from "@bb/host-daemon-contract";
-import type { HostWatcher } from "@bb/host-watcher";
+import type { AgentRuntime, AgentRuntimeOptions } from "@sandy/agent-runtime";
+import { type ThreadEvent, threadScope, turnScope } from "@sandy/domain";
+import type { HostDaemonInjectedSkillSource } from "@sandy/host-daemon-contract";
+import type { HostWatcher } from "@sandy/host-watcher";
 import {
   provisionWorkspace,
   type HostWorkspace,
   type ProvisionWorkspaceArgs,
-} from "@bb/host-workspace";
-import { createDeferredPromise, initRepo, makeTempDir } from "@bb/test-helpers";
+} from "@sandy/host-workspace";
+import { createDeferredPromise, initRepo, makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   RuntimeManager,
@@ -405,7 +405,7 @@ describe("RuntimeManager", () => {
   });
 
   it("passes staged injected skill roots to created runtimes", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -450,7 +450,7 @@ describe("RuntimeManager", () => {
   });
 
   it("loads a thread command's skill catalog while that command retains an idle runtime", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-command-skills-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-command-skills-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -495,7 +495,7 @@ describe("RuntimeManager", () => {
   });
 
   it("does not reuse an idle runtime with a stale skill catalog hash", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-stale-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-stale-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -549,7 +549,7 @@ describe("RuntimeManager", () => {
   it.each(["catalog", "shell"] as const)(
     "retains one runtime when concurrent ensures overlap a %s replacement",
     async (invalidation) => {
-      const dataDir = await makeTempDir("bb-runtime-replacement-");
+      const dataDir = await makeTempDir("sandy-runtime-replacement-");
       const source = await writeInjectedSkillSource({
         dataDir,
         name: "race-check",
@@ -615,7 +615,7 @@ describe("RuntimeManager", () => {
   );
 
   it("passes current roots through a busy runtime and replaces it once idle", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-defer-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-defer-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -676,7 +676,7 @@ describe("RuntimeManager", () => {
   });
 
   it("replaces an idle runtime that hosts the target thread and keeps the new staged catalog", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-idle-host-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-idle-host-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -726,7 +726,7 @@ describe("RuntimeManager", () => {
   });
 
   it("keeps the staged catalog of an environment still being created while another environment swaps catalogs", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-pending-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-pending-");
     const sourceA = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -794,7 +794,7 @@ describe("RuntimeManager", () => {
   });
 
   it("reuses a busy runtime for a target thread it does not host yet", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-unhosted-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-unhosted-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -860,7 +860,7 @@ describe("RuntimeManager", () => {
   });
 
   it("reuses a runtime pinned busy by a terminal when a thread brings skill sources", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-terminal-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-terminal-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -895,7 +895,7 @@ describe("RuntimeManager", () => {
   });
 
   it("rejects a stale skill catalog on a busy runtime when no thread targets it", async () => {
-    const dataDir = await makeTempDir("bb-runtime-manager-skills-conflict-");
+    const dataDir = await makeTempDir("sandy-runtime-manager-skills-conflict-");
     const source = await writeInjectedSkillSource({
       dataDir,
       name: "release-notes",
@@ -935,11 +935,11 @@ describe("RuntimeManager", () => {
 
   it("passes unmanaged linked worktree git metadata roots to created runtimes", async () => {
     const repoPath = await initRepo(
-      await makeTempDir("bb-runtime-manager-repo-"),
+      await makeTempDir("sandy-runtime-manager-repo-"),
     );
-    const parentDir = await makeTempDir("bb-runtime-manager-unmanaged-wt-");
+    const parentDir = await makeTempDir("sandy-runtime-manager-unmanaged-wt-");
     const worktreePath = path.join(parentDir, "env");
-    await runGit(["worktree", "add", "-B", "bb/unmanaged", worktreePath], {
+    await runGit(["worktree", "add", "-B", "sandy/unmanaged", worktreePath], {
       cwd: repoPath,
     });
     const runtimeOptions: RuntimeOptionsRef = { current: null };
@@ -980,7 +980,7 @@ describe("RuntimeManager", () => {
     const runtimeOptions: RuntimeOptionsRef = { current: null };
     const manager = new RuntimeManager({
       provisionWorkspace,
-      threadStorageRootPath: "/tmp/bb-thread-storage",
+      threadStorageRootPath: "/tmp/sandy-thread-storage",
       createRuntime: (options) => {
         runtimeOptions.current = options;
         return createFakeRuntime();
@@ -993,19 +993,19 @@ describe("RuntimeManager", () => {
     });
 
     expect(runtimeOptions.current?.additionalWorkspaceWriteRoots).toEqual([
-      "/tmp/bb-thread-storage",
+      "/tmp/sandy-thread-storage",
     ]);
   });
 
   it("forwards the bridge record-mode directory to provider processes but not the shell env", async () => {
-    vi.stubEnv("BB_PROVIDER_BRIDGE_RECORD_DIR", "/tmp/provider-recordings/raw");
+    vi.stubEnv("SANDY_PROVIDER_BRIDGE_RECORD_DIR", "/tmp/provider-recordings/raw");
     const provisionWorkspace = createProvisionWorkspaceMock("/tmp/env-1");
     const createRuntime = vi.fn(() => createFakeRuntime());
     const manager = new RuntimeManager({
       provisionWorkspace,
       createRuntime,
       shellEnv: {
-        PATH: "/tmp/bb-bin:/usr/bin",
+        PATH: "/tmp/sandy-bin:/usr/bin",
       },
     });
 
@@ -1017,10 +1017,10 @@ describe("RuntimeManager", () => {
     expect(createRuntime).toHaveBeenCalledWith(
       expect.objectContaining({
         env: {
-          PATH: "/tmp/bb-bin:/usr/bin",
-          BB_PROVIDER_BRIDGE_RECORD_DIR: "/tmp/provider-recordings/raw",
+          PATH: "/tmp/sandy-bin:/usr/bin",
+          SANDY_PROVIDER_BRIDGE_RECORD_DIR: "/tmp/provider-recordings/raw",
         },
-        shellEnv: { PATH: "/tmp/bb-bin:/usr/bin" },
+        shellEnv: { PATH: "/tmp/sandy-bin:/usr/bin" },
       }),
     );
   });
@@ -1055,8 +1055,8 @@ describe("RuntimeManager", () => {
       provisionWorkspace,
       createRuntime,
       shellEnv: {
-        PATH: "/tmp/bb-bin:/home/me/.local/bin:/usr/bin",
-        BB_SERVER_URL: "http://127.0.0.1:3334",
+        PATH: "/tmp/sandy-bin:/home/me/.local/bin:/usr/bin",
+        SANDY_SERVER_URL: "http://127.0.0.1:3334",
         OPENAI_API_KEY: "test-openai-key",
       },
     });
@@ -1069,11 +1069,11 @@ describe("RuntimeManager", () => {
     expect(createRuntime).toHaveBeenCalledWith(
       expect.objectContaining({
         env: {
-          PATH: "/tmp/bb-bin:/home/me/.local/bin:/usr/bin",
+          PATH: "/tmp/sandy-bin:/home/me/.local/bin:/usr/bin",
         },
         shellEnv: {
-          PATH: "/tmp/bb-bin:/home/me/.local/bin:/usr/bin",
-          BB_SERVER_URL: "http://127.0.0.1:3334",
+          PATH: "/tmp/sandy-bin:/home/me/.local/bin:/usr/bin",
+          SANDY_SERVER_URL: "http://127.0.0.1:3334",
           OPENAI_API_KEY: "test-openai-key",
         },
       }),
@@ -1081,7 +1081,7 @@ describe("RuntimeManager", () => {
   });
 
   it("recreates the provider maintenance runtime after base shell env changes", async () => {
-    const dataDir = await makeTempDir("bb-provider-maintenance-");
+    const dataDir = await makeTempDir("sandy-provider-maintenance-");
     const firstRuntime = createFakeRuntime();
     const secondRuntime = createFakeRuntime();
     const createRuntime = vi
@@ -1100,7 +1100,7 @@ describe("RuntimeManager", () => {
     ).resolves.toBe(firstRuntime);
     await manager.replaceBaseShellEnv({
       PATH: "/new/bin:/usr/bin",
-      BB_SERVER_URL: "http://127.0.0.1:3334",
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
     });
     await expect(
       manager.ensureProviderMaintenanceRuntime({ dataDir }),
@@ -1115,7 +1115,7 @@ describe("RuntimeManager", () => {
         },
         shellEnv: {
           PATH: "/new/bin:/usr/bin",
-          BB_SERVER_URL: "http://127.0.0.1:3334",
+          SANDY_SERVER_URL: "http://127.0.0.1:3334",
         },
       }),
     );
@@ -1124,7 +1124,7 @@ describe("RuntimeManager", () => {
   it("shuts down provider maintenance workers after the request becomes idle", async () => {
     vi.useFakeTimers();
     try {
-      const dataDir = await makeTempDir("bb-provider-maintenance-idle-");
+      const dataDir = await makeTempDir("sandy-provider-maintenance-idle-");
       const runtime = createFakeRuntime();
       const request = createDeferredPromise<void>();
       const requestStarted = createDeferredPromise<void>();
@@ -1156,7 +1156,7 @@ describe("RuntimeManager", () => {
   });
 
   it("retires a busy provider maintenance runtime after its requests finish when the shell env changes", async () => {
-    const dataDir = await makeTempDir("bb-provider-maintenance-retire-");
+    const dataDir = await makeTempDir("sandy-provider-maintenance-retire-");
     const firstRuntime = createFakeRuntime();
     const secondRuntime = createFakeRuntime();
     const createRuntime = vi
@@ -1199,7 +1199,7 @@ describe("RuntimeManager", () => {
   });
 
   it("shuts down a busy retired provider maintenance runtime when the manager shuts down", async () => {
-    const dataDir = await makeTempDir("bb-provider-maintenance-shutdown-");
+    const dataDir = await makeTempDir("sandy-provider-maintenance-shutdown-");
     const runtime = createFakeRuntime();
     const manager = new RuntimeManager({
       createRuntime: () => runtime,
@@ -1226,7 +1226,7 @@ describe("RuntimeManager", () => {
   });
 
   it("keeps runtimes when only fnm multishell PATH entries change", async () => {
-    const dataDir = await makeTempDir("bb-provider-maintenance-fnm-");
+    const dataDir = await makeTempDir("sandy-provider-maintenance-fnm-");
     const runtime = createFakeRuntime();
     const createRuntime = vi.fn(() => runtime);
     const manager = new RuntimeManager({
@@ -1254,7 +1254,7 @@ describe("RuntimeManager", () => {
   });
 
   it("does not let stale provider maintenance creation replace a newer runtime", async () => {
-    const dataDir = await makeTempDir("bb-provider-maintenance-race-");
+    const dataDir = await makeTempDir("sandy-provider-maintenance-race-");
     const staleRuntime = createFakeRuntime();
     const currentRuntime = createFakeRuntime();
     const staleCreation = createDeferredPromise<AgentRuntime>();
@@ -1697,7 +1697,7 @@ describe("RuntimeManager", () => {
 
   it("leaves processes alone when an environment is only forgotten", async () => {
     const directory = await fs.realpath(
-      await fs.mkdtemp(path.join(os.tmpdir(), "bb-forget-env-")),
+      await fs.mkdtemp(path.join(os.tmpdir(), "sandy-forget-env-")),
     );
     const manager = new RuntimeManager({
       provisionWorkspace: createProvisionWorkspaceMock(directory),

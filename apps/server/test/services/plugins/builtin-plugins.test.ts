@@ -24,10 +24,10 @@ import {
   setPluginSettingsValues,
   upsertPluginSchedule,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
-import type { Logger } from "@bb/logger";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   createPluginService,
@@ -41,7 +41,7 @@ import {
   OFFICIAL_PLUGINS,
   resolveBuiltinPluginRootPath,
 } from "../../../src/services/plugins/builtin-registry.js";
-import { copyPluginRuntime } from "@bb/plugin-build";
+import { copyPluginRuntime } from "@sandy/plugin-build";
 import { testLogger } from "../../helpers/test-app.js";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
@@ -57,7 +57,7 @@ const fixtureRoot = resolve(
   "..",
   "fixtures",
   "plugins",
-  "bb-plugin-builtin-fixture",
+  "sandy-plugin-builtin-fixture",
 );
 const globals = globalThis as Record<string, unknown>;
 
@@ -87,10 +87,10 @@ async function writePackagedBuiltinSource(
       join(sourceRoot, "package.json"),
       JSON.stringify(
         {
-          name: `bb-plugin-${name}`,
+          name: `sandy-plugin-${name}`,
           version: "0.1.0",
           type: "module",
-          bb: {
+          sandy: {
             name,
             description: `${name} builtin plugin fixture.`,
             branding: {
@@ -262,7 +262,7 @@ describe("builtin plugin reconciliation", () => {
     delete globals.__packagedBuiltinLoads;
     delete globals.__hotBuiltinServerVersion;
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-builtin-plugins-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-builtin-plugins-"));
   });
 
   it("keeps official plugins bundled but out of the auto-install builtins", () => {
@@ -281,14 +281,14 @@ describe("builtin plugin reconciliation", () => {
     expect(OFFICIAL_PLUGINS.every((plugin) => !plugin.autoInstall)).toBe(true);
   });
 
-  it("enables the account pooler only when a parent bb server pool is present", () => {
+  it("enables the account pooler only when a parent sandy server pool is present", () => {
     expect(accountPoolDefaultEnabled({})).toBe(false);
-    expect(accountPoolDefaultEnabled({ BB_ACCOUNT_POOL_PARENT_URL: "" })).toBe(
+    expect(accountPoolDefaultEnabled({ SANDY_ACCOUNT_POOL_PARENT_URL: "" })).toBe(
       false,
     );
     expect(
       accountPoolDefaultEnabled({
-        BB_ACCOUNT_POOL_PARENT_URL:
+        SANDY_ACCOUNT_POOL_PARENT_URL:
           "http://127.0.0.1:38886/api/v1/plugins/account-pool/http",
       }),
     ).toBe(true);
@@ -330,7 +330,7 @@ describe("builtin plugin reconciliation", () => {
     );
   });
 
-  it("removes a builtin and its data once bb no longer bundles it", async () => {
+  it("removes a builtin and its data once sandy no longer bundles it", async () => {
     const dataDir = join(workDir, "data");
     const secretsDir = join(dataDir, "plugins", "builtin-fixture", "secrets");
     service = createService({ db, dataDir });
@@ -413,7 +413,7 @@ describe("builtin plugin reconciliation", () => {
     const legacyRows = [
       ["legacy-path", `path:${fixtureRoot}`, 1, 101],
       ["legacy-builtin", "builtin:fixture", 0, 102],
-      ["legacy-git", `git:github.com/acme/bb-plugin-legacy@${sha}`, 0, 104],
+      ["legacy-git", `git:github.com/acme/sandy-plugin-legacy@${sha}`, 0, 104],
     ] as const;
     const insert = db.$client.prepare(
       `INSERT INTO plugins
@@ -446,7 +446,7 @@ describe("builtin plugin reconciliation", () => {
       enabled: false,
       removedAt: 104,
       sourceKind: "git",
-      sourceGitUrl: "https://github.com/acme/bb-plugin-legacy",
+      sourceGitUrl: "https://github.com/acme/sandy-plugin-legacy",
       sourceGitRequestedRef: sha,
       gitResolvedCommit: sha,
     });
@@ -473,7 +473,7 @@ describe("builtin plugin reconciliation", () => {
       .run(`path:${fixtureRoot}`, legacyRoot);
     setAiServiceSelection(db, "thread-title", {
       mode: "service",
-      pluginId: "bb-ai",
+      pluginId: "sandy-ai",
       serviceId: "cloud",
     });
     setAiServiceSelection(db, "commit-message", {
@@ -485,16 +485,16 @@ describe("builtin plugin reconciliation", () => {
     setPluginKvValue(db, "push-notifications", "subscription:a", "{}");
     setPluginKvValue(db, "push-notifications", "subscription:b", "{}");
     setPluginKvValue(db, "push-notifications", "last-send-outcome", "{}");
-    setPluginKvValue(db, "bb-account", "credential", "{}");
-    setPluginKvValue(db, "bb-account", "profile", "{}");
-    setPluginKvValue(db, "bb-account", "revision", "3");
-    setPluginSettingsValues(db, "bb-account", { server: "x" });
+    setPluginKvValue(db, "sandy-account", "credential", "{}");
+    setPluginKvValue(db, "sandy-account", "profile", "{}");
+    setPluginKvValue(db, "sandy-account", "revision", "3");
+    setPluginSettingsValues(db, "sandy-account", { server: "x" });
     setPluginKvValue(db, "connect", "machine-credential", "{}");
     setPluginSettingsValues(db, "connect", { enabled: "true" });
-    setPluginKvValue(db, "bb--connect-next", "gate", "{}");
-    setPluginSettingsValues(db, "bb--connect-next", { enabled: "true" });
-    setPluginKvValue(db, "bb-ai", "state", "{}");
-    setPluginSettingsValues(db, "bb-ai", { enabled: "true" });
+    setPluginKvValue(db, "sandy--connect-next", "gate", "{}");
+    setPluginSettingsValues(db, "sandy--connect-next", { enabled: "true" });
+    setPluginKvValue(db, "sandy-ai", "state", "{}");
+    setPluginSettingsValues(db, "sandy-ai", { enabled: "true" });
     setPluginKvValue(db, "environment-modal-sandbox", "state", "{}");
     setPluginSettingsValues(db, "environment-modal-sandbox", { token: "x" });
     setPluginKvValue(db, "local-tool", "keep", "1");
@@ -514,14 +514,14 @@ describe("builtin plugin reconciliation", () => {
     expect(listPluginKvKeys(db, "push-notifications")).toEqual([
       "last-send-outcome",
     ]);
-    expect(listPluginKvKeys(db, "bb-account")).toEqual([]);
-    expect(getPluginSettingsValues(db, "bb-account")).toEqual({});
+    expect(listPluginKvKeys(db, "sandy-account")).toEqual([]);
+    expect(getPluginSettingsValues(db, "sandy-account")).toEqual({});
     expect(listPluginKvKeys(db, "connect")).toEqual([]);
     expect(getPluginSettingsValues(db, "connect")).toEqual({});
-    expect(listPluginKvKeys(db, "bb--connect-next")).toEqual([]);
-    expect(getPluginSettingsValues(db, "bb--connect-next")).toEqual({});
-    expect(listPluginKvKeys(db, "bb-ai")).toEqual([]);
-    expect(getPluginSettingsValues(db, "bb-ai")).toEqual({});
+    expect(listPluginKvKeys(db, "sandy--connect-next")).toEqual([]);
+    expect(getPluginSettingsValues(db, "sandy--connect-next")).toEqual({});
+    expect(listPluginKvKeys(db, "sandy-ai")).toEqual([]);
+    expect(getPluginSettingsValues(db, "sandy-ai")).toEqual({});
     expect(listPluginKvKeys(db, "environment-modal-sandbox")).toEqual([]);
     expect(getPluginSettingsValues(db, "environment-modal-sandbox")).toEqual(
       {},
@@ -532,11 +532,11 @@ describe("builtin plugin reconciliation", () => {
     });
     expect(listPluginKvKeys(db, "local-tool")).toEqual(["keep"]);
 
-    setPluginKvValue(db, "bb-account", "credential", '{"again":true}');
+    setPluginKvValue(db, "sandy-account", "credential", '{"again":true}');
     await service.stop();
     service = createService({ db, dataDir: join(workDir, "data") });
     await service.start();
-    expect(listPluginKvKeys(db, "bb-account")).toEqual(["credential"]);
+    expect(listPluginKvKeys(db, "sandy-account")).toEqual(["credential"]);
   });
 
   it("removes installed plugins that came from an npm source and keeps the others", async () => {
@@ -547,7 +547,7 @@ describe("builtin plugin reconciliation", () => {
          (id, source, root_dir, version, enabled, installed_at, updated_at)
          VALUES (?, ?, ?, '1.0.0', 1, 10, 20)`,
       )
-      .run("from-npm", "npm:bb-plugin-from-npm@1.0.0", legacyRoot);
+      .run("from-npm", "npm:sandy-plugin-from-npm@1.0.0", legacyRoot);
     db.$client
       .prepare(
         `INSERT INTO plugins
@@ -561,7 +561,7 @@ describe("builtin plugin reconciliation", () => {
          (id, source, root_dir, version, enabled, installed_at, updated_at, removed_at)
          VALUES (?, ?, ?, '1.0.0', 0, 10, 20, 30)`,
       )
-      .run("removed-npm", "npm:bb-plugin-removed@1.0.0", legacyRoot);
+      .run("removed-npm", "npm:sandy-plugin-removed@1.0.0", legacyRoot);
     setPluginKvValue(db, "removed-npm", "state", "1");
     setPluginKvValue(db, "from-npm", "state", "1");
     setPluginSettingsValues(db, "from-npm", { mode: "fast" });
@@ -729,7 +729,7 @@ describe("builtin plugin reconciliation", () => {
   });
 
   it.each([
-    ["provider-usage", "bb--provider-usage"],
+    ["provider-usage", "sandy--provider-usage"],
     ["provider-retry", "provider-retry"],
   ])(
     "runs the real %s builtin on a fresh database",
@@ -792,7 +792,7 @@ describe("builtin plugin reconciliation", () => {
   });
 
   it("refreshes the builtin row when the bundled package version changes", async () => {
-    const mutableRoot = join(workDir, "bb-plugin-builtin-fixture");
+    const mutableRoot = join(workDir, "sandy-plugin-builtin-fixture");
     await cp(fixtureRoot, mutableRoot, { recursive: true });
     service = createService({
       db,
@@ -805,10 +805,10 @@ describe("builtin plugin reconciliation", () => {
     await writeFile(
       join(mutableRoot, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-builtin-fixture",
+        name: "sandy-plugin-builtin-fixture",
         version: "0.2.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Builtin fixture",
           description: "Builtin plugin fixture.",
           branding: { icon: "Zap" },
@@ -857,15 +857,15 @@ describe("builtin plugin reconciliation", () => {
   });
 
   it("hot-reloads a source-layout builtin server instead of a compatible dist artifact", async () => {
-    const mutableRoot = join(workDir, "bb-plugin-hot-server-builtin");
+    const mutableRoot = join(workDir, "sandy-plugin-hot-server-builtin");
     await mkdir(join(mutableRoot, "dist"), { recursive: true });
     await writeFile(
       join(mutableRoot, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-hot-server-builtin",
+        name: "sandy-plugin-hot-server-builtin",
         version: "0.1.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Hot server builtin",
           description: "Hot server builtin plugin fixture.",
           branding: { icon: "Zap" },
@@ -913,15 +913,15 @@ describe("builtin plugin reconciliation", () => {
   }, 50_000);
 
   it("rebuilds a source-layout builtin app changed while the server was stopped", async () => {
-    const mutableRoot = join(workDir, "bb-plugin-stale-app-builtin");
+    const mutableRoot = join(workDir, "sandy-plugin-stale-app-builtin");
     await mkdir(mutableRoot, { recursive: true });
     await writeFile(
       join(mutableRoot, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-stale-app-builtin",
+        name: "sandy-plugin-stale-app-builtin",
         version: "0.1.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Stale app builtin",
           description: "Stale app builtin plugin fixture.",
           branding: { icon: "Zap" },
@@ -978,15 +978,15 @@ describe("builtin plugin reconciliation", () => {
   }, 30_000);
 
   it("surfaces builtin app build failures in status until the next successful build", async () => {
-    const mutableRoot = join(workDir, "bb-plugin-hot-app-builtin");
+    const mutableRoot = join(workDir, "sandy-plugin-hot-app-builtin");
     await mkdir(mutableRoot, { recursive: true });
     await writeFile(
       join(mutableRoot, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-hot-app-builtin",
+        name: "sandy-plugin-hot-app-builtin",
         version: "0.1.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Hot app builtin",
           description: "Hot app builtin plugin fixture.",
           branding: { icon: "Zap" },
@@ -1122,7 +1122,7 @@ describe("builtin plugin reconciliation", () => {
         version: "0.1.0",
         enabled: true,
         status: "incompatible",
-        statusDetail: `server artifact for plugin "automations" was built for SDK major ${incompatibleMajor}, running SDK major is ${PLUGIN_SDK_MAJOR}; rebuild the server artifact with this bb version`,
+        statusDetail: `server artifact for plugin "automations" was built for SDK major ${incompatibleMajor}, running SDK major is ${PLUGIN_SDK_MAJOR}; rebuild the server artifact with this sandy version`,
       },
     ]);
     expect(packagedLoadCount()).toBe(before);
@@ -1157,7 +1157,7 @@ describe("builtin plugin packaging", () => {
   let workDir: string;
 
   beforeEach(async () => {
-    workDir = await mkdtemp(join(tmpdir(), "bb-builtin-plugin-copy-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-builtin-plugin-copy-"));
   });
 
   afterEach(async () => {
@@ -1176,7 +1176,7 @@ describe("builtin plugin packaging", () => {
       await readFile(join(copiedRoot, "package.json"), "utf8"),
     );
     expect(packageJson).toMatchObject({
-      bb: {
+      sandy: {
         server: "./dist/server.js",
         app: "./dist/app.js",
         skills: ["skills"],

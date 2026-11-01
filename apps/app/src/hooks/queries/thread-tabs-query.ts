@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ThreadTabsResponse } from "@bb/server-contract";
+import type { ThreadTabsResponse } from "@sandy/server-contract";
 import { resolveFetchedThreadTabs } from "@/hooks/cache-owners/thread-tabs-cache-owner";
 import { sdk } from "@/lib/sdk";
 import { threadTabsQueryKey } from "./query-keys";

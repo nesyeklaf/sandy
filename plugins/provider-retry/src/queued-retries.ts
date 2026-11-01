@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
 export interface QueuedRetry {
   id: string;
@@ -7,10 +7,10 @@ export interface QueuedRetry {
 }
 
 export async function listQueuedRetries(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   threadId?: string,
 ): Promise<QueuedRetry[]> {
-  const rows = await bb.sdk.threads.queue.list(
+  const rows = await sandy.sdk.threads.queue.list(
     threadId === undefined ? {} : { threadId },
   );
   return rows
@@ -23,9 +23,9 @@ export async function listQueuedRetries(
 }
 
 export async function findQueuedRetry(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   threadId: string,
 ): Promise<QueuedRetry | null> {
-  const rows = await listQueuedRetries(bb, threadId);
+  const rows = await listQueuedRetries(sandy, threadId);
   return rows[0] ?? null;
 }

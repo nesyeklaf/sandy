@@ -1,4 +1,4 @@
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   BRANCH_LIST_LIMIT_MAX,
@@ -6,7 +6,7 @@ import {
   gitBranchOptionsSchema,
   gitCheckoutRefSchema,
   workspaceResolutionFailureSchema,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 
 export const gitObjectIdSchema = z.string().regex(/^[0-9a-f]{4,40}$/iu);
 

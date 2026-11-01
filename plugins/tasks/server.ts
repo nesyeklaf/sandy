@@ -1,4 +1,4 @@
-import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
+import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 import { createStore, registerTasksApi } from "./api";
@@ -22,18 +22,18 @@ function statusPayload() {
   return { name: TASKS_PLUGIN_NAME, version: TASKS_PLUGIN_VERSION };
 }
 
-export default async function plugin(bb: BbPluginApi) {
-  bb.log.info(`${TASKS_PLUGIN_NAME} ${TASKS_PLUGIN_VERSION} loaded`);
+export default async function plugin(sandy: SandyPluginApi) {
+  sandy.log.info(`${TASKS_PLUGIN_NAME} ${TASKS_PLUGIN_VERSION} loaded`);
 
-  const store = createStore(bb);
-  registerTasksApi(bb, store);
-  registerAttachments(bb, store.tasks);
-  registerTasksCli(bb, store, statusPayload());
-  registerDelegation(bb, store);
-  registerMentions(bb, store);
-  await registerLifecycle(bb, store);
+  const store = createStore(sandy);
+  registerTasksApi(sandy, store);
+  registerAttachments(sandy, store.tasks);
+  registerTasksCli(sandy, store, statusPayload());
+  registerDelegation(sandy, store);
+  registerMentions(sandy, store);
+  await registerLifecycle(sandy, store);
 
-  bb.rpc.register(tasksRpcContract, {
+  sandy.rpc.register(tasksRpcContract, {
     ping(): { ok: true; version: string } {
       return { ok: true, version: TASKS_PLUGIN_VERSION };
     },

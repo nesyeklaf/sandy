@@ -90,7 +90,7 @@ export const measureScrollGesture = async (
   { scroller, point, gesture, quietMs = 300 },
 ) => {
   await browser.evaluate(
-    "window.__bbperf.recordScroll(" + JSON.stringify(scroller) + ")",
+    "window.__sandyperf.recordScroll(" + JSON.stringify(scroller) + ")",
   );
   if (gesture.source === "touch")
     await browser.touchFling({
@@ -106,7 +106,7 @@ export const measureScrollGesture = async (
       source: gesture.source,
     });
   const recording = await browser.evaluate(
-    "window.__bbperf.stopScroll(" + quietMs + ")",
+    "window.__sandyperf.stopScroll(" + quietMs + ")",
   );
   const moved = Math.round(Math.abs(recording.endTop - recording.startTop));
   if (recording.firstScrollAt === null || recording.scrollCount < 2)

@@ -3,13 +3,13 @@ import {
   environmentStatusSchema,
   environmentStatusValues,
   type EnvironmentStatus,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { Command } from "commander";
-import type { CommitActionResponse } from "@bb/server-contract";
-import type { EnvironmentUpdateArgs } from "@bb/sdk";
+import type { CommitActionResponse } from "@sandy/server-contract";
+import type { EnvironmentUpdateArgs } from "@sandy/sdk";
 import { action } from "../action.js";
 import { runPluginCliCommand } from "../plugin-cli-proxy.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { resolveMachineHostId, resolveMachineTargetOption } from "./machine.js";
 import { outputJson, prependErrorContext } from "./helpers.js";
 
@@ -175,7 +175,7 @@ export function registerEnvironmentCommands(
     .action(
       action(
         async (id: string, opts: { json?: boolean; recover?: boolean }) => {
-          const result = await createCliBbSdk(
+          const result = await createCliSandySdk(
             getUrl(),
           ).environments.experimental_cleanup({
             environmentId: id,
@@ -210,7 +210,7 @@ export function registerEnvironmentCommands(
                 serverUrl: getUrl(),
                 target: machineTarget,
               });
-        const providers = await createCliBbSdk(
+        const providers = await createCliSandySdk(
           getUrl(),
         ).environments.listProviders({
           ...(opts.project === undefined ? {} : { projectId: opts.project }),
@@ -267,7 +267,7 @@ export function registerEnvironmentCommands(
       action(async (opts: EnvironmentListCommandOptions) => {
         const limit = parseNonNegativeIntegerOption(opts.limit, "--limit");
         const offset = parseNonNegativeIntegerOption(opts.offset, "--offset");
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const hostId =
           opts.host === undefined
             ? undefined
@@ -303,7 +303,7 @@ export function registerEnvironmentCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: { json?: boolean }) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const result = await sdk.environments.delete({ environmentId: id });
         if (outputJson(opts, result)) return;
         const environment = await sdk.environments.get({ environmentId: id });
@@ -319,7 +319,7 @@ export function registerEnvironmentCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: EnvironmentShowCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const env = await sdk.environments.get({ environmentId: id });
         if (outputJson(opts, env)) return;
         console.log(`Environment: ${env.id}`);
@@ -377,7 +377,7 @@ export function registerEnvironmentCommands(
         const includeFiles = opts.files === true || opts.directories !== true;
         const includeDirectories =
           opts.directories === true || opts.files !== true;
-        const result = await createCliBbSdk(getUrl()).environments.paths({
+        const result = await createCliSandySdk(getUrl()).environments.paths({
           environmentId: id,
           includeFiles: booleanQueryValue(includeFiles),
           includeDirectories: booleanQueryValue(includeDirectories),
@@ -395,14 +395,14 @@ export function registerEnvironmentCommands(
   for (const name of RETIRED_GIT_COMMANDS) {
     environment
       .command(name, { hidden: true })
-      .description(`Moved to bb git ${GIT_COMMAND_REPLACEMENTS[name]}`)
+      .description(`Moved to sandy git ${GIT_COMMAND_REPLACEMENTS[name]}`)
       .helpOption(false)
       .allowUnknownOption()
       .allowExcessArguments()
       .argument("[args...]")
       .action(async (args: string[]) => {
         process.stderr.write(
-          `bb environment ${name} moved to bb git ${GIT_COMMAND_REPLACEMENTS[name]}.\n`,
+          `sandy environment ${name} moved to sandy git ${GIT_COMMAND_REPLACEMENTS[name]}.\n`,
         );
         process.exit(
           await runPluginCliCommand(getUrl(), GIT_PLUGIN_ID, [name, ...args]),
@@ -450,7 +450,7 @@ export function registerEnvironmentCommands(
           );
         }
 
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const environment = await sdk.environments.update(
           buildEnvironmentUpdateArgs({ id, opts }),
         );
@@ -478,7 +478,7 @@ export function registerEnvironmentCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: EnvironmentCommitCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         let result: CommitActionResponse;
         try {
           result = await sdk.environments.commit({ environmentId: id });
@@ -499,7 +499,7 @@ export function registerEnvironmentCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: EnvironmentCommitCommandOptions) => {
-        const result = await createCliBbSdk(
+        const result = await createCliSandySdk(
           getUrl(),
         ).environments.archiveThreads({
           environmentId: id,

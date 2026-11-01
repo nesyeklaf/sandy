@@ -8,8 +8,8 @@ import {
   listStoredEventRows,
   listStoredTurnCompletedRowsByTurnIds,
   type StoredEventRow,
-} from "@bb/db";
-import type { Thread, ThreadEvent, ThreadEventType } from "@bb/domain";
+} from "@sandy/db";
+import type { Thread, ThreadEvent, ThreadEventType } from "@sandy/domain";
 import type { AppDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import { parseStoredEvent } from "./thread-data.js";
@@ -189,7 +189,7 @@ export function resolveThreadForkPoint(
   }
   if (sourceSession.kind === "ambiguous") {
     forkPointUnavailable(
-      "Cannot fork: another thread announced the source thread's provider session at the same moment, so bb cannot tell whose it is",
+      "Cannot fork: another thread announced the source thread's provider session at the same moment, so sandy cannot tell whose it is",
     );
   }
   if (sourceSession.kind === "foreign") {

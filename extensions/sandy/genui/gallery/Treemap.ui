@@ -1,0 +1,18 @@
+Treemap([
+  {path: "src/app/main.ts", bytes: 74000},
+  {path: "src/app/router.ts", bytes: 29000},
+  {path: "src/app/store.ts", bytes: 24000},
+  {path: "src/lib/format.ts", bytes: 21000},
+  {path: "src/lib/http.ts", bytes: 17000},
+  {path: "src/lib/cache.ts", bytes: 13000},
+  {path: "src/lib/log.ts", bytes: 12000},
+  {path: "src/ui/Chart.tsx", bytes: 30000},
+  {path: "src/ui/Table.tsx", bytes: 29000},
+  {path: "src/ui/Form.tsx", bytes: 28000},
+  {path: "src/ui/Modal.tsx", bytes: 27000},
+  {path: "src/ui/Menu.tsx", bytes: 26000},
+  {path: "src/ui/Tabs.tsx", bytes: 24000},
+  {path: "src/ui/Card.tsx", bytes: 23000},
+  {path: "server/index.ts", bytes: 16000},
+  {path: "server/routes.ts", bytes: 13000}
+])

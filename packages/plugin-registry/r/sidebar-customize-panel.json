@@ -3,11 +3,11 @@
   "name": "sidebar-customize-panel",
   "type": "registry:ui",
   "title": "sidebar-customize-panel",
-  "description": "BB ui \"sidebar-customize-panel\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"sidebar-customize-panel\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/chrome-style-tokens",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/chrome-style-tokens",
+    "@sandy/utils"
   ],
   "files": [
     {

@@ -2,8 +2,8 @@ import {
   type EnvironmentDisplayInfo,
   type EnvironmentDisplayProviderLookup,
   formatEnvironmentDisplay,
-} from "@bb/core-ui";
-import type { BbSdk } from "@bb/sdk";
+} from "@sandy/core-ui";
+import type { SandySdk } from "@sandy/sdk";
 
 export interface ThreadEnvironmentInfo {
   display: EnvironmentDisplayInfo;
@@ -12,7 +12,7 @@ export interface ThreadEnvironmentInfo {
 
 async function resolveEnvironmentProvider(args: {
   environmentProviderId: string | null;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<EnvironmentDisplayProviderLookup> {
   if (args.environmentProviderId === null) {
     return { status: "loaded", provider: null };
@@ -36,7 +36,7 @@ async function resolveEnvironmentProvider(args: {
 
 export async function fetchEnvironmentInfo(args: {
   environmentId: string;
-  sdk: BbSdk;
+  sdk: SandySdk;
 }): Promise<ThreadEnvironmentInfo | null> {
   try {
     const env = await args.sdk.environments.get({

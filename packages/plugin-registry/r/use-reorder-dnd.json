@@ -3,13 +3,13 @@
   "name": "use-reorder-dnd",
   "type": "registry:ui",
   "title": "use-reorder-dnd",
-  "description": "BB ui \"use-reorder-dnd\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"use-reorder-dnd\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@dnd-kit/core",
     "@dnd-kit/sortable"
   ],
   "registryDependencies": [
-    "@bb/use-drag-click-suppression"
+    "@sandy/use-drag-click-suppression"
   ],
   "files": [
     {

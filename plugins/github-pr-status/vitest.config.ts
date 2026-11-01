@@ -9,7 +9,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "bb-plugin-bb--github-pr-status",
+      name: "sandy-plugin-sandy--github-pr-status",
       include: ["**/*.test.{ts,tsx}"],
     }),
   },

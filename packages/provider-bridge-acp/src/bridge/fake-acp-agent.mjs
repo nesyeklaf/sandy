@@ -106,7 +106,7 @@
  * - "stop-reason:<reason>"       → end the turn with that stop reason
  * - "advertise-commands"         → advertise two slash commands, twice
  * - "ask-form"                   → ask a two-field form question
- * - "ask-form-too-large"         → ask a form with more fields than bb shows
+ * - "ask-form-too-large"         → ask a form with more fields than sandy shows
  */
 
 import { spawn } from "node:child_process";
@@ -580,7 +580,7 @@ async function handlePrompt(message) {
   } else if (text.includes("request-external-directory-permission")) {
     // opencode's external_directory permission: the running edit tool asks
     // with the generic kind "other", a bare directory title, and
-    // locations = [file, parentDir]. Mirrors get-bb/bb#1719.
+    // locations = [file, parentDir]. Mirrors nesyeklaf/sandy#1719.
     notifyUpdate({
       sessionUpdate: "tool_call",
       toolCallId: "write-tool-1",

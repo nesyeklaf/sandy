@@ -3,11 +3,11 @@
   "name": "prompt-stack-disclosure",
   "type": "registry:ui",
   "title": "prompt-stack-disclosure",
-  "description": "BB ui \"prompt-stack-disclosure\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"prompt-stack-disclosure\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/chrome-style-tokens",
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/chrome-style-tokens",
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

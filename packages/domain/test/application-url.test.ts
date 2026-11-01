@@ -28,7 +28,7 @@ describe("application links", () => {
     " linear://issue/123",
     "linear:\n//issue/123",
     "/some/file",
-    "bb://settings",
+    "sandy://settings",
   ])("rejects %s before prompting", async (url) => {
     const confirm = vi.fn();
     const open = vi.fn();

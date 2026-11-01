@@ -5,8 +5,8 @@ import {
   PROMPT_ATTACHMENT_MAX_BYTES,
   type ClientTurnRequestId,
   type PromptInput,
-} from "@bb/domain";
-import { resolveContainedPath } from "@bb/process-utils";
+} from "@sandy/domain";
+import { resolveContainedPath } from "@sandy/process-utils";
 import {
   CommandDispatchError,
   type CommandDispatchOptions,
@@ -16,7 +16,7 @@ import {
   publishFileWithoutReplacing,
   writeVerifiedFile,
   type WrittenFile,
-} from "@bb/file-transfer";
+} from "@sandy/file-transfer";
 
 type AttachmentPromptInput = Extract<
   PromptInput,
@@ -200,7 +200,7 @@ async function stageAttachment(args: StageAttachmentArgs): Promise<string> {
   const expectedSizeBytes = expectedAttachmentSizeBytes(args.attachment);
   const downloadPath = path.join(
     args.stagingDir,
-    `.bb-attachment-${randomUUID()}.partial`,
+    `.sandy-attachment-${randomUUID()}.partial`,
   );
   try {
     let written: WrittenFile;

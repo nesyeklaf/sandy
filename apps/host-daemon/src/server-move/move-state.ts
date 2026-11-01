@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { lastServerMoveSchema } from "@bb/domain";
+import { lastServerMoveSchema } from "@sandy/domain";
 import { z } from "zod";
 import { ExpectedCommandDispatchError } from "../command-dispatch-support.js";
 import { isFileNotFoundError, writeFileAtomically } from "./fs.js";

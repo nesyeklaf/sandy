@@ -1,5 +1,5 @@
-import type { PluginRuntimeStatus } from "@bb/server-contract";
-import type { IconName } from "@bb/shared-ui/icon";
+import type { PluginRuntimeStatus } from "@sandy/server-contract";
+import type { IconName } from "@sandy/shared-ui/icon";
 import type { PluginListItem } from "@/hooks/queries/plugin-settings-queries";
 
 export interface PluginRuntimeStatusPresentation {
@@ -53,13 +53,13 @@ function pluginRuntimeRecovery(plugin: PluginListItem): string {
         : "Try reloading it.";
     case "incompatible":
       return plugin.provenance === "builtin"
-        ? "Update bb."
+        ? "Update sandy."
         : "Install a compatible version.";
     case "missing":
       if (plugin.source.startsWith("path:"))
         return "Restore the folder, then reload.";
       return plugin.provenance === "builtin"
-        ? "Update or reinstall bb."
+        ? "Update or reinstall sandy."
         : "Reinstall from its source.";
     case "needs-configuration":
       return plugin.hasSettings ? "" : "Then reload.";
@@ -79,7 +79,7 @@ function pluginRuntimeCondition(plugin: PluginListItem): string {
         ? "Configured folder unavailable."
         : "The plugin couldn't start.";
     case "incompatible":
-      return "This version is incompatible with bb.";
+      return "This version is incompatible with sandy.";
     case "missing":
       return "Plugin files are missing.";
     case "needs-configuration": {

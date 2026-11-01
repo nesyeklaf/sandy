@@ -2,8 +2,8 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 export const MAX_CUSTOM_INSTRUCTIONS_LENGTH = 4096;
@@ -20,13 +20,13 @@ const JSON_OPTION = {
   description: "Emit machine-readable JSON",
 } as const;
 
-export default async function plugin(bb: BbPluginApi) {
-  const settings = bb.settings.define({
+export default async function plugin(sandy: SandyPluginApi) {
+  const settings = sandy.settings.define({
     instructions: {
       type: "string",
       label: "Custom instructions",
       description:
-        "Give agents extra instructions and context for tasks on this bb host.",
+        "Give agents extra instructions and context for tasks on this sandy host.",
       experimental_multiline: true,
       experimental_schema: customInstructionsSchema,
       default: "",
@@ -34,12 +34,12 @@ export default async function plugin(bb: BbPluginApi) {
   });
 
   let current = await settings.get();
-  const legacy = await bb.storage.kv.get<string>(STORAGE_KEY);
+  const legacy = await sandy.storage.kv.get<string>(STORAGE_KEY);
   if (legacy !== undefined) {
     if (current.instructions.length === 0 && legacy.length > 0) {
       current = await settings.experimental_set({ instructions: legacy });
     }
-    await bb.storage.kv.delete(STORAGE_KEY);
+    await sandy.storage.kv.delete(STORAGE_KEY);
   }
   let customInstructions = current.instructions;
 
@@ -47,16 +47,16 @@ export default async function plugin(bb: BbPluginApi) {
     customInstructions = next.instructions;
   });
 
-  bb.agents.contributeInstructions(() =>
+  sandy.agents.contributeInstructions(() =>
     customInstructions.trim().length > 0 ? customInstructions : null,
   );
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "instructions",
       summary: "Read and update the custom instructions injected into agents",
       description:
-        "The text is appended to the instructions bb already gives every agent on this host.",
+        "The text is appended to the instructions sandy already gives every agent on this host.",
       commands: {
         get: cliCommand({
           summary: "Print the current custom instructions",

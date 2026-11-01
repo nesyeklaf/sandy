@@ -9,9 +9,9 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import { ResourceDetailPage } from "@bb/shared-ui/resource-list";
-import type { SkillSummary } from "@bb/server-contract";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { ResourceDetailPage } from "@sandy/shared-ui/resource-list";
+import type { SkillSummary } from "@sandy/server-contract";
 import { type PluginListItem } from "@/hooks/queries/plugin-settings-queries";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import {
@@ -47,13 +47,13 @@ const PLUGIN: PluginListItem = makePluginListItem({
   id: "github",
   source: "builtin:github",
   rootDir: "/managed/plugins/github",
-  description: "Browse GitHub issues and pull requests in BB.",
+  description: "Browse GitHub issues and pull requests in SANDY.",
   name: "GitHub",
   icon: "Github",
   provenance: "catalog",
   catalogEntryId: "github",
-  publisherLabel: "BB Community",
-  sourceDisplay: "BB Official · GitHub",
+  publisherLabel: "SANDY Community",
+  sourceDisplay: "SANDY Official · GitHub",
 });
 
 function renderPlugin(
@@ -212,7 +212,7 @@ describe("Plugin detail recipe", () => {
     ).toBeNull();
 
     for (const item of [
-      "bb gh",
+      "sandy gh",
       "review",
       "gh_search",
       "Pull requests",
@@ -368,6 +368,8 @@ describe("Plugin detail recipe", () => {
             pluginId: "github",
             filePath: "/plugins/github/skills/review/SKILL.md",
             manageable: false,
+            providers: [],
+            duplicates: [],
           },
         ],
       },

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { TimelineRow } from "@bb/server-contract";
-import { Switch } from "@bb/shared-ui/switch";
+import type { TimelineRow } from "@sandy/server-contract";
+import { Switch } from "@sandy/shared-ui/switch";
 import { FollowUpPromptBox } from "@/components/promptbox/FollowUpPromptBox";
 import type { ExecutionPermissionConfig } from "@/components/promptbox/ExecutionControls";
 import { PageShell } from "@/components/ui/page-shell";

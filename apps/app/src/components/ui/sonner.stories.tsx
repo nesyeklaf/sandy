@@ -1,7 +1,7 @@
 import { appToast, AppToastContent, type AppToastTone } from "./app-toast";
 import { ArchivedThreadToastDescription } from "../thread/ArchivedThreadToastDescription";
 import { pluginNotificationDescription } from "../plugin/PluginNotificationDescription";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
 import { useState, type ReactNode } from "react";
 import { toast as sonnerToast } from "sonner";
@@ -278,7 +278,7 @@ function showToastExample(example: ToastExample): void {
       />
     ),
     {
-      className: "bb-app-toast",
+      className: "sandy-app-toast",
       dismissible: current.dismissible ?? true,
       duration: LIVE_TOAST_DURATION,
       id,

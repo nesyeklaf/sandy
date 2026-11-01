@@ -5,7 +5,7 @@ import {
   ProviderResponseEncodeError,
   type JsonValue,
   type ProviderInteractionOutcome,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import computerUseElicitation from "./fixtures/computer-use-elicitation.json";
 import computerUseActiveTurnElicitation from "./fixtures/computer-use-active-turn-elicitation.json";
 import mcpToolApprovalElicitation from "./fixtures/mcp-tool-approval-elicitation.json";
@@ -283,7 +283,7 @@ describe("MCP tool-call approval decoding", () => {
     ).toMatchObject({ kind: "tool_approval", scopes: [] });
   });
 
-  it("drops scopes BB cannot encode", () => {
+  it("drops scopes SANDY cannot encode", () => {
     expect(
       normalizeCodexMcpElicitation({
         ...mcpToolApprovalElicitation.params,

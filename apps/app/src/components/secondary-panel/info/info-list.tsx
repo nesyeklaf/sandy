@@ -1,11 +1,11 @@
 import { Fragment, useId, useState, type ReactNode } from "react";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   INFO_LIST_LEADING_CLASS,
   InfoListIndentGuides,
   infoListIndentStyle,
-} from "@bb/shared-ui/info-list-row";
+} from "@sandy/shared-ui/info-list-row";
 import { useScopedInfoSectionCollapse } from "./useInfoSectionCollapse";
 
 export const INFO_LIST_CARET_CLASS = "size-3 shrink-0 transition-transform";

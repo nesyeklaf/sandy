@@ -18,7 +18,7 @@ let nextId = 3000;
 beforeEach(async () => {
   turnCount = 0;
   harness = await startFakePiBridge({
-    prefix: "bb-pi-handled-",
+    prefix: "sandy-pi-handled-",
     initialize: true,
   });
   vi.stubEnv("FAKE_PI_DISPOSITIONS", "1");

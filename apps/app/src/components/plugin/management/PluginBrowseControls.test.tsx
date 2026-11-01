@@ -18,7 +18,7 @@ import {
 import type { PluginBrowseCategoryOption } from "./plugin-browse-discovery";
 
 const viewport = vi.hoisted(() => ({ compact: false }));
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => viewport.compact,
 }));
 
@@ -233,7 +233,7 @@ function ToolbarHarness({
             ? {
                 options: [
                   { id: "user", label: "Local" },
-                  { id: "official", label: "BB Official" },
+                  { id: "official", label: "SANDY Official" },
                 ],
                 selectedValues: params.getAll("source"),
                 onChange: (values) =>

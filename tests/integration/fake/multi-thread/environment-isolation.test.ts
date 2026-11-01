@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { environments } from "@bb/db";
+import { environments } from "@sandy/db";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -242,7 +242,7 @@ describe.sequential("fake provider environment-isolation multi-thread integratio
             cwd: harness.repoDir,
           })
         ).trim(),
-      ).toBe("bb: automated commit");
+      ).toBe("sandy: automated commit");
       expect(
         (
           await runGit({
@@ -250,6 +250,6 @@ describe.sequential("fake provider environment-isolation multi-thread integratio
             cwd: secondRepoDir,
           })
         ).trim(),
-      ).toBe("bb: automated commit");
+      ).toBe("sandy: automated commit");
     }));
 });

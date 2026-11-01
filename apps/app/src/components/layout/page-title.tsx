@@ -10,7 +10,7 @@ import { z } from "zod";
 import type {
   ExperimentalPageTitle,
   PluginNavPanelRegistration,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 const pageTitleSchema = z
   .union([

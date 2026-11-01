@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Icon } from "@bb/shared-ui/icon";
-import { getDesktopBrowserApi } from "@/lib/bb-desktop";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { getDesktopBrowserApi } from "@/lib/sandy-desktop";
 
 const imageSizes = new Map<string, number>();
 

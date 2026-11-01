@@ -1,9 +1,9 @@
-import type { HostDaemonEntrypointConfig } from "@bb/config/host-daemon-entrypoint";
+import type { HostDaemonEntrypointConfig } from "@sandy/config/host-daemon-entrypoint";
 
 export interface HostDaemonRuntimeEnvironment extends HostDaemonEntrypointConfig {
-  BB_DATA_DIR: string;
-  BB_HOST_DAEMON_PORT: string;
-  BB_SERVER_URL: string;
+  SANDY_DATA_DIR: string;
+  SANDY_HOST_DAEMON_PORT: string;
+  SANDY_SERVER_URL: string;
   NODE_ENV: "development" | "production";
 }
 

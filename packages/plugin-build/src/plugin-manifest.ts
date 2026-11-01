@@ -4,8 +4,8 @@ import {
   isPluginOwnedIconPath,
   pluginPackageJsonSchema,
   type PluginPackageJson,
-} from "@bb/domain";
-import { isPathWithinDirectory } from "@bb/process-utils";
+} from "@sandy/domain";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import {
   assertValidPluginCompactIconSvg,
   assertValidPluginIconSvg,
@@ -102,16 +102,16 @@ export async function validatePluginBuildManifest(
       `invalid plugin package.json${path ? ` (${path})` : ""} at ${packageJsonPath}: ${issue?.message ?? "unknown error"}`,
     );
   }
-  const logo = parsed.data.bb.branding.logo;
+  const logo = parsed.data.sandy.branding.logo;
   const compactIcon =
-    parsed.data.bb.branding.icon !== undefined &&
-    isPluginOwnedIconPath(parsed.data.bb.branding.icon)
-      ? parsed.data.bb.branding.icon
+    parsed.data.sandy.branding.icon !== undefined &&
+    isPluginOwnedIconPath(parsed.data.sandy.branding.icon)
+      ? parsed.data.sandy.branding.icon
       : undefined;
   for (const [label, entry] of [
-    ["bb.branding.icon", compactIcon],
-    ["bb.branding.logo.light", logo?.light],
-    ["bb.branding.logo.dark", logo?.dark],
+    ["sandy.branding.icon", compactIcon],
+    ["sandy.branding.logo.light", logo?.light],
+    ["sandy.branding.logo.dark", logo?.dark],
   ] as const) {
     if (entry === undefined) continue;
     if (!/\.(svg|png|webp)$/i.test(entry)) {
@@ -124,7 +124,7 @@ export async function validatePluginBuildManifest(
       resolveManifestPath(rootDir, entry, label),
       label,
     );
-    if (label === "bb.branding.icon") {
+    if (label === "sandy.branding.icon") {
       assertValidPluginCompactIconSvg(await readFile(realAsset), label);
     } else if (/\.svg$/iu.test(entry)) {
       assertValidPluginLogoSvg(
@@ -134,9 +134,9 @@ export async function validatePluginBuildManifest(
     }
   }
   for (const [name, entry] of Object.entries(
-    parsed.data.bb.branding.experimental_icons ?? {},
+    parsed.data.sandy.branding.experimental_icons ?? {},
   )) {
-    const label = `bb.branding.experimental_icons["${name}"]`;
+    const label = `sandy.branding.experimental_icons["${name}"]`;
     const realAsset = await resolveManifestAssetFile(
       rootDir,
       resolveManifestPath(rootDir, entry, label),

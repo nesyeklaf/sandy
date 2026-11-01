@@ -184,13 +184,13 @@ describe("cross-provider permission changes: Codex", () => {
   let workspaceDir: string;
   let requestLogPath: string;
   beforeEach(async () => {
-    workspaceDir = mkdtempSync(join(tmpdir(), "bb-permission-codex-"));
+    workspaceDir = mkdtempSync(join(tmpdir(), "sandy-permission-codex-"));
     requestLogPath = join(workspaceDir, "requests.jsonl");
     const scriptPath = join(workspaceDir, "script.json");
     writeFileSync(scriptPath, JSON.stringify({ requestLogPath }));
-    vi.stubEnv("BB_CODEX_BRIDGE_APP_SERVER_COMMAND", process.execPath);
+    vi.stubEnv("SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND", process.execPath);
     vi.stubEnv(
-      "BB_CODEX_BRIDGE_APP_SERVER_ARGS",
+      "SANDY_CODEX_BRIDGE_APP_SERVER_ARGS",
       JSON.stringify([
         join(
           checkout,

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import { createAgentRuntime } from "./runtime.js";
 import {
   createScriptedEchoLaunch,
@@ -48,7 +48,7 @@ describe("codex process topology", () => {
   const runtimes: AgentRuntime[] = [];
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-topology-"));
+    workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-topology-"));
   });
 
   afterEach(async () => {
@@ -91,8 +91,8 @@ describe("codex process topology", () => {
         workspacePath: workspaceDir,
         env: {
           ...record.env,
-          BB_CODEX_BRIDGE_APP_SERVER_COMMAND: process.execPath,
-          BB_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify([
+          SANDY_CODEX_BRIDGE_APP_SERVER_COMMAND: process.execPath,
+          SANDY_CODEX_BRIDGE_APP_SERVER_ARGS: JSON.stringify([
             fakeAppServerPath,
             scriptPath,
           ]),

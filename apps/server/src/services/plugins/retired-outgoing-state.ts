@@ -8,17 +8,17 @@ import {
   setAiServiceSelection,
   setAppSettingsMarker,
   type DbConnection,
-} from "@bb/db";
-import { AI_TASKS } from "@bb/domain";
+} from "@sandy/db";
+import { AI_TASKS } from "@sandy/domain";
 
 const MARKER_KEY = "retiredState.outgoingConnections.v2";
-const RETIRED_AI_PLUGIN_IDS: ReadonlySet<string> = new Set(["bb-ai"]);
+const RETIRED_AI_PLUGIN_IDS: ReadonlySet<string> = new Set(["sandy-ai"]);
 const RETIRED_PLUGIN_IDS = [
-  "bb-ai",
+  "sandy-ai",
   "environment-modal-sandbox",
-  "bb-account",
+  "sandy-account",
   "connect",
-  "bb--connect-next",
+  "sandy--connect-next",
 ] as const;
 const PUSH_PLUGIN_ID = "push-notifications";
 const PUSH_SUBSCRIPTION_KEY_PREFIX = "subscription:";

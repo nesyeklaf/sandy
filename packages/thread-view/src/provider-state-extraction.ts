@@ -6,11 +6,11 @@ import {
   threadProviderCommandsStateSchema,
   threadSessionOptionSelectionsStateSchema,
   threadSessionOptionsStateSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ProviderCommand,
   ThreadTimelineSessionOption,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type { ThreadEventWithMeta } from "./build-event-projection.js";
 
 function latestStatePayload(

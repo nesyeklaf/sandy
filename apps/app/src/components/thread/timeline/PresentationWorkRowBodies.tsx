@@ -1,14 +1,14 @@
-import type { ThreadEventPlanStep } from "@bb/domain";
-import type { TimelineRowPresentation } from "@bb/server-contract";
-import type { TimelineViewWorkRow } from "@bb/thread-view";
+import type { ThreadEventPlanStep } from "@sandy/domain";
+import type { TimelineRowPresentation } from "@sandy/server-contract";
+import type { TimelineViewWorkRow } from "@sandy/thread-view";
 import {
   activityIconClass,
   activityRowClass,
   activityTextClass,
   type ActivityRowState,
-} from "@bb/shared-ui/activity-row-styles";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/activity-row-styles";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { MarkdownPreview } from "../../ui/markdown-preview.js";
 
 export function PresentationDetail({

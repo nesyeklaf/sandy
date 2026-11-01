@@ -10,15 +10,15 @@ import type { CommandRegistrar } from "../helpers/command-output-harness.js";
 import * as fixtures from "../helpers/command-output-fixtures.js";
 import { registerStatusCommand } from "../../commands/status.js";
 
-describe("bb status command output", () => {
+describe("sandy status command output", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
     registerStatusCommand(program, () => "http://server");
 
-  it("bb status prints project/thread context", async () => {
-    vi.stubEnv("BB_PROJECT_ID", "proj-1");
-    vi.stubEnv("BB_THREAD_ID", "thread-1");
+  it("sandy status prints project/thread context", async () => {
+    vi.stubEnv("SANDY_PROJECT_ID", "proj-1");
+    vi.stubEnv("SANDY_THREAD_ID", "thread-1");
 
     await runCommand(["status"], register);
 
@@ -27,9 +27,9 @@ describe("bb status command output", () => {
     expect(lines).toContain("Thread: thread-1");
   });
 
-  it("bb status prints environment without fetching hosts", async () => {
-    vi.stubEnv("BB_PROJECT_ID", "proj-1");
-    vi.stubEnv("BB_THREAD_ID", "thread-1");
+  it("sandy status prints environment without fetching hosts", async () => {
+    vi.stubEnv("SANDY_PROJECT_ID", "proj-1");
+    vi.stubEnv("SANDY_THREAD_ID", "thread-1");
 
     const getProject = vi.fn(async () => ({
       id: "proj-1",
@@ -63,9 +63,9 @@ describe("bb status command output", () => {
     );
   });
 
-  it("bb status prints pinned state for pinned thread context", async () => {
-    vi.stubEnv("BB_PROJECT_ID", "proj-1");
-    vi.stubEnv("BB_THREAD_ID", "thread-pinned-1");
+  it("sandy status prints pinned state for pinned thread context", async () => {
+    vi.stubEnv("SANDY_PROJECT_ID", "proj-1");
+    vi.stubEnv("SANDY_THREAD_ID", "thread-pinned-1");
 
     const getProject = vi.fn(async () => ({
       id: "proj-1",
@@ -95,7 +95,7 @@ function stubServer(plugins: Array<{ id: string; status: string }>): void {
   vi.mocked(fetch).mockImplementation(async (input) => {
     const url = String(input instanceof Request ? input.url : input);
     const body = url.endsWith("/api/v1/system/config")
-      ? { dataDir: "/data/bb" }
+      ? { dataDir: "/data/sandy" }
       : {
           plugins: plugins.map(({ id, status }) => ({
             id,
@@ -130,7 +130,7 @@ function stubServer(plugins: Array<{ id: string; status: string }>): void {
   });
 }
 
-describe("bb status plugin attention", () => {
+describe("sandy status plugin attention", () => {
   setupCommandOutputTestEnvironment();
 
   const register: CommandRegistrar = (program) =>
@@ -149,7 +149,7 @@ describe("bb status plugin attention", () => {
     await runCommand(["status"], register);
 
     expect(collectLogPayloads(vi.mocked(console.log)).join("\n")).toContain(
-      "1 plugin not running (notify: incompatible). Run bb plugin list.",
+      "1 plugin not running (notify: incompatible). Run sandy plugin list.",
     );
   });
 

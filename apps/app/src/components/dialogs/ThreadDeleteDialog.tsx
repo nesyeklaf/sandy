@@ -1,8 +1,8 @@
-import type { Thread } from "@bb/domain";
+import type { Thread } from "@sandy/domain";
 import {
   ConfirmDeleteDialog,
   ConfirmDeleteDialogContent,
-} from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/confirm-delete-dialog";
 import { formatChildThreadCount } from "@/lib/child-thread-copy";
 
 export interface ThreadDeleteDialogTarget {

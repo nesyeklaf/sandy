@@ -10,8 +10,8 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import type { PendingInteraction, PluginPendingInteraction } from "@bb/domain";
-import type { PluginPendingInteractionProps } from "@get-bb/plugin-sdk";
+import type { PendingInteraction, PluginPendingInteraction } from "@sandy/domain";
+import type { PluginPendingInteractionProps } from "@sandy-sdk/plugin-sdk";
 import {
   resetPluginSlotStoreForTest,
   setPluginSlotRegistrations,
@@ -107,7 +107,7 @@ const toolUseApproval: PendingInteraction = {
       presentation: {
         label: { pending: "Creating issue", completed: "Created issue" },
         icon: { glyph: "Globe" },
-        title: "get-bb/bb#42",
+        title: "nesyeklaf/sandy#42",
         detail: "Opens a **bug** issue",
         tint: { light: "#123456", dark: "#abcdef" },
       },
@@ -168,7 +168,7 @@ const commandApproval: PendingInteraction = {
 };
 
 const chainedCommand =
-  "cd apps/app && pnpm install && pnpm exec turbo run typecheck && pnpm exec turbo run test --filter=@bb/app && git status --short";
+  "cd apps/app && pnpm install && pnpm exec turbo run typecheck && pnpm exec turbo run test --filter=@sandy/app && git status --short";
 
 const chainedCommandApproval: PendingInteraction = {
   ...planReview,
@@ -225,7 +225,7 @@ describe("ThreadPendingInteractionBanner tool-use approval", () => {
     renderBanner(toolUseApproval);
     expect(screen.getAllByText("Creating issue").length).toBeGreaterThan(0);
     const ask = screen.getByTestId("tool-use-ask");
-    expect(ask.textContent).toContain("get-bb/bb#42");
+    expect(ask.textContent).toContain("nesyeklaf/sandy#42");
     expect(ask.textContent).toContain("Tool: mcp__github__create_issue");
     expect(ask.querySelector("strong")?.textContent).toBe("bug");
     expect(ask.querySelector("svg")?.getAttribute("style")).toMatch(
@@ -586,11 +586,11 @@ describe("ThreadPendingInteractionBanner collapsed strip", () => {
     renderBanner(chainedCommandApproval);
     const preview = screen.getByTestId("command-preview");
     expect(preview.querySelector("pre")?.textContent).toBe(
-      "$ cd apps/app &&\n  pnpm install &&\n  pnpm exec turbo run typecheck &&\n  pnpm exec turbo run test --filter=@bb/app &&",
+      "$ cd apps/app &&\n  pnpm install &&\n  pnpm exec turbo run typecheck &&\n  pnpm exec turbo run test --filter=@sandy/app &&",
     );
     fireEvent.click(screen.getByRole("button", { name: "Show 1 more line" }));
     expect(preview.querySelector("pre")?.textContent).toBe(
-      "$ cd apps/app &&\n  pnpm install &&\n  pnpm exec turbo run typecheck &&\n  pnpm exec turbo run test --filter=@bb/app &&\n  git status --short",
+      "$ cd apps/app &&\n  pnpm install &&\n  pnpm exec turbo run typecheck &&\n  pnpm exec turbo run test --filter=@sandy/app &&\n  git status --short",
     );
   });
 

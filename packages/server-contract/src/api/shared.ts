@@ -9,13 +9,13 @@ import {
   BRANCH_LIST_QUERY_MAX_LENGTH,
   gitBranchNameSchema,
   gitBranchSelectionSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 export {
   BRANCH_LIST_LIMIT_MAX,
   FILE_LIST_LIMIT_MAX,
   FILE_LIST_QUERY_MAX_LENGTH,
-} from "@bb/domain";
+} from "@sandy/domain";
 
 interface IncludeQueryValidationArgs {
   allowedValues: readonly string[];

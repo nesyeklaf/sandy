@@ -1,7 +1,7 @@
 import { appendFile, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { killProcessesReferencingPath } from "@bb/test-helpers";
+import { killProcessesReferencingPath } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   createLogLineBuffer,
@@ -29,7 +29,7 @@ const tempDirs: TempDir[] = [];
 const tailers: LogTailer[] = [];
 
 async function createTempDir(): Promise<TempDir> {
-  const path = await mkdtemp(join(tmpdir(), "bb-desktop-log-viewer-"));
+  const path = await mkdtemp(join(tmpdir(), "sandy-desktop-log-viewer-"));
   const tempDir = { path };
   tempDirs.push(tempDir);
   return tempDir;

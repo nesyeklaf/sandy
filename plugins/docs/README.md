@@ -1,11 +1,11 @@
 # Docs
 
-Docs is a filesystem-first document library for bb. Documents remain ordinary
+Docs is a filesystem-first document library for sandy. Documents remain ordinary
 Markdown, HTML, and asset files while the plugin adds nested navigation,
 multi-host vaults, rich editing, images, sandboxed HTML, automation, chat
 mentions, and links that open inside a thread.
 
-The package and installed plugin ID remain `bb-plugin-simple-notes` and
+The package and installed plugin ID remain `sandy-plugin-simple-notes` and
 `simple-notes` for compatibility with existing settings and stored vaults. The
 user-facing product name, catalog listing, panel route, CLI, mention
 provider, and directive are all Docs.
@@ -19,7 +19,7 @@ provider, and directive are all Docs.
   Markdown documents, and HTML pages. It can be collapsed, and search stays
   hidden until requested.
 - **Safe host-routed operations:** all list/read/write/mkdir/move/remove calls
-  go through `bb.sdk.files` with an explicit vault root. Saves retain SHA-256
+  go through `sandy.sdk.files` with an explicit vault root. Saves retain SHA-256
   compare-and-swap conflict handling. While a vault's tree or one of its
   documents is on screen, local vaults are watched natively and remote or
   unwatchable vaults are polled every 10 seconds; nothing is watched otherwise.
@@ -90,32 +90,32 @@ provider, and directive are all Docs.
 The plugin ships `skills/docs/SKILL.md`. Installed agents are taught to use the
 Docs CLI, understand that a Docs `@`-mention is user-provided document context,
 store plans and HTML artifacts in a vault when asked, and return `::docs` links
-that the user can open in bb.
+that the user can open in sandy.
 
 ## CLI
 
-The plugin registers the agent-discoverable `bb docs` command:
+The plugin registers the agent-discoverable `sandy docs` command:
 
 ```sh
-bb docs vaults --json
-bb docs vault-add Work /home/me/work-docs host_workstation
-bb docs list --vault personal --json
-bb docs read projects/plan.md --vault personal
-bb docs pull projects/plan.md --vault personal --into ./docs-work
+sandy docs vaults --json
+sandy docs vault-add Work /home/me/work-docs host_workstation
+sandy docs list --vault personal --json
+sandy docs read projects/plan.md --vault personal
+sandy docs pull projects/plan.md --vault personal --into ./docs-work
 # Edit ./docs-work/projects/plan.md with an ordinary editor or agent file tool.
-bb docs status ./docs-work --diff
-bb docs push ./docs-work
+sandy docs status ./docs-work --diff
+sandy docs push ./docs-work
 
-bb docs pull projects --folder --vault personal --into ./docs-work
-bb docs pull --all --vault personal --into ./docs-work
-bb docs push ./docs-work --dry-run --diff
-bb docs push ./docs-work --delete
+sandy docs pull projects --folder --vault personal --into ./docs-work
+sandy docs pull --all --vault personal --into ./docs-work
+sandy docs push ./docs-work --dry-run --diff
+sandy docs push ./docs-work --delete
 ```
 
 ### Sync workspace contract
 
 - **Layout and identity:** the destination keeps exact vault-relative paths
-  beneath one workspace root and stores a versioned `.bb-docs-state.json`
+  beneath one workspace root and stores a versioned `.sandy-docs-state.json`
   manifest at that root. Manifest entries map `vault id + remote path` to a
   local path and retain the pulled SHA-256, byte size, content encoding, MIME
   type, and modification time. A single-file pull still keeps its vault path,
@@ -172,8 +172,8 @@ success/no-op, 1 validation or operational/partial failure, 2 usage error, 3
 stale/conflict, and 4 `status` found changes or ignored deletions. Options are
 command-specific; an unknown command, an option not shown in a command's usage,
 and a stray argument are all rejected before any mutation, with the nearest
-declared name suggested. `bb docs --help` lists the commands and
-`bb docs <command> --help` prints that command's arguments, options, and rules.
+declared name suggested. `sandy docs --help` lists the commands and
+`sandy docs <command> --help` prints that command's arguments, options, and rules.
 
 The legacy `write`, `mkdir`, `move`, and `remove` CLI commands remain for one
 backward-compatibility window and emit a deprecation warning. New agent
@@ -183,8 +183,8 @@ its existing compare-and-swap behavior.
 ## Token-authenticated HTTP API
 
 The stable internal plugin ID remains `simple-notes`. Generate or inspect its
-token with `bb plugin token simple-notes`, then send it in
-`x-bb-plugin-token` to these JSON endpoints:
+token with `sandy plugin token simple-notes`, then send it in
+`x-sandy-plugin-token` to these JSON endpoints:
 
 ```text
 POST /api/v1/plugins/simple-notes/http/list
@@ -214,9 +214,9 @@ state client-side.
 ## Install
 
 ```sh
-bb plugin install simple-notes
-bb plugin config simple-notes set directory "~/Notes"
-bb plugin reload simple-notes
+sandy plugin install simple-notes
+sandy plugin config simple-notes set directory "~/Notes"
+sandy plugin reload simple-notes
 ```
 
 ## Inline editing and proposed revisions
@@ -225,9 +225,9 @@ Markdown document cards support inline editing and opening the same file in a
 Docs tab. An agent can propose a complete revision without modifying the file:
 
 ```sh
-bb docs read letter.md --vault personal --json
-bb docs proposal letter.md --vault personal --json
-bb docs propose letter.md --vault personal --file ./candidate.md --expected-sha256 HASH --version none --json
+sandy docs read letter.md --vault personal --json
+sandy docs proposal letter.md --vault personal --json
+sandy docs propose letter.md --vault personal --file ./candidate.md --expected-sha256 HASH --version none --json
 ```
 
 Use the returned proposal version instead of `none` when replacing a previous
@@ -236,8 +236,8 @@ overrides that host. The expected hash must come from the document used to
 write the candidate. Every proposal mutation checks its version, including
 replacement after rejection, so a delayed response cannot restore stale work.
 
-`bb docs proposal-update letter.md --version N --content MARKDOWN` updates only
-the pending candidate. `bb docs accept|reject|undo|redo letter.md --version N`
+`sandy docs proposal-update letter.md --version N --content MARKDOWN` updates only
+the pending candidate. `sandy docs accept|reject|undo|redo letter.md --version N`
 performs the same actions as the card. All accept `--vault` and `--json`.
 Accept saves only when the original file hash still matches. Reject leaves the
 file alone. Undo after rejection restores the pending proposal; undo after

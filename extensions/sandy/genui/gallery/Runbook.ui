@@ -1,0 +1,7 @@
+Card("Rotate the API key", [Runbook([
+  {title: "Create a new key in the provider console", detail: "Settings → API keys → New key, scope read-write"},
+  {title: "Store it on the server", command: "sudo -e /etc/app/env  # set API_KEY=…"},
+  {title: "Restart the service", command: "sudo systemctl restart app", expected: "active (running) in systemctl status app"},
+  {title: "Check the health endpoint", command: "curl -fsS https://app.example.com/health", expected: "{\"ok\":true}"},
+  {title: "Revoke the old key in the console"}
+])])

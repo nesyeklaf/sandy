@@ -149,7 +149,7 @@ const signedMs = (value) =>
     ? "-"
     : (value > 0 ? "+" : "") + Math.round(value);
 
-export const REPORT_MARKER = "<!-- bb-perf-regression -->";
+export const REPORT_MARKER = "<!-- sandy-perf-regression -->";
 
 export const renderMarkdown = ({ evaluation, base, head, report }) => {
   const lines = [

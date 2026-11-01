@@ -3,8 +3,8 @@ import {
   cliCommand,
   defineCli,
   defineRpcContract,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import {
   ACP_REGISTRY_URL,
@@ -88,7 +88,7 @@ interface LoadedRegistry {
 }
 
 interface AcpRegistryServiceDeps {
-  bb: Pick<BbPluginApi, "storage" | "rpc" | "cli" | "log">;
+  sandy: Pick<SandyPluginApi, "storage" | "rpc" | "cli" | "log">;
   readCustomAgents(): Promise<string>;
   writeCustomAgents(value: string): Promise<void>;
   reservedProviderIds: ReadonlySet<string>;
@@ -137,14 +137,14 @@ export function formatRegistryView(view: AcpRegistryView): string {
 }
 
 export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
-  const { bb } = deps;
+  const { sandy } = deps;
 
   async function readCache(): Promise<{
     fetchedAt: number;
     agents: AcpRegistryAgent[];
   } | null> {
     const cached = cachedRegistrySchema.safeParse(
-      await bb.storage.kv.get<unknown>(REGISTRY_CACHE_KEY),
+      await sandy.storage.kv.get<unknown>(REGISTRY_CACHE_KEY),
     );
     return cached.success ? cached.data : null;
   }
@@ -161,13 +161,13 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
     try {
       const parsed = parseAcpRegistry(await fetchRegistryDocument());
       const fetchedAt = Date.now();
-      await bb.storage.kv.set(REGISTRY_CACHE_KEY, {
+      await sandy.storage.kv.set(REGISTRY_CACHE_KEY, {
         fetchedAt,
         agents: parsed.agents,
       });
       if (parsed.skipped > 0) {
-        bb.log.debug(
-          `Skipped ${parsed.skipped} ACP registry entries bb could not read.`,
+        sandy.log.debug(
+          `Skipped ${parsed.skipped} ACP registry entries sandy could not read.`,
         );
       }
       return { agents: parsed.agents, fetchedAt, error: null };
@@ -204,7 +204,7 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
       );
     }
     if (deps.reservedProviderIds.has(`acp-${id}`)) {
-      throw new Error(`${agent.name} is already built into bb.`);
+      throw new Error(`${agent.name} is already built into sandy.`);
     }
     await deps.writeCustomAgents(
       settingWithRegistryAgent(await deps.readCustomAgents(), agent),
@@ -219,7 +219,7 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
     return view(false);
   }
 
-  bb.rpc.register(acpRegistryRpcContract, {
+  sandy.rpc.register(acpRegistryRpcContract, {
     listRegistry: ({ refresh }) => view(refresh),
     addRegistryAgent: ({ id }) => addAgent(id),
     removeAgent: ({ id }) => removeAgent(id),
@@ -236,7 +236,7 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
     } catch (error) {
       throw new PluginCliError(errorMessage(error), {
         code: "acp_agent_change_failed",
-        hint: "Run `bb acp registry` to see the agents and their ids.",
+        hint: "Run `sandy acp registry` to see the agents and their ids.",
       });
     }
     return {
@@ -245,15 +245,15 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
     };
   }
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "acp",
       summary: "Add ACP agents from the official registry",
       description:
-        "Lists the agents in the Agent Client Protocol registry and adds them to bb as providers. Added agents run through npx or uvx on the machine that hosts the thread.",
+        "Lists the agents in the Agent Client Protocol registry and adds them to sandy as providers. Added agents run through npx or uvx on the machine that hosts the thread.",
       commands: {
         registry: cliCommand({
-          summary: "List the registry's agents and whether each is added to bb",
+          summary: "List the registry's agents and whether each is added to sandy",
           options: {
             refresh: {
               type: "boolean",
@@ -274,7 +274,7 @@ export function registerAcpRegistry(deps: AcpRegistryServiceDeps): void {
         }),
         add: cliCommand({
           summary:
-            "Add a registry agent as a bb provider, or move an added one to the registry's current version",
+            "Add a registry agent as a sandy provider, or move an added one to the registry's current version",
           positionals: [
             {
               name: "agent-id",

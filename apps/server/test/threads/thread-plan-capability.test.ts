@@ -1,4 +1,4 @@
-import { createBuiltinPlanCommandTextInput } from "@bb/domain";
+import { createBuiltinPlanCommandTextInput } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { createThreadFromRequest } from "../../src/services/threads/thread-create.js";
 import { acceptThreadSendRequest } from "../../src/services/threads/thread-send-request.js";

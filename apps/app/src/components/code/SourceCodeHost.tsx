@@ -1,19 +1,19 @@
 import { PluginReplacementSlot } from "@/components/plugin/PluginReplacementSlot";
-import { BbSourceCodeSplit } from "./BbSourceCodeSplit";
+import { SandySourceCodeSplit } from "./SandySourceCodeSplit";
 import { useSourceCodeRendererReplacement } from "./codeRendererProvider";
 import {
   DEFAULT_CODE_OVERFLOW,
-  type BbSourceCodeProps,
+  type SandySourceCodeProps,
 } from "./code-rendering";
 
 const SOURCE_CODE_RENDERER_SLOT_KIND = "sourceCodeRenderer";
 
 interface SourceCodeHostProps extends Omit<
-  BbSourceCodeProps,
+  SandySourceCodeProps,
   "overflow" | "highlightedLines"
 > {
-  overflow?: BbSourceCodeProps["overflow"];
-  highlightedLines?: BbSourceCodeProps["highlightedLines"];
+  overflow?: SandySourceCodeProps["overflow"];
+  highlightedLines?: SandySourceCodeProps["highlightedLines"];
 }
 
 export function SourceCodeHost({
@@ -29,7 +29,7 @@ export function SourceCodeHost({
   const replacement = useSourceCodeRendererReplacement();
 
   const original = (
-    <BbSourceCodeSplit
+    <SandySourceCodeSplit
       content={content}
       path={path}
       cacheKey={cacheKey}

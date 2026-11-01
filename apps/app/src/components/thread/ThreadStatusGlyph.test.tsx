@@ -2,11 +2,11 @@
 
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import type { PluginSidebarThreadIndicator } from "@get-bb/plugin-sdk";
+import type { PluginSidebarThreadIndicator } from "@sandy-sdk/plugin-sdk";
 import {
   SIDEBAR_SUCCESS_STATUS_COLOR_CLASS,
   SIDEBAR_WORKING_STATUS_COLOR_CLASS,
-} from "@bb/shared-ui/sidebar-row-classes";
+} from "@sandy/shared-ui/sidebar-row-classes";
 import { ThreadStatusGlyph } from "./ThreadStatusGlyph";
 
 afterEach(() => {

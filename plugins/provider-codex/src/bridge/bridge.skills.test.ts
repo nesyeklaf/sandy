@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it, vi } from "vitest";
 import { z } from "zod";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { experimental_killAllChildrenForTests, handleLine } from "./bridge.js";
 import {
   FULL_ACCESS_SESSION_OPTIONS,
@@ -11,7 +11,7 @@ import {
 } from "./fake-codex-app-server-harness.js";
 
 it("resolves selected skills for both turn start and steering through the app-server catalog", async () => {
-  const cwd = mkdtempSync(join(tmpdir(), "bb-codex-skill-input-"));
+  const cwd = mkdtempSync(join(tmpdir(), "sandy-codex-skill-input-"));
   const log = join(cwd, "requests.jsonl");
   const script = join(cwd, "script.json");
   const skillPath = join(cwd, ".agents", "skills", "teach", "SKILL.md");

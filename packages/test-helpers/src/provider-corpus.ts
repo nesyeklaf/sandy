@@ -10,12 +10,12 @@ import {
   threadStatusSchema,
   threadVisibilitySchema,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   ThreadEventRow,
   ThreadEventScope,
   ThreadEventScopeKind,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
 
 const corpusScopeKindSchema = z.enum(["thread", "turn"]);
@@ -28,7 +28,7 @@ const corpusScopeKindCoversDomain: ThreadEventScopeKind extends z.infer<
   : false = true;
 void corpusScopeKindCoversDomain;
 
-export const PROVIDER_CORPUS_DIR_ENV = "BB_PROVIDER_CORPUS_DIR";
+export const PROVIDER_CORPUS_DIR_ENV = "SANDY_PROVIDER_CORPUS_DIR";
 
 const corpusPathSegmentSchema = z
   .string()

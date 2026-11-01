@@ -5,12 +5,12 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HostDaemonBridgeLaunch } from "@bb/host-daemon-contract";
-import { buildPluginHost, resolvePluginBuildToolchain } from "@bb/plugin-build";
+import type { HostDaemonBridgeLaunch } from "@sandy/host-daemon-contract";
+import { buildPluginHost, resolvePluginBuildToolchain } from "@sandy/plugin-build";
 import {
   validatePluginProviderDeclaration,
   type NormalizedPluginProviderDeclaration,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   EMPTY_PROVIDER_NATIVE_ROOTS,
   EMPTY_PROVIDER_RESOLVED_NATIVE_ROOTS,
@@ -19,12 +19,12 @@ import {
   pluginPackageJsonSchema,
   type ProviderInfo,
   type ProviderNativeRootSet,
-} from "@bb/domain";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
+} from "@sandy/domain";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 import {
   captureFirstPartyProviderDeclarations,
   firstPartyPluginRootDir,
-} from "@bb/agent-runtime/test";
+} from "@sandy/agent-runtime/test";
 import { buildPluginProviderRegistration } from "../../src/services/providers/plugin-provider-registration.js";
 import { readPluginProviderIcon } from "../../src/services/plugins/plugin-runtime.js";
 import {
@@ -69,7 +69,7 @@ async function declaredIcons(pluginId: string): Promise<Map<string, string>> {
       ),
     ),
   );
-  return new Map(Object.entries(manifest.bb.branding.experimental_icons ?? {}));
+  return new Map(Object.entries(manifest.sandy.branding.experimental_icons ?? {}));
 }
 
 function providerIconSnapshot(args: {
@@ -161,7 +161,7 @@ export function minimalProviderRegistration(args: {
 
 export function stubHostArtifact(pluginId: string): PluginHostArtifactSnapshot {
   const bytes = Buffer.from(`// stub host artifact for ${pluginId}\n`);
-  const path = join(tmpdir(), `bb-stub-host-artifact-${pluginId}.mjs`);
+  const path = join(tmpdir(), `sandy-stub-host-artifact-${pluginId}.mjs`);
   writeFileSync(path, bytes);
   return {
     digest: createHash("sha256").update(bytes).digest("hex"),
@@ -184,7 +184,7 @@ async function buildFirstPartyBridgeArtifact(
     return null;
   }
   const toolchain = await resolvePluginBuildToolchain(
-    join(tmpdir(), "bb-plugin-build-toolchain"),
+    join(tmpdir(), "sandy-plugin-build-toolchain"),
   );
   const build = await buildPluginHost(rootDir, "0.0.0-test", toolchain);
   const bytes = await readFile(build.jsPath);
@@ -218,8 +218,8 @@ async function hasHostEntry(rootDir: string): Promise<boolean> {
   return (
     typeof parsed === "object" &&
     parsed !== null &&
-    typeof (parsed as { bb?: unknown }).bb === "object" &&
-    (parsed as { bb: { host?: unknown } }).bb.host !== undefined
+    typeof (parsed as { sandy?: unknown }).sandy === "object" &&
+    (parsed as { sandy: { host?: unknown } }).sandy.host !== undefined
   );
 }
 
@@ -269,7 +269,7 @@ export function scriptedEchoProviderRootDir(): string {
 
 export async function buildScriptedEchoProviderArtifact(): Promise<PluginHostArtifactSnapshot> {
   const toolchain = await resolvePluginBuildToolchain(
-    join(tmpdir(), "bb-plugin-build-toolchain"),
+    join(tmpdir(), "sandy-plugin-build-toolchain"),
   );
   const build = await buildPluginHost(
     scriptedEchoProviderRootDir(),

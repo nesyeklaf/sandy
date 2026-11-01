@@ -17,10 +17,10 @@ import { ThreadTimelineRows } from "./ThreadTimelineRows";
 
 const compactViewport = vi.hoisted(() => ({ calls: 0 }));
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", async (importOriginal) => {
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", async (importOriginal) => {
   const actual =
     await importOriginal<
-      typeof import("@bb/shared-ui/hooks/use-compact-viewport")
+      typeof import("@sandy/shared-ui/hooks/use-compact-viewport")
     >();
   return {
     ...actual,
@@ -152,12 +152,12 @@ describe("ThreadTimelineRows location subscription", () => {
       '[data-timeline-row-id="thr_a-message"]',
     );
     await waitFor(() =>
-      expect(matchingRow?.classList.contains("bb-search-flash")).toBe(true),
+      expect(matchingRow?.classList.contains("sandy-search-flash")).toBe(true),
     );
     expect(
       container
         .querySelector('[data-timeline-row-id="thr_b-message"]')
-        ?.classList.contains("bb-search-flash"),
+        ?.classList.contains("sandy-search-flash"),
     ).toBe(false);
   });
 
@@ -186,14 +186,14 @@ describe("ThreadTimelineRows location subscription", () => {
           expect(
             container
               .querySelector(`[data-timeline-row-id="${rowId}"]`)
-              ?.classList.contains("bb-search-flash"),
+              ?.classList.contains("sandy-search-flash"),
           ).toBe(true),
         );
       }
       expect(
         container
           .querySelector("[data-timeline-row-id='thr_b-next-message']")
-          ?.classList.contains("bb-search-flash"),
+          ?.classList.contains("sandy-search-flash"),
       ).toBe(false);
     } finally {
       unmount();

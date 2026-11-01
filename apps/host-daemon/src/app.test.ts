@@ -1,22 +1,25 @@
 import fs from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import type { AgentRuntime, AgentRuntimeOptions } from "@bb/agent-runtime";
+import type { AgentRuntime, AgentRuntimeOptions } from "@sandy/agent-runtime";
 import {
   threadScope,
   turnScope,
   type PendingInteractionCreate,
   type ToolCallRequest,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   hostDaemonEventBatchRequestSchema,
   hostDaemonInteractiveInterruptRequestSchema,
   type HostDaemonInteractiveRequestResponse,
   type HostDaemonContributedEnvEntry,
   type HostDaemonOnlineRpcCommand,
-} from "@bb/host-daemon-contract";
-import type { HostWatcher } from "@bb/host-watcher";
-import { createDeferredPromise, makeTempDir } from "@bb/test-helpers";
+} from "@sandy/host-daemon-contract";
+import type { HostWatcher } from "@sandy/host-watcher";
+import { createDeferredPromise, makeTempDir } from "@sandy/test-helpers";
+import { context, metrics, propagation, trace } from "@opentelemetry/api";
+import { startTelemetry } from "@sandy/telemetry";
+import { startOtlpReceiver } from "@sandy/telemetry/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DISPATCH_TEST_BRIDGE_LAUNCH,
@@ -382,7 +385,7 @@ async function createAppFixture(
     exitProcess?: (code: number) => void;
   } = {},
 ): Promise<HostDaemonAppFixture> {
-  const dataDir = await makeTempDir("bb-host-daemon-app-test-");
+  const dataDir = await makeTempDir("sandy-host-daemon-app-test-");
   const fetchRecorder = createFetchRecorder(args);
   const logger = createLogger();
   const runtimeOptions: RuntimeOptionsRef = { current: null };
@@ -418,6 +421,47 @@ async function createAppFixture(
 }
 
 describe("createHostDaemonApp", () => {
+  it("continues the server's trace when it handles a host RPC", async () => {
+    const receiver = await startOtlpReceiver();
+    const telemetry = startTelemetry({
+      component: "host-daemon",
+      env: { SANDY_OTLP_ENDPOINT: receiver.endpoint },
+    });
+    const { app, dataDir } = await createAppFixture();
+    const traceId = "0af7651916cd43dd8448eb211c80319c";
+    try {
+      const response = await app.router.handleOnlineRpcRequest({
+        type: "host-rpc.request",
+        requestId: "traced-read",
+        command: {
+          type: "host.read_file",
+          path: path.join(dataDir, "missing.txt"),
+          followRootSymlink: false,
+        },
+        traceparent: `00-${traceId}-b7ad6b7169203331-01`,
+      });
+      expect(response.ok).toBe(false);
+      await telemetry.shutdown();
+
+      const traces = receiver.requests.find(
+        (request) => request.path === "/v1/traces",
+      );
+      expect(traces?.body.includes(Buffer.from(traceId, "hex"))).toBe(true);
+      expect(traces?.body.includes("host-rpc host.read_file")).toBe(true);
+      expect(traces?.body.includes("sandy-host-daemon")).toBe(true);
+      expect(
+        response.ok ? undefined : traces?.body.includes(response.errorCode),
+      ).toBe(true);
+    } finally {
+      await app.daemon.shutdown("test", 0);
+      trace.disable();
+      context.disable();
+      propagation.disable();
+      metrics.disable();
+      await receiver.close();
+    }
+  });
+
   it("installs machine variables into the daemon and child processes before work, then removes overrides live", async () => {
     vi.stubEnv("MACHINE_DAEMON_TEST", "original");
     let socket: ReconnectingWebSocketLike | undefined;
@@ -509,7 +553,7 @@ describe("createHostDaemonApp", () => {
   });
 
   it("refreshes runtime shell env before provider model listing", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-app-models-");
+    const dataDir = await makeTempDir("sandy-host-daemon-app-models-");
     const fetchRecorder = createFetchRecorder();
     const logger = createLogger();
     const runtimeOptions: RuntimeOptionsRef = { current: null };
@@ -529,7 +573,7 @@ describe("createHostDaemonApp", () => {
     }));
     const resolveRuntimeShellEnv = vi.fn(async () => ({
       PATH: "/shell/bin:/usr/bin",
-      BB_SERVER_URL: "http://127.0.0.1:3334",
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
     }));
     const app = await createHostDaemonApp({
       dataDir,
@@ -581,7 +625,7 @@ describe("createHostDaemonApp", () => {
           },
           shellEnv: {
             PATH: "/shell/bin:/usr/bin",
-            BB_SERVER_URL: "http://127.0.0.1:3334",
+            SANDY_SERVER_URL: "http://127.0.0.1:3334",
           },
         }),
       );
@@ -616,7 +660,7 @@ describe("createHostDaemonApp", () => {
   });
 
   it("reuses freshly resolved startup shell env for immediate model listing", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-app-startup-env-");
+    const dataDir = await makeTempDir("sandy-host-daemon-app-startup-env-");
     const fetchRecorder = createFetchRecorder();
     const logger = createLogger();
     const runtimeOptions: RuntimeOptionsRef = { current: null };
@@ -636,7 +680,7 @@ describe("createHostDaemonApp", () => {
     }));
     const resolveRuntimeShellEnv = vi.fn(async () => ({
       PATH: "/slow-shell/bin:/usr/bin",
-      BB_SERVER_URL: "http://127.0.0.1:3334",
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
     }));
     const app = await createHostDaemonApp({
       dataDir,
@@ -650,7 +694,7 @@ describe("createHostDaemonApp", () => {
       localApiConfig: null,
       runtimeShellEnv: {
         PATH: "/startup/bin:/usr/bin",
-        BB_SERVER_URL: "http://127.0.0.1:3334",
+        SANDY_SERVER_URL: "http://127.0.0.1:3334",
       },
       runtimeShellEnvResolvedAtMs: 1_000,
       resolveRuntimeShellEnv,
@@ -756,7 +800,7 @@ describe("createHostDaemonApp", () => {
   async function createExpiredShellEnvApp(args: {
     resolvedAtMs: number | null;
   }) {
-    const dataDir = await makeTempDir("bb-host-daemon-app-expired-env-");
+    const dataDir = await makeTempDir("sandy-host-daemon-app-expired-env-");
     const runtimeOptions: RuntimeOptionsRef = { current: null };
     const freshShellEnv = createDeferredPromise<Record<string, string>>();
     const resolveRuntimeShellEnv = vi.fn(() => freshShellEnv.promise);
@@ -1066,9 +1110,9 @@ describe("createHostDaemonApp", () => {
   });
 
   it("forgets server-retired loaded environments when opening a session", async () => {
-    const dataDir = await makeTempDir("bb-host-daemon-app-retired-");
+    const dataDir = await makeTempDir("sandy-host-daemon-app-retired-");
     const workspacePath = await makeTempDir(
-      "bb-host-daemon-retired-workspace-",
+      "sandy-host-daemon-retired-workspace-",
     );
     const logger = createLogger();
     const fetchRecorder = createFetchRecorder({
@@ -1127,7 +1171,7 @@ describe("createHostDaemonApp", () => {
     const { app, logger, runtimeOptions } = await createAppFixture();
     try {
       const workspacePath = await makeTempDir(
-        "bb-host-daemon-app-log-workspace-",
+        "sandy-host-daemon-app-log-workspace-",
       );
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-provider-exit-log",
@@ -1173,7 +1217,7 @@ describe("createHostDaemonApp", () => {
     const { app, fetchRecorder, runtimeOptions } = await createAppFixture();
     try {
       const workspacePath = await makeTempDir(
-        "bb-host-daemon-app-pending-turn-exit-",
+        "sandy-host-daemon-app-pending-turn-exit-",
       );
       await app.connection.start();
       await app.runtimeManager.ensureEnvironment({
@@ -1240,7 +1284,7 @@ describe("createHostDaemonApp", () => {
   it("interrupts pending interactive requests when an expected provider exit affects their threads", async () => {
     const { app, fetchRecorder, runtimeOptions } = await createAppFixture();
     try {
-      const workspacePath = await makeTempDir("bb-host-daemon-app-workspace-");
+      const workspacePath = await makeTempDir("sandy-host-daemon-app-workspace-");
       await app.connection.start();
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-interactive",
@@ -1330,7 +1374,7 @@ describe("createHostDaemonApp", () => {
       await app.connection.start();
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-rejected-interrupt",
-        workspacePath: await makeTempDir("bb-host-daemon-app-workspace-"),
+        workspacePath: await makeTempDir("sandy-host-daemon-app-workspace-"),
       });
       const options = runtimeOptions.current;
       if (!options?.onProcessExit) {
@@ -1397,7 +1441,7 @@ describe("createHostDaemonApp", () => {
       await app.connection.start();
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-transient-interrupt",
-        workspacePath: await makeTempDir("bb-host-daemon-app-workspace-"),
+        workspacePath: await makeTempDir("sandy-host-daemon-app-workspace-"),
       });
       vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
       const options = runtimeOptions.current;
@@ -1455,7 +1499,7 @@ describe("createHostDaemonApp", () => {
       },
     });
     try {
-      const workspacePath = await makeTempDir("bb-host-daemon-app-abort-");
+      const workspacePath = await makeTempDir("sandy-host-daemon-app-abort-");
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-abort",
         workspacePath,
@@ -1477,7 +1521,7 @@ describe("createHostDaemonApp", () => {
   it("logs stack-bearing fields for dynamic tool forwarding failures", async () => {
     const { app, logger, runtimeOptions } = await createAppFixture();
     try {
-      const workspacePath = await makeTempDir("bb-host-daemon-app-tool-");
+      const workspacePath = await makeTempDir("sandy-host-daemon-app-tool-");
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-tool",
         workspacePath,
@@ -1516,7 +1560,7 @@ describe("createHostDaemonApp", () => {
     });
     try {
       const workspacePath = await makeTempDir(
-        "bb-host-daemon-app-interactive-error-",
+        "sandy-host-daemon-app-interactive-error-",
       );
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-interactive-error",
@@ -1558,7 +1602,7 @@ describe("createHostDaemonApp", () => {
     });
     try {
       const workspacePath = await makeTempDir(
-        "bb-host-daemon-app-rejected-interactive-",
+        "sandy-host-daemon-app-rejected-interactive-",
       );
       await app.runtimeManager.ensureEnvironment({
         environmentId: "env-app-rejected-interactive",

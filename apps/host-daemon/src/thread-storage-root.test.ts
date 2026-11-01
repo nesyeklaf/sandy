@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ensureThreadStorageRoot } from "./thread-storage-root.js";
 
@@ -10,11 +10,11 @@ afterEach(() => {
 
 describe("thread storage root", () => {
   it("creates thread-storage under the host data dir, not a parent thread's ambient storage path", async () => {
-    const dataDir = await makeTempDir("bb-thread-storage-root-data-");
+    const dataDir = await makeTempDir("sandy-thread-storage-root-data-");
     const parentStorageRoot = await makeTempDir(
-      "bb-thread-storage-root-parent-",
+      "sandy-thread-storage-root-parent-",
     );
-    vi.stubEnv("BB_THREAD_STORAGE", path.join(parentStorageRoot, "thr_parent"));
+    vi.stubEnv("SANDY_THREAD_STORAGE", path.join(parentStorageRoot, "thr_parent"));
 
     const rootPath = await ensureThreadStorageRoot(dataDir);
 

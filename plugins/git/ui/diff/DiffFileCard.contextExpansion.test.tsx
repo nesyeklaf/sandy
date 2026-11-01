@@ -6,23 +6,23 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderSlot } from "@get-bb/plugin-sdk/testing/app";
-import { POINTER_COARSE_QUERY } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
+import { POINTER_COARSE_QUERY } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import type {
   DiffFileContentsResult,
   RequestDiffFileContents,
-} from "@bb/shared-ui/git-diff/card-body";
+} from "@sandy/shared-ui/git-diff/card-body";
 import type { DiffFileEntry } from "../../contract.js";
 import { DiffFileCard, type DiffFileCardProps } from "./DiffFileCard.js";
 import { makeDiffFileEntry } from "./diff-file-fixtures.js";
 
 function findDiffView() {
-  return screen.findByTestId("bb-diff");
+  return screen.findByTestId("sandy-diff");
 }
 
 function hasFullFileContents(): boolean {
   return (
-    screen.getByTestId("bb-diff").getAttribute("data-has-full-file-contents") ===
+    screen.getByTestId("sandy-diff").getAttribute("data-has-full-file-contents") ===
     "true"
   );
 }

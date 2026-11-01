@@ -169,26 +169,26 @@ describe("arrangePluginNavPanelPreferences", () => {
   });
 
   it("hides only the default-hidden keys before the user customizes", () => {
-    const newThread = panel("__bb__", "new-thread");
-    const searchThreads = panel("__bb__", "search-threads");
+    const newThread = panel("__sandy__", "new-thread");
+    const searchThreads = panel("__sandy__", "search-threads");
     const extra = panel("calendar", "agenda");
     const result = arrangePluginNavPanelPreferences({
       panels: [newThread, searchThreads, github, docs, tasks, extra],
       storedOrder: [
         "github/pulls",
-        "__bb__/new-thread",
+        "__sandy__/new-thread",
         "docs/vault",
-        "__bb__/search-threads",
+        "__sandy__/search-threads",
         "tasks/board",
         "calendar/agenda",
       ],
       storedVisibleKeys: null,
-      defaultHiddenKeys: ["__bb__/search-threads"],
+      defaultHiddenKeys: ["__sandy__/search-threads"],
     });
 
     expect(result.visibleKeys).toEqual([
       "github/pulls",
-      "__bb__/new-thread",
+      "__sandy__/new-thread",
       "docs/vault",
       "tasks/board",
       "calendar/agenda",
@@ -196,15 +196,15 @@ describe("arrangePluginNavPanelPreferences", () => {
   });
 
   it("keeps a stored visible list authoritative over the default-hidden keys", () => {
-    const searchThreads = panel("__bb__", "search-threads");
+    const searchThreads = panel("__sandy__", "search-threads");
     const result = arrangePluginNavPanelPreferences({
       panels: [searchThreads, github],
-      storedOrder: ["__bb__/search-threads", "github/pulls"],
-      storedVisibleKeys: ["__bb__/search-threads"],
-      defaultHiddenKeys: ["__bb__/search-threads"],
+      storedOrder: ["__sandy__/search-threads", "github/pulls"],
+      storedVisibleKeys: ["__sandy__/search-threads"],
+      defaultHiddenKeys: ["__sandy__/search-threads"],
     });
 
-    expect(result.visibleKeys).toEqual(["__bb__/search-threads"]);
+    expect(result.visibleKeys).toEqual(["__sandy__/search-threads"]);
   });
 });
 

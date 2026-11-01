@@ -1,0 +1,5 @@
+Card("Lisbon, five days", [
+  Text("Five days for two comes to about **€1,240**, flights included."),
+  SegmentedBar([{label: "Flat", value: 610}, {label: "Flights", value: 380}, {label: "Rest", value: 250}], unit: "€"),
+  FollowUps(["Where can we save the most?", "Plan the five days hour by hour", "How does Porto compare for the same week?"])
+])

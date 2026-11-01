@@ -9,7 +9,7 @@ import {
   useLocation,
   matchPath,
 } from "react-router-dom";
-import "@bb/shared-ui/icon-extended";
+import "@sandy/shared-ui/icon-extended";
 import {
   builtInThemes,
   defaultAppSettings,
@@ -19,27 +19,28 @@ import {
   experimentKeys,
   managedBranchPrefixSchema,
   type AppTheme,
+  type SandySkillSourceId,
   type ExperimentKey,
   type Experiments,
   type FaviconColorPreference,
   type PluginThemeMeta,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   WorkspaceOpenTarget,
   WorkspaceOpenTargetId,
-} from "@bb/host-daemon-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { Switch } from "@bb/shared-ui/switch";
-import { COARSE_POINTER_ICON_SIZE_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
+} from "@sandy/host-daemon-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { Switch } from "@sandy/shared-ui/switch";
+import { COARSE_POINTER_ICON_SIZE_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
+} from "@sandy/shared-ui/dropdown-menu";
 import { PageShell } from "@/components/ui/page-shell.js";
 import {
   SettingsSection,
@@ -56,6 +57,7 @@ import { useAppThemePreview } from "@/hooks/useAppThemePreview";
 import { ProvidersSettingsSection } from "@/components/settings/ProvidersSettingsSection";
 import { CodeRendererSettings } from "@/components/settings/CodeRendererSettings";
 import { SidebarThreadListSetting } from "@/components/settings/SidebarThreadListSetting";
+import { SkillSourcesSettings } from "@/components/settings/SkillSourcesSettings";
 import { SidebarNavigationProviderSetting } from "@/components/settings/SidebarNavigationProviderSetting";
 import { SidebarFooterSettings } from "@/components/settings/SidebarFooterSettings";
 import { SplitDimmingSetting } from "@/components/settings/SplitDimmingSetting";
@@ -85,7 +87,7 @@ import {
 } from "@/hooks/mutations/settings-mutations";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import { useWorkspaceOpenTargets } from "@/hooks/useWorkspaceOpenTargets";
-import { isDesktopBrowserAvailable } from "@/lib/bb-desktop";
+import { isDesktopBrowserAvailable } from "@/lib/sandy-desktop";
 import {
   FAVICON_COLOR_VALUES,
   getFaviconGlyphHref,
@@ -98,7 +100,7 @@ import {
   getRootComposeRoutePath,
 } from "@/lib/route-paths";
 import { useNavigateToThreadAfterCreatePreference } from "@/lib/root-compose-create-preference";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   resolvePreferredWorkspaceOpenTarget,
   supportsWorkspaceOpenTargetCapability,
@@ -112,7 +114,7 @@ import type { LocalHostDaemonAccessState } from "@/lib/local-host-daemon-access"
 import { openUrlInExternalBrowser } from "@/lib/url-open-routing";
 
 const LOCAL_EDITOR_INTEGRATION_DOCS_URL =
-  "https://github.com/get-bb/bb/blob/main/docs/multiple-devices.md#open-bb-from-another-browser";
+  "https://github.com/nesyeklaf/sandy/blob/main/docs/multiple-devices.md#open-sandy-from-another-browser";
 
 interface ThemePreferenceOption {
   label: string;
@@ -191,6 +193,8 @@ interface GeneralSettingsSectionProps {
   openLinksInAppBrowser: boolean;
   rewriteLocalhostLinks: boolean;
   steerActiveThreadOnEnter: boolean;
+  disabledSkillSources: readonly SandySkillSourceId[];
+  onDisabledSkillSourcesChange: (disabledSources: SandySkillSourceId[]) => void;
 }
 
 interface PrivacySettingsSectionProps {
@@ -264,9 +268,9 @@ const SETTINGS_DROPDOWN_CONTENT_CLASS =
   "min-w-[var(--radix-dropdown-menu-trigger-width)]";
 
 const CREATE_CUSTOM_PALETTE_PROMPT =
-  "Create a custom bb palette. First run `bb theme dir` to find the custom theme directory. Ask me for the palette name and visual direction, then create `<theme-dir>/<name>/theme.css` with light and dark theme variables compatible with bb's theme tokens.";
+  "Create a custom sandy palette. First run `sandy theme dir` to find the custom theme directory. Ask me for the palette name and visual direction, then create `<theme-dir>/<name>/theme.css` with light and dark theme variables compatible with sandy's theme tokens.";
 const PALETTE_SETTING_DESCRIPTION =
-  "Palettes change bb's colors, including syntax colors in diffs and file previews. Choose a built-in palette or create one from a prompt.";
+  "Palettes change sandy's colors, including syntax colors in diffs and file previews. Choose a built-in palette or create one from a prompt.";
 
 interface PaletteMenuItemProps {
   active: boolean;
@@ -513,10 +517,10 @@ export function LocalOpenTargetSettingsSection({
     const accessDenied = accessState === "denied";
     const accessAvailable = accessState === "available";
     const descriptionText = accessDenied
-      ? "Your browser blocked access to bb on this device. Allow local network access for this site in browser settings, then reload bb."
+      ? "Your browser blocked access to sandy on this device. Allow local network access for this site in browser settings, then reload sandy."
       : accessAvailable
-        ? "bb couldn’t connect to its local editor helper. Make sure the bb desktop app or CLI is running on this device, then retry. If it is already running, a remote browser origin may need to be configured."
-        : "Connect this browser to bb on this device so it can discover installed editors. bb only contacts the local helper after you choose Enable; your browser may ask for local network access.";
+        ? "sandy couldn’t connect to its local editor helper. Make sure the sandy desktop app or CLI is running on this device, then retry. If it is already running, a remote browser origin may need to be configured."
+        : "Connect this browser to sandy on this device so it can discover installed editors. sandy only contacts the local helper after you choose Enable; your browser may ask for local network access.";
     const buttonLabel = accessRequestPending
       ? accessAvailable
         ? "Retrying…"
@@ -646,7 +650,7 @@ function ManagedBranchPrefixSetting({
       label={MANAGED_BRANCH_PREFIX_SETTING_LABEL}
       description={
         valid ? (
-          `bb puts this in front of every branch it creates for a worktree, such as ${draft}${MANAGED_BRANCH_PREFIX_EXAMPLE_SLUG}. Leave it empty for no prefix.`
+          `sandy puts this in front of every branch it creates for a worktree, such as ${draft}${MANAGED_BRANCH_PREFIX_EXAMPLE_SLUG}. Leave it empty for no prefix.`
         ) : (
           <span className="text-destructive" role="alert">
             This prefix cannot start a valid git branch name.
@@ -878,6 +882,8 @@ export function GeneralSettingsSection({
   openLinksInAppBrowser,
   rewriteLocalhostLinks,
   steerActiveThreadOnEnter,
+  disabledSkillSources,
+  onDisabledSkillSourcesChange,
 }: GeneralSettingsSectionProps) {
   const localhostRewriteDescription = localhostLinkRewriteDescription(
     typeof window === "undefined" ? undefined : window.location.hostname,
@@ -1001,12 +1007,18 @@ export function GeneralSettingsSection({
           </SettingsWithControl>
         </div>
       </SettingsSection>
+      <SkillSourcesSettings
+        disabled={generalSettingsDisabled}
+        disabledSources={disabledSkillSources}
+        onDisabledSourcesChange={onDisabledSkillSourcesChange}
+      />
+
       <SettingsSection title="Links">
         <div className="space-y-5">
           {desktopBrowserAvailable ? (
             <SettingsWithControl
               label={IN_APP_BROWSER_LINK_SETTING_LABEL}
-              description="Open web links inside bb."
+              description="Open web links inside sandy."
             >
               <Switch
                 checked={openLinksInAppBrowser}
@@ -1106,7 +1118,7 @@ const EXPERIMENT_DEFINITIONS: Record<
   applicationLinks: {
     label: "App links",
     description:
-      "Open links like linear:// or slack:// in their apps on this device. BB asks first unless you choose Always allow. Manage approvals in General → Links → App links.",
+      "Open links like linear:// or slack:// in their apps on this device. SANDY asks first unless you choose Always allow. Manage approvals in General → Links → App links.",
   },
   compactExpiredCache: {
     label: "Compact before resuming expired sessions",
@@ -1126,7 +1138,7 @@ const EXPERIMENT_DEFINITIONS: Record<
   serverMove: {
     label: "Server move",
     description:
-      "Move the bb server to another machine from Settings → Machines, and export or import server data with bb server.",
+      "Move the sandy server to another machine from Settings → Machines, and export or import server data with sandy server.",
   },
   sidebarMultiSelect: {
     label: "Select multiple sidebar threads",
@@ -1136,7 +1148,7 @@ const EXPERIMENT_DEFINITIONS: Record<
   skipFocusedThreadNotifications: {
     label: "Skip notifications for the thread you're viewing",
     description:
-      "Don't show a system notification for a thread that is open in a visible, focused bb window or tab. Other threads, and the same thread in a window you're not using, still notify.",
+      "Don't show a system notification for a thread that is open in a visible, focused sandy window or tab. Other threads, and the same thread in a window you're not using, still notify.",
   },
   threadContextCard: {
     label: "Thread context card",
@@ -1393,9 +1405,7 @@ export function SettingsView() {
   } else if (activeSection === "environment-variables") {
     content = <MachineEnvironmentSettings />;
   } else if (activeSection === "updates") {
-    content = (
-      <UpdatesSettingsSection />
-    );
+    content = <UpdatesSettingsSection />;
   } else if (activeSection === "mobile") {
     content = <MobileAppSection />;
   } else if (activeSection === "experiments") {
@@ -1464,6 +1474,12 @@ export function SettingsView() {
           openLinksInAppBrowser={openLinksInAppBrowser}
           rewriteLocalhostLinks={rewriteLocalhostLinks}
           steerActiveThreadOnEnter={generalSettings.steerActiveThreadOnEnter}
+          disabledSkillSources={generalSettings.disabledSkillSources}
+          onDisabledSkillSourcesChange={(disabledSources) =>
+            updateGeneralSettingsMutation.mutate({
+              disabledSkillSources: disabledSources,
+            })
+          }
           terminalCopyOnSelect={generalSettings.terminalCopyOnSelect}
           onTerminalCopyOnSelectChange={(enabled) =>
             updateGeneralSettingsMutation.mutate({

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { MachineEnvironmentList } from "@bb/server-contract";
+import type { MachineEnvironmentList } from "@sandy/server-contract";
 import { OptionPicker } from "@/components/pickers/OptionPicker";
 import {
   MachineEnvironmentAutomaticRow,
@@ -96,8 +96,8 @@ const SCOPES = {
     ]),
     inheritedVariables: GLOBAL_VARIABLES,
   },
-  bb: {
-    label: "bb",
+  sandy: {
+    label: "sandy",
     environment: environment(LOGGED_IN),
     inheritedVariables: GLOBAL_VARIABLES,
   },
@@ -306,7 +306,7 @@ export function Rows() {
       </StoryRow>
       <StoryRow
         label="saved variable · with a note"
-        hint="notes come from bb machine env set --note; they wrap instead of truncating"
+        hint="notes come from sandy machine env set --note; they wrap instead of truncating"
       >
         <RowStage>
           <MachineEnvironmentVariableRow

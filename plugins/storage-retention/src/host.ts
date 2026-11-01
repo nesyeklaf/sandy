@@ -1,7 +1,7 @@
 import {
   experimental_defineHostEntry,
   experimental_killProcessesWithCwdUnder,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -19,7 +19,7 @@ import {
 import { measureDiskUsage } from "./disk-usage.js";
 import { isFsErrorWithCode } from "./fs-errors.js";
 
-const STORAGE_ENTRY = /^(thr_[a-zA-Z0-9]+|\.bb-trash-[a-zA-Z0-9_-]+)$/;
+const STORAGE_ENTRY = /^(thr_[a-zA-Z0-9]+|\.sandy-trash-[a-zA-Z0-9_-]+)$/;
 
 function assertStorageEntry(rootPath: string, name: string) {
   if (
@@ -140,7 +140,7 @@ export default experimental_defineHostEntry({
     async discard({ rootPath, names, recreate }, context) {
       for (const name of names) {
         assertStorageEntry(rootPath, name);
-        if (recreate && name.startsWith(".bb-trash-"))
+        if (recreate && name.startsWith(".sandy-trash-"))
           throw new Error("Cannot recreate a trash directory");
       }
       context.signal.throwIfAborted();
@@ -154,7 +154,7 @@ export default experimental_defineHostEntry({
       }
       await experimental_killProcessesWithCwdUnder({
         directories: names
-          .filter((name) => !name.startsWith(".bb-trash-"))
+          .filter((name) => !name.startsWith(".sandy-trash-"))
           .map((name) => path.join(root, name)),
       });
       const removed: string[] = [];
@@ -169,9 +169,9 @@ export default experimental_defineHostEntry({
               throw new Error(
                 "Storage entry must be a directory, not a symbolic link",
               );
-            const trash = name.startsWith(".bb-trash-")
+            const trash = name.startsWith(".sandy-trash-")
               ? source
-              : path.join(root, `.bb-trash-${name}-${randomUUID()}`);
+              : path.join(root, `.sandy-trash-${name}-${randomUUID()}`);
             if (source !== trash) await fs.rename(source, trash);
             trashes.push(trash);
             removed.push(name);

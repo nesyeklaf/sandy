@@ -1,7 +1,7 @@
-import type { ThreadListEntry } from "@bb/domain";
+import type { ThreadListEntry } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { toPluginSidebarThread } from "./plugin-sidebar-threads";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 
 function makeThread(overrides: Partial<ThreadListEntry> = {}): ThreadListEntry {
   return makeThreadListEntry({
@@ -18,7 +18,7 @@ function makeThread(overrides: Partial<ThreadListEntry> = {}): ThreadListEntry {
 }
 
 describe("toPluginSidebarThread", () => {
-  it("resolves the display title through the same rules bb's row uses", () => {
+  it("resolves the display title through the same rules sandy's row uses", () => {
     expect(toPluginSidebarThread(makeThread()).displayTitle).toBe("A thread");
     expect(
       toPluginSidebarThread(makeThread({ title: null, titleFallback: "Fallback" }))
@@ -32,7 +32,7 @@ describe("toPluginSidebarThread", () => {
 
     const resources = {
       sectionNamesById: new Map([["sec_slop", "Slop Cop"]]),
-      projectNamesById: new Map([["proj_1", "bb"]]),
+      projectNamesById: new Map([["proj_1", "sandy"]]),
       threadById: new Map(),
     };
     expect(
@@ -41,7 +41,7 @@ describe("toPluginSidebarThread", () => {
         new Map(),
         resources,
       ).displayTitle,
-    ).toBe("Review Slop Cop in bb");
+    ).toBe("Review Slop Cop in sandy");
   });
 
   it("maps activity counts onto the plugin-facing names", () => {
@@ -146,8 +146,8 @@ describe("toPluginSidebarThread", () => {
         archivedAt: 13,
         environmentId: "env_1",
         environmentName: "Worktree",
-        environmentBranchName: "bb/feature",
-        environmentPath: "/repos/bb/.worktrees/feature",
+        environmentBranchName: "sandy/feature",
+        environmentPath: "/repos/sandy/.worktrees/feature",
         environmentIsWorktree: true,
         environmentProviderId: "git-worktree",
         environmentWorkspaceDisplayKind: "managed-worktree",
@@ -163,8 +163,8 @@ describe("toPluginSidebarThread", () => {
     expect(mapped.environment).toEqual({
       id: "env_1",
       name: "Worktree",
-      branchName: "bb/feature",
-      path: "/repos/bb/.worktrees/feature",
+      branchName: "sandy/feature",
+      path: "/repos/sandy/.worktrees/feature",
       isWorktree: true,
       providerId: "git-worktree",
       workspaceDisplayKind: "managed-worktree",

@@ -8,7 +8,7 @@ export const NOT_MEASURED = [
   "unreadable pids",
   "connections shorter than about 1 s",
   "unconnected UDP (sendto without connect)",
-  "bb CLI processes started outside the server and daemon trees",
+  "sandy CLI processes started outside the server and daemon trees",
   "the clients themselves (browser, desktop, phone)",
 ];
 

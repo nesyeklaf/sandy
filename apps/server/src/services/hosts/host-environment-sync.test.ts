@@ -1,6 +1,6 @@
-import { noopNotifier, setAppSettings, updateHost, upsertHost } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import { defaultAppSettings } from "@bb/domain";
+import { noopNotifier, setAppSettings, updateHost, upsertHost } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import { defaultAppSettings } from "@sandy/domain";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,7 +11,7 @@ import { HostEnvironmentSync } from "./host-environment-sync.js";
 
 it("synchronizes configured variables to every connected host", async () => {
   const db = createMigratedConnection();
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-machine-env-sync-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-machine-env-sync-"));
   const hub = new NotificationHub();
   try {
     setAppSettings(db, {

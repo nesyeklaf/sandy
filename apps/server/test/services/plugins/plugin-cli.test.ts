@@ -1,7 +1,7 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PLUGIN_CLI_OUTPUT_MAX_BYTES } from "@get-bb/plugin-sdk";
+import { PLUGIN_CLI_OUTPUT_MAX_BYTES } from "@sandy-sdk/plugin-sdk";
 import {
   generatedSkillsRootPath,
   pluginCommandsSkillDir,
@@ -16,13 +16,13 @@ import {
 const BASE = "http://127.0.0.1:3334";
 
 const CLI_SOURCE = `
-  export default function plugin(bb: any) {
-    bb.log.info("cli plugin loaded");
-    bb.cli.register({
+  export default function plugin(sandy: any) {
+    sandy.log.info("cli plugin loaded");
+    sandy.cli.register({
       name: "acme",
       summary: "Acme tools",
       commands: [
-        { name: "issues", summary: "List issues", usage: "bb acme issues [--json]" },
+        { name: "issues", summary: "List issues", usage: "sandy acme issues [--json]" },
       ],
       async run(argv: string[], ctx: any) {
         if (argv[0] === "fail") return { exitCode: 3, stderr: "acme failed" };
@@ -65,7 +65,7 @@ async function writePlugin(
     JSON.stringify({
       name: options.name,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "CLI fixture",
         description: "Plugin CLI fixture.",
         branding: { icon: "Zap" },
@@ -89,14 +89,14 @@ async function runCli(
   });
 }
 
-describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () => {
+describe("plugin CLI commands (sandy.cli.register + endpoints + skill + logs)", () => {
   let harness: TestAppHarness;
   let rootDir: string;
 
   beforeEach(async () => {
     harness = await createTestAppHarness();
     rootDir = await writePlugin(join(harness.config.dataDir, "fixtures"), {
-      name: "bb-plugin-acme",
+      name: "sandy-plugin-acme",
       serverSource: CLI_SOURCE,
     });
     const entry = await harness.pluginService.installPath(rootDir);
@@ -123,7 +123,7 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
             {
               name: "issues",
               summary: "List issues",
-              usage: "bb acme issues [--json]",
+              usage: "sandy acme issues [--json]",
             },
           ],
           rendersHelp: false,
@@ -273,10 +273,10 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
     const reserved = await writePlugin(
       join(harness.config.dataDir, "fixtures"),
       {
-        name: "bb-plugin-shadower",
+        name: "sandy-plugin-shadower",
         serverSource: `
-          export default function plugin(bb: any) {
-            bb.cli.register({ name: "thread", summary: "s", commands: [{ name: "inspect", summary: "Inspect", usage: "bb thread inspect" }], run: async () => ({ exitCode: 0, stdout: "thread" }) });
+          export default function plugin(sandy: any) {
+            sandy.cli.register({ name: "thread", summary: "s", commands: [{ name: "inspect", summary: "Inspect", usage: "sandy thread inspect" }], run: async () => ({ exitCode: 0, stdout: "thread" }) });
           }
         `,
       },
@@ -291,7 +291,7 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
       {
         level: "warn",
         message:
-          'CLI command "thread" collides with core command "bb thread"; core keeps the short form. Use "bb plugin run shadower" to invoke this plugin.',
+          'CLI command "thread" collides with core command "sandy thread"; core keeps the short form. Use "sandy plugin run shadower" to invoke this plugin.',
       },
     ]);
     expect(
@@ -301,15 +301,15 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
       join(pluginCommandsSkillDir(harness.config.dataDir), "SKILL.md"),
       "utf8",
     );
-    expect(skill).toContain("bb plugin run shadower inspect");
+    expect(skill).toContain("sandy plugin run shadower inspect");
 
     const invalid = await writePlugin(
       join(harness.config.dataDir, "fixtures"),
       {
-        name: "bb-plugin-badname",
+        name: "sandy-plugin-badname",
         serverSource: `
-        export default function plugin(bb: any) {
-          bb.cli.register({ name: "Bad Name", summary: "s", run: async () => ({ exitCode: 0 }) });
+        export default function plugin(sandy: any) {
+          sandy.cli.register({ name: "Bad Name", summary: "s", run: async () => ({ exitCode: 0 }) });
         }
       `,
       },
@@ -323,11 +323,11 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
     const replacer = await writePlugin(
       join(harness.config.dataDir, "fixtures"),
       {
-        name: "bb-plugin-replacer",
+        name: "sandy-plugin-replacer",
         serverSource: `
-        export default function plugin(bb: any) {
-          bb.cli.register({ name: "first", summary: "old", run: async () => ({ exitCode: 0 }) });
-          bb.cli.register({ name: "second", summary: "new", run: async () => ({ exitCode: 0 }) });
+        export default function plugin(sandy: any) {
+          sandy.cli.register({ name: "first", summary: "old", run: async () => ({ exitCode: 0 }) });
+          sandy.cli.register({ name: "second", summary: "new", run: async () => ({ exitCode: 0 }) });
         }
       `,
       },
@@ -351,8 +351,8 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
     expect(content).toContain("name: plugin-commands");
     expect(content).toContain("capped at 33554432 UTF-8 bytes");
     expect(content).toContain("plugin_cli_output_too_large");
-    expect(content).toContain("## bb acme — Acme tools");
-    expect(content).toContain("bb acme issues [--json]");
+    expect(content).toContain("## sandy acme — Acme tools");
+    expect(content).toContain("sandy acme issues [--json]");
 
     const sources = (
       await resolveSkillCatalogEntries(testLogger, {
@@ -370,18 +370,18 @@ describe("plugin CLI commands (bb.cli.register + endpoints + skill + logs)", () 
     await writeFile(
       join(rootDir, "server.ts"),
       `
-        export default function plugin(bb: any) {
-          bb.cli.register({ name: "acme2", summary: "Acme v2", run: async () => ({ exitCode: 0 }) });
+        export default function plugin(sandy: any) {
+          sandy.cli.register({ name: "acme2", summary: "Acme v2", run: async () => ({ exitCode: 0 }) });
         }
       `,
     );
     await harness.pluginService.reload("acme");
     const reloaded = await readFile(skillFile, "utf8");
-    expect(reloaded).toContain("## bb acme2 — Acme v2");
-    expect(reloaded).not.toContain("## bb acme —");
+    expect(reloaded).toContain("## sandy acme2 — Acme v2");
+    expect(reloaded).not.toContain("## sandy acme —");
   });
 
-  it("bb.log writes JSONL to the plugin log file and the tail endpoint serves it", async () => {
+  it("sandy.log writes JSONL to the plugin log file and the tail endpoint serves it", async () => {
     const logFile = join(
       harness.config.dataDir,
       "plugins",

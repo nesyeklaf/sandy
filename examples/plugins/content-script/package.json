@@ -1,12 +1,12 @@
 {
-  "name": "bb-plugin-content-script-example",
+  "name": "sandy-plugin-content-script-example",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "bbPluginSdk": ">=0.4.3"
+    "sandyPluginSdk": ">=0.4.3"
   },
-  "bb": {
+  "sandy": {
     "name": "Content Script Example",
     "description": "Adds a cleanup-safe focus ring to editable app surfaces.",
     "branding": {
@@ -16,8 +16,8 @@
     "app": "./app.ts"
   },
   "devDependencies": {
-    "@get-bb/plugin-sdk": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

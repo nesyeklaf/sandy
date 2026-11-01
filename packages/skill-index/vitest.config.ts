@@ -8,7 +8,7 @@ export default defineWorkspaceTestConfig({
     silent: "passed-only",
     projects: sharedWorkerProjects({
       pkgDir: import.meta.dirname,
-      name: "@bb/skill-index",
+      name: "@sandy/skill-index",
       include: ["test/**/*.test.ts"],
     }),
   },

@@ -24,7 +24,7 @@ function tokenTypes(html: string): string[] {
 }
 
 describe("highlightMarkdownCode", () => {
-  const shell = "# install the plugin\nbb plugin install ./plugins/monokai";
+  const shell = "# install the plugin\nsandy plugin install ./plugins/monokai";
 
   it.each(["sh", "bash", "shell", "zsh", "console", "shellscript"])(
     "lexes a `#` comment in a %s fence as a comment, not a JS sign",
@@ -91,18 +91,18 @@ describe("highlightMarkdownCode", () => {
     for (const role of ["add", "remove", "hunk", "meta"]) {
       expect(html).toContain(`sh__line--diff-${role}`);
       expect(stylesheet).toContain(
-        `.bb-code-highlight .sh__line--diff-${role}`,
+        `.sandy-code-highlight .sh__line--diff-${role}`,
       );
     }
 
     expect(stylesheet).toMatch(
-      /\.bb-code-highlight \.sh__line\s*\{[^}]*display: inline-block;[^}]*min-width: 100%;[^}]*\}/u,
+      /\.sandy-code-highlight \.sh__line\s*\{[^}]*display: inline-block;[^}]*min-width: 100%;[^}]*\}/u,
     );
     expect(stylesheet).toMatch(
-      /\.bb-code-highlight \.sh__line--diff-add\s*\{[^}]*var\(--diff-added\)[^}]*\}/u,
+      /\.sandy-code-highlight \.sh__line--diff-add\s*\{[^}]*var\(--diff-added\)[^}]*\}/u,
     );
     expect(stylesheet).toMatch(
-      /\.bb-code-highlight \.sh__line--diff-remove\s*\{[^}]*var\(--diff-removed\)[^}]*\}/u,
+      /\.sandy-code-highlight \.sh__line--diff-remove\s*\{[^}]*var\(--diff-removed\)[^}]*\}/u,
     );
   });
 

@@ -2,14 +2,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 
 const docsDir = join(dirname(fileURLToPath(import.meta.url)), "docs");
 
 const USAGE = [
   "Usage:",
-  "  bb docs search <query...>   Search the bundled docs and print matching lines",
-  "  bb docs last                Show the cached last search",
+  "  sandy docs search <query...>   Search the bundled docs and print matching lines",
+  "  sandy docs last                Show the cached last search",
 ].join("\n");
 
 const DOC_FILE_PATTERN = /^[a-z0-9-]+\.md$/;
@@ -20,8 +20,8 @@ interface LastSearch {
   at: number;
 }
 
-export default async function plugin(bb: BbPluginApi) {
-  const settings = bb.settings.define({
+export default async function plugin(sandy: SandyPluginApi) {
+  const settings = sandy.settings.define({
     caseSensitive: {
       type: "boolean",
       label: "Case-sensitive search",
@@ -47,7 +47,7 @@ export default async function plugin(bb: BbPluginApi) {
         }
       });
     }
-    await bb.storage.kv.set("last-search", {
+    await sandy.storage.kv.set("last-search", {
       query,
       matchCount: excerpts.length,
       at: Date.now(),
@@ -71,19 +71,19 @@ export default async function plugin(bb: BbPluginApi) {
     return docs;
   }
 
-  bb.cli.register({
+  sandy.cli.register({
     name: "docs",
     summary: "Search this plugin's bundled docs",
     commands: [
       {
         name: "search",
         summary: "Search the docs and print matching lines",
-        usage: "bb docs search <query...>",
+        usage: "sandy docs search <query...>",
       },
       {
         name: "last",
         summary: "Show the cached last search",
-        usage: "bb docs last",
+        usage: "sandy docs last",
       },
     ],
     async run(argv) {
@@ -103,7 +103,7 @@ export default async function plugin(bb: BbPluginApi) {
         return { exitCode: 0, stdout: excerpts.join("\n") };
       }
       if (sub === "last") {
-        const last = await bb.storage.kv.get<LastSearch>("last-search");
+        const last = await sandy.storage.kv.get<LastSearch>("last-search");
         if (!last) return { exitCode: 0, stdout: "No searches yet." };
         return {
           exitCode: 0,
@@ -114,7 +114,7 @@ export default async function plugin(bb: BbPluginApi) {
     },
   });
 
-  bb.agents.registerTool({
+  sandy.agents.registerTool({
     name: "docs_search",
     description:
       "Search this repository's bundled docs (conventions, testing rules) and return matching lines.",
@@ -130,7 +130,7 @@ export default async function plugin(bb: BbPluginApi) {
     },
   });
 
-  bb.agents.configure((context) => {
+  sandy.agents.configure((context) => {
     if (context.project.kind === "personal") {
       return { tools: [], skills: [] };
     }
@@ -141,7 +141,7 @@ export default async function plugin(bb: BbPluginApi) {
     };
   });
 
-  bb.ui.registerMentionProvider({
+  sandy.ui.registerMentionProvider({
     id: "docs",
     label: "Plugin docs",
     async search({ query }) {

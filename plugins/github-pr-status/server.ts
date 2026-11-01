@@ -3,8 +3,8 @@ import {
   defineCli,
   experimental_PluginRpcRefusal,
   PluginCliError,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import { assemblePullRequest } from "./assemble.js";
 import {
   HOST_VIEWS_MAX_READS,
@@ -53,7 +53,7 @@ export function environmentChangeEffect(
 }
 
 type Environment = Awaited<
-  ReturnType<BbPluginApi["sdk"]["environments"]["get"]>
+  ReturnType<SandyPluginApi["sdk"]["environments"]["get"]>
 >;
 
 function errorMessage(error: unknown): string {
@@ -123,8 +123,8 @@ function describeEnvironmentPullRequest(
   }
 }
 
-export default function githubPrStatusPlugin(bb: BbPluginApi): void {
-  bb.settings.define({
+export default function githubPrStatusPlugin(sandy: SandyPluginApi): void {
+  sandy.settings.define({
     [SHOW_PULL_REQUEST_SETTING]: {
       type: "boolean",
       label: "Show pull request above the composer",
@@ -133,7 +133,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
       default: true,
     },
   });
-  const host = bb.hosts.experimental_client({
+  const host = sandy.hosts.experimental_client({
     contract: githubPrStatusHostContract,
   });
 
@@ -141,14 +141,14 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     environmentId: string,
   ): Promise<Environment | null> {
     try {
-      return await bb.sdk.environments.get({ environmentId });
+      return await sandy.sdk.environments.get({ environmentId });
     } catch (error) {
       if (httpStatusOf(error) === 404) return null;
       throw error;
     }
   }
 
-  const persistence = createPullRequestPersistence(bb.storage);
+  const persistence = createPullRequestPersistence(sandy.storage);
   const savedLinks = persistence.links();
   const lookedUpBranches = new Map<string, string | null>(
     savedLinks.map((link) => [link.environmentId, link.branch]),
@@ -182,7 +182,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
       )
         store.pushed(environmentId);
     } catch (error) {
-      bb.log.debug(
+      sandy.log.debug(
         `Failed to inspect refs for ${environmentId}: ${errorMessage(error)}`,
       );
     }
@@ -217,7 +217,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
       };
     }
     try {
-      const machine = await bb.sdk.hosts.get({ hostId: environment.hostId });
+      const machine = await sandy.sdk.hosts.get({ hostId: environment.hostId });
       if (
         machine.status !== "connected" ||
         machine.lifecycle.phase !== "active"
@@ -378,22 +378,22 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     branch: (environmentId) => lookedUpBranches.get(environmentId) ?? null,
     load: loadPullRequest,
     publish: (environmentIds) => {
-      bb.rpc.experimental_invalidate(
+      sandy.rpc.experimental_invalidate(
         environmentIds.map(environmentPullRequestTag),
       );
     },
     onCheckFailed: (environmentId, error) => {
-      bb.log.debug(
+      sandy.log.debug(
         `Failed to check watched pull request for ${environmentId}: ${errorMessage(error)}`,
       );
     },
   });
 
-  bb.onDispose(() => {
+  sandy.onDispose(() => {
     store.dispose();
     clearTimeout(loadTimer);
   });
-  bb.events.on("experimental_environment.removed", ({ removal }) => {
+  sandy.events.on("experimental_environment.removed", ({ removal }) => {
     store.remove(removal.environmentId);
     lookedUpBranches.delete(removal.environmentId);
     upstreams.delete(removal.environmentId);
@@ -405,7 +405,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
         if (environment === null) store.remove(environmentId);
       })
       .catch((error) =>
-        bb.log.debug(
+        sandy.log.debug(
           `Failed to check saved environment ${environmentId}: ${errorMessage(error)}`,
         ),
       );
@@ -415,7 +415,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
   let stopEnvironmentEvents: (() => void) | null = null;
   function retainEnvironmentEvents(): () => void {
     watchedCount += 1;
-    stopEnvironmentEvents ??= bb.sdk.subscribe({
+    stopEnvironmentEvents ??= sandy.sdk.subscribe({
       event: "environment:changed",
       callback: (event) => {
         const environmentId = event.id;
@@ -465,7 +465,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     if (environment.status !== "ready" || environment.path === null) {
       refuse("Environment is not ready");
     }
-    const machine = await bb.sdk.hosts.get({ hostId: environment.hostId });
+    const machine = await sandy.sdk.hosts.get({ hostId: environment.hostId });
     if (
       machine.status !== "connected" ||
       machine.lifecycle.phase !== "active"
@@ -536,7 +536,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     return { message: "Pull request merge started" };
   }
 
-  bb.rpc.register(
+  sandy.rpc.register(
     githubPrStatusRpcContract,
     {
       async pullRequests({ keys }, context) {
@@ -559,11 +559,11 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     {
       experimental_discoverable: true,
       experimental_description:
-        "GitHub pull request status and actions for bb environments.",
+        "GitHub pull request status and actions for sandy environments.",
     },
   );
 
-  bb.rpc.experimental_whileWatched("pullRequests", (read, signal) => {
+  sandy.rpc.experimental_whileWatched("pullRequests", (read, signal) => {
     if (!("key" in read)) return;
     store.watch(read.key, signal);
     const release = retainEnvironmentEvents();
@@ -573,7 +573,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
   async function turnRanGh(threadId: string): Promise<boolean> {
     let beforeSeq: string | undefined;
     for (;;) {
-      const events = await bb.sdk.threads.events.list({
+      const events = await sandy.sdk.threads.events.list({
         threadId,
         beforeSeq,
         order: "desc",
@@ -598,7 +598,7 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     }
   }
   for (const event of ["thread.idle", "thread.failed"] as const) {
-    bb.events.on(event, async ({ thread }) => {
+    sandy.events.on(event, async ({ thread }) => {
       const environmentId = thread.environmentId;
       if (environmentId === null || !store.isWatched(environmentId)) return;
       if (!store.hasPullRequest(environmentId))
@@ -607,12 +607,12 @@ export default function githubPrStatusPlugin(bb: BbPluginApi): void {
     });
   }
 
-  bb.cli.register(
+  sandy.cli.register(
     defineCli({
       name: "pull-request",
       summary: "Inspect and manage an environment's GitHub pull request",
       description:
-        "Runs gh on the environment's machine against its current branch. The machine must be online; bb does not wake it.",
+        "Runs gh on the environment's machine against its current branch. The machine must be online; sandy does not wake it.",
       commands: {
         show: cliCommand({
           summary: "Show an environment's pull request",

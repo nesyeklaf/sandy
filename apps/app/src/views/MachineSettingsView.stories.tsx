@@ -1,5 +1,5 @@
-import type { Host, MachineLifecycle } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import type { Host, MachineLifecycle } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { MachineSettingsHeader } from "./MachineSettingsView";
 import {
   MANUAL_MACHINE_PROVIDER,
@@ -76,7 +76,7 @@ export function Header() {
     <StoryCard labelWidth="220px" className="max-w-4xl">
       <StoryRow
         label="this machine"
-        hint="the machine bb itself runs on: no provider, so no tag and no lifecycle actions"
+        hint="the machine sandy itself runs on: no provider, so no tag and no lifecycle actions"
       >
         <Row
           host={makeHost({

@@ -1,4 +1,4 @@
-import type { ExperimentalComposerThreadLinkTarget } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalComposerThreadLinkTarget } from "@sandy-sdk/plugin-sdk/app";
 
 export type ThreadLinkParser = (
   url: string,

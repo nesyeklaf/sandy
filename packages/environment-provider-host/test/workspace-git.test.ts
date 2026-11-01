@@ -15,12 +15,12 @@ const tempDirs: string[] = [];
 
 async function initReadGitBlobRepo() {
   const repoPath = await fs.mkdtemp(
-    path.join(os.tmpdir(), "bb-read-git-blob-"),
+    path.join(os.tmpdir(), "sandy-read-git-blob-"),
   );
   tempDirs.push(repoPath);
   await runGit(["init", "-b", "main"], { cwd: repoPath });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: repoPath });
-  await runGit(["config", "user.email", "bb@example.com"], { cwd: repoPath });
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: repoPath });
+  await runGit(["config", "user.email", "sandy@example.com"], { cwd: repoPath });
   await fs.mkdir(path.join(repoPath, "docs"));
   await fs.writeFile(path.join(repoPath, "README.md"), "hello\n", "utf8");
   await fs.writeFile(path.join(repoPath, "docs", "index.md"), "docs\n", "utf8");
@@ -31,18 +31,18 @@ async function initReadGitBlobRepo() {
 }
 
 async function initEmptyRepo() {
-  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "bb-empty-git-"));
+  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-empty-git-"));
   tempDirs.push(repoPath);
   await runGit(["init", "-b", "main"], { cwd: repoPath });
   return repoPath;
 }
 
 async function initConflictRepo() {
-  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "bb-git-conflict-"));
+  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-git-conflict-"));
   tempDirs.push(repoPath);
   await runGit(["init", "-b", "main"], { cwd: repoPath });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: repoPath });
-  await runGit(["config", "user.email", "bb@example.com"], { cwd: repoPath });
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: repoPath });
+  await runGit(["config", "user.email", "sandy@example.com"], { cwd: repoPath });
   await fs.writeFile(path.join(repoPath, "README.md"), "base\n", "utf8");
   await runGit(["add", "."], { cwd: repoPath });
   await runGit(["commit", "-m", "Initial commit"], { cwd: repoPath });
@@ -57,7 +57,7 @@ async function initConflictRepo() {
 
 async function initDefaultBranchRemoteRepo() {
   const repoPath = await initReadGitBlobRepo();
-  const remotePath = await fs.mkdtemp(path.join(os.tmpdir(), "bb-git-remote-"));
+  const remotePath = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-git-remote-"));
   tempDirs.push(remotePath);
   await runGit(["init", "--bare"], { cwd: remotePath });
   await runGit(["remote", "add", "origin", remotePath], { cwd: repoPath });
@@ -68,15 +68,15 @@ async function initDefaultBranchRemoteRepo() {
 
 async function pushRemoteMainCommit(remotePath: string) {
   const cloneParent = await fs.mkdtemp(
-    path.join(os.tmpdir(), "bb-git-remote-clone-"),
+    path.join(os.tmpdir(), "sandy-git-remote-clone-"),
   );
   tempDirs.push(cloneParent);
   const clonePath = path.join(cloneParent, "repo");
   await runGit(["clone", "--branch", "main", remotePath, clonePath], {
     cwd: cloneParent,
   });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: clonePath });
-  await runGit(["config", "user.email", "bb@example.com"], {
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: clonePath });
+  await runGit(["config", "user.email", "sandy@example.com"], {
     cwd: clonePath,
   });
   await fs.writeFile(path.join(clonePath, "remote.txt"), "remote\n", "utf8");
@@ -111,7 +111,7 @@ async function initSshRemoteRepo() {
 async function initBareWorktreeLayout() {
   const origin = await initReadGitBlobRepo();
   await runGit(["branch", "feature-a"], { cwd: origin });
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bb-bare-layout-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-bare-layout-"));
   tempDirs.push(root);
   await runGit(["clone", "--bare", origin, ".bare"], { cwd: root });
   await fs.writeFile(path.join(root, ".git"), "gitdir: ./.bare\n", "utf8");
@@ -134,16 +134,16 @@ afterEach(async () => {
 });
 
 describe("runGit", () => {
-  it("scrubs inherited bb runtime env vars and node mode", async () => {
+  it("scrubs inherited sandy runtime env vars and node mode", async () => {
     const repoPath = await initEmptyRepo();
-    vi.stubEnv("BB_DATA_DIR", "/tmp/leaked-bb-data");
+    vi.stubEnv("SANDY_DATA_DIR", "/tmp/leaked-sandy-data");
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("OPENAI_API_KEY", "external-secret");
 
     const result = await runGit(
       [
         "-c",
-        `alias.env-probe=!printf '%s|%s|%s' "\${BB_DATA_DIR-missing}" "\${NODE_ENV-missing}" "\${OPENAI_API_KEY-missing}"`,
+        `alias.env-probe=!printf '%s|%s|%s' "\${SANDY_DATA_DIR-missing}" "\${NODE_ENV-missing}" "\${OPENAI_API_KEY-missing}"`,
         "env-probe",
       ],
       { cwd: repoPath },
@@ -156,7 +156,7 @@ describe("runGit", () => {
 describe("detectGitRepoKind", () => {
   it("tells a bare repository root apart from its worktrees and plain directories", async () => {
     const { root, worktreePath } = await initBareWorktreeLayout();
-    const plainDir = await fs.mkdtemp(path.join(os.tmpdir(), "bb-plain-dir-"));
+    const plainDir = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-plain-dir-"));
     tempDirs.push(plainDir);
 
     await expect(detectGitRepoKind(root)).resolves.toBe("bare");
@@ -258,10 +258,10 @@ describe("command timeouts", () => {
 describe("user-shell Git resolution", () => {
   it("uses the resolved shell PATH for Git commands", async () => {
     const workspacePath = await fs.mkdtemp(
-      path.join(os.tmpdir(), "bb-git-shell-path-workspace-"),
+      path.join(os.tmpdir(), "sandy-git-shell-path-workspace-"),
     );
     const binPath = await fs.mkdtemp(
-      path.join(os.tmpdir(), "bb-git-shell-path-bin-"),
+      path.join(os.tmpdir(), "sandy-git-shell-path-bin-"),
     );
     tempDirs.push(workspacePath, binPath);
     await fs.writeFile(

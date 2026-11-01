@@ -2,8 +2,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { TouchSensor } from "@dnd-kit/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { SidebarVisibilityCustomize } from "@bb/shared-ui/sidebar-visibility-customize";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { SidebarVisibilityCustomize } from "@sandy/shared-ui/sidebar-visibility-customize";
 
 afterEach(() => {
   cleanup();

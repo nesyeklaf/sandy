@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ThreadTimelineResponse, TimelineRow } from "@bb/server-contract";
+import type { ThreadTimelineResponse, TimelineRow } from "@sandy/server-contract";
 import {
   formatTimelineRowKindsForDiagnostics,
   timelineHasAssistantConversation,

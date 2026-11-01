@@ -1,5 +1,5 @@
-import type { AvailableModel } from "@bb/domain";
-import type { DeltaItemShape } from "@bb/provider-bridge-protocol";
+import type { AvailableModel } from "@sandy/domain";
+import type { DeltaItemShape } from "@sandy/provider-bridge-protocol";
 import { basename } from "node:path";
 import { z } from "zod";
 import {

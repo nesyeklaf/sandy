@@ -1,11 +1,15 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { PluginProviderDeclaration } from "@get-bb/plugin-sdk";
+import type { PluginProviderDeclaration } from "@sandy-sdk/plugin-sdk";
 import {
   experimental_filterResolvedNativeRoots,
   type ExperimentalNativeRootsResolveAnswer,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import { z } from "zod";
+import {
+  type PiPackageSkillRoot,
+  resolvePiPackageSkillRoots,
+} from "./pi-package-skills.js";
 
 export const PI_NATIVE_ROOTS_DECLARATION: Pick<
   PluginProviderDeclaration,
@@ -33,6 +37,7 @@ const DEFAULT_AGENT_DIR_SEGMENTS = [".pi", "agent"] as const;
 export interface ResolvePiNativeRootsArgs {
   homeDir: string;
   env: Readonly<Record<string, string | undefined>>;
+  cwd: string | null;
 }
 
 function resolvePiAgentDir(args: ResolvePiNativeRootsArgs): string {
@@ -57,6 +62,44 @@ function isPlainSkillSource(value: string): boolean {
 }
 
 export async function resolvePiNativeRoots(
+  args: ResolvePiNativeRootsArgs,
+): Promise<ExperimentalNativeRootsResolveAnswer> {
+  const settingsRoots = await resolvePiSettingsNativeRoots(args);
+  let packageRoots: PiPackageSkillRoot[];
+  try {
+    packageRoots = await resolvePiPackageSkillRoots({
+      cwd: args.cwd,
+      homeDir: args.homeDir,
+      agentDir: resolvePiAgentDir(args),
+      env: args.env,
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    console.warn(
+      "pi native skill roots: Pi's own resolver was unavailable, falling back to settings.json skills without package skills: " +
+        reason,
+    );
+    return settingsRoots;
+  }
+  return {
+    skills: [
+      ...(settingsRoots.skills ?? []),
+      ...experimental_filterResolvedNativeRoots(
+        {
+          skills: packageRoots.map((root) => ({
+            path: root.path,
+            origin: root.origin,
+            recursive: false,
+            shape: "skill" as const,
+          })),
+        },
+        { warn: console.warn },
+      ).answer.skills,
+    ],
+  };
+}
+
+async function resolvePiSettingsNativeRoots(
   args: ResolvePiNativeRootsArgs,
 ): Promise<ExperimentalNativeRootsResolveAnswer> {
   const agentDir = resolvePiAgentDir(args);

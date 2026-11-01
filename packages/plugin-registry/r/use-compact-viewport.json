@@ -3,9 +3,9 @@
   "name": "use-compact-viewport",
   "type": "registry:hook",
   "title": "use-compact-viewport",
-  "description": "BB hook \"use-compact-viewport\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY hook \"use-compact-viewport\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/use-media-query"
+    "@sandy/use-media-query"
   ],
   "files": [
     {

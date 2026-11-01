@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 
 export function shouldSuppressLowValueToolCall(decoded: ThreadEvent): boolean {
   if (decoded.type !== "item/started" && decoded.type !== "item/completed") {

@@ -8,13 +8,13 @@ import {
 import {
   experimental_Diff,
   experimental_ImageLightbox,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import type {
   CodeOverflowMode,
   DiffViewMode,
   ExperimentalDiffFullFileContents,
   ExperimentalImageLightboxProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { CopyIconButton } from "../ui/copy-button";
 import { useSdkClipboardCopy } from "../ui/sdk-clipboard-copy";
 import type { ParsedGitDiffFile } from "./git-diff-parsing";

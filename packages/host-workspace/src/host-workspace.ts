@@ -10,7 +10,7 @@ import {
   WorkspaceError,
   isMissingHeadRevisionError,
   WORKSPACE_STATUS_GIT_TIMEOUT_MS,
-} from "bb-environment-provider-host/workspace-git";
+} from "sandy-environment-provider-host/workspace-git";
 import {
   readSharedGitRefsSnapshot,
   type SharedGitRefsSnapshot,

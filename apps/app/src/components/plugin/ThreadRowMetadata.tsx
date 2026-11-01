@@ -2,7 +2,7 @@ import { memo, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import type {
   ExperimentalThreadRowMetadataLineProps,
   PluginSidebarThread,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount";
 import { compareGroupedPlacement } from "@/lib/grouped-placement";
 import {
@@ -32,7 +32,7 @@ function sortThreadRowMetadata(
 }
 
 function recordItemContent(container: HTMLElement): void {
-  const roots = container.querySelectorAll(":scope > [data-bb-plugin-root]");
+  const roots = container.querySelectorAll(":scope > [data-sandy-plugin-root]");
   container.toggleAttribute(
     "data-has-items",
     [...roots].some((root) => root.hasChildNodes()),

@@ -14,9 +14,9 @@ import {
   setPluginSettingsValues,
   upsertInstalledPlugin,
   type DbConnection,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { Logger } from "@bb/logger";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { Logger } from "@sandy/logger";
 import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-registry.js";
 import {
   BUNDLED_PLUGINS,
@@ -31,14 +31,14 @@ import { testLogger } from "../../helpers/test-app.js";
 const logger = testLogger as unknown as Logger;
 
 async function writePathPlugin(dir: string, name: string): Promise<string> {
-  const rootDir = join(dir, `bb-plugin-${name}`);
+  const rootDir = join(dir, `sandy-plugin-${name}`);
   await mkdir(rootDir, { recursive: true });
   await writeFile(
     join(rootDir, "package.json"),
     JSON.stringify({
-      name: `bb-plugin-${name}`,
+      name: `sandy-plugin-${name}`,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: `Retirement fixture ${name}`,
         description: "Retirement fixture.",
         branding: { icon: "Zap" },
@@ -123,7 +123,7 @@ describe("retired bundled plugins", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    workDir = await mkdtemp(join(tmpdir(), "bb-plugin-retired-"));
+    workDir = await mkdtemp(join(tmpdir(), "sandy-plugin-retired-"));
     service = createService();
     await service.start();
     await service.installPath(await writePathPlugin(workDir, "successor"));
@@ -228,7 +228,7 @@ describe("retired bundled plugins", () => {
     });
   });
 
-  it("retires only plugins bb no longer bundles, into successors it does", () => {
+  it("retires only plugins sandy no longer bundles, into successors it does", () => {
     const bundledIds = BUNDLED_PLUGINS.map((plugin) => plugin.pluginId);
     expect(RETIRED_BUNDLED_PLUGINS.length).toBeGreaterThan(0);
     for (const retired of RETIRED_BUNDLED_PLUGINS) {

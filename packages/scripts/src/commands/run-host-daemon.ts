@@ -2,20 +2,20 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
-  BB_PROD_HOST_DAEMON_PORT,
+  SANDY_PROD_HOST_DAEMON_PORT,
   resolvePortFromEnv,
   resolveRuntimeDataDir,
   resolveRuntimeMode,
-  type BbRuntimeMode,
-} from "@bb/config/runtime";
-import { loadServerUrlValue } from "@bb/config/server-url";
+  type SandyRuntimeMode,
+} from "@sandy/config/runtime";
+import { loadServerUrlValue } from "@sandy/config/server-url";
 import {
   HOST_AUTH_FILE_NAME,
   HOST_ID_FILE_NAME,
   hostDaemonEnrollKeyResponseSchema,
   type HostDaemonEnrollKeyRequest,
-} from "@bb/host-daemon-contract";
-import { loadHostDaemonEntrypointConfig } from "@bb/config/host-daemon-entrypoint";
+} from "@sandy/host-daemon-contract";
+import { loadHostDaemonEntrypointConfig } from "@sandy/config/host-daemon-entrypoint";
 import type { HostDaemonRuntimeEnvironment } from "../lib/host-daemon-runtime.js";
 import { toHostDaemonProcessEnv } from "../lib/host-daemon-runtime.js";
 import { resolveDevHostDaemonPort } from "../lib/dev-restart-utils.js";
@@ -34,17 +34,17 @@ interface CreateAutoJoinRequestArgs {
 }
 
 interface ResolveHostDaemonPortArgs {
-  mode: BbRuntimeMode;
+  mode: SandyRuntimeMode;
   requiresExplicitPort: boolean;
 }
 
 function resolveHostDaemonPort(args: ResolveHostDaemonPortArgs): number {
   if (
     args.requiresExplicitPort &&
-    process.env.BB_HOST_DAEMON_PORT === undefined
+    process.env.SANDY_HOST_DAEMON_PORT === undefined
   ) {
     throw new Error(
-      "BB_HOST_DAEMON_PORT is required when running a dev extra-host daemon without BB_DATA_DIR. Set it to a port distinct from pnpm dev's host daemon port.",
+      "SANDY_HOST_DAEMON_PORT is required when running a dev extra-host daemon without SANDY_DATA_DIR. Set it to a port distinct from pnpm dev's host daemon port.",
     );
   }
 
@@ -52,32 +52,32 @@ function resolveHostDaemonPort(args: ResolveHostDaemonPortArgs): number {
     defaultPort:
       args.mode === "dev"
         ? resolveDevHostDaemonPort()
-        : BB_PROD_HOST_DAEMON_PORT,
+        : SANDY_PROD_HOST_DAEMON_PORT,
     env: process.env,
-    name: "BB_HOST_DAEMON_PORT",
+    name: "SANDY_HOST_DAEMON_PORT",
   });
 }
 
-function ensureDevOverridePair(mode: BbRuntimeMode): void {
+function ensureDevOverridePair(mode: SandyRuntimeMode): void {
   if (mode !== "dev") {
     return;
   }
 
-  const hasDataDirOverride = process.env.BB_DATA_DIR !== undefined;
-  const hasServerUrlOverride = process.env.BB_SERVER_URL !== undefined;
+  const hasDataDirOverride = process.env.SANDY_DATA_DIR !== undefined;
+  const hasServerUrlOverride = process.env.SANDY_SERVER_URL !== undefined;
   if (hasDataDirOverride !== hasServerUrlOverride) {
     throw new Error(
-      "Dev host-daemon overrides must set both BB_DATA_DIR and BB_SERVER_URL, or neither.",
+      "Dev host-daemon overrides must set both SANDY_DATA_DIR and SANDY_SERVER_URL, or neither.",
     );
   }
 }
 
 export function resolveHostDaemonRuntimeEnvironment(
-  mode: BbRuntimeMode,
+  mode: SandyRuntimeMode,
 ): HostDaemonRuntimeEnvironment {
   ensureDevOverridePair(mode);
   const usesDefaultDevExtraHost =
-    mode === "dev" && process.env.BB_DATA_DIR === undefined;
+    mode === "dev" && process.env.SANDY_DATA_DIR === undefined;
   const devDataDirSuffix = usesDefaultDevExtraHost ? "extra-host" : undefined;
   const dataDir = resolveRuntimeDataDir({
     env: process.env,
@@ -88,17 +88,17 @@ export function resolveHostDaemonRuntimeEnvironment(
   const hostDaemonEntrypointConfig = loadHostDaemonEntrypointConfig();
   return {
     ...hostDaemonEntrypointConfig,
-    BB_DATA_DIR:
+    SANDY_DATA_DIR:
       devDataDirSuffix === undefined
         ? dataDir
         : join(dataDir, devDataDirSuffix),
-    BB_HOST_DAEMON_PORT: String(
+    SANDY_HOST_DAEMON_PORT: String(
       resolveHostDaemonPort({
         mode,
         requiresExplicitPort: usesDefaultDevExtraHost,
       }),
     ),
-    BB_SERVER_URL: loadServerUrlValue({
+    SANDY_SERVER_URL: loadServerUrlValue({
       env: process.env,
       homeDir: homedir(),
       mode,
@@ -109,7 +109,7 @@ export function resolveHostDaemonRuntimeEnvironment(
 }
 
 export function resolveHostDaemonProcessCommand(
-  mode: BbRuntimeMode,
+  mode: SandyRuntimeMode,
 ): HostDaemonProcessCommand {
   if (mode === "dev") {
     return {
@@ -157,20 +157,20 @@ export async function maybeAddAutoJoinEnv(
   env: HostDaemonRuntimeEnvironment,
   autoJoin: boolean,
 ): Promise<HostDaemonRuntimeEnvironment> {
-  if (!autoJoin || env.BB_HOST_ENROLL_KEY) {
+  if (!autoJoin || env.SANDY_HOST_ENROLL_KEY) {
     return env;
   }
 
-  if (await pathExists(join(env.BB_DATA_DIR, HOST_AUTH_FILE_NAME))) {
+  if (await pathExists(join(env.SANDY_DATA_DIR, HOST_AUTH_FILE_NAME))) {
     return env;
   }
 
-  await waitForServerHealth(env.BB_SERVER_URL);
+  await waitForServerHealth(env.SANDY_SERVER_URL);
   const requestedHostId =
-    env.BB_HOST_ID?.trim() || (await readPersistedHostId(env.BB_DATA_DIR));
+    env.SANDY_HOST_ID?.trim() || (await readPersistedHostId(env.SANDY_DATA_DIR));
 
   const response = await fetch(
-    `${env.BB_SERVER_URL}/internal/hosts/enroll-key`,
+    `${env.SANDY_SERVER_URL}/internal/hosts/enroll-key`,
     {
       body: JSON.stringify(createAutoJoinRequest({ requestedHostId })),
       headers: {
@@ -198,8 +198,8 @@ export async function maybeAddAutoJoinEnv(
 
   return {
     ...env,
-    BB_HOST_ENROLL_KEY: enrollKeyResponse.enrollKey,
-    BB_HOST_ID: enrollKeyResponse.hostId,
+    SANDY_HOST_ENROLL_KEY: enrollKeyResponse.enrollKey,
+    SANDY_HOST_ID: enrollKeyResponse.hostId,
   };
 }
 

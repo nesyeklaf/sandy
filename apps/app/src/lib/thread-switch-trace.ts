@@ -5,7 +5,7 @@ import {
   perfTraceInputStart,
   startPerfTraceSpan,
   type PerfTraceSpan,
-} from "@bb/shared-ui/lib/perf-trace";
+} from "@sandy/shared-ui/lib/perf-trace";
 
 const THREAD_PATH = /\/threads\/([^/?#]+)/;
 const SWITCH_TIMEOUT_MS = 15_000;

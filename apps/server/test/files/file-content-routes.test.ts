@@ -1,4 +1,4 @@
-import type { HostDaemonOnlineRpcRequestMessage } from "@bb/host-daemon-contract";
+import type { HostDaemonOnlineRpcRequestMessage } from "@sandy/host-daemon-contract";
 import { describe, expect, it } from "vitest";
 import { registerHostRpcResponder } from "../helpers/host-rpc.js";
 import { readJson } from "../helpers/json.js";
@@ -99,7 +99,7 @@ describe("file content routes", () => {
   it("streams thread storage with ranges and sandboxed HTML", async () => {
     await withTestHarness(async (harness) => {
       const { host, session, thread } = seedThreadFixture(harness);
-      const storageRoot = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const storageRoot = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
       const commands = serveFiles(harness, {
         hostId: host.id,
         sessionId: session.id,
@@ -195,7 +195,7 @@ describe("file content routes", () => {
   it("serves HTML larger than the preview render limit as sandboxed bytes", async () => {
     await withTestHarness(async (harness) => {
       const { host, session, thread } = seedThreadFixture(harness);
-      const storageRoot = `/tmp/bb-host-data/${host.id}/thread-storage/${thread.id}`;
+      const storageRoot = `/tmp/sandy-host-data/${host.id}/thread-storage/${thread.id}`;
       const html = Buffer.alloc(6 * 1024 * 1024, "a");
       serveFiles(harness, {
         hostId: host.id,

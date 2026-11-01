@@ -1,5 +1,5 @@
 import { gzipSync } from "node:zlib";
-import { turnScope, type ThreadEvent } from "@bb/domain";
+import { turnScope, type ThreadEvent } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import {
   groupHostDaemonEvents,

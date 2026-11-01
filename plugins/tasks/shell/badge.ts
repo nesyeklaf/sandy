@@ -1,7 +1,7 @@
 import {
   experimental_useRpcQuery,
   type ExperimentalBadge,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { tasksRpcContract } from "../shared/contract.js";
 
 export function useTasksBadge(): ExperimentalBadge | null {

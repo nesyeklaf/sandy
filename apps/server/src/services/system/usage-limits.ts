@@ -1,10 +1,10 @@
-import { createAsyncTtlMemo, type AsyncTtlMemo } from "@bb/async-cache";
+import { createAsyncTtlMemo, type AsyncTtlMemo } from "@sandy/async-cache";
 import type {
   ProviderUsage,
   ProviderUsageResponse,
   HostDaemonOnlineRpcResult,
-} from "@bb/host-daemon-contract";
-import type { SystemUsageLimitsQuery } from "@bb/server-contract";
+} from "@sandy/host-daemon-contract";
+import type { SystemUsageLimitsQuery } from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import { callHostRetryableOnlineRpc } from "../hosts/online-rpc.js";

@@ -1,8 +1,8 @@
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 
 export function useDataDirectoryCommand(): void {
-  const desktopApi = getBbDesktopInfo();
+  const desktopApi = getSandyDesktopInfo();
   const openDataDirectory = desktopApi?.openDataDirectory;
 
   useAppCommandHandler(

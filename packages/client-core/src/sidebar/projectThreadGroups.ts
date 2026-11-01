@@ -1,4 +1,4 @@
-import type { ThreadListEntry } from "@bb/domain";
+import type { ThreadListEntry } from "@sandy/domain";
 import {
   getCollapsedChildActivity,
   type CollapsedChildActivity,

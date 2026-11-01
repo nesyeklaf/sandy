@@ -15,21 +15,21 @@ import {
   listThreadEventSuffixBackgroundSettlementRows,
   type AppendStoredThreadEventArgs,
   type DbQueryConnection,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   threadScope,
   type PromptInput,
   type Thread,
   type ThreadEvent,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   EditMessageRequest,
   EditMessageResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   HostDaemonCommand,
   HostDaemonCommandResult,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { ApiError } from "../../errors.js";
 import {
@@ -325,7 +325,7 @@ function resolveEditableTurnCandidate(
     })
   ) {
     conflict(
-      "Editing this message would erase provider session ownership shared with another thread. Clear context (/clear or bb thread clear) for a new session; history is kept.",
+      "Editing this message would erase provider session ownership shared with another thread. Clear context (/clear or sandy thread clear) for a new session; history is kept.",
     );
   }
   return {

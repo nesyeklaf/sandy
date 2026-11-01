@@ -9,7 +9,7 @@ import { parsePromptEditorMentionAttrs } from "./prompt-editor-serialization";
 import {
   experimental_describePromptMention as describePromptMention,
   experimental_promptMentionClipboardAttributes as promptMentionClipboardAttributes,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 interface MentionRenderArgs {
   node: Pick<ProseMirrorNode, "attrs">;

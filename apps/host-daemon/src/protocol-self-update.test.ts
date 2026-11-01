@@ -9,7 +9,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { HOST_DAEMON_PROTOCOL_VERSION } from "@bb/host-daemon-contract";
+import { HOST_DAEMON_PROTOCOL_VERSION } from "@sandy/host-daemon-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HostDaemonLogger } from "./logger.js";
 import {
@@ -34,7 +34,7 @@ function tarballResponse(
         ? {}
         : {
             "content-length": String(bytes.byteLength),
-            "x-bb-artifact-sha256": createHash("sha256")
+            "x-sandy-artifact-sha256": createHash("sha256")
               .update(bytes)
               .digest("hex"),
           }),
@@ -77,7 +77,7 @@ async function createFixture(
     useDefaultInstaller?: boolean;
   } = {},
 ) {
-  const dataDir = await mkdtemp(join(tmpdir(), "bb-self-update-test-"));
+  const dataDir = await mkdtemp(join(tmpdir(), "sandy-self-update-test-"));
   roots.push(dataDir);
   const installedTarballs: { bytes: string; path: string }[] = [];
   const installTarball = vi.fn(async (tarballPath: string) => {
@@ -97,7 +97,7 @@ async function createFixture(
           args.protocolVersion ?? HOST_DAEMON_PROTOCOL_VERSION + 1,
       });
     }
-    if (url.endsWith("/install/bb-app.tgz")) {
+    if (url.endsWith("/install/sandy-app.tgz")) {
       return tarballResponse("tarball");
     }
     throw new Error(`Unexpected URL: ${url}`);
@@ -158,7 +158,7 @@ describe("protocol self-update", () => {
     expect(test.installedTarballs).toEqual([
       {
         bytes: "verified-tarball",
-        path: join(test.dataDir, "host-package-download", "bb-app.tgz"),
+        path: join(test.dataDir, "host-package-download", "sandy-app.tgz"),
       },
     ]);
     await expect(readdir(test.dataDir)).resolves.toEqual(
@@ -171,7 +171,7 @@ describe("protocol self-update", () => {
       name: "a digest mismatch",
       response: () =>
         tarballResponse("tampered", {
-          "x-bb-artifact-sha256": "a".repeat(64),
+          "x-sandy-artifact-sha256": "a".repeat(64),
         }),
       error: /content hash mismatch/u,
     },
@@ -181,7 +181,7 @@ describe("protocol self-update", () => {
         new Response(TARBALL_BYTES, {
           headers: { "content-length": String(TARBALL_BYTES.byteLength) },
         }),
-      error: /x-bb-artifact-sha256/u,
+      error: /x-sandy-artifact-sha256/u,
     },
     {
       name: "a body longer than its content-length",
@@ -206,7 +206,7 @@ describe("protocol self-update", () => {
               controller.error(new Error("connection reset"));
             },
           }),
-          { "x-bb-artifact-sha256": digest },
+          { "x-sandy-artifact-sha256": digest },
         );
       },
       error: /connection reset/u,
@@ -247,7 +247,7 @@ describe("protocol self-update", () => {
         }),
         {
           "content-length": String(2 * 1024 * 1024 * 1024),
-          "x-bb-artifact-sha256": "d".repeat(64),
+          "x-sandy-artifact-sha256": "d".repeat(64),
         },
       );
     });
@@ -263,7 +263,7 @@ describe("protocol self-update", () => {
     const test = await createFixture();
     const staleDir = join(test.dataDir, "host-package-download");
     await mkdir(staleDir);
-    await writeFile(join(staleDir, "bb-app.tgz.partial"), "stale");
+    await writeFile(join(staleDir, "sandy-app.tgz.partial"), "stale");
 
     await expect(test.updater.handleProtocolMismatch()).resolves.toBe(
       "updated",
@@ -292,7 +292,7 @@ describe("protocol self-update", () => {
           "if-none-match": `"sha256-${digest}"`,
         });
         return new Response(null, {
-          headers: { "x-bb-artifact-sha256": digest },
+          headers: { "x-sandy-artifact-sha256": digest },
           status: 304,
         });
       },
@@ -324,7 +324,7 @@ describe("protocol self-update", () => {
         "install",
         "-g",
         "--allow-scripts=better-sqlite3,node-pty,@parcel/watcher",
-        expect.stringMatching(/host-package-download[/\\]bb-app\.tgz$/u),
+        expect.stringMatching(/host-package-download[/\\]sandy-app\.tgz$/u),
       ],
       {
         env: expect.objectContaining({
@@ -336,8 +336,8 @@ describe("protocol self-update", () => {
     );
   });
 
-  it("updates an installer-managed bb-app inside its machine-specific prefix", async () => {
-    vi.stubEnv("BB_APP_NPM_PREFIX", "/machine-data/npm");
+  it("updates an installer-managed sandy-app inside its machine-specific prefix", async () => {
+    vi.stubEnv("SANDY_APP_NPM_PREFIX", "/machine-data/npm");
     const test = await createFixture({ useDefaultInstaller: true });
 
     await expect(test.updater.handleProtocolMismatch()).resolves.toBe(
@@ -353,14 +353,14 @@ describe("protocol self-update", () => {
         "--allow-scripts=better-sqlite3,node-pty,@parcel/watcher",
         "--prefix",
         "/machine-data/npm",
-        expect.stringMatching(/host-package-download[/\\]bb-app\.tgz$/u),
+        expect.stringMatching(/host-package-download[/\\]sandy-app\.tgz$/u),
       ],
       expect.any(Object),
     );
   });
 
   it("keeps legacy global updates when the installer prefix is blank", async () => {
-    vi.stubEnv("BB_APP_NPM_PREFIX", " ");
+    vi.stubEnv("SANDY_APP_NPM_PREFIX", " ");
     const test = await createFixture({ useDefaultInstaller: true });
 
     await expect(test.updater.handleProtocolMismatch()).resolves.toBe(
@@ -374,7 +374,7 @@ describe("protocol self-update", () => {
         "install",
         "-g",
         "--allow-scripts=better-sqlite3,node-pty,@parcel/watcher",
-        expect.stringMatching(/host-package-download[/\\]bb-app\.tgz$/u),
+        expect.stringMatching(/host-package-download[/\\]sandy-app\.tgz$/u),
       ],
       expect.any(Object),
     );

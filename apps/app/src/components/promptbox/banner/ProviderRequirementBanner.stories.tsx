@@ -1,4 +1,4 @@
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import { StoryCard, StoryRow } from "../../../../.ladle/story-card";
 import { ResponsiveStage } from "./banner-story-stages";
 import { ProviderCliBanner } from "./ProviderCliBanner";
@@ -44,7 +44,7 @@ export function Requirements() {
         </ResponsiveStage>
       </StoryRow>
       <StoryRow
-        label="machines cannot reach bb"
+        label="machines cannot reach sandy"
         hint="the environment would create a machine, but nothing tells that machine how to reach this server"
       >
         <ResponsiveStage>
@@ -102,7 +102,7 @@ export function Requirements() {
       </StoryRow>
       <StoryRow
         label="required version unknown"
-        hint="bb knows the installed version is too old but not what it needs"
+        hint="sandy knows the installed version is too old but not what it needs"
       >
         <ResponsiveStage>
           <ProviderCliBanner

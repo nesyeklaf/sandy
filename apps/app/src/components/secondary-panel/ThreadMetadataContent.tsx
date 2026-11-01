@@ -26,18 +26,18 @@ import {
   experimental_THREAD_INFO_ROW_GROUPS,
   experimental_THREAD_INFO_SECTION_GROUPS,
   type ExperimentalThreadInfoProps,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { Link } from "react-router-dom";
 import type {
   Environment,
   Thread,
   ThreadListEntry,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   formatEnvironmentDisplay,
   type EnvironmentDisplayHostContext,
-} from "@bb/core-ui";
-import { cn, formatHomePathForDisplay } from "@bb/shared-ui/lib/utils";
+} from "@sandy/core-ui";
+import { cn, formatHomePathForDisplay } from "@sandy/shared-ui/lib/utils";
 import {
   findEnvironmentDisplayProvider,
   getEnvironmentWorkspaceInfoDisplay,
@@ -47,8 +47,8 @@ import { useSystemMachineProviders } from "@/hooks/queries/machine-provider-quer
 import { useHosts } from "@/hooks/queries/host-queries";
 import { useProjectDisplayName } from "@/hooks/queries/sidebar-navigation-query";
 import { MachineIcon } from "@/components/machines/MachineLabel";
-import { Button } from "@bb/shared-ui/button";
-import { COARSE_POINTER_TEXT_SM_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
+import { Button } from "@sandy/shared-ui/button";
+import { COARSE_POINTER_TEXT_SM_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
 import { CopyableInlineLabel } from "@/components/ui/copy-button.js";
 import { useFittedPathMiddle } from "@/components/ui/truncate-path-middle";
 import {
@@ -57,8 +57,8 @@ import {
   DETAIL_ROW_ICON_CLASS,
 } from "@/components/ui/detail-card.js";
 import { useCreateThreadInEnvironment } from "@/hooks/useCreateThreadInEnvironment";
-import { Icon } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
 import { ThreadUnarchiveButton } from "@/components/thread/ThreadUnarchiveButton";
 import {
   useUnarchiveThread,

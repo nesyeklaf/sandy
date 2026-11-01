@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
-import { initRepo, makeTempDir } from "@bb/test-helpers";
+import { initRepo, makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchRemoteBranches } from "../src/branch-options.js";
 import { runGit } from "../src/workspace-git.js";
@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe("background Git authentication", () => {
   it("preserves a working GIT_SSH wrapper, including paths with spaces", async () => {
-    const repo = await initRepo(await makeTempDir("bb-git-fetch-"));
+    const repo = await initRepo(await makeTempDir("sandy-git-fetch-"));
     const wrapper = await writeScript(
       repo,
       "ssh wrapper.sh",
@@ -45,7 +45,7 @@ describe("background Git authentication", () => {
   it.each(["GIT_ASKPASS", "core.askPass", "SSH_ASKPASS"])(
     "suppresses %s on HTTP authentication while preserving explicit refresh prompts",
     async (setting) => {
-      const repo = await initRepo(await makeTempDir("bb-git-fetch-"));
+      const repo = await initRepo(await makeTempDir("sandy-git-fetch-"));
       const log = path.join(repo, "prompts.log");
       const askpass = await writeScript(
         repo,
@@ -105,7 +105,7 @@ describe("background Git authentication", () => {
   it.skipIf(process.platform === "win32")(
     "kills background transport descendants when a refresh times out",
     async () => {
-      const repo = await initRepo(await makeTempDir("bb-git-fetch-"));
+      const repo = await initRepo(await makeTempDir("sandy-git-fetch-"));
       const marker = path.join(repo, "late-side-effect");
       const wrapper = await writeScript(
         repo,

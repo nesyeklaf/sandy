@@ -1,5 +1,14 @@
-import type { AppTheme, AppThemeSelection } from "@bb/domain";
-import type { ThemeCatalogResponse } from "@bb/server-contract";
+import {
+  checkThemeCss,
+  type AppTheme,
+  type AppThemeSelection,
+  type ThemeIssue,
+  type ThemeKitInput,
+} from "@sandy/domain";
+import type {
+  CreateThemeResponse,
+  ThemeCatalogResponse,
+} from "@sandy/server-contract";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export type ThemeGetResult = AppTheme;
@@ -7,6 +16,16 @@ export type ThemeCatalogResult = ThemeCatalogResponse;
 export type ThemeSetInput = AppThemeSelection;
 export type ThemeSetResult = AppTheme;
 export type ThemeResolveResult = AppTheme;
+
+export type ThemeCreateResult = CreateThemeResponse;
+export type ThemeCheckResult = ThemeIssue[];
+
+export interface ThemeCreateArgs {
+  name: string;
+  kit: ThemeKitInput;
+  overwrite?: boolean;
+  signal?: AbortSignal;
+}
 
 export interface ThemeCatalogArgs {
   signal?: AbortSignal;
@@ -27,6 +46,14 @@ export interface ThemeArea {
   resolve(args: ThemeResolveArgs): Promise<ThemeResolveResult>;
   set(selection: ThemeSetInput): Promise<ThemeSetResult>;
   set(themeId: string): Promise<ThemeSetResult>;
+  /**
+   * Generate a full custom theme from three anchor colors per mode and write
+   * it into the custom theme directory. Rejects with a 409 when the name
+   * exists and `overwrite` is not set.
+   */
+  experimental_create(args: ThemeCreateArgs): Promise<ThemeCreateResult>;
+  /** Check theme CSS for contrast, missing tokens and eye comfort. Runs locally. */
+  experimental_check(css: string): ThemeCheckResult;
 }
 
 export function createThemeArea(args: CreateSdkAreaArgs): ThemeArea {
@@ -56,6 +83,23 @@ export function createThemeArea(args: CreateSdkAreaArgs): ThemeArea {
           ...signalRequestArgs(input.signal),
         ),
       );
+    },
+    async experimental_create(input) {
+      return transport.readJson(
+        transport.api.v1.settings.themes.$post(
+          {
+            json: {
+              name: input.name,
+              kit: input.kit,
+              overwrite: input.overwrite ?? false,
+            },
+          },
+          ...signalRequestArgs(input.signal),
+        ),
+      );
+    },
+    experimental_check(css) {
+      return checkThemeCss(css);
     },
     async set(input) {
       if (typeof input === "string") {

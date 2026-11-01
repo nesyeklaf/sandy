@@ -4,13 +4,13 @@ import {
   FILE_LIST_QUERY_MAX_LENGTH,
   gitBranchNameSchema,
   workspaceDiffTargetSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { apiErrorSchema } from "../errors.js";
 import {
   environmentProviderInstanceKeySchema,
   pathListIncludeQueryValueSchema,
 } from "./shared.js";
-import { workspaceResolutionFailureSchema } from "@bb/host-daemon-contract/workspace";
+import { workspaceResolutionFailureSchema } from "@sandy/host-daemon-contract/workspace";
 
 export const environmentCleanupQuerySchema = z.object({
   recover: z.enum(["true", "false"]).default("false"),

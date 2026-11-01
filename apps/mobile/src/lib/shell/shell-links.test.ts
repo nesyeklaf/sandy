@@ -4,7 +4,7 @@ import { resolveShellIncomingLink } from "./shell-links";
 const profiles = [
   { id: "p_bee", serverUrl: "https://bee.example.test" },
   { id: "p_lan", serverUrl: "http://10.0.0.7:38886" },
-  { id: "p_prefix", serverUrl: "https://box.example.ts.net/bb" },
+  { id: "p_prefix", serverUrl: "https://box.example.ts.net/sandy" },
 ];
 
 const context = {
@@ -15,13 +15,13 @@ const context = {
 
 describe("resolveShellIncomingLink", () => {
   it.each([
-    ["bb://", "/webview"],
-    ["bb://threads/thr_1", "/webview?path=%2Fthreads%2Fthr_1"],
-    ["bb://settings/servers/add", "/settings/servers/add"],
-    ["bb://settings/device", "/settings/device"],
-    ["bb://settings", "/webview?path=%2Fsettings"],
-    ["bb://settings/general", "/webview?path=%2Fsettings%2Fgeneral"],
-    ["bb://connections", "/webview?path=%2Fconnections"],
+    ["sandy://", "/webview"],
+    ["sandy://threads/thr_1", "/webview?path=%2Fthreads%2Fthr_1"],
+    ["sandy://settings/servers/add", "/settings/servers/add"],
+    ["sandy://settings/device", "/settings/device"],
+    ["sandy://settings", "/webview?path=%2Fsettings"],
+    ["sandy://settings/general", "/webview?path=%2Fsettings%2Fgeneral"],
+    ["sandy://connections", "/webview?path=%2Fconnections"],
   ])("routes the scheme link %s to %s", (url, path) => {
     expect(resolveShellIncomingLink(url, context)).toEqual({
       kind: "navigate",
@@ -31,11 +31,11 @@ describe("resolveShellIncomingLink", () => {
   });
 
   it("hides developer routes in a release bundle", () => {
-    expect(resolveShellIncomingLink("bb://dev/webview-spike", context)).toEqual(
+    expect(resolveShellIncomingLink("sandy://dev/webview-spike", context)).toEqual(
       { kind: "navigate", path: "/", profileId: null },
     );
     expect(
-      resolveShellIncomingLink("bb://dev/webview-spike", {
+      resolveShellIncomingLink("sandy://dev/webview-spike", {
         ...context,
         developerRoutesEnabled: true,
       }),
@@ -83,7 +83,7 @@ describe("resolveShellIncomingLink", () => {
 
   it("strips a profile's mount prefix from the page path", () => {
     const resolution = resolveShellIncomingLink(
-      "https://box.example.ts.net/bb/threads/x",
+      "https://box.example.ts.net/sandy/threads/x",
       context,
     );
     expect(resolution).toEqual({
@@ -106,7 +106,7 @@ describe("resolveShellIncomingLink", () => {
 
   it("leaves a foreign scheme alone", () => {
     expect(
-      resolveShellIncomingLink("exp+bb-app://expo-development-client", context),
+      resolveShellIncomingLink("exp+sandy-app://expo-development-client", context),
     ).toEqual({ kind: "passthrough" });
   });
 });

@@ -186,18 +186,18 @@ describe("resolveThreadLocalFileLink", () => {
         link: {
           lineRange: { startLineNumber: 4, endLineNumber: 6 },
           openTargetId: null,
-          path: "/Users/me/.bb/thread-storage/thr_one/reports/preview.html",
+          path: "/Users/me/.sandy/thread-storage/thr_one/reports/preview.html",
         },
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
         workspaceRootPath: "/Users/me/project",
       }),
     ).toEqual({
       kind: "open-thread-storage-path",
       request: {
         lineRange: { startLineNumber: 4, endLineNumber: 6 },
-        path: "/Users/me/.bb/thread-storage/thr_one/reports/preview.html",
+        path: "/Users/me/.sandy/thread-storage/thr_one/reports/preview.html",
         relativePath: "reports/preview.html",
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
       },
     });
   });
@@ -242,7 +242,7 @@ describe("resolveThreadLocalFileLink", () => {
     });
   });
 
-  it("opens $BB_THREAD_STORAGE links in the thread storage", () => {
+  it("opens $SANDY_THREAD_STORAGE links in the thread storage", () => {
     expect(
       resolveThreadLocalFileLink({
         fileOpenTargetIds: [],
@@ -250,18 +250,18 @@ describe("resolveThreadLocalFileLink", () => {
         link: {
           lineRange: null,
           openTargetId: null,
-          path: "/Users/me/project/$BB_THREAD_STORAGE/review/notes.md",
+          path: "/Users/me/project/$SANDY_THREAD_STORAGE/review/notes.md",
         },
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
         workspaceRootPath: "/Users/me/project",
       }),
     ).toEqual({
       kind: "open-thread-storage-path",
       request: {
         lineRange: null,
-        path: "/Users/me/.bb/thread-storage/thr_one/review/notes.md",
+        path: "/Users/me/.sandy/thread-storage/thr_one/review/notes.md",
         relativePath: "review/notes.md",
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
       },
     });
   });
@@ -276,7 +276,7 @@ describe("resolveThreadLocalFileLink", () => {
           openTargetId: null,
           path: "/Users/me/project/directions/a-phone.png",
         },
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
         workspaceRootPath: "/Users/me/project",
       }),
     ).toEqual({
@@ -289,9 +289,9 @@ describe("resolveThreadLocalFileLink", () => {
       },
       storageFallback: {
         lineRange: { startLineNumber: 3, endLineNumber: 3 },
-        path: "/Users/me/.bb/thread-storage/thr_one/directions/a-phone.png",
+        path: "/Users/me/.sandy/thread-storage/thr_one/directions/a-phone.png",
         relativePath: "directions/a-phone.png",
-        threadStorageRootPath: "/Users/me/.bb/thread-storage/thr_one",
+        threadStorageRootPath: "/Users/me/.sandy/thread-storage/thr_one",
       },
     });
   });

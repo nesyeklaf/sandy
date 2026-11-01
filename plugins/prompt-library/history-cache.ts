@@ -1,7 +1,7 @@
-import type { BbPluginApi, ComposerDraftReplacement } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, ComposerDraftReplacement } from "@sandy-sdk/plugin-sdk";
 import { promptFromHistory, type HistoryEntry } from "./history-prompt.js";
 
-type ListHistory = BbPluginApi["sdk"]["experimental_promptHistory"]["list"];
+type ListHistory = SandyPluginApi["sdk"]["experimental_promptHistory"]["list"];
 
 const FULL_PAGE_LIMIT = "1000";
 const NEWER_PAGE_LIMIT = "100";

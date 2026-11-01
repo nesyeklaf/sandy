@@ -13,14 +13,14 @@ import {
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
-import type { AgentRuntimeSkillRoot } from "@bb/agent-runtime";
+import type { AgentRuntimeSkillRoot } from "@sandy/agent-runtime";
 import type {
   HostDaemonInjectedSkillSource,
   HostDaemonSkillTreeManifest,
-} from "@bb/host-daemon-contract";
-import { hashSkillTreeFiles } from "@bb/host-daemon-contract/skill-tree";
+} from "@sandy/host-daemon-contract";
+import { hashSkillTreeFiles } from "@sandy/host-daemon-contract/skill-tree";
 import type { SkillTreeTransport } from "./skill-trees.js";
 import {
   cleanupInjectedSkillStagingDirs,

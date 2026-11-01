@@ -13,10 +13,10 @@ interface SourceCliResult {
 const testDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(testDir, "..", "..", "..");
 const contextEnvKeys: string[] = [
-  "BB_ENVIRONMENT_ID",
-  "BB_PROJECT_ID",
-  "BB_THREAD_ID",
-  "BB_THREAD_STORAGE",
+  "SANDY_ENVIRONMENT_ID",
+  "SANDY_PROJECT_ID",
+  "SANDY_THREAD_ID",
+  "SANDY_THREAD_STORAGE",
 ];
 const spawnedChildren: ChildProcessWithoutNullStreams[] = [];
 
@@ -25,13 +25,13 @@ function buildCleanEnv(): NodeJS.ProcessEnv {
   for (const key of contextEnvKeys) {
     delete env[key];
   }
-  env.BB_SERVER_URL = "http://127.0.0.1:9";
+  env.SANDY_SERVER_URL = "http://127.0.0.1:9";
   return env;
 }
 
-function runSourceBb(args: string[]): Promise<SourceCliResult> {
+function runSourceSandy(args: string[]): Promise<SourceCliResult> {
   return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn("pnpm", ["--silent", "bb", ...args], {
+    const child = spawn("pnpm", ["--silent", "sandy", ...args], {
       cwd: repoRoot,
       env: buildCleanEnv(),
       shell: process.platform === "win32",
@@ -71,7 +71,7 @@ afterEach(() => {
 
 describe("source CLI wrapper", () => {
   it("keeps --json stdout parseable when the prepare build writes progress", async () => {
-    const result = await runSourceBb(["status", "--json"]);
+    const result = await runSourceSandy(["status", "--json"]);
 
     if (result.code !== 0 || result.signal !== null) {
       throw new Error(

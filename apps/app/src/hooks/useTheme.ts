@@ -5,10 +5,10 @@ import {
   DARK_COLOR_SCHEME_QUERY,
   getMediaQuerySnapshot,
   subscribeMediaQuery,
-} from "@bb/shared-ui/hooks/use-media-query";
+} from "@sandy/shared-ui/hooks/use-media-query";
 import { createLocalStorageEnumStorage } from "@/lib/browser-storage";
 
-export const THEME_STORAGE_KEY = "bb.theme";
+export const THEME_STORAGE_KEY = "sandy.theme";
 
 export type Theme = "light" | "dark";
 export type ThemePreference = Theme | "system";

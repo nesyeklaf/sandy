@@ -1,4 +1,4 @@
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import { pullRequestSchema, type PullRequest } from "./contract.js";
 
@@ -27,7 +27,7 @@ const linkRow = z.object({
   discovered_at: z.number(),
 });
 
-export function createPullRequestPersistence(storage: BbPluginApi["storage"]) {
+export function createPullRequestPersistence(storage: SandyPluginApi["storage"]) {
   if (!PERSISTENCE_ENABLED)
     return {
       snapshots: () => [],

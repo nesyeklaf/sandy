@@ -5,12 +5,12 @@ import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { isExpectedCommandDispatchError } from "../command-dispatch-support.js";
 import { cloneProject, resolveProjectCloneDefaultPath } from "./project.js";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 
 const tempDirs: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "bb-project-clone-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-project-clone-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -26,9 +26,9 @@ async function createRemoteRepo(root: string): Promise<string> {
   await runGit(
     [
       "-c",
-      "user.name=BB Test",
+      "user.name=SANDY Test",
       "-c",
-      "user.email=bb@example.test",
+      "user.email=sandy@example.test",
       "commit",
       "-m",
       "initial",

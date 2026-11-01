@@ -34,12 +34,12 @@ export const JSON_SHAPE_BY_COMMAND_PATH: Readonly<Record<string, string>> = {
   "plugin list":
     "{plugins: [{id, version, enabled, status, source, rootDir}]}    (wrapped in .plugins)",
   "skill list":
-    "{skills: [{id, name, description, scope, provider, filePath}]}    (wrapped in .skills)",
+    "{skills: [{id, name, description, scope, provider, providers, pluginId, filePath, manageable, duplicates: [{id, scope, provider, pluginId, filePath, relation}]}]}    (wrapped in .skills; relation is same-file, same-content or same-name)",
 };
 
 export function jsonShapeHelp(commandPath: string): string | null {
   const shape = JSON_SHAPE_BY_COMMAND_PATH[commandPath];
   return shape === undefined
     ? null
-    : `\nJSON (--json): ${shape}\nErrors with --json: {"ok": false, "error": {code, message, hint?}} on stdout. Run \`bb guide json\` for every shape.`;
+    : `\nJSON (--json): ${shape}\nErrors with --json: {"ok": false, "error": {code, message, hint?}} on stdout. Run \`sandy guide json\` for every shape.`;
 }

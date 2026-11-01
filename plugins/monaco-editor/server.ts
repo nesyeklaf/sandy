@@ -1,7 +1,7 @@
 import path from "node:path";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
+import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 const MAX_EDITABLE_BYTES = 8 * 1024 * 1024;
@@ -117,13 +117,13 @@ async function ensureMonacoBundleDir(
   );
   if (staged === undefined) {
     throw new Error(
-      "could not build the Monaco bundle; run `pnpm --filter bb-plugin-monaco-editor build:monaco`",
+      "could not build the Monaco bundle; run `pnpm --filter sandy-plugin-monaco-editor build:monaco`",
     );
   }
   return staged;
 }
 
-export default async function plugin(bb: BbPluginApi) {
+export default async function plugin(sandy: SandyPluginApi) {
   let assetLease: { baseUrl: string; expiresAtMs: number } | null = null;
 
   async function assets() {
@@ -133,9 +133,9 @@ export default async function plugin(bb: BbPluginApi) {
       assetLease.expiresAtMs - now < ASSET_LEASE_REFRESH_MARGIN_MS
     ) {
       const bundleDir = await ensureMonacoBundleDir((message) =>
-        bb.log.info(message),
+        sandy.log.info(message),
       );
-      assetLease = await bb.sdk.files.createPreview({
+      assetLease = await sandy.sdk.files.createPreview({
         rootPath: bundleDir,
         ttlMs: ASSET_LEASE_TTL_MS,
       });
@@ -151,7 +151,7 @@ export default async function plugin(bb: BbPluginApi) {
       if (source.threadId === null) {
         throw new Error("This thread-storage file has no thread");
       }
-      const { hostId, storageRootPath } = await bb.sdk.threads.storageLocation({
+      const { hostId, storageRootPath } = await sandy.sdk.threads.storageLocation({
         threadId: source.threadId,
       });
       return {
@@ -164,7 +164,7 @@ export default async function plugin(bb: BbPluginApi) {
       if (source.projectId === null) {
         throw new Error("This file has no environment or project");
       }
-      const project = await bb.sdk.projects.get({
+      const project = await sandy.sdk.projects.get({
         projectId: source.projectId,
       });
       const sources = project.sources;
@@ -186,7 +186,7 @@ export default async function plugin(bb: BbPluginApi) {
     if (source.environmentId === null) {
       throw new Error("This file has no environment to resolve it against");
     }
-    const environment = await bb.sdk.environments.get({
+    const environment = await sandy.sdk.environments.get({
       environmentId: source.environmentId,
     });
 
@@ -214,12 +214,12 @@ export default async function plugin(bb: BbPluginApi) {
     return api.relative(root, target) || api.basename(target);
   }
 
-  bb.rpc.register(rpcContract, {
+  sandy.rpc.register(rpcContract, {
     assets: () => assets(),
 
     async read({ path: filePath, source }) {
       const target = await resolveTarget(source, filePath);
-      const file = await bb.sdk.files.read(target);
+      const file = await sandy.sdk.files.read(target);
 
       if (file.contentEncoding !== "utf8") {
         return {
@@ -244,7 +244,7 @@ export default async function plugin(bb: BbPluginApi) {
 
     async tree({ source }) {
       const target = await resolveTarget(source, ".");
-      const result = await bb.sdk.files.listPaths({
+      const result = await sandy.sdk.files.listPaths({
         path: target.rootPath,
         includeFiles: true,
         includeDirectories: true,
@@ -264,7 +264,7 @@ export default async function plugin(bb: BbPluginApi) {
 
     async write({ path: filePath, source, content, expectedSha256 }) {
       const target = await resolveTarget(source, filePath);
-      const result = await bb.sdk.files.write({
+      const result = await sandy.sdk.files.write({
         ...target,
         content,
         contentEncoding: "utf8",

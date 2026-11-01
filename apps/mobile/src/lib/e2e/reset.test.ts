@@ -49,10 +49,10 @@ describe("resetAppState", () => {
 describe("e2e mode flags", () => {
   it("wipes on launch only with the explicit env, and accepts the deep link in dev builds", () => {
     expect(shouldResetOnLaunch({})).toBe(false);
-    expect(shouldResetOnLaunch({ EXPO_PUBLIC_BB_E2E: "1" })).toBe(true);
-    expect(shouldResetOnLaunch({ EXPO_PUBLIC_BB_E2E: "true" })).toBe(false);
+    expect(shouldResetOnLaunch({ EXPO_PUBLIC_SANDY_E2E: "1" })).toBe(true);
+    expect(shouldResetOnLaunch({ EXPO_PUBLIC_SANDY_E2E: "true" })).toBe(false);
     expect(isE2eModeEnabled({}, false)).toBe(false);
     expect(isE2eModeEnabled({}, true)).toBe(true);
-    expect(isE2eModeEnabled({ EXPO_PUBLIC_BB_E2E: "1" }, false)).toBe(true);
+    expect(isE2eModeEnabled({ EXPO_PUBLIC_SANDY_E2E: "1" }, false)).toBe(true);
   });
 });

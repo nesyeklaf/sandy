@@ -2,19 +2,19 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { writeBbAppRuntimeFile } from "@bb/config/app-runtime-file";
+import { writeSandyAppRuntimeFile } from "@sandy/config/app-runtime-file";
 import {
   SERVER_MOVED_FILE_NAME,
   writeServerMovedFile,
   type ServerMovedFile,
-} from "@bb/server-archive";
+} from "@sandy/server-archive";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applyServerMove,
   createServerMovedWatcher,
   createServerMoveNoticeStore,
   ensureServerMovedRuntime,
-  hasLiveBbAppLauncher,
+  hasLiveSandyAppLauncher,
   probeLocalServerMove,
   readServerMovedLock,
   waitForCommittedServerMove,
@@ -27,7 +27,7 @@ import {
   createServerTargetStore,
   type ServerTargetFs,
 } from "../src/server-target.js";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 
 const tempDirs: string[] = [];
 
@@ -38,7 +38,7 @@ afterEach(async () => {
 });
 
 async function createTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "bb-desktop-server-moved-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-desktop-server-moved-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -48,7 +48,7 @@ function movedFile(overrides: Partial<ServerMovedFile> = {}): ServerMovedFile {
     fromHostId: "host-laptop",
     moveId: "move-1",
     movedAt: 1_750_000_000_000,
-    oldCopyEntries: ["bb.db", "attachments"],
+    oldCopyEntries: ["sandy.db", "attachments"],
     serverUrl: "https://laptop.example.test/",
     toHostId: "host-desktop",
     toHostName: "Studio desktop",
@@ -305,7 +305,7 @@ describe("ensureServerMovedRuntime", () => {
     expect(startLocalRuntime).not.toHaveBeenCalled();
   });
 
-  it("does not start a second launcher when another bb answers the address", async () => {
+  it("does not start a second launcher when another sandy answers the address", async () => {
     const { args, logInfo, startLocalRuntime } = runtimeArgs({
       isLocalAddressFree: false,
     });
@@ -439,7 +439,7 @@ describe("createServerMovedWatcher", () => {
       harness.watcher.start();
       harness.timers.flush();
 
-      harness.fakeWatch.emit("bb.db-wal");
+      harness.fakeWatch.emit("sandy.db-wal");
       expect(harness.timers.pendingCount()).toBe(0);
       await writeServerMovedFile(harness.dataDir, movedFile());
       harness.fakeWatch.emit(`${SERVER_MOVED_FILE_NAME}.abc123.tmp`);
@@ -658,7 +658,7 @@ describe("createServerMovedWatcher", () => {
     });
     watcher.start();
 
-    await writeFile(join(dataDir, "bb.db-wal"), "noise");
+    await writeFile(join(dataDir, "sandy.db-wal"), "noise");
     await writeServerMovedFile(
       dataDir,
       movedFile({
@@ -864,7 +864,7 @@ describe("probeLocalServerMove", () => {
           serverUrl: "https://laptop.example.test",
           toHostName: "Studio desktop",
         },
-        message: "This bb server moved",
+        message: "This sandy server moved",
       });
     });
 
@@ -931,11 +931,11 @@ describe("probeLocalServerMove", () => {
   });
 });
 
-describe("hasLiveBbAppLauncher", () => {
+describe("hasLiveSandyAppLauncher", () => {
   async function writeRuntimeFile(dataDir: string, pid: number) {
-    await writeBbAppRuntimeFile({
+    await writeSandyAppRuntimeFile({
       dataDir,
-      entryPath: "/opt/bb/bb-app.js",
+      entryPath: "/opt/sandy/sandy-app.js",
       pid,
       serverUrl: "http://127.0.0.1:38886",
       startedAt: new Date().toISOString(),
@@ -946,7 +946,7 @@ describe("hasLiveBbAppLauncher", () => {
 
   it("is false without a runtime file", async () => {
     await expect(
-      hasLiveBbAppLauncher({ dataDir: await createTempDir() }),
+      hasLiveSandyAppLauncher({ dataDir: await createTempDir() }),
     ).resolves.toBe(false);
   });
 
@@ -954,9 +954,9 @@ describe("hasLiveBbAppLauncher", () => {
     const dataDir = await createTempDir();
     await writeRuntimeFile(dataDir, process.pid);
 
-    await expect(hasLiveBbAppLauncher({ dataDir })).resolves.toBe(true);
+    await expect(hasLiveSandyAppLauncher({ dataDir })).resolves.toBe(true);
     await expect(
-      hasLiveBbAppLauncher({ dataDir, isRunning: () => false }),
+      hasLiveSandyAppLauncher({ dataDir, isRunning: () => false }),
     ).resolves.toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-const DESKTOP_RELEASE_CHANNEL_ENV_NAME = "BB_DESKTOP_RELEASE_CHANNEL";
+const DESKTOP_RELEASE_CHANNEL_ENV_NAME = "SANDY_DESKTOP_RELEASE_CHANNEL";
 
 export function resolveDesktopReleaseChannel(env) {
   const rawChannel = env[DESKTOP_RELEASE_CHANNEL_ENV_NAME]?.trim();
@@ -33,25 +33,25 @@ export function resolveDesktopBuildPlatform(nodePlatform) {
 export function createDesktopReleaseConfig(channel) {
   if (channel === "nightly") {
     return {
-      appId: "dev.bb.desktop.nightly",
-      applicationName: "bb Nightly",
-      artifactName: "bb-nightly-${version}-${arch}.${ext}",
+      appId: "dev.sandy.desktop.nightly",
+      applicationName: "sandy Nightly",
+      artifactName: "sandy-nightly-${version}-${arch}.${ext}",
       iconFileName: "icon-nightly.png",
       // The Linux binary name must differ from stable so both channels can be
       // installed at once without one shadowing the other on PATH.
-      linuxExecutableName: "bb-nightly",
+      linuxExecutableName: "sandy-nightly",
       macIconPath: "assets/icon-nightly.icns",
-      windowsInstallName: "bb-nightly",
+      windowsInstallName: "sandy-nightly",
     };
   }
 
   return {
-    appId: "dev.bb.desktop",
-    applicationName: "bb",
+    appId: "dev.sandy.desktop",
+    applicationName: "sandy",
     artifactName: "${productName}-${version}-${arch}.${ext}",
     iconFileName: "icon.png",
-    linuxExecutableName: "bb",
+    linuxExecutableName: "sandy",
     macIconPath: "assets/icon.icns",
-    windowsInstallName: "bb",
+    windowsInstallName: "sandy",
   };
 }

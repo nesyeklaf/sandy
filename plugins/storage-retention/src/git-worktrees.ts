@@ -1,4 +1,4 @@
-import { experimental_execHostFileCallback as execFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFileCallback as execFile } from "@sandy-sdk/plugin-sdk/process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { z } from "zod";

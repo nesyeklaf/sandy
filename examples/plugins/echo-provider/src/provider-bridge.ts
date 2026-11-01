@@ -27,7 +27,7 @@ import {
   threadStopParamsSchema,
   turnStartParamsSchema,
   turnSteerParamsSchema,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { randomUUID } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -189,7 +189,7 @@ function runEchoTurn(args: {
       item: {
         type: "tool",
         tool: ECHO_STAMP_TOOL_NAME,
-        server: "bb",
+        server: "sandy",
         args: { text: prompt },
       },
       ...(stampTool.presentation === undefined
@@ -414,7 +414,7 @@ function finishEchoTurn(
       item: {
         type: "tool",
         tool: ECHO_STAMP_TOOL_NAME,
-        server: "bb",
+        server: "sandy",
         args: { text: turn.prompt },
         ...(stamp === null
           ? { error: "no reply" }

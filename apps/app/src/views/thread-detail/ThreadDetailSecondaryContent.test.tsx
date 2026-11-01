@@ -4,8 +4,8 @@ import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import {
   usePluginComposerHost,
@@ -43,10 +43,10 @@ const secondaryPanelMockState = vi.hoisted(() => ({
     | undefined,
 }));
 
-vi.mock("@/lib/bb-desktop", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/bb-desktop")>()),
+vi.mock("@/lib/sandy-desktop", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/sandy-desktop")>()),
   DEFAULT_DESKTOP_WINDOW_STATE: { isFullScreen: false },
-  getBbDesktopInfo: () => null,
+  getSandyDesktopInfo: () => null,
   shouldReserveMacosTrafficLights: () => false,
   shouldUseMacosDesktopChrome: () => false,
 }));

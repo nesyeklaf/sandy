@@ -1,11 +1,11 @@
-# @bb/mobile
+# @sandy/mobile
 
-Native iOS/Android client for bb (Expo SDK 58, React Native 0.88, Expo
+Native iOS/Android client for sandy (Expo SDK 58, React Native 0.88, Expo
 Router, NativeWind v5).
 
 Status: a native shell around the web interface (#2515). `app/webview.tsx`
 loads the active server's web app in `react-native-webview` and talks to it
-over `@bb/mobile-bridge` (handshake, haptics, share, open
+over `@sandy/mobile-bridge` (handshake, haptics, share, open
 external links, open native screens, save files on iOS). Threads, projects, plugins and server
 settings run in the page. The native screens cover what the page cannot
 own: first-run pairing (Direct URL),
@@ -34,10 +34,10 @@ app/                     Expo Router routes (thin: each file re-exports a screen
   settings/              device (This device), appearance,
                          servers/index (saved servers), servers/add (Direct URL
                          form)
-  dev/webview-spike.tsx  Phase 0 WebView diagnostics (dev / EXPO_PUBLIC_BB_E2E=1
+  dev/webview-spike.tsx  Phase 0 WebView diagnostics (dev / EXPO_PUBLIC_SANDY_E2E=1
                          only: release bundles redirect home)
-  e2e/reset.tsx          bb://e2e/reset — wipes local state (dev / EXPO_PUBLIC_BB_E2E=1)
-  +native-intent.tsx     redirectSystemPath: every incoming URL (bb:// scheme,
+  e2e/reset.tsx          sandy://e2e/reset — wipes local state (dev / EXPO_PUBLIC_SANDY_E2E=1)
+  +native-intent.tsx     redirectSystemPath: every incoming URL (sandy:// scheme,
                          universal links, dev-client URLs) → src/lib/shell link
                          resolution → profile switch + shell route / add-server prompt
   +not-found.tsx         unknown native route fallback
@@ -66,7 +66,7 @@ src/
     query/               per-profile QueryClient, AppState focus, realtime →
                          system config invalidation
     realtime/            WebSocketManager-shaped realtime on RN WebSocket
-    sdk/                 createMobileSdk (@bb/sdk/browser + app-surface header),
+    sdk/                 createMobileSdk (@sandy/sdk/browser + app-surface header),
                          per-profile client registry
     share/               inbound share intent → shell composer seed
     shell/               shell URL and navigation rules, screen state, last-path
@@ -87,11 +87,11 @@ e2e/flows/               Maestro shell flows: shell-launch, shell-deep-link,
                          shell-send, shell-unreachable-server
 e2e/subflows/            shared steps (launch-app.yaml: cold start through the
                          dev client + Metro, or `launchApp` of the embedded
-                         Release bundle with `-e BB_E2E_EMBEDDED_BUNDLE=1`;
+                         Release bundle with `-e SANDY_E2E_EMBEDDED_BUNDLE=1`;
                          pair-direct-server.yaml: add the harness server and
-                         wait for the shell; open-bb-link.yaml /
+                         wait for the shell; open-sandy-link.yaml /
                          clear-open-confirmation.yaml: accept or cancel the
-                         native `bb://` confirmation), called with
+                         native `sandy://` confirmation), called with
                          `runFlow: ../subflows/<name>.yaml`
 e2e/scripts/             ci-run-flows.sh (the CI flow set against a Release
                          build; see "CI"), pick-simulator.mjs (newest iPhone
@@ -102,7 +102,7 @@ scripts/                 generate-native-theme.ts (theme tokens),
                          testflight-distribute.mjs (TestFlight distribution)
 ```
 
-Rules: import `@bb/sdk/browser` (never `@bb/sdk`); no `@bb/shared-ui`; no DOM
+Rules: import `@sandy/sdk/browser` (never `@sandy/sdk`); no `@sandy/shared-ui`; no DOM
 APIs; keep RN-dependent code out of `src/lib/**` except `src/lib/native`.
 
 ## Prerequisites (macOS)
@@ -115,26 +115,23 @@ debugging enabled.
 
 ### Android local APK and verification
 
-For development threads, build the standalone **bb dev** app from the repo root:
+For development threads, build the standalone **sandy dev** app from the repo root:
 
 ```bash
 pnpm mobile:apk:dev
-adb install -r apps/mobile/build-output/bb-dev.apk
+adb install -r apps/mobile/build-output/sandy-dev.apk
 ```
 
-The APK is `apps/mobile/build-output/bb-dev.apk`. It has an orange bb launcher
-icon, favicon, and splash logo, the name **bb dev**, and package `app.getbb.mobile.dev`, so it
+The APK is `apps/mobile/build-output/sandy-dev.apk`. It has a blue sandy launcher
+icon, favicon, and splash logo (the normal mark is amber), the name **sandy dev**, and package `app.sandy.mobile.dev`, so it
 installs alongside the regular app with separate saved servers and data. It
 embeds the Release JS bundle and runs without Metro, EAS, or production
 signing credentials. Pair it with the development server through Add server or
 a pairing code. It does not claim production HTTPS app links; Android themed icons use the system tint.
-Dev launcher assets tint the existing shaded mobile artwork using the orange
-palette and tinting method from `apps/app/scripts/generate-pwa-icons.mjs`,
-preserving the original dimensions, alpha, and launcher padding. The transparent
-splash asset stores the original light logo's shading in orange RGB and uses
-the dark logo's silhouette alpha. This keeps transparency at the edges rather
-than throughout the shaded mark, avoiding darkening during native image
-generation. Both light and dark splash screens use the orange logo.
+All launcher, splash and favicon assets are rendered from the one mark in
+`apps/app/scripts/brand-marks.mjs` by `scripts/generate-brand-assets.mjs`; the
+dev variants use its blue palette, and the adaptive icon keeps the mark inside
+the launcher's safe zone.
 
 Use `pnpm mobile:apk:dev -- x86_64` for an Intel emulator. The default is
 `arm64-v8a` for a physical phone. Install Android SDK/build tools and JDK 17
@@ -149,15 +146,15 @@ is running, then retry.
 When a thread is asked to build a dev APK, use this command, wait for successful
 completion, and provide a clickable link to the resulting APK. Record the
 source commit and any uncommitted changes. For a durable per-thread copy, copy
-the APK into `$BB_THREAD_STORAGE` and link that absolute path. Do not publish it
+the APK into `$SANDY_THREAD_STORAGE` and link that absolute path. Do not publish it
 to the public `android-testing` release. Builds use the generated debug signing
 key; Android updates require the same key as the installed dev app.
 
 The existing local build retains the regular app identity for smoke tests:
 
 ```bash
-pnpm exec turbo run build:android:local --filter=@bb/mobile
-adb install -r apps/mobile/build-output/bb-android-local.apk
+pnpm exec turbo run build:android:local --filter=@sandy/mobile
+adb install -r apps/mobile/build-output/sandy-android-local.apk
 ```
 
 This builds an ARM64 APK with an embedded Release JS bundle and the generated
@@ -170,11 +167,11 @@ Run the mobile backend described below, then `adb reverse tcp:41999 tcp:41999`
 so the Android app can reach it at `http://127.0.0.1:41999`. Keep the reverse
 mapping active during tests. Android does not share the Mac loopback directly.
 
-Run `pnpm exec turbo run e2e:android --filter=@bb/mobile` with only the intended
+Run `pnpm exec turbo run e2e:android --filter=@sandy/mobile` with only the intended
 Android emulator/device connected. The smoke flow clears this app's local data,
 pairs the fixture, sends a message, checks Android back navigation, relaunches,
 and opens native device settings. Use a normal embedded build, not
-`EXPO_PUBLIC_BB_E2E=1`, so the relaunch step can verify saved profiles.
+`EXPO_PUBLIC_SANDY_E2E=1`, so the relaunch step can verify saved profiles.
 
 `e2e/android/keyboard.yaml` uses the same backend and checks repeated keyboard
 opening, Back dismissal, draft retention, and sending after dismissal. Run it
@@ -221,7 +218,7 @@ the public. The first Play upload must be completed manually.
 For Play uploads, add the GitHub secret `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`.
 Local EAS Submit reads the gitignored `google-play-service-account.json` in
 `apps/mobile`. Register the **Play app-signing certificate**, not only the
-upload certificate, for any HTTPS app-link domain you serve. The native `bb://` scheme works
+upload certificate, for any HTTPS app-link domain you serve. The native `sandy://` scheme works
 without those certificates.
 
 Pending credentials do not establish verified HTTPS app-link coverage. Test
@@ -241,24 +238,24 @@ that separately once signing is configured.
 pnpm install                                   # applies patches/react-native-webview@14.0.1.patch
 cd apps/mobile
 pnpm ios                                       # prebuild + build the dev-client, opens the simulator
-EXPO_PUBLIC_BB_SERVER_URL=http://127.0.0.1:<port> pnpm dev   # Metro (dev-client)
+EXPO_PUBLIC_SANDY_SERVER_URL=http://127.0.0.1:<port> pnpm dev   # Metro (dev-client)
 ```
 
 The iOS Simulator shares the Mac loopback, so `pnpm dev` (repo root) or
 `pnpm dev` gives a server URL that works as-is. Physical
 phones need a Tailscale Serve URL or the server's tailnet address in
-`BB_SERVER_BIND_HOST`. For the E2E backend below, set
-`BB_MOBILE_E2E_BIND_HOST` to one tailnet or WireGuard address of this machine;
+`SANDY_SERVER_BIND_HOST`. For the E2E backend below, set
+`SANDY_MOBILE_E2E_BIND_HOST` to one tailnet or WireGuard address of this machine;
 the backend then listens only there.
 
 ## E2E (Maestro)
 
 ```bash
 # terminal 1: deterministic backend (fake provider, fixed port 41999) serving the built web app
-pnpm exec turbo run build --filter=@bb/app
-BB_MOBILE_E2E_SERVE_APP=1 pnpm --filter @bb/integration-tests e2e:mobile-backend
-# terminal 2: Metro (EXPO_PUBLIC_BB_E2E=1 wipes profiles/preferences on every launch)
-cd apps/mobile && EXPO_PUBLIC_BB_SERVER_URL=http://127.0.0.1:41999 EXPO_PUBLIC_BB_E2E=1 pnpm dev --port 8082
+pnpm exec turbo run build --filter=@sandy/app
+SANDY_MOBILE_E2E_SERVE_APP=1 pnpm --filter @sandy/integration-tests e2e:mobile-backend
+# terminal 2: Metro (EXPO_PUBLIC_SANDY_E2E=1 wipes profiles/preferences on every launch)
+cd apps/mobile && EXPO_PUBLIC_SANDY_SERVER_URL=http://127.0.0.1:41999 EXPO_PUBLIC_SANDY_E2E=1 pnpm dev --port 8082
 # terminal 3: flows
 cd apps/mobile && pnpm e2e:ios
 ```
@@ -270,31 +267,31 @@ The deterministic backend marks web onboarding complete before seeding threads,
 so Android and iOS shell flows start with the thread list available.
 `shell-launch.yaml` pairs a Direct server from first run and lands in the
 shell with the page rendered; the other shell flows assume it works.
-`shell-deep-link.yaml` opens a `bb://` scheme link and a web link for the
+`shell-deep-link.yaml` opens a `sandy://` scheme link and a web link for the
 saved server: both resolve to the shell route carrying a page path.
 `shell-send.yaml` sends a message through the page and reaches the native
 device settings from it.
 `shell-unreachable-server.yaml` checks that the add-server probe refuses a
 server the phone cannot reach, so the shell never loads a dead origin; it
 does not use the harness backend.
-Flows open `bb://` links through `subflows/open-bb-link.yaml` and pair through
+Flows open `sandy://` links through `subflows/open-sandy-link.yaml` and pair through
 `subflows/pair-direct-server.yaml`; `src/lib/e2e/mobile-e2e-flows.test.ts`
 enforces both.
 Flows dismiss the keyboard by tapping a static label ("Server URL",
 "Add server"): Maestro's `hideKeyboard` looks for a Return/Done key and the
 Add server fields use "next".
 Flows cold-start the dev client (`stopApp`) because a warm reload keeps the
-last deep link as the initial URL. Without `EXPO_PUBLIC_BB_E2E=1`, open `bb://e2e/reset`
+last deep link as the initial URL. Without `EXPO_PUBLIC_SANDY_E2E=1`, open `sandy://e2e/reset`
 (dev builds) to return the simulator to first run.
 
 ### Flows against a Release build (no Metro)
 
 A Release build (`npx expo run:ios --configuration Release --no-bundler
 --device <udid>`) embeds the JS bundle and never starts the dev launcher, so
-the same flows run without Metro: build it with `EXPO_PUBLIC_BB_E2E=1` (and
-`EXPO_PUBLIC_BB_SERVER_URL=http://127.0.0.1:41999`) in the environment — the
+the same flows run without Metro: build it with `EXPO_PUBLIC_SANDY_E2E=1` (and
+`EXPO_PUBLIC_SANDY_SERVER_URL=http://127.0.0.1:41999`) in the environment — the
 Xcode "Bundle React Native code and images" phase inlines `EXPO_PUBLIC_*` at
-bundle time — and pass `-e BB_E2E_EMBEDDED_BUNDLE=1` to Maestro.
+bundle time — and pass `-e SANDY_E2E_EMBEDDED_BUNDLE=1` to Maestro.
 `e2e/subflows/launch-app.yaml` switches on that variable between the
 dev-client deep link and a plain `launchApp`; it is a `-e` variable on
 purpose because values in a flow's `env:` block beat `-e`, and `METRO_URL`
@@ -302,7 +299,7 @@ lives in every flow's header.
 `e2e/scripts/ci-run-flows.sh <udid> <artifacts dir> [flow…]` is what CI runs:
 `shell-launch`, `shell-deep-link`, `shell-send`, `shell-unreachable-server`,
 one `maestro test` at a time with `--test-output-dir` per flow (screenshots,
-logs, JUnit); after a failure it clears the native `bb://` confirmation
+logs, JUnit); after a failure it clears the native `sandy://` confirmation
 before the next flow, and it exits non-zero if any flow failed.
 `--dev-client`
 as the first argument drives a dev client through Metro instead.
@@ -339,7 +336,7 @@ as the first argument drives a dev client through Metro instead.
 
 ## Server moves
 
-- After `bb server move`, the old computer answers its old address with
+- After `sandy server move`, the old computer answers its old address with
   `410 {code:"server_moved", details:{serverUrl, toHostName}}`.
   `createMobileFetch` reads that body from `response.clone()` and validates
   `details.serverUrl` with the Direct URL rules. The registry passes the
@@ -351,20 +348,20 @@ as the first argument drives a dev client through Metro instead.
 
 ## Deep links
 
-- Deep links: `bb://<path>` (`bb://threads/<id>`, `bb://settings/servers`,
-  `bb://projects/<p>/threads/<t>`, …) and web links of a saved server.
+- Deep links: `sandy://<path>` (`sandy://threads/<id>`, `sandy://settings/servers`,
+  `sandy://projects/<p>/threads/<t>`, …) and web links of a saved server.
   `app/+native-intent.tsx` resolves every
   URL with `src/lib/shell` (`resolveShellIncomingLink` over `src/lib/links`):
   a web link whose origin matches a saved profile switches to that profile
   (waiting for its connection) and opens the shell route carrying the page
   path; native-only paths (servers and device settings) stay native; an unknown server opens Add server prefilled with
   the origin and the follow-up path. The app claims no universal-link
-  domain, so only the `bb://` scheme reaches it from other apps. The realtime `thread-open` signal (`POST /threads/:id/open`,
-  `bb thread open`) navigates to the thread while the app is foregrounded.
+  domain, so only the `sandy://` scheme reaches it from other apps. The realtime `thread-open` signal (`POST /threads/:id/open`,
+  `sandy thread open`) navigates to the thread while the app is foregrounded.
 
 ## Share sheet and haptics
 
-- Inbound "Send to bb" is wired for `expo-share-intent` but the native module
+- Inbound "Send to sandy" is wired for `expo-share-intent` but the native module
   is **not** in the current dev client: `src/lib/share/share-intent.ts` loads
   it optionally and `src/app-shell/ShareIntentHandler.tsx` renders nothing
   when it is absent. To enable it: `npx expo install expo-share-intent`, add
@@ -380,7 +377,7 @@ as the first argument drives a dev client through Metro instead.
   URLs for recordings and other browser-created blobs. The iOS WebView patch
   turns `shouldPerformDownload` actions and attachment/non-displayable
   responses into `WKDownload`s. WebKit writes the file in the WebView's
-  request context; bb does not copy cookies, refetch through native HTTP, or
+  request context; sandy does not copy cookies, refetch through native HTTP, or
   transfer bytes through the JavaScript bridge. The patched `onFileDownload`
   event includes `filePath` for a completed local file or `error` for a
   failure, alongside the original `downloadUrl`. React Native presents the
@@ -388,7 +385,7 @@ as the first argument drives a dev client through Metro instead.
   or failure. Partial downloads are cancelled and removed on WebView teardown
   or page reload. Previous-process cache files are cleared on the first
   download. There are at most four active WebKit downloads. Files live under
-  `Paths.cache/bb-webkit-downloads/<uuid>/`.
+  `Paths.cache/sandy-webkit-downloads/<uuid>/`.
   The shell queries the installed binary through `nativeDownloadsSupported()`
   before enabling the new handlers, so an OTA update on an older binary keeps
   its existing behavior. The handshake advertises `nativeDownloads: true` separately from the strict
@@ -403,7 +400,7 @@ as the first argument drives a dev client through Metro instead.
 - Haptics: `src/lib/haptics/` — `haptic(kind)` maps semantic kinds
   (`selection`, `impact-light|medium|heavy`, `success`, `warning`, `error`)
   onto expo-haptics and honors the Settings → This device → Haptics toggle
-  (MMKV `bb.haptics.enabled`, default on). Call sites: bridge `haptic`
+  (MMKV `sandy.haptics.enabled`, default on). Call sites: bridge `haptic`
   messages handled in `useShellBridge` (the web app sends none yet), the
   segmented appearance picker (selection), destructive ActionSheet rows and
   confirmations (warning), the servers long-press menu (heavy), and the
@@ -419,9 +416,9 @@ fixture proxy with its printed backend URL and an unused local port:
 node apps/mobile/e2e/scripts/download-fixture.mjs http://127.0.0.1:<backend-port> <proxy-port>
 ```
 
-Save both `http://127.0.0.1:<proxy-port>` and the same URL with `/bb` as
-native server profiles. With each active, open `bb://api/v1/download-fixture`.
-The proxy forwards normal app traffic, strips `/bb`, and also forwards root
+Save both `http://127.0.0.1:<proxy-port>` and the same URL with `/sandy` as
+native server profiles. With each active, open `sandy://api/v1/download-fixture`.
+The proxy forwards normal app traffic, strips `/sandy`, and also forwards root
 paths, matching the web app's current root-relative API URLs.
 
 - Authenticated file requires an HttpOnly cookie installed by the fixture
@@ -430,7 +427,7 @@ paths, matching the web app's current root-relative API URLs.
 - Download blob generates the same 1,536,000 bytes in the page. Both files
   must match the SHA-256 printed by the fixture server and retain their names.
 - Save to Files and share-sheet dismissal must leave the page intact and
-  remove the corresponding `Library/Caches/bb-webkit-downloads/<uuid>/` file.
+  remove the corresponding `Library/Caches/sandy-webkit-downloads/<uuid>/` file.
 - Missing file must show a 404 toast. Redirect download must finish with the
   same bytes. Open attachment tab must open the share sheet.
 - Start Slow download, then Reload page before it finishes. The proxy must
@@ -442,10 +439,10 @@ Cold-launch the development client for native verification.
 
 ## Release (EAS)
 
-The app lives in the EAS project `@bb-team/bb-app` (id in
-`app.json` → `extra.eas.projectId`; the Expo slug `bb-app` also names the
-dev-client scheme `exp+bb-app://`). Apple team `9QCU24SXK5`, bundle id
-`app.getbb.mobile`, App Store Connect app `6803559210`. EAS holds the iOS
+The app lives in the EAS project `@sandy-team/sandy-app` (id in
+`app.json` → `extra.eas.projectId`; the Expo slug `sandy-app` also names the
+dev-client scheme `exp+sandy-app://`). Apple team `9QCU24SXK5`, bundle id
+`app.sandy.mobile`, App Store Connect app `6803559210`. EAS holds the iOS
 credentials (distribution certificate, App Store provisioning profile); nobody needs a local Xcode signing setup to ship.
 
 - **Log in once**: `pnpm exec eas login` (or `EXPO_TOKEN`). `eas-cli` is a
@@ -475,14 +472,14 @@ credentials (distribution certificate, App Store provisioning profile); nobody n
 --build N` from `apps/mobile` with the `.p8` in place.
   Run it alone from the Actions tab ("Mobile iOS (EAS)") or
   `gh workflow run mobile-ios-eas.yml -f profile=production -f submit=true`.
-  The nightly `publish-bb-app.yml` calls the same workflow after the npm
+  The nightly `publish-sandy-app.yml` calls the same workflow after the npm
   nightly publish with an empty `version`, so every nightly keeps the
   marketing version committed in `app.json` and only the EAS build number
   moves. This is deliberate: TestFlight needs a Beta App Review for the
   first build of each new marketing version, and later builds of the same
   version skip it. Bump `app.json` `version` only when you want a new
   review, for example for a store release. Repo
-  secrets: `EXPO_TOKEN` (a robot token from the `bb-team` Expo org) and
+  secrets: `EXPO_TOKEN` (a robot token from the `sandy-team` Expo org) and
   `ASC_API_KEY_P8` (the `.p8` contents).
 - The `react-native-webview` pnpm patch and the `lightningcss` override ship
   with the repo and apply on EAS; builds need an EAS image with Xcode 27.x
@@ -495,7 +492,7 @@ credentials (distribution certificate, App Store provisioning profile); nobody n
 
 **Internal testers** need no Apple review. A build reaches the group as soon as
 App Store Connect finishes processing it, usually within 30 minutes. The group
-`bb team` exists and the nightly feeds it.
+`sandy team` exists and the nightly feeds it.
 
 **External testers** need a Beta App Review on the first build of each
 marketing version, and Apple usually auto-approves later builds of that
@@ -510,15 +507,15 @@ group, App Store Connect needs all of this:
   build, a "What to test" note.
 - **Beta App Review Details** (`betaAppReviewDetail`): contact first name, last
   name, phone, and email. Apple uses these, testers never see them.
-- **A way for the reviewer to use the app.** This is the part that fails. bb
-  opens on "Add server", and a reviewer has no bb server, so without help they
+- **A way for the reviewer to use the app.** This is the part that fails. sandy
+  opens on "Add server", and a reviewer has no sandy server, so without help they
   cannot get past the first screen and will reject the build. The real path
-  does not work for a reviewer: a bb server's API is unauthenticated and runs
+  does not work for a reviewer: a sandy server's API is unauthenticated and runs
   commands, so it cannot be on the internet. Give them the **demo server** instead:
   `apps/demo-server` is a Cloudflare Worker that serves the web app shell, sidebar plugin frontends, and API
   from fixed data, runs nothing, and isolates each client address. Build it
-  with `pnpm exec turbo run build --filter=@bb/demo-server`, then deploy it
-  with `pnpm --filter @bb/demo-server exec wrangler deploy`, and rehearse the review notes
+  with `pnpm exec turbo run build --filter=@sandy/demo-server`, then deploy it
+  with `pnpm --filter @sandy/demo-server exec wrangler deploy`, and rehearse the review notes
   below before every submission. Disclose it in the notes: a disclosed demo
   mode is sanctioned by guideline 2.1.
 
@@ -526,13 +523,13 @@ Review notes template — keep it literal, and assume the reviewer knows nothing
 about coding agents:
 
 ```text
-bb is a client for a bb server that a developer runs on their own computer.
+sandy is a client for a sandy server that a developer runs on their own computer.
 The app has no accounts of its own, so we have prepared a demo server for
 you. It serves sample conversations and scripted replies; it does not run a
 real coding agent.
 
-1. Open the app. It shows "Connect to a bb server".
-2. In "Server URL", enter: https://bb-demo-server.sawyer-7bb.workers.dev
+1. Open the app. It shows "Connect to a sandy server".
+2. In "Server URL", enter: https://sandy-demo-server.sawyer-7bb.workers.dev
 3. Tap "Connect".
 4. The app shows a list of conversations. Open any of them to read it.
 5. Browse the sample conversations. No credentials or pairing code are needed.
@@ -546,7 +543,7 @@ instructions. No sign-in or pairing code is needed. See
 and deployment steps. Verify the deployed shell with the actual store build
 before submitting either platform.
 
-Rehearse it before submitting: hand a colleague a phone that has never run bb,
+Rehearse it before submitting: hand a colleague a phone that has never run sandy,
 give them only these notes, and check that they reach a thread.
 
 The nightly keeps the marketing version in `app.json` and lets the EAS build
@@ -556,9 +553,9 @@ Beta App Review and another build of the same version usually does not.
 ## Local state
 
 - Server profiles: `expo-secure-store`, one key per profile
-  (`bb.profile.<id>`) plus `bb.profiles.index`.
-- Preferences (theme mode `bb.theme`, haptics `bb.haptics.enabled`): MMKV
-  store `bb.preferences`, one shared instance from
+  (`sandy.profile.<id>`) plus `sandy.profiles.index`.
+- Preferences (theme mode `sandy.theme`, haptics `sandy.haptics.enabled`): MMKV
+  store `sandy.preferences`, one shared instance from
   `src/lib/native/preferences-storage.ts`.
 - Each profile owns one SDK client, one realtime socket, and one TanStack
   QueryClient (`src/lib/sdk/client-registry.ts`, instantiated once by
@@ -572,14 +569,14 @@ Beta App Review and another build of the same version usually does not.
 `apps/app/src/lib/themes/*.ts`: every color token per palette × light/dark as a
 plain RN color string, with `nativeRadii` and the touch (`pointer: coarse`)
 `nativeTypography` scale. Do not edit it by hand. After changing theme.css or a
-palette, run `pnpm --filter @bb/mobile theme:generate` and commit the result;
+palette, run `pnpm --filter @sandy/mobile theme:generate` and commit the result;
 `src/theme/generate-native-theme.test.ts` fails when the file is stale.
 
 ## Notes
 
 - Workspace packages resolve from TypeScript source through `metro.config.js`
-  (`source` export condition for `@bb/*` only, `./x.js` → `./x.ts`).
-- Import `@bb/sdk/browser`, never `@bb/sdk` (lint-enforced).
+  (`source` export condition for `@sandy/*` only, `./x.js` → `./x.ts`).
+- Import `@sandy/sdk/browser`, never `@sandy/sdk` (lint-enforced).
 - Never spread a `Headers` instance into a fetch init on React Native.
 - `lightningcss` is pinned to 1.30.1 for `@expo/metro-config` (NativeWind v5).
 - Type-scale line heights in `global.css` are unitless ratios
@@ -600,7 +597,7 @@ nightly publication following a stable release. Successful builds replace the
 published APK. These builds do not submit
 to Google Play.
 
-The Android version name matches the published bb-app nightly version, including
+The Android version name matches the published sandy-app nightly version, including
 its full `-nightly.RUN.ATTEMPT` suffix. EAS continues to increment the integer
 Android build number independently.
 
@@ -621,7 +618,7 @@ security scanning; reduced size does not guarantee a fix for scanning hangs.
 ## Android keyboard image paste
 
 The `react-native-webview` patch receives keyboard image content through
-AndroidX `InputConnectionCompat`. It is enabled only for WebViews with BB's
+AndroidX `InputConnectionCompat`. It is enabled only for WebViews with SANDY's
 injected mobile bridge. The bridge captures the focused prompt editor, then
 replays the image as a clipboard file through the existing web paste handler.
 The WebView serves a temporary, single-use URL from the keyboard's content
@@ -650,14 +647,14 @@ For a device smoke test:
 7. Remove the test attachments and text without sending a message.
 
 Bridge regression tests run with
-`pnpm exec turbo run test typecheck --filter=@bb/mobile-bridge`.
+`pnpm exec turbo run test typecheck --filter=@sandy/mobile-bridge`.
 
 ## Android message copy
 
 For messages containing text and an image, Android Copy uses the shell's
 `copyRichText` method to publish `text/plain` plus `text/html`. The HTML carries
-hidden, versioned BB metadata with the exact message text and an image URL.
-BB's regular Paste handler validates that metadata, inserts the text and
+hidden, versioned SANDY metadata with the exact message text and an image URL.
+SANDY's regular Paste handler validates that metadata, inserts the text and
 fetches the image from the same server with the current session. Downloads
 reject redirects and non-image responses, enforce the 35 MB attachment limit,
 and time out after 30 seconds. A failed download preserves the pasted text and
@@ -666,7 +663,7 @@ pages that navigated away are discarded.
 
 Android WebView's long-press Paste delivers the HTML. Gboard's text suggestion
 and clipboard-history text entries insert plain text without a rich paste
-event, so those paths paste text only. BB does not compare inserted text with
+event, so those paths paste text only. SANDY does not compare inserted text with
 previous messages or retain a copied-message cache. HTML-aware destinations
 can also render the text and image reference; plain text destinations receive
 only the text. The image reference requires access to the original server and
@@ -677,7 +674,7 @@ cache and expose its URI through the WebView FileProvider. Downloads are
 limited to 35 MB, reject redirects, and expire after 25 seconds with 10-second
 network timeouts. Old cache files are removed on the next copy after 24 hours.
 
-Both the APK and served BB web app need this change. Older APKs retain the
+Both the APK and served SANDY web app need this change. Older APKs retain the
 previous combined image/text item behavior. Verify mixed-message Copy followed
 by long-press Paste, Gboard text insertion, image-only Copy/Paste, ordinary text,
 and a missing image. Remove test drafts without sending them.

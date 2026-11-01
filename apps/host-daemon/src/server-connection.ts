@@ -9,7 +9,7 @@ import {
   type HostDaemonSessionCloseReason,
   type HostDaemonSessionOpenResponse,
   type HostDaemonDaemonWsMessage,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { z } from "zod";
 import {
   DEFAULT_CONNECTION_TIMEOUT_MS,
@@ -24,8 +24,8 @@ import {
   type ReconnectingWebSocketLike,
   type ServerConnectionOptions,
 } from "./server-connection-support.js";
-import { isLikelySystemSuspensionDelay } from "@bb/process-utils";
-import { sliceUtf16Head } from "@bb/text-utils";
+import { isLikelySystemSuspensionDelay } from "@sandy/process-utils";
+import { sliceUtf16Head } from "@sandy/text-utils";
 import { normalizeCaughtError, runtimeErrorLogFields } from "./error-utils.js";
 import { ServerResponseError } from "./server-client.js";
 
@@ -364,7 +364,7 @@ export class ServerConnection {
         const moved = error.serverMoved;
         this.options.logger.info(
           { serverUrl: moved.serverUrl, toHostName: moved.toHostName },
-          "The bb server moved; switching this daemon to the new address",
+          "The sandy server moved; switching this daemon to the new address",
         );
         const switched = await this.options
           .onServerMoved({
@@ -379,7 +379,7 @@ export class ServerConnection {
             (handlerError: unknown) => {
               this.options.logger.error(
                 { ...runtimeErrorLogFields(handlerError) },
-                "Failed to switch this daemon to the moved bb server",
+                "Failed to switch this daemon to the moved sandy server",
               );
               return false;
             },
@@ -645,7 +645,7 @@ export class ServerConnection {
       ).catch((error) => {
         this.options.logger.error(
           { ...runtimeErrorLogFields(error), serverUrl: move.serverUrl },
-          "Failed to switch this daemon to the moved bb server",
+          "Failed to switch this daemon to the moved sandy server",
         );
       });
       return;

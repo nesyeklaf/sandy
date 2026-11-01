@@ -1,4 +1,4 @@
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { useCallback, useState } from "react";
 import {
   useGitDiffDisplayModePreference,

@@ -1,4 +1,4 @@
-import type { GitBranchRefClassification } from "@bb/domain";
+import type { GitBranchRefClassification } from "@sandy/domain";
 
 interface GetMergeBaseBranchCandidatesArgs {
   mergeBaseBranch?: string;

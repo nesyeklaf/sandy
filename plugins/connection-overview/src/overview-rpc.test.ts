@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import { overviewSchema } from "./contract.js";
 import type { ConnectionState } from "./classify.js";
@@ -16,17 +16,17 @@ afterEach(async () => {
 });
 
 async function harness(health: SourceHealth[]) {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "bb-overview-rpc-"));
+  const dataDir = await mkdtemp(path.join(tmpdir(), "sandy-overview-rpc-"));
   cleanups.push(() => rm(dataDir, { recursive: true, force: true }));
   const host = createFakePluginHost({
-    pluginId: "bb--connection-overview",
+    pluginId: "sandy--connection-overview",
     dataDir,
   });
   const store = createStore(
-    host.bb.storage.database(),
-    host.bb.storage.migrate,
+    host.sandy.storage.database(),
+    host.sandy.storage.migrate,
   );
-  registerOverviewRpc(host.bb, { store, health: () => health, now: () => NOW });
+  registerOverviewRpc(host.sandy, { store, health: () => health, now: () => NOW });
   return { host, store };
 }
 
@@ -63,7 +63,7 @@ const freshServer: SourceHealth = {
 };
 
 describe("overview.get", () => {
-  it("orders rows by urgency, counts every state and reports the same exit code as bb connections status", async () => {
+  it("orders rows by urgency, counts every state and reports the same exit code as sandy connections status", async () => {
     const { host, store } = await harness([freshServer]);
     const states: ConnectionState[] = [
       "allowed",

@@ -20,7 +20,7 @@ import {
   GitSegmentFixtureProvider,
   type GitSegmentFixture,
 } from "@/test/fixtures/git-segment-plugin";
-import type { WorkspaceChangedFilesSection } from "@bb/shared-ui/workspace-change-summary";
+import type { WorkspaceChangedFilesSection } from "@sandy/shared-ui/workspace-change-summary";
 
 const noop = () => {};
 const CHILD_THREADS = "child-threads";
@@ -199,7 +199,7 @@ describe("ThreadPromptContextBanner", () => {
       expect(screen.queryByText(/history|machine settings/)).toBeNull();
       expect(screen.queryByText("Provision")).toBeNull();
       toggle.click();
-      expect(toggled).toEqual(["bb--core/status"]);
+      expect(toggled).toEqual(["sandy--core/status"]);
     },
   );
 
@@ -212,7 +212,7 @@ describe("ThreadPromptContextBanner", () => {
         environmentGoneSection={{ status: "cleanup-failed" }}
         parentThreadSection={null}
         childThreadsSection={null}
-        expandedSection="bb--core/status"
+        expandedSection="sandy--core/status"
         onToggleSection={noop}
       />,
     );
@@ -555,7 +555,7 @@ describe("ThreadPromptContextBanner", () => {
     const onToggleSection = vi.fn();
     const renderBanner = (
       items: ReturnType<typeof childThreadItem>[],
-      expandedSection: "bb--git/changed-files" | null,
+      expandedSection: "sandy--git/changed-files" | null,
     ) => (
       <MemoryRouter>
         <Banner
@@ -581,17 +581,17 @@ describe("ThreadPromptContextBanner", () => {
       pending: true,
     });
     const { rerender } = render(
-      renderBanner([working], "bb--git/changed-files"),
+      renderBanner([working], "sandy--git/changed-files"),
     );
     expect(onToggleSection).not.toHaveBeenCalled();
-    rerender(renderBanner([blocked, working], "bb--git/changed-files"));
+    rerender(renderBanner([blocked, working], "sandy--git/changed-files"));
     expect(onToggleSection).toHaveBeenCalledTimes(1);
     expect(onToggleSection).toHaveBeenCalledWith(CHILD_THREADS);
   });
 });
 
 describe("ThreadPromptContextBanner git section body", () => {
-  function renderBanner(expandedSection: "bb--git/changed-files" | null) {
+  function renderBanner(expandedSection: "sandy--git/changed-files" | null) {
     return (
       <MemoryRouter>
         <Banner
@@ -612,7 +612,7 @@ describe("ThreadPromptContextBanner git section body", () => {
     const { rerender } = render(renderBanner(null));
     expect(screen.queryByRole("list", { hidden: true })).toBeNull();
 
-    rerender(renderBanner("bb--git/changed-files"));
+    rerender(renderBanner("sandy--git/changed-files"));
     expect(screen.getByRole("list")).toBeTruthy();
     expect(
       screen.getByRole("button", { name: `Open ${changedFile.path}` }),

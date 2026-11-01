@@ -1,5 +1,5 @@
-import { pluginCommandId } from "@bb/domain";
-import type { PluginComposerApi } from "@get-bb/plugin-sdk";
+import { pluginCommandId } from "@sandy/domain";
+import type { PluginComposerApi } from "@sandy-sdk/plugin-sdk";
 import { useComposerCommand } from "@/components/promptbox/composer-commands";
 import { useComposer } from "@/lib/plugin-sdk-hooks";
 import {

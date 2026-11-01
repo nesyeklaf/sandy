@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import {
   usePluginList,
   type PluginListItem,

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import { buildSkillEditThreadPrompt } from "@bb/shared-ui/resource-edit-prompt";
-import type { EditableSkillScope, SkillSummary } from "@bb/server-contract";
-import { ResourceListState } from "@bb/shared-ui/resource-list";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { buildSkillEditThreadPrompt } from "@sandy/shared-ui/resource-edit-prompt";
+import type { EditableSkillScope, SkillSummary } from "@sandy/server-contract";
+import { ResourceListState } from "@sandy/shared-ui/resource-list";
 import { getToolsOwnedCollectionRoutePath } from "@/components/tools/tools-navigation";
 import {
   SkillDetailDialogView,
@@ -13,9 +13,9 @@ import {
 } from "@/components/tools/SkillsCollection";
 import { useSystemProviders } from "@/hooks/queries/system-queries";
 import { isSkillEditable } from "@/components/tools/skill-taxonomy";
-import { CREATE_SKILL_PROMPT } from "@bb/client-core";
+import { CREATE_SKILL_PROMPT } from "@sandy/client-core";
 import { usePrimaryHost } from "@/hooks/queries/host-queries";
-import { getAbsoluteDirname } from "@bb/shared-ui/lib/absolute-file-path";
+import { getAbsoluteDirname } from "@sandy/shared-ui/lib/absolute-file-path";
 import { buildMarkdownHostFileImageRouting } from "@/components/ui/markdown-file-image-routing";
 import {
   getRootComposeRoutePath,

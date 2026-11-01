@@ -1,5 +1,5 @@
-import type { DbConnection, StoredEventRow } from "@bb/db";
-import type { ThreadEvent } from "@bb/domain";
+import type { DbConnection, StoredEventRow } from "@sandy/db";
+import type { ThreadEvent } from "@sandy/domain";
 import { parseStoredEvent } from "./thread-data.js";
 
 interface StoredEventDecodeEntry {

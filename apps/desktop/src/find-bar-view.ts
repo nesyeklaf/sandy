@@ -1,4 +1,4 @@
-import { BB_DESKTOP_MAX_FIND_TEXT_LENGTH } from "@bb/desktop-contract";
+import { SANDY_DESKTOP_MAX_FIND_TEXT_LENGTH } from "@sandy/desktop-contract";
 
 export const FIND_BAR_VIEW_WIDTH = 344;
 export const FIND_BAR_VIEW_HEIGHT = 48;
@@ -126,15 +126,15 @@ function renderFindBarView(): string {
   <div class="bar" role="search" aria-label="Find in window">
     <div class="field">
       <input
-        id="bb-find-input"
+        id="sandy-find-input"
         type="text"
         placeholder="Find in window"
         aria-label="Find in window"
         autocomplete="off"
         spellcheck="false"
-        maxlength="${BB_DESKTOP_MAX_FIND_TEXT_LENGTH}"
+        maxlength="${SANDY_DESKTOP_MAX_FIND_TEXT_LENGTH}"
       />
-      <span id="bb-find-count" class="count" role="status" aria-live="polite"></span>
+      <span id="sandy-find-count" class="count" role="status" aria-live="polite"></span>
     </div>
     <button type="button" data-step="previous" aria-label="Previous match" disabled>
       ${CHEVRON_UP_ICON}

@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { Command } from "commander";
 import {
   builtInThemes,
@@ -7,10 +8,12 @@ import {
   FAVICON_COLORS,
   isBuiltInThemeId,
   type AppTheme,
+  type ThemeIssue,
+  type ThemeKitInput,
   type FaviconColorPreference,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { action } from "../action.js";
-import { createCliBbSdk } from "../client.js";
+import { createCliSandySdk } from "../client.js";
 import { outputJson, type JsonOutputOptions } from "./helpers.js";
 
 interface ThemeShowCommandOptions extends JsonOutputOptions {
@@ -31,6 +34,60 @@ function parseFaviconColor(value: string): FaviconColorPreference {
     );
   }
   return parsed.data;
+}
+
+interface ThemeNewCommandOptions extends JsonOutputOptions {
+  lightCanvas: string;
+  lightInk: string;
+  lightAccent: string;
+  darkCanvas: string;
+  darkInk: string;
+  darkAccent: string;
+  statusChroma?: string;
+  fontSans?: string;
+  fontMono?: string;
+  fontTerminal?: string;
+  overwrite?: boolean;
+  set?: boolean;
+}
+
+function themeKitFromOptions(opts: ThemeNewCommandOptions): ThemeKitInput {
+  const fonts = {
+    ...(opts.fontSans === undefined ? {} : { sans: opts.fontSans }),
+    ...(opts.fontMono === undefined ? {} : { mono: opts.fontMono }),
+    ...(opts.fontTerminal === undefined ? {} : { terminal: opts.fontTerminal }),
+  };
+  const statusChroma =
+    opts.statusChroma === undefined ? undefined : Number(opts.statusChroma);
+  if (statusChroma !== undefined && !Number.isFinite(statusChroma)) {
+    throw new Error(`Invalid --status-chroma '${opts.statusChroma}'.`);
+  }
+  return {
+    light: {
+      canvas: opts.lightCanvas,
+      ink: opts.lightInk,
+      accent: opts.lightAccent,
+    },
+    dark: {
+      canvas: opts.darkCanvas,
+      ink: opts.darkInk,
+      accent: opts.darkAccent,
+    },
+    ...(statusChroma === undefined ? {} : { statusChroma }),
+    ...(Object.keys(fonts).length === 0 ? {} : { fonts }),
+  };
+}
+
+function printIssues(issues: readonly ThemeIssue[]): void {
+  if (issues.length === 0) {
+    console.log("No findings: contrast, coverage and comfort checks pass.");
+    return;
+  }
+  for (const issue of issues) {
+    console.log(
+      `${issue.severity.padEnd(7)} ${issue.mode.padEnd(5)} --${issue.token}: ${issue.message}`,
+    );
+  }
 }
 
 function describeTheme(theme: AppTheme): string {
@@ -61,7 +118,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const catalog = await sdk.theme.catalog();
         if (
           outputJson(opts, {
@@ -119,7 +176,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: ThemeSetCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const updated =
           opts.faviconColor === undefined
             ? await sdk.theme.set(id)
@@ -133,12 +190,79 @@ export function registerThemeCommands(
     );
 
   theme
+    .command("new <name>")
+    .description(
+      "Generate a full custom theme from canvas, ink and accent colors per mode, check it, and write it to the custom theme directory",
+    )
+    .requiredOption("--light-canvas <color>", "Light background, oklch(L C H) or #rrggbb")
+    .requiredOption("--light-ink <color>", "Light text color")
+    .requiredOption("--light-accent <color>", "Light accent (primary) color")
+    .requiredOption("--dark-canvas <color>", "Dark background")
+    .requiredOption("--dark-ink <color>", "Dark text color")
+    .requiredOption("--dark-accent <color>", "Dark accent (primary) color")
+    .option("--status-chroma <number>", "Chroma of status colors, 0 to 0.16 (default 0.085)")
+    .option("--font-sans <stack>", "font-sans CSS font stack")
+    .option("--font-mono <stack>", "font-mono CSS font stack")
+    .option("--font-terminal <stack>", "font-terminal CSS font stack")
+    .option("--overwrite", "Replace an existing custom theme of the same name")
+    .option("--set", "Activate the theme after writing it")
+    .option("--json", "Print machine-readable JSON output")
+    .action(
+      action(async (name: string, opts: ThemeNewCommandOptions) => {
+        const sdk = createCliSandySdk(getUrl());
+        const created = await sdk.theme.experimental_create({
+          name,
+          kit: themeKitFromOptions(opts),
+          overwrite: opts.overwrite === true,
+        });
+        const activated =
+          opts.set === true ? await sdk.theme.set(created.name) : null;
+        if (outputJson(opts, { ...created, activated })) return;
+        console.log(`Wrote ${created.path}`);
+        printIssues(created.issues);
+        if (activated !== null) {
+          console.log(`Theme set to ${describeTheme(activated)}`);
+        } else {
+          console.log(`Activate it with: sandy theme set ${created.name}`);
+        }
+      }),
+    );
+
+  theme
+    .command("check <nameOrFile>")
+    .description(
+      "Check a custom theme (by name) or a theme.css file for contrast, missing tokens and eye comfort; exits 1 on errors",
+    )
+    .option("--json", "Print machine-readable JSON output")
+    .action(
+      action(async (nameOrFile: string, opts: JsonOutputOptions) => {
+        const sdk = createCliSandySdk(getUrl());
+        let css: string | null;
+        if (existsSync(nameOrFile)) {
+          css = readFileSync(nameOrFile, "utf8");
+        } else {
+          css = (await sdk.theme.resolve({ themeId: nameOrFile })).customCss;
+          if (css === null) {
+            throw new Error(
+              `'${nameOrFile}' has no CSS on disk; only custom and plugin themes can be checked.`,
+            );
+          }
+        }
+        const issues = sdk.theme.experimental_check(css);
+        if (!outputJson(opts, { issues })) printIssues(issues);
+        if (issues.some((issue) => issue.severity === "error")) {
+          process.exitCode = 1;
+        }
+      }),
+    );
+
+  theme
     .command("dir")
     .description("Print the directory where custom themes live")
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const catalog = await sdk.theme.catalog();
         if (outputJson(opts, { dir: catalog.dir })) return;
         console.log(catalog.dir);
@@ -157,7 +281,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (color: string, opts: JsonOutputOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const active = await sdk.theme.get();
         const updated = await sdk.theme.set({
           themeId: active.themeId,
@@ -174,7 +298,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const active = await sdk.theme.get();
         const updated = await sdk.theme.set({
           themeId: active.themeId,
@@ -194,7 +318,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string | undefined, opts: ThemeShowCommandOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const theme =
           id === undefined
             ? await sdk.theme.get()
@@ -226,7 +350,7 @@ export function registerThemeCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: JsonOutputOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const updated = await sdk.theme.set(defaultAppTheme.themeId);
         if (outputJson(opts, updated)) return;
         console.log(`Theme reset to ${describeTheme(updated)}`);

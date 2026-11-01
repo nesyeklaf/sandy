@@ -3,10 +3,10 @@ import type {
   ServerMoveStatus,
   ServerMoveStep,
   ServerMoveStepStatus,
-} from "@bb/server-contract";
-import { Button } from "@bb/shared-ui/button";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/server-contract";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   serverMoveStepLabel,
   type ServerMoveOverlayContent,
@@ -296,9 +296,9 @@ function overlayDescription(content: VisibleServerMoveOverlayContent): string {
     case "progress":
       return content.move.state === "switching"
         ? `Every machine and app is switching over to ${name}. The move can't be cancelled now.`
-        : `bb is copying the server to ${name}.`;
+        : `sandy is copying the server to ${name}.`;
     case "recovery":
-      return `${name} didn't confirm that it took over, so this server stays up but read-only. bb keeps checking and finishes the move as soon as ${name} answers.`;
+      return `${name} didn't confirm that it took over, so this server stays up but read-only. sandy keeps checking and finishes the move as soon as ${name} answers.`;
     case "waiting":
       return content.destinationState === "activating"
         ? `${name} is switching over to the new server. This page opens it as soon as it's ready.`
@@ -321,7 +321,7 @@ function overlayDescription(content: VisibleServerMoveOverlayContent): string {
 function overlayNote(content: VisibleServerMoveOverlayContent): string | null {
   if (content.kind === "recovery") {
     const name = content.move.targetHostName;
-    return `If ${name} isn't running the server, abandon the move to keep the server here. If this server stops, run bb server unlock on this computer.`;
+    return `If ${name} isn't running the server, abandon the move to keep the server here. If this server stops, run sandy server unlock on this computer.`;
   }
   if (
     content.kind === "ended" &&

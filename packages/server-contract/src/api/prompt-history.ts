@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { promptHistoryListEntrySchema } from "@bb/domain";
+import { promptHistoryListEntrySchema } from "@sandy/domain";
 
 export const promptHistoryListQuerySchema = z.object({
   cursor: z.string().min(1).optional(),

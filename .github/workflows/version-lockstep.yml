@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check:
-    name: Check bb-app and desktop versions
+    name: Check sandy-app and desktop versions
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 

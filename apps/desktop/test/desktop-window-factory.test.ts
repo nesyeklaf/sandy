@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MACOS_TRAFFIC_LIGHT_INSET_PX,
   MACOS_TRAFFIC_LIGHT_TOP_INSET_PX,
-} from "@bb/desktop-contract";
+} from "@sandy/desktop-contract";
 import {
   createDesktopWindowFactory,
   type DesktopBrowserWindow,
@@ -16,7 +16,7 @@ import {
   type DesktopWindowWebContents,
 } from "../src/desktop-window-factory.js";
 import type { DesktopContextMenuWebContents } from "../src/desktop-context-menu.js";
-import { BB_DESKTOP_ZOOM_CHANGED_CHANNEL } from "../src/desktop-ipc-channels.js";
+import { SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL } from "../src/desktop-ipc-channels.js";
 import { readPersistedWindowStateFile } from "../src/window-state.js";
 import {
   MIN_WINDOW_HEIGHT,
@@ -36,7 +36,7 @@ interface FakeDesktopWindowArgs {
 const tempDirs: TempDir[] = [];
 
 async function createTempDir(): Promise<TempDir> {
-  const path = await mkdtemp(join(tmpdir(), "bb-desktop-window-factory-"));
+  const path = await mkdtemp(join(tmpdir(), "sandy-desktop-window-factory-"));
   const tempDir = { path };
   tempDirs.push(tempDir);
   return tempDir;
@@ -388,7 +388,7 @@ describe("desktop window factory", () => {
     const window = createdWindows[0];
     if (!window) throw new Error("Expected a window");
     window.webContents.zoomFactor = zoomFactor;
-    window.webContents.ipcListeners.get(BB_DESKTOP_ZOOM_CHANGED_CHANNEL)?.();
+    window.webContents.ipcListeners.get(SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL)?.();
     expect(window.windowButtonPositions).toEqual([
       { x: MACOS_TRAFFIC_LIGHT_INSET_PX, y },
     ]);
@@ -418,7 +418,7 @@ describe("desktop window factory", () => {
     const window = createdWindows[0];
     if (!window) throw new Error("Expected a window");
     expect(
-      window.webContents.ipcListeners.has(BB_DESKTOP_ZOOM_CHANGED_CHANNEL),
+      window.webContents.ipcListeners.has(SANDY_DESKTOP_ZOOM_CHANGED_CHANNEL),
     ).toBe(false);
   });
 
@@ -705,7 +705,7 @@ describe("desktop window factory", () => {
 
     const results = [
       "https://example.com/from-markdown",
-      "devin://file/Users/me/.bb/artifacts/thr_1/review.diff",
+      "devin://file/Users/me/.sandy/artifacts/thr_1/review.diff",
       "javascript:alert(1)",
       "file:///System/Applications/Chess.app",
       "http://127.0.0.1:38886/threads/thr_1",

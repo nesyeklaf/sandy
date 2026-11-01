@@ -328,7 +328,7 @@ describe("resolveChromiumKeys", () => {
 describe("browser cookie readers", () => {
   let directory: string;
   beforeEach(async () => {
-    directory = await mkdtemp(join(tmpdir(), "bb-browser-import-"));
+    directory = await mkdtemp(join(tmpdir(), "sandy-browser-import-"));
   });
   afterEach(async () => {
     await rm(directory, { recursive: true, force: true });
@@ -565,12 +565,12 @@ describe("browser cookie readers", () => {
     },
   );
 
-  it("keeps known encryption metadata, deduplicates stores, and excludes the BB profile", async () => {
+  it("keeps known encryption metadata, deduplicates stores, and excludes the SANDY profile", async () => {
     const support = join(directory, "Library", "Application Support");
     const helium = join(support, "net.imput.helium");
     const extra = join(support, "Custom", "Unlisted");
-    const bb = join(support, "bb");
-    for (const root of [helium, extra, bb]) {
+    const sandy = join(support, "sandy");
+    for (const root of [helium, extra, sandy]) {
       await mkdir(join(root, "Default"), { recursive: true });
       createChromiumCookieDatabase(join(root, "Default", "Cookies"), 24, []);
     }
@@ -578,7 +578,7 @@ describe("browser cookie readers", () => {
     const context = {
       platform: "darwin" as const,
       home: directory,
-      excludedDirectories: [bb],
+      excludedDirectories: [sandy],
     };
     const discovered = await discoverBrowserImportSources(
       context,
@@ -1277,7 +1277,7 @@ describe("browser cookie readers", () => {
   });
 
   it("detects a running Firefox through the parentlock owner", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "bb-ff-lock-"));
+    const directory = await mkdtemp(join(tmpdir(), "sandy-ff-lock-"));
     try {
       const lock = join(directory, ".parentlock");
       await writeFile(lock, "");
@@ -1353,7 +1353,7 @@ describe("macOS app icons", () => {
   });
 
   it("converts the bundle icon with sips and returns a PNG data URL", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "bb-icon-"));
+    const directory = await mkdtemp(join(tmpdir(), "sandy-icon-"));
     try {
       const appPath = join(directory, "Arc.app");
       await mkdir(join(appPath, "Contents", "Resources"), { recursive: true });

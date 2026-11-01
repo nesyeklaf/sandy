@@ -3,14 +3,14 @@
   "name": "button",
   "type": "registry:ui",
   "title": "button",
-  "description": "BB ui \"button\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"button\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-slot",
     "class-variance-authority"
   ],
   "registryDependencies": [
-    "@bb/motion",
-    "@bb/utils"
+    "@sandy/motion",
+    "@sandy/utils"
   ],
   "files": [
     {

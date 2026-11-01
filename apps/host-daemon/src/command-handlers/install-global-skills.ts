@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { HostDaemonOnlineRpcResult } from "@bb/host-daemon-contract";
+import type { HostDaemonOnlineRpcResult } from "@sandy/host-daemon-contract";
 import {
   CommandDispatchError,
   type CommandOf,
@@ -68,7 +68,7 @@ async function replaceSkillDirectory(args: {
   await fs.mkdir(parentPath, { recursive: true });
   const stagingPath = path.join(
     parentPath,
-    `.bb-tmp-${args.name}-${process.pid}-${randomUUID()}`,
+    `.sandy-tmp-${args.name}-${process.pid}-${randomUUID()}`,
   );
   try {
     await copyInjectedSkillSource({

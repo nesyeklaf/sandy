@@ -5,9 +5,9 @@ import {
   listQueuedThreadMessages,
   setQueuedThreadMessageFailureReason,
   setQueuedThreadMessageGroupBoundary,
-} from "@bb/db";
-import { turnRequestEventDataSchema } from "@bb/domain";
-import type { PluginHookName } from "@get-bb/plugin-sdk";
+} from "@sandy/db";
+import { turnRequestEventDataSchema } from "@sandy/domain";
+import type { PluginHookName } from "@sandy-sdk/plugin-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   setPluginHookProvider,

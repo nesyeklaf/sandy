@@ -7,10 +7,10 @@ import {
 import { useMemo } from "react";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
 import { createTabScopedStorage } from "./browser-storage";
 
-const ROOT_COMPOSE_PROJECT_ID_STORAGE_KEY = "bb.root-compose.project-id";
+const ROOT_COMPOSE_PROJECT_ID_STORAGE_KEY = "sandy.root-compose.project-id";
 
 function parseStoredProjectId(
   storedValue: string | null,
@@ -61,7 +61,7 @@ export function useImportedProjectDefault() {
 }
 
 const rootComposeReuseEnvironmentAtom = atomWithStorage<string | null>(
-  "bb.root-compose.reuse-environment",
+  "sandy.root-compose.reuse-environment",
   null,
   createTabScopedStorage<string | null>({
     parse: (storedValue) =>
@@ -75,7 +75,7 @@ const rootComposeReuseEnvironmentAtom = atomWithStorage<string | null>(
 );
 
 const rootComposeStoredPlacementAtom = atomWithStorage<ThreadCreationPlacement>(
-  "bb.root-compose.placement",
+  "sandy.root-compose.placement",
   DEFAULT_THREAD_CREATION_PLACEMENT,
   createTabScopedStorage<ThreadCreationPlacement>({
     parse: (storedValue, initialValue) => {

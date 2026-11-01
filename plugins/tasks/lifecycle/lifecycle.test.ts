@@ -1,7 +1,7 @@
 import {
   createFakePluginHost,
   makeThreadResponse,
-} from "@get-bb/plugin-sdk/testing";
+} from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import { createStore } from "../api";
 import type { TaskThreadLiveStatus } from "../db";
@@ -9,7 +9,7 @@ import { registerLifecycle } from ".";
 import { commentsTag, threadsChangedTags } from "../shared/tags";
 
 interface TrackedThreadFixture {
-  bb: ReturnType<typeof createFakePluginHost>["bb"];
+  sandy: ReturnType<typeof createFakePluginHost>["sandy"];
   harness: ReturnType<typeof createFakePluginHost>["harness"];
   store: ReturnType<typeof createStore>;
   taskId: string;
@@ -33,7 +33,7 @@ function trackedThreadFixture(
       },
     },
   });
-  const store = createStore(host.bb);
+  const store = createStore(host.sandy);
   const project = store.tasks.createProject({
     name: "Tasks plugin",
     prefix: "TASK",
@@ -63,7 +63,7 @@ describe("task thread lifecycle", () => {
   it("reconciles each non-terminal task thread once during startup", async () => {
     const fixture = trackedThreadFixture("working", "active");
 
-    await registerLifecycle(fixture.bb, fixture.store);
+    await registerLifecycle(fixture.sandy, fixture.store);
 
     expect(fixture.harness.sdk.callsTo("threads.get")).toEqual([
       [{ threadId: "thr_worker" }],
@@ -74,7 +74,7 @@ describe("task thread lifecycle", () => {
 
   it("moves a working thread to completed, comments, and publishes", async () => {
     const fixture = trackedThreadFixture("working", "active");
-    await registerLifecycle(fixture.bb, fixture.store);
+    await registerLifecycle(fixture.sandy, fixture.store);
 
     await fixture.harness.emitThreadEvent("thread.deleted", {
       thread: makeThreadResponse({
@@ -110,7 +110,7 @@ describe("task thread lifecycle", () => {
 
   it("recovers a failed thread without recording failure as terminal", async () => {
     const fixture = trackedThreadFixture("working", "active");
-    await registerLifecycle(fixture.bb, fixture.store);
+    await registerLifecycle(fixture.sandy, fixture.store);
 
     await fixture.harness.emitThreadEvent("thread.failed", {
       thread: makeThreadResponse({
@@ -158,7 +158,7 @@ describe("task thread lifecycle", () => {
   it("reconciles a stale non-terminal row on load", async () => {
     const fixture = trackedThreadFixture("starting", "idle");
 
-    await registerLifecycle(fixture.bb, fixture.store);
+    await registerLifecycle(fixture.sandy, fixture.store);
 
     expect(fixture.harness.sdk.callsTo("threads.get")).toEqual([
       [{ threadId: "thr_worker" }],
@@ -195,7 +195,7 @@ describe("task thread lifecycle", () => {
         },
       },
     });
-    const store = createStore(host.bb);
+    const store = createStore(host.sandy);
     const project = store.tasks.createProject({
       name: "Fast lifecycle",
       prefix: "FAST",
@@ -213,7 +213,7 @@ describe("task thread lifecycle", () => {
       liveStatus: "starting",
     });
 
-    await registerLifecycle(host.bb, store);
+    await registerLifecycle(host.sandy, store);
 
     expect(handlersAtFirstRead).toMatchObject({
       "thread.created": 1,
@@ -236,7 +236,7 @@ describe("task thread lifecycle", () => {
 
   it("moves a starting thread to working from thread.active without an SDK subscription", async () => {
     const fixture = trackedThreadFixture("starting", "starting");
-    await registerLifecycle(fixture.bb, fixture.store);
+    await registerLifecycle(fixture.sandy, fixture.store);
 
     await fixture.harness.emitThreadEvent("thread.active", {
       thread: makeThreadResponse({

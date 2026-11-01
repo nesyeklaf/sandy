@@ -16,7 +16,7 @@ export async function initRepo(
   await git(directory, ["init", "-q", "-b", "main"]);
   await appendFile(
     join(directory, ".git", "config"),
-    "\n[user]\n\tname = BB Tests\n\temail = bb@example.com\n[core]\n\tautocrlf = false\n",
+    "\n[user]\n\tname = SANDY Tests\n\temail = sandy@example.com\n[core]\n\tautocrlf = false\n",
     "utf8",
   );
   if (commit) {

@@ -1,8 +1,8 @@
 import {
   isUserQuestionPendingInteraction,
   type PendingInteractionResolution,
-} from "@bb/domain";
-import type { TimelineQuestionWorkRow, TimelineRow } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { TimelineQuestionWorkRow, TimelineRow } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import {
   getThreadOutput,

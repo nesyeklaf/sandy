@@ -1,8 +1,8 @@
-import { archiveThread, getThread, markThreadDeleted } from "@bb/db";
+import { archiveThread, getThread, markThreadDeleted } from "@sandy/db";
 import {
   threadCascadeListResponseSchema,
   threadChildSummaryResponseSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
 import { readJson } from "../helpers/json.js";
 import {

@@ -1,5 +1,5 @@
-import type { Host } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import type { Host } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { SettingsStoryFixtures } from "../../../.ladle/settings-story-fixtures";
 import { SettingsStoryChrome } from "../../../.ladle/story-settings-chrome";
 import { MachinesSettingsSection } from "./MachinesSettingsSection";

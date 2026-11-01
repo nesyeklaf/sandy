@@ -1,17 +1,17 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
-import type { HostPlatform } from "@bb/host-daemon-contract";
+import type { HostPlatform } from "@sandy/host-daemon-contract";
 import {
   canonicalPath,
   isFileNotFoundError,
   writeFileAtomically,
 } from "./fs.js";
 
-export const SERVER_MOVE_SERVICE_MANAGER_ENV = "BB_SERVER_MOVE_SERVICE_MANAGER";
+export const SERVER_MOVE_SERVICE_MANAGER_ENV = "SANDY_SERVER_MOVE_SERVICE_MANAGER";
 
-const LAUNCHD_PLIST_PREFIX = "app.getbb.host-daemon.";
+const LAUNCHD_PLIST_PREFIX = "app.sandy.host-daemon.";
 const LAUNCHD_PLIST_SUFFIX = ".plist";
-const SYSTEMD_USER_UNIT_PREFIX = "bb-host-daemon-";
+const SYSTEMD_USER_UNIT_PREFIX = "sandy-host-daemon-";
 const SYSTEMD_UNIT_SUFFIX = ".service";
 const SERVER_URL_FLAGS = ["--server-url", "--server"] as const;
 const LAUNCHER_SUBCOMMANDS = ["host-daemon", "start"] as const;
@@ -137,7 +137,7 @@ export async function findServiceDefinition(
       candidate.manager === "launchd"
         ? parseLaunchdPlist(content)
         : parseSystemdUnit(content, basename(candidate.path));
-    const definitionDataDir = parsed?.environment.BB_DATA_DIR;
+    const definitionDataDir = parsed?.environment.SANDY_DATA_DIR;
     if (
       parsed === null ||
       definitionDataDir === undefined ||
@@ -423,7 +423,7 @@ export function buildServerStartArguments(
   const subcommand = launcherSubcommandIndex(programArguments);
   if (subcommand === null) {
     throw new Error(
-      "The service definition does not run bb-app host-daemon or bb-app start",
+      "The service definition does not run sandy-app host-daemon or sandy-app start",
     );
   }
   return [

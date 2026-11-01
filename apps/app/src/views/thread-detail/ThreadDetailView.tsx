@@ -42,9 +42,9 @@ import {
   useThreadTimelineController,
 } from "@/components/thread/timeline";
 import { ThreadProviderContext } from "@/components/thread/thread-provider-context";
-import { type ThreadListEntry } from "@bb/domain";
-import type { TerminalSession } from "@bb/server-contract";
-import type { WorkspaceOpenTarget } from "@bb/host-daemon-contract";
+import { type ThreadListEntry } from "@sandy/domain";
+import type { TerminalSession } from "@sandy/server-contract";
+import type { WorkspaceOpenTarget } from "@sandy/host-daemon-contract";
 import { appToast } from "@/components/ui/app-toast";
 import { copyToClipboardWithToast } from "@/lib/clipboard";
 import {
@@ -69,19 +69,19 @@ import { HEADER_ICON_BUTTON_CLASS } from "@/components/layout/AppPageHeader";
 import type {
   JsonValue,
   PluginThreadActionsInlineItem,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { ThreadActionsMenu } from "@/components/thread/ThreadActionsMenu";
 import { toThreadActionTarget } from "@/lib/thread-actions/thread-action-target";
-import { Button } from "@bb/shared-ui/button";
-import { COARSE_POINTER_ICON_SIZE_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Button } from "@sandy/shared-ui/button";
+import { COARSE_POINTER_ICON_SIZE_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PluginThreadHeaderActions } from "@/components/plugin/PluginThreadHeaderActions";
 import { ThreadWorkspaceOpenButton } from "@/components/thread/ThreadWorkspaceOpenButton";
 import {
   formatEnvironmentDisplay,
   type EnvironmentDisplayHostContext,
-} from "@bb/core-ui";
-import { assertNever } from "@bb/thread-view";
+} from "@sandy/core-ui";
+import { assertNever } from "@sandy/thread-view";
 import { useCreateThreadInEnvironment } from "@/hooks/useCreateThreadInEnvironment";
 import { useHostDaemon } from "@/hooks/useHostDaemon";
 import { useCanOpenFileExternally } from "@/hooks/useCanOpenFileExternally";
@@ -104,12 +104,12 @@ import {
 } from "@/lib/environment-workspace-display";
 import { useSystemEnvironmentProviders } from "@/hooks/queries/environment-provider-queries";
 import { useSystemMachineProviders } from "@/hooks/queries/machine-provider-queries";
-import { formatWorkspaceCheckoutDisplay } from "@bb/shared-ui/lib/workspace-checkout-display";
+import { formatWorkspaceCheckoutDisplay } from "@sandy/shared-ui/lib/workspace-checkout-display";
 import {
   getAbsoluteDirname,
   isAbsoluteFilePathWithinRoot,
   resolveAbsoluteFilePath,
-} from "@bb/shared-ui/lib/absolute-file-path";
+} from "@sandy/shared-ui/lib/absolute-file-path";
 import { getThreadDisplayTitle } from "@/lib/thread-title";
 import { hasThreadProvisioningFailure } from "@/lib/thread-provisioning-failure";
 import {
@@ -164,8 +164,8 @@ import { usePluginSlots } from "@/lib/plugin-slots";
 import { getFileExtension } from "@/lib/plugin-slot-resolvers";
 import { isFileMissing } from "@/lib/api";
 import { buildThreadHostFileContentUrl } from "@/lib/file-content-urls";
-import { Icon } from "@bb/shared-ui/icon";
-import { getBbDesktopInfo, isDesktopBrowserAvailable } from "@/lib/bb-desktop";
+import { Icon } from "@sandy/shared-ui/icon";
+import { getSandyDesktopInfo, isDesktopBrowserAvailable } from "@/lib/sandy-desktop";
 import { UrlOpenRoutingProvider } from "@/lib/url-open-routing";
 import {
   AppNavigationHostProvider,
@@ -185,7 +185,7 @@ import {
   isSecondaryFileTab,
   isThreadForkable,
   type PromptMentionLinkResolver,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { useThreadOpenFileSignal } from "@/components/secondary-panel/useThreadOpenFileSignal";
 import type {
   SecondaryPanelFixedTab,
@@ -223,8 +223,8 @@ import {
 import type { SecondaryFileFixedPanelTab } from "@/lib/fixed-panel-tabs-state";
 import { resolveGitDiffTabStatus } from "@/components/secondary-panel/gitDiffTabEligibility";
 import { isRootThread } from "./threadParentSelectorOptions";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { usePointerCoarse } from "@bb/shared-ui/hooks/use-pointer-coarse";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { usePointerCoarse } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import {
   getActiveFixedSecondaryTab,
   useSetThreadSecondaryPanelSelection,
@@ -1062,7 +1062,7 @@ function ThreadDetailViewInternal(
     if (!isFocused) {
       return;
     }
-    const desktopInfo = getBbDesktopInfo();
+    const desktopInfo = getSandyDesktopInfo();
     if (
       desktopInfo === null ||
       desktopInfo.onAppCommand !== undefined ||
@@ -1145,7 +1145,7 @@ function ThreadDetailViewInternal(
     if (!isFocused) {
       return;
     }
-    const desktopInfo = getBbDesktopInfo();
+    const desktopInfo = getSandyDesktopInfo();
     if (
       desktopInfo === null ||
       desktopInfo.onCloseWindowRequest === undefined

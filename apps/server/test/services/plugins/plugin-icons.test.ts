@@ -2,7 +2,7 @@ import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PLUGIN_ICON_MAX_BYTES } from "@bb/domain";
+import { PLUGIN_ICON_MAX_BYTES } from "@sandy/domain";
 import {
   createTestAppHarness,
   type TestAppHarness,
@@ -29,7 +29,7 @@ async function writeIconPluginFixture(
     JSON.stringify({
       name: options.name,
       version: "0.1.0",
-      bb: {
+      sandy: {
         name: "Icons fixture",
         description: "Declares icons.",
         branding: {
@@ -61,8 +61,8 @@ async function writeIconPluginFixture(
 }
 
 const PROVIDER_SOURCE = (icon: string, tierIcon?: string): string => `
-  export default function plugin(bb: any) {
-    bb.providers.register({
+  export default function plugin(sandy: any) {
+    sandy.providers.register({
       id: "marked-agent",
       displayName: "Marked Agent",
       icon: ${JSON.stringify(icon)},
@@ -103,10 +103,10 @@ describe("plugin-declared icons", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-iconed",
+      "sandy-plugin-iconed",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-iconed",
+      name: "sandy-plugin-iconed",
       icons: { receipt: "./icons/receipt.svg", mark: "./icons/mark.svg" },
       files: { "icons/receipt.svg": SVG, "icons/mark.svg": OTHER_SVG },
     });
@@ -226,10 +226,10 @@ describe("plugin-declared icons", () => {
       const rootDir = join(
         harness.config.dataDir,
         "fixtures",
-        "bb-plugin-badicon",
+        "sandy-plugin-badicon",
       );
       await writeIconPluginFixture(rootDir, {
-        name: "bb-plugin-badicon",
+        name: "sandy-plugin-badicon",
         icons,
         files,
       });
@@ -239,14 +239,14 @@ describe("plugin-declared icons", () => {
     },
   );
 
-  it("fails the load when bb.branding.icon is a namespaced glyph, even the plugin's own", async () => {
+  it("fails the load when sandy.branding.icon is a namespaced glyph, even the plugin's own", async () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-branded",
+      "sandy-plugin-branded",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-branded",
+      name: "sandy-plugin-branded",
       brandingIcon: "branded/logo",
       icons: { logo: "./icons/logo.svg" },
       files: { "icons/logo.svg": SVG },
@@ -254,22 +254,22 @@ describe("plugin-declared icons", () => {
     await expect(
       harness.pluginService.installPath(rootDir),
     ).rejects.toThrowError(
-      /\(bb\.branding\.icon\): "branded\/logo" is a namespaced glyph/,
+      /\(sandy\.branding\.icon\): "branded\/logo" is a namespaced glyph/,
     );
     expect(harness.pluginService.getApi("branded")).toBeUndefined();
   });
 
   it("fails the load for an icon reached through a symlink outside the plugin", async () => {
-    const outside = join(tmpdir(), `bb-plugin-icon-outside-${Date.now()}`);
+    const outside = join(tmpdir(), `sandy-plugin-icon-outside-${Date.now()}`);
     await mkdir(outside, { recursive: true });
     await writeFile(join(outside, "receipt.svg"), SVG);
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-linked",
+      "sandy-plugin-linked",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-linked",
+      name: "sandy-plugin-linked",
       icons: { receipt: "./icons/receipt.svg" },
     });
     await mkdir(join(rootDir, "icons"), { recursive: true });
@@ -288,10 +288,10 @@ describe("plugin-declared icons", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-tooled",
+      "sandy-plugin-tooled",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-tooled",
+      name: "sandy-plugin-tooled",
       icons: { stamp: "./icons/stamp.svg" },
       files: { "icons/stamp.svg": SVG },
     });
@@ -340,10 +340,10 @@ describe("plugin-declared icons", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-marked",
+      "sandy-plugin-marked",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-marked",
+      name: "sandy-plugin-marked",
       icons: { agent: "./icons/agent.svg" },
       files: { "icons/agent.svg": SVG },
       serverSource: PROVIDER_SOURCE("marked/agent"),
@@ -392,10 +392,10 @@ describe("plugin-declared icons", () => {
     const rootDir = join(
       harness.config.dataDir,
       "fixtures",
-      "bb-plugin-unmarked",
+      "sandy-plugin-unmarked",
     );
     await writeIconPluginFixture(rootDir, {
-      name: "bb-plugin-unmarked",
+      name: "sandy-plugin-unmarked",
       icons: { agent: "./icons/agent.svg" },
       files: { "icons/agent.svg": SVG },
       serverSource: PROVIDER_SOURCE("unmarked/badge"),
@@ -418,10 +418,10 @@ describe("plugin-declared icons", () => {
       const rootDir = join(
         harness.config.dataDir,
         "fixtures",
-        "bb-plugin-unmarked",
+        "sandy-plugin-unmarked",
       );
       await writeIconPluginFixture(rootDir, {
-        name: "bb-plugin-unmarked",
+        name: "sandy-plugin-unmarked",
         icons: { agent: "./icons/agent.svg" },
         files: { "icons/agent.svg": SVG },
         serverSource: PROVIDER_SOURCE("unmarked/agent", tierIcon),

@@ -14,16 +14,16 @@ const FULL_HASH = "a985e1d5523398e9c7459d35679142cc4339771e";
 const GIT_PLUGIN = makePluginListItem({
   id: "prompt-shaper",
   source:
-    "git:https://github.com/brsbl/bb-plugins.git@1c6bb2e8ad3551466981e7eb027cc4b1f3428cac",
-  rootDir: "/home/user/.bb/plugins/prompt-shaper",
+    "git:https://github.com/brsbl/sandy-plugins.git@1c6bb2e8ad3551466981e7eb027cc4b1f3428cac",
+  rootDir: "/home/user/.sandy/plugins/prompt-shaper",
   description: "Enhance a rough composer draft before sending it.",
   name: "Prompt Improver",
   icon: "AiContentGenerator01",
   app: { hasApp: true, bundle: null },
   provenance: "catalog",
   catalogEntryId: "prompt-shaper",
-  publisherLabel: "BB Community",
-  sourceDisplay: "git · github.com/brsbl/bb-plugins",
+  publisherLabel: "SANDY Community",
+  sourceDisplay: "git · github.com/brsbl/sandy-plugins",
   updateState: {
     ...EMPTY_PLUGIN_UPDATE_STATE,
     availableVersion: FULL_HASH,

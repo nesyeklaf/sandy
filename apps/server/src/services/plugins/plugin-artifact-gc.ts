@@ -11,11 +11,11 @@ import {
   listPluginArtifactsUnderPath,
   type DbConnection,
   type PluginArtifactRow,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   PluginCachePruneEntry,
   PluginCachePruneResponse,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 
 const GIT_CHECKOUT_DIR_PATTERN = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 const GIT_TEMPORARY_DIR_PATTERN = /^(?:[0-9a-f]{40}|[0-9a-f]{64})\./;

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Environment } from "@bb/domain";
-import type { WorkspacePathListResponse } from "@bb/server-contract";
+import type { Environment } from "@sandy/domain";
+import type { WorkspacePathListResponse } from "@sandy/server-contract";
 import type {
   EnvironmentFilePreviewSource,
   FilePreview,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { loadFilePreview } from "@/lib/api";
 import { buildEnvironmentFileContentUrl } from "@/lib/file-content-urls";
 import { sdk } from "@/lib/sdk";

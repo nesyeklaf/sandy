@@ -1,4 +1,4 @@
-import type { ThreadTimelineResponse } from "@bb/server-contract";
+import type { ThreadTimelineResponse } from "@sandy/server-contract";
 import { timelineWindowJsonLength } from "./timeline-window-tag.js";
 
 const DEFAULT_MAX_THREADS = 16;

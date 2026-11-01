@@ -3,14 +3,14 @@ import {
   hostTypeSchema,
   jsonValueSchema,
   permissionModeSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   pathsExistRequestSchema,
   type PathsExistRequest,
   type PathsExistResponse,
   type PickFolderResponse,
   type ProviderCliStatusResponse,
-} from "@bb/host-daemon-contract/local";
+} from "@sandy/host-daemon-contract/local";
 
 export const hostDirectoryQuerySchema = z.object({
   path: z.string().min(1).optional(),

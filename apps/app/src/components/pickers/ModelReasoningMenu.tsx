@@ -6,30 +6,30 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import type { SystemExecutionOptionsModelLoadError } from "@bb/server-contract";
+import type { SystemExecutionOptionsModelLoadError } from "@sandy/server-contract";
 import {
   DEFAULT_SERVICE_TIER,
   type ProviderOptionDescriptor,
   type ReasoningLevel,
   type ServiceTier,
-} from "@bb/domain";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { COARSE_POINTER_ICON_SIZE_SHRINK_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { Popover, PopoverAnchor, PopoverContent } from "@bb/shared-ui/popover";
-import { Switch } from "@bb/shared-ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@bb/shared-ui/toggle-group";
-import { LIST_HOVER_TRANSITION } from "@bb/shared-ui/motion";
+} from "@sandy/domain";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { COARSE_POINTER_ICON_SIZE_SHRINK_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Popover, PopoverAnchor, PopoverContent } from "@sandy/shared-ui/popover";
+import { Switch } from "@sandy/shared-ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@sandy/shared-ui/toggle-group";
+import { LIST_HOVER_TRANSITION } from "@sandy/shared-ui/motion";
 import {
   MENU_ITEM_LAST_HOVERED_CLASS,
   MenuHoverProvider,
   useMenuItemHover,
-} from "@bb/shared-ui/menu-item-hover";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/menu-item-hover";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type {
   SessionOptionChoice,
   SessionOptionMenuSection,
 } from "./SessionOptionsMenu";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   stripModelBrandPrefix,
   type ProviderPickerOption,

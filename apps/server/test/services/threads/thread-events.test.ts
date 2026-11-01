@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
-import { events, getThread, threads } from "@bb/db";
-import type { AppendStoredThreadEventArgs } from "@bb/db";
+import { events, getThread, threads } from "@sandy/db";
+import type { AppendStoredThreadEventArgs } from "@sandy/db";
 import {
   createStandaloneBuiltinCompactCommandInput,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   appendClientTurnEvent,

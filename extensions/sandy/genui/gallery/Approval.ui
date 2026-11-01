@@ -1,0 +1,9 @@
+Card("Release genui 0.4.0 (local build + GitHub)", [Approval([
+  {kind: "write", target: "sandy/genui/package.json", detail: "Step 1: bump the version 0.3.1 → 0.4.0", revert: "git checkout v0.3.1 -- sandy/genui/package.json"},
+  {kind: "write", target: "sandy/genui/dist", detail: "Step 2: build the plugin at 0.4.0", command: "npm run build", revert: "git checkout v0.3.1 -- sandy/genui/dist"},
+  {kind: "run", target: "git tag v0.4.0", detail: "Step 3: tag the release commit", command: "git tag v0.4.0", revert: "git tag -d v0.4.0"},
+  {kind: "external", target: "github.com/eysenfalk/plugins main", detail: "Step 4: push the merged branch and the tag", command: "git push origin main v0.4.0", revert: "git revert HEAD && git push origin main && git push origin :refs/tags/v0.4.0"},
+  {kind: "run", target: "sandy plugin reload genui", detail: "Step 5: load the published build; to undo, restore dist (step 2) and reload again", command: "sandy plugin reload genui"},
+  {kind: "delete", target: "plugins-wt/genui", detail: "Step 6: the worktree, once merged"},
+  {kind: "temp", target: "/tmp/genui-build.log", detail: "Step 7: build output, removed after"}
+], title: "Release genui 0.4.0")])

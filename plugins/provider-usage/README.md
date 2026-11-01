@@ -19,12 +19,12 @@ Settings → Installed plugins → Provider usage contains the usage page, using
 full-size provider groups with email-labeled accounts and fetching only resources in the selected pool or machine. Both surfaces share the plugin’s aggregation and cache. Neither display is required for source
 plugins to publish their usage.
 
-Use `bb plugin rpc list --method provider-usage.v1.listResources --json` to find sources
-and `bb plugin rpc inspect <plugin-id> provider-usage.v1.listResources --json`
+Use `sandy plugin rpc list --method provider-usage.v1.listResources --json` to find sources
+and `sandy plugin rpc inspect <plugin-id> provider-usage.v1.listResources --json`
 to inspect their published contracts. RPC calls accept JSON through
 `--input-file`. See the Plugin Guide for the contract API.
 
-`bb settings usage --json` and `bb.sdk.system.usageLimits()` remain the
+`sandy settings usage --json` and `sandy.sdk.system.usageLimits()` remain the
 host-local provider-maintenance view; they do not aggregate shared pool accounts.
 
 Codex, Claude Code, and ACP provider plugins explicitly implement the usage contract
@@ -46,4 +46,4 @@ Provider Usage is enabled by default for newly registered installations. Existin
 explicit enable/disable choices are preserved. Right-click the footer shortcut and
 choose **Hide** to move it into **More**. Settings → Appearance → Sidebar footer
 controls order and visibility for every footer action. The usage settings page
-remains available. These preferences belong to BB, not the plugin.
+remains available. These preferences belong to SANDY, not the plugin.

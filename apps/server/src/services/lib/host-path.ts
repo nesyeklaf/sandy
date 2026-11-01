@@ -1,4 +1,4 @@
-import { joinHostPath } from "@bb/domain";
+import { joinHostPath } from "@sandy/domain";
 
 export function joinHostPathSegments(
   rootPath: string,

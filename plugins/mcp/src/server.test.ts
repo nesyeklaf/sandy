@@ -1,13 +1,13 @@
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import plugin from "./server.js";
 
 async function load() {
   const host = createFakePluginHost({
-    pluginId: "bb--mcp",
+    pluginId: "sandy--mcp",
     loopbackBaseUrl: "http://127.0.0.1:4000",
   });
-  await plugin(host.bb);
+  await plugin(host.sandy);
   return host;
 }
 
@@ -42,7 +42,7 @@ describe("MCP route", () => {
       mcpRequest({}),
     );
     expect(response.status).toBe(200);
-    expect(await response.text()).toContain('"name":"bb"');
+    expect(await response.text()).toContain('"name":"sandy"');
   });
 
   it("refuses web pages before any MCP handling, with or without old gate headers", async () => {
@@ -51,8 +51,8 @@ describe("MCP route", () => {
       { origin: "https://evil.example" },
       {
         origin: "https://evil.example",
-        "x-bb-gate-auth": "oauth",
-        "x-bb-gate-oauth-scope": "bb",
+        "x-sandy-gate-auth": "oauth",
+        "x-sandy-gate-oauth-scope": "sandy",
       },
     ];
     for (const headers of refused) {
@@ -67,13 +67,13 @@ describe("MCP route", () => {
   });
 });
 
-describe("bb mcp", () => {
+describe("sandy mcp", () => {
   it("prints the loopback MCP address", async () => {
     const host = await load();
     const result = await host.harness.runCli(["status", "--json"]);
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual({
-      localUrl: "http://127.0.0.1:4000/api/v1/plugins/bb--mcp/http/mcp",
+      localUrl: "http://127.0.0.1:4000/api/v1/plugins/sandy--mcp/http/mcp",
     });
   });
 

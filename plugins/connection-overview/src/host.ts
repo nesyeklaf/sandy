@@ -1,4 +1,4 @@
-import { experimental_defineHostEntry } from "@get-bb/plugin-sdk/host";
+import { experimental_defineHostEntry } from "@sandy-sdk/plugin-sdk/host";
 import { randomUUID } from "node:crypto";
 import { hostConnectionsContract } from "./contract.js";
 import { nodeProcFs } from "./proc-fs.js";

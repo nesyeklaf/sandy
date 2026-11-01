@@ -2,12 +2,12 @@
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { UsageProvider } from "./usage-schema.js";
-import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
+import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import {
   loadPluginApp,
   mountPluginContentScripts,
   renderSlot,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 
 afterEach(() => {
   cleanup();
@@ -220,7 +220,7 @@ describe("provider usage footer disclosure", () => {
     vi.stubGlobal("fetch", fetchMock);
     const app = await loadPluginApp(() => import("./app"));
     const mounted = await mountPluginContentScripts(app, {
-      pluginId: "bb--provider-usage",
+      pluginId: "sandy--provider-usage",
     });
     const item = app.experimentalSidebarFooterItems[0];
     expect(item).toMatchObject({
@@ -233,7 +233,7 @@ describe("provider usage footer disclosure", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/plugins/bb--provider-usage/rpc/getUsage",
+        "/api/v1/plugins/sandy--provider-usage/rpc/getUsage",
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({
@@ -250,7 +250,7 @@ describe("provider usage footer disclosure", () => {
       item,
       { dismiss },
       {
-        pluginId: "bb--provider-usage",
+        pluginId: "sandy--provider-usage",
         context: { threadId: "thread-active" },
         sidebarThreads: {
           threads: [threadOnMachine("host-m5", "M5")],
@@ -274,7 +274,7 @@ describe("provider usage footer disclosure", () => {
     ]);
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/plugins/bb--provider-usage/rpc/getUsage",
+        "/api/v1/plugins/sandy--provider-usage/rpc/getUsage",
         expect.objectContaining({
           body: JSON.stringify({
             force: false,
@@ -298,7 +298,7 @@ describe("provider usage footer disclosure", () => {
     ).toBeTruthy();
     expect(slot.getByText("97%")).toBeTruthy();
     expect(
-      localStorage.getItem("bb.bb--provider-usage.selected-machine.v1"),
+      localStorage.getItem("sandy.sandy--provider-usage.selected-machine.v1"),
     ).toBe("host-m5");
 
     fireEvent.pointerDown(machinePicker, { button: 0 });
@@ -428,8 +428,8 @@ describe("provider usage footer disclosure", () => {
       .spyOn(console, "warn")
       .mockImplementation(() => undefined);
     for (const failure of [
-      () => new Response("bb connect temporarily unavailable", { status: 503 }),
-      () => new Response("bb connect is not JSON", { status: 200 }),
+      () => new Response("sandy connect temporarily unavailable", { status: 503 }),
+      () => new Response("sandy connect is not JSON", { status: 200 }),
       () => Response.json({ ok: true, result: { machines: "invalid" } }),
     ]) {
       await waitFor(() =>
@@ -450,7 +450,7 @@ describe("provider usage footer disclosure", () => {
       );
       expect(slot.getByText("claude-team@example.com")).toBeTruthy();
       expect(
-        slot.queryByText(/Unexpected token|bb connect|invalid JSON/i),
+        slot.queryByText(/Unexpected token|sandy connect|invalid JSON/i),
       ).toBeNull();
       fireEvent.click(
         slot.getByRole("button", { name: "Reload provider usage" }),
@@ -528,14 +528,14 @@ it.each([
   );
   const app = await loadPluginApp(() => import("./app"));
   const mounted = await mountPluginContentScripts(app, {
-    pluginId: "bb--provider-usage",
+    pluginId: "sandy--provider-usage",
   });
   const item = app.experimentalSidebarFooterItems[0];
   if (item?.kind !== "disclosure") throw new Error("missing disclosure");
   const slot = renderSlot(
     item,
     { dismiss: vi.fn() },
-    { pluginId: "bb--provider-usage" },
+    { pluginId: "sandy--provider-usage" },
   );
   await waitFor(() =>
     expect(slot.getByText(expected, { exact: false })).toBeTruthy(),
@@ -608,7 +608,7 @@ it("keeps a measured refresh when an older snapshot response arrives late", asyn
   vi.stubGlobal("fetch", fetchMock);
   const app = await loadPluginApp(() => import("./app"));
   const mounted = await mountPluginContentScripts(app, {
-    pluginId: "bb--provider-usage",
+    pluginId: "sandy--provider-usage",
   });
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const now = vi.spyOn(Date, "now").mockReturnValue(1_000);
@@ -623,7 +623,7 @@ it("keeps a measured refresh when an older snapshot response arrives late", asyn
   const slot = renderSlot(
     item,
     { dismiss: vi.fn() },
-    { pluginId: "bb--provider-usage" },
+    { pluginId: "sandy--provider-usage" },
   );
   await new Promise((resolve) => setTimeout(resolve, 0));
   releaseInventory!();

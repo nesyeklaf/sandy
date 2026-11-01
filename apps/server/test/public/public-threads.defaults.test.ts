@@ -9,9 +9,9 @@ import {
   listThreadsWithPendingInteractionState,
   setExperiments,
   upsertProjectExecutionDefaults,
-} from "@bb/db";
-import { defaultExperiments, threadSchema } from "@bb/domain";
-import { sidebarBootstrapResponseSchema } from "@bb/server-contract";
+} from "@sandy/db";
+import { defaultExperiments, threadSchema } from "@sandy/domain";
+import { sidebarBootstrapResponseSchema } from "@sandy/server-contract";
 import { waitForQueuedCommand } from "../helpers/commands.js";
 import { seedModelCatalog } from "../helpers/provider-model-catalogs.js";
 import { availableModelFixture } from "../helpers/available-models.js";

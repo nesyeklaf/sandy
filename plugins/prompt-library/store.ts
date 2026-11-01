@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import type { BbPluginApi, ComposerDraft } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi, ComposerDraft } from "@sandy-sdk/plugin-sdk";
 import { promptSchema } from "./contract.js";
 
-type PluginDatabase = ReturnType<BbPluginApi["storage"]["database"]>;
+type PluginDatabase = ReturnType<SandyPluginApi["storage"]["database"]>;
 
 export const STARRED_PROMPT_MIGRATIONS = [
   `CREATE TABLE starred_prompts (

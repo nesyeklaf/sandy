@@ -3,10 +3,10 @@ import { createAiServiceRegistry } from "../../../src/services/ai/ai-service-reg
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Logger } from "@bb/logger";
+import type { Logger } from "@sandy/logger";
 import { createPluginRuntime } from "../../../src/services/plugins/plugin-runtime.js";
 import { testLogger } from "../../helpers/test-app.js";
-import { createMigratedConnection } from "@bb/db/testing";
+import { createMigratedConnection } from "@sandy/db/testing";
 
 async function createRuntime() {
   const db = createMigratedConnection();
@@ -24,7 +24,7 @@ async function createRuntime() {
       },
       logger: testLogger as unknown as Logger,
       aiServices: createAiServiceRegistry(),
-      dataDir: await mkdtemp(join(tmpdir(), "bb-dev-build-problems-")),
+      dataDir: await mkdtemp(join(tmpdir(), "sandy-dev-build-problems-")),
       appVersion: "0.9.0",
     },
   });

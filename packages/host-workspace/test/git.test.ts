@@ -10,7 +10,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 import {
   detectLinkedWorktree,
   getCheckoutRef,
@@ -24,11 +24,11 @@ const tempDirs: string[] = [];
 let templateRepo: string;
 
 beforeAll(async () => {
-  templateRepo = await fs.mkdtemp(path.join(os.tmpdir(), "bb-git-template-"));
+  templateRepo = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-git-template-"));
   const repoPath = templateRepo;
   await runGit(["init", "-b", "main"], { cwd: repoPath });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: repoPath });
-  await runGit(["config", "user.email", "bb@example.com"], { cwd: repoPath });
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: repoPath });
+  await runGit(["config", "user.email", "sandy@example.com"], { cwd: repoPath });
   await fs.mkdir(path.join(repoPath, "docs"));
   await fs.writeFile(path.join(repoPath, "README.md"), "hello\n", "utf8");
   await fs.writeFile(path.join(repoPath, "docs", "index.md"), "docs\n", "utf8");
@@ -50,7 +50,7 @@ afterAll(async () => {
 
 async function initReadGitBlobRepo() {
   const repoPath = await fs.mkdtemp(
-    path.join(os.tmpdir(), "bb-read-git-blob-"),
+    path.join(os.tmpdir(), "sandy-read-git-blob-"),
   );
   tempDirs.push(repoPath);
   await fs.cp(templateRepo, repoPath, { recursive: true });
@@ -58,18 +58,18 @@ async function initReadGitBlobRepo() {
 }
 
 async function initEmptyRepo() {
-  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "bb-empty-git-"));
+  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-empty-git-"));
   tempDirs.push(repoPath);
   await runGit(["init", "-b", "main"], { cwd: repoPath });
   return repoPath;
 }
 
 async function initConflictRepo() {
-  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "bb-git-conflict-"));
+  const repoPath = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-git-conflict-"));
   tempDirs.push(repoPath);
   await runGit(["init", "-b", "main"], { cwd: repoPath });
-  await runGit(["config", "user.name", "BB Tests"], { cwd: repoPath });
-  await runGit(["config", "user.email", "bb@example.com"], { cwd: repoPath });
+  await runGit(["config", "user.name", "SANDY Tests"], { cwd: repoPath });
+  await runGit(["config", "user.email", "sandy@example.com"], { cwd: repoPath });
   await fs.writeFile(path.join(repoPath, "README.md"), "base\n", "utf8");
   await runGit(["add", "."], { cwd: repoPath });
   await runGit(["commit", "-m", "Initial commit"], { cwd: repoPath });
@@ -85,7 +85,7 @@ async function initConflictRepo() {
 async function initBareWorktreeLayout() {
   const origin = await initReadGitBlobRepo();
   await runGit(["branch", "feature-a"], { cwd: origin });
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "bb-bare-layout-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-bare-layout-"));
   tempDirs.push(root);
   await runGit(["clone", "--bare", origin, ".bare"], { cwd: root });
   await fs.writeFile(path.join(root, ".git"), "gitdir: ./.bare\n", "utf8");
@@ -321,7 +321,7 @@ describe("detectLinkedWorktree", () => {
   it("tells a linked worktree apart from an ordinary checkout", async () => {
     const { worktreePath } = await initBareWorktreeLayout();
     const ordinaryCheckout = await initReadGitBlobRepo();
-    const plainDir = await fs.mkdtemp(path.join(os.tmpdir(), "bb-plain-wt-"));
+    const plainDir = await fs.mkdtemp(path.join(os.tmpdir(), "sandy-plain-wt-"));
     tempDirs.push(plainDir);
 
     await expect(detectLinkedWorktree(worktreePath)).resolves.toBe(true);

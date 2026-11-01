@@ -3,9 +3,9 @@
   "name": "split-pane-mini-map",
   "type": "registry:ui",
   "title": "split-pane-mini-map",
-  "description": "BB ui \"split-pane-mini-map\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"split-pane-mini-map\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/utils"
+    "@sandy/utils"
   ],
   "files": [
     {

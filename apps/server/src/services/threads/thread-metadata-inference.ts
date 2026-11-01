@@ -1,4 +1,4 @@
-import type { PromptInput, ProvisioningTranscriptEntry } from "@bb/domain";
+import type { PromptInput, ProvisioningTranscriptEntry } from "@sandy/domain";
 import type { LoggedWorkSessionDeps } from "../../types.js";
 import { appendThreadProvisioningEvent } from "./thread-events.js";
 import {

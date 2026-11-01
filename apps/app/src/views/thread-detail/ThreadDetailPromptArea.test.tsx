@@ -11,7 +11,7 @@ import type {
   ThreadTimelineGoal,
   ThreadTimelineModelFallback,
   ThreadWithRuntime,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   cleanup,
   fireEvent,
@@ -24,12 +24,12 @@ import {
 import type {
   TimelineWorkflowWorkRow,
   ThreadTimelineSessionOption,
-} from "@bb/server-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/server-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import {
   makeThreadQueuedMessage as makeThreadQueuedMessageFixture,
   makeThreadWithRuntime as makeThreadWithRuntimeFixture,
-} from "@bb/test-helpers/domain-fixtures";
+} from "@sandy/test-helpers/domain-fixtures";
 import type { ComponentProps } from "react";
 import {
   afterEach,
@@ -42,9 +42,9 @@ import {
 } from "vitest";
 import { LazyQueuedMessagesList } from "@/components/promptbox/banner/LazyQueuedMessagesList";
 import { workflowRow } from "@/test/fixtures/thread-timeline-rows";
-import type { PromptDraftAttachment } from "@bb/client-core";
-import { BbHttpError } from "@/lib/sdk";
-import type { ExperimentalComposerSelection } from "@get-bb/plugin-sdk";
+import type { PromptDraftAttachment } from "@sandy/client-core";
+import { SandyHttpError } from "@/lib/sdk";
+import type { ExperimentalComposerSelection } from "@sandy-sdk/plugin-sdk";
 import { setComposerTextEffect } from "@/lib/composer-text-effects";
 import {
   resetPluginSlotStoreForTest,
@@ -1296,7 +1296,7 @@ describe("ThreadDetailPromptArea", () => {
   it("dismisses a missing queued message but keeps a stale edit recoverable", async () => {
     mocks.queuedMessages = [makeQueuedMessage()];
     mocks.updateQueuedMessageMutateAsync.mockRejectedValueOnce(
-      new BbHttpError({
+      new SandyHttpError({
         body: null,
         code: "invalid_request",
         status: 409,
@@ -1327,7 +1327,7 @@ describe("ThreadDetailPromptArea", () => {
     ).toBeTruthy();
 
     mocks.updateQueuedMessageMutateAsync.mockRejectedValueOnce(
-      new BbHttpError({
+      new SandyHttpError({
         body: null,
         code: "invalid_request",
         status: 404,

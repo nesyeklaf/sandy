@@ -2,9 +2,9 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
-import type { Host } from "@bb/domain";
-import { makeHost } from "@bb/test-helpers/domain-fixtures";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
+import type { Host } from "@sandy/domain";
+import { makeHost } from "@sandy/test-helpers/domain-fixtures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   UpdateInventory,
@@ -95,7 +95,7 @@ describe("SidebarUpdatesBadge", () => {
             kind: "blocked",
             plugin: plugin("legacy"),
             version: "2.0.0",
-            reasons: ["engines.bb requires >=9.0.0"],
+            reasons: ["engines.sandy requires >=9.0.0"],
           },
         ],
       },

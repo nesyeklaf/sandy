@@ -2,16 +2,16 @@
 
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { BbDesktopBrowserRevealRequest } from "@bb/desktop-contract";
+import type { SandyDesktopBrowserRevealRequest } from "@sandy/desktop-contract";
 import { useDesktopBrowserReveal } from "./use-desktop-browser-reveal";
 
 const listeners = vi.hoisted(
-  () => new Set<(request: BbDesktopBrowserRevealRequest) => void>(),
+  () => new Set<(request: SandyDesktopBrowserRevealRequest) => void>(),
 );
 
-vi.mock("./bb-desktop", () => ({
+vi.mock("./sandy-desktop", () => ({
   getDesktopBrowserApi: () => ({
-    onReveal: (listener: (request: BbDesktopBrowserRevealRequest) => void) => {
+    onReveal: (listener: (request: SandyDesktopBrowserRevealRequest) => void) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },

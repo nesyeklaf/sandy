@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@bb/shared-ui/button";
+import { Button } from "@sandy/shared-ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Textarea } from "@bb/shared-ui/textarea";
+} from "@sandy/shared-ui/dialog";
+import { Textarea } from "@sandy/shared-ui/textarea";
 import { parseEnvFile, type ParsedEnvEntry } from "@/lib/parse-env-file";
 
 export function MachineEnvironmentImportDialog({

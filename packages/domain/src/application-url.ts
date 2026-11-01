@@ -22,7 +22,7 @@ const BLOCKED_SCHEMES = new Set([
   "ms-officecmd",
   "shell",
   "smb",
-  "bb",
+  "sandy",
   "vscode",
   "vscode-insiders",
   "cursor",

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import type { CodeOverflowMode } from "@get-bb/plugin-sdk";
+import type { CodeOverflowMode } from "@sandy-sdk/plugin-sdk";
 
 export type GitDiffDisplayMode = "unified" | "split";
 export type GitDiffDisplayModeChangeHandler = (
@@ -11,11 +11,11 @@ export type CodeOverflowModeChangeHandler = (mode: CodeOverflowMode) => void;
 export const DEFAULT_CODE_OVERFLOW_MODE: CodeOverflowMode = "scroll";
 
 export const GIT_DIFF_DISPLAY_MODE_STORAGE_KEY =
-  "bb.thread.gitDiff.displayMode";
+  "sandy.thread.gitDiff.displayMode";
 export const GIT_DIFF_LINE_OVERFLOW_MODE_STORAGE_KEY =
-  "bb.thread.gitDiff.lineOverflowMode";
+  "sandy.thread.gitDiff.lineOverflowMode";
 export const GIT_DIFF_IGNORE_WHITESPACE_STORAGE_KEY =
-  "bb.thread.gitDiff.ignoreWhitespace";
+  "sandy.thread.gitDiff.ignoreWhitespace";
 
 function isGitDiffDisplayMode(value: string): value is GitDiffDisplayMode {
   return value === "unified" || value === "split";

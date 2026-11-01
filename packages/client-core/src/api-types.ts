@@ -1,5 +1,5 @@
-import type { ThreadOriginKind } from "@bb/domain";
-import type { CreateThreadRequest } from "@bb/server-contract";
+import type { ThreadOriginKind } from "@sandy/domain";
+import type { CreateThreadRequest } from "@sandy/server-contract";
 
 export type AppCreateThreadRequest = Omit<
   CreateThreadRequest,

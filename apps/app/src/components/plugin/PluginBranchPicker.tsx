@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import type { BranchPickerProps } from "@get-bb/plugin-sdk";
-import { BranchPicker } from "@bb/shared-ui/branch-picker";
+import type { BranchPickerProps } from "@sandy-sdk/plugin-sdk";
+import { BranchPicker } from "@sandy/shared-ui/branch-picker";
 import { usePluginBranches } from "./usePluginBranchPickerState";
 
 export function PluginBranchPicker({

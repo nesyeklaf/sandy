@@ -1,4 +1,4 @@
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, expect, it, vi } from "vitest";
 import { registerCodexAiService } from "./ai-service.js";
 import { transcribeCodexVoice } from "./ai/chatgpt-client.js";
@@ -44,7 +44,7 @@ it("returns a transcript when the endpoint responds after 64 seconds", async () 
       });
     }),
   );
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     sdk: { system: { config: async () => ({ primaryHostId: "host-1" }) } },
     experimental_callHostRpc: async (call) => ({
       ok: true,
@@ -54,7 +54,7 @@ it("returns a transcript when the endpoint responds after 64 seconds", async () 
       ),
     }),
   });
-  registerCodexAiService(bb);
+  registerCodexAiService(sandy);
   const [service] = harness.registrations.aiServiceRegistrations;
   if (!service?.transcribe) throw new Error("Missing voice service");
 

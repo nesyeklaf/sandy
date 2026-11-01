@@ -1,0 +1,18 @@
+{
+  "name": "pi-work",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "pi extension: goals, session tasks, track stages, autopilots and the delegate tool gate in one unit (pairs with sandy/work)",
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "npm run test:goal && npm run test:parts",
+    "test:goal": "cd goal && npm test",
+    "test:parts": "node --test --experimental-strip-types index.test.mjs gate.test.ts link.test.ts sandy-cli.test.ts tasks/*.test.ts track/tests/*.test.ts autopilot/*.test.ts autopilot/autopilots/*.test.ts delegate/*.test.ts delegate/*.test.mjs",
+    "check": "cd goal && npx tsc --noEmit"
+  }
+}

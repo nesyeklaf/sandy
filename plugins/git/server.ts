@@ -1,8 +1,8 @@
-import { resolveEnvironmentMergeBaseBranch } from "@bb/domain";
+import { resolveEnvironmentMergeBaseBranch } from "@sandy/domain";
 import {
   experimental_PluginRpcRefusal,
-  type BbPluginApi,
-} from "@get-bb/plugin-sdk";
+  type SandyPluginApi,
+} from "@sandy-sdk/plugin-sdk";
 import {
   GIT_SHOW_CHANGES_SETTING,
   GIT_SHOW_COMMIT_BUTTON_SETTING,
@@ -32,8 +32,8 @@ function patchGroupKey(key: GitPatchKey): string {
   return JSON.stringify([key.environmentId, key.target, key.ignoreWhitespace]);
 }
 
-export default function gitPlugin(bb: BbPluginApi): void {
-  bb.settings.define({
+export default function gitPlugin(sandy: SandyPluginApi): void {
+  sandy.settings.define({
     [GIT_SHOW_CHANGES_SETTING]: {
       type: "boolean",
       label: "Show Git changes above the composer",
@@ -51,10 +51,10 @@ export default function gitPlugin(bb: BbPluginApi): void {
   const generations = createReadGenerations((environmentId) =>
     watchedEnvironments.has(environmentId),
   );
-  const reads = createGitReads(bb, generations.freshness);
-  const viewed = createGitViewed(bb);
+  const reads = createGitReads(sandy, generations.freshness);
+  const viewed = createGitViewed(sandy);
   const invalidator = createCoalescedInvalidator((tags) =>
-    bb.rpc.experimental_invalidate(tags),
+    sandy.rpc.experimental_invalidate(tags),
   );
 
   let stopEnvironmentEvents: (() => void) | null = null;
@@ -112,7 +112,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
       turnEnded(known);
       return;
     }
-    void bb.sdk.threads.get({ threadId }).then(
+    void sandy.sdk.threads.get({ threadId }).then(
       (thread) => {
         if (stopEnvironmentEvents === null) return;
         if (threadEnvironments.size >= THREAD_ENVIRONMENT_CACHE_LIMIT) {
@@ -127,7 +127,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
   }
 
   function subscribeToChanges(): () => void {
-    const stopThreads = bb.sdk.subscribe({
+    const stopThreads = sandy.sdk.subscribe({
       event: "thread:changed",
       callback: (event) => {
         const threadId = event.id;
@@ -147,13 +147,13 @@ export default function gitPlugin(bb: BbPluginApi): void {
         }
       },
     });
-    const stopEnvironments = bb.sdk.subscribe({
+    const stopEnvironments = sandy.sdk.subscribe({
       event: "environment:changed",
       callback: (event) => {
         if (event.id !== undefined) environmentChanged(event.id, event.changes);
       },
     });
-    const stopHosts = bb.sdk.subscribe({
+    const stopHosts = sandy.sdk.subscribe({
       event: "host:changed",
       callback: (event) => {
         if (
@@ -223,7 +223,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
       : null;
   }
 
-  bb.rpc.register(
+  sandy.rpc.register(
     gitRpcContract,
     {
       async status({ keys }) {
@@ -313,7 +313,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
       clearViewed: ({ environmentId, target, path }) =>
         viewed.clear(environmentId, target, path),
       async setMergeBase({ environmentId, mergeBaseBranch }) {
-        const environment = await bb.sdk.environments.get({ environmentId });
+        const environment = await sandy.sdk.environments.get({ environmentId });
         if (environment.status !== "ready" || environment.path === null) {
           return { ok: false as const, environmentStatus: environment.status };
         }
@@ -329,7 +329,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
             ? null
             : mergeBaseBranch;
         if (persisted !== environment.mergeBaseBranch) {
-          await bb.sdk.environments.update({
+          await sandy.sdk.environments.update({
             environmentId,
             mergeBaseBranch: persisted,
           });
@@ -340,7 +340,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
       refresh({ environmentId }) {
         reads.clearCaches(environmentId);
         generations.reset(environmentId);
-        bb.rpc.experimental_invalidate([
+        sandy.rpc.experimental_invalidate([
           gitStatusTag(environmentId),
           gitFilesTag(environmentId),
           gitRefsTag(environmentId),
@@ -351,7 +351,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
     {
       experimental_discoverable: true,
       experimental_description:
-        "Git status, changed files, diffs and Viewed marks for bb environments.",
+        "Git status, changed files, diffs and Viewed marks for sandy environments.",
     },
   );
 
@@ -362,7 +362,7 @@ export default function gitPlugin(bb: BbPluginApi): void {
     "branches",
     "viewed",
   ] as const) {
-    bb.rpc.experimental_whileWatched(method, (read, signal) => {
+    sandy.rpc.experimental_whileWatched(method, (read, signal) => {
       if ("key" in read) {
         const environmentId =
           method === "patches"
@@ -383,8 +383,8 @@ export default function gitPlugin(bb: BbPluginApi): void {
     });
   }
 
-  bb.cli.register(createGitCli(reads, viewed));
-  bb.onDispose(() => {
+  sandy.cli.register(createGitCli(reads, viewed));
+  sandy.onDispose(() => {
     stopEnvironmentEvents?.();
     stopEnvironmentEvents = null;
     watchedEnvironments.clear();

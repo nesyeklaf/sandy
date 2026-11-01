@@ -17,7 +17,7 @@ import type {
   ProcessExitResult,
 } from "../src/lib/process-helpers.js";
 import type { WritePidFileRequest } from "../src/lib/pid-file.js";
-import { createDeferredPromise } from "@bb/test-helpers";
+import { createDeferredPromise } from "@sandy/test-helpers";
 
 interface FakeRuntimeWaiter {
   predicate(): boolean;
@@ -68,7 +68,7 @@ function createSupervisorOptions(
   return {
     childArgs: ["child.js"],
     childCommand: "node",
-    childCwd: "/tmp/bb-supervisor-test",
+    childCwd: "/tmp/sandy-supervisor-test",
     serviceName: SERVICE_NAME,
     unexpectedRestartBackoff: args,
   };

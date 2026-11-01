@@ -10,7 +10,7 @@ export default defineWorkspaceTestConfig({
     testTimeout: 15_000,
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "bb-plugin-bb--git",
+      name: "sandy-plugin-sandy--git",
       include: ["**/*.test.{ts,tsx}"],
     }),
   },

@@ -8,18 +8,18 @@ import {
   type ReasoningLevel,
   type ServiceTier,
   type SessionOptionSelections,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { createTabScopedStorage } from "@/lib/browser-storage";
 import { getProjectScopedStorageKey } from "@/lib/project-scoped-storage";
 
-const MODEL_STORAGE_KEY = "bb.promptbox.model";
-const SERVICE_TIER_STORAGE_KEY = "bb.promptbox.service-tier";
-const REASONING_STORAGE_KEY = "bb.promptbox.reasoning";
-const PERMISSION_MODE_STORAGE_KEY = "bb.promptbox.permission-mode";
-const ENVIRONMENT_STORAGE_KEY = "bb.promptbox.environment";
-const MACHINE_STORAGE_KEY = "bb.promptbox.machine";
-const PROVIDER_STORAGE_KEY = "bb.promptbox.provider";
-const SESSION_OPTIONS_STORAGE_KEY = "bb.promptbox.session-options";
+const MODEL_STORAGE_KEY = "sandy.promptbox.model";
+const SERVICE_TIER_STORAGE_KEY = "sandy.promptbox.service-tier";
+const REASONING_STORAGE_KEY = "sandy.promptbox.reasoning";
+const PERMISSION_MODE_STORAGE_KEY = "sandy.promptbox.permission-mode";
+const ENVIRONMENT_STORAGE_KEY = "sandy.promptbox.environment";
+const MACHINE_STORAGE_KEY = "sandy.promptbox.machine";
+const PROVIDER_STORAGE_KEY = "sandy.promptbox.provider";
+const SESSION_OPTIONS_STORAGE_KEY = "sandy.promptbox.session-options";
 const PROVIDER_SELECTION_STORAGE_VERSION = "1";
 
 export type StoredServiceTier = "" | ServiceTier;

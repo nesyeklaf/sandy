@@ -1,4 +1,4 @@
-import type { BuiltInThemeId } from "@bb/domain";
+import type { BuiltInThemeId } from "@sandy/domain";
 import { VariableContextProvider } from "nativewind";
 import {
   createContext,

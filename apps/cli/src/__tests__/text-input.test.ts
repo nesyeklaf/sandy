@@ -14,7 +14,7 @@ describe("resolveTextInput", () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "bb-text-input-"));
+    dir = mkdtempSync(join(tmpdir(), "sandy-text-input-"));
   });
 
   afterEach(() => {

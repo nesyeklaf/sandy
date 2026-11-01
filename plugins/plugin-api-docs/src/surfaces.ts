@@ -40,10 +40,10 @@ export function fixtureResponsiveStrategy(
 export const SURFACE_GROUPS: SurfaceGroup[] = [
   {
     id: "app-shell",
-    title: "The bb app window",
+    title: "The sandy app window",
     fixtureKind: "spatial",
     blurb:
-      "The main bb window, containing the sidebar, the conversation, and the side panel. A plugin can add rows, controls, panel tabs, and message content to the numbered regions.",
+      "The main sandy window, containing the sidebar, the conversation, and the side panel. A plugin can add rows, controls, panel tabs, and message content to the numbered regions.",
     surfaces: [
       {
         id: "sidebar-navigation",
@@ -52,7 +52,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Replace the sidebar's navigation, as a rail or as rows above the thread list. With this, a plugin can:",
         bullets: [
           "Arrange New thread, Search, Plugins, Skills, and plugin pages in any layout",
-          "Choose the rail or list placement, and get bb's layout around it",
+          "Choose the rail or list placement, and get sandy's layout around it",
           "Keep saved order and badges; Cmd/Ctrl-click splits supported pages or opens Plugins/Skills in tabs",
           "Add controls to the header row beside the sidebar toggle",
         ],
@@ -104,10 +104,10 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "PluginNavPanelRegistration.experimental_usePageTitle",
           "ExperimentalPageTitle",
           "ExperimentalPageBreadcrumb",
-          "useBbContext",
-          "useBbNavigate",
-          "BbNavigate.toPluginPanel",
-          "BbNavigate.experimental_openTerminal",
+          "useSandyContext",
+          "useSandyNavigate",
+          "SandyNavigate.toPluginPanel",
+          "SandyNavigate.experimental_openTerminal",
         ],
         firstParty: ["Automations", "Docs", "GitHub", "Tasks", "Theme Preview"],
       },
@@ -119,7 +119,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         bullets: [
           "Show that the plugin is working on a thread, with a shimmering icon",
           "Settle the icon to succeeded or failed when the work ends",
-          "Set it from an [app-wide script](content-scripts), which bb cleans up after",
+          "Set it from an [app-wide script](content-scripts), which sandy cleans up after",
         ],
         apiSymbols: [
           "PluginComposerThreadRowStatus",
@@ -135,7 +135,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         bullets: [
           "Show per-thread state at a glance, like a pull request's number and its checks",
           "Load every listed thread in one hook, so rows have their final height before they scroll in",
-          "Appear on plugin-built thread lists too, and on bb's rows once Metadata is turned on",
+          "Appear on plugin-built thread lists too, and on sandy's rows once Metadata is turned on",
         ],
         apiSymbols: [
           "ExperimentalThreadRowMetadataRegistration",
@@ -155,8 +155,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         bullets: [
           "Group, sort, and draw every row your own way",
           "Read live threads, sections, projects, and run status",
-          "Use optimistic SDK writes and bb's actions to move, pin, rename, restore, archive, and split threads",
-          "Keep bb's New thread button, search, and footer around it",
+          "Use optimistic writes and sandy's actions to move, pin, rename, restore, archive, and split threads",
+          "Keep sandy's New thread button, search, and footer around it",
         ],
         apiSymbols: [
           "PluginThreadListRegistration",
@@ -168,8 +168,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "PluginSidebarThread",
           "PluginSidebarSection",
           "experimental_useArchiveEnvironmentThreads",
-          "BbNavigate.toThread",
-          "BbNavigate.toCompose",
+          "SandyNavigate.toThread",
+          "SandyNavigate.toCompose",
           "experimental_useSidebarThreadSplit",
           "PluginSidebarThreadSplit",
           "PluginSidebarThreadSplitOptions",
@@ -192,7 +192,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "useEnvironmentProviders",
           "PluginEnvironmentProvidersState",
           "useSdk",
-          "PluginBrowserBbSdk",
+          "PluginBrowserSandySdk",
           "experimental_usePluginId",
         ],
         firstParty: ["Thread list"],
@@ -202,12 +202,12 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         id: "sidebar-footer",
         title: "Sidebar footer items",
         summary:
-          "Add an icon to the bottom of bb's sidebar. With this, a plugin can:",
+          "Add an icon to the bottom of sandy's sidebar. With this, a plugin can:",
         bullets: [
           "Run an action, or open a small panel above the footer",
           "Show quick status, such as usage limits, without leaving the thread",
           "Follow the user's order and visibility choices in Appearance",
-          "Switch this device to another of its bb servers, in bb Desktop and the mobile app",
+          "Switch this device to another of its sandy servers, in sandy Desktop and the mobile app",
         ],
         apiSymbols: [
           "ExperimentalSidebarFooter",
@@ -248,9 +248,9 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Add an action to every thread menu and the sidebar row's quick actions. With this, a plugin can:",
         bullets: [
           "Appear in every thread menu, the long-press drawer, and the menu for several selected threads",
-          "Offer a list of choices that bb renders as a submenu, a drawer step, or a popover",
+          "Offer a list of choices that sandy renders as a submenu, a drawer step, or a popover",
           "Read app-wide data once and derive each thread's entry from it",
-          "Render bb's own thread menus in a replacement thread list",
+          "Render sandy's own thread menus in a replacement thread list",
         ],
         apiSymbols: [
           "PluginThreadActionRegistration",
@@ -278,9 +278,9 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Add a row or a titled section to the context card of every thread pane. With this, a plugin can:",
         bullets: [
           "Keep a pull request, change counts, or related threads in view while messages scroll",
-          "Sit among bb's own rows in the Info tab's groups, drawn with the same row",
+          "Sit among sandy's own rows in the Info tab's groups, drawn with the same row",
           "Hide a matching context segment while the pane shows the card",
-          "Leave the card, placement, and the header button to bb",
+          "Leave the card, placement, and the header button to sandy",
         ],
         apiSymbols: [
           "PluginAppSlots.experimental_threadContextCardRow",
@@ -302,8 +302,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         summary:
           "Add rich detail to the timeline entries your plugin creates. With this, a plugin can:",
         bullets: [
-          "Draw custom content under each entry while bb keeps its header and controls",
-          "Fall back to bb's default view if the plugin is off or crashes",
+          "Draw custom content under each entry while sandy keeps its header and controls",
+          "Fall back to sandy's default view if the plugin is off or crashes",
         ],
         apiSymbols: [
           "PluginTimelineRendererRegistration",
@@ -343,7 +343,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Let an agent write a fenced ```ui block that your component renders live as the reply streams",
           "Keep one component, with its state, per block for the whole reply",
           "Tell a block that is still streaming from one that closed or was cut off",
-          "Fall back to BB's code block when the plugin is off or a block's component throws",
+          "Fall back to SANDY's code block when the plugin is off or a block's component throws",
         ],
         apiSymbols: [
           "ExperimentalCodeFenceRendererRegistration",
@@ -378,7 +378,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Show timestamps, status, or statistics beside chosen user and assistant messages",
           "Read message identity, creation time, and turn details without receiving streaming text",
           "Use React state and shared queries; mounted effects clean up when messages leave view",
-          "Rely on bb for placement, styling, ordering, plugin context, and isolated loading and errors",
+          "Rely on sandy for placement, styling, ordering, plugin context, and isolated loading and errors",
         ],
         apiSymbols: [
           "ExperimentalMessageMetadataRegistration",
@@ -396,7 +396,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         bullets: [
           "Replace the prompt box with your form, even after the turn has ended",
           "Return the answer or cancellation to the agent and keep a record in the thread",
-          "Show bb's answer shortcuts and respond to its answer, submit, switch, and cancel keys",
+          "Show sandy's answer shortcuts and respond to its answer, submit, switch, and cancel keys",
           "Dictate editable answers and wait for voice input before navigating or submitting",
         ],
         apiSymbols: [
@@ -419,8 +419,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Add a row to a thread's Info tab details, or a section below them. With this, a plugin can:",
         bullets: [
           "Show plugin state for the thread beside Project, Environment, Branch, and Pull request",
-          'List related items in a section with bb\'s heading, count, collapse, and "N more" list',
-          "Sit at any position among bb's own rows and sections, which use the same slots",
+          'List related items in a section with sandy\'s heading, count, collapse, and "N more" list',
+          "Sit at any position among sandy's own rows and sections, which use the same slots",
         ],
         apiSymbols: [
           "ExperimentalThreadInfoRowRegistration",
@@ -444,11 +444,11 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         id: "code-renderers",
         title: "Code & diff renderers",
         summary:
-          "Replace bb's code or diff viewer everywhere it appears. With this, a plugin can:",
+          "Replace sandy's code or diff viewer everywhere it appears. With this, a plugin can:",
         bullets: [
           "Restyle file previews, timeline diffs, and plugin pages in one place",
           "Replace code and diffs independently",
-          "Hand any render back to bb, which also takes over if the plugin crashes",
+          "Hand any render back to sandy, which also takes over if the plugin crashes",
         ],
         apiSymbols: [
           "PluginSourceCodeRendererRegistration",
@@ -491,10 +491,10 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         reference: [
           "Register tabs with app.slots.experimental_tab({ id, title, icon, tooltip?, layout?, context, availability, useVisible?, component }). context is { kind: 'thread' } or { kind: 'nav-panel', panelId }. Thread tabs and their useVisible receive threadId and environment ({ id } | null, taken from the thread and null only without one) and read anything else about the environment themselves; navigation-page tabs receive subPath. Core Info and the Git plugin's Diff use thread + fixed registrations. tooltip defaults to title; layout is padded (default) or flush.",
           "availability: 'fixed' creates one pinned, non-closable destination per owner and tab id. availability: 'action' adds a launcher for closable instances; only actions accept run, default params and persisted instance params. Identical params focus the existing instance; different params open siblings. useVisible controls the fixed tab or launcher, never existing action instances. Hooks and components run in plugin scope with crash isolation.",
-          "Open, toggle and close through the surface's panel controller: experimental_useAppPanel() in components, or ctx.experimental_panel in commands, thread actions, message actions, New-thread panel actions and action tabs' run. openTab({ tab: { id, context, availability }, target?, params?, title? }) takes a session-only target for fixed tabs (validated by the tab's experimental_target and read with experimental_useFixedTabTarget, on thread and navigation-page fixed tabs) and persisted params plus a title for action tabs. toggleTab closes the side panel when that tab is showing, otherwise opens it; close() closes the side panel. Unknown, hidden or wrong-context destinations return false. bb's panel toggle, Info and tab-strip controls and the Git plugin's Mod+D command use the same controller.",
-          "List every open tab, bb's and other plugins', with experimental_usePanelTabs(): { open, selectedKey, tabs } in the tab strip's order, each { key, title, status, closable, detail } where detail is info, file, browser, terminal, new-tab, plugin (with its tab reference and params) or plugin-details. getTabs() on the panel controller reads the same list once for commands and other non-component code; selectTab(key) and closeTab(key) run the strip's own select and close; experimental_PanelTabIcon draws a tab's icon. The strip, the phone pager and these calls share one list on the thread view, plugin pages, the New thread screen and the Plugins browse page.",
+          "Open, toggle and close through the surface's panel controller: experimental_useAppPanel() in components, or ctx.experimental_panel in commands, thread actions, message actions, New-thread panel actions and action tabs' run. openTab({ tab: { id, context, availability }, target?, params?, title? }) takes a session-only target for fixed tabs (validated by the tab's experimental_target and read with experimental_useFixedTabTarget, on thread and navigation-page fixed tabs) and persisted params plus a title for action tabs. toggleTab closes the side panel when that tab is showing, otherwise opens it; close() closes the side panel. Unknown, hidden or wrong-context destinations return false. sandy's panel toggle, Info and tab-strip controls and the Git plugin's Mod+D command use the same controller.",
+          "List every open tab, sandy's and other plugins', with experimental_usePanelTabs(): { open, selectedKey, tabs } in the tab strip's order, each { key, title, status, closable, detail } where detail is info, file, browser, terminal, new-tab, plugin (with its tab reference and params) or plugin-details. getTabs() on the panel controller reads the same list once for commands and other non-component code; selectTab(key) and closeTab(key) run the strip's own select and close; experimental_PanelTabIcon draws a tab's icon. The strip, the phone pager and these calls share one list on the thread view, plugin pages, the New thread screen and the Plugins browse page.",
           "experimental_useTabVisible() is true while the tab is selected and the side panel is open, and false while the panel is closed, suppressed or showing another tab. A closed panel keeps its tab mounted, so pause reads that only feed the tab while it is false.",
-          "Identity and order survive hiding, disabling and reload. Thread fixed tabs persist as { id, kind: 'plugin-fixed', pluginId, tabId }; navigation-page fixed tabs and action instances keep their existing storage identities. SDK threads.tabs.get/update and CLI bb thread tabs show/set support thread tab entries with revision checks. Selection stays client-local. See the authoring skill's Tab API migration section for upgrading source registrations.",
+          "Identity and order survive hiding, disabling and reload. Thread fixed tabs persist as { id, kind: 'plugin-fixed', pluginId, tabId }; navigation-page fixed tabs and action instances keep their existing storage identities. SDK threads.tabs.get/update and CLI sandy thread tabs show/set support thread tab entries with revision checks. Selection stays client-local. See the authoring skill's Tab API migration section for upgrading source registrations.",
         ],
         apiSymbols: [
           "PluginAppSlots.experimental_tab",
@@ -539,7 +539,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Open files such as `.csv` or `.excalidraw` in your own view",
           "Use lowercase alphanumeric extension names with single `_` or `-` separators between segments",
           "Jump to the linked lines when someone opens a file reference",
-          "Hand individual files back to bb's built-in preview",
+          "Hand individual files back to sandy's built-in preview",
         ],
         apiSymbols: [
           "PluginFileOpenerRegistration",
@@ -552,7 +552,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         id: "app-overlay",
         title: "App-wide overlays",
         summary:
-          "Add a floating widget that stays on screen across bb. With this, a plugin can:",
+          "Add a floating widget that stays on screen across sandy. With this, a plugin can:",
         bullets: [
           "Show persistent UI, such as a timer or a status badge, on every page",
           "Control its own position and visibility",
@@ -569,7 +569,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         id: "content-scripts",
         title: "App-wide scripts",
         summary:
-          "Run code in every bb window, without a UI of its own. With this, a plugin can:",
+          "Run code in every sandy window, without a UI of its own. With this, a plugin can:",
         bullets: [
           "Add app-wide behavior, such as a keyboard shortcut",
           "Set a [thread row status](thread-row-status) on any thread",
@@ -588,13 +588,13 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
     title: "Command palette",
     fixtureKind: "spatial",
     blurb:
-      "bb's searchable command menu. A plugin can add actions that match, rank, and run alongside bb's own commands.",
+      "sandy's searchable command menu. A plugin can add actions that match, rank, and run alongside sandy's own commands.",
     surfaces: [
       {
         id: "command-palette-actions",
         title: "Command palette actions",
         summary:
-          "Add commands to bb's command palette. With this, a plugin can:",
+          "Add commands to sandy's command palette. With this, a plugin can:",
         bullets: [
           "Run plugin actions from the palette or a keyboard shortcut",
           "Suggest a default shortcut that people can rebind",
@@ -623,11 +623,11 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         id: "composer-replacement",
         title: "The composer box",
         summary:
-          "Replace the prompt box with one your plugin draws, everywhere bb shows a composer. With this, a plugin can:",
+          "Replace the prompt box with one your plugin draws, everywhere sandy shows a composer. With this, a plugin can:",
         bullets: [
           "Bring its own editor, from a plain textarea to a code editor",
-          "Search bb's @-mentions and commands, and keep bb's pills, attachments, history and voice input",
-          "Place bb's model, mode and handoff controls where it wants them",
+          "Search sandy's @-mentions and commands, and keep sandy's pills, attachments, history and voice input",
+          "Place sandy's model, mode and handoff controls where it wants them",
           "Keep other plugins' actions, popups and menu entries working inside it",
         ],
         apiSymbols: [
@@ -761,15 +761,15 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "ComposerSendMenuItem",
           "ComposerSubmitOptions",
         ],
-        firstParty: ["Automations", "BB guide", "Drafts", "Send later"],
+        firstParty: ["Automations", "SANDY guide", "Drafts", "Send later"],
       },
       {
         id: "provider-picker",
         title: "Agent providers",
         summary:
-          "Provide an agent people can pick in bb's model picker. With this, a plugin can:",
+          "Provide an agent people can pick in sandy's model picker. With this, a plugin can:",
         bullets: [
-          "Bring any CLI agent into bb, with its own models and icon",
+          "Bring any CLI agent into sandy, with its own models and icon",
           "Run every thread started with it through a bridge the plugin ships",
           "Report context usage, service tiers, and install status",
           "Distinguish unknown reasoning from confirmed models with no selectable levels",
@@ -821,6 +821,10 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "ComposerInsertOptions",
           "ComposerCustomization.experimental_popups",
           "ExperimentalComposerPopupRegistration",
+          "ComposerCustomization.experimental_menus",
+          "ExperimentalComposerMenuRegistration",
+          "ExperimentalComposerMenuItem",
+          "ExperimentalComposerMenuTrigger",
           "PluginComposerApi.experimental_openPopup",
           "PluginComposerApi.experimental_closePopup",
           "PluginAppComposer.experimental_registerCommand",
@@ -837,12 +841,12 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
     title: "Home page",
     fixtureKind: "spatial",
     blurb:
-      "The screen bb opens on, holding the new-thread composer and a side panel. A plugin can add a section below the composer, and an action in that panel that opens its own tab.",
+      "The screen sandy opens on, holding the new-thread composer and a side panel. A plugin can add a section below the composer, and an action in that panel that opens its own tab.",
     surfaces: [
       {
         id: "homepage-section",
         title: "Home-screen sections",
-        summary: "Add a section to bb's home page. With this, a plugin can:",
+        summary: "Add a section to sandy's home page. With this, a plugin can:",
         bullets: [
           "Show shortcuts, pinned work, or recent activity before any thread exists",
           "Span the full width below the composer on desktop",
@@ -874,7 +878,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
     title: "Plugin settings page",
     fixtureKind: "spatial",
     blurb:
-      "The settings page bb creates for every installed plugin. A plugin can declare fields for bb to render and add its own section below them.",
+      "The settings page sandy creates for every installed plugin. A plugin can declare fields for sandy to render and add its own section below them.",
     surfaces: [
       {
         id: "declarative-settings",
@@ -897,7 +901,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         ],
         firstParty: [
           "ACP providers",
-          "BB guide",
+          "SANDY guide",
           "Claude Code provider",
           "Codex provider",
           "Custom instructions",
@@ -914,7 +918,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Add your own section to the plugin's settings page. With this, a plugin can:",
         bullets: [
           "Show anything that isn't a form field, such as a connect-account button",
-          "Sit below the [generated fields](declarative-settings) under a heading bb renders",
+          "Sit below the [generated fields](declarative-settings) under a heading sandy renders",
         ],
         apiSymbols: [
           "PluginSettingsSectionRegistration.experimental_page",
@@ -937,7 +941,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
     title: "Plugin page",
     fixtureKind: "spatial",
     blurb:
-      "The page bb shows for an installed plugin under Plugins: what it is, what it registers, and whether it is healthy. A plugin can report that it needs configuring, and bb says so at the top of this page.",
+      "The page sandy shows for an installed plugin under Plugins: what it is, what it registers, and whether it is healthy. A plugin can report that it needs configuring, and sandy says so at the top of this page.",
     surfaces: [
       {
         id: "plugin-status",
@@ -985,7 +989,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         title: "Data & platform",
         surfaceIds: [
           "storage",
-          "bb-sdk",
+          "sandy-sdk",
+          "theme-kit",
           "thread-plugin-metadata",
           "desktop-browsers",
           "ai-services",
@@ -1000,10 +1005,10 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
     surfaces: [
       {
         id: "cli",
-        tagline: "Your own `bb <name>` command",
-        title: "bb CLI commands",
+        tagline: "Your own `sandy <name>` command",
+        title: "sandy CLI commands",
         summary:
-          "Add a `bb <name>` command for people and agents. With this, a plugin can:",
+          "Add a `sandy <name>` command for people and agents. With this, a plugin can:",
         bullets: [
           "Run the same command from a terminal, a script, or an agent mid-task",
           "Get argument parsing, `--help`, and JSON errors from one declaration",
@@ -1045,7 +1050,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         summary:
           "Add tools, skills, and instructions to every agent session. With this, a plugin can:",
         bullets: [
-          "Give agents native tools that work like bb's built-in ones",
+          "Give agents native tools that work like sandy's built-in ones",
           "Choose per thread which tools and skills are available",
           "Add instructions to the system prompt when a session starts",
         ],
@@ -1061,7 +1066,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Agent Annotations",
           "Ask User Question",
           "Automations",
-          "BB guide",
+          "SANDY guide",
           "Browser Automation",
           "Claude Code provider",
           "Codex provider",
@@ -1084,13 +1089,13 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         tagline: "Supervised services and cron schedules",
         title: "Background work",
         summary:
-          "Run code on the bb server when no window is open. With this, a plugin can:",
+          "Run code on the sandy server when no window is open. With this, a plugin can:",
         bullets: [
           "Keep services running, with automatic restarts after a failure",
           "Run jobs on a cron schedule",
           "Set things up once, right after install",
         ],
-        apiSymbols: ["PluginBackground", "BbPluginApi.onInstall"],
+        apiSymbols: ["PluginBackground", "SandyPluginApi.onInstall"],
         firstParty: [
           "Account Pooler [Experimental]",
           "ACP providers",
@@ -1122,8 +1127,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Data retains successful values and shared predictions during refresh errors. Plain reads start undefined; keyed reads expose loaded rows, initially an empty record, through select",
           "isLoading means an enabled read is fetching never-loaded data, including missing requested keys. isFetching includes background attempts; keyed views share their method's activity",
           "error is an experimental_PluginRpcCallError or null. Success clears it; retrying a first load clears its previous error while loading. refetch forces a read, waits through retries, and records failures in error without rejecting. Keyed reads also have refetchKeys(keys), which reads only those keys again and keeps every other row",
-          "Reads stay fresh for two seconds without polling. Focus does not refetch while BB's realtime connection is healthy; while disconnected, focus/browser-online events recheck stale active reads. BB reconnect invalidates all plugin reads. Page hiding cancels active attempts and resume restarts those cancelled reads",
-          "Invalidations refresh immediately. Network/abort failures retry twice at 250 ms, HTTP failures never retry, and writes never retry automatically. Tags are plain strings: reads declare them with tags or keyTags, and the server marks them stale with bb.rpc.experimental_invalidate where the data changes, so writes from the app, the CLI, agent tools and background work each refresh matching reads once",
+          "Reads stay fresh for two seconds without polling. Focus does not refetch while SANDY's realtime connection is healthy; while disconnected, focus/browser-online events recheck stale active reads. SANDY reconnect invalidates all plugin reads. Page hiding cancels active attempts and resume restarts those cancelled reads",
+          "Invalidations refresh immediately. Network/abort failures retry twice at 250 ms, HTTP failures never retry, and writes never retry automatically. Tags are plain strings: reads declare them with tags or keyTags, and the server marks them stale with sandy.rpc.experimental_invalidate where the data changes, so writes from the app, the CLI, agent tools and background work each refresh matching reads once",
           "mutate, isPending and pendingInputs settle at write acknowledgement; matched reads refresh in the background. Shared predictions stay until confirmed reads arrive, or roll back on write failure",
           "Optimistic updaters must be pure and replayable; generate IDs and timestamps before mutate",
           "RPC error codes may grow: switch on error.code with a fallback. Newer server codes become unknown_error with the original serverCode; transport_error and invalid_response cover client failures. CLI output preserves unknown codes",
@@ -1134,7 +1139,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "ExperimentalPluginRpcHandlersWithContext",
           "ExperimentalPluginRpcHandlerContext",
           "ExperimentalPluginRpcCaller",
-          "PluginBbSdk.plugins.experimental_discoverRpc",
+          "PluginSandySdk.plugins.experimental_discoverRpc",
           "PluginHttp",
           "PluginRealtime",
           "useRpc",
@@ -1298,7 +1303,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         tagline: "Create and own execution machines",
         title: "Machine providers",
         summary:
-          "Provide machines that bb creates and manages, such as cloud sandboxes. With this, a plugin can:",
+          "Provide machines that sandy creates and manages, such as cloud sandboxes. With this, a plugin can:",
         bullets: [
           "Create, suspend, resume, and remove machines on demand",
           "Pair them with an [environment provider](environment-providers) for one-step threads",
@@ -1306,14 +1311,14 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         ],
         apiSymbols: [
           "PluginMachines",
-          "PluginBbSdk.hosts.experimental_create",
-          "PluginBbSdk.hosts.experimental_getEnrollmentCommand",
-          "PluginBbSdk.hosts.experimental_listProviders",
-          "PluginBbSdk.hosts.experimental_suspend",
-          "PluginBbSdk.hosts.experimental_reconcile",
-          "PluginBbSdk.hosts.experimental_resume",
-          "PluginBbSdk.hosts.experimental_retryCleanup",
-          "PluginBbSdk.hosts.delete",
+          "PluginSandySdk.hosts.experimental_create",
+          "PluginSandySdk.hosts.experimental_getEnrollmentCommand",
+          "PluginSandySdk.hosts.experimental_listProviders",
+          "PluginSandySdk.hosts.experimental_suspend",
+          "PluginSandySdk.hosts.experimental_reconcile",
+          "PluginSandySdk.hosts.experimental_resume",
+          "PluginSandySdk.hosts.experimental_retryCleanup",
+          "PluginSandySdk.hosts.delete",
           "PluginMachines.getResource",
           "MachineExecutorRequest",
           "MachineExecutor",
@@ -1343,7 +1348,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         tagline: "Connect machines to their server",
         title: "Machine server access",
         summary:
-          "Provide the connection machines use to reach their bb server. With this, a plugin can:",
+          "Provide the connection machines use to reach their sandy server. With this, a plugin can:",
         bullets: [
           "Give new machines what they need to enroll, such as a URL they can reach",
           "Appear as a choice in Machines settings and manual setup",
@@ -1407,17 +1412,17 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
       {
         id: "provider-bridges",
         title: "Provider bridges",
-        tagline: "Bring any agent's runtime into bb",
+        tagline: "Bring any agent's runtime into sandy",
         summary:
           "Run an agent's sessions through a bridge your plugin ships to each machine. With this, a plugin can:",
         bullets: [
-          "Translate an agent CLI or SDK into bb's timeline, tool calls, approvals, and usage",
+          "Translate an agent CLI or SDK into sandy's timeline, tool calls, approvals, and usage",
           "Run any Agent Client Protocol agent through the bundled ACP bridge, with no bridge code",
           "Show native skills, commands, and plugins; validate selections with the shared skills index",
-          "Test it against bb's conformance suite and recorded sessions, without a running bb",
+          "Test it against sandy's conformance suite and recorded sessions, without a running sandy",
         ],
         reference: [
-          "Use @get-bb/plugin-sdk/process for hostToolchain executable and environment discovery, or spawnHostProcess, forkHostProcess and execHostFile (all experimental_ exports). Core uses these same launch paths; ENOENT or exit 127 starts a background discovery refresh without replaying side effects, and launches never wait for discovery. Explicit cwd and env are preserved, Windows shims are quoted, and workers recover a replaced Node runtime only when its native-module ABI matches. Node launches that carry --use-env-proxy keep it only when the child's HTTP(S)_PROXY values are http(s) URLs, and then bypass the proxy for loopback.",
+          "Use @sandy-sdk/plugin-sdk/process for hostToolchain executable and environment discovery, or spawnHostProcess, forkHostProcess and execHostFile (all experimental_ exports). Core uses these same launch paths; ENOENT or exit 127 starts a background discovery refresh without replaying side effects, and launches never wait for discovery. Explicit cwd and env are preserved, Windows shims are quoted, and workers recover a replaced Node runtime only when its native-module ABI matches. Node launches that carry --use-env-proxy keep it only when the child's HTTP(S)_PROXY values are http(s) URLs, and then bypass the proxy for loopback.",
         ],
         apiSymbols: [
           "experimental_defineProviderBridge",
@@ -1469,7 +1474,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         tagline: "Namespaced KV plus your own SQLite",
         title: "Storage",
         summary:
-          "Use storage on the bb server that only your plugin can see. With this, a plugin can:",
+          "Use storage on the sandy server that only your plugin can see. With this, a plugin can:",
         bullets: [
           "Keep small values such as flags and cursors in a key-value store",
           "Get its own SQLite database with migrations",
@@ -1495,11 +1500,11 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         ],
       },
       {
-        id: "bb-sdk",
+        id: "sandy-sdk",
         tagline: "Create threads and projects from plugin code",
-        title: "The bb SDK",
+        title: "The sandy SDK",
         summary:
-          "Use bb's own API from plugin server code. With this, a plugin can:",
+          "Use sandy's own API from plugin server code. With this, a plugin can:",
         bullets: [
           "Create threads attributed to the plugin, send messages, and manage projects and machines",
           "Start plugin updates in the background and follow their progress or rollback",
@@ -1507,25 +1512,26 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Retry failed environment cleanup with recover: true after inspecting processes using the workspace",
         ],
         apiSymbols: [
-          "BbPluginApi",
+          "SandyPluginApi",
           "PluginServerApi",
-          "PluginBbSdk.hosts.get",
-          "PluginBbSdk.hosts.experimental_discoverRepos",
-          "PluginBbSdk.experimental_promptHistory.list",
-          "PluginBbSdk.environments.experimental_cleanup",
-          "PluginBbSdk.environments.experimental_diffViewed",
-          "PluginBbSdk.environments.experimental_markDiffViewed",
-          "PluginBbSdk.environments.experimental_clearDiffViewed",
-          "PluginBbSdk.plugins.experimental_getSafeMode",
-          "PluginBbSdk.plugins.experimental_setSafeMode",
-          "PluginBbSdk.plugins.experimental_pruneCache",
-          "PluginBbSdk.plugins.experimental_startUpdate",
-          "PluginBbSdk.plugins.experimental_updateJobs",
-          "PluginBbSdk.threads.queuedMessages.experimental_holdForEdit",
-          "PluginBbSdk.threads.queuedMessages.experimental_releaseEditHold",
-          "PluginBbSdk.threads.experimental_listDescendants",
-          "PluginBbSdk.threads.experimental_listCascade",
-          "PluginBbSdk.threads.experimental_regenerateTitle",
+          "PluginSandySdk.hosts.get",
+          "PluginSandySdk.hosts.experimental_discoverRepos",
+          "PluginSandySdk.experimental_promptHistory.list",
+          "PluginSandySdk.environments.experimental_cleanup",
+          "PluginSandySdk.environments.experimental_diffViewed",
+          "PluginSandySdk.environments.experimental_markDiffViewed",
+          "PluginSandySdk.environments.experimental_clearDiffViewed",
+          "PluginSandySdk.plugins.experimental_getSafeMode",
+          "PluginSandySdk.plugins.experimental_setSafeMode",
+          "PluginSandySdk.plugins.experimental_pruneCache",
+          "PluginSandySdk.plugins.experimental_startUpdate",
+          "PluginSandySdk.plugins.experimental_updateJobs",
+          "PluginSandySdk.threads.queuedMessages.experimental_holdForEdit",
+          "PluginSandySdk.threads.queuedMessages.experimental_releaseEditHold",
+          "PluginSandySdk.threads.experimental_listDescendants",
+          "PluginSandySdk.threads.experimental_listCascade",
+          "PluginSandySdk.threads.experimental_regenerateTitle",
+          "PluginSandySdk.threads.experimental_updateEnvironmentDirectory",
         ],
         firstParty: [
           "Account Pooler [Experimental]",
@@ -1555,6 +1561,24 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         ],
       },
       {
+        id: "theme-kit",
+        tagline: "Generate a theme from three colors",
+        title: "Theme kit",
+        summary:
+          "Use sandy's theme generator from plugin server code. With this, a plugin can:",
+        bullets: [
+          "Generate a full light and dark theme from canvas, ink and accent colors",
+          "Write it to the custom theme directory, refusing to replace an existing one",
+          "Check any theme CSS for contrast, missing tokens and eye comfort",
+        ],
+        apiSymbols: [
+          "PluginSandySdk.theme.experimental_create",
+          "PluginSandySdk.theme.experimental_check",
+        ],
+        firstParty: [],
+        experimental: true,
+      },
+      {
         id: "thread-plugin-metadata",
         tagline: "Keep plugin data with a thread",
         title: "Thread plugin metadata",
@@ -1567,19 +1591,19 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Read it for many threads at once, along with each thread's ancestors",
         ],
         apiSymbols: [
-          "PluginBbSdk",
+          "PluginSandySdk",
           "PluginAgentConfigurationContext",
           "ReadonlyJsonValue",
-          "BbPluginApi",
+          "SandyPluginApi",
         ],
         firstParty: ["Push notifications", "Workflows"],
       },
       {
         id: "desktop-browsers",
         title: "Desktop browser control",
-        tagline: "Use your automation tool on BB-owned tabs",
+        tagline: "Use your automation tool on SANDY-owned tabs",
         summary:
-          "Use bb's desktop browser tabs from plugin code. With this, a plugin can:",
+          "Use sandy's desktop browser tabs from plugin code. With this, a plugin can:",
         bullets: [
           "Open signed-in tabs that belong to a thread",
           "Give an automation tool private control of a tab",
@@ -1599,10 +1623,10 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
       },
       {
         id: "ai-services",
-        tagline: "Write bb's titles, commit messages, and transcripts",
+        tagline: "Write sandy's titles, commit messages, and transcripts",
         title: "AI services",
         summary:
-          "Provide the models that write bb's titles, commit messages, and transcripts. With this, a plugin can:",
+          "Provide the models that write sandy's titles, commit messages, and transcripts. With this, a plugin can:",
         bullets: [
           "Write thread titles and commit messages with any model",
           "Transcribe voice input from the microphone button",
@@ -1618,15 +1642,15 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
       },
       {
         id: "host-components",
-        tagline: "Embed bb's chat and prompt box",
+        tagline: "Embed sandy's chat and prompt box",
         title: "Host components",
         summary:
-          "Use bb's own chat, prompt box, and pickers inside plugin pages. With this, a plugin can:",
+          "Use sandy's own chat, prompt box, and pickers inside plugin pages. With this, a plugin can:",
         bullets: [
           "Embed a thread, a new-thread prompt box, or a textarea with editable voice input",
-          "Render Markdown, code, diffs, and file links, and copy text and save files, the way bb does",
+          "Render Markdown, code, diffs, and file links, and copy text and save files, the way sandy does",
           "Open app links with device approval, remember allowed apps, and revoke approvals in Settings",
-          "Add or override app icons while matching bb's styling",
+          "Add or override app icons while matching sandy's styling",
         ],
         apiSymbols: [
           "experimental_getApplicationLinkApprovals",
@@ -1667,9 +1691,9 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "ExperimentalLiveFileTarget.experimental_ref",
           "ExperimentalFileLocation",
           "ExperimentalFileOpenOptions",
-          "BbNavigate.openUrl",
-          "BbNavigate.experimental_openFilePreview",
-          "BbNavigate.experimental_openFileExternally",
+          "SandyNavigate.openUrl",
+          "SandyNavigate.experimental_openFilePreview",
+          "SandyNavigate.experimental_openFileExternally",
           "experimental_useCanOpenFileExternally",
         ],
         firstParty: [
@@ -1687,12 +1711,12 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
       },
       {
         id: "testing",
-        tagline: "Unit-test every surface without a running bb",
+        tagline: "Unit-test every surface without a running sandy",
         title: "Testing harnesses",
         summary:
-          "Use test harnesses that run without bb. With this, a plugin can:",
+          "Use test harnesses that run without sandy. With this, a plugin can:",
         bullets: [
-          "Test server code against an in-process fake bb server",
+          "Test server code against an in-process fake sandy server",
           "Render UI slots under vitest",
           "Drive host workers without a machine",
         ],
@@ -1713,7 +1737,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Agent Annotations",
           "Ask User Question",
           "Automations",
-          "BB guide",
+          "SANDY guide",
           "Browser Automation",
           "Claude Code provider",
           "Codex provider",

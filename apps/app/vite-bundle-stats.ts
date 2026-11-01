@@ -164,7 +164,7 @@ export function computeBundleStats(
 
 export function bundleStats(): Plugin {
   return {
-    name: "bb:bundle-stats",
+    name: "sandy:bundle-stats",
     apply: "build",
     async writeBundle(_options, bundle) {
       const chunks: BundleStatsChunkInput[] = [];

@@ -5,12 +5,12 @@ import {
   publicApiRoutes,
   typedRoutes,
   type PublicApiSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { COMMAND_TIMEOUT_MS } from "../constants.js";
 import { ApiError } from "../errors.js";
 import { browserRequestProblem } from "../browser-request-guard.js";
 import type { AppDeps } from "../types.js";
-import type { HostDaemonRpcCommand } from "@bb/host-daemon-contract";
+import type { HostDaemonRpcCommand } from "@sandy/host-daemon-contract";
 import {
   callHostOnlineRpcForWork,
   callHostRetryableOnlineRpc,

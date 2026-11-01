@@ -34,10 +34,10 @@ const PAGE_PROBE_SOURCE = readFileSync(
 );
 
 const MEASURE_COLLECTOR =
-  "window.__bbmeasures = []; new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (entry.name.startsWith('bb:')) window.__bbmeasures.push({ name: entry.name, start: entry.startTime, duration: entry.duration, label: entry.detail?.bb?.label ?? null }) }).observe({ type: 'measure' });";
+  "window.__sandymeasures = []; new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (entry.name.startsWith('sandy:')) window.__sandymeasures.push({ name: entry.name, start: entry.startTime, duration: entry.duration, label: entry.detail?.sandy?.label ?? null }) }).observe({ type: 'measure' });";
 
 const RESET_ACTION =
-  "(() => { window.__bbmeasures.length = 0; performance.clearResourceTimings(); return true })()";
+  "(() => { window.__sandymeasures.length = 0; performance.clearResourceTimings(); return true })()";
 
 export const settleExpression = (quietMs, timeoutMs) =>
   "new Promise((resolve) => { const started = performance.now(); let lastBusy = started; let last = started; const observer = new MutationObserver(() => { lastBusy = performance.now() }); observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true }); const tick = (now) => { if (now - last > 50) lastBusy = now; last = now; if (now - lastBusy >= " +
@@ -128,11 +128,11 @@ const checkLiveness = async (browser, ledger, label) => {
     state.visibility === "visible",
     state,
   );
-  const raf = await browser.evaluate("window.__bbperf.rafProbe(500)");
+  const raf = await browser.evaluate("window.__sandyperf.rafProbe(500)");
   const fps = Math.round((raf.frames / raf.elapsedMs) * 1000);
   ledger.record(label + ": rAF frames are produced", fps >= 30, { fps });
   const drift = summarize(
-    await browser.evaluate("window.__bbperf.timerDrift(30, 10)"),
+    await browser.evaluate("window.__sandyperf.timerDrift(30, 10)"),
   );
   ledger.record(
     label + ": timers are not throttled",
@@ -148,16 +148,16 @@ const checkLiveness = async (browser, ledger, label) => {
 
 export const appTimings = (measures) => {
   const total = measures
-    .filter((measure) => measure.name === "bb:switch")
+    .filter((measure) => measure.name === "sandy:switch")
     .sort((a, b) => b.duration - a.duration)[0];
   if (!total) return null;
   const phases = Object.fromEntries(
     SWITCH_PHASES.map((phase) => [phase, null]),
   );
   for (const measure of measures) {
-    const phase = measure.name.slice("bb:switch:".length);
+    const phase = measure.name.slice("sandy:switch:".length);
     if (
-      measure.name.startsWith("bb:switch:") &&
+      measure.name.startsWith("sandy:switch:") &&
       phase in phases &&
       measure.start >= total.start - 0.5 &&
       measure.start <= total.start + total.duration + 0.5
@@ -186,7 +186,7 @@ const measureSwitch = async (options, driver, thread) => {
     () => driver.click(selector),
   );
   const settled = await settlePage(browser, 300, 8000);
-  const measures = await browser.evaluate("window.__bbmeasures.slice()");
+  const measures = await browser.evaluate("window.__sandymeasures.slice()");
   const requests = await browser.evaluate(requestsExpression(thread.id));
   const domNodes = await browser.evaluate(
     "document.getElementsByTagName('*').length",
@@ -267,7 +267,7 @@ export const runRound = async (options, browserName, plan, round, profile) => {
 
 const analyzeProfile = async (options, profile, samples) => {
   const main = contentMainThread(profile);
-  if (main === null) return { error: "no content thread with bb:switch spans" };
+  if (main === null) return { error: "no content thread with sandy:switch spans" };
   await loadSourceMaps(jsFrameUrls(main), {
     directory: options.sourcemaps,
     cache: options.sourceMapCache,

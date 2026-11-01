@@ -12,7 +12,7 @@ import {
   type NativeShellHandshake,
   type SafeAreaInsets,
   type ShellToPageEvent,
-} from "@bb/mobile-bridge";
+} from "@sandy/mobile-bridge";
 
 interface NativeBridgeGlobal {
   post(message: unknown): void;

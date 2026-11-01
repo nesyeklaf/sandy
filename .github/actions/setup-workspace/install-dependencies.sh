@@ -4,7 +4,7 @@ set -euo pipefail
 if [[ "${PNPM_CACHE_RESTORE_OUTCOME:-success}" != "success" && "${PNPM_CACHE_RESTORE_OUTCOME:-success}" != "skipped" ]]; then
   echo "::warning::pnpm cache restoration failed; using a fresh dependency store."
   export npm_config_store_dir
-  npm_config_store_dir=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/bb-pnpm-fallback.XXXXXX")
+  npm_config_store_dir=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/sandy-pnpm-fallback.XXXXXX")
   if [[ -n "${GITHUB_ENV:-}" ]]; then
     echo "npm_config_store_dir=$npm_config_store_dir" >> "$GITHUB_ENV"
   fi

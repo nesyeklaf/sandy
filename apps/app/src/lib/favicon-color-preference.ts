@@ -5,15 +5,11 @@ import {
   faviconColorPreferenceSchema,
   type FaviconColor,
   type FaviconColorPreference,
-} from "@bb/domain";
-import {
-  DARK_COLOR_SCHEME_QUERY,
-  getMediaQuerySnapshot,
-  subscribeMediaQuery,
-} from "@bb/shared-ui/hooks/use-media-query";
+} from "@sandy/domain";
+import { getMediaQuerySnapshot } from "@sandy/shared-ui/hooks/use-media-query";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 
-export const FAVICON_COLOR_STORAGE_KEY = "bb.faviconColor";
+export const FAVICON_COLOR_STORAGE_KEY = "sandy.faviconColor";
 
 const FAVICON_BADGES = ["none", "unread"] as const;
 type FaviconBadge = (typeof FAVICON_BADGES)[number];
@@ -110,9 +106,14 @@ export function getFaviconGlyphHref(): string {
   return import.meta.env.DEV ? "/favicon-32x32-dev.png" : "/favicon-32x32.png";
 }
 
-function getFaviconVariantSuffix(): string {
-  if (import.meta.env.DEV) return "-dev";
-  return getMediaQuerySnapshot(DARK_COLOR_SCHEME_QUERY) ? "-dark" : "";
+// The default favicon is the colour mark and reads on light and dark tabs.
+// A chosen colour fills the one-colour glyph (`-mono`), not the colour mark,
+// whose dune layers would flatten into a plain disc.
+function getFaviconVariantSuffix(
+  colorPreference: FaviconColorPreference,
+): string {
+  if (colorPreference !== defaultFaviconColor) return "-mono";
+  return import.meta.env.DEV ? "-dev" : "";
 }
 
 function getFaviconLink(size: number): HTMLLinkElement | null {
@@ -234,7 +235,7 @@ let applyToken = 0;
 async function applyFaviconState(state: FaviconRenderState): Promise<void> {
   const token = ++applyToken;
   if (getMediaQuerySnapshot(STANDALONE_DISPLAY_MODE_QUERY)) return;
-  const suffix = getFaviconVariantSuffix();
+  const suffix = getFaviconVariantSuffix(state.colorPreference);
   const links = await Promise.all(
     FAVICON_SIZES.map(async (size): Promise<RenderedFaviconLink> => {
       const baseHref = `/favicon-${size}x${size}${suffix}.png`;
@@ -270,6 +271,5 @@ export function initializeFavicon(): void {
   };
   store.sub(faviconColorAtom, apply);
   store.sub(faviconBadgeAtom, apply);
-  subscribeMediaQuery(DARK_COLOR_SCHEME_QUERY, apply);
   apply();
 }

@@ -15,12 +15,12 @@ import {
   type AppDefaultKeybindings,
   type AppKeybindingOverrides,
   type AppShortcut,
-} from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { Switch } from "@bb/shared-ui/switch";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { Switch } from "@sandy/shared-ui/switch";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { APP_COMMAND_GROUPS } from "@/lib/app-command-metadata";
 import {
   areAppShortcutsEqual,
@@ -41,7 +41,7 @@ import {
   useUpdateGeneralSettings,
   useUpdateKeyboardSettings,
 } from "@/hooks/mutations/settings-mutations";
-import { pluginCommandId } from "@bb/domain";
+import { pluginCommandId } from "@sandy/domain";
 import { usePluginCommandBindings } from "@/hooks/usePluginCommandBindings";
 import { useSystemConfig } from "@/hooks/queries/system-queries";
 import {
@@ -49,8 +49,8 @@ import {
   SettingsSection,
   SettingsWithControl,
 } from "@/components/ui/settings-section";
-import { ShortcutPill } from "@bb/shared-ui/shortcut-pill";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { ShortcutPill } from "@sandy/shared-ui/shortcut-pill";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 
 const EMPTY_OVERRIDES: AppKeybindingOverrides = [];
 const SETTINGS_SHORTCUT_PILL_CLASS =
@@ -473,7 +473,7 @@ export function KeyboardSettingsSection() {
     isPending: isKeyboardSettingsPending,
     mutate: mutateKeyboardSettings,
   } = useUpdateKeyboardSettings();
-  const isDesktop = getBbDesktopInfo() !== null;
+  const isDesktop = getSandyDesktopInfo() !== null;
   const platform = browserPlatform();
   const generalSettings =
     systemConfig.data?.generalSettings ?? defaultAppSettings;
@@ -734,7 +734,7 @@ export function KeyboardSettingsSection() {
           Reset all
         </Button>
       }
-      description="Click a shortcut, then press its new keys. Changes sync to every bb window."
+      description="Click a shortcut, then press its new keys. Changes sync to every sandy window."
       title="Keyboard shortcuts"
     >
       <div className="space-y-5">

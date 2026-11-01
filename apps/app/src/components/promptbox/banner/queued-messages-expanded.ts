@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { atom, useAtom } from "jotai";
-import type { ThreadQueuedMessage } from "@bb/domain";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+import type { ThreadQueuedMessage } from "@sandy/domain";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 
 type CollapsedQueues = ReadonlyMap<string, ReadonlySet<string>>;
 

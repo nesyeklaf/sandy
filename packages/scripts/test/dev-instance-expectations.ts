@@ -65,7 +65,7 @@ export function expectedDevInstanceId(args: ExpectedDevInstanceArgs): string {
 }
 
 export function expectedDevDataDir(args: ExpectedDevInstanceArgs): string {
-  return join(args.homeDir, ".bb-dev", expectedDevInstanceId(args));
+  return join(args.homeDir, ".sandy-dev", expectedDevInstanceId(args));
 }
 
 export function expectedDevServerUrl(repoRoot: string): string {

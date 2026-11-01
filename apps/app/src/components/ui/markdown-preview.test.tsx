@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { defaultExperiments } from "@bb/domain";
+import { defaultExperiments } from "@sandy/domain";
 import { appQueryClient } from "@/lib/app-query-client";
 import { systemConfigQueryKey } from "@/hooks/queries/query-keys";
 import { ApplicationUrlDialog } from "@/components/ApplicationUrlDialog";
@@ -745,7 +745,7 @@ describe("MarkdownPreview", () => {
 
     render(
       <MarkdownPreview
-        content="Open [review](devin://file/Users/me/.bb/artifacts/thr_1/review.diff) or [cursor](Cursor://file/workspace/My%20App.ts:12:3)."
+        content="Open [review](devin://file/Users/me/.sandy/artifacts/thr_1/review.diff) or [cursor](Cursor://file/workspace/My%20App.ts:12:3)."
         linkRouting={{
           localFile: {
             absoluteLinks: { kind: "trusted-host" },
@@ -758,7 +758,7 @@ describe("MarkdownPreview", () => {
 
     const review = screen.getByRole("link", { name: "review" });
     expect(review.getAttribute("href")).toBe(
-      "file:///Users/me/.bb/artifacts/thr_1/review.diff",
+      "file:///Users/me/.sandy/artifacts/thr_1/review.diff",
     );
     fireEvent.click(review);
     fireEvent.click(screen.getByRole("link", { name: "cursor" }));
@@ -768,7 +768,7 @@ describe("MarkdownPreview", () => {
         {
           lineRange: null,
           openTargetId: "devin-desktop",
-          path: "/Users/me/.bb/artifacts/thr_1/review.diff",
+          path: "/Users/me/.sandy/artifacts/thr_1/review.diff",
         },
       ],
       [
@@ -1167,7 +1167,7 @@ describe("application links", () => {
     "keeps application links inert until enabled and responds to disabling (HTML: %s)",
     async (allowHtml) => {
       const openApplicationUrl = vi.fn(async () => {});
-      vi.stubGlobal("bbDesktop", { openApplicationUrl });
+      vi.stubGlobal("sandyDesktop", { openApplicationUrl });
       render(
         <MarkdownPreview
           allowHtml={allowHtml}
@@ -1206,7 +1206,7 @@ describe("application links", () => {
         experiments: { ...defaultExperiments, applicationLinks: true },
       });
       const openApplicationUrl = vi.fn(async () => {});
-      vi.stubGlobal("bbDesktop", { openApplicationUrl });
+      vi.stubGlobal("sandyDesktop", { openApplicationUrl });
       const url = "reflect://note/Project%20X?tag=a%2Fb";
       render(
         <MarkdownPreview

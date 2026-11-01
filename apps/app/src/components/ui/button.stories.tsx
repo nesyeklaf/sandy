@@ -1,6 +1,6 @@
-import { Button, type ButtonProps } from "@bb/shared-ui/button";
+import { Button, type ButtonProps } from "@sandy/shared-ui/button";
 import { StoryCard, StoryRow } from "../../../.ladle/story-card";
-import { Icon } from "@bb/shared-ui/icon";
+import { Icon } from "@sandy/shared-ui/icon";
 
 export default {
   title: "ui/Button",

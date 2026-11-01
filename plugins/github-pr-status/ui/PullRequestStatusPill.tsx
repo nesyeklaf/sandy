@@ -1,6 +1,6 @@
 import type { PullRequest } from "../contract";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   describePullRequestStatus,
   getPullRequestStateDisplay,

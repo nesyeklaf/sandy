@@ -11,7 +11,7 @@ import {
 import { acpProviderDeclaration } from "./declaration.js";
 import { KNOWN_ACP_AGENTS, RESERVED_ACP_PROVIDER_IDS } from "./known-agents.js";
 import { REGISTRY_ICON_AGENT_IDS } from "./registry-icons.js";
-import { experimental_acpLaunchSpecSchema } from "@get-bb/plugin-sdk/provider-bridge/acp";
+import { experimental_acpLaunchSpecSchema } from "@sandy-sdk/plugin-sdk/provider-bridge/acp";
 
 const reserved = RESERVED_ACP_PROVIDER_IDS;
 
@@ -158,7 +158,7 @@ describe("custom agent icons", () => {
   it("ships and declares an icon file for every registry agent it names", () => {
     const manifest = z
       .object({
-        bb: z.object({
+        sandy: z.object({
           branding: z.object({
             experimental_icons: z.record(z.string(), z.string()),
           }),
@@ -169,7 +169,7 @@ describe("custom agent icons", () => {
           readFileSync(new URL("../package.json", import.meta.url), "utf8"),
         ),
       );
-    const declared = manifest.bb.branding.experimental_icons;
+    const declared = manifest.sandy.branding.experimental_icons;
     for (const agentId of REGISTRY_ICON_AGENT_IDS) {
       const path = declared[`registry-${agentId}`];
       expect(path).toBe(`./icons/registry-${agentId}.svg`);

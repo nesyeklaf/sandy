@@ -1,7 +1,7 @@
 type DesktopReleaseChannel = "latest" | "nightly";
 
 interface DesktopReleaseInfo {
-  applicationName: "bb" | "bb Nightly";
+  applicationName: "sandy" | "sandy Nightly";
   channel: DesktopReleaseChannel;
   iconFileName: "icon.png" | "icon-nightly.png";
 }
@@ -12,7 +12,7 @@ export function createDesktopReleaseInfo(
   const nightly = channel === "nightly";
 
   return {
-    applicationName: nightly ? "bb Nightly" : "bb",
+    applicationName: nightly ? "sandy Nightly" : "sandy",
     channel,
     iconFileName: nightly ? "icon-nightly.png" : "icon.png",
   };
@@ -34,7 +34,7 @@ function resolveBuiltDesktopReleaseChannel(
 }
 
 export const DESKTOP_RELEASE_CHANNEL = resolveBuiltDesktopReleaseChannel(
-  process.env.BB_DESKTOP_RELEASE_CHANNEL,
+  process.env.SANDY_DESKTOP_RELEASE_CHANNEL,
 );
 export const DESKTOP_RELEASE_INFO = createDesktopReleaseInfo(
   DESKTOP_RELEASE_CHANNEL,

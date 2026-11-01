@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import type { ThreadEvent } from "@bb/domain";
+import type { ThreadEvent } from "@sandy/domain";
 import {
   createScriptedEchoRequestRecord,
   createScriptedEchoRuntime,
@@ -23,7 +23,7 @@ function createRewindRuntime(args: {
   onStderr?: (line: string) => void;
   scripted?: ScriptedEchoLaunchScript;
 }) {
-  const workspacePath = mkdtempSync(join(tmpdir(), "bb-runtime-rewind-"));
+  const workspacePath = mkdtempSync(join(tmpdir(), "sandy-runtime-rewind-"));
   temporaryDirectories.push(workspacePath);
   const record = createScriptedEchoRequestRecord();
   const runtime = createScriptedEchoRuntime({

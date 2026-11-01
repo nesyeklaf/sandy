@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { InstalledPlugin } from "@bb/server-contract";
+import type { InstalledPlugin } from "@sandy/server-contract";
 import { appToast } from "@/components/ui/app-toast";
 import type { PluginCatalogSearchEntry } from "@/hooks/queries/plugin-catalog-queries";
 import { pluginInstallJobsQueryKey } from "@/hooks/queries/query-keys";
@@ -17,9 +17,9 @@ const GUIDE: InstalledPlugin = {
   rootDir: "/plugins/plugin-api-docs",
   version: "1.0.0",
   provenance: "builtin",
-  publisherLabel: "BB Official",
+  publisherLabel: "SANDY Official",
   isOrphanedBuiltin: false,
-  sourceDisplay: "Included with BB",
+  sourceDisplay: "Included with SANDY",
   updateState: {},
   enabled: false,
   description: "Explore the plugin API",
@@ -49,12 +49,12 @@ const GUIDE_ENTRY: PluginCatalogSearchEntry = {
   displayName: "Plugin Guide",
   description: "Explore the plugin API",
   source: GUIDE.source,
-  marketplace: "bb-official",
-  marketplaceDisplayName: "BB Official",
-  publisherKey: "bb-official",
-  publisherLabel: "BB Official",
+  marketplace: "sandy-official",
+  marketplaceDisplayName: "SANDY Official",
+  publisherKey: "sandy-official",
+  publisherLabel: "SANDY Official",
   official: true,
-  author: { name: "BB", github: "get-bb", url: "https://github.com/get-bb" },
+  author: { name: "SANDY", github: "get-bb", url: "https://github.com/get-bb" },
   icon: null,
   iconUrl: null,
   iconTinted: false,
@@ -200,7 +200,7 @@ describe("OpenPluginGuideButton", () => {
       target: {
         kind: "catalog",
         entryId: "plugin-api-docs",
-        marketplace: "bb-official",
+        marketplace: "sandy-official",
       },
       displayName: "Plugin Guide",
     };
@@ -238,7 +238,7 @@ describe("OpenPluginGuideButton", () => {
     expect(installCall?.[1]?.method).toBe("POST");
     expect(JSON.parse(String(installCall?.[1]?.body))).toEqual({
       entryId: "plugin-api-docs",
-      marketplace: "bb-official",
+      marketplace: "sandy-official",
     });
     expect(screen.getByTestId("location").textContent).toBe("/plugins");
 

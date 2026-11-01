@@ -1,13 +1,13 @@
 import {
   getProjectExecutionDefaults,
   upsertProjectExecutionDefaults,
-} from "@bb/db";
+} from "@sandy/db";
 import type {
   ProjectExecutionDefaults,
   RecordedThreadExecutionOptions,
   ResolvedThreadExecutionOptions,
   Thread,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { AppDeps } from "../../types.js";
 import type {
   ThreadCreateServiceRequest,

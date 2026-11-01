@@ -4,8 +4,8 @@ import {
   updateHost,
   upsertHost,
   type EnvironmentRow,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import {
   resolveEnvironmentWorkspaceDisplayKind,
   toEnvironmentResponse,

@@ -82,7 +82,7 @@ describe("marketplace icon validation", () => {
   });
 
   it("bounds a local icon read before validation", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "bb-local-icon-bound-"));
+    const directory = await mkdtemp(join(tmpdir(), "sandy-local-icon-bound-"));
     cleanup.push(directory);
     const path = join(directory, "large.png");
     const handle = await open(path, "w");

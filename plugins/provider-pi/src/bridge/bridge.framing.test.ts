@@ -14,7 +14,7 @@ let harness: FakePiBridgeHarness;
 
 beforeEach(async () => {
   harness = await startFakePiBridge({
-    prefix: "bb-pi-framing-",
+    prefix: "sandy-pi-framing-",
     sessionDir: (workspaceDir) =>
       join(workspaceDir, `sessions${LINE_SEPARATOR}dir`),
     initialize: true,
@@ -34,8 +34,8 @@ it("carries U+2028/U+2029 through stdout events, RPC responses, and both channel
     options: FULL_PERMISSION_OPTIONS,
     dynamicTools: [
       {
-        name: "bb_probe",
-        description: "A bb tool.",
+        name: "sandy_probe",
+        description: "A sandy tool.",
         inputSchema: {
           type: "object",
           properties: { value: { type: "string" } },
@@ -87,7 +87,7 @@ it("carries U+2028/U+2029 through stdout events, RPC responses, and both channel
         input: [
           {
             type: "text",
-            text: `/tool bb_probe ${JSON.stringify({ value: argValue })}`,
+            text: `/tool sandy_probe ${JSON.stringify({ value: argValue })}`,
             mentions: [],
           },
         ],

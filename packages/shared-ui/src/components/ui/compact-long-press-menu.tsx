@@ -19,7 +19,7 @@ const LONG_PRESS_TARGET_STYLE: CSSProperties = {
 };
 
 const CLAIMED_PRESS_EVENT_KEY = Symbol.for(
-  "bb.compactLongPressMenu.claimedPressEvent",
+  "sandy.compactLongPressMenu.claimedPressEvent",
 );
 
 function isClaimedPressEvent(event: Event): boolean {

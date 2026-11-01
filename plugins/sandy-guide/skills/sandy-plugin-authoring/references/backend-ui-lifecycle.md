@@ -1,0 +1,90 @@
+# Host UI, status, and lifecycle
+
+### sandy.ui — host-rendered UI (no frontend bundle needed)
+
+```ts
+sandy.ui.registerMentionProvider({
+  id: "issue",
+  label: "Issues",
+  triggers: ["@", "#"], // optional; defaults to ["@"]. Valid: @ # $ ! ~
+  search({ trigger, query, projectId, threadId }) {
+    // 2s time box, failure = empty list
+    return [{ id: "42", title: "ENG-42 Fix flake", subtitle: "Todo" }];
+  },
+  resolve(itemId) {
+    // once per unique item AT SEND TIME
+    return {
+      context: "# ENG-42…",
+      experimental_images: [
+        {
+          type: "localImage",
+          path: "/absolute/path/capture.jpg",
+          context: "Selected element",
+        },
+      ],
+    }; // attached as agent-only context; throwing BLOCKS the send
+  },
+});
+```
+
+Mention items render under `label` in the menu for each registered trigger.
+`experimental_images` may add bounded agent-only `image` URL or `localImage`
+path inputs, each with optional `context`. Treat remote and page-derived image
+content as untrusted evidence. Invalid images block the send rather than being
+silently dropped.
+All handlers run server-side. There is deliberately no plugin slash-command surface: the composer's `/`
+menu lists skills, so a plugin capability that crafts a prompt for the agent
+ships as a `skills/` entry instead.
+
+### sandy.status
+
+`sandy.status.needsConfiguration(message)` — mark the plugin
+`needs-configuration` (shown in `sandy plugin list` and the UI) instead of
+failing. Cleared on the next load; saving settings retries the load.
+
+### sandy.onInstall
+
+`sandy.onInstall(handler)` runs once, right after the user installs
+the plugin and its server entry has loaded. It does not run on update,
+reload, enable, or server restart, and not for sandy's bundled plugins;
+reinstalling after removal runs it again. Use it for one-time setup the user
+would expect from installing, such as picking the plugin's thread list:
+
+```ts
+sandy.onInstall(async () => {
+  const { preferences } = await sandy.sdk.system.uiPreferences.list();
+  await sandy.sdk.system.uiPreferences.set({
+    key: "sidebar.threadListProvider",
+    value: "my-plugin/inbox",
+    expectedRevision: preferences["sidebar.threadListProvider"].revision,
+  });
+});
+```
+
+A handler that throws is logged and the install still succeeds; the install
+waits at most 30 seconds for handlers. In tests,
+`harness.lifecycle.install()` runs them.
+
+### sandy.onDispose and the reload lifecycle
+
+`sandy.onDispose(hook)` registers cleanup; hooks run **LIFO**. On reload the
+host first runs the factory against a candidate registration set; if it
+throws, the complete previous set stays live. Once the candidate succeeds, the
+old generation is torn down in order: its WebSockets close with code 1012, the
+CLI `ctx.signal` and RPC `experimental_signal` of its in-flight calls abort,
+its host workers stop, input it requested is interrupted (forms the new
+generation raised while loading stay pending), services are aborted and get up
+to five seconds each (a hung service marks the plugin degraded until it
+stops), WebSocket `onClose` handlers run, dispose hooks run in LIFO order (one
+failed hook does not stop later cleanup), and in-flight HTTP, RPC, CLI and
+event handlers get five seconds to finish. Callers still waiting after that
+get an error saying the plugin was reloaded or disabled; the handler itself
+keeps running until it stops on its signal. Then database handles close and
+the old `sandy` object is invalidated. Requests that arrive during this teardown
+are still served by the old generation. Disable, removal and shutdown use the
+same sequence without a replacement, and also interrupt every pending input
+the plugin owns. A captured `sandy` from a previous load throws
+`PluginContextStaleError` on use — never stash the API object in
+module-level state that outlives a load. sandy logs that error, and any other
+uncaught exception thrown from plugin code, against the plugin and keeps
+running.

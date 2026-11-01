@@ -3,16 +3,16 @@
   "name": "command",
   "type": "registry:ui",
   "title": "command",
-  "description": "BB ui \"command\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"command\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "dependencies": [
     "@radix-ui/react-dialog",
     "cmdk"
   ],
   "registryDependencies": [
-    "@bb/coarse-pointer-sizing",
-    "@bb/dialog",
-    "@bb/icon",
-    "@bb/utils"
+    "@sandy/coarse-pointer-sizing",
+    "@sandy/dialog",
+    "@sandy/icon",
+    "@sandy/utils"
   ],
   "files": [
     {

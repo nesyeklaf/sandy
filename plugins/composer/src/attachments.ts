@@ -1,4 +1,4 @@
-import type { ComposerAttachment } from "@get-bb/plugin-sdk/app";
+import type { ComposerAttachment } from "@sandy-sdk/plugin-sdk/app";
 
 export function isImageAttachment(attachment: ComposerAttachment): boolean {
   return (

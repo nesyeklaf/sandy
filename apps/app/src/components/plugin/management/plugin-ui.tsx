@@ -1,9 +1,9 @@
-import { pluginInstallBadge } from "@bb/domain/plugin-install-badge";
-import { PluginBrandIcon } from "@bb/shared-ui/plugin-icon";
+import { pluginInstallBadge } from "@sandy/domain/plugin-install-badge";
+import { PluginBrandIcon } from "@sandy/shared-ui/plugin-icon";
 import { useState, type ReactNode } from "react";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { ResourceIconFrame } from "@bb/shared-ui/resource-list";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { ResourceIconFrame } from "@sandy/shared-ui/resource-list";
 import { PluginIcon } from "@/components/plugin/PluginIcon";
 import { usePreferredTheme } from "@/hooks/useTheme";
 import type { PluginListItem } from "@/hooks/queries/plugin-settings-queries";
@@ -350,7 +350,7 @@ export function RollbackNote({
       <Icon name="RotateCcw" className="mt-0.5 size-3.5 shrink-0" />
       <span>
         Your plugin data is snapshotted first — if {toVersion} fails to start,
-        bb restores {fromVersion} and its data automatically.
+        sandy restores {fromVersion} and its data automatically.
       </span>
     </div>
   );

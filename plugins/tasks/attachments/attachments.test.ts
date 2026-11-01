@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import { createTasksStore } from "../db";
 import {
@@ -11,8 +11,8 @@ import { registerAttachments } from ".";
 import { attachmentsChangedTags } from "../shared/tags";
 
 function setup(options?: Parameters<typeof registerAttachments>[2]) {
-  const { bb, harness } = createFakePluginHost({ pluginId: "tasks" });
-  const db = bb.storage.database();
+  const { sandy, harness } = createFakePluginHost({ pluginId: "tasks" });
+  const db = sandy.storage.database();
   const store = createTasksStore(db);
   const project = store.createProject({
     name: "Attachments",
@@ -23,7 +23,7 @@ function setup(options?: Parameters<typeof registerAttachments>[2]) {
     projectId: project.id,
     title: "Attachment owner",
   });
-  registerAttachments(bb, store, options);
+  registerAttachments(sandy, store, options);
   const database = db
     .prepare<[], { name: string; file: string }>("PRAGMA database_list")
     .all()

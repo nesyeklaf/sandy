@@ -1,0 +1,21 @@
+{
+  "id": "D5",
+  "total": 8,
+  "question": "What happens to a user's sessions when they change their password?",
+  "recommend": "version",
+  "why": "Either option ends the old sessions; the counter needs no list of session keys, and D4 already makes every request touch Redis.",
+  "options": [
+    {
+      "value": "delete",
+      "title": "Delete all their sessions",
+      "detail": "Look up the user's sessions and remove them at once.",
+      "locks": "A per-user index of session keys in Redis (D1), written on every sign-in."
+    },
+    {
+      "value": "version",
+      "title": "Bump a version number on the user",
+      "detail": "Every request compares its session's version with the user's.",
+      "locks": "One extra Redis read per request; stale sessions stay in Redis until D4's 30 days pass, but are refused."
+    }
+  ]
+}

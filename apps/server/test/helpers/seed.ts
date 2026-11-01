@@ -13,18 +13,18 @@ import {
   openSession,
   threads,
   upsertHost,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   HOST_DAEMON_PROTOCOL_VERSION,
   HOST_ID_FILE_NAME,
   type HostPlatform,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   encodeClientTurnRequestIdNumber,
   parseStoredThreadEvent,
   threadScope,
   turnScope,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   EnvironmentProviderSelection,
   EnvironmentStatus,
@@ -40,7 +40,7 @@ import type {
   ThreadStatus,
   ThreadParentNotifications,
   ThreadVisibility,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type { AppDeps } from "../../src/types.js";
 import { ARCHIVE_UNDO_GRACE_MS } from "../../src/constants.js";
 import { registerTestHostRpcCapture } from "./commands.js";
@@ -120,7 +120,7 @@ export function seedSession(
     hostId,
     instanceId: options.instanceId ?? "instance-1",
     hostName: "Test Host",
-    dataDir: `/tmp/bb-host-data/${hostId}`,
+    dataDir: `/tmp/sandy-host-data/${hostId}`,
     protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
     heartbeatIntervalMs: 5_000,
     leaseTimeoutMs: 30_000,
@@ -190,7 +190,7 @@ export function seedEnvironment(
           },
         }
       : {}),
-    branchName: args.branchName !== undefined ? args.branchName : "bb/test",
+    branchName: args.branchName !== undefined ? args.branchName : "sandy/test",
     baseBranch: args.baseBranch !== undefined ? args.baseBranch : null,
     defaultBranch:
       args.defaultBranch !== undefined ? args.defaultBranch : "main",

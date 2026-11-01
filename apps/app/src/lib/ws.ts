@@ -2,7 +2,7 @@ import ReconnectingWebSocket from "partysocket/ws";
 import {
   realtimeSubscriptionTargetSchema,
   type ThreadTimelineSubscriptionTarget,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   changedMessageLenientSchema,
   pluginSignalLenientSchema,
@@ -11,7 +11,7 @@ import {
   threadOpenSignalLenientSchema,
   threadPaneActionSignalLenientSchema,
   threadTimelineSignalLenientSchema,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   ClientMessage,
   ChangedMessage,
@@ -21,7 +21,7 @@ import type {
   ThreadOpenSignal,
   ThreadPaneActionSignal,
   ReceivedThreadTimelineSignal,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { buildBrowserWebSocketUrl } from "./dev-websocket-url";
 import {
   isDocumentVisible,

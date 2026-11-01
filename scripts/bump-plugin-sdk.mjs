@@ -3,12 +3,12 @@ import {
   parsePackageJsonWithVersion,
   writeFilesAtomically,
 } from "./lib/package-version.mjs";
-// Bumps @get-bb/plugin-sdk in the two files that must always agree:
+// Bumps @sandy-sdk/plugin-sdk in the two files that must always agree:
 //
 //   packages/domain/src/plugin-sdk-version.ts  (PLUGIN_SDK_VERSION)
 //   packages/plugin-sdk/package.json           (version)
 //
-// The publish job is publish-if-missing (.github/workflows/publish-bb-app.yml,
+// The publish job is publish-if-missing (.github/workflows/publish-sandy-app.yml,
 // job publish-plugin-sdk): it never republishes a version that already exists on
 // npm. So any change to the package's published content — dist/, bundled-types/,
 // README.md, or a consumer-facing manifest field — needs a new version, or npm
@@ -129,12 +129,12 @@ export async function bumpPluginSdk(options) {
   });
 
   log(
-    `Bumped: @get-bb/plugin-sdk ${manifestVersion} → ${newVersion} (${MANIFEST_PATH} + ${VERSION_MODULE_PATH})`,
+    `Bumped: @sandy-sdk/plugin-sdk ${manifestVersion} → ${newVersion} (${MANIFEST_PATH} + ${VERSION_MODULE_PATH})`,
   );
 }
 
 async function main() {
-  const repoRoot = process.env.BB_BUMP_PLUGIN_SDK_REPO_ROOT ?? defaultRepoRoot;
+  const repoRoot = process.env.SANDY_BUMP_PLUGIN_SDK_REPO_ROOT ?? defaultRepoRoot;
 
   await bumpPluginSdk({
     args: process.argv.slice(2),

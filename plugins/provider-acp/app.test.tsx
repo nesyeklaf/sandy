@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadPluginApp, renderSlot } from "@get-bb/plugin-sdk/testing/app";
+import { loadPluginApp, renderSlot } from "@sandy-sdk/plugin-sdk/testing/app";
 
 const app = await loadPluginApp(() => import("./app"));
 
@@ -78,7 +78,7 @@ describe("ACP agent registry settings", () => {
     expect(slot.queryByRole("button", { name: /Native Only/ })).toBeNull();
     expect(slot.getByText("Runs npx -y claude-acp@1.0.0")).toBeTruthy();
     expect(
-      slot.getByText("bb already ships this agent as a provider."),
+      slot.getByText("sandy already ships this agent as a provider."),
     ).toBeTruthy();
 
     fireEvent.change(slot.getByLabelText("Search agents"), {

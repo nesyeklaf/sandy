@@ -1,6 +1,6 @@
-import { type PromptInput } from "@bb/domain";
-import { displayWidth, truncateToWidth } from "@bb/text-utils";
-import { fileNameFromPath } from "@bb/thread-view";
+import { type PromptInput } from "@sandy/domain";
+import { displayWidth, truncateToWidth } from "@sandy/text-utils";
+import { fileNameFromPath } from "@sandy/thread-view";
 import { promptInputToDraft, type PromptDraftState } from "./prompt-draft.js";
 
 const QUEUED_MESSAGE_PREVIEW_MAX_WIDTH = 140;

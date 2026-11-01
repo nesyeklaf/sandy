@@ -10,20 +10,20 @@ import {
 import { createPortal } from "react-dom";
 import { atom, useAtom } from "jotai";
 import { atomFamily } from "jotai-family";
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import { PluginTabScope, usePluginTabs } from "./PluginTabs";
 import type { PluginNavTabSlot } from "@/lib/plugin-slots";
 import {
   createPanelActionDestination,
   runPluginPanelAction,
 } from "./PluginPanelActions";
-import { Button } from "@bb/shared-ui/button";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
-import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@bb/shared-ui/coarse-pointer-sizing";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
-import { Icon } from "@bb/shared-ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
+import { Button } from "@sandy/shared-ui/button";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
+import { COARSE_POINTER_HEADER_ICON_BUTTON_CLASS } from "@sandy/shared-ui/coarse-pointer-sizing";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
+import { Icon } from "@sandy/shared-ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
 import { useAppCommandHandler } from "@/components/commands/AppCommandProvider";
 import { PluginItemIcon } from "@/components/plugin/PluginIcon";
 import { RIGHT_PANEL_TOGGLE_ICON_NAME } from "@/components/secondary-panel/panelToggleControlState";
@@ -57,7 +57,7 @@ import {
   type TerminalFixedPanelTab,
 } from "@/lib/fixed-panel-tabs-state";
 import { createFileOpenerOriginalTab } from "./file-opener-tabs";
-import { activateSecondaryPanelTabInState } from "@bb/client-core";
+import { activateSecondaryPanelTabInState } from "@sandy/client-core";
 import {
   terminalQueryScopeForTarget,
   useTerminals,
@@ -71,7 +71,7 @@ import { useSystemConfig } from "@/hooks/queries/system-queries";
 import {
   isDesktopBrowserAvailable,
   MACOS_TITLE_BAR_TRAILING_TOGGLE_CLASS,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import { useIsSidebarFramed } from "@/components/ui/sidebar.js";
 import { UrlOpenRoutingProvider } from "@/lib/url-open-routing";
 import { usePluginSlots } from "@/lib/plugin-slots";

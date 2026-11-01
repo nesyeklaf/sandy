@@ -68,9 +68,9 @@ import type {
   PromptInput,
   PromptTextMention,
   ThreadQueuedMessage,
-} from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   PROMPT_STACK_CARD_HEADER_BUTTON_CLASS,
   PromptStackCard,
@@ -78,10 +78,10 @@ import {
 import {
   PromptStackCollapseRow,
   useDisclosureFocusHandoff,
-} from "@bb/shared-ui/prompt-stack-disclosure";
-import { PROMPT_STACK_ROW_ACTION_TAKEOVER_CLASS } from "@bb/shared-ui/prompt-banner-actions";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
+import { PROMPT_STACK_ROW_ACTION_TAKEOVER_CLASS } from "@sandy/shared-ui/prompt-banner-actions";
 import { useScrollOverflowState } from "@/components/thread/timeline/useScrollOverflowState";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
 import { InlineMessageEditorFrame } from "@/components/promptbox/InlineMessageEditorFrame";
 import { useBottomAnchoredScroll } from "@/components/ui/bottom-anchored-scroll-body";
 import {
@@ -89,18 +89,18 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/tooltip";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   countQueuedMessageAttachments,
   formatQueuedMessagePreview,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import {
   collectLeadQueuedMessageGroupIds,
   preserveLeadQueuedMessageGroupAfterReorder,
   type QueuedMessageReorderRequest,
 } from "@/lib/queued-message-reorder";
-import type { PromptMentionLinkResolver } from "@bb/client-core";
+import type { PromptMentionLinkResolver } from "@sandy/client-core";
 import {
   PromptMentionPill,
   shiftMentionsToTextRange,
@@ -235,7 +235,7 @@ const QUEUED_MARKDOWN_COMPONENTS: Components = {
   thead: ({ children }) => <span>{children}</span>,
   tr: ({ children }) => <span>{children} </span>,
   ul: ({ children }) => <span>{children}</span>,
-  "bb-prompt-mention": PromptMentionElement,
+  "sandy-prompt-mention": PromptMentionElement,
 };
 
 function CompactQueuedMarkdownPreview({

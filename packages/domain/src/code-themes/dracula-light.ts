@@ -199,7 +199,7 @@ export const draculaLightCodeTheme = {
     "walkThrough.embeddedEditorBackground": "#eeeeea",
   },
   displayName: "Dracula Light",
-  name: "bb:dracula:light",
+  name: "sandy:dracula:light",
   semanticHighlighting: true,
   tokenColors: [
     {

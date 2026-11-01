@@ -1,0 +1,10 @@
+{
+  "name": "pi-autopilot",
+  "version": "0.1.0",
+  "description": "Autopilots for pi: code steers the session, the model does the work",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test --experimental-strip-types"
+  }
+}

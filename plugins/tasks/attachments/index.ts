@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
-import type { BbPluginApi } from "@get-bb/plugin-sdk";
+import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { Attachment, TasksStore } from "../db";
 import {
   attachmentDownloadUrl,
@@ -48,7 +48,7 @@ interface DatabaseListRow {
 }
 
 type PluginHttpContext = Parameters<
-  Parameters<BbPluginApi["http"]["route"]>[2]
+  Parameters<SandyPluginApi["http"]["route"]>[2]
 >[0];
 
 class AttachmentRequestError extends Error {
@@ -91,8 +91,8 @@ function removeAttachmentDescriptionReferences(
   return markdown.replace(new RegExp(`!\\[[^\\]]*\\]\\(${url}\\)`, "g"), "");
 }
 
-function pluginDataDirectory(bb: BbPluginApi): string {
-  const main = bb.storage
+function pluginDataDirectory(sandy: SandyPluginApi): string {
+  const main = sandy.storage
     .database()
     .prepare<[], DatabaseListRow>("PRAGMA database_list")
     .all()
@@ -107,7 +107,7 @@ function requireStoreRoot(store: TasksStore): string {
   const root = storeRoots.get(store);
   if (!root) {
     throw new Error(
-      "Tasks attachment helpers require registerAttachments(bb, store) first",
+      "Tasks attachment helpers require registerAttachments(sandy, store) first",
     );
   }
   return root;
@@ -126,7 +126,7 @@ function pathInside(root: string, blobPath: string): string {
 }
 
 export async function removeAttachmentBlobs(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksStore,
   attachments: readonly Pick<Attachment, "id" | "blobPath">[],
 ): Promise<void> {
@@ -142,7 +142,7 @@ export async function removeAttachmentBlobs(
     if (result.status === "fulfilled") return [];
     const attachment = attachments[index];
     const message = errorMessage(result.reason);
-    bb.log.warn(
+    sandy.log.warn(
       `failed to remove attachment blob ${attachment?.id ?? "unknown"}: ${message}`,
     );
     return [result.reason];
@@ -416,7 +416,7 @@ function errorResponse(context: PluginHttpContext, error: unknown): Response {
 }
 
 export async function deleteAttachmentById(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksStore,
   attachmentId: string,
   options: {
@@ -448,7 +448,7 @@ export async function deleteAttachmentById(
   }
 
   try {
-    await (options.removeBlobs ?? removeAttachmentBlobs)(bb, store, [
+    await (options.removeBlobs ?? removeAttachmentBlobs)(sandy, store, [
       attachment,
     ]);
   } catch (error) {
@@ -458,12 +458,12 @@ export async function deleteAttachmentById(
     store.updateTask(ownerTask.id, { description: nextDescription });
   }
   if (!store.deleteAttachment(attachment.id)) return null;
-  invalidateAttachmentChanged(bb, store, attachment);
+  invalidateAttachmentChanged(sandy, store, attachment);
   return attachment;
 }
 
 export function invalidateAttachmentChanged(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksStore,
   attachment: Attachment,
 ): void {
@@ -474,25 +474,25 @@ export function invalidateAttachmentChanged(
       : undefined);
   const task = taskId ? store.getTask(taskId) : undefined;
   if (!task) {
-    bb.log.warn(`failed to invalidate attachment change ${attachment.id}`);
+    sandy.log.warn(`failed to invalidate attachment change ${attachment.id}`);
     return;
   }
-  bb.rpc.experimental_invalidate(
+  sandy.rpc.experimental_invalidate(
     attachmentsChangedTags(task.id, attachment.commentId),
   );
 }
 
 export function registerAttachments(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksStore,
   options: {
     removeBlobs?: typeof removeAttachmentBlobs;
   } = {},
 ): void {
-  const root = pluginDataDirectory(bb);
+  const root = pluginDataDirectory(sandy);
   storeRoots.set(store, root);
 
-  bb.http.route(
+  sandy.http.route(
     "POST",
     UPLOAD_PATH,
     async (context) => {
@@ -507,7 +507,7 @@ export function registerAttachments(
           body.byteLength,
           (destinationPath) => writeFile(destinationPath, body),
         );
-        invalidateAttachmentChanged(bb, store, attachment);
+        invalidateAttachmentChanged(sandy, store, attachment);
         return context.json(
           {
             attachmentId: attachment.id,
@@ -522,7 +522,7 @@ export function registerAttachments(
     { auth: "token" },
   );
 
-  bb.http.route("GET", DOWNLOAD_PATH, async (context) => {
+  sandy.http.route("GET", DOWNLOAD_PATH, async (context) => {
     const attachmentId = context.req.query("attachmentId")?.trim();
     const attachment = attachmentId
       ? store.getAttachment(attachmentId)
@@ -552,11 +552,11 @@ export function registerAttachments(
     });
   });
 
-  bb.http.route("DELETE", DELETE_PATH, async (context) => {
+  sandy.http.route("DELETE", DELETE_PATH, async (context) => {
     const attachmentId = context.req.query("attachmentId")?.trim();
     try {
       const attachment = attachmentId
-        ? await deleteAttachmentById(bb, store, attachmentId, {
+        ? await deleteAttachmentById(sandy, store, attachmentId, {
             removeBlobs: options.removeBlobs,
             removeDescriptionReferences:
               context.req.query("removeDescriptionReferences") === "true",

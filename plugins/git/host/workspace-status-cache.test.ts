@@ -2,9 +2,9 @@ import { tmpdir } from "node:os";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
-import { createDeferredPromise, initRepo, makeTempDir } from "@bb/test-helpers";
+import { createDeferredPromise, initRepo, makeTempDir } from "@sandy/test-helpers";
 import { WorkspaceReads } from "./workspace-reads.js";
-import { runGit } from "bb-environment-provider-host/workspace-git";
+import { runGit } from "sandy-environment-provider-host/workspace-git";
 
 let freshReads = 0;
 function fresh() {
@@ -13,11 +13,11 @@ function fresh() {
 }
 
 vi.mock(
-  "bb-environment-provider-host/workspace-git",
+  "sandy-environment-provider-host/workspace-git",
   async (importOriginal) => {
     const actual =
       await importOriginal<
-        typeof import("bb-environment-provider-host/workspace-git")
+        typeof import("sandy-environment-provider-host/workspace-git")
       >();
     return { ...actual, runGit: vi.fn(actual.runGit) };
   },
@@ -28,7 +28,7 @@ let initialCommit: string;
 
 beforeAll(async () => {
   initialRepository = await fs.mkdtemp(
-    path.join(tmpdir(), "bb-squash-template-"),
+    path.join(tmpdir(), "sandy-squash-template-"),
   );
   await initRepo(initialRepository);
   initialCommit = (
@@ -63,7 +63,7 @@ async function readUntilSquashChecked(repo: string) {
 }
 
 it("reuses committed comparisons across readers while refreshing edits and moved refs", async () => {
-  const repo = await initRepo(await makeTempDir("bb-status-cache-"));
+  const repo = await initRepo(await makeTempDir("sandy-status-cache-"));
   await runGit(["checkout", "-b", "feature"], { cwd: repo });
   await fs.writeFile(path.join(repo, "feature.txt"), "feature\n");
   await fs.writeFile(path.join(repo, "other.txt"), "other\n");
@@ -118,14 +118,14 @@ it("reuses committed comparisons across readers while refreshing edits and moved
 });
 
 it("returns degraded comparisons on Git failures without caching them", async () => {
-  const repo = await initRepo(await makeTempDir("bb-status-cache-failure-"));
+  const repo = await initRepo(await makeTempDir("sandy-status-cache-failure-"));
   await runGit(["checkout", "-b", "feature"], { cwd: repo });
   await fs.writeFile(path.join(repo, "feature.txt"), "feature\n");
   await runGit(["add", "."], { cwd: repo });
   await runGit(["commit", "-m", "Feature"], { cwd: repo });
   const actual = await vi.importActual<
-    typeof import("bb-environment-provider-host/workspace-git")
-  >("bb-environment-provider-host/workspace-git");
+    typeof import("sandy-environment-provider-host/workspace-git")
+  >("sandy-environment-provider-host/workspace-git");
   let fail = true;
   vi.mocked(runGit).mockImplementation(async (args, options) => {
     if (
@@ -168,7 +168,7 @@ async function createDivergedRepo({
   basePath = "main.txt",
   baseText = "main\n",
 } = {}) {
-  const repo = await makeTempDir("bb-squash-budget-");
+  const repo = await makeTempDir("sandy-squash-budget-");
   await fs.cp(initialRepository, repo, { recursive: true });
   const timestamp = Math.floor(Date.now() / 1000);
   const commit = (
@@ -177,7 +177,7 @@ async function createDivergedRepo({
     file: string,
     text: string,
   ) =>
-    `commit refs/heads/${branch}\ncommitter BB Tests <bb@example.com> ${timestamp} +0000\ndata ${Buffer.byteLength(subject) + 1}\n${subject}\n\nfrom ${initialCommit}\nM 100644 inline ${JSON.stringify(file)}\ndata ${Buffer.byteLength(text)}\n${text}\n`;
+    `commit refs/heads/${branch}\ncommitter SANDY Tests <sandy@example.com> ${timestamp} +0000\ndata ${Buffer.byteLength(subject) + 1}\n${subject}\n\nfrom ${initialCommit}\nM 100644 inline ${JSON.stringify(file)}\ndata ${Buffer.byteLength(text)}\n${text}\n`;
   await runGit(["fast-import", "--quiet"], {
     cwd: repo,
     input:
@@ -258,8 +258,8 @@ it("filters irrelevant history beyond 200 commits and reports incomplete only at
 it("cancels an over-budget squash command and returns basic comparison data", async () => {
   const repo = await createDivergedRepo({ basePath: "feature.txt" });
   const actual = await vi.importActual<
-    typeof import("bb-environment-provider-host/workspace-git")
-  >("bb-environment-provider-host/workspace-git");
+    typeof import("sandy-environment-provider-host/workspace-git")
+  >("sandy-environment-provider-host/workspace-git");
   let canceled = false;
   vi.mocked(runGit).mockImplementation((args, options) => {
     if (options.cwd === repo && args[0] === "patch-id" && options.signal) {
@@ -405,8 +405,8 @@ it("finishes a timed-out squash check on the next refresh without rehashing comm
   await runGit(["commit", "-m", "Later main change"], { cwd: repo });
   await runGit(["checkout", "feature"], { cwd: repo });
   const actual = await vi.importActual<
-    typeof import("bb-environment-provider-host/workspace-git")
-  >("bb-environment-provider-host/workspace-git");
+    typeof import("sandy-environment-provider-host/workspace-git")
+  >("sandy-environment-provider-host/workspace-git");
   let interrupted = false;
   const interruptedPatch = createDeferredPromise<void>();
   vi.mocked(runGit).mockImplementation((args, options) => {
@@ -466,7 +466,7 @@ it("finishes a timed-out squash check on the next refresh without rehashing comm
 }, 15_000);
 
 it("excludes cherry-picked commits on both sides but keeps same-file changes", async () => {
-  const repo = await initRepo(await makeTempDir("bb-status-cherry-pick-"));
+  const repo = await initRepo(await makeTempDir("sandy-status-cherry-pick-"));
   await runGit(["checkout", "-b", "feature"], { cwd: repo });
   await fs.writeFile(path.join(repo, "picked.txt"), "picked\n");
   await runGit(["add", "."], { cwd: repo });
@@ -496,7 +496,7 @@ it("excludes cherry-picked commits on both sides but keeps same-file changes", a
 });
 
 it("keeps renamed files compact when comparing squash patches", async () => {
-  const repo = await initRepo(await makeTempDir("bb-status-squash-rename-"));
+  const repo = await initRepo(await makeTempDir("sandy-status-squash-rename-"));
   const lines = Array.from({ length: 600_000 }, (_, i) => `line ${i}`);
   await fs.writeFile(path.join(repo, "big.txt"), `${lines.join("\n")}\n`);
   await runGit(["add", "."], { cwd: repo });

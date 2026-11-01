@@ -2,8 +2,8 @@ import type { Plugin } from "esbuild";
 import { PLUGIN_SDK_PACKAGE_NAME } from "./plugin-sdk-install.js";
 
 const ZOD_FILTER = /^zod($|\/)/;
-const RESOLVED_MARK = "bb-zod-resolution-resolved";
-const SDK_IMPORTER = /[\\/]@get-bb[\\/]plugin-sdk[\\/]/;
+const RESOLVED_MARK = "sandy-zod-resolution-resolved";
+const SDK_IMPORTER = /[\\/]@sandy-sdk[\\/]plugin-sdk[\\/]/;
 
 export function describeUnresolvedZod(args: {
   specifier: string;
@@ -28,7 +28,7 @@ export function zodResolutionPlugin(
   } = {},
 ): Plugin {
   return {
-    name: "bb-zod-resolution",
+    name: "sandy-zod-resolution",
     setup(build) {
       build.onResolve({ filter: ZOD_FILTER }, async (args) => {
         if (options.hostProvidedBareZod === true && args.path === "zod") {

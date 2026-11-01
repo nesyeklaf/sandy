@@ -1,6 +1,6 @@
-import { extractErrorMessage } from "@bb/core-ui";
+import { extractErrorMessage } from "@sandy/core-ui";
 
-export const DEFAULT_BB_REQUEST_TIMEOUT_MS = 75_000;
+export const DEFAULT_SANDY_REQUEST_TIMEOUT_MS = 75_000;
 
 export type FetchImplementation = typeof fetch;
 
@@ -63,30 +63,30 @@ function formatRequestTimeoutDuration(timeoutMs: number): string {
   return seconds === 1 ? "1 second" : `${seconds} seconds`;
 }
 
-export class BbRequestTimeoutError extends Error {
+export class SandyRequestTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(
-      `BB request timed out after ${formatRequestTimeoutDuration(timeoutMs)}.`,
+      `SANDY request timed out after ${formatRequestTimeoutDuration(timeoutMs)}.`,
     );
-    this.name = "BbRequestTimeoutError";
+    this.name = "SandyRequestTimeoutError";
   }
 }
 
-export interface BbHttpErrorArgs {
+export interface SandyHttpErrorArgs {
   body: unknown;
   code: string | null;
   message: string;
   status: number;
 }
 
-export class BbHttpError extends Error {
+export class SandyHttpError extends Error {
   readonly body: unknown;
   readonly code: string | null;
   readonly status: number;
 
-  constructor(args: BbHttpErrorArgs) {
+  constructor(args: SandyHttpErrorArgs) {
     super(`HTTP ${args.status}: ${args.message}`);
-    this.name = "BbHttpError";
+    this.name = "SandyHttpError";
     this.body = args.body;
     this.code = args.code;
     this.status = args.status;
@@ -114,7 +114,7 @@ export function createRequestTimeoutFetch(
       return wrapRequestTimeoutResponse({ context, response });
     } catch (error) {
       if (isRequestTimeoutError(context, error)) {
-        throw new BbRequestTimeoutError(options.timeoutMs);
+        throw new SandyRequestTimeoutError(options.timeoutMs);
       }
       throw error;
     }
@@ -143,14 +143,14 @@ export async function resolveResponse<TResponse extends SdkResponseLike>(
   } catch (error) {
     if (isTypeErrorWithCauseCode(error, "ECONNREFUSED")) {
       throw new Error(
-        "Cannot connect to BB server. Ensure it is running and BB_SERVER_URL is correct.",
+        "Cannot connect to SANDY server. Ensure it is running and SANDY_SERVER_URL is correct.",
       );
     }
     throw error;
   }
   if (!response.ok) {
     const { body, code, message } = await readHttpErrorInfo(response);
-    throw new BbHttpError({ body, code, message, status: response.status });
+    throw new SandyHttpError({ body, code, message, status: response.status });
   }
   return response;
 }
@@ -162,7 +162,7 @@ async function readResponseBodyWithTimeoutMapping<TBody>(
     return await args.read();
   } catch (error) {
     if (isRequestTimeoutError(args.context, error)) {
-      throw new BbRequestTimeoutError(args.context.timeoutMs);
+      throw new SandyRequestTimeoutError(args.context.timeoutMs);
     }
     throw error;
   }
@@ -232,7 +232,7 @@ function wrapRequestTimeoutBody(
         controller.enqueue(result.value);
       } catch (error) {
         if (isRequestTimeoutError(args.context, error)) {
-          controller.error(new BbRequestTimeoutError(args.context.timeoutMs));
+          controller.error(new SandyRequestTimeoutError(args.context.timeoutMs));
           return;
         }
         controller.error(error);
@@ -263,7 +263,7 @@ function isRequestTimeoutError(
 function validateRequestTimeoutMs(timeoutMs: number): void {
   if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
     throw new RangeError(
-      "BB request timeout must be a non-negative finite number.",
+      "SANDY request timeout must be a non-negative finite number.",
     );
   }
 }
@@ -313,7 +313,7 @@ async function readHttpErrorInfo(
   try {
     rawBody = await response.text();
   } catch (error) {
-    if (error instanceof BbRequestTimeoutError) {
+    if (error instanceof SandyRequestTimeoutError) {
       throw error;
     }
     rawBody = "";

@@ -1,4 +1,4 @@
-import { createBuiltinPlanCommandTextInput } from "@bb/domain";
+import { createBuiltinPlanCommandTextInput } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../../src/errors.js";
 import { assertProviderAcceptsPromptActions } from "../../src/services/providers/provider-plan-command.js";

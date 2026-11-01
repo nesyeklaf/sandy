@@ -5,14 +5,14 @@ import {
   THREAD_CONTEXT_CLEAR_OPERATION,
   type ThreadEventItemType,
   type ThreadEventType,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   advanceThreadPruning,
   createThread,
   deleteThreadEventSuffixInTransaction,
   getLatestThreadSequence,
   noopNotifier,
-} from "@bb/db";
+} from "@sandy/db";
 import { pruneThreadEventHistory } from "../../../src/services/system/event-pruning.js";
 import {
   clearTimelineOrderingContextCache,

@@ -2,14 +2,14 @@ import type {
   PluginBoundThreadAction,
   PluginThreadActionsInlineItem,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { Fragment } from "react";
 import {
   ContextMenuItem,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -17,12 +17,12 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy/shared-ui/dropdown-menu";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   ActionMenuItem,
   ActionMenuSeparator,
-} from "@bb/shared-ui/action-menu-items";
+} from "@sandy/shared-ui/action-menu-items";
 import {
   bindThreadAction,
   useDefaultRequestRename,

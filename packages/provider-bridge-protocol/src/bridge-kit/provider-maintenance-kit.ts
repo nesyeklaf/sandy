@@ -1,4 +1,4 @@
-import { hostToolchain, execPortableFile } from "@bb/process-utils";
+import { hostToolchain, execPortableFile } from "@sandy/process-utils";
 import semverCompare from "semver/functions/compare.js";
 import semverValid from "semver/functions/valid.js";
 

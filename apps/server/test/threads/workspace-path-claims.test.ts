@@ -1,4 +1,4 @@
-import { createEnvironment } from "@bb/db";
+import { createEnvironment } from "@sandy/db";
 import { describe, expect, it } from "vitest";
 import {
   foreignProjectOwnedPathRefusal,
@@ -11,7 +11,7 @@ import {
 } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";
 
-const HOST_DATA_DIR = "/home/agent/.bb";
+const HOST_DATA_DIR = "/home/agent/.sandy";
 
 describe("suppliedWorkspacePathRefusal", () => {
   it("still refuses a foreign managed workspace when the host data dir is unknown", async () => {
@@ -42,7 +42,7 @@ describe("suppliedWorkspacePathRefusal", () => {
           projectId: project.id,
         }),
       ).toBe(
-        "Workspace path is a bb-managed workspace owned by another project",
+        "Workspace path is a sandy-managed workspace owned by another project",
       );
     });
   });
@@ -110,7 +110,7 @@ describe("suppliedWorkspacePathRefusal", () => {
           projectId: project.id,
         }),
       ).toBe(
-        "Workspace path is inside bb-managed storage but is not a workspace of this project",
+        "Workspace path is inside sandy-managed storage but is not a workspace of this project",
       );
     });
   });
@@ -159,7 +159,7 @@ describe("foreignProjectOwnedPathRefusal for provider-produced environments", ()
             projectId: other.id,
           }),
         ).toBe(
-          "Workspace path is a bb-managed workspace owned by another project",
+          "Workspace path is a sandy-managed workspace owned by another project",
         );
       }
       expect(

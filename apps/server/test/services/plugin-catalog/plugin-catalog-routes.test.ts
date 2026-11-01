@@ -1,8 +1,8 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type DbConnection } from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
+import { type DbConnection } from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
 import { Hono } from "hono";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registerPluginCatalogRoutes } from "../../../src/routes/plugin-catalog.js";
@@ -25,7 +25,7 @@ describe("plugin catalog routes", () => {
 
   beforeEach(async () => {
     db = createMigratedConnection();
-    dataDir = await mkdtemp(join(tmpdir(), "bb-catalog-routes-"));
+    dataDir = await mkdtemp(join(tmpdir(), "sandy-catalog-routes-"));
   });
 
   afterEach(async () => {
@@ -89,7 +89,7 @@ describe("plugin catalog routes", () => {
     );
     await expect(search.json()).resolves.toMatchObject({
       results: [{ entryId: "memory", installed: false }],
-      collections: [{ id: "bb-official", displayName: "BB Official" }],
+      collections: [{ id: "sandy-official", displayName: "SANDY Official" }],
     });
 
     const refresh = await app.request("/plugin-catalog/refresh", {
@@ -132,7 +132,7 @@ describe("plugin catalog routes", () => {
           "content-type": "application/json",
           prefer: "respond-async",
         },
-        body: JSON.stringify({ entryId, marketplace: "bb-official" }),
+        body: JSON.stringify({ entryId, marketplace: "sandy-official" }),
       });
       expect(install.status).toBe(202);
       await expect(install.json()).resolves.toMatchObject({
@@ -140,7 +140,7 @@ describe("plugin catalog routes", () => {
           target: {
             kind: "catalog",
             entryId: "docs",
-            marketplace: "bb-official",
+            marketplace: "sandy-official",
           },
         },
       });
@@ -258,7 +258,7 @@ describe("plugin catalog routes", () => {
       const listed = await app.request("/marketplaces");
       await expect(listed.json()).resolves.toMatchObject({
         marketplaces: [
-          { name: "bb-official", official: true, sourceKind: "path" },
+          { name: "sandy-official", official: true, sourceKind: "path" },
           { name: "acme-plugins" },
         ],
       });
@@ -294,7 +294,7 @@ describe("plugin catalog routes", () => {
 
       const misplacedSubdirectory = await postJson(app, "/marketplaces", {
         source: ACME_URL,
-        subdirectory: "bb",
+        subdirectory: "sandy",
       });
       expect(misplacedSubdirectory.status).toBe(422);
       await expect(misplacedSubdirectory.json()).resolves.toMatchObject({
@@ -324,7 +324,7 @@ describe("plugin catalog routes", () => {
       );
       expect(longPlan.status).toBe(422);
 
-      const reserved = await app.request("/marketplaces/bb-official", {
+      const reserved = await app.request("/marketplaces/sandy-official", {
         method: "DELETE",
       });
       expect(reserved.status).toBe(422);

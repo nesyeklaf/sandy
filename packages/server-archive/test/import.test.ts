@@ -9,7 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import {
   archiveExistingServerData,
@@ -68,7 +68,7 @@ async function expectArchiveError(
 }
 
 const SOURCE_CONFIG = {
-  config: { BB_INFERENCE: "codex/gpt-5.4-mini", BB_LOG_LEVEL: "info" },
+  config: { SANDY_INFERENCE: "codex/gpt-5.4-mini", SANDY_LOG_LEVEL: "info" },
   customModels: [{ providerId: "codex", model: "gpt-5.4" }],
   customAcpAgents: [
     { id: "grok", displayName: "Grok", command: "grok", unknownField: true },
@@ -77,9 +77,9 @@ const SOURCE_CONFIG = {
 };
 
 const TARGET_CONFIG = {
-  config: { BB_LOG_LEVEL: "debug", BB_APP_URL: "https://target.example" },
+  config: { SANDY_LOG_LEVEL: "debug", SANDY_APP_URL: "https://target.example" },
   serverUrl: "https://old-server.example",
-  serverHeaders: { "x-bb-machine-access": "credential" },
+  serverHeaders: { "x-sandy-machine-access": "credential" },
   machineCredential: "credential",
   connectMachineId: "machine-1",
 };
@@ -89,7 +89,7 @@ async function stageImport(): Promise<{
   manifest: ServerArchiveManifest;
 }> {
   const sourceDataDir = await makeTempDir();
-  await writeDataFile(sourceDataDir, "bb.db", "server database");
+  await writeDataFile(sourceDataDir, "sandy.db", "server database");
   await writeDataFile(
     sourceDataDir,
     "config.json",
@@ -128,7 +128,7 @@ async function stageImport(): Promise<{
       })),
     manifest: {
       createdAt: 1,
-      bbVersion: "0.43.1",
+      sandyVersion: "0.43.1",
       protocolVersion: 209,
       migrationCount: 142,
       sourceDataDir,
@@ -164,14 +164,14 @@ describe("mergeImportedManagedConfig", () => {
   it("keeps server keys, drops machine keys, and points serverUrl at the local server", () => {
     const merged = mergeImportedManagedConfig({
       importedConfig: {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
         serverUrl: "https://ignored.example",
         machineCredential: "source-credential",
       },
       existingConfig: {
-        config: { BB_LOG_LEVEL: "debug", BB_APP_URL: "https://target.example" },
+        config: { SANDY_LOG_LEVEL: "debug", SANDY_APP_URL: "https://target.example" },
         customModels: [{ providerId: "codex", model: "gpt-5.4" }],
-        serverHeaders: { "x-bb-machine-access": "target-credential" },
+        serverHeaders: { "x-sandy-machine-access": "target-credential" },
         machineCredential: "target-credential",
         connectMachineId: "machine-1",
       },
@@ -179,7 +179,7 @@ describe("mergeImportedManagedConfig", () => {
     });
 
     expect(merged).toEqual({
-      config: { BB_LOG_LEVEL: "info", BB_APP_URL: "https://target.example" },
+      config: { SANDY_LOG_LEVEL: "info", SANDY_APP_URL: "https://target.example" },
       serverUrl: "http://127.0.0.1:39886",
     });
   });
@@ -228,20 +228,20 @@ describe("installImportedServerFiles and removeImportedServerFiles", () => {
     expect([...result.importedEntries].sort()).toEqual([
       "attachments/thr_1/image.png",
       "auth-secret",
-      "bb.db",
       "config.json",
       "env.json",
       "plugins/docs/data.db",
       "plugins/docs/secrets/token",
+      "sandy.db",
       "skills/review/SKILL.md",
     ]);
-    expect(result.importedEntries.at(-1)).toBe("bb.db");
+    expect(result.importedEntries.at(-1)).toBe("sandy.db");
     expect([...result.backups].sort()).toEqual([
       "config.json",
       "env.json",
       "skills/review/SKILL.md",
     ]);
-    expect(await readDataFile(dataDir, "bb.db")).toBe("server database");
+    expect(await readDataFile(dataDir, "sandy.db")).toBe("server database");
     expect(await readDataFile(dataDir, "skills/review/SKILL.md")).toBe(
       "imported skill",
     );
@@ -257,8 +257,8 @@ describe("installImportedServerFiles and removeImportedServerFiles", () => {
     );
     expect(await readJson(dataDir, "config.json")).toEqual({
       config: {
-        BB_APP_URL: "https://target.example",
-        BB_LOG_LEVEL: "info",
+        SANDY_APP_URL: "https://target.example",
+        SANDY_LOG_LEVEL: "info",
       },
       customModels: SOURCE_CONFIG.customModels,
       sharedSkillRoots: SOURCE_CONFIG.sharedSkillRoots,
@@ -279,7 +279,7 @@ describe("installImportedServerFiles and removeImportedServerFiles", () => {
       ),
     ).toBe(originalConfig);
 
-    await writeDataFile(dataDir, "bb.db-wal", "pending server wal");
+    await writeDataFile(dataDir, "sandy.db-wal", "pending server wal");
     await removeImportedServerFiles({
       dataDir,
       importedEntries: result.importedEntries,
@@ -309,8 +309,8 @@ describe("installImportedServerFiles and removeImportedServerFiles", () => {
   it("refuses to import over existing server data without touching the target", async () => {
     const { stagingDir, manifest } = await stageImport();
     for (const existing of [
-      "bb.db",
-      "bb.db-wal",
+      "sandy.db",
+      "sandy.db-wal",
       SERVER_IMPORT_BACKUP_DIR_NAME,
     ]) {
       const dataDir = await createTargetDataDir();
@@ -356,7 +356,7 @@ describe("installImportedServerFiles and removeImportedServerFiles", () => {
     );
 
     expect(await readdir(outside)).toEqual([]);
-    expect(await readdir(dataDir)).not.toContain("bb.db");
+    expect(await readdir(dataDir)).not.toContain("sandy.db");
   });
 
   it("rejects an invalid imported config before changing the target", async () => {
@@ -411,13 +411,13 @@ async function stageManifestEntries(paths: readonly string[]): Promise<{
     });
   }
   const manifest = serverArchiveManifestSchema.parse({
-    format: "bb-server-archive",
+    format: "sandy-server-archive",
     version: SERVER_ARCHIVE_VERSION,
     createdAt: 1,
-    bbVersion: "0.43.1",
+    sandyVersion: "0.43.1",
     protocolVersion: 209,
     migrationCount: 142,
-    sourceDataDir: "/home/old/.bb",
+    sourceDataDir: "/home/old/.sandy",
     sourceServerHostId: "host-old",
     serverMoveExperiment: true,
     entries,
@@ -447,7 +447,7 @@ describe("server-owned allowlist on import", () => {
         })),
       manifest: {
         createdAt: 1,
-        bbVersion: "0.43.1",
+        sandyVersion: "0.43.1",
         protocolVersion: 209,
         migrationCount: 142,
         sourceDataDir,
@@ -476,7 +476,7 @@ describe("server-owned allowlist on import", () => {
 
   it.each([
     ...HOST_OWNED_FIXTURE_PATHS,
-    "bb.db/nested",
+    "sandy.db/nested",
     "plugins/docs",
     "plugins/docs/host-data",
   ])(
@@ -521,17 +521,17 @@ describe("server-owned allowlist on import", () => {
 
   it("refuses to remove host-owned entries", async () => {
     const dataDir = await createTargetDataDir();
-    await writeDataFile(dataDir, "bb.db", "imported database");
+    await writeDataFile(dataDir, "sandy.db", "imported database");
 
     await expectArchiveError(
       removeImportedServerFiles({
         dataDir,
-        importedEntries: ["bb.db", "auth.json"],
+        importedEntries: ["sandy.db", "auth.json"],
       }),
       "unsafe_entry",
     );
 
-    expect(await readDataFile(dataDir, "bb.db")).toBe("imported database");
+    expect(await readDataFile(dataDir, "sandy.db")).toBe("imported database");
     expect(await readDataFile(dataDir, "auth.json")).toBe("{}");
   });
 });
@@ -594,15 +594,15 @@ describe("discardImportBackups", () => {
       localServerUrl: null,
     });
 
-    expect(result.importedEntries).toContain("bb.db");
+    expect(result.importedEntries).toContain("sandy.db");
   });
 });
 
 describe("archiveExistingServerData", () => {
   it("renames the data directory with a local timestamp suffix and avoids collisions", async () => {
     const parent = await makeTempDir();
-    const dataDir = path.join(parent, ".bb");
-    await writeDataFile(dataDir, "bb.db", "standalone");
+    const dataDir = path.join(parent, ".sandy");
+    await writeDataFile(dataDir, "sandy.db", "standalone");
     const now = new Date(2026, 8, 15, 9, 5, 7).getTime();
 
     const archivedPath = await archiveExistingServerData({
@@ -611,19 +611,19 @@ describe("archiveExistingServerData", () => {
     });
 
     expect(archivedPath).toBe(`${dataDir}.before-move-20260915-090507`);
-    expect(await readDataFile(archivedPath, "bb.db")).toBe("standalone");
-    expect(await readdir(parent)).toEqual([".bb.before-move-20260915-090507"]);
+    expect(await readDataFile(archivedPath, "sandy.db")).toBe("standalone");
+    expect(await readdir(parent)).toEqual([".sandy.before-move-20260915-090507"]);
 
-    await writeDataFile(dataDir, "bb.db", "second standalone");
+    await writeDataFile(dataDir, "sandy.db", "second standalone");
     const secondArchivedPath = await archiveExistingServerData({
       dataDir,
       now,
     });
 
     expect(secondArchivedPath).toBe(`${dataDir}.before-move-20260915-090507-2`);
-    expect(await readDataFile(secondArchivedPath, "bb.db")).toBe(
+    expect(await readDataFile(secondArchivedPath, "sandy.db")).toBe(
       "second standalone",
     );
-    expect(await readDataFile(archivedPath, "bb.db")).toBe("standalone");
+    expect(await readDataFile(archivedPath, "sandy.db")).toBe("standalone");
   });
 });

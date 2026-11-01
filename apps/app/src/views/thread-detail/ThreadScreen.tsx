@@ -7,18 +7,18 @@ import {
   type ReactNode,
 } from "react";
 import { nanoid } from "nanoid";
-import { defaultAppSettings, type Environment } from "@bb/domain";
-import type { ThreadResponse, TimelineRow } from "@bb/server-contract";
+import { defaultAppSettings, type Environment } from "@sandy/domain";
+import type { ThreadResponse, TimelineRow } from "@sandy/server-contract";
 import {
   appendQuoteAndAttachmentsToDraft,
   promptInputToDraft,
   type PromptDraftAttachment,
   type PromptDraftState,
   type PromptMentionLinkResolver,
-} from "@bb/client-core";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/client-core";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   isRunningThreadRuntimeDisplayStatus,
   ThreadTimelineSurface,
@@ -52,7 +52,7 @@ import {
 } from "@/components/promptbox/banner/ThreadPromptContextBanner";
 import type { EnvironmentSummaryChrome } from "@/lib/environment-workspace-display";
 import type { MachineRemovalStatus } from "@/lib/machine-removal-display";
-import type { WorkspaceCheckoutDisplay } from "@bb/shared-ui/lib/workspace-checkout-display";
+import type { WorkspaceCheckoutDisplay } from "@sandy/shared-ui/lib/workspace-checkout-display";
 import { createCoreComposerActions } from "@/lib/plugin-composer-handle";
 import {
   requestComposerFocus,

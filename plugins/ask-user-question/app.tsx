@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   definePluginApp,
   type PluginPendingInteractionProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Button } from "@/components/ui/button";
 import { QuestionForm } from "@/components/ui/question-form";
 import {

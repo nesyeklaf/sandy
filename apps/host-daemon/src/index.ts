@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadHostDaemonStartConfig } from "@bb/config/host-daemon";
-import { loadHostDaemonEntrypointConfig } from "@bb/config/host-daemon-entrypoint";
+import { loadHostDaemonStartConfig } from "@sandy/config/host-daemon";
+import { loadHostDaemonEntrypointConfig } from "@sandy/config/host-daemon-entrypoint";
 import {
   installSafeProcessDiagnostics,
   installSocketTypeOfServiceGuard,
   writeSafeProcessDiagnosticReport,
-} from "@bb/process-utils";
+} from "@sandy/process-utils";
 import { hasMachineSuspensionMarker } from "./suspension-marker.js";
 
 interface ReportStartupFailureArgs {
@@ -20,7 +20,7 @@ type MainFailureHandler = (error: unknown) => void;
 const entrypointDir = dirname(fileURLToPath(import.meta.url));
 
 function resolveEntrypointBridgeBundleDir(): string | undefined {
-  return existsSync(join(entrypointDir, "bb-provider-bridge-worker.mjs"))
+  return existsSync(join(entrypointDir, "sandy-provider-bridge-worker.mjs"))
     ? entrypointDir
     : undefined;
 }
@@ -56,15 +56,15 @@ async function runHostDaemonEntrypoint(): Promise<void> {
   }
   const hostDaemonModule = await import("./start-host-daemon.js");
   const daemon = await hostDaemonModule.startHostDaemon({
-    bbExecutableDirectory: hostDaemonEntrypointConfig.BB_CLI_DIR,
+    sandyExecutableDirectory: hostDaemonEntrypointConfig.SANDY_CLI_DIR,
     bridgeBundleDir:
-      hostDaemonEntrypointConfig.BB_BRIDGE_DIR ??
+      hostDaemonEntrypointConfig.SANDY_BRIDGE_DIR ??
       resolveEntrypointBridgeBundleDir(),
-    serverHeaders: hostDaemonEntrypointConfig.BB_SERVER_HEADERS,
-    autoUpdate: hostDaemonEntrypointConfig.BB_HOST_DAEMON_AUTO_UPDATE,
-    supervised: hostDaemonEntrypointConfig.BB_HOST_DAEMON_SUPERVISED,
-    enrollKey: hostDaemonEntrypointConfig.BB_HOST_ENROLL_KEY,
-    hostId: hostDaemonEntrypointConfig.BB_HOST_ID,
+    serverHeaders: hostDaemonEntrypointConfig.SANDY_SERVER_HEADERS,
+    autoUpdate: hostDaemonEntrypointConfig.SANDY_HOST_DAEMON_AUTO_UPDATE,
+    supervised: hostDaemonEntrypointConfig.SANDY_HOST_DAEMON_SUPERVISED,
+    enrollKey: hostDaemonEntrypointConfig.SANDY_HOST_ENROLL_KEY,
+    hostId: hostDaemonEntrypointConfig.SANDY_HOST_ID,
   });
   await daemon.waitUntilStopped();
 }

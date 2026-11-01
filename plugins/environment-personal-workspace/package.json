@@ -1,13 +1,13 @@
 {
-  "name": "bb-plugin-environment-personal-workspace",
+  "name": "sandy-plugin-environment-personal-workspace",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Give every thread without a project its own personal workspace on the machine",
   "engines": {
-    "bb": ">=0.0"
+    "sandy": ">=0.0"
   },
-  "bb": {
+  "sandy": {
     "name": "Personal workspace",
     "description": "Give every thread without a project its own personal workspace on the machine",
     "branding": {
@@ -17,20 +17,20 @@
     "host": "./host.ts"
   },
   "keywords": [
-    "bb-plugin"
+    "sandy-plugin"
   ],
   "scripts": {
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsrs --noEmit",
     "lint": "oxlint --ignore-pattern node_modules --ignore-pattern dist .",
-    "prepare:bundled": "bb-plugin-build prepare-bundled"
+    "prepare:bundled": "sandy-plugin-build prepare-bundled"
   },
   "dependencies": {
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@bb/plugin-build": "workspace:*",
-    "@get-bb/plugin-sdk": "workspace:*",
+    "@sandy/plugin-build": "workspace:*",
+    "@sandy-sdk/plugin-sdk": "workspace:*",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.0.0",
     "better-sqlite3": "12.10.0",

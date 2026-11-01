@@ -3,17 +3,17 @@ import {
   experimental_useThreadContextKind,
   type ExperimentalThreadContextSegmentInput,
   type ExperimentalThreadContextSegmentProps,
-} from "@get-bb/plugin-sdk/app";
-import { BranchPicker } from "@bb/shared-ui/branch-picker";
-import { Icon } from "@bb/shared-ui/icon";
+} from "@sandy-sdk/plugin-sdk/app";
+import { BranchPicker } from "@sandy/shared-ui/branch-picker";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   getMergeBaseBranchCandidateGroups,
 } from "../merge-base-branch-candidates";
-import { BannerActionSlot } from "@bb/shared-ui/prompt-banner-actions";
+import { BannerActionSlot } from "@sandy/shared-ui/prompt-banner-actions";
 import {
   AnimatedDisclosureBody,
   SectionToggleButton,
-} from "@bb/shared-ui/prompt-stack-disclosure";
+} from "@sandy/shared-ui/prompt-stack-disclosure";
 import {
   CHANGED_FILES_KIND_PREFIX,
   formatChangeSummary,
@@ -21,8 +21,8 @@ import {
   selectWorkspaceChangedFilesSection,
   toChangeTally,
   type WorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
-import { WorkspaceChangesList } from "@bb/shared-ui/workspace-changes-list";
+} from "@sandy/shared-ui/workspace-change-summary";
+import { WorkspaceChangesList } from "@sandy/shared-ui/workspace-changes-list";
 import { useChangedFileActions } from "../changed-files.js";
 import { useMergeBase, type MergeBaseState } from "../merge-base.js";
 import { useGitStatus, useShowGitChanges } from "../queries.js";

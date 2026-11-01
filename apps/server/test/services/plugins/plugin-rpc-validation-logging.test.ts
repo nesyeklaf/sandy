@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it, vi } from "vitest";
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import { createTestAppHarness } from "../../helpers/test-app.js";
 
@@ -11,15 +11,15 @@ async function rpcValidationWarning(
   input: unknown,
 ): Promise<string | undefined> {
   const harness = await createTestAppHarness();
-  const rootDir = await mkdtemp(join(tmpdir(), "bb-rpc-diagnostics-"));
+  const rootDir = await mkdtemp(join(tmpdir(), "sandy-rpc-diagnostics-"));
   const warn = vi.spyOn(harness.deps.logger, "warn");
   try {
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-rpc-diagnostics",
+        name: "sandy-plugin-rpc-diagnostics",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "RPC diagnostics fixture",
           description: "Validation logging fixture",
           branding: { icon: "Zap" },
@@ -51,9 +51,11 @@ async function rpcValidationWarning(
       },
     );
     expect(response.status).toBe(400);
-    return warn.mock.calls
-      .map(([message]) => String(message))
-      .find((message) => message.includes("rpc inspect failed:"));
+    const call = warn.mock.calls.find((args) =>
+      String(args.at(-1)).includes("rpc inspect failed:"),
+    );
+    expect(call?.[0]).toEqual({ pluginId: "rpc-diagnostics" });
+    return call === undefined ? undefined : String(call.at(-1));
   } finally {
     warn.mockRestore();
     await harness.pluginService.stop();

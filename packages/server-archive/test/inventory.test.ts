@@ -1,6 +1,6 @@
 import { mkdir, symlink } from "node:fs/promises";
 import path from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { describe, expect, it } from "vitest";
 import { listServerOwnedEntries } from "../src/index.js";
 import {
@@ -30,7 +30,6 @@ describe("listServerOwnedEntries", () => {
       "AGENTS.md",
       "attachments",
       "auth-secret",
-      "bb.db",
       "config.json",
       "env.json",
       "machine-environment-key",
@@ -41,6 +40,7 @@ describe("listServerOwnedEntries", () => {
       "plugins/docs/secrets",
       "plugins/npm",
       "plugins/snapshots",
+      "sandy.db",
       "skills",
       "theme",
     ]);
@@ -49,10 +49,10 @@ describe("listServerOwnedEntries", () => {
         .filter((file) => file.sqliteDatabase)
         .map((file) => file.path)
         .sort(),
-    ).toEqual(["bb.db", "plugins/docs/data.db"]);
-    const database = files.find((file) => file.path === "bb.db");
-    expect(database?.absolutePath).toBe(path.join(dataDir, "bb.db"));
-    expect(database?.sizeBytes).toBe(fixtureBody("bb.db").length);
+    ).toEqual(["plugins/docs/data.db", "sandy.db"]);
+    const database = files.find((file) => file.path === "sandy.db");
+    expect(database?.absolutePath).toBe(path.join(dataDir, "sandy.db"));
+    expect(database?.sizeBytes).toBe(fixtureBody("sandy.db").length);
     expect(inventory.skippedPaths).toEqual([]);
   });
 
@@ -62,7 +62,7 @@ describe("listServerOwnedEntries", () => {
     await writeFixtureFile(outside, "secret.txt", "x");
     await writeFixtureFile(outside, "vault/notes.md", "x");
     await writeFixtureFile(dataDir, "attachments/real.png", "x");
-    await writeFixtureFile(dataDir, "bb.db/nested", "x");
+    await writeFixtureFile(dataDir, "sandy.db/nested", "x");
     await symlink(
       path.join(outside, "secret.txt"),
       path.join(dataDir, "attachments", "linked.png"),
@@ -97,8 +97,8 @@ describe("listServerOwnedEntries", () => {
     expect(inventory.skippedPaths).toEqual([
       "attachments/linked.png",
       "auth-secret",
-      "bb.db",
       "plugins/dev-plugin",
+      "sandy.db",
       "skills",
     ]);
   });

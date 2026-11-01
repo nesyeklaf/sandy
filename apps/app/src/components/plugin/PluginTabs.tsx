@@ -12,7 +12,7 @@ import {
   usePluginSlots,
   type PluginTabSlot,
 } from "@/lib/plugin-slots";
-import type { ExperimentalThreadEnvironment } from "@get-bb/plugin-sdk";
+import type { ExperimentalThreadEnvironment } from "@sandy-sdk/plugin-sdk";
 import { PluginSlotMount } from "./PluginSlotMount";
 
 export type PluginTabContext =

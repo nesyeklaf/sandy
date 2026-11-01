@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getExperiments } from "@bb/db";
+import { getExperiments } from "@sandy/db";
 import {
   defaultAppSettings,
   defaultExperiments,
   earlyAdopterExperiments,
   experimentsSchema,
-} from "@bb/domain";
-import { systemConfigResponseSchema } from "@bb/server-contract";
+} from "@sandy/domain";
+import { systemConfigResponseSchema } from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { type TestAppHarness, withTestHarness } from "../helpers/test-app.js";
 

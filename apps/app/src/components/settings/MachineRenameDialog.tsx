@@ -1,14 +1,14 @@
 import { useState, type FormEvent, type RefObject } from "react";
-import type { Host } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { Host } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@bb/shared-ui/dialog";
-import { Input } from "@bb/shared-ui/input";
-import { RenameDialog } from "@bb/shared-ui/rename-dialog";
+} from "@sandy/shared-ui/dialog";
+import { Input } from "@sandy/shared-ui/input";
+import { RenameDialog } from "@sandy/shared-ui/rename-dialog";
 
 const HOST_NAME_MAX_LENGTH = 100;
 

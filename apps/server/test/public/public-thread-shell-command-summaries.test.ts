@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { setAppSettings } from "@bb/db";
-import { defaultAppSettings, turnScope } from "@bb/domain";
+import { setAppSettings } from "@sandy/db";
+import { defaultAppSettings, turnScope } from "@sandy/domain";
 import {
   threadTimelineResponseSchema,
   timelineTurnSummaryDetailsResponseSchema,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { readJson } from "../helpers/json.js";
 import { seedEvent, seedThreadFixture } from "../helpers/seed.js";
 import { withTestHarness } from "../helpers/test-app.js";

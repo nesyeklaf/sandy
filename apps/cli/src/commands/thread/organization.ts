@@ -1,11 +1,11 @@
 import { Command } from "commander";
-import { updateThreadTabsRequestSchema } from "@bb/server-contract";
+import { updateThreadTabsRequestSchema } from "@sandy/server-contract";
 import {
   queuedMessageWaitHolderSchema,
   type PromptInput,
   type QueuedMessageWaitHolder,
-} from "@bb/domain";
-import type { ThreadQueuedMessagesResult } from "@bb/sdk";
+} from "@sandy/domain";
+import type { ThreadQueuedMessagesResult } from "@sandy/sdk";
 import {
   columnWidths,
   printBorderlessTable,
@@ -14,7 +14,7 @@ import {
 import { describeQueueWait } from "./actions.js";
 import { formatQueueSendCountdown } from "./send-time.js";
 import { action } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { requireTextInput, TEXT_FILE_HELP_SUFFIX } from "../../text-input.js";
 import {
   collectOption,
@@ -141,7 +141,7 @@ function printQueueTable(rows: ThreadQueuedMessagesResult): void {
   for (const row of rows) {
     if (row.failureReason === null) continue;
     console.log(`Failed ${row.id}: ${row.failureReason}`);
-    console.log(`Retry: bb thread queue send ${row.threadId} ${row.id}`);
+    console.log(`Retry: sandy thread queue send ${row.threadId} ${row.id}`);
   }
 }
 
@@ -175,7 +175,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (opts: JsonOptions) => {
-        const sections = await createCliBbSdk(getUrl()).threadSections.list();
+        const sections = await createCliSandySdk(getUrl()).threadSections.list();
         if (outputJson(opts, sections)) return;
         if (sections.length === 0) {
           console.log("No thread sections found");
@@ -191,7 +191,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (name: string, opts: JsonOptions) => {
-        const result = await createCliBbSdk(getUrl()).threadSections.create({
+        const result = await createCliSandySdk(getUrl()).threadSections.create({
           name,
         });
         if (outputJson(opts, result)) return;
@@ -205,7 +205,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, name: string, opts: JsonOptions) => {
-        const result = await createCliBbSdk(getUrl()).threadSections.update({
+        const result = await createCliSandySdk(getUrl()).threadSections.update({
           id,
           name,
         });
@@ -226,7 +226,7 @@ export function registerOrganizationCommands(
           !(await confirmDestructiveAction(`Delete thread section ${id}?`))
         )
           return;
-        const result = await createCliBbSdk(getUrl()).threadSections.delete({
+        const result = await createCliSandySdk(getUrl()).threadSections.delete({
           id,
         });
         if (outputJson(opts, result)) return;
@@ -246,7 +246,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (query: string, opts: SearchOptions) => {
-        const result = await createCliBbSdk(getUrl()).threads.search({
+        const result = await createCliSandySdk(getUrl()).threads.search({
           query,
           limitPerGroup: parsePositiveInteger(
             opts.limit,
@@ -266,7 +266,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: HistoryOptions) => {
-        const result = await createCliBbSdk(getUrl()).threads.promptHistory({
+        const result = await createCliSandySdk(getUrl()).threads.promptHistory({
           threadId: id,
           limit: parsePositiveInteger(opts.limit, "--limit"),
         });
@@ -282,12 +282,12 @@ export function registerOrganizationCommands(
     parent
       .command(`${name} [id]`)
       .description(`Mark a thread ${name}`)
-      .option("--self", "Target the current thread (from BB_THREAD_ID)")
+      .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
       .option("--json", "Print machine-readable JSON output")
       .action(
         action(async (id: string | undefined, opts: SelfOptions) => {
           const threadId = requireThreadIdOrSelf(id, opts);
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const result = markRead
             ? await sdk.threads.markRead({ threadId })
             : await sdk.threads.markUnread({ threadId });
@@ -305,7 +305,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (id: string, opts: ReorderPinnedOptions) => {
-        const result = await createCliBbSdk(getUrl()).threads.reorderPinned({
+        const result = await createCliSandySdk(getUrl()).threads.reorderPinned({
           threadId: id,
           previousThreadId: opts.after ?? null,
           nextThreadId: opts.before ?? null,
@@ -328,7 +328,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (threadId: string | undefined, opts: QueueListOptions) => {
-        const sdk = createCliBbSdk(getUrl());
+        const sdk = createCliSandySdk(getUrl());
         const result =
           threadId === undefined
             ? await sdk.threads.queue.list({
@@ -379,7 +379,7 @@ export function registerOrganizationCommands(
             inline: inlineMessage,
             inlineLabel: "<message>",
           });
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const input = await uploadClientAttachmentInputs({
             input: buildPromptInputs({
               message,
@@ -436,7 +436,7 @@ export function registerOrganizationCommands(
             inline: inlineMessage,
             inlineLabel: "<message>",
           });
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const queuedMessages = sdk.threads.queuedMessages;
           const existing = (await queuedMessages.list({ threadId })).find(
             (queuedMessage) => queuedMessage.id === messageId,
@@ -477,7 +477,7 @@ export function registerOrganizationCommands(
         async (threadId: string, messageId: string, opts: QueueSendOptions) => {
           if (opts.mode !== "auto" && opts.mode !== "steer")
             throw new Error("--mode must be auto or steer.");
-          const result = await createCliBbSdk(
+          const result = await createCliSandySdk(
             getUrl(),
           ).threads.queuedMessages.send({
             threadId,
@@ -501,7 +501,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (threadId: string, messageId: string, opts: JsonOptions) => {
-        const result = await createCliBbSdk(
+        const result = await createCliSandySdk(
           getUrl(),
         ).threads.queuedMessages.delete({
           threadId,
@@ -525,7 +525,7 @@ export function registerOrganizationCommands(
           messageId: string,
           opts: QueueReorderOptions,
         ) => {
-          const result = await createCliBbSdk(
+          const result = await createCliSandySdk(
             getUrl(),
           ).threads.queuedMessages.reorder({
             threadId,
@@ -562,7 +562,7 @@ export function registerOrganizationCommands(
             .filter(Boolean);
           if (prefix.length === 0)
             throw new Error("--prefix must contain at least one message id.");
-          const result = await createCliBbSdk(
+          const result = await createCliSandySdk(
             getUrl(),
           ).threads.queuedMessages.setGroupBoundary({
             threadId,
@@ -586,7 +586,7 @@ export function registerOrganizationCommands(
     .option("--json", "Print machine-readable JSON output")
     .action(
       action(async (threadId: string, opts: JsonOptions) => {
-        const result = await createCliBbSdk(getUrl()).threads.tabs.get({
+        const result = await createCliSandySdk(getUrl()).threads.tabs.get({
           threadId,
         });
         if (outputJson(opts, result)) return;
@@ -612,7 +612,7 @@ export function registerOrganizationCommands(
             expectedRevision: Number(opts.expectedRevision),
             tabs: JSON.parse(opts.tabsJson),
           });
-          const result = await createCliBbSdk(getUrl()).threads.tabs.update({
+          const result = await createCliSandySdk(getUrl()).threads.tabs.update({
             threadId,
             ...request,
           });

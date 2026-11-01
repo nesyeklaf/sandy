@@ -11,20 +11,20 @@ import {
 import {
   makeHost as makeHostFixture,
   makeThreadListEntry,
-} from "@bb/test-helpers/domain-fixtures";
-import type { SystemConfigResponse } from "@bb/server-contract";
+} from "@sandy/test-helpers/domain-fixtures";
+import type { SystemConfigResponse } from "@sandy/server-contract";
 import type {
   ProviderCliKey,
   ProviderCliStatus,
   ProviderCliStatusResponse,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { defaultExperiments, type Host, type LastServerMove } from "@bb/domain";
+import { defaultExperiments, type Host, type LastServerMove } from "@sandy/domain";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sdk } from "@/lib/sdk";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { makeSystemConfig } from "@/test/fixtures/system-config";
-import { makeProviderInfo } from "@bb/test-helpers/domain-fixtures";
+import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
 import { MachineSettingsView } from "./MachineSettingsView";
 
 vi.mock("@/lib/sdk", () => ({
@@ -389,7 +389,7 @@ describe("MachineSettingsView", () => {
       targetHostId: HOST_ID,
       targetHostName: "dev-vm",
       serverUrl: null,
-      targetDataDir: "/home/sawyer/.bb-machines/workstation",
+      targetDataDir: "/home/sawyer/.sandy-machines/workstation",
       existingTargetServerData: null,
       items: [],
       canMove: true,

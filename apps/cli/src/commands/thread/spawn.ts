@@ -8,10 +8,10 @@ import {
   type ThreadParentNotifications,
   type JsonValue,
   type GitBranchSelection,
-} from "@bb/domain";
-import type { CreateThreadEnvironmentArgs } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { CreateThreadEnvironmentArgs } from "@sandy/server-contract";
 import { action, CliUsageError } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { missingProjectHint } from "../../context-hints.js";
 import { requireTextInput, TEXT_FILE_HELP_SUFFIX } from "../../text-input.js";
 import {
@@ -126,7 +126,7 @@ function resolveSpawnParentThreadId(args: {
   if (args.parentSelf) {
     const selfThreadId = resolveContextThreadId();
     if (!selfThreadId) {
-      throw new Error("--parent-self requires BB_THREAD_ID to be set.");
+      throw new Error("--parent-self requires SANDY_THREAD_ID to be set.");
     }
     return selfThreadId;
   }
@@ -236,7 +236,7 @@ async function buildProviderSpawnEnvironment(args: {
     );
   }
   const requested = args.environmentProvider.trim();
-  const providers = await createCliBbSdk(
+  const providers = await createCliSandySdk(
     args.serverUrl,
   ).environments.listProviders({ projectId: args.projectId });
   const match = providers.find((provider) => provider.id === requested);
@@ -252,7 +252,7 @@ async function buildProviderSpawnEnvironment(args: {
       inputs = {};
     } else {
       throw new Error(
-        `The '${match.id}' environment provider needs --environment-inputs <json>; \`bb environment providers --json\` shows its schema.`,
+        `The '${match.id}' environment provider needs --environment-inputs <json>; \`sandy environment providers --json\` shows its schema.`,
       );
     }
   }
@@ -272,7 +272,7 @@ async function buildProviderSpawnEnvironment(args: {
         if (match.machineAcceptsEmptyInputs) machineInputs = {};
         else {
           throw new Error(
-            `The '${match.machineProviderId}' machine provider needs --machine-inputs <json>; \`bb environment providers --json\` shows its schema.`,
+            `The '${match.machineProviderId}' machine provider needs --machine-inputs <json>; \`sandy environment providers --json\` shows its schema.`,
           );
         }
       }
@@ -366,7 +366,7 @@ export function registerSpawnCommand(
       "Persisted non-secret inputs for --new-machine or a composed --environment-provider; store credentials in plugin settings",
     )
     .option("--parent-thread <id>", "Parent thread ID for worker thread links")
-    .option("--parent-self", "Parent the new thread to BB_THREAD_ID")
+    .option("--parent-self", "Parent the new thread to SANDY_THREAD_ID")
     .option("--provider <id>", PROVIDER_HELP)
     .option(
       "--model <model>",
@@ -380,7 +380,7 @@ export function registerSpawnCommand(
     .option("--service-tier <tier>", SERVICE_TIER_HELP)
     .option(
       "--option <option=value>",
-      "Choose a value for an option the provider's model lists (see bb provider models); use true or false for an on/off option (repeatable)",
+      "Choose a value for an option the provider's model lists (see sandy provider models); use true or false for an on/off option (repeatable)",
       (value: string, previous: string[] = []) => [...previous, value],
     )
     .option("--permission-mode <mode>", PERMISSION_MODE_HELP)
@@ -406,11 +406,11 @@ export function registerSpawnCommand(
     .option("--parent-notifications <value>", PARENT_NOTIFICATIONS_HELP)
     .option(
       "--environment-provider <id>",
-      "Run on an environment provider by id (list them with `bb environment providers`)",
+      "Run on an environment provider by id (list them with `sandy environment providers`)",
     )
     .option(
       "--environment-inputs <json>",
-      "JSON value for an --environment-provider that declares inputs (`bb environment providers --json` shows the schema)",
+      "JSON value for an --environment-provider that declares inputs (`sandy environment providers --json` shows the schema)",
     )
     .option("--send-at <when>", SEND_AT_HELP)
     .option("--origin-kind <kind>", "Thread origin: fork")
@@ -471,7 +471,7 @@ export function registerSpawnCommand(
         }
         const machineProvider = opts.newMachine
           ? (
-              await createCliBbSdk(getUrl()).hosts.experimental_listProviders()
+              await createCliSandySdk(getUrl()).hosts.experimental_listProviders()
             ).find((provider) => provider.id === opts.newMachine?.trim())
           : undefined;
         if (opts.newMachine && machineProvider === undefined) {
@@ -491,7 +491,7 @@ export function registerSpawnCommand(
           if (machineProvider.acceptsEmptyInputs) machineInputs = {};
           else {
             throw new Error(
-              `The '${machineProvider?.id}' machine provider needs --machine-inputs <json>; \`bb machine providers --json\` shows its schema.`,
+              `The '${machineProvider?.id}' machine provider needs --machine-inputs <json>; \`sandy machine providers --json\` shows its schema.`,
             );
           }
         }
@@ -588,7 +588,7 @@ export function registerSpawnCommand(
 
         let thread: Thread;
         try {
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const input = await uploadClientAttachmentInputs({
             input: buildPromptInputs({
               message: prompt,
@@ -617,8 +617,8 @@ export function registerSpawnCommand(
             startedOnBehalfOf: null,
             originKind: opts.originKind ?? null,
             ...(parentThreadId ? { parentThreadId } : {}),
-            ...(process.env.BB_THREAD_ID
-              ? { senderThreadId: process.env.BB_THREAD_ID }
+            ...(process.env.SANDY_THREAD_ID
+              ? { senderThreadId: process.env.SANDY_THREAD_ID }
               : {}),
             ...(parentNotifications ? { parentNotifications } : {}),
             ...(opts.lifecycleOwnerThread !== undefined

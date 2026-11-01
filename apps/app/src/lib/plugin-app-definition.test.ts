@@ -3,12 +3,12 @@ import type {
   ExperimentalSidebarFooterDisclosureController,
   PluginAppSlots,
   PluginSidebarFooterActionContext,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import {
   getCollectedSidebarFooterItems,
   type LegacyThreadHeaderActionRegistration,
-} from "@get-bb/plugin-sdk/internal/plugin-app-collector";
-import { loadPluginApp } from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
+import { loadPluginApp } from "@sandy-sdk/plugin-sdk/testing/app";
 import {
   collectPluginAppRegistrations,
   definePluginApp,
@@ -29,7 +29,7 @@ describe("definePluginApp", () => {
     const definition = definePluginApp(() => {});
     expect(isPluginAppDefinition(definition)).toBe(true);
     expect(isPluginAppDefinition({})).toBe(false);
-    expect(isPluginAppDefinition({ __bbPluginApp: true })).toBe(false);
+    expect(isPluginAppDefinition({ __sandyPluginApp: true })).toBe(false);
     expect(isPluginAppDefinition(null)).toBe(false);
   });
 

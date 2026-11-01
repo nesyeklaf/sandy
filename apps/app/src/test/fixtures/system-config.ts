@@ -3,8 +3,8 @@ import {
   defaultAppTheme,
   defaultExperiments,
   defaultFeatureFlags,
-} from "@bb/domain";
-import type { SystemConfigResponse } from "@bb/server-contract";
+} from "@sandy/domain";
+import type { SystemConfigResponse } from "@sandy/server-contract";
 
 export function makeSystemConfig(
   overrides: Partial<SystemConfigResponse> = {},
@@ -32,7 +32,7 @@ export function makeSystemConfig(
     primaryHostId: null,
     primaryHostPlatform: null,
     voiceTranscriptionEnabled: false,
-    dataDir: "/tmp/bb-test",
+    dataDir: "/tmp/sandy-test",
     ...overrides,
   };
 }

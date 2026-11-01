@@ -1,9 +1,9 @@
 import { memo, Suspense, useMemo } from "react";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import type {
   ExperimentalMessageMetadataContext,
   ExperimentalMessageMetadataPlacement,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type { PluginMessageMetadataSlot } from "@/lib/plugin-slots.js";
 import { PluginSlotMount } from "../../plugin/PluginSlotMount.js";
 import {

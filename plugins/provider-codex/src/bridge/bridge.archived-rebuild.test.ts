@@ -2,8 +2,8 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@get-bb/plugin-sdk/provider-bridge/testing";
-import type { BridgeJsonRpcOutputMessage } from "@get-bb/plugin-sdk/provider-bridge/testing";
+import { experimental_createBridgeJsonRpcTestHarness as createBridgeJsonRpcTestHarness } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
+import type { BridgeJsonRpcOutputMessage } from "@sandy-sdk/plugin-sdk/provider-bridge/testing";
 import { handleLine } from "./bridge.js";
 import {
   cleanupBridgeProcessTest,
@@ -36,7 +36,7 @@ let archiveStatePath = "";
 let processLogPath = "";
 
 beforeEach(() => {
-  workspaceDir = mkdtempSync(join(tmpdir(), "bb-codex-archived-rebuild-"));
+  workspaceDir = mkdtempSync(join(tmpdir(), "sandy-codex-archived-rebuild-"));
   archiveStatePath = join(workspaceDir, "fake-codex-archived.json");
   processLogPath = join(workspaceDir, "app-server-processes.log");
   const scriptPath = join(workspaceDir, "fake-codex-script.json");
@@ -72,7 +72,7 @@ async function resumeThread(): Promise<void> {
   expect(response.error).toBeUndefined();
 }
 
-function archiveOutsideBb(): void {
+function archiveOutsideSandy(): void {
   writeFileSync(archiveStatePath, JSON.stringify([PROVIDER_THREAD_ID]));
 }
 
@@ -150,7 +150,7 @@ async function expectRetryAfterUnarchiveSucceeds(
 
 it("keeps the thread resumable when a settings-change rebuild hits an externally archived rollout", async () => {
   await resumeThread();
-  archiveOutsideBb();
+  archiveOutsideSandy();
 
   await expectArchivedHint(await startTurn(2, changedSessionOptions));
   await expectRetryAfterUnarchiveSucceeds(changedSessionOptions);
@@ -177,7 +177,7 @@ it("keeps the thread resumable when the rebuild after the child died hits an ext
     }
     await new Promise((resolveTick) => setTimeout(resolveTick, 20));
   }
-  archiveOutsideBb();
+  archiveOutsideSandy();
 
   await expectArchivedHint(await startTurn(2, sessionOptions));
   await expectRetryAfterUnarchiveSucceeds(sessionOptions);

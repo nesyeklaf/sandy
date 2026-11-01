@@ -1,4 +1,4 @@
-import type { HostDaemonCommandResult } from "@bb/host-daemon-contract";
+import type { HostDaemonCommandResult } from "@sandy/host-daemon-contract";
 import {
   CommandDispatchError,
   type CommandDispatchOptions,

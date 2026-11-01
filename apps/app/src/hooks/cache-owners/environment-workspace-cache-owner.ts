@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { optimisticQueryUpdate } from "@bb/query-tags";
-import type { Environment } from "@bb/domain";
+import { optimisticQueryUpdate } from "@sandy/query-tags";
+import type { Environment } from "@sandy/domain";
 import {
   environmentQueryKey,
   threadSearchQueryKeyPrefix,

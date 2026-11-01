@@ -13,18 +13,18 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@bb/domain";
-import { scaffoldPlugin } from "@bb/templates/plugin-scaffold";
+import { PLUGIN_SDK_MAJOR, PLUGIN_SDK_VERSION } from "@sandy/domain";
+import { scaffoldPlugin } from "@sandy/templates/plugin-scaffold";
 import {
   buildPluginApp,
   resolvePluginBuildToolchain,
   type PluginBuildToolchain,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 function testToolchain() {
-  return resolvePluginBuildToolchain(join(tmpdir(), "bb-toolchain-unused"));
+  return resolvePluginBuildToolchain(join(tmpdir(), "sandy-toolchain-unused"));
 }
 
-const TEST_BB_VERSION = "0.9.0-test";
+const TEST_SANDY_VERSION = "0.9.0-test";
 
 async function failingTailwindToolchain(
   dir: string,
@@ -42,10 +42,10 @@ async function failingTailwindToolchain(
 
 const FIXTURE_PACKAGE_JSON = JSON.stringify(
   {
-    name: "bb-plugin-fixture",
+    name: "sandy-plugin-fixture",
     version: "0.1.0",
     type: "module",
-    bb: {
+    sandy: {
       name: "Build fixture",
       description: "Plugin app build fixture.",
       branding: { icon: "Zap" },
@@ -60,7 +60,7 @@ const FIXTURE_PACKAGE_JSON = JSON.stringify(
 const FIXTURE_APP_TSX = `
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { definePluginApp } from "@get-bb/plugin-sdk/app";
+import { definePluginApp } from "@sandy-sdk/plugin-sdk/app";
 
 void createRoot;
 
@@ -80,7 +80,7 @@ describe("buildPluginApp", () => {
   let root: string;
 
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), "bb-plugin-build-"));
+    root = await mkdtemp(join(tmpdir(), "sandy-plugin-build-"));
   });
 
   afterEach(async () => {
@@ -97,13 +97,13 @@ describe("buildPluginApp", () => {
     await writeFixture();
     const result = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
 
     const js = await readFile(result.jsPath, "utf8");
     expect(js).toMatch(/export\s*\{/);
-    expect(js).toContain("globalThis.__bbPluginRuntime");
+    expect(js).toContain("globalThis.__sandyPluginRuntime");
     for (const slot of [
       "react",
       "reactDomClient",
@@ -128,10 +128,10 @@ describe("buildPluginApp", () => {
     expect(css).toContain("--text-sm:.8125rem");
     expect(css).toContain(".animate-in");
     expect(css).toContain(".fade-in-0");
-    const scope = ":where([data-bb-plugin=fixture])";
-    expect(css).not.toContain(",[data-bb-plugin-root]");
+    const scope = ":where([data-sandy-plugin=fixture])";
+    expect(css).not.toContain(",[data-sandy-plugin-root]");
     expect(css).toContain(
-      ":where([data-bb-plugin-root]:not([data-bb-plugin]))",
+      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
     );
     expect(css).toContain(`${scope} .animate-in`);
     expect(css).toContain(`${scope}.animate-in`);
@@ -146,26 +146,26 @@ describe("buildPluginApp", () => {
       pluginVersion: "0.1.0",
       runtimeSlots: ["jsxRuntime", "pluginSdkApp", "react", "reactDomClient"],
       builtWith: {
-        bbVersion: TEST_BB_VERSION,
+        sandyVersion: TEST_SANDY_VERSION,
         pluginSdkVersion: PLUGIN_SDK_VERSION,
       },
     });
   });
 
-  it("throws at import time without the BB runtime and loads once slots are set", async () => {
+  it("throws at import time without the SANDY runtime and loads once slots are set", async () => {
     await writeFixture();
     const { jsPath } = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     const url = pathToFileURL(jsPath).href;
 
     await expect(import(/* @vite-ignore */ url)).rejects.toThrow(
-      /must be loaded by the BB app/,
+      /must be loaded by the SANDY app/,
     );
 
-    (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime = {
+    (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime = {
       react: { useState: () => [0, () => {}] },
       reactDomClient: { createRoot: () => ({}) },
       jsxRuntime: { jsx: () => ({}), jsxs: () => ({}), Fragment: {} },
@@ -175,7 +175,7 @@ describe("buildPluginApp", () => {
       const mod = await import(/* @vite-ignore */ `${url}?with-runtime`);
       expect(mod.default).toBeDefined();
     } finally {
-      delete (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime;
+      delete (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime;
     }
   });
 
@@ -195,7 +195,7 @@ describe("buildPluginApp", () => {
     );
     const { jsPath } = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     const js = await readFile(jsPath, "utf8");
@@ -224,7 +224,7 @@ describe("buildPluginApp", () => {
     );
     const { jsPath } = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     const js = await readFile(jsPath, "utf8");
@@ -236,7 +236,7 @@ describe("buildPluginApp", () => {
     await writeFixture();
     const first = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     const originalJs = await readFile(first.jsPath, "utf8");
@@ -250,7 +250,7 @@ describe("buildPluginApp", () => {
     await expect(
       buildPluginApp(
         root,
-        TEST_BB_VERSION,
+        TEST_SANDY_VERSION,
         await failingTailwindToolchain(root, "tailwind exploded"),
       ),
     ).rejects.toThrow("tailwind exploded");
@@ -265,13 +265,13 @@ describe("buildPluginApp", () => {
     ]);
   });
 
-  it("errors clearly when the plugin has no bb.app entry", async () => {
+  it("errors clearly when the plugin has no sandy.app entry", async () => {
     await writeFile(
       join(root, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-headless",
+        name: "sandy-plugin-headless",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Headless fixture",
           description: "Headless plugin build fixture.",
           branding: { icon: "Zap" },
@@ -280,48 +280,48 @@ describe("buildPluginApp", () => {
       }),
     );
     await expect(
-      buildPluginApp(root, TEST_BB_VERSION, await testToolchain()),
+      buildPluginApp(root, TEST_SANDY_VERSION, await testToolchain()),
     ).rejects.toThrow(/no frontend entry/);
   });
 
-  it("errors when bb.app points at a missing file", async () => {
+  it("errors when sandy.app points at a missing file", async () => {
     await writeFile(join(root, "package.json"), FIXTURE_PACKAGE_JSON);
     await expect(
-      buildPluginApp(root, TEST_BB_VERSION, await testToolchain()),
+      buildPluginApp(root, TEST_SANDY_VERSION, await testToolchain()),
     ).rejects.toThrow(/missing file/);
   });
 
   it("validates a path-shaped branding.icon before building", async () => {
     await writeFixture();
     const packageJson = JSON.parse(FIXTURE_PACKAGE_JSON) as {
-      bb: { branding: { icon: string } };
+      sandy: { branding: { icon: string } };
     };
-    packageJson.bb.branding.icon = "./assets/icon.svg";
+    packageJson.sandy.branding.icon = "./assets/icon.svg";
     await writeFile(
       join(root, "package.json"),
       JSON.stringify(packageJson, null, 2),
     );
 
     await expect(
-      buildPluginApp(root, TEST_BB_VERSION, await testToolchain()),
-    ).rejects.toThrow(/bb\.branding\.icon points at a missing file/);
+      buildPluginApp(root, TEST_SANDY_VERSION, await testToolchain()),
+    ).rejects.toThrow(/sandy\.branding\.icon points at a missing file/);
 
     await mkdir(join(root, "assets"));
     await writeFile(join(root, "assets", "icon.svg"), "<svg/>");
     const result = await buildPluginApp(
       root,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     expect(result.jsPath).toBe(join(root, "dist", "app.js"));
   });
 
-  it("builds the `bb plugin new` scaffold end to end", async () => {
-    const targetDir = join(root, "bb-plugin-scaffolded");
+  it("builds the `sandy plugin new` scaffold end to end", async () => {
+    const targetDir = join(root, "sandy-plugin-scaffolded");
     await scaffoldPlugin({
       targetDir,
-      packageName: "bb-plugin-scaffolded",
-      bbVersion: "0.9.0",
+      packageName: "sandy-plugin-scaffolded",
+      sandyVersion: "0.9.0",
     });
     await linkScaffoldDeps(targetDir, [
       "@radix-ui/react-checkbox",
@@ -329,15 +329,15 @@ describe("buildPluginApp", () => {
     ]);
     const result = await buildPluginApp(
       targetDir,
-      TEST_BB_VERSION,
+      TEST_SANDY_VERSION,
       await testToolchain(),
     );
     const js = await readFile(result.jsPath, "utf8");
-    expect(js).toContain("globalThis.__bbPluginRuntime");
+    expect(js).toContain("globalThis.__sandyPluginRuntime");
     const css = await readFile(result.cssPath, "utf8");
     expect(css).toContain(".rounded-md");
 
-    (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime = {
+    (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime = {
       react: createRequire(
         new URL("../../../app/package.json", import.meta.url),
       )("react"),
@@ -348,20 +348,20 @@ describe("buildPluginApp", () => {
       tailwindMerge: { twMerge: (value: string) => value },
       pluginSdkApp: {
         definePluginApp: (setup: unknown) => ({
-          __bbPluginApp: true,
+          __sandyPluginApp: true,
           setup,
         }),
-        useBbContext: () => ({ projectId: null, threadId: null }),
+        useSandyContext: () => ({ projectId: null, threadId: null }),
       },
     };
     try {
       const mod = (await import(
         /* @vite-ignore */ pathToFileURL(result.jsPath).href
-      )) as { default?: { __bbPluginApp?: unknown; setup?: unknown } };
-      expect(mod.default?.__bbPluginApp).toBe(true);
+      )) as { default?: { __sandyPluginApp?: unknown; setup?: unknown } };
+      expect(mod.default?.__sandyPluginApp).toBe(true);
       expect(typeof mod.default?.setup).toBe("function");
     } finally {
-      delete (globalThis as { __bbPluginRuntime?: unknown }).__bbPluginRuntime;
+      delete (globalThis as { __sandyPluginRuntime?: unknown }).__sandyPluginRuntime;
     }
   });
 });

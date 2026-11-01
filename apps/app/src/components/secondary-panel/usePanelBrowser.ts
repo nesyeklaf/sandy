@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { BbDesktopBrowserApi } from "@bb/desktop-contract";
-import { getDesktopBrowserApi } from "@/lib/bb-desktop";
+import type { SandyDesktopBrowserApi } from "@sandy/desktop-contract";
+import { getDesktopBrowserApi } from "@/lib/sandy-desktop";
 import {
   openUrlByPreference,
   useOpenLinksInAppBrowserPreference,
@@ -30,7 +30,7 @@ export interface PanelBrowser {
 }
 
 export function subscribeDesktopOpenRequests(
-  browserApi: Pick<BbDesktopBrowserApi, "onOpenTab" | "onScopedOpenTab"> | null,
+  browserApi: Pick<SandyDesktopBrowserApi, "onOpenTab" | "onScopedOpenTab"> | null,
   {
     browserTabIds,
     isFocused,

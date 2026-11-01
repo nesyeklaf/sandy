@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { defaultAppSettings } from "@bb/domain";
+import { defaultAppSettings } from "@sandy/domain";
 import { makeProjectWithThreadsResponse } from "@/test/fixtures/projects";
 import { resetFixedPanelTabsStateForTest } from "@/lib/fixed-panel-tabs";
 import {
@@ -48,7 +48,7 @@ vi.mock("@/components/commands/AppCommandProvider", async (importOriginal) => ({
   },
   useAppCommandShortcut: () => null,
 }));
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => false,
 }));
 vi.mock("@/components/secondary-panel/SecondaryPanelLayout", () => ({

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
-import { threadEventSchema, type ThreadEvent } from "@bb/domain";
+import { threadEventSchema, type ThreadEvent } from "@sandy/domain";
 import { replayRecording } from "./parity.js";
 
 function writeLane(
@@ -34,7 +34,7 @@ function writeLane(
 it.each(["valid", "rejected"])(
   "waits for the planned tail and reports %s events",
   async (mode) => {
-    const dir = mkdtempSync(join(tmpdir(), "bb-parity-tail-test-"));
+    const dir = mkdtempSync(join(tmpdir(), "sandy-parity-tail-test-"));
     const bridgePath = join(dir, "delayed-tail-bridge.mjs");
     const identity = {
       threadId: "thr_test",
@@ -202,7 +202,7 @@ async function waitForStartupCondition(
 }
 
 function createStartupFixture() {
-  const dir = mkdtempSync(join(tmpdir(), "bb-parity-startup-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "sandy-parity-startup-test-"));
   const bridgePath = join(dir, "startup-bridge.mjs");
   const initializeGate = join(dir, "initialize");
   const turnGate = join(dir, "turn");
@@ -353,7 +353,7 @@ it.each(["exit", "signal", "timeout", "spawn-error"] as const)(
 );
 
 function createCrashingBridgeFixture(crashes: number) {
-  const dir = mkdtempSync(join(tmpdir(), "bb-parity-crash-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "sandy-parity-crash-test-"));
   const bridgePath = join(dir, "crashing-bridge.mjs");
   const launchesPath = join(dir, "launches");
   writeLane(dir, "runtime→bridge", [

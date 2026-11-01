@@ -7,21 +7,21 @@ import {
   CarouselNext,
   CarouselPrevious,
   type CarouselApi,
-} from "@bb/shared-ui/carousel";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/carousel";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   ResourceDefinitionSection,
   ResourceListPanel,
   ResourceRow,
   ResourceRowDetailChevron,
-} from "@bb/shared-ui/resource-list";
+} from "@sandy/shared-ui/resource-list";
 import type { PluginCatalogSearchEntry } from "@/hooks/queries/plugin-catalog-queries";
 import { PluginOverviewMarkdown } from "@/components/plugin/management/PluginOverviewMarkdown";
 import { getPluginsRoutePath } from "@/lib/route-paths";
 import { PluginCardAuthorName } from "./PluginCard";
 import { PluginNameTag } from "./PluginNameTag";
-import { splitPluginDisplayName } from "@bb/domain/plugin-display-name";
+import { splitPluginDisplayName } from "@sandy/domain/plugin-display-name";
 import { catalogEntryDetailKey } from "./installed-plugin-catalog";
 import {
   CatalogEntryIconChip,
@@ -95,7 +95,7 @@ export function PluginMarketplaceDetailMetadata({
 }) {
   return (
     <>
-      {entry.marketplace === "bb-official" ? null : (
+      {entry.marketplace === "sandy-official" ? null : (
         <PluginDetailMetadataItem label="Marketplace">
           {entry.marketplaceDisplayName}
         </PluginDetailMetadataItem>
@@ -266,7 +266,7 @@ export function PluginMarketplaceListingSections({
     <>
       <PluginMarketplaceOverview entry={entry} />
       <PluginMarketplaceSource entry={entry} />
-      {entry.marketplace === "bb-official" &&
+      {entry.marketplace === "sandy-official" &&
       entry.publishedAt === undefined ? null : (
         <ResourceDefinitionSection label="Details">
           <PluginDetailMetadata>

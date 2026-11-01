@@ -1,10 +1,10 @@
 import os from "node:os";
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import {
   experimental_defineHostEntry,
   experimental_nativeRootsHostContract,
   type ExperimentalNativeRootsResolveAnswer,
-} from "@get-bb/plugin-sdk/host";
+} from "@sandy-sdk/plugin-sdk/host";
 import {
   completeCodexInference,
   transcribeCodexVoice,

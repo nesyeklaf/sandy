@@ -4,26 +4,26 @@ import type { ReactNode } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PluginContext } from "@/components/plugin/plugin-context";
-import { Dialog, DialogContent, DialogTitle } from "@bb/shared-ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@sandy/shared-ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@bb/shared-ui/tooltip";
+} from "@sandy/shared-ui/tooltip";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@bb/shared-ui/select";
+} from "@sandy/shared-ui/select";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@bb/shared-ui/context-menu";
+} from "@sandy/shared-ui/context-menu";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 function inPluginScope(children: ReactNode) {
@@ -52,16 +52,16 @@ describe("usePortalScopeProps", () => {
 
     const content = baseElement.querySelector('[role="dialog"]');
     expect(content).not.toBeNull();
-    expect(content!.getAttribute("data-bb-portaled-overlay")).toBe("");
-    expect(content!.getAttribute("data-bb-plugin-root")).toBe("");
+    expect(content!.getAttribute("data-sandy-portaled-overlay")).toBe("");
+    expect(content!.getAttribute("data-sandy-plugin-root")).toBe("");
 
-    const scoped = baseElement.querySelectorAll("[data-bb-plugin-root]");
+    const scoped = baseElement.querySelectorAll("[data-sandy-plugin-root]");
     expect(scoped.length).toBe(2);
     for (const root of scoped) {
-      expect(root.getAttribute("data-bb-plugin")).toBe("test-plugin");
+      expect(root.getAttribute("data-sandy-plugin")).toBe("test-plugin");
     }
     expect(
-      baseElement.querySelectorAll("[data-bb-portaled-overlay]").length,
+      baseElement.querySelectorAll("[data-sandy-portaled-overlay]").length,
     ).toBe(2);
   });
 
@@ -70,9 +70,9 @@ describe("usePortalScopeProps", () => {
 
     const content = baseElement.querySelector('[role="dialog"]');
     expect(content).not.toBeNull();
-    expect(content!.hasAttribute("data-bb-plugin-root")).toBe(false);
-    expect(content!.getAttribute("data-bb-portaled-overlay")).toBe("");
-    expect(baseElement.querySelectorAll("[data-bb-plugin-root]").length).toBe(
+    expect(content!.hasAttribute("data-sandy-plugin-root")).toBe(false);
+    expect(content!.getAttribute("data-sandy-portaled-overlay")).toBe("");
+    expect(baseElement.querySelectorAll("[data-sandy-plugin-root]").length).toBe(
       0,
     );
   });
@@ -90,13 +90,13 @@ describe("usePortalScopeProps", () => {
     );
 
     const tip = baseElement.querySelector(
-      '[data-bb-plugin-root][role="tooltip"], [role="tooltip"]',
+      '[data-sandy-plugin-root][role="tooltip"], [role="tooltip"]',
     );
     expect(tip).not.toBeNull();
-    const scopedTip = baseElement.querySelector("[data-bb-plugin-root]");
+    const scopedTip = baseElement.querySelector("[data-sandy-plugin-root]");
     expect(scopedTip).not.toBeNull();
-    expect(scopedTip!.getAttribute("data-bb-plugin")).toBe("test-plugin");
-    expect(scopedTip!.getAttribute("data-bb-portaled-overlay")).toBe("");
+    expect(scopedTip!.getAttribute("data-sandy-plugin")).toBe("test-plugin");
+    expect(scopedTip!.getAttribute("data-sandy-portaled-overlay")).toBe("");
   });
 
   it("stamps select content so native drag regions cannot swallow options", () => {
@@ -114,7 +114,7 @@ describe("usePortalScopeProps", () => {
     expect(
       baseElement
         .querySelector('[role="listbox"]')
-        ?.getAttribute("data-bb-portaled-overlay"),
+        ?.getAttribute("data-sandy-portaled-overlay"),
     ).toBe("");
   });
 
@@ -131,7 +131,7 @@ describe("usePortalScopeProps", () => {
     fireEvent.contextMenu(screen.getByText("Context target"));
 
     const menu = baseElement.querySelector('[role="menu"]');
-    expect(menu?.getAttribute("data-bb-portaled-overlay")).toBe("");
+    expect(menu?.getAttribute("data-sandy-portaled-overlay")).toBe("");
     expect(menu?.classList.contains("z-[70]")).toBe(true);
   });
 
@@ -150,10 +150,10 @@ describe("usePortalScopeProps", () => {
     render(inPlugin ? inPluginScope(lightbox) : lightbox);
 
     const dialog = screen.getByRole("dialog", { name: "Image preview" });
-    expect(dialog.getAttribute("data-bb-portaled-overlay")).toBe("");
-    expect(dialog.getAttribute("data-bb-plugin")).toBe(
+    expect(dialog.getAttribute("data-sandy-portaled-overlay")).toBe("");
+    expect(dialog.getAttribute("data-sandy-plugin")).toBe(
       inPlugin ? "test-plugin" : null,
     );
-    expect(dialog.hasAttribute("data-bb-plugin-root")).toBe(inPlugin);
+    expect(dialog.hasAttribute("data-sandy-plugin-root")).toBe(inPlugin);
   });
 });

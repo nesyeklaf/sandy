@@ -3,7 +3,7 @@ import {
   type ExperimentalQuestionFormAction,
   type ExperimentalQuestionFormHost,
   type ExperimentalQuestionShortcut,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
 export type QuestionFormHost = ExperimentalQuestionFormHost & {
   density: "default" | "compact";

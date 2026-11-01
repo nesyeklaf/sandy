@@ -26,10 +26,10 @@ const interact = async (
 ) => {
   await browser.reveal(selector);
   await browser.evaluate(
-    "window.__bbperf.arm(" + JSON.stringify(readyExpression) + ", 8000)",
+    "window.__sandyperf.arm(" + JSON.stringify(readyExpression) + ", 8000)",
   );
   await browser.click(selector);
-  const result = await browser.evaluate("window.__bbperf.collectArmed()");
+  const result = await browser.evaluate("window.__sandyperf.collectArmed()");
   ledger.record(
     "drawers-panels: " + name + " became usable",
     Boolean(result) &&

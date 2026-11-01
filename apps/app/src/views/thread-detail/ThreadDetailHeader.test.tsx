@@ -12,10 +12,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThreadDetailHeader } from "./ThreadDetailHeader";
 import { PaneContext, type PaneContextValue } from "./PaneContext";
 import { ThreadTitleMentionResourcesProvider } from "@/components/thread/ThreadTitleMentions";
-import { makeThreadListEntry } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadListEntry } from "@sandy/test-helpers/domain-fixtures";
 import { sdk } from "@/lib/sdk";
-import { createBbDesktopApi } from "@/test/bb-desktop-test-utils";
-import { MACOS_TITLE_BAR_TRAILING_TOGGLE_CLASS } from "@/lib/bb-desktop";
+import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
+import { MACOS_TITLE_BAR_TRAILING_TOGGLE_CLASS } from "@/lib/sandy-desktop";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ import type { ThreadDetailHeaderActionsMenuArgs } from "./ThreadDetailHeader";
 import type {
   PluginThreadActionRegistration,
   PluginThreadActionTarget,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 
 const mocks = vi.hoisted(() => ({
   renameThreadAsync: vi.fn(),
@@ -88,11 +88,11 @@ vi.mock("@/hooks/queries/system-queries", () => ({
   }),
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-compact-viewport", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-compact-viewport", () => ({
   useIsCompactViewport: () => viewportState.isCompactViewport,
 }));
 
-vi.mock("@bb/shared-ui/hooks/use-pointer-coarse", () => ({
+vi.mock("@sandy/shared-ui/hooks/use-pointer-coarse", () => ({
   usePointerCoarse: () => viewportState.isPointerCoarse,
 }));
 
@@ -175,7 +175,7 @@ afterEach(() => {
   mocks.renameThreadAsync.mockReset();
   vi.restoreAllMocks();
   window.localStorage.clear();
-  delete window.bbDesktop;
+  delete window.sandyDesktop;
 });
 
 describe("ThreadDetailHeader", () => {
@@ -687,7 +687,7 @@ describe("ThreadDetailHeader", () => {
   });
 
   it("keeps the header title out of the macOS window-drag region so double click renames", async () => {
-    window.bbDesktop = createBbDesktopApi({
+    window.sandyDesktop = createSandyDesktopApi({
       platform: "macos",
       version: "0.0.0-test",
     });
@@ -714,7 +714,7 @@ describe("ThreadDetailHeader", () => {
   });
 
   it("places the window toggle's reserved slot over the title-bar toggle so its whole box stays clickable", () => {
-    window.bbDesktop = createBbDesktopApi({
+    window.sandyDesktop = createSandyDesktopApi({
       platform: "macos",
       version: "0.0.0-test",
     });

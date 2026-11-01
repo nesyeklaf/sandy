@@ -1,5 +1,5 @@
 import type { PathSuggestion } from "./usePathSuggestions";
-import type { PromptMentionSuggestion } from "@bb/client-core";
+import type { PromptMentionSuggestion } from "@sandy/client-core";
 
 export type PathMentionSuggestion = Extract<
   PromptMentionSuggestion,

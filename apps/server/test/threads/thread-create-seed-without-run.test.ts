@@ -4,13 +4,13 @@ import {
   getEnvironment,
   getThread,
   listEvents,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   PERSONAL_PROJECT_ID,
   turnRequestEventDataSchema,
   turnScope,
   type PermissionMode,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../../src/errors.js";
 import { createThreadFromRequest } from "../../src/services/threads/thread-create.js";

@@ -4,7 +4,7 @@ import {
   type AppDefaultKeybinding,
   type AppShortcut,
   type KeyboardCommandId,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   resolvePluginCommandDefaults,
   shortcutsConflict,
@@ -36,7 +36,7 @@ const NO_BUNDLED: ReadonlySet<KeyboardCommandId> = new Set();
 describe("plugin command keybindings", () => {
   it("keeps a bundled plugin's default over another plugin's, as core bindings are kept", () => {
     const defaults = [
-      binding("plugin:bb--git/toggle-diff"),
+      binding("plugin:sandy--git/toggle-diff"),
       binding("plugin:third-party/open"),
     ];
     const result = resolvePluginCommandDefaults(
@@ -44,15 +44,15 @@ describe("plugin command keybindings", () => {
       [],
       false,
       "Linux",
-      new Set<KeyboardCommandId>(["plugin:bb--git/toggle-diff"]),
+      new Set<KeyboardCommandId>(["plugin:sandy--git/toggle-diff"]),
     );
     expect(
       applyAppKeybindingOverrides(result.defaults, []).map(
         (entry) => entry.command,
       ),
-    ).toEqual(["plugin:bb--git/toggle-diff"]);
+    ).toEqual(["plugin:sandy--git/toggle-diff"]);
     expect(result.conflicts.get("plugin:third-party/open")).toEqual([
-      "plugin:bb--git/toggle-diff",
+      "plugin:sandy--git/toggle-diff",
     ]);
   });
 

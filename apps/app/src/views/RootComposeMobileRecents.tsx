@@ -6,21 +6,21 @@ import {
   useRef,
 } from "react";
 import { useAtom } from "jotai";
-import type { ProviderInfo, ThreadListEntry } from "@bb/domain";
+import type { ProviderInfo, ThreadListEntry } from "@sandy/domain";
 import { RouteAnchor } from "@/components/ui/app-route-anchor";
 import { ThreadStatusGlyph } from "@/components/thread/ThreadStatusGlyph";
 import { ThreadActionsContextMenu } from "@/components/thread/ThreadActionsMenu";
 import { threadListEntryActionTarget } from "@/lib/thread-actions/thread-action-target";
-import { getSidebarThreadRowPaddingLeft } from "@bb/shared-ui/sidebar-row-classes";
-import { SIDEBAR_WORKING_STATUS_COLOR_CLASS } from "@bb/shared-ui/sidebar-row-classes";
-import { CHROME_SECTION_LABEL_CLASS } from "@bb/shared-ui/chrome-style-tokens";
+import { getSidebarThreadRowPaddingLeft } from "@sandy/shared-ui/sidebar-row-classes";
+import { SIDEBAR_WORKING_STATUS_COLOR_CLASS } from "@sandy/shared-ui/sidebar-row-classes";
+import { CHROME_SECTION_LABEL_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
 import {
   COARSE_POINTER_ICON_SIZE_CLASS,
   COARSE_POINTER_TEXT_BASE_CLASS,
   COARSE_POINTER_TEXT_SM_CLASS,
-} from "@bb/shared-ui/coarse-pointer-sizing";
-import { Icon } from "@bb/shared-ui/icon";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
+} from "@sandy/shared-ui/coarse-pointer-sizing";
+import { Icon } from "@sandy/shared-ui/icon";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
 import { getThreadRoutePath, isProjectlessProjectId } from "@/lib/route-paths";
 import {
   getThreadListIndicatorLabel,
@@ -30,7 +30,7 @@ import {
   type CollapsedChildActivity,
   type ProjectThreadItem,
   type ThreadListIndicatorState,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { getThreadDisplayTitle } from "@/lib/thread-title";
 import {
   ThreadTitle,
@@ -45,10 +45,10 @@ import { useSystemEnvironmentProviders } from "@/hooks/queries/environment-provi
 import {
   resolveEnvironmentDisplayName,
   type EnvironmentDisplayProviderLookup,
-} from "@bb/core-ui";
+} from "@sandy/core-ui";
 import { getProviderIconInfo } from "@/lib/provider-icon";
 import { ProviderIconMark } from "@/components/settings/ProviderIconMark";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { usePromptDraftInputThreadIds } from "@/hooks/usePromptDraftStorage";
 import { mobileRecentsCollapsedThreadIdsAtom } from "./mobile-recents-collapse";
 

@@ -4,12 +4,12 @@ import {
   providerResolvedNativeRootsSchema,
   type ProviderNativeRootSet,
   type ProviderResolvedNativeRoots,
-} from "@bb/domain";
+} from "@sandy/domain";
 import type {
   HostDaemonOnlineRpcResultForCommand,
   HostDaemonRetryableOnlineRpcCommand,
-} from "@bb/host-daemon-contract";
-import { experimental_nativeRootsHostContract } from "@get-bb/plugin-sdk/host";
+} from "@sandy/host-daemon-contract";
+import { experimental_nativeRootsHostContract } from "@sandy-sdk/plugin-sdk/host";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import type { AppDeps, WorkSessionDeps } from "../../types.js";
 import {
@@ -153,7 +153,7 @@ async function callResolveNativeRoots(
   if (artifact === undefined) {
     deps.logger.warn(
       fields,
-      `Plugin "${pluginId}" resolves native roots for provider "${providerId}" but has no live bb.host artifact; listing its declared roots only`,
+      `Plugin "${pluginId}" resolves native roots for provider "${providerId}" but has no live sandy.host artifact; listing its declared roots only`,
     );
     return EMPTY_PROVIDER_RESOLVED_NATIVE_ROOTS;
   }

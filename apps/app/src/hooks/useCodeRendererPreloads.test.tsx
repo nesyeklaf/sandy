@@ -35,11 +35,11 @@ import { useCodeRendererPreloads } from "./useCodeRendererPreloads";
 
 const imports = vi.hoisted(() => ({ diff: vi.fn(), source: vi.fn() }));
 
-vi.mock("@/components/code/BbDiff", () => {
+vi.mock("@/components/code/SandyDiff", () => {
   imports.diff();
   return { default: () => <p>Built-in diff ready</p> };
 });
-vi.mock("@/components/code/BbSourceCode", () => {
+vi.mock("@/components/code/SandySourceCode", () => {
   imports.source();
   return { default: () => <p>Built-in source ready</p> };
 });

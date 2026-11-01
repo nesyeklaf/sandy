@@ -5,14 +5,14 @@ import {
   HOST_DAEMON_PROTOCOL_VERSION,
   type HostDaemonOnlineRpcRequestMessage,
   type HostDaemonRpcCommand,
-} from "@bb/host-daemon-contract";
-import { openSession, upsertHost } from "@bb/db";
+} from "@sandy/host-daemon-contract";
+import { openSession, upsertHost } from "@sandy/db";
 import {
   listServerOwnedEntries,
   readServerMovedFile,
-} from "@bb/server-archive";
-import type { ServerMoveStatus } from "@bb/server-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+} from "@sandy/server-archive";
+import type { ServerMoveStatus } from "@sandy/server-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { describe, expect, it, vi } from "vitest";
 import { createServerMoveCoordinator } from "../../src/services/server-move/coordinator.js";
 import {
@@ -164,11 +164,11 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "debug" },
+        config: { SANDY_LOG_LEVEL: "debug" },
         machineCredential: "stale-credential",
         serverHeaders: { "x-stale": "1" },
       });
-      await writeFile(join(harness.config.dataDir, "bb.db"), "");
+      await writeFile(join(harness.config.dataDir, "sandy.db"), "");
       const { environment, events, plugins, retired } =
         createTestServerMoveEnvironment(harness);
       const coordinator = createServerMoveCoordinator(environment);
@@ -213,7 +213,7 @@ describe("server move coordinator", () => {
               type: "server_move.progress",
               moveId: request.command.moveId,
               step: "update-target",
-              message: "Installing bb",
+              message: "Installing sandy",
             });
             progressSnapshots.push(coordinator.getStatus());
             coordinator.handleProgress(NEW, {
@@ -276,7 +276,7 @@ describe("server move coordinator", () => {
         ["verify-address", "pending"],
         ["switch", "pending"],
       ]);
-      expect(progressSnapshots[1]?.steps[1]?.message).toBe("Installing bb");
+      expect(progressSnapshots[1]?.steps[1]?.message).toBe("Installing sandy");
       expect(progressSnapshots[2]?.steps.slice(3, 5)).toEqual([
         { id: "transfer", status: "done", message: "Downloading the export" },
         {
@@ -327,7 +327,7 @@ describe("server move coordinator", () => {
           downloadPath: `/internal/server-move/${started.moveId}/archive`,
           sha256: expect.stringMatching(/^[0-9a-f]{64}$/u),
         },
-        bbApp: null,
+        sandyApp: null,
         serverPort: 39_101,
         sourceDataDir: harness.config.dataDir,
         sourceServerHostId: OLD,
@@ -368,9 +368,9 @@ describe("server move coordinator", () => {
         toHostName: "Desktop",
         serverUrl: DIRECT_URL,
       });
-      expect(moved?.oldCopyEntries).toEqual(["auth-secret", "bb.db"]);
+      expect(moved?.oldCopyEntries).toEqual(["auth-secret", "sandy.db"]);
       expect(JSON.parse(await readFile(config.path, "utf8"))).toEqual({
-        config: { BB_LOG_LEVEL: "debug" },
+        config: { SANDY_LOG_LEVEL: "debug" },
         serverUrl: DIRECT_URL,
       });
       expect(old.movedMessages).toEqual([
@@ -417,7 +417,7 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
       });
       const { environment, events, retired } =
         createTestServerMoveEnvironment(harness);
@@ -607,7 +607,7 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
       });
       const { environment, events, plugins } =
         createTestServerMoveEnvironment(harness);
@@ -869,7 +869,7 @@ describe("server move coordinator", () => {
         hostId: NEW,
         instanceId: "instance-new",
         hostName: "Desktop",
-        dataDir: "/home/me/.bb-machines/laptop",
+        dataDir: "/home/me/.sandy-machines/laptop",
         protocolVersion: HOST_DAEMON_PROTOCOL_VERSION,
         heartbeatIntervalMs: 5_000,
         leaseTimeoutMs: 30_000,
@@ -1010,7 +1010,7 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
       });
       const { environment, events, plugins, retired } =
         createTestServerMoveEnvironment(harness, { timings: RECOVERY_TIMINGS });
@@ -1108,7 +1108,7 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
       });
       const { environment, events, plugins } = createTestServerMoveEnvironment(
         harness,
@@ -1190,7 +1190,7 @@ describe("server move coordinator", () => {
     withTestHarness(async (harness) => {
       seedTopology(harness);
       const config = await writeConfig(harness, {
-        config: { BB_LOG_LEVEL: "info" },
+        config: { SANDY_LOG_LEVEL: "info" },
       });
       const { environment, events, plugins } = createTestServerMoveEnvironment(
         harness,
@@ -1473,7 +1473,7 @@ describe("server move coordinator", () => {
             ? ok(
                 inspectResult({
                   existingServerData: {
-                    path: "/home/me/.bb",
+                    path: "/home/me/.sandy",
                     sizeBytes: 1_024,
                   },
                 }),

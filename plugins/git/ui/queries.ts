@@ -4,7 +4,7 @@ import {
   experimental_useRpcQuery as useRpcQuery,
   useSdk,
   useSettings,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import {

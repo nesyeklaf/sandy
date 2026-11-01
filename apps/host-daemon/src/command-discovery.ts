@@ -4,19 +4,19 @@ import {
   scanSkillFiles,
   skillRegistrationId,
   type IndexedSkillFile,
-} from "@bb/skill-index";
+} from "@sandy/skill-index";
 import {
   parseSkillMetadata,
   type SkillMetadata,
-} from "@bb/skill-index/metadata";
+} from "@sandy/skill-index/metadata";
 import type {
   DiscoveredSkill,
   HostCommandOrigin,
   HostCommandSource,
   HostProviderCommand,
   SkillRootKind,
-} from "@bb/host-daemon-contract";
-export { SKILL_FILE_NAME } from "@bb/skill-index";
+} from "@sandy/host-daemon-contract";
+export { SKILL_FILE_NAME } from "@sandy/skill-index";
 
 interface CommandScanRootBase {
   boundaryPath?: string;

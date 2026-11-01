@@ -6,7 +6,7 @@ export default defineWorkspaceTestConfig({
   test: {
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
-      name: "bb-plugin-bb--connection-overview",
+      name: "sandy-plugin-sandy--connection-overview",
       include: ["**/*.test.{ts,tsx}"],
     }),
   },

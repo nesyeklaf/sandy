@@ -4,8 +4,8 @@ import {
   runtimePermissionPolicySchema,
   runtimePermissionScopeValues,
   threadTurnInitiatorSchema,
-} from "@bb/domain";
-import type { RuntimePermissionPolicy, ThreadTurnInitiator } from "@bb/domain";
+} from "@sandy/domain";
+import type { RuntimePermissionPolicy, ThreadTurnInitiator } from "@sandy/domain";
 import { describe, expect, it } from "vitest";
 import { resolvePermissionEscalation } from "../../src/services/threads/thread-runtime-config.js";
 

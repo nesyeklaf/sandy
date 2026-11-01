@@ -1,4 +1,4 @@
-import { experimental_execHostFile } from "@get-bb/plugin-sdk/process";
+import { experimental_execHostFile } from "@sandy-sdk/plugin-sdk/process";
 import {
   copyFile,
   mkdir,
@@ -17,7 +17,7 @@ import { z } from "zod";
 
 const binary = z.string().min(1).parse(process.env.DEV_BROWSER_SMOKE_BINARY);
 const chrome = z.string().min(1).parse(process.env.DEV_BROWSER_SMOKE_CHROME);
-const root = await mkdtemp(join(tmpdir(), "bb-dev-browser-smoke-"));
+const root = await mkdtemp(join(tmpdir(), "sandy-dev-browser-smoke-"));
 const dataDir = join(root, "data");
 await mkdir(join(dataDir, "runtime"), { recursive: true });
 const runtimeBinary = join(dataDir, "runtime", "dev-browser");

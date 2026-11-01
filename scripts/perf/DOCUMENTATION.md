@@ -1,6 +1,6 @@
 # Performance Measurement Tooling
 
-Scripted, repeatable captures of bb's web app against a seeded production build. Each scenario drives a real Chromium over CDP, records a trace and a page-side probe, and reports numbers against one contract. A capture that is throttled, empty or idle where it should be busy is reported `INVALID` and fails the run; it never produces a number.
+Scripted, repeatable captures of sandy's web app against a seeded production build. Each scenario drives a real Chromium over CDP, records a trace and a page-side probe, and reports numbers against one contract. A capture that is throttled, empty or idle where it should be busy is reported `INVALID` and fails the run; it never produces a number.
 
 ## Contract
 
@@ -16,22 +16,22 @@ Scenario results are measurements, not pass/fail against the contract. `PASS` me
 1. Seed an isolated data dir. Never point the tooling at a real data dir.
 
    ```sh
-   pnpm seed:perf -- --reset --events 400000 --data-dir ~/bb-perf/data
+   pnpm seed:perf -- --reset --events 400000 --data-dir ~/sandy-perf/data
    ```
 
 2. Start a production build on it (or let `--data-dir` do it, see below).
 
    ```sh
-   BB_SKIP_ONBOARDING=1 NODE_ENV=production node --conditions=source --import tsx scripts/start-bb.mjs \
-     --data-dir ~/bb-perf/data --server-port 39886 --host-daemon-port 39887
+   SANDY_SKIP_ONBOARDING=1 NODE_ENV=production node --conditions=source --import tsx scripts/start-sandy.mjs \
+     --data-dir ~/sandy-perf/data --server-port 39886 --host-daemon-port 39887
    ```
 
-3. Streaming only: install the paced provider into that instance and spawn one thread on it. Keep `BB_SERVER_URL` pointed at the perf instance, because the `bb` CLI otherwise talks to whatever bb the shell environment names.
+3. Streaming only: install the paced provider into that instance and spawn one thread on it. Keep `SANDY_SERVER_URL` pointed at the perf instance, because the `sandy` CLI otherwise talks to whatever sandy the shell environment names.
 
    ```sh
-   export BB_SERVER_URL=http://127.0.0.1:39886
-   bb plugin install ./scripts/perf/fixtures/paced-stream-provider --yes
-   bb thread spawn --provider paced-stream-agent --project <project id> --environment <environment id> --prompt "warm up the stream"
+   export SANDY_SERVER_URL=http://127.0.0.1:39886
+   sandy plugin install ./scripts/perf/fixtures/paced-stream-provider --yes
+   sandy thread spawn --provider paced-stream-agent --project <project id> --environment <environment id> --prompt "warm up the stream"
    ```
 
    The fixture is a copy of `examples/plugins/echo-provider` whose answer streams as `PACED_STREAM_CHUNKS` (default 240) markdown chunks every `PACED_STREAM_INTERVAL_MS` (default 25). Its `node_modules` link points at the echo provider's installed dependencies. Reseeding wipes the plugin and thread; repeat step 3.
@@ -40,14 +40,14 @@ Scenario results are measurements, not pass/fail against the contract. `PASS` me
 
 ```sh
 node scripts/perf/run.mjs list
-node scripts/perf/run.mjs all --url http://127.0.0.1:39886 --server-match bb-perf/data --out ~/bb-perf/results/dev
-node scripts/perf/run.mjs composer thread-switch --data-dir ~/bb-perf/data --runs 3
+node scripts/perf/run.mjs all --url http://127.0.0.1:39886 --server-match sandy-perf/data --out ~/sandy-perf/results/dev
+node scripts/perf/run.mjs composer thread-switch --data-dir ~/sandy-perf/data --runs 3
 ```
 
 - `--url` attaches to a running instance; `--data-dir` starts a production server on a seeded dir and stops it afterwards.
 - `--server-match` is a substring of the server's command line (its data dir). It enables server and daemon CPU sampling in `idle` and `server-latency`.
 - `--runs n` repeats each scenario with a fresh browser and profile; the headline reports mean, min and max.
-- `--viewport w,h`, `--headed`, `--chrome <path>` (or `BB_PERF_CHROME`) adjust the browser.
+- `--viewport w,h`, `--headed`, `--chrome <path>` (or `SANDY_PERF_CHROME`) adjust the browser.
 - `--attribute` adds the JS CPU profile to every capture and stores the top functions and modules as `capture.attribution` (see JS attribution).
 - `--thread <id>` picks the thread `scroll-smoothness` scrolls; the default is the heaviest idle sidebar thread.
 - The exit code is non-zero if any scenario was invalid or threw.
@@ -73,10 +73,10 @@ Artifacts land in `<out>/<scenario>/run-<n>.json` (headline, ledger of checks, c
 
 The app records thread switches and overlay opens as `performance.measure` entries, so DevTools, Perfetto and the field-latency plugin read the same spans:
 
-- `bb:switch` from the input that started the switch until the frame after the timeline is ready, with phases `input`, `render`, `timeline` and `paint` (`bb:switch:<phase>`). A switch superseded by another one is dropped.
-- `bb:open` from the input that opened a dropdown, popover, select, dialog, alert dialog, sheet, drawer or context menu until the frame after it rendered, with phases `render` and `paint`. The label is the overlay kind (`menu`, `popover`, `select`, `dialog`, `alert-dialog`, `sheet`, `drawer`, `context-menu`).
+- `sandy:switch` from the input that started the switch until the frame after the timeline is ready, with phases `input`, `render`, `timeline` and `paint` (`sandy:switch:<phase>`). A switch superseded by another one is dropped.
+- `sandy:open` from the input that opened a dropdown, popover, select, dialog, alert dialog, sheet, drawer or context menu until the frame after it rendered, with phases `render` and `paint`. The label is the overlay kind (`menu`, `popover`, `select`, `dialog`, `alert-dialog`, `sheet`, `drawer`, `context-menu`).
 
-The spans appear on the "Interactions" and "Thread switch" or "Overlay open" custom tracks in the DevTools Performance panel. Each entry carries `detail.bb` with the kind, label and phase.
+The spans appear on the "Interactions" and "Thread switch" or "Overlay open" custom tracks in the DevTools Performance panel. Each entry carries `detail.sandy` with the kind, label and phase.
 
 ## Server-Timing
 
@@ -94,19 +94,19 @@ performance
   ]);
 ```
 
-Subtract `total` from the request's `responseEnd - requestStart` to see network and queueing time; compare `db` with `total` to see whether a slow endpoint waits on SQLite or on its own code. Same-origin pages read it directly. A page on another origin (the dev app on its own port) needs `Timing-Allow-Origin`, which the server sets to the allowed CORS origin. Through bb connect the header is forwarded unchanged.
+Subtract `total` from the request's `responseEnd - requestStart` to see network and queueing time; compare `db` with `total` to see whether a slow endpoint waits on SQLite or on its own code. Same-origin pages read it directly. A page on another origin (the dev app on its own port) needs `Timing-Allow-Origin`, which the server sets to the allowed CORS origin. Through sandy connect the header is forwarded unchanged.
 
 ## Profiling build
 
 A profiling build keeps names readable and adds React's performance tracks (Scheduler and Components) to the Performance panel:
 
 ```sh
-pnpm exec turbo run build --filter=@bb/app^...
-pnpm --filter @bb/app run build:profiling
+pnpm exec turbo run build --filter=@sandy/app^...
+pnpm --filter @sandy/app run build:profiling
 node scripts/perf/profiling-proxy.mjs --upstream http://127.0.0.1:38886 --port 38887
 ```
 
-`BB_APP_PROFILING=1` turns off JS minification, writes source maps and aliases `react-dom/client` to `react-dom/profiling`; the output goes to `apps/app/dist-profiling`. The proxy serves that build and forwards everything else, including WebSockets, to a running server, so the profiling app runs against the same data as the normal one on its own port. Plugins keep their own bundles.
+`SANDY_APP_PROFILING=1` turns off JS minification, writes source maps and aliases `react-dom/client` to `react-dom/profiling`; the output goes to `apps/app/dist-profiling`. The proxy serves that build and forwards everything else, including WebSockets, to a running server, so the profiling app runs against the same data as the normal one on its own port. Plugins keep their own bundles.
 
 ## A/B runs
 
@@ -122,11 +122,11 @@ node scripts/perf/ab.mjs --a http://127.0.0.1:38886 --b http://127.0.0.1:38887 -
 - `--cpu-throttle 4` slows the page like an old laptop. `run.mjs` takes the same flag.
 - `--trace` records a Chrome trace per run, marks each wait as a `lab:switch` or `lab:open` measure and splits the main thread inside it into script, style, layout, paint, GC, other and idle time with `sql/interaction-breakdown.sql`. Traces are about 100 MB each and are deleted after the query unless `--keep-traces`.
 
-`trace-sql.mjs <trace.json>` runs the same breakdown, or another file in `sql/` (`--sql`), on any trace, for example one saved from the DevTools Performance panel. `--windows` picks the slices to split: `bb:*` (default) for the app's spans and their phases, `bb:switch` for switches only.
+`trace-sql.mjs <trace.json>` runs the same breakdown, or another file in `sql/` (`--sql`), on any trace, for example one saved from the DevTools Performance panel. `--windows` picks the slices to split: `sandy:*` (default) for the app's spans and their phases, `sandy:switch` for switches only.
 
 `--scenario scroll` replaces the switches and menu opens with the gestures of `scroll-smoothness` on `--start` (default: the heaviest idle thread) and compares the per-run frame pacing numbers with the same bootstrap interval. Lower is better, so the verdict reads "b smoother" or "b rougher". It always records a trace, because presented frames come from it.
 
-Both need the Perfetto trace processor: `curl -LO https://get.perfetto.dev/trace_processor && chmod +x trace_processor`, then set `BB_PERF_TRACE_PROCESSOR` to its path, or put `trace_processor_shell` on the PATH.
+Both need the Perfetto trace processor: `curl -LO https://get.perfetto.dev/trace_processor && chmod +x trace_processor`, then set `SANDY_PERF_TRACE_PROCESSOR` to its path, or put `trace_processor_shell` on the PATH.
 
 ## JS attribution
 
@@ -135,7 +135,7 @@ Both need the Perfetto trace processor: `curl -LO https://get.perfetto.dev/trace
 - Locations go through the chunk's source map: `--sourcemaps <dir>` first, then `<chunk url>.map` from the server. A build without maps (the live app), and code a map leaves unmapped or that sits before the first mapped column of a line, reports `chunk:line:col` and minified names; the profiling build reports `src/...:line` and `node_modules/<package>`.
 - `ab.mjs --react-components` also injects a disabled React DevTools hook stub, which makes React's profiling build emit its Components track as `console.timeStamp` events. The report lists components by self render time (children subtracted). Only the profiling build emits them, and React's own `logComponentRender` then costs a large share of the wait (about 190 ms of an 800 ms switch), so compare component times with each other, not wall times with a normal build.
 - `ab.mjs` prints the mean per kind and stores each wait's attribution in `ab.json`; `run.mjs` stores it per capture.
-- `trace-sql.mjs <trace> --sql js-attribution.sql --windows 'bb:switch'` ranks functions per window in Perfetto, for traces recorded elsewhere. Perfetto keeps no source location for Chrome JSON profiles, so it ranks by function name only.
+- `trace-sql.mjs <trace> --sql js-attribution.sql --windows 'sandy:switch'` ranks functions per window in Perfetto, for traces recorded elsewhere. Perfetto keeps no source location for Chrome JSON profiles, so it ranks by function name only.
 
 ## Firefox lab
 
@@ -145,11 +145,11 @@ Both need the Perfetto trace processor: `curl -LO https://get.perfetto.dev/trace
 node scripts/perf/firefox-lab.mjs --url http://127.0.0.1:38886 --compare-chrome --profile --sourcemaps <dir>
 ```
 
-- It drives Firefox over WebDriver BiDi (`lib/firefox.mjs`), started with `--headless --remote-debugging-port` on a throwaway profile. `--firefox`, `BB_PERF_FIREFOX` or `~/bb-perf/firefox/firefox/firefox` picks the binary; Firefox 159 and later also need `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`, which the driver sets. Content runs in a tab the driver opens, because BiDi refuses viewports and preload scripts on the privileged first tab.
+- It drives Firefox over WebDriver BiDi (`lib/firefox.mjs`), started with `--headless --remote-debugging-port` on a throwaway profile. `--firefox`, `SANDY_PERF_FIREFOX` or `~/sandy-perf/firefox/firefox/firefox` picks the binary; Firefox 159 and later also need `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`, which the driver sets. Content runs in a tab the driver opens, because BiDi refuses viewports and preload scripts on the privileged first tab.
 - Each round opens `--start` in a fresh browser at the field viewport (2396x1318), then switches through `--threads` visible sidebar threads twice, first visit then revisit. A click is a real pointer: it rests `--hover-ms` on the link, which starts the sidebar's hover prefetch as a mouse does, then presses for `--press-ms`. `--revisit-gap-ms` idles between the two passes, because field revisits come minutes after the first visit, not seconds.
-- Per switch it reports the wait (pointerdown until the frame after the thread is usable, as in `ab.mjs`), the app's `bb:switch` total and its input, render, timeline and paint phases, and the slowest request for the thread's data as `network` with its `Server-Timing` total as `server`. These are the field-latency plugin's phases, so lab and field compare directly. The report gives n, p50 and p75 per browser and visit.
+- Per switch it reports the wait (pointerdown until the frame after the thread is usable, as in `ab.mjs`), the app's `sandy:switch` total and its input, render, timeline and paint phases, and the slowest request for the thread's data as `network` with its `Server-Timing` total as `server`. These are the field-latency plugin's phases, so lab and field compare directly. The report gives n, p50 and p75 per browser and visit.
 - `--compare-chrome` runs every round in headless Chrome as well, with the same input and viewport, alternating which browser goes first.
-- `--profile` adds `--profile-rounds` Firefox rounds under the Gecko profiler (features `js`, `cpu`, `nomarkerstacks`; threads GeckoMain, Renderer, Compositor, StyleThread). Their timings are reported apart, because the profiler slows the page. `lib/gecko-profile.mjs` finds the content process main thread that recorded the `bb:switch` spans and attributes every `lab:switch` window and its render and paint phases: time per Gecko category and subcategory, self time per innermost JS function (time in native code below it counts for the function; `jsMs` is the part in the JavaScript category), and the CPU time of the same process's Stylo threads. Samples weigh up to 10 ms, as in Chrome attribution. The profiles are kept as `.json.gz` and open in profiler.firefox.com.
+- `--profile` adds `--profile-rounds` Firefox rounds under the Gecko profiler (features `js`, `cpu`, `nomarkerstacks`; threads GeckoMain, Renderer, Compositor, StyleThread). Their timings are reported apart, because the profiler slows the page. `lib/gecko-profile.mjs` finds the content process main thread that recorded the `sandy:switch` spans and attributes every `lab:switch` window and its render and paint phases: time per Gecko category and subcategory, self time per innermost JS function (time in native code below it counts for the function; `jsMs` is the part in the JavaScript category), and the CPU time of the same process's Stylo threads. Samples weigh up to 10 ms, as in Chrome attribution. The profiles are kept as `.json.gz` and open in profiler.firefox.com.
 - Function locations go through source maps like the Chrome attribution. The live app ships without maps, but a build of the same commit maps it: `cd apps/app && npx vite build --outDir <dir> --emptyOutDir --sourcemap hidden`, then `--sourcemaps <dir>/assets`. Check that the chunk names match the served ones. Plugin bundles stay unmapped.
 - The validity checks are the ones below that apply without a trace: the page is visible, rAF produces frames, timers do not drift and the host CPU is quiet before each round. An invalid round is listed and left out of the summary.
 - Everything goes to `--out` as `firefox-lab.json`.
@@ -178,14 +178,14 @@ node scripts/perf/calibrate.mjs --device-score 30
 node scripts/perf/calibrate.mjs --field --since 14d
 ```
 
-- It runs `bbBenchmarkIndex` (`lib/calibration.mjs`), the exact function the field-latency plugin runs in the user's browser, 5 times (`--runs`) in a dedicated worker in headless Chrome and takes the median as the lab score. The factor is lab score / device score.
+- It runs `sandyBenchmarkIndex` (`lib/calibration.mjs`), the exact function the field-latency plugin runs in the user's browser, 5 times (`--runs`) in a dedicated worker in headless Chrome and takes the median as the lab score. The factor is lab score / device score.
 - CDP CPU throttling does not slow dedicated workers (a worker scores the same at 4x), so the check runs the benchmark on the throttled main thread. It passes when the median lands within 10% of the device score, and corrects the rate up to `--refine` times (default 2) when it misses.
-- `--field` reads the median `benchmarkIndex` over the `devices` rows of `bb field-latency report --json` (field-latency 0.3.0 or later; `device` is only an alias of the newest row and is read only when `devices` is missing). When no device in the window has a benchmark, the command says so and exits 2.
+- `--field` reads the median `benchmarkIndex` over the `devices` rows of `sandy field-latency report --json` (field-latency 0.3.0 or later; `device` is only an alias of the newest row and is read only when `devices` is missing). When no device in the window has a benchmark, the command says so and exits 2.
 - A device faster than the lab machine needs no throttle; the command says so and exits 0.
 
 ## Regression check
 
-`regression.mjs` answers "did this change make bb slower than its base?" without a running server:
+`regression.mjs` answers "did this change make sandy slower than its base?" without a running server:
 
 ```sh
 node scripts/perf/regression.mjs --base origin/main --head HEAD
@@ -194,7 +194,7 @@ node scripts/perf/regression.mjs --base origin/main --head HEAD
 - It checks out `--base` (default: the merge-base of `origin/main` and the head) and `--head` (default `HEAD`) as detached worktrees under `--out`, installs with pnpm, builds the app, server, host daemon and bundled plugins with Turbo (`TURBO_CACHE_DIR` is honoured), seeds one fixture with the base's `seed-perf-db.ts` (1200 threads, 400000 events, seed 1) and starts each ref on its own copy of it.
 - It then runs the A/B above with `--rounds 8 --cpu-throttle 4`, base as a and head as b, opening the heaviest idle thread first. Each browser's first load of that thread adds a `load first` metric next to the switches and menu opens.
 - `budgets.json` sets, per metric, `budgetMs` and `budgetPct` (the slowdown the head may add) and `ceilingMs` (the head median it should stay under at `cpuThrottle`). A metric fails when the whole 95% interval of head - base is above zero and the median slowdown exceeds both `budgetMs` and `budgetPct`, or when the head completed more than 20% fewer of its actions than the base. The check fails closed: it is INCONCLUSIVE when no round ran, when a metric with a budget was not measured, or when it has fewer than 5 rounds with valid samples on either side (a probe that broke both variants alike). Too few samples on a metric without a budget, a missing budget and a broken ceiling only warn.
-- It prints and writes `summary.md` (a Markdown table starting with `<!-- bb-perf-regression -->`, also appended to `GITHUB_STEP_SUMMARY`), `regression.json` with the verdict and every row, `ab.json` with the raw samples, and the install, build, seed and server logs under `logs/`. Exit code 0 is PASS, 1 FAIL, 2 INCONCLUSIVE or a broken run; a FAIL wins over INCONCLUSIVE.
+- It prints and writes `summary.md` (a Markdown table starting with `<!-- sandy-perf-regression -->`, also appended to `GITHUB_STEP_SUMMARY`), `regression.json` with the verdict and every row, `ab.json` with the raw samples, and the install, build, seed and server logs under `logs/`. Exit code 0 is PASS, 1 FAIL, 2 INCONCLUSIVE or a broken run; a FAIL wins over INCONCLUSIVE.
 - The worktrees and data are removed afterwards unless `--keep-worktrees`. A run takes about 10 minutes, mostly the browser rounds; `--rounds` trades time for a narrower interval.
 - `.github/workflows/perf-regression.yml` runs it on pull requests that touch the app, server, packages, plugins or this tooling, comparing the PR merge commit with its first parent, and on manual dispatch with any base and head. The report is the job summary and the `perf-regression` artifact.
 
@@ -231,4 +231,4 @@ Every capture records a ledger of checks before it reports numbers, so a broken 
 
 ## Adding a scenario
 
-Rank threads with `context.api.rankSidebarThreads`, open them with `openThread`, wrap the interaction in `browser.capture({ action })`, arm a ready expression with `window.__bbperf.arm` before each action that should produce content, and record a ledger check for every precondition. Do not add a wait that a missing element could satisfy silently.
+Rank threads with `context.api.rankSidebarThreads`, open them with `openThread`, wrap the interaction in `browser.capture({ action })`, arm a ready expression with `window.__sandyperf.arm` before each action that should produce content, and record a ledger check for every precondition. Do not add a wait that a missing element could satisfy silently.

@@ -5,8 +5,8 @@ import {
   resolveDevInstanceConfig,
   resolveInheritedDevSkillsRootPaths,
   toDevProcessEnv,
-} from "@bb/config/runtime";
-import { makeTempDir } from "@bb/test-helpers";
+} from "@sandy/config/runtime";
+import { makeTempDir } from "@sandy/test-helpers";
 import {
   createStartWorktreeCommand,
   resolveDevLaunchMode,
@@ -39,7 +39,7 @@ afterEach(() => {
 describe("run-dev", () => {
   it("derives stable data and ports from a managed checkout", () => {
     const homeDir = "/Users/tester";
-    const repoRoot = "/Users/tester/.bb-dev/projects/env_q7e5i54kxt/bb";
+    const repoRoot = "/Users/tester/.sandy-dev/projects/env_q7e5i54kxt/sandy";
     const config = resolveDevInstanceConfig({ homeDir, repoRoot });
 
     expect(config.instanceId).toBe(
@@ -58,7 +58,7 @@ describe("run-dev", () => {
 
   it("uses the home-relative checkout path for non-managed checkout paths", () => {
     const homeDir = "/Users/tester";
-    const repoRoot = "/Users/tester/src/work/bb-feature-copy";
+    const repoRoot = "/Users/tester/src/work/sandy-feature-copy";
 
     const config = resolveDevInstanceConfig({ homeDir, repoRoot });
 
@@ -70,11 +70,11 @@ describe("run-dev", () => {
   it("overrides instance selectors while preserving unrelated environment", () => {
     const config = resolveDevInstanceConfig({
       homeDir: "/Users/tester",
-      repoRoot: "/Users/tester/.bb-dev/projects/env_q7e5i54kxt/bb",
+      repoRoot: "/Users/tester/.sandy-dev/projects/env_q7e5i54kxt/sandy",
     });
     const baseEnv: NodeJS.ProcessEnv = {
-      BB_DATA_DIR: "/Users/tester/.bb-dev",
-      BB_SERVER_PORT: "3334",
+      SANDY_DATA_DIR: "/Users/tester/.sandy-dev",
+      SANDY_SERVER_PORT: "3334",
       NODE_ENV: "production",
       OPENAI_API_KEY: "test-key",
     };
@@ -83,18 +83,18 @@ describe("run-dev", () => {
 
     expect(env.OPENAI_API_KEY).toBe("test-key");
     expect(env.NODE_ENV).toBe("development");
-    expect(env.BB_DATA_DIR).toBe(config.dataDir);
-    expect(env.BB_SERVER_PORT).toBe(String(config.ports.serverPort));
-    expect(env.BB_SERVER_URL).toBe(config.serverUrl);
-    expect(env.BB_HOST_DAEMON_PORT).toBe(String(config.ports.hostDaemonPort));
-    expect(env.BB_DEV_APP_PORT).toBe(String(config.ports.appPort));
+    expect(env.SANDY_DATA_DIR).toBe(config.dataDir);
+    expect(env.SANDY_SERVER_PORT).toBe(String(config.ports.serverPort));
+    expect(env.SANDY_SERVER_URL).toBe(config.serverUrl);
+    expect(env.SANDY_HOST_DAEMON_PORT).toBe(String(config.ports.hostDaemonPort));
+    expect(env.SANDY_DEV_APP_PORT).toBe(String(config.ports.appPort));
   });
 
-  it("inherits parent bb skills for managed worktree dev apps", () => {
+  it("inherits parent sandy skills for managed worktree dev apps", () => {
     const homeDir = path.resolve("/Users/tester");
     const repoRoot = path.join(
       homeDir,
-      ".bb-dev/code-bb-abc123/worktrees/env_feature/bb",
+      ".sandy-dev/code-sandy-abc123/worktrees/env_feature/sandy",
     );
     const config = resolveDevInstanceConfig({
       homeDir,
@@ -102,78 +102,78 @@ describe("run-dev", () => {
     });
 
     const inheritedSkillsRootPaths = [
-      path.join(homeDir, ".bb-dev", "code-bb-abc123", "skills"),
-      path.join(homeDir, ".bb", "skills"),
+      path.join(homeDir, ".sandy-dev", "code-sandy-abc123", "skills"),
+      path.join(homeDir, ".sandy", "skills"),
     ];
     expect(resolveInheritedDevSkillsRootPaths({ homeDir, repoRoot })).toEqual(
       inheritedSkillsRootPaths,
     );
     expect(toDevProcessEnv({ baseEnv: {}, config })).toMatchObject({
-      BB_INHERITED_SKILLS_ROOTS: inheritedSkillsRootPaths.join(path.delimiter),
+      SANDY_INHERITED_SKILLS_ROOTS: inheritedSkillsRootPaths.join(path.delimiter),
     });
   });
 
-  it("dedupes inherited bb skills for prod-managed worktree dev apps", () => {
+  it("dedupes inherited sandy skills for prod-managed worktree dev apps", () => {
     const homeDir = path.resolve("/Users/tester");
-    const repoRoot = path.join(homeDir, ".bb/worktrees/env_feature/bb");
+    const repoRoot = path.join(homeDir, ".sandy/worktrees/env_feature/sandy");
     const config = resolveDevInstanceConfig({
       homeDir,
       repoRoot,
     });
 
     expect(resolveInheritedDevSkillsRootPaths({ homeDir, repoRoot })).toEqual([
-      path.join(homeDir, ".bb", "skills"),
+      path.join(homeDir, ".sandy", "skills"),
     ]);
     expect(toDevProcessEnv({ baseEnv: {}, config })).toMatchObject({
-      BB_INHERITED_SKILLS_ROOTS: path.join(homeDir, ".bb", "skills"),
+      SANDY_INHERITED_SKILLS_ROOTS: path.join(homeDir, ".sandy", "skills"),
     });
   });
 
-  it("inherits prod bb skills for ordinary checkout dev apps", () => {
+  it("inherits prod sandy skills for ordinary checkout dev apps", () => {
     const homeDir = path.resolve("/Users/tester");
-    const repoRoot = path.join(homeDir, "src", "bb");
+    const repoRoot = path.join(homeDir, "src", "sandy");
     const config = resolveDevInstanceConfig({
       homeDir,
       repoRoot,
     });
 
     expect(resolveInheritedDevSkillsRootPaths({ homeDir, repoRoot })).toEqual([
-      path.join(homeDir, ".bb", "skills"),
+      path.join(homeDir, ".sandy", "skills"),
     ]);
     expect(toDevProcessEnv({ baseEnv: {}, config })).toMatchObject({
-      BB_INHERITED_SKILLS_ROOTS: path.join(homeDir, ".bb", "skills"),
+      SANDY_INHERITED_SKILLS_ROOTS: path.join(homeDir, ".sandy", "skills"),
     });
   });
 
   it("strips parent thread context from dev child processes", () => {
     const config = resolveDevInstanceConfig({
       homeDir: "/Users/tester",
-      repoRoot: "/Users/tester/src/bb",
+      repoRoot: "/Users/tester/src/sandy",
     });
     const baseEnv: NodeJS.ProcessEnv = {
-      BB_ENVIRONMENT_ID: "env_parent",
-      BB_PROJECT_ID: "proj_parent",
-      BB_THREAD_ID: "thr_parent",
-      BB_THREAD_STORAGE: "/Users/tester/.bb/thread-storage/thr_parent",
+      SANDY_ENVIRONMENT_ID: "env_parent",
+      SANDY_PROJECT_ID: "proj_parent",
+      SANDY_THREAD_ID: "thr_parent",
+      SANDY_THREAD_STORAGE: "/Users/tester/.sandy/thread-storage/thr_parent",
     };
 
     const env = toDevProcessEnv({ baseEnv, config });
 
-    expect(env.BB_ENVIRONMENT_ID).toBeUndefined();
-    expect(env.BB_THREAD_ID).toBeUndefined();
-    expect(env.BB_THREAD_STORAGE).toBeUndefined();
-    expect(env.BB_PROJECT_ID).toBe("proj_parent");
+    expect(env.SANDY_ENVIRONMENT_ID).toBeUndefined();
+    expect(env.SANDY_THREAD_ID).toBeUndefined();
+    expect(env.SANDY_THREAD_STORAGE).toBeUndefined();
+    expect(env.SANDY_PROJECT_ID).toBe("proj_parent");
   });
 
   it("passes the account pool marker to a nested dev server", () => {
     const config = resolveDevInstanceConfig({
       homeDir: "/Users/tester",
-      repoRoot: "/Users/tester/src/bb",
+      repoRoot: "/Users/tester/src/sandy",
     });
     const baseEnv: NodeJS.ProcessEnv = {
-      BB_ACCOUNT_POOL_PARENT_URL:
+      SANDY_ACCOUNT_POOL_PARENT_URL:
         "http://127.0.0.1:38886/api/v1/plugins/account-pool/http",
-      BB_ACCOUNT_POOL_PARENT_TOKEN: "parent-hub-token",
+      SANDY_ACCOUNT_POOL_PARENT_TOKEN: "parent-hub-token",
       ANTHROPIC_BASE_URL:
         "http://127.0.0.1:38886/api/v1/plugins/account-pool/http",
       ANTHROPIC_AUTH_TOKEN: "parent-hub-token",
@@ -181,12 +181,12 @@ describe("run-dev", () => {
 
     const env = toDevProcessEnv({ baseEnv, config });
 
-    expect(env.BB_ACCOUNT_POOL_PARENT_URL).toBe(
+    expect(env.SANDY_ACCOUNT_POOL_PARENT_URL).toBe(
       "http://127.0.0.1:38886/api/v1/plugins/account-pool/http",
     );
-    expect(env.BB_ACCOUNT_POOL_PARENT_TOKEN).toBe("parent-hub-token");
+    expect(env.SANDY_ACCOUNT_POOL_PARENT_TOKEN).toBe("parent-hub-token");
     expect(env.ANTHROPIC_AUTH_TOKEN).toBe("parent-hub-token");
-    expect(env.BB_SERVER_URL).toBe(config.serverUrl);
+    expect(env.SANDY_SERVER_URL).toBe(config.serverUrl);
   });
 
   it("runs the production-style source launcher for worktree start", () => {
@@ -200,7 +200,7 @@ describe("run-dev", () => {
       "--conditions=source",
       "--import",
       "tsx",
-      path.resolve(import.meta.dirname, "../../..", "scripts/start-bb.mjs"),
+      path.resolve(import.meta.dirname, "../../..", "scripts/start-sandy.mjs"),
       "--worktree-runtime-policy",
     ]);
   });
@@ -218,28 +218,28 @@ describe("run-dev", () => {
     (mode) => {
       const config = resolveDevInstanceConfig({
         homeDir: "/Users/tester",
-        repoRoot: "/Users/tester/src/bb",
+        repoRoot: "/Users/tester/src/sandy",
       });
       const env = toDevLaunchProcessEnv({
-        baseEnv: { BB_SKIP_ONBOARDING: "0" },
+        baseEnv: { SANDY_SKIP_ONBOARDING: "0" },
         config,
         mode,
       });
 
-      expect(env.BB_SKIP_ONBOARDING).toBe("0");
+      expect(env.SANDY_SKIP_ONBOARDING).toBe("0");
     },
   );
 
   it("uses production serving with checkout-specific dev selectors", () => {
     const config = resolveDevInstanceConfig({
       homeDir: "/Users/tester",
-      repoRoot: "/Users/tester/src/bb",
+      repoRoot: "/Users/tester/src/sandy",
     });
 
     const env = toDevLaunchProcessEnv({
       baseEnv: {
-        BB_DATA_DIR: "/Users/tester/.bb",
-        BB_DEV_APP_PORT: "5173",
+        SANDY_DATA_DIR: "/Users/tester/.sandy",
+        SANDY_DEV_APP_PORT: "5173",
         NODE_ENV: "development",
         OPENAI_API_KEY: "test-key",
       },
@@ -248,37 +248,37 @@ describe("run-dev", () => {
     });
 
     expect(env).toMatchObject({
-      BB_DATA_DIR: config.dataDir,
-      BB_HOST_DAEMON_PORT: String(config.ports.hostDaemonPort),
-      BB_SERVER_PORT: String(config.ports.serverPort),
-      BB_SERVER_URL: config.serverUrl,
-      BB_SKIP_ONBOARDING: "1",
+      SANDY_DATA_DIR: config.dataDir,
+      SANDY_HOST_DAEMON_PORT: String(config.ports.hostDaemonPort),
+      SANDY_SERVER_PORT: String(config.ports.serverPort),
+      SANDY_SERVER_URL: config.serverUrl,
+      SANDY_SKIP_ONBOARDING: "1",
       NODE_ENV: "production",
       OPENAI_API_KEY: "test-key",
     });
-    expect(env.BB_DEV_APP_PORT).toBeUndefined();
+    expect(env.SANDY_DEV_APP_PORT).toBeUndefined();
   });
 
   it("migrates legacy flat dev data into the checkout instance", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
-    const legacyDataDir = path.join(homeDir, ".bb-dev");
+    const homeDir = await makeTempDir("sandy-dev-home-");
+    const legacyDataDir = path.join(homeDir, ".sandy-dev");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
     await fs.mkdir(path.join(legacyDataDir, "logs"), { recursive: true });
     await fs.mkdir(path.join(legacyDataDir, "attachments", "proj_test"), {
       recursive: true,
     });
-    await fs.mkdir(path.join(legacyDataDir, "worktrees", "env_old", "bb"), {
+    await fs.mkdir(path.join(legacyDataDir, "worktrees", "env_old", "sandy"), {
       recursive: true,
     });
     await fs.mkdir(path.join(legacyDataDir, "dev-supervisors"), {
       recursive: true,
     });
-    await fs.writeFile(path.join(legacyDataDir, "bb.db"), "db", "utf8");
+    await fs.writeFile(path.join(legacyDataDir, "sandy.db"), "db", "utf8");
     await fs.writeFile(
-      path.join(legacyDataDir, "bb.db.backup-20260515-160305"),
+      path.join(legacyDataDir, "sandy.db.backup-20260515-160305"),
       "backup",
       "utf8",
     );
@@ -306,13 +306,13 @@ describe("run-dev", () => {
       migratedEntries: [
         "attachments",
         "auth-secret",
-        "bb.db",
-        "bb.db.backup-20260515-160305",
         "logs",
+        "sandy.db",
+        "sandy.db.backup-20260515-160305",
       ],
     });
     await expect(
-      fs.readFile(path.join(config.dataDir, "bb.db"), "utf8"),
+      fs.readFile(path.join(config.dataDir, "sandy.db"), "utf8"),
     ).resolves.toBe("db");
     await expect(
       fs.readFile(path.join(config.dataDir, "auth-secret"), "utf8"),
@@ -324,7 +324,7 @@ describe("run-dev", () => {
       ),
     ).resolves.toBe("image");
     await expect(
-      fs.access(path.join(legacyDataDir, "worktrees", "env_old", "bb")),
+      fs.access(path.join(legacyDataDir, "worktrees", "env_old", "sandy")),
     ).resolves.toBeUndefined();
     await expect(
       fs.access(path.join(legacyDataDir, "dev-supervisors", "server.pid")),
@@ -340,34 +340,34 @@ describe("run-dev", () => {
   });
 
   it("skips migration when the target instance already has data", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
-    const legacyDataDir = path.join(homeDir, ".bb-dev");
+    const homeDir = await makeTempDir("sandy-dev-home-");
+    const legacyDataDir = path.join(homeDir, ".sandy-dev");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
     await fs.mkdir(legacyDataDir, { recursive: true });
     await fs.mkdir(config.dataDir, { recursive: true });
-    await fs.writeFile(path.join(legacyDataDir, "bb.db"), "legacy", "utf8");
-    await fs.writeFile(path.join(config.dataDir, "bb.db"), "target", "utf8");
+    await fs.writeFile(path.join(legacyDataDir, "sandy.db"), "legacy", "utf8");
+    await fs.writeFile(path.join(config.dataDir, "sandy.db"), "target", "utf8");
 
     await expect(migrateLegacyDevData({ config })).resolves.toEqual({
       migratedEntries: [],
       skippedReason: "target-exists",
     });
     await expect(
-      fs.readFile(path.join(legacyDataDir, "bb.db"), "utf8"),
+      fs.readFile(path.join(legacyDataDir, "sandy.db"), "utf8"),
     ).resolves.toBe("legacy");
     await expect(
-      fs.readFile(path.join(config.dataDir, "bb.db"), "utf8"),
+      fs.readFile(path.join(config.dataDir, "sandy.db"), "utf8"),
     ).resolves.toBe("target");
   });
 
   it("skips migration when legacy dev data is absent", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
+    const homeDir = await makeTempDir("sandy-dev-home-");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
 
     await expect(migrateLegacyDevData({ config })).resolves.toEqual({
@@ -378,11 +378,11 @@ describe("run-dev", () => {
   });
 
   it("skips migration when legacy dev data has no migratable entries", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
-    const legacyDataDir = path.join(homeDir, ".bb-dev");
+    const homeDir = await makeTempDir("sandy-dev-home-");
+    const legacyDataDir = path.join(homeDir, ".sandy-dev");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
     await fs.mkdir(legacyDataDir, { recursive: true });
     await fs.writeFile(path.join(legacyDataDir, "daemon.lock"), "lock", "utf8");
@@ -395,11 +395,11 @@ describe("run-dev", () => {
   });
 
   it("rolls back already moved entries when migration rename fails", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
-    const legacyDataDir = path.join(homeDir, ".bb-dev");
+    const homeDir = await makeTempDir("sandy-dev-home-");
+    const legacyDataDir = path.join(homeDir, ".sandy-dev");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
     await fs.mkdir(legacyDataDir, { recursive: true });
     await fs.writeFile(
@@ -407,7 +407,7 @@ describe("run-dev", () => {
       "secret",
       "utf8",
     );
-    await fs.writeFile(path.join(legacyDataDir, "bb.db"), "db", "utf8");
+    await fs.writeFile(path.join(legacyDataDir, "sandy.db"), "db", "utf8");
     const renameCalls: string[] = [];
     const renameWithInjectedFailure = vi.fn(
       async (sourcePath: string, targetPath: string): Promise<void> => {
@@ -430,27 +430,27 @@ describe("run-dev", () => {
       }),
     ).rejects.toThrow("injected rename failure");
 
-    expect(renameCalls).toEqual(["auth-secret", "bb.db"]);
+    expect(renameCalls).toEqual(["auth-secret", "sandy.db"]);
     await expect(
       fs.readFile(path.join(legacyDataDir, "auth-secret"), "utf8"),
     ).resolves.toBe("secret");
     await expect(
-      fs.readFile(path.join(legacyDataDir, "bb.db"), "utf8"),
+      fs.readFile(path.join(legacyDataDir, "sandy.db"), "utf8"),
     ).resolves.toBe("db");
     expect(await pathExists(config.dataDir)).toBe(false);
   });
 
   it("does not migrate legacy data while a legacy dev supervisor is running", async () => {
-    const homeDir = await makeTempDir("bb-dev-home-");
-    const legacyDataDir = path.join(homeDir, ".bb-dev");
+    const homeDir = await makeTempDir("sandy-dev-home-");
+    const legacyDataDir = path.join(homeDir, ".sandy-dev");
     const config = resolveDevInstanceConfig({
       homeDir,
-      repoRoot: path.join(homeDir, "src", "bb"),
+      repoRoot: path.join(homeDir, "src", "sandy"),
     });
     await fs.mkdir(path.join(legacyDataDir, "dev-supervisors"), {
       recursive: true,
     });
-    await fs.writeFile(path.join(legacyDataDir, "bb.db"), "db", "utf8");
+    await fs.writeFile(path.join(legacyDataDir, "sandy.db"), "db", "utf8");
     await fs.writeFile(
       path.join(legacyDataDir, "dev-supervisors", "server.pid"),
       `${process.pid}\n`,
@@ -462,7 +462,7 @@ describe("run-dev", () => {
       skippedReason: "legacy-dev-process-running",
     });
     await expect(
-      fs.readFile(path.join(legacyDataDir, "bb.db"), "utf8"),
+      fs.readFile(path.join(legacyDataDir, "sandy.db"), "utf8"),
     ).resolves.toBe("db");
     expect(await pathExists(config.dataDir)).toBe(false);
   });

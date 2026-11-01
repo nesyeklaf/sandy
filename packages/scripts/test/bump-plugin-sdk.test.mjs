@@ -38,7 +38,7 @@ export const PLUGIN_SDK_MAJOR = Number(PLUGIN_SDK_VERSION.split(".", 1)[0]);
 }
 
 function createTestRepo({ manifestVersion, moduleVersion }) {
-  const repoRoot = mkdtempSync(join(tmpdir(), "bb-bump-plugin-sdk-"));
+  const repoRoot = mkdtempSync(join(tmpdir(), "sandy-bump-plugin-sdk-"));
   testRoots.push(repoRoot);
 
   mkdirSync(join(repoRoot, "packages", "plugin-sdk"), { recursive: true });
@@ -47,7 +47,7 @@ function createTestRepo({ manifestVersion, moduleVersion }) {
     join(repoRoot, MANIFEST_PATH),
     `${JSON.stringify(
       {
-        name: "@get-bb/plugin-sdk",
+        name: "@sandy-sdk/plugin-sdk",
         version: manifestVersion,
         files: ["bundled-types", "dist", "README.md"],
       },
@@ -82,7 +82,7 @@ function readModuleVersion(repoRoot) {
 function runScript(repoRoot, args) {
   return spawnSync(process.execPath, [scriptPath, ...args], {
     encoding: "utf8",
-    env: { ...process.env, BB_BUMP_PLUGIN_SDK_REPO_ROOT: repoRoot },
+    env: { ...process.env, SANDY_BUMP_PLUGIN_SDK_REPO_ROOT: repoRoot },
   });
 }
 
@@ -101,7 +101,7 @@ describe("bump-plugin-sdk", () => {
     const result = runScript(repoRoot, ["--patch"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("@get-bb/plugin-sdk 0.4.3 → 0.4.4");
+    expect(result.stdout).toContain("@sandy-sdk/plugin-sdk 0.4.3 → 0.4.4");
     expect(readManifestVersion(repoRoot)).toBe("0.4.4");
     expect(readModuleVersion(repoRoot)).toBe("0.4.4");
   });

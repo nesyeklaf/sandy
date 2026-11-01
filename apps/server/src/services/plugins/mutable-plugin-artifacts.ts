@@ -9,17 +9,17 @@ import {
 } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { z } from "zod";
-import { PLUGIN_SDK_VERSION } from "@bb/domain";
+import { PLUGIN_SDK_VERSION } from "@sandy/domain";
 import {
   buildPluginHost,
   isIgnoredPluginDevPath,
   type PluginBuildToolchain,
-} from "@bb/plugin-build";
+} from "@sandy/plugin-build";
 import { validatePluginArtifactMeta } from "./app-bundle.js";
 
 const hostBuildRecordSchema = z.object({
   rootDir: z.string(),
-  bbVersion: z.string(),
+  sandyVersion: z.string(),
   artifactDigest: z.string(),
   inputs: z.array(z.string()),
 });
@@ -74,12 +74,12 @@ export async function buildMutablePluginHost(args: {
   dataDir: string;
   pluginId: string;
   rootDir: string;
-  bbVersion: string;
+  sandyVersion: string;
   toolchain: PluginBuildToolchain;
 }): Promise<void> {
   const result = await buildPluginHost(
     args.rootDir,
-    args.bbVersion,
+    args.sandyVersion,
     args.toolchain,
   );
   const recordPath = hostBuildRecordPath(args.dataDir, args.pluginId);
@@ -89,7 +89,7 @@ export async function buildMutablePluginHost(args: {
     stagedPath,
     JSON.stringify({
       rootDir: args.rootDir,
-      bbVersion: args.bbVersion,
+      sandyVersion: args.sandyVersion,
       artifactDigest: result.artifactDigest,
       inputs: result.inputs,
     } satisfies z.infer<typeof hostBuildRecordSchema>),
@@ -102,7 +102,7 @@ export async function isMutablePluginHostReusable(args: {
   pluginId: string;
   pluginVersion: string;
   rootDir: string;
-  bbVersion: string;
+  sandyVersion: string;
 }): Promise<boolean> {
   const distDir = join(args.rootDir, "dist");
   let record: z.infer<typeof hostBuildRecordSchema>;
@@ -126,7 +126,7 @@ export async function isMutablePluginHostReusable(args: {
   }
   if (
     record.rootDir !== args.rootDir ||
-    record.bbVersion !== args.bbVersion ||
+    record.sandyVersion !== args.sandyVersion ||
     validatePluginArtifactMeta({
       artifact: "host",
       raw: rawMeta,

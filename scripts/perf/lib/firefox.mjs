@@ -7,7 +7,7 @@ import { reservePort, wait } from "./cdp.mjs";
 
 export const DEFAULT_FIREFOX = join(
   homedir(),
-  "bb-perf/firefox/firefox/firefox",
+  "sandy-perf/firefox/firefox/firefox",
 );
 export const PROFILER_THREADS = [
   "GeckoMain",
@@ -20,13 +20,13 @@ export const PROFILER_FEATURES = ["js", "cpu", "nomarkerstacks"];
 
 export const resolveFirefox = (explicit) => {
   const candidate = resolve(
-    explicit ?? process.env.BB_PERF_FIREFOX ?? DEFAULT_FIREFOX,
+    explicit ?? process.env.SANDY_PERF_FIREFOX ?? DEFAULT_FIREFOX,
   );
   if (!existsSync(candidate))
     throw new Error(
       "Firefox executable not found: " +
         candidate +
-        ". Pass --firefox or set BB_PERF_FIREFOX.",
+        ". Pass --firefox or set SANDY_PERF_FIREFOX.",
     );
   return candidate;
 };
@@ -157,7 +157,7 @@ export class FirefoxBrowser {
   } = {}) {
     const executable = resolveFirefox(firefox);
     const port = await reservePort();
-    const profileDir = mkdtempSync(join(tmpdir(), "bb-perf-firefox-"));
+    const profileDir = mkdtempSync(join(tmpdir(), "sandy-perf-firefox-"));
     const args = [
       "--no-remote",
       "--profile",

@@ -1,11 +1,11 @@
 import fs from "node:fs/promises";
 import path, { delimiter } from "node:path";
-import { makeTempDir } from "@bb/test-helpers";
+import { makeTempDir } from "@sandy/test-helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   prepareRuntimeShellEnv,
   resolvePowerShellExecutionPolicyDefault,
-  resolveLocalBbExecutablePath,
+  resolveLocalSandyExecutablePath,
   type SpawnUserShellEnv,
   type SpawnUserShellEnvArgs,
   type UserShellEnvSpawnResult,
@@ -67,8 +67,8 @@ async function withPlatform<T>(
 async function createFakeCliPackage(
   options: FakeCliPackageOptions = {},
 ): Promise<FakeCliPackage> {
-  const cliPackageRoot = await makeTempDir("bb-cli-package-");
-  const executablePath = options.executablePath ?? "./dist/bin/bb";
+  const cliPackageRoot = await makeTempDir("sandy-cli-package-");
+  const executablePath = options.executablePath ?? "./dist/bin/sandy";
   const cliEntryPath = path.resolve(cliPackageRoot, executablePath);
   const cliRuntimePath = path.resolve(cliPackageRoot, "dist/index.js");
 
@@ -76,7 +76,7 @@ async function createFakeCliPackage(
     await fs.mkdir(path.dirname(cliEntryPath), { recursive: true });
     await fs.writeFile(
       cliEntryPath,
-      "#!/usr/bin/env node\nprocess.stdout.write('bb')\n",
+      "#!/usr/bin/env node\nprocess.stdout.write('sandy')\n",
       { mode: options.executable ? 0o755 : 0o644 },
     );
     await fs.chmod(cliEntryPath, options.executable ? 0o755 : 0o644);
@@ -84,7 +84,7 @@ async function createFakeCliPackage(
 
   if (options.writeRuntime) {
     await fs.mkdir(path.dirname(cliRuntimePath), { recursive: true });
-    await fs.writeFile(cliRuntimePath, "process.stdout.write('bb')\n", "utf8");
+    await fs.writeFile(cliRuntimePath, "process.stdout.write('sandy')\n", "utf8");
   }
 
   return {
@@ -127,7 +127,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("resolveLocalBbExecutablePath", () => {
+describe("resolveLocalSandyExecutablePath", () => {
   it("returns the built CLI executable path", async () => {
     const { cliEntryPath, cliRuntimePath } = await createFakeCliPackage({
       executable: true,
@@ -135,7 +135,7 @@ describe("resolveLocalBbExecutablePath", () => {
     });
 
     await expect(
-      resolveLocalBbExecutablePath({
+      resolveLocalSandyExecutablePath({
         cliExecutablePath: cliEntryPath,
         cliRuntimePath,
       }),
@@ -148,12 +148,12 @@ describe("resolveLocalBbExecutablePath", () => {
     });
 
     await expect(
-      resolveLocalBbExecutablePath({
+      resolveLocalSandyExecutablePath({
         cliExecutablePath: cliEntryPath,
         cliRuntimePath,
       }),
     ).rejects.toThrow(
-      `Missing built bb CLI runtime at ${cliRuntimePath}. Build @bb/cli before starting the host daemon.`,
+      `Missing built sandy CLI runtime at ${cliRuntimePath}. Build @sandy/cli before starting the host daemon.`,
     );
   });
 
@@ -163,11 +163,11 @@ describe("resolveLocalBbExecutablePath", () => {
     });
 
     await expect(
-      resolveLocalBbExecutablePath({
+      resolveLocalSandyExecutablePath({
         cliExecutablePath: cliEntryPath,
       }),
     ).rejects.toThrow(
-      `Missing built bb CLI entry at ${cliEntryPath}. Build @bb/cli before starting the host daemon.`,
+      `Missing built sandy CLI entry at ${cliEntryPath}. Build @sandy/cli before starting the host daemon.`,
     );
   });
 
@@ -179,11 +179,11 @@ describe("resolveLocalBbExecutablePath", () => {
       });
 
       await expect(
-        resolveLocalBbExecutablePath({
+        resolveLocalSandyExecutablePath({
           cliExecutablePath: cliEntryPath,
         }),
       ).rejects.toThrow(
-        `Resolved bb CLI entry is not executable: ${cliEntryPath}. Build @bb/cli before starting the host daemon.`,
+        `Resolved sandy CLI entry is not executable: ${cliEntryPath}. Build @sandy/cli before starting the host daemon.`,
       );
     },
   );
@@ -195,7 +195,7 @@ describe("resolveLocalBbExecutablePath", () => {
 
     await expect(
       withPlatform("win32", () =>
-        resolveLocalBbExecutablePath({
+        resolveLocalSandyExecutablePath({
           cliExecutablePath: cliEntryPath,
         }),
       ),
@@ -205,37 +205,37 @@ describe("resolveLocalBbExecutablePath", () => {
 
 describe("prepareRuntimeShellEnv", () => {
   it("uses the daemon proxy URL without exporting its machine credential", () => {
-    vi.stubEnv("BB_SERVER_HEADERS", '{"x-bb-machine-access":"durable_secret"}');
+    vi.stubEnv("SANDY_SERVER_HEADERS", '{"x-sandy-machine-access":"durable_secret"}');
 
     const env = prepareRuntimeShellEnv({
-      bbExecutableDirectory: "/tmp/bb-bin",
+      sandyExecutableDirectory: "/tmp/sandy-bin",
       inheritedPath: "/usr/bin",
       serverUrl: "http://127.0.0.1:43123",
     });
 
-    expect(env.BB_SERVER_URL).toBe("http://127.0.0.1:43123");
-    expect(env).not.toHaveProperty("BB_SERVER_HEADERS");
+    expect(env.SANDY_SERVER_URL).toBe("http://127.0.0.1:43123");
+    expect(env).not.toHaveProperty("SANDY_SERVER_HEADERS");
   });
 
-  it("prepends the configured bb executable directory to PATH and sets BB_CLI", () => {
+  it("prepends the configured sandy executable directory to PATH and sets SANDY_CLI", () => {
     expect(
       prepareRuntimeShellEnv({
-        bbExecutableDirectory: "/tmp/bb-bin",
+        sandyExecutableDirectory: "/tmp/sandy-bin",
         hostDaemonPort: 3002,
         inheritedPath: "/usr/bin",
         serverUrl: "http://127.0.0.1:3334",
       }),
     ).toEqual({
-      PATH: `/tmp/bb-bin${delimiter}/usr/bin`,
-      BB_CLI: path.resolve("/tmp/bb-bin", "bb"),
-      BB_SERVER_URL: "http://127.0.0.1:3334",
-      BB_HOST_DAEMON_PORT: "3002",
+      PATH: `/tmp/sandy-bin${delimiter}/usr/bin`,
+      SANDY_CLI: path.resolve("/tmp/sandy-bin", "sandy"),
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
+      SANDY_HOST_DAEMON_PORT: "3002",
     });
   });
 
   it("sets the PowerShell execution policy it is given and none otherwise", () => {
     const options = {
-      bbExecutableDirectory: "C:\\bb",
+      sandyExecutableDirectory: "C:\\sandy",
       inheritedPath: "C:\\Windows",
       serverUrl: "http://127.0.0.1:43123",
     };
@@ -254,17 +254,17 @@ describe("prepareRuntimeShellEnv", () => {
     );
   });
 
-  it("uses an explicit bbExecutablePath for BB_CLI", () => {
+  it("uses an explicit sandyExecutablePath for SANDY_CLI", () => {
     expect(
       prepareRuntimeShellEnv({
-        bbExecutableDirectory: "/tmp/bb-bin",
-        bbExecutablePath: "/opt/custom/bb",
+        sandyExecutableDirectory: "/tmp/sandy-bin",
+        sandyExecutablePath: "/opt/custom/sandy",
         inheritedPath: "/usr/bin",
         serverUrl: "http://127.0.0.1:3334",
       }),
     ).toMatchObject({
-      BB_CLI: "/opt/custom/bb",
-      PATH: `/tmp/bb-bin${delimiter}/usr/bin`,
+      SANDY_CLI: "/opt/custom/sandy",
+      PATH: `/tmp/sandy-bin${delimiter}/usr/bin`,
     });
   });
 
@@ -273,29 +273,29 @@ describe("prepareRuntimeShellEnv", () => {
 
     expect(
       prepareRuntimeShellEnv({
-        bbExecutableDirectory: "/tmp/bb-bin",
+        sandyExecutableDirectory: "/tmp/sandy-bin",
         hostDaemonPort: 3002,
         serverUrl: "http://127.0.0.1:3334",
       }),
     ).toEqual({
-      PATH: `/tmp/bb-bin${delimiter}/usr/local/bin:/usr/bin`,
-      BB_CLI: path.resolve("/tmp/bb-bin", "bb"),
-      BB_SERVER_URL: "http://127.0.0.1:3334",
-      BB_HOST_DAEMON_PORT: "3002",
+      PATH: `/tmp/sandy-bin${delimiter}/usr/local/bin:/usr/bin`,
+      SANDY_CLI: path.resolve("/tmp/sandy-bin", "sandy"),
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
+      SANDY_HOST_DAEMON_PORT: "3002",
     });
   });
 
   it("omits the host daemon port when the local API is disabled", () => {
     expect(
       prepareRuntimeShellEnv({
-        bbExecutableDirectory: "/tmp/bb-bin",
+        sandyExecutableDirectory: "/tmp/sandy-bin",
         inheritedPath: "/usr/bin",
         serverUrl: "http://127.0.0.1:3334",
       }),
     ).toEqual({
-      PATH: `/tmp/bb-bin${delimiter}/usr/bin`,
-      BB_CLI: path.resolve("/tmp/bb-bin", "bb"),
-      BB_SERVER_URL: "http://127.0.0.1:3334",
+      PATH: `/tmp/sandy-bin${delimiter}/usr/bin`,
+      SANDY_CLI: path.resolve("/tmp/sandy-bin", "sandy"),
+      SANDY_SERVER_URL: "http://127.0.0.1:3334",
     });
   });
 });

@@ -27,8 +27,8 @@ function plugin(updateState: Partial<PluginUpdateState>): PluginListItem {
     name: "Linear",
     provenance: "catalog",
     catalogEntryId: "linear",
-    publisherLabel: "BB Community",
-    sourceDisplay: "npm · @bb-plugins/linear · tracks compatible",
+    publisherLabel: "SANDY Community",
+    sourceDisplay: "npm · @sandy-plugins/linear · tracks compatible",
     updateState: { ...EMPTY_PLUGIN_UPDATE_STATE, ...updateState },
   });
 }
@@ -80,7 +80,7 @@ describe("UpdatePluginDialog", () => {
 
     expect(screen.getByText("Update Linear to 1.7.0?")).toBeTruthy();
     expect(screen.getByTestId("rollback-note").textContent).toContain(
-      "if 1.7.0 fails to start, bb restores 1.6.2",
+      "if 1.7.0 fails to start, sandy restores 1.6.2",
     );
     expect(
       screen
@@ -97,7 +97,7 @@ describe("UpdatePluginDialog", () => {
         plugin={plugin({
           blockedVersion: "1.9.0",
           blockedLabel: "1.9.0",
-          blockedReasons: ["needs bb >= 0.15 — you have 0.14.1"],
+          blockedReasons: ["needs sandy >= 0.15 — you have 0.14.1"],
         })}
         open
         onOpenChange={() => {}}
@@ -106,15 +106,15 @@ describe("UpdatePluginDialog", () => {
     );
 
     expect(
-      screen.getByText("1.9.0 isn’t compatible with this bb"),
+      screen.getByText("1.9.0 isn’t compatible with this sandy"),
     ).toBeTruthy();
-    expect(screen.getByText("needs bb >= 0.15 — you have 0.14.1")).toBeTruthy();
+    expect(screen.getByText("needs sandy >= 0.15 — you have 0.14.1")).toBeTruthy();
     expect(
       screen.getByText(
         "Keep using 1.6.2 and check again when a compatible plugin version is available.",
       ),
     ).toBeTruthy();
-    expect(screen.queryByText(/once this bb meets/i)).toBeNull();
+    expect(screen.queryByText(/once this sandy meets/i)).toBeNull();
     expect(
       (screen.getByRole("button", { name: "Update" }) as HTMLButtonElement)
         .disabled,
@@ -162,7 +162,7 @@ describe("UpdatePluginDialog", () => {
     expect(screen.getByText("Failed on Jul 22, 2026.")).toBeTruthy();
     expect(
       screen.getByText(
-        "bb couldn’t activate 1.7.0. It restored 1.6.2 and its data.",
+        "sandy couldn’t activate 1.7.0. It restored 1.6.2 and its data.",
       ),
     ).toBeTruthy();
     expect(screen.getByText("factory threw during activation")).toBeTruthy();

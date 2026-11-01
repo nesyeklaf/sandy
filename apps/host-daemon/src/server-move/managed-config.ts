@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import {
-  formatBbAppConfigPath,
-  parseBbAppManagedConfig,
-} from "@bb/config/bb-app-managed-config";
-import { mutateManagedJsonFile } from "@bb/config/managed-json-file";
+  formatSandyAppConfigPath,
+  parseSandyAppManagedConfig,
+} from "@sandy/config/sandy-app-managed-config";
+import { mutateManagedJsonFile } from "@sandy/config/managed-json-file";
 import { isFileNotFoundError } from "./fs.js";
 
 const MACHINE_CONNECTION_KEYS = [
@@ -42,9 +42,9 @@ async function readManagedConfigObject(
     throw error;
   }
   const parsed: unknown = JSON.parse(raw);
-  parseBbAppManagedConfig(parsed);
+  parseSandyAppManagedConfig(parsed);
   if (!isJsonObject(parsed)) {
-    throw new Error(`Invalid bb-app config at ${path}`);
+    throw new Error(`Invalid sandy-app config at ${path}`);
   }
   return parsed;
 }
@@ -53,13 +53,13 @@ async function updateManagedConfig(
   dataDir: string,
   update: (current: Record<string, unknown>) => Record<string, unknown>,
 ): Promise<void> {
-  const path = formatBbAppConfigPath(dataDir);
+  const path = formatSandyAppConfigPath(dataDir);
   await mutateManagedJsonFile({
     path,
     read: () => readManagedConfigObject(path),
     mutate: (current) => {
       const next = update(current);
-      parseBbAppManagedConfig(next);
+      parseSandyAppManagedConfig(next);
       return next;
     },
   });

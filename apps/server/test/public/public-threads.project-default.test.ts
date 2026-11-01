@@ -3,8 +3,8 @@ import {
   getEnvironment,
   getThread,
   updateHost,
-} from "@bb/db";
-import { threadSchema, type GitSourceInspection } from "@bb/domain";
+} from "@sandy/db";
+import { threadSchema, type GitSourceInspection } from "@sandy/domain";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 import { setPluginMachineProviderBridge } from "../../src/services/plugins/plugin-machine-provider-registry.js";
 import {

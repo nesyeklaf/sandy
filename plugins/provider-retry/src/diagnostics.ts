@@ -1,4 +1,4 @@
-import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
+import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 import { retryAvailabilitySchema } from "./retry-contract.js";
 
@@ -23,10 +23,10 @@ export const retryDiagnosticContract = defineRpcContract({
   },
 });
 export async function readRetryDiagnostic(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   threadId: string,
 ): Promise<RetryDiagnostic | null> {
   return retryDiagnosticSchema
     .nullable()
-    .parse((await bb.storage.kv.get(`decision:${threadId}`)) ?? null);
+    .parse((await sandy.storage.kv.get(`decision:${threadId}`)) ?? null);
 }

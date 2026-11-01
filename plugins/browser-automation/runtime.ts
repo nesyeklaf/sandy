@@ -1,4 +1,4 @@
-import { experimental_hostToolchain as hostToolchain } from "@get-bb/plugin-sdk/process";
+import { experimental_hostToolchain as hostToolchain } from "@sandy-sdk/plugin-sdk/process";
 import { constants } from "node:fs";
 import {
   access,

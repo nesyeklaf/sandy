@@ -78,12 +78,12 @@ describe("moveStylesheetPropertiesToRegistry", () => {
   });
 
   it("keeps a rule the registry rejects", () => {
-    const rejected = propertyRule("--bb-taken", "*", null);
+    const rejected = propertyRule("--sandy-taken", "*", null);
     const sheet = sheetOf([rejected]);
 
     moveStylesheetPropertiesToRegistry(
       [sheet],
-      registryRejecting(new Set(["--bb-taken"])),
+      registryRejecting(new Set(["--sandy-taken"])),
     );
 
     expect(sheet.cssRules).toEqual([rejected]);

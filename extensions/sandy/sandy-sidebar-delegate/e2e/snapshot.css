@@ -1,0 +1,4 @@
+/* Relative update and wake labels vary with wall time; keep their geometry. */
+[data-sandy-sidebar-root] .tabular-nums {
+  visibility: hidden !important;
+}

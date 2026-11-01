@@ -1,0 +1,14 @@
+rows = Load("data/triage/branches.json")
+recommended = rows.filter(r => r.merged).map(r => r.name)
+reason = r => r.merged ? "Merged into main; nothing exists only on it" : r.notOnMain + (r.notOnMain == 1 ? " commit is" : " commits are") + " not on main" + (r.pushed ? "; a copy is on origin" : " and not pushed: they exist only here")
+$remove = []
+lost = $remove.map(n => rows.find(r => r.name == n)).filter(r => !r.merged && !r.pushed)
+Card("Local branches: what to remove", [
+  Text(`${rows.length} branches, ${recommended.length} of them merged into main.`),
+  Table(["Branch", "Not on main", "Pushed", "Recommendation", "Why"], rows.map(r => [r.name, r.notOnMain, r.pushed ? "Yes" : "No", Badge(r.merged ? "Remove" : "Keep", tone: r.merged ? "info" : "neutral"), reason(r)])),
+  Form([
+    Checklist($remove, rows.map(r => r.name), label: "Remove these branches"),
+    Row([Button("Select the recommended removals", Set($remove, recommended)), Button("Clear the selection", Set($remove, []))])
+  ]),
+  lost.length > 0 ? Callout(`${lost.map(r => r.name).join(", ")} ${lost.length == 1 ? "has" : "have"} ${sum(lost.map(r => r.notOnMain))} commits that are not on main and not on origin. Removing ${lost.length == 1 ? "it deletes" : "them deletes"} those commits for good.`, tone: "warn", title: "Not recoverable") : null
+])

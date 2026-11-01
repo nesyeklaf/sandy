@@ -2,13 +2,13 @@
 // Tailwind theme entry (apps/app/src/components/ui/theme.css) and the
 // repo-installed tw-animate-css.
 //
-// The plugin CSS pass (`bb plugin build`) compiles utilities against the same
+// The plugin CSS pass (`sandy plugin build`) compiles utilities against the same
 // semantic tokens the host uses (`bg-background`, `text-sm`, `animate-in`, …).
 // Both inputs are embedded as strings so the packaged CLI needs no runtime
 // resolution of app source or style-only npm exports (tw-animate-css exports
 // only a `style` condition — require.resolve cannot reach it).
 //
-// The output is not committed: turbo runs this as `@bb/plugin-build#generate`
+// The output is not committed: turbo runs this as `@sandy/plugin-build#generate`
 // (see turbo.json) before every task that resolves this package's sources.
 //
 //   node packages/plugin-build/scripts/generate-plugin-theme.mjs

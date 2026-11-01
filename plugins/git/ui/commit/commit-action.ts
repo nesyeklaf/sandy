@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   useSdk,
-  type PluginBrowserBbSdk,
+  type PluginBrowserSandySdk,
   type PluginThreadActionDataInput,
   type PluginThreadActionRegistration,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { useGitWorkspaces, useShowCommitButton } from "../queries.js";
 import {
   closeCommitDialogUnlessShown,
@@ -19,7 +19,7 @@ export interface CommitActionData {
 type ThreadEnvironmentIds = ReadonlyMap<string, string | null>;
 
 function useThreadEnvironmentIds(
-  sdk: PluginBrowserBbSdk,
+  sdk: PluginBrowserSandySdk,
   threadIds: readonly string[],
 ): ThreadEnvironmentIds {
   const [environmentIds, setEnvironmentIds] = useState<ThreadEnvironmentIds>(

@@ -4,9 +4,9 @@ import {
   PERSONAL_PROJECT_ID,
   type Host,
   type ThreadListEntry,
-} from "@bb/domain";
-import type { PullRequest } from "bb-plugin-bb--github-pr-status/contract";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/domain";
+import type { PullRequest } from "sandy-plugin-sandy--github-pr-status/contract";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import type {
   PluginSdkApp,
   PluginSidebarProject,
@@ -17,7 +17,7 @@ import type {
   PluginSidebarThreadRowStatus,
   PluginSidebarThreadShortcut,
   PluginSidebarThreadsState,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { useSidebarThreadShortcut as useHostSidebarThreadShortcut } from "@/components/sidebar/sidebarThreadShortcuts";
 import {
   useThreadTitleMentionResources,

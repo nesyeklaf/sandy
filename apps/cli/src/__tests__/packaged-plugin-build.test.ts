@@ -11,7 +11,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
-import { readBbAppVersion } from "./bb-app-version.js";
+import { readSandyAppVersion } from "./sandy-app-version.js";
 
 const execFileAsync = promisify(execFile);
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -55,10 +55,10 @@ describe("packaged CLI plugin build", () => {
     await writeFile(
       join(pluginRoot, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-packaged-shim-fixture",
+        name: "sandy-plugin-packaged-shim-fixture",
         version: "0.1.0",
         type: "module",
-        bb: {
+        sandy: {
           name: "Packaged shim fixture",
           description: "Exercises the packaged CLI SDK shim fallback.",
           branding: { icon: "Zap" },
@@ -74,7 +74,7 @@ describe("packaged CLI plugin build", () => {
     await writeFile(
       join(pluginRoot, "app.ts"),
       [
-        'import { definePluginApp, experimental_useBranches, experimental_useCheckoutState, useComposerView } from "@get-bb/plugin-sdk/app";',
+        'import { definePluginApp, experimental_useBranches, experimental_useCheckoutState, useComposerView } from "@sandy-sdk/plugin-sdk/app";',
         "function ComposerProbe() {",
         '  const branches = experimental_useBranches({ hostId: "host_fixture", projectId: "proj_fixture" });',
         '  const checkout = experimental_useCheckoutState({ hostId: "host_fixture", projectId: "proj_fixture" });',
@@ -95,10 +95,10 @@ describe("packaged CLI plugin build", () => {
 
     const childEnv: NodeJS.ProcessEnv = {
       ...process.env,
-      BB_CLI_REEXEC: "1",
+      SANDY_CLI_REEXEC: "1",
     };
-    delete childEnv.BB_CLI;
-    delete childEnv.BB_APP_VERSION;
+    delete childEnv.SANDY_CLI;
+    delete childEnv.SANDY_APP_VERSION;
 
     expect(await readdir(join(tempRoot, "cli-chunks"))).not.toHaveLength(0);
     const { stdout: versionOutput } = await execFileAsync(
@@ -106,7 +106,7 @@ describe("packaged CLI plugin build", () => {
       [cliEntry, "--version"],
       { cwd: workspaceRoot, env: childEnv },
     );
-    expect(versionOutput.trim()).toBe(await readBbAppVersion());
+    expect(versionOutput.trim()).toBe(await readSandyAppVersion());
 
     await execFileAsync(
       process.execPath,

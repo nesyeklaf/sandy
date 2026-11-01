@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HostDaemonRpcCommand } from "@bb/host-daemon-contract";
-import { createDeferredPromise } from "@bb/test-helpers";
+import type { HostDaemonRpcCommand } from "@sandy/host-daemon-contract";
+import { createDeferredPromise } from "@sandy/test-helpers";
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { createServerErrorHandler } from "../../src/errors.js";
@@ -25,15 +25,15 @@ type PrepareCommand = Extract<
 >;
 
 describe("server move downloads", () => {
-  it("streams the archive and the full bb-app package with exact content lengths", () =>
+  it("streams the archive and the full sandy-app package with exact content lengths", () =>
     withTestHarness(async (harness) => {
       seedHost(harness.deps, { id: "host-old", name: "Laptop" });
       seedPrimaryHost(harness.deps, "host-old");
       seedHost(harness.deps, { id: "host-new", name: "Desktop" });
-      const artifactDir = await mkdtemp(join(tmpdir(), "bb-app-artifact-"));
+      const artifactDir = await mkdtemp(join(tmpdir(), "sandy-app-artifact-"));
       try {
-        const artifactPath = join(artifactDir, "bb-app-full.tgz");
-        const artifactBytes = Buffer.from("full bb-app package bytes");
+        const artifactPath = join(artifactDir, "sandy-app-full.tgz");
+        const artifactBytes = Buffer.from("full sandy-app package bytes");
         await writeFile(artifactPath, artifactBytes);
         const { environment, events } = createTestServerMoveEnvironment(
           harness,
@@ -77,7 +77,7 @@ describe("server move downloads", () => {
               case "server_move.inspect":
                 return {
                   ok: true,
-                  result: inspectResult({ bbAppVersion: "0.0.0-alpha.1" }),
+                  result: inspectResult({ sandyAppVersion: "0.0.0-alpha.1" }),
                 };
               case "server_move.prepare":
                 received.prepare = request.command;
@@ -111,19 +111,19 @@ describe("server move downloads", () => {
         });
         await expect.poll(() => received.prepare !== null).toBe(true);
         const prepare = received.prepare;
-        if (prepare === null || prepare.bbApp === null) {
-          throw new Error("The target never received a bb-app download");
+        if (prepare === null || prepare.sandyApp === null) {
+          throw new Error("The target never received a sandy-app download");
         }
 
-        const bbApp = await app.request(prepare.bbApp.downloadPath, {
+        const sandyApp = await app.request(prepare.sandyApp.downloadPath, {
           headers: { "x-test-host": "host-new" },
         });
-        expect(bbApp.status).toBe(200);
-        expect(bbApp.headers.get("content-length")).toBe(
+        expect(sandyApp.status).toBe(200);
+        expect(sandyApp.headers.get("content-length")).toBe(
           String(artifactBytes.byteLength),
         );
-        expect(Buffer.from(await bbApp.arrayBuffer())).toEqual(artifactBytes);
-        expect(prepare.bbApp.sizeBytes).toBe(artifactBytes.byteLength);
+        expect(Buffer.from(await sandyApp.arrayBuffer())).toEqual(artifactBytes);
+        expect(prepare.sandyApp.sizeBytes).toBe(artifactBytes.byteLength);
 
         const archive = await app.request(prepare.archive.downloadPath, {
           headers: { "x-test-host": "host-new" },
@@ -136,7 +136,7 @@ describe("server move downloads", () => {
           prepare.archive.sizeBytes,
         );
 
-        const forbidden = await app.request(prepare.bbApp.downloadPath, {
+        const forbidden = await app.request(prepare.sandyApp.downloadPath, {
           headers: { "x-test-host": "host-old" },
         });
         expect(forbidden.status).toBe(403);

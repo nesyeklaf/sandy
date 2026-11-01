@@ -12,13 +12,13 @@ import { useAtom } from "jotai";
 import type {
   ExperimentalThreadContextCardProps,
   ExperimentalThreadContextKind,
-} from "@get-bb/plugin-sdk";
-import { Button } from "@bb/shared-ui/button";
-import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@bb/shared-ui/chrome-style-tokens";
-import { Icon } from "@bb/shared-ui/icon";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@bb/shared-ui/tooltip";
+} from "@sandy-sdk/plugin-sdk";
+import { Button } from "@sandy/shared-ui/button";
+import { CHROME_SUBTLE_ICON_BUTTON_FOREGROUND_CLASS } from "@sandy/shared-ui/chrome-style-tokens";
+import { Icon } from "@sandy/shared-ui/icon";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@sandy/shared-ui/tooltip";
 import { HEADER_ICON_BUTTON_CLASS } from "@/components/layout/AppPageHeader";
 import { INFO_SECTION_TITLE_CLASS } from "@/components/secondary-panel/info/info-list";
 import {
@@ -213,13 +213,13 @@ export function useThreadContextCardContentInset(): number {
 }
 
 const EMPTY_BLOCK_CLASS =
-  "[&:not(:has([data-thread-context-card-body]_:not([data-bb-plugin-root])))]:hidden";
+  "[&:not(:has([data-thread-context-card-body]_:not([data-sandy-plugin-root])))]:hidden";
 
 const SECTION_DIVIDER_CLASS =
-  "[:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-bb-plugin-root]))~&]:mt-2 [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-bb-plugin-root]))~&]:border-t [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-bb-plugin-root]))~&]:border-border [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-bb-plugin-root]))~&]:pt-2";
+  "[:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-sandy-plugin-root]))~&]:mt-2 [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-sandy-plugin-root]))~&]:border-t [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-sandy-plugin-root]))~&]:border-border [:is([data-thread-context-card-rows],[data-thread-context-card-section]):has([data-thread-context-card-body]_:not([data-sandy-plugin-root]))~&]:pt-2";
 
 const SHOW_EMPTY_STATE_CLASS =
-  "contents [&:not(:has([data-thread-context-card-body]_:not([data-bb-plugin-root])))>[data-thread-context-card-empty]]:flex";
+  "contents [&:not(:has([data-thread-context-card-body]_:not([data-sandy-plugin-root])))>[data-thread-context-card-empty]]:flex";
 
 function ThreadContextCardContent({
   state,

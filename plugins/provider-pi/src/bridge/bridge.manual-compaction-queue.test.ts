@@ -19,7 +19,7 @@ afterEach(async () => {
 
 async function start() {
   const bridge = await startFakePiBridge({
-    prefix: "bb-pi-manual-compaction-",
+    prefix: "sandy-pi-manual-compaction-",
     initialize: true,
   });
   harness = bridge;

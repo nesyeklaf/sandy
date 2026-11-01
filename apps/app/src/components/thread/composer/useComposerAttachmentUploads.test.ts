@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { PromptDraftAttachment } from "@bb/client-core";
-import { BbHttpError } from "@bb/sdk/browser";
+import type { PromptDraftAttachment } from "@sandy/client-core";
+import { SandyHttpError } from "@sandy/sdk/browser";
 import { uploadDraftAttachments } from "./useComposerAttachmentUploads";
 
 const uploaded: PromptDraftAttachment = {
@@ -60,7 +60,7 @@ describe("uploadDraftAttachments", () => {
     const upload = vi
       .fn<(file: File) => Promise<PromptDraftAttachment>>()
       .mockRejectedValueOnce(
-        new BbHttpError({
+        new SandyHttpError({
           body: { code: "invalid_request", message },
           code: "invalid_request",
           message,

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { threads } from "@bb/db";
-import { turnScope, type ThreadTimelineSubscriptionTarget } from "@bb/domain";
+import { threads } from "@sandy/db";
+import { turnScope, type ThreadTimelineSubscriptionTarget } from "@sandy/domain";
 import {
   applyThreadTimelineDelta,
   isThreadTimelineDelta,
@@ -9,8 +9,8 @@ import {
   threadTimelineSignalSchema,
   type ThreadTimelineResponse,
   type ThreadTimelineSignal,
-} from "@bb/server-contract";
-import { realtimeSubscriptionTargetKey } from "@bb/domain";
+} from "@sandy/server-contract";
+import { realtimeSubscriptionTargetKey } from "@sandy/domain";
 import { onClientSocketMessage } from "../../src/ws/client-protocol.js";
 import { readJson } from "../helpers/json.js";
 import { createMockHubSocket } from "../helpers/mock-hub-socket.js";

@@ -8,20 +8,20 @@ import {
   screen,
 } from "@testing-library/react";
 import { startTransition, useState, type ReactNode } from "react";
-import { makeThreadWithRuntime } from "@bb/test-helpers/domain-fixtures";
+import { makeThreadWithRuntime } from "@sandy/test-helpers/domain-fixtures";
 import { threadQueryKey } from "@/hooks/queries/query-keys";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { RouteNavigationProvider } from "@/components/ui/app-route-anchor";
 import { resetAppRouteHistoryForTest } from "@/lib/app-route-history";
-import { useBbNavigate } from "@/lib/plugin-sdk-hooks";
+import { useSandyNavigate } from "@/lib/plugin-sdk-hooks";
 import type { PluginNavPanelSlot } from "@/lib/plugin-slots";
 import { usePluginId } from "@/components/plugin/plugin-context";
 import { resetAllCrashedPluginSlotsForTest } from "@/components/plugin/PluginSlotMount";
 import { createStore, Provider } from "jotai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TooltipProvider } from "@bb/shared-ui/tooltip";
-import { CompactViewportOverrideProvider } from "@bb/shared-ui/hooks/use-compact-viewport";
+import { TooltipProvider } from "@sandy/shared-ui/tooltip";
+import { CompactViewportOverrideProvider } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -410,7 +410,7 @@ function CurrentPath() {
   return <output data-testid="current-path">{useLocation().pathname}</output>;
 }
 function NavigatingHomeNavigation() {
-  const navigation = useBbNavigate();
+  const navigation = useSandyNavigate();
   const [count, setCount] = useState(0);
   return (
     <nav aria-label="Home navigation">

@@ -1,7 +1,7 @@
-import { defineRpcContract } from "@get-bb/plugin-sdk";
+import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
-import { gitBranchNameSchema, isValidGitBranchName } from "@bb/domain";
-import { diffViewedFileSchema } from "@bb/server-contract";
+import { gitBranchNameSchema, isValidGitBranchName } from "@sandy/domain";
+import { diffViewedFileSchema } from "@sandy/server-contract";
 import {
   GIT_DIFF_MAX_DIFF_BYTES,
   GIT_DIFF_MAX_FILE_LIST_BYTES,
@@ -25,7 +25,7 @@ import {
   BRANCH_LIST_LIMIT_MAX,
   BRANCH_LIST_QUERY_MAX_LENGTH,
   gitBranchOptionsSchema,
-} from "bb-environment-provider-host/git-types";
+} from "sandy-environment-provider-host/git-types";
 
 const gitDiffQuerySchema = workspaceDiffTargetSchema.refine(
   (target) =>

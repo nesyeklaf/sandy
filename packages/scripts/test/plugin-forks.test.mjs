@@ -127,21 +127,21 @@ describe("registry components at fork time", () => {
 
 describe("forkPluginPackageJson", () => {
   const workspaceBinsByPackage = new Map([
-    ["@bb/plugin-build", ["bb-plugin-build"]],
+    ["@sandy/plugin-build", ["sandy-plugin-build"]],
   ]);
   const noRegistryPackages = { dependencies: {}, devDependencies: {} };
 
   it("installs the SDK from the given source and drops workspace build tooling with its scripts", () => {
     const manifest = {
-      name: "bb-plugin-thread-list",
+      name: "sandy-plugin-thread-list",
       scripts: {
         test: "vitest run",
-        "prepare:bundled": "bb-plugin-build prepare-bundled",
+        "prepare:bundled": "sandy-plugin-build prepare-bundled",
       },
       dependencies: { jotai: "^2.19.0" },
       devDependencies: {
-        "@bb/plugin-build": "workspace:*",
-        "@get-bb/plugin-sdk": "workspace:*",
+        "@sandy/plugin-build": "workspace:*",
+        "@sandy-sdk/plugin-sdk": "workspace:*",
         vitest: "^4.1.1",
       },
     };
@@ -153,24 +153,24 @@ describe("forkPluginPackageJson", () => {
     });
 
     expect(forked.manifest).toEqual({
-      name: "bb-plugin-thread-list",
+      name: "sandy-plugin-thread-list",
       scripts: { test: "vitest run" },
       dependencies: { jotai: "^2.19.0" },
       devDependencies: {
-        "@get-bb/plugin-sdk": "file:/tmp/get-bb-plugin-sdk.tgz",
+        "@sandy-sdk/plugin-sdk": "file:/tmp/get-bb-plugin-sdk.tgz",
         vitest: "^4.1.1",
       },
     });
-    expect(forked.droppedDevDependencies).toEqual(["@bb/plugin-build"]);
+    expect(forked.droppedDevDependencies).toEqual(["@sandy/plugin-build"]);
     expect(forked.droppedScripts).toEqual(["prepare:bundled"]);
-    expect(manifest.devDependencies["@bb/plugin-build"]).toBe("workspace:*");
+    expect(manifest.devDependencies["@sandy/plugin-build"]).toBe("workspace:*");
   });
 
-  it("replaces @bb/shared-ui with the vendored items' packages without overriding the plugin's own", () => {
+  it("replaces @sandy/shared-ui with the vendored items' packages without overriding the plugin's own", () => {
     const forked = forkPluginPackageJson(
       {
         dependencies: {
-          "@bb/shared-ui": "workspace:*",
+          "@sandy/shared-ui": "workspace:*",
           "@radix-ui/react-slot": "^1.3.0",
         },
         devDependencies: { react: "^19.0.0" },
@@ -200,18 +200,18 @@ describe("forkPluginPackageJson", () => {
   it("refuses a plugin that needs another workspace package at runtime", () => {
     expect(() =>
       forkPluginPackageJson(
-        { dependencies: { "@bb/client-core": "workspace:*" } },
+        { dependencies: { "@sandy/client-core": "workspace:*" } },
         {
           sdkSpecifier: "0.5.16",
           workspaceBinsByPackage,
           registryDependencies: noRegistryPackages,
         },
       ),
-    ).toThrow("dependencies.@bb/client-core is a workspace package");
+    ).toThrow("dependencies.@sandy/client-core is a workspace package");
   });
 });
 
-describe("bb/forkable-plugin-imports", () => {
+describe("sandy/forkable-plugin-imports", () => {
   const pluginFile = join(
     ROOT,
     "plugins",
@@ -221,61 +221,61 @@ describe("bb/forkable-plugin-imports", () => {
     "x.ts",
   );
 
-  it("rejects bb workspace packages in every module position", () => {
+  it("rejects sandy workspace packages in every module position", () => {
     const reports = lint(pluginFile, (visitors) => {
-      visitors.ImportDeclaration({ source: literal("@bb/shared-ui/button") });
-      visitors.ExportAllDeclaration({ source: literal("@bb/client-core") });
-      visitors.ImportExpression({ source: literal("@bb/shared-ui/icon") });
-      visitors.TSImportType({ source: literal("@bb/domain") });
+      visitors.ImportDeclaration({ source: literal("@sandy/shared-ui/button") });
+      visitors.ExportAllDeclaration({ source: literal("@sandy/client-core") });
+      visitors.ImportExpression({ source: literal("@sandy/shared-ui/icon") });
+      visitors.TSImportType({ source: literal("@sandy/domain") });
       visitors.CallExpression({
         callee: {
           type: "MemberExpression",
           object: { type: "Identifier", name: "vi" },
           property: { type: "Identifier", name: "mock" },
         },
-        arguments: [literal("@bb/client-core")],
+        arguments: [literal("@sandy/client-core")],
       });
     });
 
     expect(reports).toHaveLength(5);
     expect(reports[0]).toContain(
-      "@bb/shared-ui/button is a bb workspace package",
+      "@sandy/shared-ui/button is a sandy workspace package",
     );
   });
 
   it("rejects workspace packages published under other names", () => {
     const reports = lint(pluginFile, (visitors) => {
       visitors.ImportDeclaration({
-        source: literal("bb-environment-provider-host/git"),
+        source: literal("sandy-environment-provider-host/git"),
       });
-      visitors.ImportDeclaration({ source: literal("bb-plugin-tasks") });
+      visitors.ImportDeclaration({ source: literal("sandy-plugin-tasks") });
       visitors.ImportDeclaration({
-        source: literal("@get-bb/plugin-sdk/host"),
+        source: literal("@sandy-sdk/plugin-sdk/host"),
       });
       visitors.ImportDeclaration({ source: literal("cross-spawn") });
     });
 
     expect(reports).toEqual([
       expect.stringContaining(
-        "bb-environment-provider-host/git is a bb workspace package",
+        "sandy-environment-provider-host/git is a sandy workspace package",
       ),
-      expect.stringContaining("bb-plugin-tasks is a bb workspace package"),
+      expect.stringContaining("sandy-plugin-tasks is a sandy workspace package"),
     ]);
   });
 
   it("rejects internal SDK modules and allows its public entry points", () => {
     const reports = lint(pluginFile, (visitors) => {
       visitors.ImportDeclaration({
-        source: literal("@get-bb/plugin-sdk/internal/plugin-app-collector"),
+        source: literal("@sandy-sdk/plugin-sdk/internal/plugin-app-collector"),
       });
       visitors.ImportDeclaration({
-        source: literal("@get-bb/plugin-sdk/testing/app"),
+        source: literal("@sandy-sdk/plugin-sdk/testing/app"),
       });
     });
 
     expect(reports).toEqual([
       expect.stringContaining(
-        "@get-bb/plugin-sdk/internal/plugin-app-collector is an internal SDK module",
+        "@sandy-sdk/plugin-sdk/internal/plugin-app-collector is an internal SDK module",
       ),
     ]);
   });
@@ -303,7 +303,7 @@ describe("bb/forkable-plugin-imports", () => {
         source: literal("../../../../packages/domain/src/index.js"),
       });
       visitors.ImportDeclaration({ source: literal("../model/fixtures.js") });
-      visitors.ImportDeclaration({ source: literal("@get-bb/plugin-sdk/app") });
+      visitors.ImportDeclaration({ source: literal("@sandy-sdk/plugin-sdk/app") });
       visitors.ImportDeclaration({ source: literal("@dnd-kit/core") });
       visitors.ExportNamedDeclaration({ source: null });
     });

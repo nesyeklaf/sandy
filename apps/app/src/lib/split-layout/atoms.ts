@@ -33,7 +33,7 @@ export const multiPaneSplitLayoutAtom = atom((get) => {
   return layout !== null && countPanes(layout.root) > 1 ? layout : null;
 });
 
-export const MAXIMIZED_PANE_STORAGE_KEY = "bb.splitLayout.maximizedPaneId";
+export const MAXIMIZED_PANE_STORAGE_KEY = "sandy.splitLayout.maximizedPaneId";
 
 export const maximizedPaneIdAtom = atomWithStorage<string | null>(
   MAXIMIZED_PANE_STORAGE_KEY,
@@ -49,7 +49,7 @@ export const maximizedPaneIdAtom = atomWithStorage<string | null>(
 );
 
 export const DIM_INACTIVE_SPLITS_STORAGE_KEY =
-  "bb.splitLayout.dimInactiveSplits";
+  "sandy.splitLayout.dimInactiveSplits";
 
 export const dimInactiveSplitsAtom = createBooleanPreferenceAtom(
   DIM_INACTIVE_SPLITS_STORAGE_KEY,

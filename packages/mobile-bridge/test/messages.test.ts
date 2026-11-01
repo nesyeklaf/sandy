@@ -31,7 +31,7 @@ describe("parsePageToShellMessage", () => {
   it("accepts every message kind the contract defines", () => {
     const cases: unknown[] = [
       { type: "ready", path: "/threads/thr_1" },
-      { type: "title", title: "bb", path: "/" },
+      { type: "title", title: "sandy", path: "/" },
       { type: "haptic", kind: "impact-medium" },
       { type: "badge", count: 0 },
       { type: "open-external", url: "https://example.com/docs" },
@@ -107,7 +107,7 @@ describe("parsePageToShellMessage", () => {
       "javascript:alert(1)",
       "data:text/html,<script>alert(1)</script>",
       "file:///etc/passwd",
-      "bb://settings",
+      "sandy://settings",
       "not a url",
     ]) {
       expect(
@@ -140,7 +140,7 @@ describe("parsePageToShellMessage", () => {
         json({
           type: "request",
           id: "r1",
-          request: { kind: "share", payload: { title: "bb" } },
+          request: { kind: "share", payload: { title: "sandy" } },
         }),
       ).ok,
     ).toBe(false);

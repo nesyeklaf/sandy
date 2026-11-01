@@ -1,8 +1,8 @@
 import { useId, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@bb/shared-ui/popover";
-import type { ThreadContextWindowUsage } from "@bb/server-contract";
+import { Popover, PopoverContent, PopoverTrigger } from "@sandy/shared-ui/popover";
+import type { ThreadContextWindowUsage } from "@sandy/server-contract";
 import { useHoverPopover } from "../../ui/hooks/use-hover-popover.js";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   calculateContextWindowUsagePercent,
   formatCompactTokenCount,

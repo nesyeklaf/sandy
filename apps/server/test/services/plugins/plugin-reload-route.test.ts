@@ -8,8 +8,8 @@ import {
 
 const BASE = "http://127.0.0.1:3334";
 
-const HEALTHY_SOURCE = `export default function plugin(bb: any) {
-  bb.cli.register({ name: "keeper", summary: "keeper", run() { return { exitCode: 0, stdout: "ok" }; } });
+const HEALTHY_SOURCE = `export default function plugin(sandy: any) {
+  sandy.cli.register({ name: "keeper", summary: "keeper", run() { return { exitCode: 0, stdout: "ok" }; } });
 }
 `;
 const BROKEN_SOURCE = `export default function plugin() { throw new Error("boom on load"); }
@@ -21,14 +21,14 @@ describe("POST /plugins/reload outcome", () => {
 
   beforeEach(async () => {
     harness = await createTestAppHarness();
-    rootDir = join(harness.config.dataDir, "fixtures", "bb-plugin-keeper");
+    rootDir = join(harness.config.dataDir, "fixtures", "sandy-plugin-keeper");
     await mkdir(rootDir, { recursive: true });
     await writeFile(
       join(rootDir, "package.json"),
       JSON.stringify({
-        name: "bb-plugin-keeper",
+        name: "sandy-plugin-keeper",
         version: "0.1.0",
-        bb: {
+        sandy: {
           name: "Keeper",
           description: "Reload outcome fixture.",
           branding: { icon: "Zap" },

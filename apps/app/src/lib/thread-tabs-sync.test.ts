@@ -1,5 +1,5 @@
-import { openSecondaryPanelTabInState } from "@bb/client-core";
-import { threadTabsSchema, type ThreadTab } from "@bb/server-contract";
+import { openSecondaryPanelTabInState } from "@sandy/client-core";
+import { threadTabsSchema, type ThreadTab } from "@sandy/server-contract";
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { setCachedThreadTabs } from "@/hooks/cache-owners/thread-tabs-cache-owner";
@@ -147,13 +147,13 @@ describe("thread tab synchronization", () => {
       secondary: {
         tabs: [
           {
-            id: "plugin-fixed:bb--git:diff",
+            id: "plugin-fixed:sandy--git:diff",
             kind: "plugin-fixed",
-            pluginId: "bb--git",
+            pluginId: "sandy--git",
             tabId: "diff",
           },
         ],
-        activeTabId: "plugin-fixed:bb--git:diff",
+        activeTabId: "plugin-fixed:sandy--git:diff",
         isOpen: true,
       },
     });
@@ -165,13 +165,13 @@ describe("thread tab synchronization", () => {
     ]);
     expect(restored.secondary).toEqual({
       isOpen: true,
-      activeTabId: "plugin-fixed:bb--git:diff",
+      activeTabId: "plugin-fixed:sandy--git:diff",
       tabs: [
         terminal,
         {
-          id: "plugin-fixed:bb--git:diff",
+          id: "plugin-fixed:sandy--git:diff",
           kind: "plugin-fixed",
-          pluginId: "bb--git",
+          pluginId: "sandy--git",
           tabId: "diff",
         },
         {
@@ -186,9 +186,9 @@ describe("thread tab synchronization", () => {
 
   it("keeps one Diff tab when the server saved both the core and the Git plugin ids", () => {
     const gitDiff: ThreadTab = {
-      id: "plugin-fixed:bb--git:diff",
+      id: "plugin-fixed:sandy--git:diff",
       kind: "plugin-fixed",
-      pluginId: "bb--git",
+      pluginId: "sandy--git",
       tabId: "diff",
     };
     const coreDiff: ThreadTab = {
@@ -198,7 +198,7 @@ describe("thread tab synchronization", () => {
       tabId: "diff",
     };
     const merged = mergeThreadTabChanges([gitDiff, coreDiff], [], []);
-    expect(merged.map((tab) => tab.id)).toEqual(["plugin-fixed:bb--git:diff"]);
+    expect(merged.map((tab) => tab.id)).toEqual(["plugin-fixed:sandy--git:diff"]);
   });
 
   it("preserves remote additions and edits when removing a local tab", () => {

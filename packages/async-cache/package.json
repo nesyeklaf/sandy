@@ -1,5 +1,5 @@
 {
-  "name": "@bb/async-cache",
+  "name": "@sandy/async-cache",
   "version": "0.0.1",
   "type": "module",
   "sideEffects": false,
@@ -18,11 +18,11 @@
     "lint": "oxlint src"
   },
   "devDependencies": {
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.1",
-    "@bb/test-helpers": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
     "@types/node": "^22.0.0"
   }
 }

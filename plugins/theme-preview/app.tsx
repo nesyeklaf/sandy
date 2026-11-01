@@ -1,12 +1,12 @@
 import {
   definePluginApp,
-  useBbNavigate,
+  useSandyNavigate,
   useRealtime,
   useRpc,
-} from "@get-bb/plugin-sdk/app";
-import { Badge as BbBadge } from "@/components/ui/badge";
-import { Button as BbButton } from "@/components/ui/button";
-import { Checkbox as BbCheckbox } from "@/components/ui/checkbox";
+} from "@sandy-sdk/plugin-sdk/app";
+import { Badge as SandyBadge } from "@/components/ui/badge";
+import { Button as SandyButton } from "@/components/ui/button";
+import { Checkbox as SandyCheckbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -44,7 +44,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { Input as BbInput } from "@/components/ui/input";
+import { Input as SandyInput } from "@/components/ui/input";
 import { PluginCompactIconMask } from "@/components/ui/plugin-icon";
 import {
   Popover,
@@ -58,7 +58,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Switch as BbSwitch } from "@/components/ui/switch";
+import { Switch as SandySwitch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -206,7 +206,7 @@ function Badge({
     merged: "border-transparent bg-pr-merged/15 text-pr-merged",
   };
   return (
-    <BbBadge
+    <SandyBadge
       variant="outline"
       className={cn(
         "h-5 gap-1 whitespace-nowrap px-1.5 py-0 text-[11px] font-medium",
@@ -214,7 +214,7 @@ function Badge({
       )}
     >
       {children}
-    </BbBadge>
+    </SandyBadge>
   );
 }
 
@@ -319,12 +319,12 @@ function MockSidebarRow({
     MOCK_SIDEBAR_ROW_CLASS,
     state === "hover" && "bg-sidebar-accent text-sidebar-accent-foreground",
     state === "selected" &&
-      "bb-sidebar-selected-row bg-state-active text-sidebar-foreground",
-    state === "split" && "bb-sidebar-open-in-split-row",
+      "sandy-sidebar-selected-row bg-state-active text-sidebar-foreground",
+    state === "split" && "sandy-sidebar-open-in-split-row",
   );
   if (interactive) {
     return (
-      <BbButton
+      <SandyButton
         type="button"
         size="sm"
         variant="ghost"
@@ -334,11 +334,11 @@ function MockSidebarRow({
         className={className}
       >
         {content}
-      </BbButton>
+      </SandyButton>
     );
   }
   return (
-    <BbButton
+    <SandyButton
       asChild
       size="sm"
       variant="ghost"
@@ -347,7 +347,7 @@ function MockSidebarRow({
       <div data-tp-sidebar-row="" data-tp-sidebar-state={state}>
         {content}
       </div>
-    </BbButton>
+    </SandyButton>
   );
 }
 
@@ -367,7 +367,7 @@ function Sidebar({
       <div className="flex min-h-0 flex-1 flex-col px-2 py-2">
         {mobile ? null : (
           <div className="flex h-8 items-center px-2 text-sm font-semibold">
-            bb-plugins
+            sandy-plugins
           </div>
         )}
         <MockSidebarRow label="New thread" />
@@ -641,7 +641,7 @@ function ThreadTocFixture() {
             }}
           >
             {messages.map((message, index) => (
-              <BbButton
+              <SandyButton
                 key={message}
                 variant="ghost"
                 size="sm"
@@ -662,7 +662,7 @@ function ThreadTocFixture() {
                 >
                   {message}
                 </span>
-              </BbButton>
+              </SandyButton>
             ))}
           </TabsContent>
         </Tabs>
@@ -774,7 +774,7 @@ function Thread({
                 <Dot color={v("success")} size={6} /> Running
               </Badge>
               {narrow ? null : (
-                <Badge tone="outline">bb/endless-theme-plugin</Badge>
+                <Badge tone="outline">sandy/endless-theme-plugin</Badge>
               )}
             </div>
           )}
@@ -1070,12 +1070,12 @@ function InfoPanel({ mobile = false }: { mobile?: boolean }) {
             {kv("Environment", "Worktree")}
             {kv(
               "Directory",
-              <span style={{ fontFamily: MONO, fontSize: 12 }}>~/Code/bb</span>,
+              <span style={{ fontFamily: MONO, fontSize: 12 }}>~/Code/sandy</span>,
             )}
             {kv(
               "Branch",
               <span style={{ fontFamily: MONO, fontSize: 12 }}>
-                bb/endless-theme
+                sandy/endless-theme
               </span>,
             )}
             {kv(
@@ -1134,7 +1134,7 @@ function SettingsPage({
   mode: Mode;
 }) {
   const control = (label: string, value: ReactNode) => (
-    <BbButton
+    <SandyButton
       type="button"
       variant="outline"
       size="sm"
@@ -1158,7 +1158,7 @@ function SettingsPage({
         name="ChevronDown"
         className="size-3.5 shrink-0 text-muted-foreground"
       />
-    </BbButton>
+    </SandyButton>
   );
   const row = (label: string, description: string | null, child: ReactNode) => (
     <div
@@ -1250,7 +1250,7 @@ function SettingsPage({
               )}
               {row(
                 "Palette",
-                "Palettes change bb's colors, including syntax colors in diffs and file previews. Choose a built-in palette or create one from a prompt.",
+                "Palettes change sandy's colors, including syntax colors in diffs and file previews. Choose a built-in palette or create one from a prompt.",
                 control("Palette", themeName),
               )}
               {row(
@@ -1277,7 +1277,7 @@ function SettingsPage({
               {row(
                 "Fade inactive splits",
                 "Fade out splits that do not have focus.",
-                <BbSwitch checked aria-label="Fade inactive splits" />,
+                <SandySwitch checked aria-label="Fade inactive splits" />,
               )}
             </div>
           </div>
@@ -1471,15 +1471,15 @@ function MobileFrame({
           className="absolute inset-y-0 left-0 flex w-[76%] max-w-80 flex-col bg-sidebar [&>aside]:w-full!"
         >
           <div className="flex h-12 shrink-0 items-center justify-between px-3 text-sm text-sidebar-foreground">
-            <span className="font-semibold">bb-plugins</span>
-            <BbButton
+            <span className="font-semibold">sandy-plugins</span>
+            <SandyButton
               variant="ghost"
               className={headerButton}
               aria-label="Close navigation preview"
               onClick={() => setSurface("conversation")}
             >
               <Icon name="PanelLeft" />
-            </BbButton>
+            </SandyButton>
           </div>
           {view === "settings" ? (
             <SettingsSidebarFixture />
@@ -1499,7 +1499,7 @@ function MobileFrame({
         }}
       >
         <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border-seam bg-surface-scrim px-2 text-sm">
-          <BbButton
+          <SandyButton
             variant="ghost"
             className={headerButton}
             aria-label="Show navigation preview"
@@ -1508,17 +1508,17 @@ function MobileFrame({
             }
           >
             <Icon name="PanelLeft" />
-          </BbButton>
+          </SandyButton>
           <span className="min-w-0 flex-1 truncate">{title}</span>
           <Icon name="MoreHorizontal" className="size-5 shrink-0" />
-          <BbButton
+          <SandyButton
             variant="ghost"
             className={headerButton}
             aria-label="Show right panel preview"
             onClick={() => setSurface(panel ? "conversation" : "panel")}
           >
             <Icon name="PanelRight" />
-          </BbButton>
+          </SandyButton>
         </div>
         {view === "settings" ? (
           <SettingsPage narrow themeName={themeName} mode={mode} />
@@ -1566,14 +1566,14 @@ function MobileFrame({
             <Icon name="Info" className="size-5" />
             <Icon name="FileDiff" className="size-5" />
             <span className="min-w-0 flex-1 truncate text-sm">Info</span>
-            <BbButton
+            <SandyButton
               variant="ghost"
               className={headerButton}
               aria-label="Close right panel preview"
               onClick={() => setSurface("conversation")}
             >
               <Icon name="PanelRight" />
-            </BbButton>
+            </SandyButton>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto [&>aside]:w-full! [&>aside]:border-0 [&>aside]:bg-background">
             <InfoPanel mobile />
@@ -1651,7 +1651,7 @@ const ALL_TOKENS = [
   "text-sm--line-height",
   "spacing",
   "tracking-normal",
-  "bb-sidebar-row-height",
+  "sandy-sidebar-row-height",
   "icon-stroke-width",
   "radius",
   "radius-sm",
@@ -2550,13 +2550,13 @@ function OverlaySpecimens() {
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <BbButton
+          <SandyButton
             variant="outline"
             size="sm"
             className={OVERLAY_TRIGGER_CLASS}
           >
             <OverlayTriggerLabel>Menu</OverlayTriggerLabel>
-          </BbButton>
+          </SandyButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuLabel>Thread</DropdownMenuLabel>
@@ -2571,13 +2571,13 @@ function OverlaySpecimens() {
       </DropdownMenu>
       <Dialog>
         <DialogTrigger asChild>
-          <BbButton
+          <SandyButton
             variant="outline"
             size="sm"
             className={OVERLAY_TRIGGER_CLASS}
           >
             <OverlayTriggerLabel>Dialog</OverlayTriggerLabel>
-          </BbButton>
+          </SandyButton>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -2589,25 +2589,25 @@ function OverlaySpecimens() {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <BbButton variant="outline" size="sm">
+              <SandyButton variant="outline" size="sm">
                 Cancel
-              </BbButton>
+              </SandyButton>
             </DialogClose>
             <DialogClose asChild>
-              <BbButton size="sm">Archive</BbButton>
+              <SandyButton size="sm">Archive</SandyButton>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Popover>
         <PopoverTrigger asChild>
-          <BbButton
+          <SandyButton
             variant="outline"
             size="sm"
             className={OVERLAY_TRIGGER_CLASS}
           >
             <OverlayTriggerLabel>Popover</OverlayTriggerLabel>
-          </BbButton>
+          </SandyButton>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-56 p-1">
           <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
@@ -2633,7 +2633,7 @@ function OverlaySpecimens() {
       <TooltipProvider delayDuration={HOVER_OPEN_DELAY_MS}>
         <Tooltip open={tooltip.open} onOpenChange={tooltip.setOpen}>
           <TooltipTrigger asChild>
-            <BbButton
+            <SandyButton
               variant="outline"
               size="sm"
               data-tp-tooltip-trigger=""
@@ -2648,7 +2648,7 @@ function OverlaySpecimens() {
               }}
             >
               <OverlayTriggerLabel>Tooltip</OverlayTriggerLabel>
-            </BbButton>
+            </SandyButton>
           </TooltipTrigger>
           <TooltipContent
             data-tp-tooltip-content=""
@@ -2666,7 +2666,7 @@ function OverlaySpecimens() {
         closeDelay={HOVER_CLOSE_DELAY_MS}
       >
         <HoverCardTrigger asChild>
-          <BbButton
+          <SandyButton
             variant="outline"
             size="sm"
             data-tp-hovercard-trigger=""
@@ -2674,7 +2674,7 @@ function OverlaySpecimens() {
             onClick={() => setHoverCardOpen((open) => !open)}
           >
             <OverlayTriggerLabel>Hover card</OverlayTriggerLabel>
-          </BbButton>
+          </SandyButton>
         </HoverCardTrigger>
         <HoverCardContent
           data-tp-hovercard-content=""
@@ -2700,7 +2700,7 @@ function OverlaySpecimens() {
               color: v("muted-foreground"),
             }}
           >
-            bb/endless-theme
+            sandy/endless-theme
           </div>
           <div
             style={{
@@ -2714,23 +2714,23 @@ function OverlaySpecimens() {
             .20.
           </div>
           <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-            <BbButton
+            <SandyButton
               variant="outline"
               size="sm"
               className="h-7 flex-1 cursor-pointer px-2 text-xs"
             >
               Copy branch
-            </BbButton>
-            <BbButton
+            </SandyButton>
+            <SandyButton
               size="sm"
               className="h-7 flex-1 cursor-pointer px-2 text-xs"
             >
               Open in split
-            </BbButton>
+            </SandyButton>
           </div>
         </HoverCardContent>
       </HoverCard>
-      <BbButton
+      <SandyButton
         variant="outline"
         size="sm"
         className={OVERLAY_TRIGGER_CLASS}
@@ -2741,7 +2741,7 @@ function OverlaySpecimens() {
         }
       >
         <OverlayTriggerLabel>Toast</OverlayTriggerLabel>
-      </BbButton>
+      </SandyButton>
     </div>
   );
 }
@@ -2799,48 +2799,48 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
             gap: 6,
           }}
         >
-          <BbButton
+          <SandyButton
             size="sm"
             className="h-7 min-w-0 cursor-pointer px-2 text-xs"
           >
             Default
-          </BbButton>
-          <BbButton
+          </SandyButton>
+          <SandyButton
             size="sm"
             variant="secondary"
             className="h-7 min-w-0 cursor-pointer px-2 text-xs"
           >
             Secondary
-          </BbButton>
-          <BbButton
+          </SandyButton>
+          <SandyButton
             size="sm"
             variant="outline"
             className="h-7 min-w-0 cursor-pointer px-2 text-xs"
           >
             Outline
-          </BbButton>
-          <BbButton
+          </SandyButton>
+          <SandyButton
             size="sm"
             variant="ghost"
             className="h-7 min-w-0 cursor-pointer px-2 text-xs"
           >
             Ghost
-          </BbButton>
-          <BbButton
+          </SandyButton>
+          <SandyButton
             size="sm"
             variant="destructive"
             className="h-7 min-w-0 cursor-pointer px-2 text-xs"
           >
             Delete
-          </BbButton>
-          <BbButton
+          </SandyButton>
+          <SandyButton
             size="sm"
             variant="outline"
             className="h-7 min-w-0 px-2 text-xs"
             disabled
           >
             Disabled
-          </BbButton>
+          </SandyButton>
         </div>
       </div>
       <div data-tp-block="badges" style={compactBlock(true)}>
@@ -2876,14 +2876,14 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
           Inputs
         </h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <BbInput
+          <SandyInput
             className="h-7 px-2 text-xs"
             aria-label="Search threads"
             placeholder="Search threads…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          <BbInput
+          <SandyInput
             className="h-7 px-2 text-xs"
             aria-label="Disabled input"
             value="Disabled"
@@ -2909,7 +2909,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               ...compactLabel,
             }}
           >
-            <BbSwitch
+            <SandySwitch
               checked={notify}
               onCheckedChange={setNotify}
               className="cursor-pointer"
@@ -2925,7 +2925,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               ...compactLabel,
             }}
           >
-            <BbSwitch
+            <SandySwitch
               checked={compact}
               onCheckedChange={setCompact}
               className="cursor-pointer"
@@ -2941,7 +2941,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               color: v("muted-foreground"),
             }}
           >
-            <BbSwitch checked disabled /> Disabled
+            <SandySwitch checked disabled /> Disabled
           </label>
         </div>
       </div>
@@ -2962,7 +2962,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               ...compactLabel,
             }}
           >
-            <BbCheckbox
+            <SandyCheckbox
               checked={checked}
               onCheckedChange={(next) => setChecked(next === true)}
               className="cursor-pointer"
@@ -2978,7 +2978,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               ...compactLabel,
             }}
           >
-            <BbCheckbox
+            <SandyCheckbox
               checked={agreed}
               onCheckedChange={(next) => setAgreed(next === true)}
               className="cursor-pointer"
@@ -2994,7 +2994,7 @@ function ComponentsSection({ stacked = false }: { stacked?: boolean }) {
               color: v("muted-foreground"),
             }}
           >
-            <BbCheckbox checked disabled /> Disabled
+            <SandyCheckbox checked disabled /> Disabled
           </label>
         </div>
       </div>
@@ -3346,7 +3346,7 @@ function ThemePicker({
   );
 }
 
-const MODE_KEY = "bb.theme";
+const MODE_KEY = "sandy.theme";
 
 function useColorMode(): [Mode, (next: Mode) => void] {
   const read = () =>
@@ -3382,7 +3382,7 @@ function useColorMode(): [Mode, (next: Mode) => void] {
 function PreviewPage({ subPath }: { subPath: string }) {
   const rpc = useRpc<typeof rpcContract>();
   const [mode, setMode] = useColorMode();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);

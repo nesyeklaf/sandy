@@ -1,0 +1,93 @@
+{
+  "version": 3,
+  "prover": "gdp-wired@0.12.3",
+  "inputs": {
+    "proofs/index.ts": "d9e2c3f14979dea32bfbd42d2c844ba00ac714e48cbe665d1b9e664e08c60505",
+    "proofs/kernel.ts": "c2f7a54f611c859256de1ab0badcb698ee8c8148dc1f2847d683acd1dd71b795",
+    "proofs/policy.ts": "47701ff159ea3c1cd142676d93d50346e8542ca6fcf2ccf5f8412a3d5581844a",
+    "proofs/compaction.ts": "b559117f9f2224ba7bace8a94fc06af0ff60dd7cd997af5d177990202b4ca9b2",
+    "proofs/resources.ts": "49c55464807e77fa508047973196613969ca0fdafbddc48bfe58efb035fdd3a0",
+    "proofs/lifecycle.ts": "e43bc62b44982c55424ba6c36157d89eb4c2545fc445334585ce2379d0a295de",
+    "proofs/storage.ts": "5428833c8d71be81947159c8d09fcf31989809da4f09156c7f10cc0291a7df84",
+    "proofs/provider.ts": "f067052d8571c79ac9880692aa33a4a794744d3c586db53afd89d466db5659cc",
+    "proofs/authority.ts": "b9ee6a4dc95ba3783879423ecf61eaf2256ac62805927ca5b8ba1f390e53cf56",
+    "scripts/verified-kernels.ts": "193e8a49557c80cad81ba59fec0f68d47ca55a5d72effafd8bfe75b45041e301"
+  },
+  "outputs": {
+    "src/verified/generated/policy.js": "9c464c44c7e376097e5df6c274ca4ccff333cad1ae92619dc17a275427dbedb0",
+    "src/verified/generated/policy.d.ts": "a9f71f09ad846ce3dedcff4e9b0418f96eb9978abf34992a93fdc41921c9eb44",
+    "src/verified/generated/compaction.js": "4d3fcc2c7a896456e6f7b5ec640e5f37e4631754c90767f70aac52d526f62a39",
+    "src/verified/generated/compaction.d.ts": "541b3658979d897b41e9000fb3424a73e3693ff07e925cea8795015c2a5d460c",
+    "src/verified/generated/resources.js": "26ae1c9d330b317caf7fde97c9b77b8b77982d78b72a78878feb9b7fb9368c8d",
+    "src/verified/generated/resources.d.ts": "49d79430bd10dd36d87f9508d6270083dc9c5ae0888ed2495b2e073494082ae2",
+    "src/verified/generated/lifecycle.js": "dd92485c4de68ebf358ec5ebbb0fc1a8a25f7ebb1b00001a87466559fdfa7c23",
+    "src/verified/generated/lifecycle.d.ts": "beecc75c480e760f106c44c2b39affbd9b2eccb569100836cb38ee852ec25e5e",
+    "src/verified/generated/storage.js": "af00345fa10c63dfab82b77b716fcb716ae3c20f1fd1468376e4d67a31c404f7",
+    "src/verified/generated/storage.d.ts": "9663a4b5b87e3e25cff27760c8c2e896051a6726bed6e9772eedf22862d6c1aa",
+    "src/verified/generated/provider.js": "045f46fccab098f58055258d43b6943f13d6da2a40a8dc24fd209be9e877c940",
+    "src/verified/generated/provider.d.ts": "d631c9f471173cf863152adca80e21e15990086f661e7425837c0fe00d5d523c",
+    "src/verified/generated/authority.js": "09408e031761f17a1c07d060e20c4cce460bdbb8768fd67dcf00d47a53dbb88c",
+    "src/verified/generated/authority.d.ts": "e97b89665f32648c41ac78d7e916c658285374ca5b051447d2ca993bc2d9f7e1"
+  },
+  "claims": {
+    "policy": [
+      "transitionCurrent: transition_sound: a current transition is unretired, same-epoch, same-owner and open",
+      "transitionCurrent: transition_complete: every unretired, same-epoch, same-owner, open transition is current",
+      "cleanupState: cleanup_failure_quarantines: a cleanup failure always quarantines",
+      "cleanupState: cleanup_diverted: an unfailed diverted cleanup is diverted",
+      "cleanupState: cleanup_disposed: an unfailed undiverted cleanup is disposed",
+      "unknownConflict: unknown_conflict_exact: an unknown scope conflicts exactly when it or its peer is noncommutative",
+      "unknownConflict: unknown_conflict_symmetric: swapping the sides never changes the decision",
+      "knownConflict: known_conflict_exact: a shared resource conflicts exactly when one side is ordered",
+      "lineageSelected: active_lineage_only: without all-branch selection only members are selected",
+      "lineageSelected: explicit_all_lineages: explicit all-branch selection selects every entry",
+      "pointerCurrent: pointer_sound: a current pointer matches its source and its lineage",
+      "pointerCurrent: pointer_complete: a pointer matching its source and lineage is current",
+      "coverageComplete: coverage_sound: complete coverage needs a complete source and no truncation",
+      "coverageComplete: coverage_complete: an untruncated complete source is complete coverage",
+      "useNormalized: normalization_sound: a normal form is used only for non-canonical, planned, changed, accepted arguments",
+      "useNormalized: normalization_complete: every non-canonical, planned, changed, accepted normal form is used",
+      "useNormalized: canonical_identity: canonical arguments stay original",
+      "headReadable: head_sound: a readable head has its sequence, its version, and a commit or a marked pending write",
+      "headReadable: pending_without_marker_hidden: a pending uncommitted head without its marker is hidden",
+      "headReadable: committed_head_visible: a committed head with its sequence and version is visible",
+      "certificateAccepted: certificate_sound: an accepted certificate has every fact",
+      "certificateAccepted: certificate_complete: a certificate with every fact is accepted",
+      "consume: consume_once: an inactive token releases nothing",
+      "consume: consume_retires: consumption releases an active token and leaves it inactive",
+      "summaryWithin: summary_bounds: an accepted summary is within its byte limit and token target",
+      "summaryWithin: summary_complete: a summary within both bounds is accepted",
+      "sampleWithin: sample_accounting: retained plus omitted is the total, and the retained fit the limit",
+      "sampleWithin: sample_complete: exact accounting within the limit is accepted",
+      "chunkAccepted: chunk_sound: an accepted chunk starts where expected, has the expected total, an exact length, truthful completion and progress",
+      "chunkAccepted: chunk_complete: every chunk meeting those requirements is accepted"
+    ],
+    "compaction": [
+      "compactionCut: cut_sound: an open cut is eligible, after the previous marker, and within its tail budget; span_sound: a span keeps the cut open only if it was open and the span does not straddle the boundary; refusal_final: a refused cut stays refused; header_once: a header opens only an unstarted cut; cut_complete: a valid header opens a fresh cut, and an allowed span keeps it open"
+    ],
+    "resources": [
+      "resourceScope: scope names are a set; resource_source_refinement: an exact source keeps every declared name, and only those; resource_source_valid: an exact source is nonempty, with no empty or wildcard identity; resource_source_complete: every nonempty source of valid identities is exact; resource_refinement: normalization keeps a scope's names in both directions or widens it to unknown; resource_output_valid: an exact normal form is nonempty, at most 64 valid names of at most 256 code units; resource_unknown: a refused scope is unknown and names nothing; resource_precision: a valid bounded set-equivalent proposal is accepted as given (so the identity proposal is unchanged)",
+      "resourceConflict: resource_pair_sound: quiet effects never conflict, nor do two commutative ones; resource_conflict_exact: exact disjoint scopes never conflict; resource_conflict_complete: an ordered pair of effects with an unknown scope conflicts; resource_pair_complete: an ordered pair of effects sharing a named resource conflicts"
+    ],
+    "lifecycle": [
+      "bindingStep: inspect_safe: a granted inspection is open to ordinary work and changes nothing; every inspection changes nothing; inspect_open_complete: an inspection open to ordinary work is granted; begin_safe: a granted begin was open and adds exactly one call; a denied one changes nothing; begin_open_complete: every open begin is granted with one more call; retain_safe: a granted retain was open and adds exactly one hold; a denied one changes nothing; retain_open_complete: every open retain is granted with one more hold; close_safe: close starts only from a retiring, ownerless, idle binding, into Closing; otherwise nothing changes; close_complete: a retiring, ownerless, idle binding starts closing; release_exact: a release with holds removes exactly one; with none it is refused and changes nothing; end_exact: an end with calls removes exactly one; with none it is refused and changes nothing; revoke_preserves_work: revocation retires, drops the owner and keeps every hold and call; drop_owner_preserves_work: dropping the owner keeps everything else; retire_preserves_work: retirement changes only the phase; activation_exact: Staged and Active activate; every other phase is refused unchanged; completion_exact: Closing completes into Closed; every other phase is refused unchanged; failure_exact: abort quarantines every unclosed binding, keeping its work; Closed is refused unchanged; closing_refuses_work: a closing binding refuses every begin; revoked_refuses_work: a revoked binding refuses ordinary work; cleanup_after_revocation: a revoked retiring binding still admits cleanup"
+    ],
+    "storage": [
+      "storageTransition: storage_safe: an unchanged plan is an admitted delete of an absent key",
+      "storageTransition: storage_safe: a put forwards its key, value and identity exactly, at the successors of its base and of the clock",
+      "storageTransition: storage_safe: a delete forwards its key from a present slot, at the successors of its version and of the clock",
+      "storageTransition: storage_put_complete: an admitted put with room is written",
+      "storageTransition: storage_delete_complete: an admitted delete of a present key with room is applied",
+      "storageTransition: storage_absent_delete_complete: an admitted delete of an absent key changes nothing",
+      "storageTransition: storage_stale_refused: an expected revision other than the actual one is a conflict",
+      "storageTransition: storage_put_overflow: an admitted put without room is exhausted",
+      "storageTransition: storage_delete_overflow: an admitted delete of a present key without room is exhausted"
+    ],
+    "provider": [
+      "providerTicket: provider_plan_safe: a planned write had a live grant for this key, no cancellation and the expected revision, and forwards them exactly; provider_ticket_consumed: taking consumes the ticket and keeps its contents; provider_revocation_consumes: revoking consumes the ticket and plans nothing; provider_revoked_refused: a consumed ticket plans nothing; provider_canceled_refused: a canceled take plans nothing; state_stale_refused: a revision other than the expected one plans nothing; provider_admission_complete: a live ticket taken for its key at its revision plans exactly its write; provider_replay_refused: a second take of the same ticket plans nothing"
+    ],
+    "authority": [
+      "capabilityAuthority: grants are a set; authority_issue_exact: issuance is live and holds exactly its grants; authority_use_safe: a granted use was live and named a held grant; authority_use_complete: a live use of a held grant is granted; authority_use_preserves: a use changes no authority; authority_derive_safe: a live child had a live parent and holds exactly its candidate, all within the parent; authority_derive_complete: a candidate within a live parent is derived exactly; authority_released_cannot_derive: a released parent derives only a released child; authority_released_not_live: release leaves no live authority and no grants; authority_released_refused: a released authority grants nothing"
+    ]
+  }
+}

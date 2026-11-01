@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@bb/shared-ui/avatar";
-import { cn } from "@bb/shared-ui/lib/utils";
-import { BbLogo } from "@/components/ui/bb-logo";
+import { Avatar, AvatarFallback, AvatarImage } from "@sandy/shared-ui/avatar";
+import { cn } from "@sandy/shared-ui/lib/utils";
+import { SandyLogo } from "@/components/ui/sandy-logo";
 
 function authorInitials(name: string): string {
   const initials = name
@@ -50,7 +50,7 @@ export function PluginAuthorAvatar({
           size === "detail" ? "text-2xs" : "text-xs",
         )}
       >
-        {official ? <BbLogo className="size-4/5" /> : authorInitials(name)}
+        {official ? <SandyLogo className="size-4/5" /> : authorInitials(name)}
       </AvatarFallback>
     </Avatar>
   );

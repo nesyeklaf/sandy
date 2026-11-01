@@ -21,10 +21,10 @@ function catalogEntry(pluginId: string): PluginCatalogSearchEntry {
     collections: [],
     source: `npm:${pluginId}`,
     repositoryUrl: null,
-    marketplace: "bb-community",
-    marketplaceDisplayName: "BB Community",
-    publisherKey: "bb-community",
-    publisherLabel: "BB Community",
+    marketplace: "sandy-community",
+    marketplaceDisplayName: "SANDY Community",
+    publisherKey: "sandy-community",
+    publisherLabel: "SANDY Community",
     official: true,
     author: {
       name: "Pat Lee",
@@ -54,7 +54,7 @@ describe("plugin marketplace author links", () => {
     expect(
       screen.getByRole("link", { name: "Pat Lee" }).getAttribute("href"),
     ).toBe(
-      "/plugins?category=security&author=12%3Abb-community%3Agithub%3Apatlee",
+      "/plugins?category=security&author=15%3Asandy-community%3Agithub%3Apatlee",
     );
   });
 

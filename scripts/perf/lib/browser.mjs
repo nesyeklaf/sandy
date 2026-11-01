@@ -79,7 +79,7 @@ export class PerfBrowser {
     attribute = false,
   } = {}) {
     const port = await reservePort();
-    const profileDir = mkdtempSync(join(tmpdir(), "bb-perf-chrome-"));
+    const profileDir = mkdtempSync(join(tmpdir(), "sandy-perf-chrome-"));
     const executable = resolveChrome(chrome);
     const proc = launchChrome({
       chrome: executable,
@@ -131,13 +131,13 @@ export class PerfBrowser {
   }
 
   async watchOnLoad(specs) {
-    const source = "window.__bbperf.watch(" + JSON.stringify(specs) + ")";
+    const source = "window.__sandyperf.watch(" + JSON.stringify(specs) + ")";
     await this.client.send("Page.addScriptToEvaluateOnNewDocument", { source });
   }
 
   async readWatches(names, ledger, label) {
     const { results, pending } = await this.evaluate(
-      "window.__bbperf.watches()",
+      "window.__sandyperf.watches()",
     );
     for (const name of names)
       ledger.record(
@@ -431,7 +431,7 @@ export class PerfBrowser {
       state.visibility === "visible",
       state,
     );
-    const raf = await this.evaluate("window.__bbperf.rafProbe(500)");
+    const raf = await this.evaluate("window.__sandyperf.rafProbe(500)");
     const fps = (raf.frames / raf.elapsedMs) * 1000;
     ledger.record(
       label + ": rAF frames are produced (page not throttled)",
@@ -442,7 +442,7 @@ export class PerfBrowser {
         fps: Math.round(fps),
       },
     );
-    const drift = await this.evaluate("window.__bbperf.timerDrift(30, 10)");
+    const drift = await this.evaluate("window.__sandyperf.timerDrift(30, 10)");
     const driftSummary = summarize(drift);
     ledger.record(
       label + ": timers are not throttled",
@@ -469,13 +469,13 @@ export class PerfBrowser {
       { hostBusyShare: Math.round(hostBusy * 1000) / 1000, loadavg: loadavg() },
     );
     await this.livenessProbe(ledger, { label });
-    await this.evaluate("window.__bbperf.reset()");
+    await this.evaluate("window.__sandyperf.reset()");
     const metricsBefore = await this.performanceMetrics();
-    const before = await this.evaluate("window.__bbperf.collect()");
+    const before = await this.evaluate("window.__sandyperf.collect()");
     const handle = await startTrace(this.client, {
       extraCategories: this.attribute ? ATTRIBUTION_CATEGORIES : [],
     });
-    await this.evaluate("window.__bbperf.mark('bbperf:start')");
+    await this.evaluate("window.__sandyperf.mark('sandyperf:start')");
     const startedAt = Date.now();
     let actionResult;
     let actionError = null;
@@ -485,13 +485,13 @@ export class PerfBrowser {
       actionError = error;
     }
     const elapsedMs = Date.now() - startedAt;
-    await this.evaluate("window.__bbperf.mark('bbperf:end')");
+    await this.evaluate("window.__sandyperf.mark('sandyperf:end')");
     const events = await stopTrace(this.client, handle);
     if (actionError) throw actionError;
-    const after = await this.evaluate("window.__bbperf.collect()");
+    const after = await this.evaluate("window.__sandyperf.collect()");
     const metricsAfter = await this.performanceMetrics();
-    const startMark = events.find((event) => event.name === "bbperf:start");
-    const endMark = events.find((event) => event.name === "bbperf:end");
+    const startMark = events.find((event) => event.name === "sandyperf:start");
+    const endMark = events.find((event) => event.name === "sandyperf:end");
     ledger.record(
       label + ": trace window markers present",
       Boolean(startMark && endMark),

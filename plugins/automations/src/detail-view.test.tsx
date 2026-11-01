@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   ExperimentalPermissionModePickerProps,
   ExperimentalProviderModelPickerProps,
-} from "@get-bb/plugin-sdk/app";
-import { installTestPluginRuntime } from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/app";
+import { installTestPluginRuntime } from "@sandy-sdk/plugin-sdk/testing/app";
 import type {
   AgentExecutionUpdate,
   AutomationDetailResponse,
@@ -18,7 +18,7 @@ import {
   ScriptAutomationDefinition,
 } from "../detail-view.js";
 
-vi.mock("@get-bb/plugin-sdk/app", async (importOriginal) => ({
+vi.mock("@sandy-sdk/plugin-sdk/app", async (importOriginal) => ({
   ...(await importOriginal()),
   experimental_ProviderModelPicker: ({
     value,
@@ -29,7 +29,7 @@ vi.mock("@get-bb/plugin-sdk/app", async (importOriginal) => ({
   }: ExperimentalProviderModelPickerProps) => (
     <button
       type="button"
-      data-testid="bb-provider-model-picker"
+      data-testid="sandy-provider-model-picker"
       data-routing-kind={routing?.kind ?? "primary"}
       data-routing-id={
         routing === undefined
@@ -66,7 +66,7 @@ vi.mock("@get-bb/plugin-sdk/app", async (importOriginal) => ({
     <button
       type="button"
       aria-label="Permission mode"
-      data-testid="bb-permission-mode-picker"
+      data-testid="sandy-permission-mode-picker"
       data-provider-id={providerId}
       data-routing-kind={routing?.kind ?? "primary"}
       disabled={disabled}
@@ -316,10 +316,10 @@ describe("Automation detail recipe", () => {
     expect(savedPrompt.textContent).toBe("Summarize yesterday's commits.");
     expect(screen.queryByRole("button", { name: "Save Prompt" })).toBeNull();
     const disabledModelSelector = container.querySelector(
-      '[data-testid="bb-provider-model-picker"]',
+      '[data-testid="sandy-provider-model-picker"]',
     ) as HTMLButtonElement;
     const disabledPermissionSelector = container.querySelector(
-      '[data-testid="bb-permission-mode-picker"]',
+      '[data-testid="sandy-permission-mode-picker"]',
     ) as HTMLButtonElement;
     expect(disabledModelSelector.disabled).toBe(true);
     expect(disabledPermissionSelector.disabled).toBe(true);
@@ -363,14 +363,14 @@ describe("Automation detail recipe", () => {
       promptFooter.querySelectorAll('[data-option-display=""]'),
     ).toHaveLength(1);
     const accessSelector = promptFooter.querySelector(
-      '[data-testid="bb-permission-mode-picker"]',
+      '[data-testid="sandy-permission-mode-picker"]',
     ) as HTMLButtonElement;
     expect(accessSelector.disabled).toBe(false);
     expect(accessSelector.getAttribute("aria-label")).toBe("Permission mode");
     expect(promptPanel.textContent).toContain("Opus 5");
     expect(promptPanel.textContent).toContain("Claude");
     const modelSelector = promptPanel.querySelector(
-      '[data-testid="bb-provider-model-picker"]',
+      '[data-testid="sandy-provider-model-picker"]',
     ) as HTMLButtonElement;
     expect(modelSelector.disabled).toBe(false);
     expect(modelSelector.textContent).toContain("medium");
@@ -392,10 +392,10 @@ describe("Automation detail recipe", () => {
     }) as HTMLTextAreaElement;
     const reopenedPanel = reopenedPrompt.closest("form") as HTMLElement;
     const reopenedModelSelector = reopenedPanel.querySelector(
-      '[data-testid="bb-provider-model-picker"]',
+      '[data-testid="sandy-provider-model-picker"]',
     ) as HTMLButtonElement;
     const reopenedAccessSelector = container.querySelector(
-      '[data-testid="bb-permission-mode-picker"]',
+      '[data-testid="sandy-permission-mode-picker"]',
     ) as HTMLButtonElement;
     const reopenedSavePrompt = screen.getByRole("button", {
       name: "Save Prompt",
@@ -492,7 +492,7 @@ describe("Automation detail recipe", () => {
       />,
     );
 
-    const picker = screen.getByTestId("bb-provider-model-picker");
+    const picker = screen.getByTestId("sandy-provider-model-picker");
     expect(picker.getAttribute("data-routing-kind")).toBe("environment");
     expect(picker.getAttribute("data-routing-id")).toBe("env_test");
     expect(picker.getAttribute("data-provider-change-allowed")).toBe("true");
@@ -518,7 +518,7 @@ describe("Automation detail recipe", () => {
       <AutomationDetailView
         automation={{
           ...AUTOMATION,
-          projectId: "proj_bb",
+          projectId: "proj_sandy",
           execution: {
             mode: "agent",
             prompt: "Summarize yesterday's commits.",
@@ -531,7 +531,7 @@ describe("Automation detail recipe", () => {
               hostId: "host_local",
               workspace: {
                 type: "unmanaged",
-                path: "/Users/you/Code/bb",
+                path: "/Users/you/Code/sandy",
                 branch: {
                   kind: "existing",
                   name: "agent/tools-hub-schedules",
@@ -540,7 +540,7 @@ describe("Automation detail recipe", () => {
             },
           },
         }}
-        projectLabel="bb"
+        projectLabel="sandy"
         runsState={{
           runs: [],
           nextCursor: null,
@@ -567,15 +567,15 @@ describe("Automation detail recipe", () => {
     ) as HTMLElement;
     expect(promptShell.textContent).toContain("Claude");
     expect(promptShell.textContent).toContain("Opus 5");
-    expect(promptFooter.textContent).toContain("bb");
-    expect(promptFooter.textContent).toContain("~/Code/bb");
+    expect(promptFooter.textContent).toContain("sandy");
+    expect(promptFooter.textContent).toContain("~/Code/sandy");
     expect(promptFooter.textContent).toContain("Approve for me");
     expect(promptShell.textContent).toContain("medium");
     expect(
       promptShell.querySelectorAll('[data-option-display=""]'),
     ).toHaveLength(2);
     expect(
-      promptShell.querySelectorAll('[data-testid="bb-provider-model-picker"]'),
+      promptShell.querySelectorAll('[data-testid="sandy-provider-model-picker"]'),
     ).toHaveLength(1);
   });
 
@@ -632,7 +632,7 @@ describe("Automation detail recipe", () => {
       promptFooter.querySelectorAll('[data-option-display=""]'),
     ).toHaveLength(2);
     expect(
-      container.querySelector('[data-testid="bb-provider-model-picker"]'),
+      container.querySelector('[data-testid="sandy-provider-model-picker"]'),
     ).not.toBeNull();
   });
 
@@ -715,10 +715,10 @@ describe("Automation detail recipe", () => {
   it.each([
     [
       { type: "automation-storage" } as const,
-      "/var/lib/bb/plugins/automations/scripts/auto_1",
-      "/var/lib/bb/plugins/automations/scripts/auto_1",
+      "/var/lib/sandy/plugins/automations/scripts/auto_1",
+      "/var/lib/sandy/plugins/automations/scripts/auto_1",
     ],
-    [{ type: "project" } as const, "/srv/projects/bb", "/srv/projects/bb"],
+    [{ type: "project" } as const, "/srv/projects/sandy", "/srv/projects/sandy"],
     [
       { type: "path", path: "/srv/automation-work" } as const,
       "/srv/automation-work",

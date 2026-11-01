@@ -8,14 +8,14 @@ import {
   PLUGIN_SDK_VERSION,
   type Thread,
   type ThreadQueuedMessage,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { logPluginBuildWarnings } from "./plugin-log.js";
 import type { MachineEnrollmentService } from "../machines/machine-services.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import {
   providerWithoutBridgeMessage,
   type NormalizedPluginProviderDeclaration,
-} from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import { createHash, randomUUID } from "node:crypto";
 import {
   createReadStream,
@@ -30,8 +30,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire, registerHooks } from "node:module";
 import { performance } from "node:perf_hooks";
 import semver from "semver";
-import { HOST_ARTIFACT_MAX_BYTES } from "@bb/host-daemon-contract/protocol";
-import { buildPluginApp } from "@bb/plugin-build";
+import { HOST_ARTIFACT_MAX_BYTES } from "@sandy/host-daemon-contract/protocol";
+import { buildPluginApp } from "@sandy/plugin-build";
 import { PluginHostArtifactRegistry } from "./plugin-host-artifact-registry.js";
 import { getPluginBuildToolchain } from "./build-toolchain.js";
 import {
@@ -39,7 +39,7 @@ import {
   isMutableArtifactStale,
   isMutablePluginHostReusable,
 } from "./mutable-plugin-artifacts.js";
-import { createNodeBbSdk, type BbSdk } from "@bb/sdk";
+import { createNodeSandySdk, type SandySdk } from "@sandy/sdk";
 import {
   getInstalledPlugin,
   getPluginSafeMode,
@@ -47,7 +47,7 @@ import {
   prunePluginSchedules,
   upsertPluginSchedule,
   type InstalledPluginRow,
-} from "@bb/db";
+} from "@sandy/db";
 import { toThreadResponseFromThread } from "../threads/thread-runtime-display.js";
 import {
   brandingAssetHash,
@@ -73,7 +73,7 @@ import {
 import type {
   PluginHookName,
   PluginSettingDescriptors,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import type {
   PluginHookInvocation,
   PluginHookRegistration,
@@ -88,14 +88,14 @@ import {
   createPluginApi,
   isNeedsConfigurationError,
   PluginContextStaleError,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginThreadEventName,
   type PluginThreadEventPayloads,
 } from "./plugin-api.js";
 import type {
   PluginHandlerStats,
   PluginRuntimeStatus,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import type {
   LoadedPlugin,
   PluginServiceDeps,
@@ -112,9 +112,9 @@ import { createPluginRpcCallerRegistry } from "./plugin-rpc-caller.js";
 const serverRuntimeDir = dirname(fileURLToPath(import.meta.url));
 const pluginSdkRuntimePath = join(serverRuntimeDir, "plugin-sdk-runtime.js");
 const zodRuntimePath = join(serverRuntimeDir, "zod-runtime.js");
-const PLUGIN_SDK_SPECIFIER = "@get-bb/plugin-sdk";
+const PLUGIN_SDK_SPECIFIER = "@sandy-sdk/plugin-sdk";
 
-const LEGACY_PLUGIN_SDK_SPECIFIER = "@bb/plugin-sdk";
+const LEGACY_PLUGIN_SDK_SPECIFIER = "@sandy/plugin-sdk";
 const ZOD_SPECIFIER = "zod";
 
 async function hashFile(
@@ -164,7 +164,7 @@ interface MutableRoot {
 
 const mutableRoots = new Map<string, MutableRoot>();
 const builtinZodParentUrls = new Set<string>();
-const MUTABLE_ROOT_MARKER = /[?&]bbPluginLoad=(\d+)\.(\d+)/;
+const MUTABLE_ROOT_MARKER = /[?&]sandyPluginLoad=(\d+)\.(\d+)/;
 let nextMutableRootId = 1;
 let nextMutableRootEpoch = 1;
 let mutableRootHooks: { deregister: () => void } | null = null;
@@ -209,7 +209,7 @@ function registerMutableRootHooks(): void {
       const separator = resolved.url.includes("?") ? "&" : "?";
       return {
         ...resolved,
-        url: `${resolved.url}${separator}bbPluginLoad=${match.id}.${epoch}`,
+        url: `${resolved.url}${separator}sandyPluginLoad=${match.id}.${epoch}`,
         shortCircuit: true,
       };
     },
@@ -428,7 +428,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
   const needsConfiguration = new Map<string, string>();
   const agentToolProblems = new Map<string, string>();
   const handlerStats = new Map<string, PluginHandlerStats>();
-  let boundSdk: BbSdk | undefined;
+  let boundSdk: SandySdk | undefined;
   let boundLoopbackBaseUrl: string | undefined;
   const rpcCallers = createPluginRpcCallerRegistry();
 
@@ -505,7 +505,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
 
   function reportAgentToolProblem(id: string, message: string): void {
     agentToolProblems.set(id, message);
-    logger.warn(`[plugin:${id}] ${message}`);
+    logger.warn({ pluginId: id }, `[plugin:${id}] ${message}`);
     if (statuses.get(id)?.status === "running") {
       setStatus(id, "running", message);
     }
@@ -575,7 +575,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     if (!reportedStaleErrors.has(error)) {
       reportedStaleErrors.add(error);
       logger.warn(
-        { err: error },
+        { err: error, pluginId: error.pluginId },
         `[plugin:${error.pluginId}] ${error.message}`,
       );
     }
@@ -588,7 +588,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     if (pluginId === undefined) return false;
     const message = error instanceof Error ? error.message : String(error);
     logger.warn(
-      { err: error },
+      { err: error, pluginId },
       `[plugin:${pluginId}] uncaught error: ${message}`,
     );
     if (statuses.get(pluginId)?.status === "running") {
@@ -605,6 +605,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     const message = error instanceof Error ? error.message : String(error);
     if (service.controller !== controller || service.disposed) {
       logger.warn(
+        { pluginId: id },
         `[plugin:${id}] service ${name} raised an uncaught exception from a stopped run: ${message}`,
       );
       return true;
@@ -612,7 +613,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     if (instance.uncaughtError !== undefined) return true;
     instance.uncaughtError = { error };
     logger.warn(
-      { err: error },
+      { err: error, pluginId: id },
       `[plugin:${id}] service ${name} raised an uncaught exception outside start(): ${message} — aborting it`,
     );
     const current = service.current;
@@ -628,6 +629,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
         `service ${name} did not stop after an uncaught exception`,
       );
       logger.warn(
+        { pluginId: id },
         `[plugin:${id}] service ${name} did not stop within ${serviceStopTimeoutMs}ms of its uncaught exception — plugin degraded until it does`,
       );
     });
@@ -645,7 +647,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     const name = service.record.name;
     if (!outcome.crashed) {
       service.state = "stopped";
-      logger.info(`[plugin:${id}] service ${name} stopped`);
+      logger.info({ pluginId: id }, `[plugin:${id}] service ${name} stopped`);
       return;
     }
     if (isNeedsConfigurationError(outcome.error)) {
@@ -655,6 +657,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
         outcome.error.message || `service ${name} needs configuration`,
       );
       logger.info(
+        { pluginId: id },
         `[plugin:${id}] service ${name} needs configuration; not restarting until reload`,
       );
       return;
@@ -667,6 +670,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       service.state = "stopped";
       setStatus(id, "error", `service ${name} crashed: ${message}`);
       logger.warn(
+        { pluginId: id },
         `[plugin:${id}] service ${name} crashed during activation: ${message}`,
       );
       return;
@@ -682,6 +686,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     service.consecutiveCrashes += 1;
     service.state = "backoff";
     logger.warn(
+      { pluginId: id },
       `[plugin:${id}] service ${name} crashed: ${message} — restarting in ${delayMs}ms`,
     );
     const timer = setTimeout(() => {
@@ -715,6 +720,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
           hung.add(name);
           setStatus(id, "degraded", `service ${name} did not stop`);
           logger.warn(
+            { pluginId: id },
             `[plugin:${id}] service ${name} did not stop within ${serviceStopTimeoutMs}ms — plugin degraded until it does`,
           );
           void current.then(
@@ -733,6 +739,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     hung.delete(name);
     if (hung.size === 0) hungServices.delete(id);
     logger.info(
+      { pluginId: id },
       `[plugin:${id}] service ${name} eventually stopped — reload to recover`,
     );
   }
@@ -804,6 +811,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       for (const provider of select(plugin)) {
         if (seen.has(provider.id)) {
           logger.warn(
+            { pluginId },
             `[plugin:${pluginId}] ${kindLabel} provider "${provider.id}" is already registered by another plugin; ignoring`,
           );
           continue;
@@ -931,7 +939,10 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       const message = error instanceof Error ? error.message : String(error);
       stats.errorCount += 1;
       if (!reportStaleError(error)) {
-        logger.warn(`[plugin:${id}] ${label} failed: ${message}`);
+        logger.warn(
+          { pluginId: id },
+          `[plugin:${id}] ${label} failed: ${message}`,
+        );
         if (
           loaded.get(id) === instance &&
           statuses.get(id)?.status === "running"
@@ -947,6 +958,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       void execution.catch((error: unknown) => {
         if (released.aborted && !reportStaleError(error)) {
           logger.warn(
+            { pluginId: id },
             `[plugin:${id}] ${label} failed after its caller was released: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
@@ -1055,7 +1067,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
   }
 
   function checkEngineRange(manifest: PluginManifest): string | undefined {
-    if (!manifest.bbEngineRange) return undefined;
+    if (!manifest.sandyEngineRange) return undefined;
     const version = semver.coerce(deps.appVersion);
     if (!version) {
       logger.warn(
@@ -1066,23 +1078,23 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     if (version.major === 0 && version.minor === 0 && version.patch === 0) {
       return undefined;
     }
-    if (!semver.satisfies(version, manifest.bbEngineRange)) {
-      return `requires bb ${manifest.bbEngineRange}, this is ${version.version}`;
+    if (!semver.satisfies(version, manifest.sandyEngineRange)) {
+      return `requires sandy ${manifest.sandyEngineRange}, this is ${version.version}`;
     }
     return undefined;
   }
 
   function checkPluginSdkRange(manifest: PluginManifest): string | undefined {
-    if (!manifest.bbPluginSdkRange) return undefined;
-    if (!isPluginSdkRangeSatisfied(manifest.bbPluginSdkRange)) {
-      return pluginSdkRangeProblem(manifest.bbPluginSdkRange);
+    if (!manifest.sandyPluginSdkRange) return undefined;
+    if (!isPluginSdkRangeSatisfied(manifest.sandyPluginSdkRange)) {
+      return pluginSdkRangeProblem(manifest.sandyPluginSdkRange);
     }
     return undefined;
   }
 
   async function runFactoryTimeBoxed(
-    factory: (api: BbPluginApi) => unknown,
-    api: BbPluginApi,
+    factory: (api: SandyPluginApi) => unknown,
+    api: SandyPluginApi,
   ): Promise<void> {
     await raceTimeout(
       Promise.resolve(factory(api)),
@@ -1226,7 +1238,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
           dataDir: deps.dataDir,
           pluginId: row.id,
           sdkVersion: PLUGIN_SDK_VERSION,
-          bbVersion: deps.appVersion,
+          sandyVersion: deps.appVersion,
           validatedConfig: {
             serverEntry,
             packageName: manifest.packageName,
@@ -1393,14 +1405,14 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
           pluginId: row.id,
           pluginVersion: manifest.version,
           rootDir: row.rootDir,
-          bbVersion: deps.appVersion,
+          sandyVersion: deps.appVersion,
         }))
       ) {
         await buildMutablePluginHost({
           dataDir: deps.dataDir,
           pluginId: row.id,
           rootDir: row.rootDir,
-          bbVersion: deps.appVersion,
+          sandyVersion: deps.appVersion,
           toolchain: await getPluginBuildToolchain(deps),
         });
         setDevBuildProblem(row.id, "host", null);
@@ -1635,7 +1647,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
     args: SafeModeActivationRefusalArgs,
   ): string | null {
     if (isSafeModeExempt(args) || !getPluginSafeMode(deps.db)) return null;
-    return `plugin safe mode is on; turn it off with \`bb plugin safe-mode off\` before you ${args.action} "${args.pluginId}"`;
+    return `plugin safe mode is on; turn it off with \`sandy plugin safe-mode off\` before you ${args.action} "${args.pluginId}"`;
   }
 
   async function loadOne(row: InstalledPluginRow): Promise<string | null> {
@@ -1826,7 +1838,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       callPluginHost: (args) => {
         if (hostArtifactCandidate === null) {
           throw new Error(
-            `plugin "${row.id}" does not declare a bb.host entry`,
+            `plugin "${row.id}" does not declare a sandy.host entry`,
           );
         }
         if (!deps.callPluginHost) {
@@ -1934,11 +1946,11 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       const factory = mod.default;
       if (typeof factory !== "function") {
         throw new Error(
-          `server entry must default-export a factory (bb) => void, got ${typeof factory}`,
+          `server entry must default-export a factory (sandy) => void, got ${typeof factory}`,
         );
       }
       await runFactoryTimeBoxed(
-        factory as (api: BbPluginApi) => unknown,
+        factory as (api: SandyPluginApi) => unknown,
         handle.api,
       );
     } catch (error) {
@@ -1946,7 +1958,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
       discardCandidate(plugin);
       let message = error instanceof Error ? error.message : String(error);
       if (/ERR_DLOPEN_FAILED|\.node/.test(message)) {
-        message += " (native dependencies are not supported in BB plugins)";
+        message += " (native dependencies are not supported in SANDY plugins)";
       }
       if (previous !== undefined) {
         setStatus(row.id, "running", `reload failed: ${message}`);
@@ -2155,7 +2167,7 @@ export function createPluginRuntime(context: PluginRuntimeContext) {
   }
 
   function bindSdk(args: { baseUrl: string }): void {
-    boundSdk = createNodeBbSdk({ baseUrl: args.baseUrl });
+    boundSdk = createNodeSandySdk({ baseUrl: args.baseUrl });
     boundLoopbackBaseUrl = args.baseUrl;
   }
 

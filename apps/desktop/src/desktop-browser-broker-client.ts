@@ -9,7 +9,7 @@ import {
   desktopBrowserBrokerDescriptorSchema,
   desktopBrowserBrokerRequestSchema,
   desktopBrowserResultSchemas,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import type { DesktopBrowserBroker } from "./desktop-browser-broker.js";
 
 export function isTrustedBrokerDescriptorFile(args: {
@@ -71,7 +71,7 @@ async function readServerBrokerDescriptor(args: {
   );
   const dataDirs = new Set([
     args.dataDir,
-    join(args.homeDir, ".bb-machines", serverHost),
+    join(args.homeDir, ".sandy-machines", serverHost),
   ]);
   for (const dataDir of dataDirs) {
     const descriptor = await readBrokerDescriptor(dataDir).catch(() => null);
@@ -81,7 +81,7 @@ async function readServerBrokerDescriptor(args: {
     )
       return descriptor;
   }
-  const machinesDir = join(args.homeDir, ".bb-machines");
+  const machinesDir = join(args.homeDir, ".sandy-machines");
   const entries = await readdir(machinesDir, { withFileTypes: true }).catch(
     () => [],
   );
@@ -121,7 +121,7 @@ async function readServerBrokerDescriptor(args: {
         );
         signal.throwIfAborted();
         const expected = createHmac("sha256", descriptor.token)
-          .update(`bb-desktop-broker:${challenge}`)
+          .update(`sandy-desktop-broker:${challenge}`)
           .digest();
         if (!timingSafeEqual(expected, Buffer.from(proof, "hex")))
           throw new Error("Invalid desktop broker proof");

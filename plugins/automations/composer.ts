@@ -2,9 +2,9 @@ import type {
   ComposerCustomization,
   ComposerDraftReplacement,
   ComposerDraftSnapshot,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 
-export const CREATE_AUTOMATION_PROMPT = "Create a new bb automation to ";
+export const CREATE_AUTOMATION_PROMPT = "Create a new sandy automation to ";
 
 export function withCreateAutomationPrompt(
   draft: ComposerDraftSnapshot,

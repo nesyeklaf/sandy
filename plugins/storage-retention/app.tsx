@@ -11,12 +11,12 @@ import {
   definePluginApp,
   experimental_Icon as PluginIcon,
   experimental_copyToClipboard,
-  useBbNavigate,
+  useSandyNavigate,
   useRealtime,
   useRpc,
   useSdk,
   type PluginNavPanelProps,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { DatabaseRestoreIcon } from "./icons/database-restore.js";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -400,7 +400,7 @@ function StoragePage({
   notifySuccess: NotifySuccess;
 }) {
   const rpc = useRpc<typeof storageRpc>();
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const state = data?.state ?? null;
   const hosts = data?.hosts ?? [];
   const machines = data?.machines ?? {};
@@ -928,7 +928,7 @@ function StoragePage({
                     <CleanupRow
                       title="Orphaned storage"
                       size={report.orphanBytes}
-                      description="Files left behind by deleted threads. BB cleans these up automatically while idle."
+                      description="Files left behind by deleted threads. SANDY cleans these up automatically while idle."
                       action="Remove orphans"
                       busy={cleanupBusy("orphans")}
                       disabled={locked || report.orphanCount === 0}
@@ -959,7 +959,7 @@ function StoragePage({
                     <CleanupRow
                       title="Leftover worktrees"
                       size={report.leftoverWorktreeBytes}
-                      description="Checkouts BB could not remove after their threads were archived. BB retries automatically."
+                      description="Checkouts SANDY could not remove after their threads were archived. SANDY retries automatically."
                       action="Retry cleanup"
                       busy={cleanupBusy("worktrees")}
                       disabled={locked || report.leftoverWorktrees.length === 0}
@@ -1007,9 +1007,9 @@ function StoragePage({
                       )}
                     </CleanupRow>
                     <CleanupRow
-                      title="Worktrees created outside BB"
+                      title="Worktrees created outside SANDY"
                       size={externalBytes}
-                      description="Git worktrees of your projects that BB didn’t create, such as ones agents added with git worktree add. Removing them keeps their branches. Bulk removal keeps worktrees with uncommitted changes, locked worktrees, and detached worktrees with commits on no branch; remove those one at a time."
+                      description="Git worktrees of your projects that SANDY didn’t create, such as ones agents added with git worktree add. Removing them keeps their branches. Bulk removal keeps worktrees with uncommitted changes, locked worktrees, and detached worktrees with commits on no branch; remove those one at a time."
                       action="Remove worktrees"
                       busy={cleanupBusy("externalWorktrees")}
                       disabled={locked || report.externalWorktrees.length === 0}
@@ -1022,7 +1022,7 @@ function StoragePage({
                             machine?.name ?? report.hostId,
                           ),
                           action: "Remove worktrees",
-                          title: `Remove ${plural(report.externalWorktrees.length, "worktree")} created outside BB (${bytes(externalBytes)})?`,
+                          title: `Remove ${plural(report.externalWorktrees.length, "worktree")} created outside SANDY (${bytes(externalBytes)})?`,
                           detail:
                             "Delete these checkouts, including ignored files such as dependencies, build output, and local env files. Branches and commits stay in the repository. Worktrees with uncommitted changes, locked worktrees, and detached worktrees with commits on no branch are kept; remove those one at a time. Make sure no agent is still working in them. This can’t be undone.",
                           run: async () => {
@@ -1128,7 +1128,7 @@ function StoragePage({
                       <CleanupRow
                         title="Development instances without a checkout"
                         size={missingDevBytes}
-                        description={`${plural(missingDev.length, "development instance")} in ~/.bb-dev whose source checkout no longer exists. Servers still running from them are stopped before removal.`}
+                        description={`${plural(missingDev.length, "development instance")} in ~/.sandy-dev whose source checkout no longer exists. Servers still running from them are stopped before removal.`}
                         action="Remove instances"
                         busy={cleanupBusy("development")}
                         disabled={locked || missingDev.length === 0}
@@ -1326,7 +1326,7 @@ function StoragePage({
                               action: "Stop and remove",
                               title: `Stop and remove “${label}” (${bytes(entry.sizeBytes)})?`,
                               detail:
-                                "Its dev server is running. BB will stop it, then delete its database, logs, and thread files. The source checkout is kept. This can’t be undone.",
+                                "Its dev server is running. SANDY will stop it, then delete its database, logs, and thread files. The source checkout is kept. This can’t be undone.",
                               run: async () => {
                                 const stopped = await removeDevelopment({
                                   hostId: report.hostId,
@@ -1524,7 +1524,7 @@ function StoragePage({
                         Delete development data when its checkout is removed
                       </span>
                       <span className="block text-xs text-muted-foreground">
-                        After scans, remove ~/.bb-dev folders with missing
+                        After scans, remove ~/.sandy-dev folders with missing
                         checkouts and stop their servers. Checks run hourly,
                         including for existing development data.
                       </span>
@@ -1931,7 +1931,7 @@ function ProjectWorktrees({
     <section className="space-y-3">
       <SectionHeading
         title="Worktrees by project"
-        description="BB worktrees are the managed checkouts BB tracks. Other worktrees were added to the same repositories outside BB, for example by agents running git worktree add. Projects with a source here are included even when they have no worktrees. These counts are separate from thread files."
+        description="SANDY worktrees are the managed checkouts SANDY tracks. Other worktrees were added to the same repositories outside SANDY, for example by agents running git worktree add. Projects with a source here are included even when they have no worktrees. These counts are separate from thread files."
       />
       <div className="overflow-x-auto rounded-lg border border-border bg-card px-4 py-2">
         {report.projectWorktrees.length === 0 ? (
@@ -1955,7 +1955,7 @@ function ProjectWorktrees({
                   scope="col"
                   className="py-2 pl-3 text-right align-bottom font-normal sm:whitespace-nowrap sm:pl-6"
                 >
-                  BB worktrees
+                  SANDY worktrees
                 </th>
                 <th
                   scope="col"
@@ -2021,7 +2021,7 @@ const EXTERNAL_WORKTREE_SKIP_REASONS = {
   locked: "The worktree is locked",
   uncommittedChanges: "The worktree has uncommitted changes",
   unsavedCommits: "The worktree has commits that are not on any branch",
-  inUseByBb: "A BB environment now uses this worktree",
+  inUseBySandy: "A SANDY environment now uses this worktree",
 } as const;
 
 const EXTERNAL_WORKTREE_FORCE_WARNINGS = {
@@ -2060,7 +2060,7 @@ function ExternalWorktrees({
   confirmation: ReactNode;
   onRemove: (worktree: ExternalWorktree, label: string) => void;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const groups = new Map<string, ExternalWorktree[]>();
   for (const worktree of worktrees)
@@ -2217,7 +2217,7 @@ type DeveloperEntry = NonNullable<
 function developerEntryLabel(entry: DeveloperEntry) {
   const parts = entry.sourcePath?.split(/[\\/]/).filter(Boolean);
   if (parts?.length)
-    return parts.at(-1) === "bb" ? (parts.at(-2) ?? "bb") : parts.at(-1)!;
+    return parts.at(-1) === "sandy" ? (parts.at(-2) ?? "sandy") : parts.at(-1)!;
   return (
     entry.name.match(/thr_[a-zA-Z0-9]+(?:-\d+)?/)?.[0] ??
     entry.name.replace(/-[a-f0-9]{12}$/, "")
@@ -2270,7 +2270,7 @@ function DeveloperStorage({
   onRemove: (entry: DeveloperEntry, label: string) => void;
   onRemoveSelected: (entries: DeveloperEntry[]) => void;
 }) {
-  const navigate = useBbNavigate();
+  const navigate = useSandyNavigate();
   const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(
     new Set(),
   );
@@ -2325,7 +2325,7 @@ function DeveloperStorage({
     },
     {
       title: "Other instances",
-      description: "No matching thread in this BB",
+      description: "No matching thread in this SANDY",
       entries: filtered.filter(
         (entry) => entry.sourcePath !== null && entry.threads.length === 0,
       ),
@@ -2355,8 +2355,8 @@ function DeveloperStorage({
   return (
     <section className="space-y-3">
       <SectionHeading
-        title="BB development storage"
-        description="Databases, logs, and thread files from local development instances in ~/.bb-dev."
+        title="SANDY development storage"
+        description="Databases, logs, and thread files from local development instances in ~/.sandy-dev."
       />
       <div className="space-y-3 rounded-lg border border-border bg-card px-4 py-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -2523,7 +2523,7 @@ function DeveloperStorage({
                               )}
                             {entry.current ? (
                               <p className="text-xs text-muted-foreground">
-                                This BB is running from this instance
+                                This SANDY is running from this instance
                               </p>
                             ) : (
                               entry.running &&
@@ -2670,7 +2670,7 @@ function categories(report: NonNullable<HostReport["report"]>) {
     ...(report.developerStorage
       ? [
           {
-            label: "BB development",
+            label: "SANDY development",
             value: report.developerStorage.sizeBytes,
             count: report.developerStorage.entries.length,
           },

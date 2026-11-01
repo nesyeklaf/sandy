@@ -198,7 +198,7 @@ export const externalWorktreeSkipReasonSchema = z.enum([
   "locked",
   "uncommittedChanges",
   "unsavedCommits",
-  "inUseByBb",
+  "inUseBySandy",
 ]);
 export type ExternalWorktreeSkipReason = z.infer<
   typeof externalWorktreeSkipReasonSchema

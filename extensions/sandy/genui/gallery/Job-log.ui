@@ -1,0 +1,1 @@
+Card("Image build", [Job("data/jobs/build.log", title: "docker build")])

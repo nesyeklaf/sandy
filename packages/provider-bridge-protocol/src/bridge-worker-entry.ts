@@ -1,7 +1,7 @@
 import { rmSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
-import { createPluginProcessTempDir } from "@bb/process-utils";
+import { createPluginProcessTempDir } from "@sandy/process-utils";
 import { readBoundedLines } from "./bridge-kit/bounded-line-reader.js";
 import {
   createRecordingLineSplitter,
@@ -35,7 +35,7 @@ if (
 
 const tempDir = await createPluginProcessTempDir({
   pluginId,
-  prefix: "bb-provider-bridge",
+  prefix: "sandy-provider-bridge",
 });
 
 let removedTempDir = false;

@@ -8,6 +8,6 @@ export function mcpAccessProblem(headers: Headers): McpAccessProblem | null {
     ? null
     : {
         status: 403,
-        message: "The bb MCP endpoint does not accept requests from web pages.",
+        message: "The sandy MCP endpoint does not accept requests from web pages.",
       };
 }

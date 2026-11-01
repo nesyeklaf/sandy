@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { clientMessageSchema, type ClientMessage } from "@bb/domain";
-import type { RealtimeSubscriptionTarget } from "@bb/server-contract";
+import { clientMessageSchema, type ClientMessage } from "@sandy/domain";
+import type { RealtimeSubscriptionTarget } from "@sandy/server-contract";
 
 const fakeSocketState = vi.hoisted(() => {
   type CloseHandler = () => void;
@@ -56,7 +56,7 @@ vi.mock("partysocket/ws", () => ({
 }));
 
 vi.mock("./dev-websocket-url", () => ({
-  buildBrowserWebSocketUrl: () => "ws://bb.test/ws",
+  buildBrowserWebSocketUrl: () => "ws://sandy.test/ws",
 }));
 
 import {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import {
   experimental_PluginIcon as PluginIcon,
   experimental_PromptMentionIcon as PromptMentionIcon,
@@ -7,8 +7,9 @@ import {
   type ExperimentalComposerCommandSuggestion,
   type ExperimentalComposerCommandSuggestionGroup,
   type ExperimentalComposerCommandTrigger,
+  type ExperimentalComposerMenuItem,
   type ExperimentalComposerThreadRelation,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
 import { Pill } from "@/components/ui/pill";
 import { TruncateStart } from "@/components/ui/truncate-start";
@@ -18,6 +19,8 @@ import {
   typeaheadSuggestionKey,
   type MenuMentionGroup,
   type MenuMentionSuggestion,
+  type PluginMenuGroup,
+  type PluginMenuSuggestion,
   type TypeaheadMenuState,
   type TypeaheadSuggestion,
 } from "./typeahead-suggestions";
@@ -30,7 +33,7 @@ interface MentionMenuProps {
 }
 
 interface MentionResultsProps {
-  groups: readonly MenuMentionGroup[];
+  groups: readonly (MenuMentionGroup | PluginMenuGroup)[];
   refreshing: boolean;
   selectedIndex: number;
   onApply: (item: TypeaheadSuggestion) => void;
@@ -39,7 +42,10 @@ interface MentionResultsProps {
 }
 
 interface CommandResultsProps {
-  groups: readonly ExperimentalComposerCommandSuggestionGroup[];
+  groups: readonly (
+    | ExperimentalComposerCommandSuggestionGroup
+    | PluginMenuGroup
+  )[];
   refreshing: boolean;
   trigger: ExperimentalComposerCommandTrigger;
   selectedIndex: number;
@@ -158,6 +164,61 @@ function getCommandIcon(
     <PromptMentionIcon
       mention={commandMentionTarget(item, trigger)}
       className={ROW_ICON_CLASS}
+    />
+  );
+}
+
+function isSubmenu(item: ExperimentalComposerMenuItem): boolean {
+  return item.items !== undefined;
+}
+
+function PluginMenuRow({
+  item,
+  index,
+  selectedIndex,
+  onApply,
+  itemRefs,
+}: {
+  item: PluginMenuSuggestion;
+  index: number;
+  selectedIndex: number;
+  onApply: () => void;
+  itemRefs: React.MutableRefObject<Array<HTMLButtonElement | null>>;
+}) {
+  const row = item.item;
+  return (
+    <SuggestionRow
+      index={index}
+      selectedIndex={selectedIndex}
+      icon={
+        row.icon === undefined ? (
+          <PluginIcon
+            pluginId={item.contribution.pluginId}
+            icon={null}
+            className={ROW_ICON_CLASS}
+          />
+        ) : (
+          <Icon name={row.icon} className={ROW_ICON_CLASS} aria-hidden />
+        )
+      }
+      primary={row.label}
+      trailing={
+        row.description === undefined ? null : (
+          <MutedTrailing>{row.description}</MutedTrailing>
+        )
+      }
+      badge={
+        isSubmenu(row) ? (
+          <Icon
+            name="ChevronRight"
+            className="size-3.5 text-muted-foreground"
+            aria-hidden
+          />
+        ) : undefined
+      }
+      title={row.description ?? row.label}
+      onApply={onApply}
+      itemRefs={itemRefs}
     />
   );
 }
@@ -360,7 +421,7 @@ function MentionResults({
       {groups.map((group, groupIndex) => {
         const startIndex = startIndexes[groupIndex]!;
         return (
-          <div key={group.key}>
+          <div key={group.key} data-group-key={group.key}>
             <MenuSectionHeader
               label={group.label}
               refreshing={groupIndex === 0 && refreshing}
@@ -369,6 +430,19 @@ function MentionResults({
             <div className="flex flex-col gap-px px-1">
               {group.suggestions.map((item, itemIndex) => {
                 const index = startIndex + itemIndex;
+                if (item.kind === "menu") {
+                  return (
+                    <PluginMenuRow
+                      key={item.key}
+                      item={item}
+                      index={index}
+                      selectedIndex={selectedIndex}
+                      onApply={() => onApply(item)}
+                      itemRefs={itemRefs}
+                    />
+                  );
+                }
+
                 let primary = item.mention.label;
                 let secondaryContext: string | null = null;
                 let secondaryContextKind: SecondaryContextKind | null = null;
@@ -455,37 +529,48 @@ function CommandResults({
       {groups.map((group, groupIndex) => {
         const startIndex = startIndexes[groupIndex]!;
         return (
-          <div key={group.key}>
+          <div key={group.key} data-group-key={group.key}>
             <MenuSectionHeader
               label={group.label}
               refreshing={groupIndex === 0 && refreshing}
               onDismiss={groupIndex === 0 ? onDismiss : undefined}
             />
             <div className="flex flex-col gap-px px-1">
-              {group.suggestions.map((item, itemIndex) => (
-                <SuggestionRow
-                  key={typeaheadSuggestionKey(item)}
-                  index={startIndex + itemIndex}
-                  selectedIndex={selectedIndex}
-                  icon={getCommandIcon(item, trigger)}
-                  primary={item.name}
-                  trailing={
-                    <>
-                      {item.description !== null ? (
-                        <MutedTrailing>{item.description}</MutedTrailing>
-                      ) : null}
-                      {item.argumentHint !== null ? (
-                        <span className="shrink-0 text-subtle-foreground">
-                          {item.argumentHint}
-                        </span>
-                      ) : null}
-                    </>
-                  }
-                  title={item.description ?? item.name}
-                  onApply={() => onApply(item)}
-                  itemRefs={itemRefs}
-                />
-              ))}
+              {group.suggestions.map((item, itemIndex) =>
+                item.kind === "menu" ? (
+                  <PluginMenuRow
+                    key={item.key}
+                    item={item}
+                    index={startIndex + itemIndex}
+                    selectedIndex={selectedIndex}
+                    onApply={() => onApply(item)}
+                    itemRefs={itemRefs}
+                  />
+                ) : (
+                  <SuggestionRow
+                    key={typeaheadSuggestionKey(item)}
+                    index={startIndex + itemIndex}
+                    selectedIndex={selectedIndex}
+                    icon={getCommandIcon(item, trigger)}
+                    primary={item.name}
+                    trailing={
+                      <>
+                        {item.description !== null ? (
+                          <MutedTrailing>{item.description}</MutedTrailing>
+                        ) : null}
+                        {item.argumentHint !== null ? (
+                          <span className="shrink-0 text-subtle-foreground">
+                            {item.argumentHint}
+                          </span>
+                        ) : null}
+                      </>
+                    }
+                    title={item.description ?? item.name}
+                    onApply={() => onApply(item)}
+                    itemRefs={itemRefs}
+                  />
+                ),
+              )}
             </div>
           </div>
         );
@@ -503,6 +588,68 @@ function typeaheadResultsLength(state: TypeaheadMenuState): number {
     : 0;
 }
 
+function GroupRail({
+  groups,
+  activeKey,
+  scrollRef,
+}: {
+  groups: readonly { key: string; label: string }[];
+  activeKey: string | undefined;
+  scrollRef: RefObject<HTMLDivElement | null>;
+}) {
+  const jump = (key: string) => {
+    const container = scrollRef.current;
+    const target = container?.querySelector<HTMLElement>(
+      `[data-group-key="${CSS.escape(key)}"]`,
+    );
+    if (!container || !target) return;
+    container.scrollTop +=
+      target.getBoundingClientRect().top -
+      container.getBoundingClientRect().top;
+  };
+  return (
+    <div
+      role="tablist"
+      aria-orientation="vertical"
+      className="hidden w-24 shrink-0 flex-col gap-px overflow-y-auto border-r border-border p-1 @sm/mention-menu:flex"
+    >
+      {groups.map((group) => (
+        <button
+          key={group.key}
+          type="button"
+          role="tab"
+          aria-selected={group.key === activeKey}
+          title={group.label}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            jump(group.key);
+          }}
+          className={cn(
+            "truncate rounded px-2 py-1 text-left text-xs",
+            group.key === activeKey
+              ? "bg-state-active text-foreground"
+              : "text-muted-foreground hover:bg-state-hover",
+          )}
+        >
+          {group.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function activeGroupKey(
+  groups: readonly { key: string; suggestions: readonly unknown[] }[],
+  selectedIndex: number,
+): string | undefined {
+  let start = 0;
+  for (const group of groups) {
+    if (selectedIndex < start + group.suggestions.length) return group.key;
+    start += group.suggestions.length;
+  }
+  return groups[0]?.key;
+}
+
 export function MentionMenu({
   state,
   selectedIndex,
@@ -510,6 +657,11 @@ export function MentionMenu({
   onDismiss,
 }: MentionMenuProps) {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const railGroups =
+    state.state.kind === "results" && state.state.groups.length > 1
+      ? state.state.groups
+      : null;
 
   const innerState = state.state;
   const resultsLength = typeaheadResultsLength(state);
@@ -527,54 +679,66 @@ export function MentionMenu({
 
   return (
     <div className="@container/mention-menu flex max-h-(--promptbox-typeahead-max-height) flex-col overflow-hidden rounded-md border border-border bg-popover text-popover-foreground">
-      <div className="max-h-48 min-h-0 overflow-y-auto">
-        {innerState.kind === "hint" ? (
-          <MenuStatusRow
-            onDismiss={onDismiss}
-            className="text-muted-foreground"
-          >
-            Type to search mentions
-          </MenuStatusRow>
-        ) : innerState.kind === "loading" ? (
-          <MenuStatusRow
-            onDismiss={onDismiss}
-            className="text-muted-foreground"
-          >
-            <Icon name="Spinner" className="size-3.5 animate-spin" />
-            <span>
+      <div className="flex min-h-0">
+        {railGroups ? (
+          <GroupRail
+            groups={railGroups}
+            activeKey={activeGroupKey(railGroups, selectedIndex)}
+            scrollRef={scrollRef}
+          />
+        ) : null}
+        <div
+          ref={scrollRef}
+          className="max-h-48 min-h-0 min-w-0 flex-1 overflow-y-auto"
+        >
+          {innerState.kind === "hint" ? (
+            <MenuStatusRow
+              onDismiss={onDismiss}
+              className="text-muted-foreground"
+            >
+              Type to search mentions
+            </MenuStatusRow>
+          ) : innerState.kind === "loading" ? (
+            <MenuStatusRow
+              onDismiss={onDismiss}
+              className="text-muted-foreground"
+            >
+              <Icon name="Spinner" className="size-3.5 animate-spin" />
+              <span>
+                {state.trigger === "command"
+                  ? "Searching commands…"
+                  : "Searching mentions…"}
+              </span>
+            </MenuStatusRow>
+          ) : innerState.kind === "error" ? (
+            <MenuStatusRow onDismiss={onDismiss} className="text-destructive">
               {state.trigger === "command"
-                ? "Searching commands…"
-                : "Searching mentions…"}
-            </span>
-          </MenuStatusRow>
-        ) : innerState.kind === "error" ? (
-          <MenuStatusRow onDismiss={onDismiss} className="text-destructive">
-            {state.trigger === "command"
-              ? "Failed to load commands"
-              : "Failed to load suggestions"}
-          </MenuStatusRow>
-        ) : state.trigger === "command" ? (
-          state.state.kind === "results" ? (
-            <CommandResults
+                ? "Failed to load commands"
+                : "Failed to load suggestions"}
+            </MenuStatusRow>
+          ) : state.trigger === "command" ? (
+            state.state.kind === "results" ? (
+              <CommandResults
+                groups={state.state.groups}
+                refreshing={state.state.refreshing}
+                trigger={state.char}
+                selectedIndex={selectedIndex}
+                onApply={onApply}
+                itemRefs={itemRefs}
+                onDismiss={onDismiss}
+              />
+            ) : null
+          ) : state.state.kind === "results" ? (
+            <MentionResults
               groups={state.state.groups}
               refreshing={state.state.refreshing}
-              trigger={state.char}
               selectedIndex={selectedIndex}
               onApply={onApply}
               itemRefs={itemRefs}
               onDismiss={onDismiss}
             />
-          ) : null
-        ) : state.state.kind === "results" ? (
-          <MentionResults
-            groups={state.state.groups}
-            refreshing={state.state.refreshing}
-            selectedIndex={selectedIndex}
-            onApply={onApply}
-            itemRefs={itemRefs}
-            onDismiss={onDismiss}
-          />
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { PluginComposerScope } from "@get-bb/plugin-sdk";
+import type { PluginComposerScope } from "@sandy-sdk/plugin-sdk";
 import { composerScopeIdentity } from "@/components/plugin/plugin-composer-host";
 import { createKeyedListeners } from "./keyed-listeners";
 

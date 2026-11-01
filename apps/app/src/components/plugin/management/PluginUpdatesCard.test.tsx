@@ -29,7 +29,7 @@ function plugin(overrides: Partial<PluginListItem> = {}): PluginListItem {
     rootDir: "/plugins/linear",
     version: "1.6.2",
     name: "Linear",
-    sourceDisplay: "npm · @bb-plugins/linear · pinned",
+    sourceDisplay: "npm · @sandy-plugins/linear · pinned",
     ...overrides,
   });
 }
@@ -86,7 +86,7 @@ describe("PluginDetailReleaseControl", () => {
     });
     expect(update).toBeTruthy();
     expect(update.querySelector('[data-icon="Download"]')).not.toBeNull();
-    expect(screen.queryByText("Compatible with your bb.")).toBeNull();
+    expect(screen.queryByText("Compatible with your sandy.")).toBeNull();
   });
 
   it("shows a blocked update inline without a modal or disabled action", () => {
@@ -98,7 +98,7 @@ describe("PluginDetailReleaseControl", () => {
             ...EMPTY_PLUGIN_UPDATE_STATE,
             blockedVersion: "1.9.0",
             blockedLabel: "1.9.0",
-            blockedReasons: ["requires bb >= 0.15"],
+            blockedReasons: ["requires sandy >= 0.15"],
           },
         })}
       />,
@@ -113,12 +113,12 @@ describe("PluginDetailReleaseControl", () => {
       name: "Update blocked",
     });
     expect(screen.queryByText("Update blocked")).toBeNull();
-    expect(blockedStatus.textContent).toContain("Requires bb >= 0.15.");
+    expect(blockedStatus.textContent).toContain("Requires sandy >= 0.15.");
     expect(blockedStatus.textContent).toContain("1.6.2 remains installed");
     expect(blockedStatus.textContent).toContain(
       "check again when a compatible plugin version is available",
     );
-    expect(blockedStatus.textContent).not.toContain("Update bb");
+    expect(blockedStatus.textContent).not.toContain("Update sandy");
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
@@ -193,7 +193,7 @@ describe("PluginDetailReleaseControl", () => {
     const failedStatus = screen.getByRole("status", { name: "Update failed" });
     expect(screen.queryByText("Update failed")).toBeNull();
     expect(failedStatus.textContent).toContain(
-      "bb couldn’t activate 1.9.0. It restored 1.6.2 and its data.",
+      "sandy couldn’t activate 1.9.0. It restored 1.6.2 and its data.",
     );
     expect(screen.queryByText("Technical details")).toBeNull();
     expect(screen.queryByText("The plugin failed to load.")).toBeNull();

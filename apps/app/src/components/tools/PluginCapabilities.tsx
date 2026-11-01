@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import { pluginCliCall } from "@bb/domain/plugin-cli";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { pluginCliCall } from "@sandy/domain/plugin-cli";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Button } from "@bb/shared-ui/button";
-import type { PluginCapability, SkillListResponse } from "@bb/server-contract";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import type { PluginCapability, SkillListResponse } from "@sandy/server-contract";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
 import {
   ResourceActionButton,
   ResourceDetailIncludesSection,
   ResourceStatus,
   type ResourceStatusTone,
-} from "@bb/shared-ui/resource-list";
-import { cn } from "@bb/shared-ui/lib/utils";
+} from "@sandy/shared-ui/resource-list";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PluginBannerBar } from "@/components/tools/plugin-detail-banner";
 import {
   PluginDetailGlyph,

@@ -9,14 +9,14 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import { HOVER_REVEAL_NO_HOVER_VISIBLE_CLASS } from "@bb/shared-ui/hover-reveal";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { HOVER_REVEAL_NO_HOVER_VISIBLE_CLASS } from "@sandy/shared-ui/hover-reveal";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   observedBorderBoxBlockSize,
   observeSharedResize,
 } from "@/lib/shared-resize-observer";
 import { layoutAnimationInFlightCountAtom } from "./layoutAnimationAtoms.js";
-import { CONTROL_HOVER_TRANSITION } from "@bb/shared-ui/motion";
+import { CONTROL_HOVER_TRANSITION } from "@sandy/shared-ui/motion";
 
 const EXPANDABLE_PANEL_TRANSITION_MS = 200;
 
@@ -46,7 +46,7 @@ function Chevron({ className }: ChevronProps) {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("bb-icon-stroke", className)}
+      className={cn("sandy-icon-stroke", className)}
       aria-hidden="true"
       data-icon-root=""
     >

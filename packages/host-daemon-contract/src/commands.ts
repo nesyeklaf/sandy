@@ -33,7 +33,7 @@ import {
   gitBranchNameSchema,
   gitBranchOptionsSchema,
   gitSourceInspectionSchema,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { z } from "zod";
 import {
   pathsExistRequestSchema,
@@ -48,7 +48,7 @@ import {
   providerUsageResultSchema,
   providerUsageSchema,
   providerUsageWindowSchema,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 
 export {
   HOST_ARTIFACT_MAX_BYTES,
@@ -65,7 +65,7 @@ export {
   FILE_LIST_EXCLUDE_NAMES_MAX,
   FILE_LIST_LIMIT_MAX,
   FILE_LIST_QUERY_MAX_LENGTH,
-} from "@bb/domain";
+} from "@sandy/domain";
 const INJECTED_SKILL_NAME_PATTERN =
   /^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
 
@@ -675,9 +675,9 @@ const hostListCommandsCommandSchema = z
   .strict();
 
 const skillRootKindSchema = z.enum([
-  "bb-project",
-  "bb-data-dir",
-  "bb-builtin",
+  "sandy-project",
+  "sandy-data-dir",
+  "sandy-builtin",
   "provider-project",
   "provider-user",
   "shared-project",
@@ -751,8 +751,8 @@ export type WorkspaceProjectSkillFile = z.infer<
 >;
 
 export const deletableSkillScopeSchema = z.enum([
-  "bb-user",
-  "bb-project",
+  "sandy-user",
+  "sandy-project",
   "provider-user",
   "provider-project",
 ]);
@@ -767,23 +767,23 @@ const hostDeleteSkillCommandSchema = z
   })
   .strict()
   .superRefine((command, context) => {
-    if (command.scope === "bb-project" && command.cwd === null) {
+    if (command.scope === "sandy-project" && command.cwd === null) {
       context.addIssue({
         code: "custom",
         path: ["cwd"],
-        message: "cwd is required to delete a bb-project skill",
+        message: "cwd is required to delete a sandy-project skill",
       });
     }
-    const isBbScope =
-      command.scope === "bb-user" || command.scope === "bb-project";
-    if (isBbScope && command.rootPath !== null) {
+    const isSandyScope =
+      command.scope === "sandy-user" || command.scope === "sandy-project";
+    if (isSandyScope && command.rootPath !== null) {
       context.addIssue({
         code: "custom",
         path: ["rootPath"],
-        message: "rootPath must be null for a bb skill",
+        message: "rootPath must be null for a sandy skill",
       });
     }
-    if (!isBbScope && command.rootPath === null) {
+    if (!isSandyScope && command.rootPath === null) {
       context.addIssue({
         code: "custom",
         path: ["rootPath"],
@@ -792,12 +792,12 @@ const hostDeleteSkillCommandSchema = z
     }
   });
 
-const writableBbSkillScopeSchema = z.enum(["bb-user", "bb-project"]);
+const writableSandySkillScopeSchema = z.enum(["sandy-user", "sandy-project"]);
 
 const hostWriteSkillCommandSchema = z
   .object({
     type: z.literal("host.write_skill"),
-    scope: writableBbSkillScopeSchema,
+    scope: writableSandySkillScopeSchema,
     name: z.string().min(1),
     cwd: z.string().min(1).nullable(),
     content: z.string().min(1).max(1_000_000),
@@ -805,11 +805,11 @@ const hostWriteSkillCommandSchema = z
   })
   .strict()
   .superRefine((command, context) => {
-    if (command.scope === "bb-project" && command.cwd === null) {
+    if (command.scope === "sandy-project" && command.cwd === null) {
       context.addIssue({
         code: "custom",
         path: ["cwd"],
-        message: "cwd is required to edit a bb-project skill",
+        message: "cwd is required to edit a sandy-project skill",
       });
     }
   });
@@ -899,7 +899,7 @@ const providerInstallationStatusCommandSchema = z
 export type {
   ProviderHealth,
   ProviderHealthResult,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 
 const provisionInitiatorSchema = z
   .object({
@@ -1132,7 +1132,7 @@ export { providerUsageWindowSchema };
 export type {
   ProviderUsage,
   ProviderUsageResult,
-} from "@bb/provider-bridge-protocol";
+} from "@sandy/provider-bridge-protocol";
 
 export const providerUsageResponseSchema = z.record(
   z.string().min(1),

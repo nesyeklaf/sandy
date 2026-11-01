@@ -1,1 +1,1 @@
-export { parseThreadEventRow } from "@bb/domain";
+export { parseThreadEventRow } from "@sandy/domain";

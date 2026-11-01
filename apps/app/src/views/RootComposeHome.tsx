@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { OverflowFade } from "@bb/shared-ui/overflow-fade";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { OverflowFade } from "@sandy/shared-ui/overflow-fade";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import { PAGE_SHELL_CONTENT_STYLE } from "@/components/ui/page-shell-content-style.js";
 import { ComposerMaxHeightContext } from "@/components/promptbox/composer-max-height";
 import { composerRootWithin } from "@/lib/pane-composer-focus";

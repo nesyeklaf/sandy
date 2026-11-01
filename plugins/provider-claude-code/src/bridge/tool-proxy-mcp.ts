@@ -1,7 +1,7 @@
 import {
   type DynamicTool,
   experimental_buildBridgeToolCallContent,
-} from "@get-bb/plugin-sdk/provider-bridge";
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
@@ -9,7 +9,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { BB_BRIDGE_MCP_SERVER_NAME } from "../tool-classification.js";
+import { SANDY_BRIDGE_MCP_SERVER_NAME } from "../tool-classification.js";
 
 type BridgeToolCallContent =
   | { type: "text"; text: string }
@@ -30,7 +30,7 @@ export function buildBridgeMcpServer(
 ): McpSdkServerConfigWithInstance {
   const toolsByName = new Map(dynamicTools.map((def) => [def.name, def]));
   const instance = new McpServer(
-    { name: BB_BRIDGE_MCP_SERVER_NAME, version: "1.0.0" },
+    { name: SANDY_BRIDGE_MCP_SERVER_NAME, version: "1.0.0" },
     { capabilities: { tools: {} } },
   );
   instance.server.setRequestHandler(ListToolsRequestSchema, () => ({
@@ -62,12 +62,12 @@ export function buildBridgeMcpServer(
       ...(result.isError ? { isError: true } : {}),
     };
   });
-  return { type: "sdk", name: BB_BRIDGE_MCP_SERVER_NAME, instance };
+  return { type: "sdk", name: SANDY_BRIDGE_MCP_SERVER_NAME, instance };
 }
 
 export function getAllowedToolNames(dynamicTools: DynamicTool[]): string[] {
   return dynamicTools.map(
-    (def) => `mcp__${BB_BRIDGE_MCP_SERVER_NAME}__${def.name}`,
+    (def) => `mcp__${SANDY_BRIDGE_MCP_SERVER_NAME}__${def.name}`,
   );
 }
 

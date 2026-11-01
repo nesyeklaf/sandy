@@ -3,10 +3,10 @@ import {
   PluginCliError,
   cliCommand,
   defineCli,
-  type BbPluginApi,
+  type SandyPluginApi,
   type PluginCliContext,
   type PluginCliResult,
-} from "@get-bb/plugin-sdk";
+} from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
 
 import {
@@ -50,7 +50,7 @@ import { allocatePrefix } from "./prefix";
 import { seedDemo } from "./seed";
 
 const TASK_KEY_PATTERN = /^([A-Z][A-Z0-9]{0,9})-(\d+)$/;
-const BB_PROJECT_ID_PATTERN = /^proj_[A-Za-z0-9_-]+$/;
+const SANDY_PROJECT_ID_PATTERN = /^proj_[A-Za-z0-9_-]+$/;
 const ACTIVE_THREAD_STATUSES = new Set(["starting", "working"]);
 const DEFAULT_PROJECT_COLOR = "blue";
 const DEFAULT_LABEL_COLOR = "gray";
@@ -73,7 +73,7 @@ const PROJECT_OPTION = {
   type: "string",
   placeholder: "prefix-or-id",
   description:
-    "Tracker project prefix or id such as ABC, never a bb project id (proj_...); run bb tasks project list",
+    "Tracker project prefix or id such as ABC, never a sandy project id (proj_...); run sandy tasks project list",
 } as const;
 
 const REQUIRED_PROJECT_OPTION = {
@@ -147,16 +147,16 @@ function unwrapTask(result: TaskMutationResult): Task {
 }
 
 async function resolveClientHostId(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   domain: TasksDomain,
   machine: string | undefined,
   ctx: PluginCliContext,
 ): Promise<string | undefined> {
   if (machine !== undefined) return resolveMachineId(domain, machine);
   if (!ctx.threadId) return undefined;
-  const thread = await bb.sdk.threads.get({ threadId: ctx.threadId });
+  const thread = await sandy.sdk.threads.get({ threadId: ctx.threadId });
   if (!thread.environmentId) return undefined;
-  const environment = await bb.sdk.environments.get({
+  const environment = await sandy.sdk.environments.get({
     environmentId: thread.environmentId,
   });
   return environment.hostId;
@@ -168,11 +168,11 @@ function isMissingClientFileError(error: unknown): boolean {
 }
 
 async function readClientFile(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   hostId: string | undefined,
   path: string,
 ): Promise<{ bytes: Buffer; text: string | null }> {
-  const file = await bb.sdk.files.read({
+  const file = await sandy.sdk.files.read({
     ...(hostId ? { hostId } : {}),
     path,
   });
@@ -186,12 +186,12 @@ async function readClientFile(
 }
 
 async function readAttachmentSource(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   hostId: string | undefined,
   path: string,
 ): Promise<Buffer> {
   try {
-    return (await readClientFile(bb, hostId, path)).bytes;
+    return (await readClientFile(sandy, hostId, path)).bytes;
   } catch (error) {
     if (isMissingClientFileError(error)) {
       throw new CliError(`attachment source is not a file: ${path}`, {
@@ -203,12 +203,12 @@ async function readAttachmentSource(
 }
 
 async function writeClientFile(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   hostId: string | undefined,
   path: string,
   content: Buffer,
 ): Promise<void> {
-  await bb.sdk.files.write({
+  await sandy.sdk.files.write({
     ...(hostId ? { hostId } : {}),
     path,
     content: content.toString("base64"),
@@ -222,7 +222,7 @@ function attachmentFileName(path: string): string {
 }
 
 async function readTextOption(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   ctx: PluginCliContext,
   hostId: string | undefined,
   inline: string | undefined,
@@ -231,7 +231,7 @@ async function readTextOption(
   if (file === undefined) return inline;
   const path = resolve(ctx.cwd ?? process.cwd(), file);
   try {
-    const { text } = await readClientFile(bb, hostId, path);
+    const { text } = await readClientFile(sandy, hostId, path);
     if (text === null) {
       throw new CliError(`could not read ${file}: file is not UTF-8 text`);
     }
@@ -262,18 +262,18 @@ async function listProjects(domain: TasksDomain): Promise<Project[]> {
   ).projects;
 }
 
-function bbProjectIdHint(
+function sandyProjectIdHint(
   address: string,
   projects: readonly Project[],
 ): string {
   const linked = projects.filter(
-    (project) => project.linkedBbProjectId === address,
+    (project) => project.linkedSandyProjectId === address,
   );
   const first = linked[0];
   if (linked.length === 1 && first) {
-    return `${address} is a bb project id; its tracker project is ${first.prefix} — re-run with --project ${first.prefix}`;
+    return `${address} is a sandy project id; its tracker project is ${first.prefix} — re-run with --project ${first.prefix}`;
   }
-  return `${address} is a bb project id, but --project takes a tracker project prefix or id; run bb tasks project list`;
+  return `${address} is a sandy project id, but --project takes a tracker project prefix or id; run sandy tasks project list`;
 }
 
 async function resolveProject(
@@ -290,8 +290,8 @@ async function resolveProject(
     const trimmed = address.trim();
     throw new CliError(`project not found: ${address}`, {
       code: "project_not_found",
-      ...(BB_PROJECT_ID_PATTERN.test(trimmed)
-        ? { hint: bbProjectIdHint(trimmed, projects) }
+      ...(SANDY_PROJECT_ID_PATTERN.test(trimmed)
+        ? { hint: sandyProjectIdHint(trimmed, projects) }
         : {}),
     });
   }
@@ -306,24 +306,24 @@ async function defaultProject(
   if (!ctx.projectId) {
     if (required) {
       throw new CliError(
-        "missing --project and no BB project context is available",
+        "missing --project and no SANDY project context is available",
         { code: "missing_required" },
       );
     }
     return undefined;
   }
   const matches = (await listProjects(domain)).filter(
-    (project) => project.linkedBbProjectId === ctx.projectId,
+    (project) => project.linkedSandyProjectId === ctx.projectId,
   );
   if (matches.length === 0) {
     throw new CliError(
-      `no tracker project is linked to BB project ${ctx.projectId}; pass --project or link one with bb tasks project update`,
+      `no tracker project is linked to SANDY project ${ctx.projectId}; pass --project or link one with sandy tasks project update`,
       { code: "project_not_linked" },
     );
   }
   if (matches.length > 1) {
     throw new CliError(
-      `multiple tracker projects are linked to BB project ${ctx.projectId}; pass --project explicitly`,
+      `multiple tracker projects are linked to SANDY project ${ctx.projectId}; pass --project explicitly`,
       { code: "project_ambiguous" },
     );
   }
@@ -349,15 +349,15 @@ async function requiredProject(
   if (address) return resolveProject(domain, address);
   const linked = ctx.projectId
     ? (await listProjects(domain)).filter(
-        (project) => project.linkedBbProjectId === ctx.projectId,
+        (project) => project.linkedSandyProjectId === ctx.projectId,
       )
     : [];
   const suggestion = linked.length === 1 ? linked[0] : undefined;
   throw new CliError("missing required option --project", {
     code: "missing_required",
     hint: suggestion
-      ? `this thread's bb project ${ctx.projectId} is linked to tracker project ${suggestion.prefix}; re-run with --project ${suggestion.prefix}`
-      : "pass a tracker project prefix or id; run bb tasks project list to see them",
+      ? `this thread's sandy project ${ctx.projectId} is linked to tracker project ${suggestion.prefix}; re-run with --project ${suggestion.prefix}`
+      : "pass a tracker project prefix or id; run sandy tasks project list to see them",
   });
 }
 
@@ -589,14 +589,14 @@ function projectTable(
     folders.map((folder) => [folder.id, folder.name]),
   );
   return table(
-    ["PREFIX", "NAME", "FOLDER", "BB PROJECT", "ID"],
+    ["PREFIX", "NAME", "FOLDER", "SANDY PROJECT", "ID"],
     projects.map((project) => [
       project.prefix,
       project.name,
       project.folderId
         ? (folderNames.get(project.folderId) ?? project.folderId)
         : "-",
-      project.linkedBbProjectId ?? "-",
+      project.linkedSandyProjectId ?? "-",
       project.id,
     ]),
     "No projects.",
@@ -624,9 +624,9 @@ function resolveInvokingThreadId(
   thread: string | undefined,
   ctx: PluginCliContext,
 ): string {
-  const threadId = thread ?? process.env.BB_THREAD_ID ?? ctx.threadId;
+  const threadId = thread ?? process.env.SANDY_THREAD_ID ?? ctx.threadId;
   if (!threadId) {
-    throw new CliError("missing --thread and BB_THREAD_ID is not set", {
+    throw new CliError("missing --thread and SANDY_THREAD_ID is not set", {
       code: "missing_required",
     });
   }
@@ -645,7 +645,7 @@ function groupCommand(
     description: [
       "Subcommands:",
       ...subcommands.map(
-        ([name, text]) => `  bb tasks ${group} ${name.padEnd(width)}  ${text}`,
+        ([name, text]) => `  sandy tasks ${group} ${name.padEnd(width)}  ${text}`,
       ),
     ].join("\n"),
     positionals: [
@@ -661,30 +661,30 @@ function groupCommand(
       if (subcommand === undefined) return { exitCode: 1, stdout: input.help };
       throw new CliError(`unknown command: ${group} ${subcommand}`, {
         code: "unknown_command",
-        hint: `run bb tasks ${group} --help for its subcommands`,
+        hint: `run sandy tasks ${group} --help for its subcommands`,
       });
     },
   });
 }
 
 export function registerTasksCli(
-  bb: BbPluginApi,
+  sandy: SandyPluginApi,
   store: TasksApiStore,
   status: PluginStatus,
 ): void {
-  const domain = registerHandlers(bb, store);
-  bb.cli.register(
+  const domain = registerHandlers(sandy, store);
+  sandy.cli.register(
     defineCli({
       name: "tasks",
       summary:
         "Create and manage task-tracker projects, tasks, labels, and comments",
       description:
-        "Tasks are addressed by key (ABC-12) or ULID. --project takes a tracker project prefix or id, never a bb project id (proj_...).",
+        "Tasks are addressed by key (ABC-12) or ULID. --project takes a tracker project prefix or id, never a sandy project id (proj_...).",
       commands: {
         status: cliCommand({
           summary: "Show the Tasks plugin name and version",
           description:
-            "Plugin health only. To filter tasks by workflow status run bb tasks list --status <status>; to change one run bb tasks update <key-or-id> --status <status>.",
+            "Plugin health only. To filter tasks by workflow status run sandy tasks list --status <status>; to change one run sandy tasks update <key-or-id> --status <status>.",
           options: { json: JSON_OPTION },
           run(input) {
             return {
@@ -725,12 +725,12 @@ export function registerTasksCli(
               placeholder: "id-or-name",
               description: "Folder that holds the project",
             },
-            "link-bb-project": {
+            "link-sandy-project": {
               type: "string",
               placeholder: "proj_id",
-              aliases: ["bb-project", "link-project"],
+              aliases: ["sandy-project", "link-project"],
               description:
-                "bb project id (proj_...) whose threads track this tracker project",
+                "sandy project id (proj_...) whose threads track this tracker project",
             },
             color: {
               type: "string",
@@ -758,7 +758,7 @@ export function registerTasksCli(
                       : derivePrefix(name, projects),
                     color: input.options.color,
                     folderId: folder?.id ?? null,
-                    linkedBbProjectId: input.options["link-bb-project"] ?? null,
+                    linkedSandyProjectId: input.options["link-sandy-project"] ?? null,
                   }),
                 ),
               );
@@ -812,7 +812,7 @@ export function registerTasksCli(
                 ["ID", project.id],
                 ["Color", project.color],
                 ["Folder", folder?.name ?? "-"],
-                ["BB project", project.linkedBbProjectId ?? "-"],
+                ["SANDY project", project.linkedSandyProjectId ?? "-"],
                 ["Next task", `${project.prefix}-${project.nextTaskNumber}`],
                 ["Created", project.createdAt],
               ]);
@@ -840,15 +840,15 @@ export function registerTasksCli(
               type: "boolean",
               description: "Move the project to the top level",
             },
-            "link-bb-project": {
+            "link-sandy-project": {
               type: "string",
               placeholder: "proj_id",
-              aliases: ["bb-project", "link-project"],
-              description: "bb project id (proj_...) to link",
+              aliases: ["sandy-project", "link-project"],
+              description: "sandy project id (proj_...) to link",
             },
-            "unlink-bb-project": {
+            "unlink-sandy-project": {
               type: "boolean",
-              description: "Remove the bb project link",
+              description: "Remove the sandy project link",
             },
             "rename-prefix": {
               type: "string",
@@ -862,7 +862,7 @@ export function registerTasksCli(
             { kind: "at-most-one", options: ["folder", "no-folder"] },
             {
               kind: "at-most-one",
-              options: ["link-bb-project", "unlink-bb-project"],
+              options: ["link-sandy-project", "unlink-sandy-project"],
             },
           ],
           run(input) {
@@ -879,9 +879,9 @@ export function registerTasksCli(
                 name: input.options.name,
                 color: input.options.color,
                 folderId: input.options["no-folder"] ? null : folder?.id,
-                linkedBbProjectId: input.options["unlink-bb-project"]
+                linkedSandyProjectId: input.options["unlink-sandy-project"]
                   ? null
-                  : input.options["link-bb-project"],
+                  : input.options["link-sandy-project"],
               };
               const renamePrefix = input.options["rename-prefix"];
               if (
@@ -889,7 +889,7 @@ export function registerTasksCli(
                 changes.name === undefined &&
                 changes.color === undefined &&
                 changes.folderId === undefined &&
-                changes.linkedBbProjectId === undefined
+                changes.linkedSandyProjectId === undefined
               ) {
                 throw new CliError("no project changes were provided", {
                   code: "no_changes",
@@ -906,7 +906,7 @@ export function registerTasksCli(
                 changes.name !== undefined ||
                 changes.color !== undefined ||
                 changes.folderId !== undefined ||
-                changes.linkedBbProjectId !== undefined;
+                changes.linkedSandyProjectId !== undefined;
               const updateInput = hasFieldChanges
                 ? tasksRpcContract.updateProject.input.parse({
                     projectId: project.id,
@@ -927,10 +927,10 @@ export function registerTasksCli(
                   name: updateInput?.name,
                   color: updateInput?.color,
                   folderId: updateInput?.folderId,
-                  linkedBbProjectId: updateInput?.linkedBbProjectId,
+                  linkedSandyProjectId: updateInput?.linkedSandyProjectId,
                 }),
               );
-              invalidateProjectTasks(bb, updated.id);
+              invalidateProjectTasks(sandy, updated.id);
               return input.options.json
                 ? JSON.stringify({ project: updated })
                 : `Updated project ${updated.prefix}  ${updated.name}`;
@@ -1080,7 +1080,7 @@ export function registerTasksCli(
                   parentFolderId: moveInput?.parentFolderId,
                 }),
               );
-              invalidateFolders(bb, { projectsMoved: false });
+              invalidateFolders(sandy, { projectsMoved: false });
               return input.options.json
                 ? JSON.stringify({ folder: updated })
                 : `Updated folder ${updated.name}  ${updated.id}`;
@@ -1220,7 +1220,7 @@ export function registerTasksCli(
               }
               const clientHostId = usesClientFiles
                 ? await resolveClientHostId(
-                    bb,
+                    sandy,
                     domain,
                     input.options.machine,
                     ctx,
@@ -1230,7 +1230,7 @@ export function registerTasksCli(
               for (const path of attachPaths) {
                 attachSources.push({
                   path,
-                  bytes: await readAttachmentSource(bb, clientHostId, path),
+                  bytes: await readAttachmentSource(sandy, clientHostId, path),
                 });
               }
               const project = await selectedProject(
@@ -1253,7 +1253,7 @@ export function registerTasksCli(
                 title: input.options.title,
                 description:
                   (await readTextOption(
-                    bb,
+                    sandy,
                     ctx,
                     clientHostId,
                     input.options.description,
@@ -1282,7 +1282,7 @@ export function registerTasksCli(
                       fileName: attachmentFileName(source.path),
                     },
                   );
-                  invalidateAttachmentChanged(bb, store.tasks, attachment);
+                  invalidateAttachmentChanged(sandy, store.tasks, attachment);
                   attachments.push(attachment);
                 } catch (error) {
                   failedAttachments.push({
@@ -1305,7 +1305,7 @@ export function registerTasksCli(
                     ),
                     ...failedAttachments.map(
                       (entry) =>
-                        `Retry with: bb tasks attachment add ${task.key} --file ${entry.path}`,
+                        `Retry with: sandy tasks attachment add ${task.key} --file ${entry.path}`,
                     ),
                   ].join("\n");
               if (failedAttachments.length === 0) return stdout;
@@ -1727,14 +1727,14 @@ export function registerTasksCli(
               const clientHostId =
                 descriptionFile !== undefined
                   ? await resolveClientHostId(
-                      bb,
+                      sandy,
                       domain,
                       input.options.machine,
                       ctx,
                     )
                   : undefined;
               const description = await readTextOption(
-                bb,
+                sandy,
                 ctx,
                 clientHostId,
                 input.options.description,
@@ -1877,14 +1877,14 @@ export function registerTasksCli(
               const clientHostId =
                 bodyFile !== undefined
                   ? await resolveClientHostId(
-                      bb,
+                      sandy,
                       domain,
                       input.options.machine,
                       ctx,
                     )
                   : undefined;
               const body = await readTextOption(
-                bb,
+                sandy,
                 ctx,
                 clientHostId,
                 input.options.body,
@@ -1898,7 +1898,7 @@ export function registerTasksCli(
               if (!body.trim()) {
                 throw new CliError("comment body must not be blank");
               }
-              const comment = await createComment(bb, store, {
+              const comment = await createComment(sandy, store, {
                 taskId: task.id,
                 kind: ctx.threadId ? "agent" : "user",
                 authorName: input.options.author ?? taskAuthor(ctx),
@@ -2068,13 +2068,13 @@ export function registerTasksCli(
                 ? { commentId: comment.id }
                 : { taskId: (await resolveTask(domain, ownerAddress)).id };
               const clientHostId = await resolveClientHostId(
-                bb,
+                sandy,
                 domain,
                 input.options.machine,
                 ctx,
               );
               const content = await readAttachmentSource(
-                bb,
+                sandy,
                 clientHostId,
                 sourcePath,
               );
@@ -2087,7 +2087,7 @@ export function registerTasksCli(
                     input.options.name ?? attachmentFileName(sourcePath),
                 },
               );
-              invalidateAttachmentChanged(bb, store.tasks, attachment);
+              invalidateAttachmentChanged(sandy, store.tasks, attachment);
               return input.options.json
                 ? JSON.stringify({
                     attachment,
@@ -2104,7 +2104,7 @@ export function registerTasksCli(
           positionals: [
             {
               name: "attachment-id",
-              description: "Attachment ULID from bb tasks attachment list",
+              description: "Attachment ULID from sandy tasks attachment list",
               required: true,
             },
           ],
@@ -2128,7 +2128,7 @@ export function registerTasksCli(
                 input.options.out,
               );
               const clientHostId = await resolveClientHostId(
-                bb,
+                sandy,
                 domain,
                 input.options.machine,
                 ctx,
@@ -2137,7 +2137,7 @@ export function registerTasksCli(
                 store.tasks,
                 input.positionals["attachment-id"],
               );
-              await writeClientFile(bb, clientHostId, outPath, content);
+              await writeClientFile(sandy, clientHostId, outPath, content);
               return input.options.json
                 ? JSON.stringify({ attachment, out: outPath })
                 : `Saved ${attachment.fileName}  ${outPath}`;
@@ -2186,7 +2186,7 @@ export function registerTasksCli(
           positionals: [
             {
               name: "attachment-id",
-              description: "Attachment ULID from bb tasks attachment list",
+              description: "Attachment ULID from sandy tasks attachment list",
               required: true,
             },
           ],
@@ -2582,7 +2582,7 @@ export function registerTasksCli(
               required: true,
               placeholder: "name-or-id",
               description:
-                "Dispatch preset name or id; run bb tasks preset list to see them",
+                "Dispatch preset name or id; run sandy tasks preset list to see them",
             },
             instructions: {
               type: "string",
@@ -2603,7 +2603,7 @@ export function registerTasksCli(
                 input.options.preset,
               );
               const result = delegationRpcContract.delegate.output.parse(
-                await delegationHandlers(bb, store).delegate(
+                await delegationHandlers(sandy, store).delegate(
                   delegationRpcContract.delegate.input.parse({
                     taskId: task.id,
                     presetId: preset.id,
@@ -2627,7 +2627,7 @@ export function registerTasksCli(
               placeholder: "thread-id",
               aliases: ["thread-id"],
               description:
-                "Thread to attach; defaults to BB_THREAD_ID or the invoking thread",
+                "Thread to attach; defaults to SANDY_THREAD_ID or the invoking thread",
             },
             json: JSON_OPTION,
           },
@@ -2643,7 +2643,7 @@ export function registerTasksCli(
               );
               const result =
                 delegationRpcContract.taskThreadsAttach.output.parse(
-                  await delegationHandlers(bb, store).taskThreadsAttach(
+                  await delegationHandlers(sandy, store).taskThreadsAttach(
                     delegationRpcContract.taskThreadsAttach.input.parse({
                       taskId: task.id,
                       threadId,
@@ -2666,7 +2666,7 @@ export function registerTasksCli(
               placeholder: "thread-id",
               aliases: ["thread-id"],
               description:
-                "Thread to detach; defaults to BB_THREAD_ID or the invoking thread",
+                "Thread to detach; defaults to SANDY_THREAD_ID or the invoking thread",
             },
             json: JSON_OPTION,
           },
@@ -2682,7 +2682,7 @@ export function registerTasksCli(
               );
               const result =
                 delegationRpcContract.taskThreadsDetach.output.parse(
-                  await delegationHandlers(bb, store).taskThreadsDetach(
+                  await delegationHandlers(sandy, store).taskThreadsDetach(
                     delegationRpcContract.taskThreadsDetach.input.parse({
                       taskId: task.id,
                       threadId,
@@ -2756,7 +2756,7 @@ export function registerTasksCli(
                     ["Labels", result.labelsCreated],
                     ["Tasks", result.tasksCreated],
                     ["Comments", result.commentsCreated],
-                    ["BB project", result.linkedBbProjectId ?? "-"],
+                    ["SANDY project", result.linkedSandyProjectId ?? "-"],
                   ]);
             });
           },

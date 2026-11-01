@@ -1,12 +1,12 @@
-import { ExpandableText } from "@bb/shared-ui/expandable-text";
+import { ExpandableText } from "@sandy/shared-ui/expandable-text";
 import type { ReactNode } from "react";
-import type { ExperimentalProviderIconProps } from "@get-bb/plugin-sdk/app";
-import { Button } from "@bb/shared-ui/button";
-import { Checkbox } from "@bb/shared-ui/checkbox";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { ResourceBrowseGrid } from "@bb/shared-ui/resource-list";
-import { Switch } from "@bb/shared-ui/switch";
-import { cn } from "@bb/shared-ui/lib/utils";
+import type { ExperimentalProviderIconProps } from "@sandy-sdk/plugin-sdk/app";
+import { Button } from "@sandy/shared-ui/button";
+import { Checkbox } from "@sandy/shared-ui/checkbox";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { ResourceBrowseGrid } from "@sandy/shared-ui/resource-list";
+import { Switch } from "@sandy/shared-ui/switch";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   PluginAuthorByline,
   PluginCard,
@@ -17,14 +17,14 @@ import {
   MACOS_APP_REGION_NO_DRAG_CLASS,
   MACOS_TRAFFIC_LIGHT_RESERVE_PADDING_CLASS,
   MACOS_WINDOW_DRAG_CLASS,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import {
   ONBOARDING_STEPS,
   type AgentSetupState,
   type OnboardingStepId,
   type SignInGuide,
 } from "./onboarding-model";
-import bbLogoUrl from "../../../../../assets/bb-logo.svg";
+import sandyLogoUrl from "../../../../../assets/sandy-logo.svg";
 
 const CONTENT_COLUMN_CLASS =
   "mx-auto w-full max-w-[600px] px-4 @min-[36rem]/onboarding:px-6";
@@ -84,8 +84,8 @@ export function OnboardingLayout({
         )}
       >
         <img
-          src={bbLogoUrl}
-          alt="bb"
+          src={sandyLogoUrl}
+          alt="sandy"
           draggable={false}
           className="h-5 w-6 shrink-0 select-none object-contain dark:invert"
         />
@@ -358,7 +358,7 @@ export function AgentStep({
         </ul>
       )}
       <p className="text-xs text-muted-foreground">
-        Don't see your agent? bb picks up other ACP agents, such as opencode,
+        Don't see your agent? sandy picks up other ACP agents, such as opencode,
         once they are installed.
       </p>
     </div>
@@ -497,7 +497,7 @@ export function AgentSignInGuide({
         <span className="min-w-0 flex-1">
           {codeSubmitted
             ? "Finishing sign-in…"
-            : "bb continues on its own as soon as you're signed in."}
+            : "sandy continues on its own as soon as you're signed in."}
         </span>
         {alternateLabel === null ? null : (
           <button
@@ -588,7 +588,7 @@ export function ProjectsStep({
         <p className="text-sm text-muted-foreground">
           {status.kind === "error"
             ? status.message
-            : "bb didn't find a git repo you've worked in over the last 30 days."}
+            : "sandy didn't find a git repo you've worked in over the last 30 days."}
         </p>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={onRetry}>
@@ -755,8 +755,8 @@ export function OnboardingPluginCard({
       descriptionLines="expandable"
       disabled={disabled}
       byline={
-        <PluginAuthorByline name="BB Official" github={null} official>
-          BB Official
+        <PluginAuthorByline name="SANDY Official" github={null} official>
+          SANDY Official
         </PluginAuthorByline>
       }
       footerAction={

@@ -3,11 +3,11 @@
   "name": "video-thumbnail",
   "type": "registry:ui",
   "title": "video-thumbnail",
-  "description": "BB ui \"video-thumbnail\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"video-thumbnail\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/icon",
-    "@bb/utils",
-    "@bb/video"
+    "@sandy/icon",
+    "@sandy/utils",
+    "@sandy/video"
   ],
   "files": [
     {

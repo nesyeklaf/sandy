@@ -1,13 +1,13 @@
 import path from "node:path";
 import { Command } from "commander";
-import { isRawThreadId } from "@bb/domain";
+import { isRawThreadId } from "@sandy/domain";
 import {
   threadOpenSplitSchema,
   type PanelFileSource,
   type ThreadOpenFile,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import { action } from "../../action.js";
-import { createCliBbSdk } from "../../client.js";
+import { createCliSandySdk } from "../../client.js";
 import { requireThreadId, resolveContextThreadId } from "../../context-env.js";
 import {
   outputJson,
@@ -32,7 +32,7 @@ interface ThreadOpenFileRequest {
   path: string;
 }
 
-type CliBbSdk = ReturnType<typeof createCliBbSdk>;
+type CliSandySdk = ReturnType<typeof createCliSandySdk>;
 
 export function registerOpenCommand(
   parent: Command,
@@ -40,11 +40,11 @@ export function registerOpenCommand(
 ): void {
   parent
     .command("open")
-    .description("Open a BB thread, optionally with a file in its panel")
+    .description("Open a SANDY thread, optionally with a file in its panel")
     .usage("[id] [path] [options]")
     .argument(
       "[id]",
-      "Thread ID. Inside a BB thread, omit it to target the current thread; a lone argument that is not a thread ID opens that file in the current thread",
+      "Thread ID. Inside a SANDY thread, omit it to target the current thread; a lone argument that is not a thread ID opens that file in the current thread",
     )
     .argument("[path]", "Thread-relative or absolute file path to open")
     .option("--line <number>", "Line number to focus")
@@ -70,7 +70,7 @@ export function registerOpenCommand(
           if (target.inputPath === null && lineNumber !== null) {
             throw new Error("--line requires a file path.");
           }
-          const sdk = createCliBbSdk(getUrl());
+          const sdk = createCliSandySdk(getUrl());
           const file: ThreadOpenFile | null =
             target.inputPath === null
               ? null
@@ -135,7 +135,7 @@ function resolveThreadOpenTarget(
 
   if (!contextThreadId) {
     throw new Error(
-      "Missing thread ID. Pass <threadId> [path], or run inside a BB thread.",
+      "Missing thread ID. Pass <threadId> [path], or run inside a SANDY thread.",
     );
   }
   return {
@@ -159,7 +159,7 @@ function parseLineNumber(value: string | undefined): number | null {
 
 async function resolveThreadOpenFileRequest(args: {
   inputPath: string;
-  sdk: CliBbSdk;
+  sdk: CliSandySdk;
   threadId: string;
 }): Promise<ThreadOpenFileRequest> {
   const inputPath = args.inputPath.trim();
@@ -199,13 +199,13 @@ async function resolveThreadOpenFileRequest(args: {
   }
 
   const acceptedRoots = threadStorageRoot
-    ? "the target thread workspace or BB_THREAD_STORAGE"
+    ? "the target thread workspace or SANDY_THREAD_STORAGE"
     : "the target thread workspace";
   throw new Error(`Absolute path must be inside ${acceptedRoots}.`);
 }
 
 async function resolveThreadWorkspaceRoot(
-  sdk: CliBbSdk,
+  sdk: CliSandySdk,
   threadId: string,
 ): Promise<string> {
   const thread = await sdk.threads.get({ threadId });
@@ -223,7 +223,7 @@ async function resolveThreadWorkspaceRoot(
 
 function resolveThreadStorageRoot(threadId: string): string | undefined {
   if (resolveContextThreadId() !== threadId) return undefined;
-  const rawRoot = process.env.BB_THREAD_STORAGE?.trim();
+  const rawRoot = process.env.SANDY_THREAD_STORAGE?.trim();
   if (!rawRoot) return undefined;
   return path.resolve(rawRoot);
 }

@@ -1,8 +1,8 @@
 {
-  "name": "@bb/desktop",
+  "name": "@sandy/desktop",
   "version": "0.48.1",
   "private": true,
-  "description": "macOS, Linux, and Windows Electron shell for bb",
+  "description": "macOS, Linux, and Windows Electron shell for sandy",
   "main": "dist/main.js",
   "os": [
     "darwin",
@@ -19,7 +19,7 @@
     "package": "pnpm run prepare-runtime && pnpm run build && node scripts/run-electron-builder.mjs --mac --dir --arm64",
     "package:linux": "pnpm run prepare-runtime && pnpm run build && node scripts/run-electron-builder.mjs --linux --dir --x64",
     "package:win": "pnpm run prepare-runtime && pnpm run build && node scripts/run-electron-builder.mjs --win --dir --x64",
-    "prepare-runtime": "pnpm exec turbo run build --filter=bb-app --output-logs=new-only",
+    "prepare-runtime": "pnpm exec turbo run build --filter=sandy-app --output-logs=new-only",
     "smoke:appimage-lifecycle": "node scripts/smoke-linux-appimage-lifecycle.mjs",
     "smoke:packaged": "node scripts/smoke-packaged-app.mjs",
     "smoke:packaged-npm": "node scripts/smoke-packaged-npm.mjs",
@@ -31,22 +31,22 @@
     "smoke:browser-address": "node scripts/smoke-browser-address.mjs"
   },
   "dependencies": {
-    "@bb/host-daemon-contract": "workspace:*",
-    "bb-app": "workspace:*",
+    "@sandy/host-daemon-contract": "workspace:*",
+    "sandy-app": "workspace:*",
     "semver": "^7.7.0",
     "ws": "^8.19.0",
     "zod": "^4.3.6",
-    "@bb/process-utils": "workspace:*"
+    "@sandy/process-utils": "workspace:*"
   },
   "devDependencies": {
-    "@bb/config": "workspace:*",
-    "@bb/desktop-contract": "workspace:*",
-    "@bb/domain": "workspace:*",
-    "@bb/server-archive": "workspace:*",
-    "@bb/server-contract": "workspace:*",
-    "@bb/test-helpers": "workspace:*",
-    "@bb/text-utils": "workspace:*",
-    "@bb/tsconfig": "workspace:*",
+    "@sandy/config": "workspace:*",
+    "@sandy/desktop-contract": "workspace:*",
+    "@sandy/domain": "workspace:*",
+    "@sandy/server-archive": "workspace:*",
+    "@sandy/server-contract": "workspace:*",
+    "@sandy/test-helpers": "workspace:*",
+    "@sandy/text-utils": "workspace:*",
+    "@sandy/tsconfig": "workspace:*",
     "@types/node": "^24.9.0",
     "@types/semver": "^7.7.0",
     "@types/ws": "^8.18.1",

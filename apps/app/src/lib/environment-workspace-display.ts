@@ -1,12 +1,12 @@
 import { machineRemovalLabels } from "./machine-removal-display";
-import type { Host } from "@bb/domain";
+import type { Host } from "@sandy/domain";
 import type {
   EnvironmentDisplayInfo,
   EnvironmentDisplayProviderLookup,
-} from "@bb/core-ui";
-import { resolveEnvironmentDisplayProvider } from "@bb/core-ui";
-import type { SystemEnvironmentProvider } from "@bb/server-contract";
-import type { IconName } from "@bb/shared-ui/icon";
+} from "@sandy/core-ui";
+import { resolveEnvironmentDisplayProvider } from "@sandy/core-ui";
+import type { SystemEnvironmentProvider } from "@sandy/server-contract";
+import type { IconName } from "@sandy/shared-ui/icon";
 import { pluginIconName } from "@/components/plugin/PluginIcon";
 import { PersistentHostIconName } from "@/lib/host-display";
 import type { MachineLabelHost } from "@/components/machines/MachineLabel";

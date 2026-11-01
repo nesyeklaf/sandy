@@ -1,8 +1,8 @@
-import { resolvedThreadExecutionOptionsSchema } from "@bb/domain";
+import { resolvedThreadExecutionOptionsSchema } from "@sandy/domain";
 import { createLastKnownCache } from "@/lib/last-known-cache";
 
 const threadExecutionOptionsCache = createLastKnownCache({
-  prefix: "bb.thread-execution-options",
+  prefix: "sandy.thread-execution-options",
   version: "1",
   schema: resolvedThreadExecutionOptionsSchema,
 });

@@ -1,7 +1,7 @@
 import {
   buildTerminalWebSocketPath,
   type BuildTerminalWebSocketPathArgs,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { buildBrowserWebSocketUrl } from "@/lib/dev-websocket-url";
 
 type BuildTerminalWebSocketUrlArgs = BuildTerminalWebSocketPathArgs;

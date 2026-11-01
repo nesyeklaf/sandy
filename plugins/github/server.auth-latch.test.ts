@@ -8,7 +8,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server";
 import { installFakeGh } from "./testing/fake-gh";
 
@@ -30,7 +30,7 @@ function ghCalls(): string[] {
 }
 
 beforeEach(() => {
-  binDir = mkdtempSync(join(tmpdir(), "bb-1758-gh-"));
+  binDir = mkdtempSync(join(tmpdir(), "sandy-1758-gh-"));
   offlineFlag = join(binDir, "gh-offline");
   noTokenFlag = join(binDir, "gh-no-token");
   badSecondaryFlag = join(binDir, "gh-bad-secondary");
@@ -86,11 +86,11 @@ afterEach(() => {
 async function loadWithSyncServiceOnce(
   options: { settings?: Record<string, string> } = {},
 ) {
-  const { bb, harness } = createFakePluginHost({
+  const { sandy, harness } = createFakePluginHost({
     pluginId: "github",
     settings: options.settings,
   });
-  await plugin(bb);
+  await plugin(sandy);
   const callsBeforeService = ghCalls().length;
   const { controller, done } = harness.runService("sync");
   await vi.waitFor(
@@ -101,7 +101,7 @@ async function loadWithSyncServiceOnce(
   );
   controller.abort();
   await done;
-  return { bb, harness };
+  return { sandy, harness };
 }
 
 describe("github plugin gh auth probe (#1758)", () => {
@@ -193,12 +193,12 @@ describe("github plugin gh auth probe (#1758)", () => {
   it("stops promptly when aborted during an all-repos failure and keeps the old sync time", async () => {
     writeFileSync(apiDownFlag, "");
     writeFileSync(slowStatusFlag, "");
-    const { bb, harness } = await loadWithSyncServiceOnce({
+    const { sandy, harness } = await loadWithSyncServiceOnce({
       settings: { extraRepos: "acme/one acme/two" },
     });
     rmSync(slowStatusFlag);
     expect(harness.needsConfigurationMessages).toEqual([]);
-    expect(await bb.storage.kv.get("sync-cursor")).toBeUndefined();
+    expect(await sandy.storage.kv.get("sync-cursor")).toBeUndefined();
     expect(harness.logEntries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -211,6 +211,6 @@ describe("github plugin gh auth probe (#1758)", () => {
     rmSync(apiDownFlag);
     const result = (await harness.callRpc("refresh")) as { repos: number };
     expect(result.repos).toBe(2);
-    expect(await bb.storage.kv.get("sync-cursor")).toBeDefined();
+    expect(await sandy.storage.kv.get("sync-cursor")).toBeDefined();
   }, 20_000);
 });

@@ -3,16 +3,16 @@
   "name": "resource-row",
   "type": "registry:ui",
   "title": "resource-row",
-  "description": "BB ui \"resource-row\" — vendored from the BB app's own source (version-matched to this BB release).",
+  "description": "SANDY ui \"resource-row\" — vendored from the SANDY app's own source (version-matched to this SANDY release).",
   "registryDependencies": [
-    "@bb/button",
-    "@bb/dropdown-menu",
-    "@bb/empty-state",
-    "@bb/hover-reveal",
-    "@bb/icon",
-    "@bb/skeleton",
-    "@bb/tooltip",
-    "@bb/utils"
+    "@sandy/button",
+    "@sandy/dropdown-menu",
+    "@sandy/empty-state",
+    "@sandy/hover-reveal",
+    "@sandy/icon",
+    "@sandy/skeleton",
+    "@sandy/tooltip",
+    "@sandy/utils"
   ],
   "files": [
     {

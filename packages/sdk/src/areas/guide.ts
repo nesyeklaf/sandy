@@ -1,4 +1,4 @@
-import { templateDefinitions, type TemplateId } from "@bb/templates/generated";
+import { templateDefinitions, type TemplateId } from "@sandy/templates/generated";
 
 export interface GuideRenderArgs {
   chapter?: string;
@@ -14,20 +14,20 @@ export interface GuideArea {
 }
 
 const guideChapters: Record<string, TemplateId> = {
-  threads: "bbGuideThreads",
-  "thread-inspection": "bbGuideThreadInspection",
-  "thread-messaging": "bbGuideThreadMessaging",
-  "thread-lifecycle": "bbGuideThreadLifecycle",
-  environments: "bbGuideEnvironments",
-  "agent-configuration": "bbGuideAgentConfiguration",
-  providers: "bbGuideProviders",
-  projects: "bbGuideProjects",
-  machines: "bbGuideMachines",
-  terminals: "bbGuideTerminals",
-  browser: "bbGuideBrowser",
-  customization: "bbGuideCustomization",
-  plugins: "bbGuidePlugins",
-  json: "bbGuideJson",
+  threads: "sandyGuideThreads",
+  "thread-inspection": "sandyGuideThreadInspection",
+  "thread-messaging": "sandyGuideThreadMessaging",
+  "thread-lifecycle": "sandyGuideThreadLifecycle",
+  environments: "sandyGuideEnvironments",
+  "agent-configuration": "sandyGuideAgentConfiguration",
+  providers: "sandyGuideProviders",
+  projects: "sandyGuideProjects",
+  machines: "sandyGuideMachines",
+  terminals: "sandyGuideTerminals",
+  browser: "sandyGuideBrowser",
+  customization: "sandyGuideCustomization",
+  plugins: "sandyGuidePlugins",
+  json: "sandyGuideJson",
 };
 
 const guideChapterAliases: Record<string, string> = {
@@ -100,14 +100,14 @@ export function createGuideArea(): GuideArea {
   return {
     render(input = {}) {
       if (!input.chapter) {
-        return { content: renderStaticTemplate("bbGuideOverview") };
+        return { content: renderStaticTemplate("sandyGuideOverview") };
       }
       const chapter = resolveGuideChapter(input.chapter);
       const templateId = guideChapters[chapter];
       if (!templateId) {
         const available = Object.keys(guideChapters).join(", ");
         throw new Error(
-          `Unknown guide chapter '${input.chapter}'. Available: ${available}. Commands contributed by plugins document themselves: run \`bb <command> --help\`.`,
+          `Unknown guide chapter '${input.chapter}'. Available: ${available}. Commands contributed by plugins document themselves: run \`sandy <command> --help\`.`,
         );
       }
       return {

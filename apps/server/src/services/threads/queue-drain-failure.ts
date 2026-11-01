@@ -1,12 +1,12 @@
 import {
   setQueuedThreadMessageFailureReason,
   setQueuedThreadMessageWaitingOn,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   QUEUED_MESSAGE_FAILURE_REASON_MAX_LENGTH,
   type Thread,
-} from "@bb/domain";
-import { sliceUtf16Head } from "@bb/text-utils";
+} from "@sandy/domain";
+import { sliceUtf16Head } from "@sandy/text-utils";
 import { ApiError } from "../../errors.js";
 import type { LoggedPendingInteractionWorkSessionDeps } from "../../types.js";
 import { dispatchEnvironmentAndHost } from "./dispatch-hooks.js";

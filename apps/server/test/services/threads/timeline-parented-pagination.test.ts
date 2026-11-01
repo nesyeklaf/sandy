@@ -3,18 +3,18 @@ import {
   encodeClientTurnRequestIdNumber,
   threadScope,
   turnScope,
-} from "@bb/domain";
-import type { ClientTurnRequestId, Thread } from "@bb/domain";
+} from "@sandy/domain";
+import type { ClientTurnRequestId, Thread } from "@sandy/domain";
 import {
   createProject,
   createThread,
   insertEvents,
   noopNotifier,
   upsertHost,
-} from "@bb/db";
-import { createMigratedConnection } from "@bb/db/testing";
-import type { DbConnection } from "@bb/db";
-import type { TimelineRow } from "@bb/server-contract";
+} from "@sandy/db";
+import { createMigratedConnection } from "@sandy/db/testing";
+import type { DbConnection } from "@sandy/db";
+import type { TimelineRow } from "@sandy/server-contract";
 import { buildThreadTimelineWithProfile } from "../../../src/services/threads/timeline.js";
 
 const providerThreadId = "provider-root";

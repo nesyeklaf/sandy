@@ -7,13 +7,13 @@ import type {
   ProviderFork,
   ProviderInfo,
   ReasoningLevel,
-} from "@bb/domain";
-import { parseExtensionKind } from "@bb/domain";
+} from "@sandy/domain";
+import { parseExtensionKind } from "@sandy/domain";
 import type {
   PluginProviderExtensionKindDeclaration,
   PluginProviderOptionsContext,
-} from "@get-bb/plugin-sdk";
-import { providerAlreadyRegisteredMessage } from "@get-bb/plugin-sdk/internal/host-policy";
+} from "@sandy-sdk/plugin-sdk";
+import { providerAlreadyRegisteredMessage } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 
 export interface ProviderHealthCacheKey {
   hostId: string;

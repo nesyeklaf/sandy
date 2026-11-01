@@ -1,13 +1,13 @@
 import { ipcMain, type BrowserWindow } from "electron";
-import { escapeHtmlText } from "@bb/text-utils";
+import { escapeHtmlText } from "@sandy/text-utils";
 import {
   createDesktopDialogWindow,
   DESKTOP_DIALOG_BASE_CSS,
   showDesktopDialogHtml,
 } from "./desktop-dialog-window.js";
 import {
-  BB_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL,
-  BB_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL,
+  SANDY_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL,
+  SANDY_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL,
   serverUrlDialogSubmitRequestSchema,
   type ServerUrlDialogSubmitResponse,
 } from "./server-url-dialog-ipc.js";
@@ -38,7 +38,7 @@ const SERVER_URL_DIALOG_TITLES: Record<ServerUrlDialogMode, string> = {
 };
 
 const SERVER_URL_DIALOG_DESCRIPTIONS: Record<ServerUrlDialogMode, string> = {
-  add: "Save another bb server to the Server menu.",
+  add: "Save another sandy server to the Server menu.",
   edit: "Edit this saved server. Leave the URL empty to remove it.",
 };
 
@@ -138,9 +138,9 @@ export function openServerUrlDialog(
         return;
       }
       settled = true;
-      ipcMain.removeHandler(BB_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL);
+      ipcMain.removeHandler(SANDY_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL);
       ipcMain.removeListener(
-        BB_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL,
+        SANDY_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL,
         handleCancel,
       );
       openDialog = null;
@@ -157,7 +157,7 @@ export function openServerUrlDialog(
     }
 
     ipcMain.handle(
-      BB_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL,
+      SANDY_DESKTOP_SERVER_URL_DIALOG_SUBMIT_CHANNEL,
       (event, payload): ServerUrlDialogSubmitResponse => {
         if (event.sender.id !== dialogWindow.webContents.id) {
           return { ok: false, message: "Unexpected sender." };
@@ -182,7 +182,7 @@ export function openServerUrlDialog(
         return { ok: true };
       },
     );
-    ipcMain.on(BB_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL, handleCancel);
+    ipcMain.on(SANDY_DESKTOP_SERVER_URL_DIALOG_CANCEL_CHANNEL, handleCancel);
     dialogWindow.on("closed", () => {
       finish({ kind: "cancelled" });
     });

@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { getHost, updateHost } from "@bb/db";
+import { getHost, updateHost } from "@sandy/db";
 import type {
   HostDaemonCommand,
   HostDaemonRpcCommand,
-} from "@bb/host-daemon-contract";
+} from "@sandy/host-daemon-contract";
 import {
   callHostOnlineRpc,
   callHostOnlineRpcForWork,

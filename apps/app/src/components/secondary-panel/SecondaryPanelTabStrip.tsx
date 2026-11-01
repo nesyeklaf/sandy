@@ -28,27 +28,27 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Button } from "@bb/shared-ui/button";
-import { Icon } from "@bb/shared-ui/icon";
+import { Button } from "@sandy/shared-ui/button";
+import { Icon } from "@sandy/shared-ui/icon";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "@bb/shared-ui/context-menu";
-import { useIsCompactViewport } from "@bb/shared-ui/hooks/use-compact-viewport";
+} from "@sandy/shared-ui/context-menu";
+import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import {
   OverflowFade,
   type OverflowFadeTone,
-} from "@bb/shared-ui/overflow-fade";
+} from "@sandy/shared-ui/overflow-fade";
 import { TabPill } from "@/components/ui/tab-pill";
-import { useDragClickSuppression } from "@bb/shared-ui/use-drag-click-suppression";
-import { cn } from "@bb/shared-ui/lib/utils";
+import { useDragClickSuppression } from "@sandy/shared-ui/use-drag-click-suppression";
+import { cn } from "@sandy/shared-ui/lib/utils";
 import {
   MACOS_APP_REGION_NO_DRAG_CLASS,
   MACOS_WINDOW_NO_DRAG_CLASS,
-} from "@/lib/bb-desktop";
+} from "@/lib/sandy-desktop";
 import {
   PANEL_TAB_DRAG_DISTANCE_PX,
   type SecondaryPanelRenderableTab,

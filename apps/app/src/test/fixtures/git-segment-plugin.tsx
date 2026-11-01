@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
-import type { ExperimentalThreadContextSegmentProps } from "@get-bb/plugin-sdk";
-import { experimental_THREAD_CONTEXT_SEGMENT_GROUPS } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalThreadContextSegmentProps } from "@sandy-sdk/plugin-sdk";
+import { experimental_THREAD_CONTEXT_SEGMENT_GROUPS } from "@sandy-sdk/plugin-sdk/app";
 import type {
   WorkspaceChangedFilesSection,
-} from "@bb/shared-ui/workspace-change-summary";
+} from "@sandy/shared-ui/workspace-change-summary";
 import {
   removePluginSlotRegistrations,
   setPluginSlotRegistrations,
@@ -14,11 +14,11 @@ import {
   MergeBaseActionView,
 } from "../../../../../plugins/git/ui/segment/ChangedFilesSegment";
 import type { MergeBaseState } from "../../../../../plugins/git/ui/merge-base";
-import type { WorkspaceFileStatus } from "bb-plugin-bb--git/contract";
+import type { WorkspaceFileStatus } from "sandy-plugin-sandy--git/contract";
 
 const noop = () => {};
 
-export const GIT_SEGMENT_FIXTURE_PLUGIN_ID = "bb--git";
+export const GIT_SEGMENT_FIXTURE_PLUGIN_ID = "sandy--git";
 
 export type GitSegmentFixture =
   | {

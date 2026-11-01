@@ -1,4 +1,4 @@
-import type { SourceCodeProps } from "@get-bb/plugin-sdk";
+import type { SourceCodeProps } from "@sandy-sdk/plugin-sdk";
 import { SourceCodeHost } from "@/components/code/SourceCodeHost";
 import { useSelectionAddToChat } from "@/components/thread/SelectionAddToChatContext";
 

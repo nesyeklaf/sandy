@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SkillProvider, SkillSummary } from "@bb/server-contract";
+import type { SkillProvider, SkillSummary } from "@sandy/server-contract";
 import {
   ResourceInfiniteScrollSentinel,
   useResourceInfiniteItems,
   useResourceViewportPageSize,
-} from "@bb/shared-ui/resource-pagination";
+} from "@sandy/shared-ui/resource-pagination";
 import {
   ResourceCollectionPage,
   ResourceCollectionViewport,
@@ -16,31 +16,31 @@ import {
   ResourceRowDetailChevron,
   ResourceSortMenu,
   ResourceToolbar,
-} from "@bb/shared-ui/resource-list";
-import { BbLogo } from "@/components/ui/bb-logo";
+} from "@sandy/shared-ui/resource-list";
+import { SandyLogo } from "@/components/ui/sandy-logo";
 import {
   ConfirmDeleteDialog,
   ConfirmDeleteDialogContent,
-} from "@bb/shared-ui/confirm-delete-dialog";
+} from "@sandy/shared-ui/confirm-delete-dialog";
 import { CreateWithTemplatesButton } from "@/components/create-via-prompt-examples";
 import { ProvenancePill } from "@/components/tools/ProvenancePill";
 import { SkillDetailView } from "@/components/tools/SkillDetailView";
 import { TOOLS_PAGE_BAND_CLASSES } from "@/components/tools/tools-navigation";
 import { skillScopeLabel } from "@/components/tools/skill-taxonomy";
-import type { ProviderInfo } from "@bb/domain";
+import type { ProviderInfo } from "@sandy/domain";
 import { ProviderIconMark } from "@/components/settings/ProviderIconMark";
 import { getProviderIconInfo } from "@/lib/provider-icon";
 import type { MarkdownLinkRouting } from "@/components/ui/markdown-link-routing";
 
-type ResourceProviderFilter = "bb" | SkillProvider;
+type ResourceProviderFilter = "sandy" | SkillProvider;
 export type ProviderRoster = ReadonlyMap<string, ProviderInfo>;
-type ResourceSkillSourceFilter = "included" | "bb-official" | "user";
+type ResourceSkillSourceFilter = "included" | "sandy-official" | "user";
 type ResourceSortMode = "provider" | "alpha";
 type ResourceSortDirection = "asc" | "desc";
 
 const RESOURCE_SKILL_SOURCE_FILTERS: readonly ResourceSkillSourceFilter[] = [
   "included",
-  "bb-official",
+  "sandy-official",
   "user",
 ];
 
@@ -53,31 +53,65 @@ function providerLabel(
   provider: SkillProvider | null,
   providerRoster: ProviderRoster,
 ): string {
-  if (provider === null) return "bb";
+  if (provider === null) return "sandy";
   return providerRoster.get(provider)?.displayName ?? provider;
 }
 
-function skillProviderFilterId(skill: SkillSummary): ResourceProviderFilter {
-  return skill.provider ?? "bb";
+function skillProviderFilterIds(skill: SkillSummary): ResourceProviderFilter[] {
+  return skill.provider === null || skill.providers.length === 0
+    ? ["sandy", ...skill.providers]
+    : skill.providers;
+}
+
+const DUPLICATE_RELATION_LABELS: Readonly<
+  Record<SkillSummary["duplicates"][number]["relation"], string>
+> = {
+  "same-file": "Same file",
+  "same-content": "Same content",
+  "same-name": "Same name",
+};
+
+function SkillDuplicatesTooltip({
+  skill,
+  providerRoster,
+}: {
+  skill: SkillSummary;
+  providerRoster: ProviderRoster;
+}) {
+  return (
+    <div className="flex max-w-md flex-col gap-1">
+      {skill.duplicates.map((duplicate) => (
+        <div key={duplicate.id} className="flex flex-col">
+          <span className="font-medium">
+            {DUPLICATE_RELATION_LABELS[duplicate.relation]} ·{" "}
+            {providerLabel(duplicate.provider, providerRoster)}
+          </span>
+          <span className="break-all text-muted-foreground">
+            {duplicate.filePath}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function providerFilterLabel(
   provider: ResourceProviderFilter,
   providerRoster: ProviderRoster,
 ): string {
-  return provider === "bb" ? "bb" : providerLabel(provider, providerRoster);
+  return provider === "sandy" ? "sandy" : providerLabel(provider, providerRoster);
 }
 
 function skillSourceFilterId(skill: SkillSummary): ResourceSkillSourceFilter {
-  if (skill.scope === "bb-builtin") return "bb-official";
+  if (skill.scope === "sandy-builtin") return "sandy-official";
   if (skill.scope === "plugin") return "included";
   return "user";
 }
 
 function skillSourceFilterLabel(source: ResourceSkillSourceFilter): string {
   switch (source) {
-    case "bb-official":
-      return "BB Official";
+    case "sandy-official":
+      return "SANDY Official";
     case "included":
       return "Included in plugin";
     case "user":
@@ -88,7 +122,7 @@ function skillSourceFilterLabel(source: ResourceSkillSourceFilter): string {
 function isResourceSkillSourceFilter(
   value: string,
 ): value is ResourceSkillSourceFilter {
-  return value === "included" || value === "bb-official" || value === "user";
+  return value === "included" || value === "sandy-official" || value === "user";
 }
 
 function isResourceProviderFilter(
@@ -138,12 +172,12 @@ export function SkillProvenanceTooltip({
     <span className="inline-flex items-center gap-1.5">
       <span>{prefix}</span>
       <span
-        data-provider-icon={providerId ?? "bb"}
+        data-provider-icon={providerId ?? "sandy"}
         aria-hidden="true"
         className="flex size-3.5 shrink-0 items-center justify-center"
       >
         {providerId === null ? (
-          <BbLogo className="size-3.5 brightness-0 invert" />
+          <SandyLogo glyph className="size-3.5 brightness-0 invert" />
         ) : (
           <ProviderLogo
             providerId={providerId}
@@ -173,7 +207,7 @@ function SkillLeading({
       />
     );
   }
-  return <BbLogo className="size-6" />;
+  return <SandyLogo className="size-6" />;
 }
 
 function skillDescription(
@@ -217,13 +251,13 @@ function skillMutationDisabledReason(
   skill: SkillSummary,
   providerRoster: ProviderRoster,
 ): string {
-  if (skill.scope === "bb-builtin") return "Built-in skill";
+  if (skill.scope === "sandy-builtin") return "Built-in skill";
   if (skill.scope === "plugin") return "Bundled with plugin";
   return `Bundled with ${providerLabel(skill.provider, providerRoster)}`;
 }
 
 const SKILLS_LIBRARY_DESCRIPTION =
-  "The skills on this bb host — yours, your providers', and those bundled with plugins. They work with every agent you use in bb.";
+  "The skills on this sandy host — yours, your providers', and those bundled with plugins. They work with every agent you use in sandy.";
 
 const PREFETCH_HOVER_INTENT_MS = 150;
 
@@ -264,26 +298,23 @@ function SkillRow({
         leading={<SkillLeading skill={skill} providerRoster={providerRoster} />}
         title={skill.name}
         titleMeta={
-          skill.scope === "bb-builtin" ? (
-            <ProvenancePill label="BB Official" />
-          ) : skill.scope === "plugin" ? (
-            <ProvenancePill
-              label="Included"
-              tooltip={
-                <SkillProvenanceTooltip
-                  prefix="Included with"
-                  providerId={skill.provider}
-                  provider={
-                    skill.provider === null
-                      ? undefined
-                      : providerRoster.get(skill.provider)
-                  }
-                  name={`${providerPluginDisplayName(skill)} plugin.`}
-                />
-              }
-              accessibleLabel={`${skill.name} is included with ${includedPluginDescription(skill, providerRoster)}`}
-            />
-          ) : undefined
+          skill.duplicates.length === 0 ? (
+            (skillProvenancePill(skill, providerRoster) ?? undefined)
+          ) : (
+            <span className="inline-flex items-baseline gap-1">
+              {skillProvenancePill(skill, providerRoster)}
+              <ProvenancePill
+                label={`${skill.duplicates.length} ${skill.duplicates.length === 1 ? "duplicate" : "duplicates"}`}
+                tooltip={
+                  <SkillDuplicatesTooltip
+                    skill={skill}
+                    providerRoster={providerRoster}
+                  />
+                }
+                accessibleLabel={`${skill.name} is also found at ${skill.duplicates.map((duplicate) => duplicate.filePath).join(", ")}`}
+              />
+            </span>
+          )
         }
         description={description}
         onOpen={onSelect}
@@ -291,6 +322,32 @@ function SkillRow({
       />
     </div>
   );
+}
+
+function skillProvenancePill(
+  skill: SkillSummary,
+  providerRoster: ProviderRoster,
+) {
+  return skill.scope === "sandy-builtin" ? (
+    <ProvenancePill label="SANDY Official" />
+  ) : skill.scope === "plugin" ? (
+    <ProvenancePill
+      label="Included"
+      tooltip={
+        <SkillProvenanceTooltip
+          prefix="Included with"
+          providerId={skill.provider}
+          provider={
+            skill.provider === null
+              ? undefined
+              : providerRoster.get(skill.provider)
+          }
+          name={`${providerPluginDisplayName(skill)} plugin.`}
+        />
+      }
+      accessibleLabel={`${skill.name} is included with ${includedPluginDescription(skill, providerRoster)}`}
+    />
+  ) : null;
 }
 
 interface SkillsOverviewProps {
@@ -344,21 +401,22 @@ export function SkillsOverview({
   const providerCounts = useMemo(() => {
     const counts = new Map<ResourceProviderFilter, number>();
     for (const skill of skills) {
-      const provider = skillProviderFilterId(skill);
-      counts.set(provider, (counts.get(provider) ?? 0) + 1);
+      for (const provider of skillProviderFilterIds(skill)) {
+        counts.set(provider, (counts.get(provider) ?? 0) + 1);
+      }
     }
     return counts;
   }, [skills]);
   const providerBucketCount = providerCounts.size;
   const providerOptions = useMemo(() => {
     const present = new Set<ResourceProviderFilter>([
-      "bb",
+      "sandy",
       ...providerCounts.keys(),
       ...providerFilters,
     ]);
     const ordered = [...present].sort((left, right) =>
-      left === "bb" || right === "bb"
-        ? Number(left !== "bb") - Number(right !== "bb")
+      left === "sandy" || right === "sandy"
+        ? Number(left !== "sandy") - Number(right !== "sandy")
         : providerFilterLabel(left, providerRoster).localeCompare(
             providerFilterLabel(right, providerRoster),
           ),
@@ -367,8 +425,8 @@ export function SkillsOverview({
       id: provider,
       label: providerFilterLabel(provider, providerRoster),
       leading:
-        provider === "bb" ? (
-          <BbLogo className="size-4" />
+        provider === "sandy" ? (
+          <SandyLogo className="size-4" />
         ) : (
           <ProviderLogo
             providerId={provider}
@@ -394,7 +452,9 @@ export function SkillsOverview({
       }
       if (
         providerFilters.length > 0 &&
-        !providerFilters.includes(skillProviderFilterId(skill))
+        !skillProviderFilterIds(skill).some((provider) =>
+          providerFilters.includes(provider),
+        )
       ) {
         return false;
       }
@@ -413,8 +473,8 @@ export function SkillsOverview({
     });
     return [...filtered].sort((left, right) => {
       const officialResult =
-        Number(left.scope !== "bb-builtin") -
-        Number(right.scope !== "bb-builtin");
+        Number(left.scope !== "sandy-builtin") -
+        Number(right.scope !== "sandy-builtin");
       if (officialResult !== 0) return officialResult;
       const base =
         sortMode === "provider"
@@ -477,7 +537,7 @@ export function SkillsOverview({
       <ResourceListPanel>
         {libraryList.items.map((skill) => (
           <SkillRow
-            key={`${skill.scope}-${skill.provider ?? "bb"}-${skill.name}-${skill.filePath}`}
+            key={`${skill.scope}-${skill.provider ?? "sandy"}-${skill.name}-${skill.filePath}`}
             skill={skill}
             providerRoster={providerRoster}
             onSelect={() => onSelectSkill(skill)}
@@ -511,7 +571,7 @@ export function SkillsOverview({
             action={
               <CreateWithTemplatesButton
                 kind="skill"
-                label="New bb skill"
+                label="New sandy skill"
                 onCreate={onCreateSkill}
               />
             }
@@ -662,11 +722,11 @@ export function SkillDetailDialogView({
       title={skill.name}
       path={skill.filePath}
       titleBadge={
-        skill.scope === "bb-builtin"
+        skill.scope === "sandy-builtin"
           ? {
-              label: "BB Official",
-              tooltip: "Ships with bb",
-              accessibleLabel: `${skill.name} is BB Official`,
+              label: "SANDY Official",
+              tooltip: "Ships with sandy",
+              accessibleLabel: `${skill.name} is SANDY Official`,
             }
           : bundledPluginName !== null
             ? {

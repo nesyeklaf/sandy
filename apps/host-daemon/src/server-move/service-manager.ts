@@ -1,4 +1,4 @@
-import { execHostFile, spawnHostProcess as spawn } from "@bb/process-utils";
+import { execHostFile, spawnHostProcess as spawn } from "@sandy/process-utils";
 import { closeSync, mkdirSync, openSync } from "node:fs";
 import { dirname } from "node:path";
 import type { ServiceDefinition } from "./service-definition.js";
@@ -93,7 +93,7 @@ export async function restartService(args: RestartServiceArgs): Promise<void> {
       args: [
         "-c",
         LAUNCHD_RESTART_SCRIPT,
-        "bb-server-move-restart",
+        "sandy-server-move-restart",
         `gui/${args.uid}`,
         args.definition.path,
       ],

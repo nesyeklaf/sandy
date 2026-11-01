@@ -3,7 +3,7 @@ import type {
   Thread,
   ThreadListEntry,
   ThreadStatusChangeMetadata,
-} from "@bb/domain";
+} from "@sandy/domain";
 import {
   getCachedThreadLists,
   iterateThreadListCacheEntries,
@@ -15,7 +15,7 @@ import type {
   ThreadResponse,
   ThreadTimelineResponse,
   TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   ARCHIVED_THREADS_LIST_KIND,
   environmentFilePreviewQueryKeyPrefix,

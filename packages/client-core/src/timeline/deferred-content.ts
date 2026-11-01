@@ -1,5 +1,5 @@
-import type { TimelineRow } from "@bb/server-contract";
-import type { ThreadTimelineViewRow } from "@bb/thread-view";
+import type { TimelineRow } from "@sandy/server-contract";
+import type { ThreadTimelineViewRow } from "@sandy/thread-view";
 
 export function deferredTimelineContentItemId(
   row: ThreadTimelineViewRow,

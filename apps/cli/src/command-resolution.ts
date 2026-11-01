@@ -195,7 +195,7 @@ export function suggestCommand(invocation: ResolvedInvocation): string | null {
         token,
         invocation.command.commands.map((child) => child.name()),
       );
-    return target === null ? null : `bb ${target}`;
+    return target === null ? null : `sandy ${target}`;
   }
   const candidates = SUBCOMMAND_SYNONYMS[token] ?? [];
   const match =
@@ -208,7 +208,7 @@ export function suggestCommand(invocation: ResolvedInvocation): string | null {
       invocation.command.commands.map((child) => child.name()),
     );
   if (match === null) return null;
-  return `bb ${[...invocation.path, match].join(" ")}`;
+  return `sandy ${[...invocation.path, match].join(" ")}`;
 }
 
 export function suggestOption(
@@ -242,6 +242,6 @@ export function formatOptionList(command: Command): string {
 }
 
 export function formatUsageLine(invocation: ResolvedInvocation): string {
-  const prefix = ["bb", ...invocation.path].join(" ");
+  const prefix = ["sandy", ...invocation.path].join(" ");
   return `Usage: ${prefix} ${invocation.command.usage()}`.trimEnd();
 }

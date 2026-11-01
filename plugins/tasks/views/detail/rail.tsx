@@ -11,7 +11,7 @@ import { TASK_PRIORITIES, TASK_STATUSES } from "../../shared/contract.js";
 import type { Preset } from "../../shared/contract.js";
 import { errorMessage } from "../../shared/errors.js";
 import {
-  selectBbProjects,
+  selectSandyProjects,
   useTasksQuery,
   useTasksRpc,
 } from "../../shell/data.js";
@@ -29,8 +29,8 @@ import {
 } from "../list/lib.js";
 import { DispatchControl } from "./threads.js";
 import { DEFAULT_COLOR } from "../manage/shared.js";
-import { BbProjectLinkPicker } from "../manage/bb-project-link.js";
-import type { BbProjectOption } from "../../shared/contract.js";
+import { SandyProjectLinkPicker } from "../manage/sandy-project-link.js";
+import type { SandyProjectOption } from "../../shared/contract.js";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -396,12 +396,12 @@ function ProjectMenu({
 
 function DispatchTargetMenu({
   project,
-  bbProjects,
+  sandyProjects,
   onError,
   triggerClassName,
 }: {
   project: Project;
-  bbProjects: readonly BbProjectOption[];
+  sandyProjects: readonly SandyProjectOption[];
   onError: (message: string) => void;
   triggerClassName: string;
 }) {
@@ -409,9 +409,9 @@ function DispatchTargetMenu({
   const [open, setOpen] = useState(false);
   const [selection, setSelection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const linkedBbProjectId = project.linkedBbProjectId;
-  const linkedName = bbProjects.find(
-    (candidate) => candidate.id === linkedBbProjectId,
+  const linkedSandyProjectId = project.linkedSandyProjectId;
+  const linkedName = sandyProjects.find(
+    (candidate) => candidate.id === linkedSandyProjectId,
   )?.name;
 
   const save = async (linkedId: string | null) => {
@@ -420,7 +420,7 @@ function DispatchTargetMenu({
     try {
       await rpc.call("updateProject", {
         projectId: project.id,
-        linkedBbProjectId: linkedId,
+        linkedSandyProjectId: linkedId,
       });
       setOpen(false);
     } catch (saveError) {
@@ -434,7 +434,7 @@ function DispatchTargetMenu({
     <Popover
       open={open}
       onOpenChange={(next) => {
-        if (next) setSelection(linkedBbProjectId);
+        if (next) setSelection(linkedSandyProjectId);
         setOpen(next);
       }}
     >
@@ -445,26 +445,26 @@ function DispatchTargetMenu({
           className={triggerClassName}
         >
           <Icon name="ArrowUpRight" className="size-3.5 shrink-0" />
-          {linkedBbProjectId !== null ? (
-            <span className="truncate" title={linkedBbProjectId}>
-              {linkedName ?? linkedBbProjectId}
+          {linkedSandyProjectId !== null ? (
+            <span className="truncate" title={linkedSandyProjectId}>
+              {linkedName ?? linkedSandyProjectId}
             </span>
           ) : (
             <span className="truncate text-muted-foreground">
-              Link a bb project…
+              Link a sandy project…
             </span>
           )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-3">
-        <BbProjectLinkPicker
+        <SandyProjectLinkPicker
           value={selection}
           onChange={setSelection}
-          bbProjects={bbProjects}
-          noneLabel={linkedBbProjectId !== null ? "Unlink" : "Not linked"}
+          sandyProjects={sandyProjects}
+          noneLabel={linkedSandyProjectId !== null ? "Unlink" : "Not linked"}
         />
         <div className="mt-2.5 flex items-center justify-between gap-2">
-          {linkedBbProjectId !== null ? (
+          {linkedSandyProjectId !== null ? (
             <Button
               variant="ghost"
               size="sm"
@@ -515,7 +515,7 @@ export function PropertiesRail({
     task.labelIds.includes(label.id),
   );
   const active = threads.filter(isActiveThread);
-  const bbProjects = useTasksQuery("listBbProjects", null, selectBbProjects);
+  const sandyProjects = useTasksQuery("listSandyProjects", null, selectSandyProjects);
   return (
     <aside className={cn("w-56 shrink-0 py-10 pl-2 pr-6", className)}>
       <h2 className="mb-1.5 text-xs font-semibold text-muted-foreground">
@@ -572,7 +572,7 @@ export function PropertiesRail({
       {project !== undefined ? (
         <DispatchTargetMenu
           project={project}
-          bbProjects={bbProjects.data ?? []}
+          sandyProjects={sandyProjects.data ?? []}
           onError={onError}
           triggerClassName={RAIL_ROW_CLASS}
         />

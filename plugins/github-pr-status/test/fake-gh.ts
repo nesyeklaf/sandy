@@ -22,7 +22,7 @@ export async function installFakeGh(
   readCalls(): Promise<string[][]>;
   readQueries(): Promise<string[]>;
 }> {
-  const binPath = await makeTempDir("bb-fake-gh-");
+  const binPath = await makeTempDir("sandy-fake-gh-");
   const logPath = path.join(binPath, "gh.log");
   const scriptPath = path.join(binPath, "gh.cjs");
   await fs.writeFile(

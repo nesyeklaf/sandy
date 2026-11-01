@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { getBbDesktopInfo } from "@/lib/bb-desktop";
+import { getSandyDesktopInfo } from "@/lib/sandy-desktop";
 import { useThemePreference } from "./useTheme";
 
 export function useDesktopThemeSync(): void {
   const themePreference = useThemePreference();
   useEffect(() => {
-    const desktopApi = getBbDesktopInfo();
+    const desktopApi = getSandyDesktopInfo();
     desktopApi?.setTheme(themePreference);
   }, [themePreference]);
 }

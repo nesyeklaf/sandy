@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { DiffStatsTally } from "@bb/shared-ui/diff-stats-tally";
-import { Icon } from "@bb/shared-ui/icon";
-import { InfoRowTime } from "@bb/shared-ui/info-list-row";
+import { DiffStatsTally } from "@sandy/shared-ui/diff-stats-tally";
+import { Icon } from "@sandy/shared-ui/icon";
+import { InfoRowTime } from "@sandy/shared-ui/info-list-row";
 import {
   INFO_SECTION_TITLE_CLASS,
   InfoList,
@@ -57,7 +57,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export function Parent() {
   return (
-    <Gallery title="Parent row (bb)">
+    <Gallery title="Parent row (sandy)">
       <Variant label="child thread">
         <ThreadContextCardRow
           icon="UserRound"
@@ -202,7 +202,7 @@ function ChildThreads({ items }: { items: StoryChild[] }) {
 
 export function ChildThreadsSection() {
   return (
-    <Gallery title="Child threads section (bb)">
+    <Gallery title="Child threads section (sandy)">
       <Variant label="one child">
         <ChildThreads items={CHILDREN.slice(0, 1)} />
       </Variant>

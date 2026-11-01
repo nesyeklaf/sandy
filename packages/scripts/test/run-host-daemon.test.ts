@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HOST_AUTH_FILE_NAME,
   HOST_ID_FILE_NAME,
-} from "@bb/host-daemon-contract";
-import { makeTempDir } from "@bb/test-helpers";
+} from "@sandy/host-daemon-contract";
+import { makeTempDir } from "@sandy/test-helpers";
 import {
   expectedDevDataDir,
   expectedDevServerUrl,
@@ -36,22 +36,22 @@ function createTestRuntimeEnv({
   serverUrl = "http://127.0.0.1:3334",
 }: TestRuntimeEnvArgs): HostDaemonRuntimeEnvironment {
   return {
-    BB_BRIDGE_DIR: undefined,
-    BB_CLI_DIR: undefined,
-    BB_DATA_DIR: dataDir,
-    BB_HOST_ENROLL_KEY: undefined,
-    BB_HOST_DAEMON_PORT: "3002",
-    BB_HOST_ID: undefined,
-    BB_SERVER_URL: serverUrl,
+    SANDY_BRIDGE_DIR: undefined,
+    SANDY_CLI_DIR: undefined,
+    SANDY_DATA_DIR: dataDir,
+    SANDY_HOST_ENROLL_KEY: undefined,
+    SANDY_HOST_DAEMON_PORT: "3002",
+    SANDY_HOST_ID: undefined,
+    SANDY_SERVER_URL: serverUrl,
     NODE_ENV: "development",
   };
 }
 
 beforeEach(async () => {
   vi.resetModules();
-  vi.stubEnv("BB_DATA_DIR", "/tmp/bb-run-host-daemon-test");
-  vi.stubEnv("BB_SERVER_URL", "http://127.0.0.1:3334");
-  vi.stubEnv("BB_HOST_DAEMON_PORT", "3002");
+  vi.stubEnv("SANDY_DATA_DIR", "/tmp/sandy-run-host-daemon-test");
+  vi.stubEnv("SANDY_SERVER_URL", "http://127.0.0.1:3334");
+  vi.stubEnv("SANDY_HOST_DAEMON_PORT", "3002");
   runHostDaemon = await import("../src/commands/run-host-daemon.js");
 });
 
@@ -62,11 +62,11 @@ afterEach(() => {
 
 describe("run-host-daemon auto join", () => {
   it("uses the production data dir when production overrides are absent", () => {
-    vi.stubEnv("BB_DATA_DIR", undefined);
+    vi.stubEnv("SANDY_DATA_DIR", undefined);
 
     const env = runHostDaemon.resolveHostDaemonRuntimeEnvironment("prod");
 
-    expect(env.BB_DATA_DIR).toBe(path.join(os.homedir(), ".bb"));
+    expect(env.SANDY_DATA_DIR).toBe(path.join(os.homedir(), ".sandy"));
     expect(env.NODE_ENV).toBe("production");
   });
 
@@ -87,25 +87,25 @@ describe("run-host-daemon auto join", () => {
   });
 
   it("requires an explicit port when dev extra-host overrides are absent", () => {
-    vi.stubEnv("BB_DATA_DIR", undefined);
-    vi.stubEnv("BB_HOST_DAEMON_PORT", undefined);
-    vi.stubEnv("BB_SERVER_URL", undefined);
+    vi.stubEnv("SANDY_DATA_DIR", undefined);
+    vi.stubEnv("SANDY_HOST_DAEMON_PORT", undefined);
+    vi.stubEnv("SANDY_SERVER_URL", undefined);
 
     expect(() =>
       runHostDaemon.resolveHostDaemonRuntimeEnvironment("dev"),
     ).toThrow(
-      "BB_HOST_DAEMON_PORT is required when running a dev extra-host daemon without BB_DATA_DIR. Set it to a port distinct from pnpm dev's host daemon port.",
+      "SANDY_HOST_DAEMON_PORT is required when running a dev extra-host daemon without SANDY_DATA_DIR. Set it to a port distinct from pnpm dev's host daemon port.",
     );
   });
 
   it("uses the current checkout instance when only the dev extra-host port is explicit", () => {
-    vi.stubEnv("BB_DATA_DIR", undefined);
-    vi.stubEnv("BB_HOST_DAEMON_PORT", "39999");
-    vi.stubEnv("BB_SERVER_URL", undefined);
+    vi.stubEnv("SANDY_DATA_DIR", undefined);
+    vi.stubEnv("SANDY_HOST_DAEMON_PORT", "39999");
+    vi.stubEnv("SANDY_SERVER_URL", undefined);
 
     const env = runHostDaemon.resolveHostDaemonRuntimeEnvironment("dev");
 
-    expect(env.BB_DATA_DIR).toBe(
+    expect(env.SANDY_DATA_DIR).toBe(
       path.join(
         expectedDevDataDir({
           homeDir: os.homedir(),
@@ -114,53 +114,53 @@ describe("run-host-daemon auto join", () => {
         "extra-host",
       ),
     );
-    expect(env.BB_HOST_DAEMON_PORT).toBe("39999");
-    expect(env.BB_SERVER_URL).toBe(expectedDevServerUrl(repoRoot));
+    expect(env.SANDY_HOST_DAEMON_PORT).toBe("39999");
+    expect(env.SANDY_SERVER_URL).toBe(expectedDevServerUrl(repoRoot));
     expect(env.NODE_ENV).toBe("development");
   });
 
   it("uses paired explicit dev overrides", () => {
-    vi.stubEnv("BB_DATA_DIR", "~/bb-host-daemon-test");
-    vi.stubEnv("BB_SERVER_URL", "http://127.0.0.1:19333");
+    vi.stubEnv("SANDY_DATA_DIR", "~/sandy-host-daemon-test");
+    vi.stubEnv("SANDY_SERVER_URL", "http://127.0.0.1:19333");
 
     const env = runHostDaemon.resolveHostDaemonRuntimeEnvironment("dev");
 
-    expect(env.BB_DATA_DIR).toBe(
-      path.join(os.homedir(), "bb-host-daemon-test"),
+    expect(env.SANDY_DATA_DIR).toBe(
+      path.join(os.homedir(), "sandy-host-daemon-test"),
     );
-    expect(env.BB_SERVER_URL).toBe("http://127.0.0.1:19333");
+    expect(env.SANDY_SERVER_URL).toBe("http://127.0.0.1:19333");
     expect(env.NODE_ENV).toBe("development");
   });
 
   it("rejects a dev data-dir override without a server URL override", () => {
-    vi.stubEnv("BB_DATA_DIR", "~/bb-host-daemon-test");
-    vi.stubEnv("BB_SERVER_URL", undefined);
+    vi.stubEnv("SANDY_DATA_DIR", "~/sandy-host-daemon-test");
+    vi.stubEnv("SANDY_SERVER_URL", undefined);
 
     expect(() =>
       runHostDaemon.resolveHostDaemonRuntimeEnvironment("dev"),
     ).toThrow(
-      "Dev host-daemon overrides must set both BB_DATA_DIR and BB_SERVER_URL, or neither.",
+      "Dev host-daemon overrides must set both SANDY_DATA_DIR and SANDY_SERVER_URL, or neither.",
     );
   });
 
   it("rejects a dev server URL override without a data-dir override", () => {
-    vi.stubEnv("BB_DATA_DIR", undefined);
-    vi.stubEnv("BB_SERVER_URL", "http://127.0.0.1:19333");
+    vi.stubEnv("SANDY_DATA_DIR", undefined);
+    vi.stubEnv("SANDY_SERVER_URL", "http://127.0.0.1:19333");
 
     expect(() =>
       runHostDaemon.resolveHostDaemonRuntimeEnvironment("dev"),
     ).toThrow(
-      "Dev host-daemon overrides must set both BB_DATA_DIR and BB_SERVER_URL, or neither.",
+      "Dev host-daemon overrides must set both SANDY_DATA_DIR and SANDY_SERVER_URL, or neither.",
     );
   });
 
   it("skips auto join when auth state already exists", async () => {
-    const dataDir = await makeTempDir("bb-run-host-daemon-");
+    const dataDir = await makeTempDir("sandy-run-host-daemon-");
     await fs.writeFile(
       path.join(dataDir, HOST_AUTH_FILE_NAME),
       JSON.stringify({
         hostId: "host_existing",
-        hostKey: "bbdh_existing",
+        hostKey: "sandydh_existing",
         serverUrl: "http://127.0.0.1:3334",
       }),
     );
@@ -172,12 +172,12 @@ describe("run-host-daemon auto join", () => {
       true,
     );
 
-    expect(env.BB_HOST_ENROLL_KEY).toBeUndefined();
+    expect(env.SANDY_HOST_ENROLL_KEY).toBeUndefined();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("reuses a persisted host ID when requesting an enroll key", async () => {
-    const dataDir = await makeTempDir("bb-run-host-daemon-");
+    const dataDir = await makeTempDir("sandy-run-host-daemon-");
     const persistedHostId = "host_persisted";
     await fs.writeFile(
       path.join(dataDir, HOST_ID_FILE_NAME),
@@ -205,7 +205,7 @@ describe("run-host-daemon auto join", () => {
 
         return new Response(
           JSON.stringify({
-            enrollKey: "bbde_test_enroll_key",
+            enrollKey: "sandyde_test_enroll_key",
             expiresAt: Date.now() + 60_000,
             hostId: persistedHostId,
           }),
@@ -224,8 +224,8 @@ describe("run-host-daemon auto join", () => {
       true,
     );
 
-    expect(env.BB_HOST_ID).toBe(persistedHostId);
-    expect(env.BB_HOST_ENROLL_KEY).toBe("bbde_test_enroll_key");
+    expect(env.SANDY_HOST_ID).toBe(persistedHostId);
+    expect(env.SANDY_HOST_ENROLL_KEY).toBe("sandyde_test_enroll_key");
     expect(requests).toHaveLength(2);
     expect(requests[1]?.url).toBe(
       "http://127.0.0.1:3334/internal/hosts/enroll-key",
@@ -238,7 +238,7 @@ describe("run-host-daemon auto join", () => {
   });
 
   it("requests a fresh enroll key when no host ID is persisted", async () => {
-    const dataDir = await makeTempDir("bb-run-host-daemon-");
+    const dataDir = await makeTempDir("sandy-run-host-daemon-");
 
     const requests: RecordedFetchRequest[] = [];
     vi.stubGlobal(
@@ -261,7 +261,7 @@ describe("run-host-daemon auto join", () => {
 
         return new Response(
           JSON.stringify({
-            enrollKey: "bbde_generated_enroll_key",
+            enrollKey: "sandyde_generated_enroll_key",
             expiresAt: Date.now() + 60_000,
             hostId: "host_generated",
           }),
@@ -280,13 +280,13 @@ describe("run-host-daemon auto join", () => {
       true,
     );
 
-    expect(env.BB_HOST_ID).toBe("host_generated");
-    expect(env.BB_HOST_ENROLL_KEY).toBe("bbde_generated_enroll_key");
+    expect(env.SANDY_HOST_ID).toBe("host_generated");
+    expect(env.SANDY_HOST_ENROLL_KEY).toBe("sandyde_generated_enroll_key");
     expect(requests[1]?.body).toBe(JSON.stringify({}));
   });
 
   it("surfaces enroll-key request failures", async () => {
-    const dataDir = await makeTempDir("bb-run-host-daemon-");
+    const dataDir = await makeTempDir("sandy-run-host-daemon-");
 
     vi.stubGlobal("fetch", async (input: TestFetchInput): Promise<Response> => {
       const url =

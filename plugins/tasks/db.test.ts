@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { createFakePluginHost } from "@get-bb/plugin-sdk/testing";
+import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { describe, expect, it } from "vitest";
 import {
   createTasksStore,
@@ -8,8 +8,8 @@ import {
 } from "./db";
 
 function setup() {
-  const { bb, harness } = createFakePluginHost({ pluginId: "tasks-db-test" });
-  const db = bb.storage.database();
+  const { sandy, harness } = createFakePluginHost({ pluginId: "tasks-db-test" });
+  const db = sandy.storage.database();
   return { db, harness, store: createTasksStore(db) };
 }
 

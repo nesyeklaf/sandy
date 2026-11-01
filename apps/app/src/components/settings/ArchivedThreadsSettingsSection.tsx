@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import type { ThreadListEntry } from "@bb/domain";
-import { Button } from "@bb/shared-ui/button";
+import type { ThreadListEntry } from "@sandy/domain";
+import { Button } from "@sandy/shared-ui/button";
 import { ProjectSelector } from "@/components/pickers/ProjectSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@bb/shared-ui/dropdown-menu";
-import { EmptyStatePanel } from "@bb/shared-ui/empty-state";
-import { Icon, type IconName } from "@bb/shared-ui/icon";
-import { Input } from "@bb/shared-ui/input";
-import { Pill } from "@bb/shared-ui/pill";
+} from "@sandy/shared-ui/dropdown-menu";
+import { EmptyStatePanel } from "@sandy/shared-ui/empty-state";
+import { Icon, type IconName } from "@sandy/shared-ui/icon";
+import { Input } from "@sandy/shared-ui/input";
+import { Pill } from "@sandy/shared-ui/pill";
 import { ThreadUnarchiveButton } from "@/components/thread/ThreadUnarchiveButton";
 import { useUnarchiveThread } from "@/hooks/mutations/thread-state-mutations";
 import {

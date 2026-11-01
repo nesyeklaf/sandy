@@ -42,7 +42,7 @@ async function installSdk(
   options?: { omitZod?: boolean },
 ): Promise<void> {
   const sdkSource = resolve(import.meta.dirname, "../../plugin-sdk");
-  const target = join(pluginDir, "node_modules", "@get-bb", "plugin-sdk");
+  const target = join(pluginDir, "node_modules", "@sandy-sdk", "plugin-sdk");
   await mkdir(target, { recursive: true });
   for (const entry of ["dist", "bundled-types", "package.json"]) {
     await cp(join(sdkSource, entry), join(target, entry), { recursive: true });
@@ -63,14 +63,14 @@ async function installSdk(
 }
 
 it("bundles SDK-owned Zod without requiring the plugin to declare it", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-host-zod-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-host-zod-"));
   tempDirs.push(dir);
   await writeFile(
     join(dir, "package.json"),
     JSON.stringify({
-      name: "bb-plugin-zodless",
+      name: "sandy-plugin-zodless",
       version: "0.0.0",
-      bb: {
+      sandy: {
         name: "Zodless",
         description: "Host entry whose plugin never installed zod.",
         branding: { icon: "Zap" },
@@ -85,7 +85,7 @@ it("bundles SDK-owned Zod without requiring the plugin to declare it", async () 
       "import {",
       "  experimental_defineHostEntry,",
       "  experimental_nativeRootsHostContract,",
-      '} from "@get-bb/plugin-sdk/host";',
+      '} from "@sandy-sdk/plugin-sdk/host";',
       "export default experimental_defineHostEntry({",
       "  contract: experimental_nativeRootsHostContract,",
       "  handlers: { resolveNativeRoots: async () => ({ skills: [], commands: [] }) },",
@@ -112,14 +112,14 @@ it("bundles SDK-owned Zod without requiring the plugin to declare it", async () 
 }, 30_000);
 
 it("reports a broken SDK installation separately from plugin dependencies", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-host-sdk-zodless-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-host-sdk-zodless-"));
   tempDirs.push(dir);
   await writeFile(
     join(dir, "package.json"),
     JSON.stringify({
-      name: "bb-plugin-broken-sdk",
+      name: "sandy-plugin-broken-sdk",
       version: "0.0.0",
-      bb: {
+      sandy: {
         name: "Broken SDK",
         description: "Host entry using an incomplete SDK installation.",
         branding: { icon: "Zap" },
@@ -130,7 +130,7 @@ it("reports a broken SDK installation separately from plugin dependencies", asyn
   );
   await writeFile(
     join(dir, "host.ts"),
-    'import { experimental_nativeRootsHostContract } from "@get-bb/plugin-sdk/host";\nexport default experimental_nativeRootsHostContract;\n',
+    'import { experimental_nativeRootsHostContract } from "@sandy-sdk/plugin-sdk/host";\nexport default experimental_nativeRootsHostContract;\n',
   );
   await installSdk(dir, { omitZod: true });
 
@@ -138,19 +138,19 @@ it("reports a broken SDK installation separately from plugin dependencies", asyn
     join(process.cwd(), ".unused-toolchain"),
   );
   await expect(buildPluginHost(dir, "0.0.0-test", toolchain)).rejects.toThrow(
-    /reinstall @get-bb\/plugin-sdk/,
+    /reinstall @sandy-sdk\/plugin-sdk/,
   );
 }, 30_000);
 
 it("requires Zod when the plugin imports it directly", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "bb-host-direct-zod-"));
+  const dir = await mkdtemp(join(tmpdir(), "sandy-host-direct-zod-"));
   tempDirs.push(dir);
   await writeFile(
     join(dir, "package.json"),
     JSON.stringify({
-      name: "bb-plugin-direct-zod",
+      name: "sandy-plugin-direct-zod",
       version: "0.0.0",
-      bb: {
+      sandy: {
         name: "Direct Zod",
         description: "Host entry importing Zod directly.",
         branding: { icon: "Zap" },

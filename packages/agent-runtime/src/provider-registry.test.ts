@@ -89,7 +89,7 @@ function expectBridgeSpawn(
     expect(workerArgs.at(-1)).toMatch(/bridge-worker-entry\.ts$/u);
   } else {
     expect(workerArgs).toEqual([
-      path.resolve(expected.bundleDir, "bb-provider-bridge-worker.mjs"),
+      path.resolve(expected.bundleDir, "sandy-provider-bridge-worker.mjs"),
     ]);
   }
 }
@@ -125,7 +125,7 @@ describe("provider registry", () => {
       expect(provider.process.args).toEqual([
         "--use-system-ca",
         "--use-env-proxy",
-        path.resolve("/tmp", "bb-provider-bridge-worker.mjs"),
+        path.resolve("/tmp", "sandy-provider-bridge-worker.mjs"),
         "/data/provider-bridges/pi.mjs",
         "provider-fixture",
         "/data/plugins/provider-fixture/bridge-data",
@@ -141,11 +141,11 @@ describe("provider registry", () => {
       additionalWorkspaceWriteRoots: [],
       bridgeLaunch: PI_BRIDGE_LAUNCH,
       bridgeNodeEnv,
-      bridgeNodeExecutablePath: "/Applications/bb.app/Contents/MacOS/bb",
+      bridgeNodeExecutablePath: "/Applications/sandy.app/Contents/MacOS/sandy",
     });
 
     expect(provider.process.command).toBe(
-      "/Applications/bb.app/Contents/MacOS/bb",
+      "/Applications/sandy.app/Contents/MacOS/sandy",
     );
     expect(provider.process.env).toEqual(bridgeNodeEnv);
   });
@@ -213,7 +213,7 @@ describe("provider registry", () => {
         permissionScope: "full",
         approvalReviewer: null,
         permissionEscalation: null,
-        envVars: { BB_THREAD_ID: "thread-1" },
+        envVars: { SANDY_THREAD_ID: "thread-1" },
       },
       instructionMode: "append",
     });

@@ -49,10 +49,10 @@ describe("rewriteLocalhostLinkHref", () => {
 
   it("rewrites to the current hostname", () => {
     for (const currentHostname of [
-      "bb.example.test",
+      "sandy.example.test",
       "sawyer.localhost",
       "sawyer--8000.localhost",
-      "sawyer.bb.localhost",
+      "sawyer.sandy.localhost",
     ]) {
       expect(
         rewriteLocalhostLinkHref({

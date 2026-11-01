@@ -3,8 +3,8 @@ import {
   isAbsoluteHostPath,
   joinHostPath,
   normalizeHostPath,
-} from "@bb/domain";
-import type { ExperimentalFileOpenOptions } from "@get-bb/plugin-sdk";
+} from "@sandy/domain";
+import type { ExperimentalFileOpenOptions } from "@sandy-sdk/plugin-sdk";
 import { isTerminalLinkActivation } from "./terminal-links";
 
 export function createTerminalFileLinkProvider({

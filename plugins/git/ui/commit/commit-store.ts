@@ -1,6 +1,6 @@
 import { createElement, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import type { PluginBrowserBbSdk } from "@get-bb/plugin-sdk/app";
+import type { PluginBrowserSandySdk } from "@sandy-sdk/plugin-sdk/app";
 import { CommitToastDescription } from "./CommitToastDescription.js";
 import { COMMIT_FAILED_TITLE, commitErrorMessage } from "./commit-errors.js";
 
@@ -56,7 +56,7 @@ interface CommitQueue {
 const queues = new Map<string, CommitQueue>();
 
 async function runCommit(
-  sdk: PluginBrowserBbSdk,
+  sdk: PluginBrowserSandySdk,
   environmentId: string,
   toastId: string | number,
 ): Promise<void> {
@@ -79,7 +79,7 @@ async function runCommit(
 }
 
 export function commit(
-  sdk: PluginBrowserBbSdk,
+  sdk: PluginBrowserSandySdk,
   target: CommitDialogTarget,
 ): Promise<void> {
   const queue = queues.get(target.threadId) ?? {

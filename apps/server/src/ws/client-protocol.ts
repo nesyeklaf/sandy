@@ -2,7 +2,7 @@ import {
   clientMessageSchema,
   realtimeSubscriptionTargetKey,
   type PongMessage,
-} from "@bb/domain";
+} from "@sandy/domain";
 import { parseSocketMessage } from "./decode-payload.js";
 import type { NotificationHub } from "./hub.js";
 

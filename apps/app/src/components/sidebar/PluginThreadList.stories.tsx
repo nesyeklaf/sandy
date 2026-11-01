@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PERSONAL_PROJECT_ID } from "@bb/domain";
-import type { SidebarBootstrapResponse } from "@bb/server-contract";
-import { installTestPluginRuntime } from "@get-bb/plugin-sdk/testing/app";
+import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import type { SidebarBootstrapResponse } from "@sandy/server-contract";
+import { installTestPluginRuntime } from "@sandy-sdk/plugin-sdk/testing/app";
 import { ThreadActionsProvider } from "@/components/thread/ThreadActionsProvider";
 import { SidebarContent, SidebarProvider } from "@/components/ui/sidebar";
 import {
@@ -50,7 +50,7 @@ function inboxEntry(
 ) {
   return makeThreadListEntry({
     id,
-    projectId: PROJECT_IDS.bb,
+    projectId: PROJECT_IDS.sandy,
     title,
     titleFallback: title,
     sectionId: INBOX.id,
@@ -216,7 +216,7 @@ function OpenThreadControls() {
     <section className="grid max-w-xs content-start gap-3 text-sm">
       <p className="text-muted-foreground">
         Organize → Groups → By read status starts on. Click a thread to open it,
-        then mark it read the way bb does when you view it. It keeps its group
+        then mark it read the way sandy does when you view it. It keeps its group
         until you open another thread.
       </p>
       <p className="text-xs text-muted-foreground">

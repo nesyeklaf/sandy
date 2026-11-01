@@ -22,7 +22,7 @@ import type {
   PluginSidebarThreadRowStatus,
   PluginProvidersState,
   PluginThreadActionEntry,
-} from "@get-bb/plugin-sdk/app";
+} from "@sandy-sdk/plugin-sdk/app";
 import {
   installTestPluginRuntime,
   renderSlot,
@@ -30,7 +30,7 @@ import {
   type RenderedSlot,
   type TestThreadActionsResolver,
   type TestThreadBulkActionsResolver,
-} from "@get-bb/plugin-sdk/testing/app";
+} from "@sandy-sdk/plugin-sdk/testing/app";
 import { NO_COLLAPSED_CHILD_ACTIVITY } from "../model/thread-activity.js";
 import {
   makeSidebarEnvironment,
@@ -341,7 +341,7 @@ function hostThreadActions({
       },
     ): PluginThreadActionEntry => ({
       key,
-      pluginId: key.split("/")[0] ?? "bb--core",
+      pluginId: key.split("/")[0] ?? "sandy--core",
       group: "2_organize",
       action: {
         label,
@@ -351,20 +351,20 @@ function hostThreadActions({
     });
     const isArchived = thread.archivedAt !== null;
     return [
-      entry("bb--core/copyLink", "Copy link", "Copy"),
+      entry("sandy--core/copyLink", "Copy link", "Copy"),
       entry(
-        "bb--core/pin",
+        "sandy--core/pin",
         thread.pinnedAt === null ? "Pin" : "Unpin",
         thread.pinnedAt === null ? "Pin" : "PinOff",
       ),
       ...(thread.parentThreadId === null && !isArchived
         ? [entry("thread-list/move", "Move to section", "SectionMove")]
         : []),
-      entry("bb--core/rename", "Rename", "Edit", async () => {
+      entry("sandy--core/rename", "Rename", "Edit", async () => {
         requestRename(thread.id);
       }),
       entry(
-        "bb--core/archive",
+        "sandy--core/archive",
         isArchived ? "Unarchive" : "Archive",
         isArchived ? "ArchiveRestore" : "Archive",
         archiveRun,
@@ -576,7 +576,7 @@ describe("ThreadRow", () => {
     fireEvent.keyDown(restore, { key: "Enter" });
     fireEvent.click(restore);
     await waitFor(() =>
-      expect(ran).toEqual([{ key: "bb--core/archive", threadId: "thr_test" }]),
+      expect(ran).toEqual([{ key: "sandy--core/archive", threadId: "thr_test" }]),
     );
     expect(rowEvent).not.toHaveBeenCalled();
   });
@@ -632,9 +632,9 @@ describe("ThreadRow", () => {
 
   it("shows the configured row actions in order and reserves their width", async () => {
     getDefaultStore().set(preferenceValueAtom("rowActions"), [
-      "bb--core/pin",
-      "bb--core/copyLink",
-      "bb--core/archive",
+      "sandy--core/pin",
+      "sandy--core/copyLink",
+      "sandy--core/archive",
     ]);
     const ran: RanThreadAction[] = [];
     renderThreadRow({ threadActions: hostThreadActions({ ran }) });
@@ -646,12 +646,12 @@ describe("ThreadRow", () => {
     ).toEqual(["Pin", "Copy link", "Archive", "Thread actions"]);
     expect(
       document
-        .querySelector<HTMLElement>(".bb-sidebar-hover-actions-inset")
-        ?.style.getPropertyValue("--bb-sidebar-hover-actions-inset"),
+        .querySelector<HTMLElement>(".sandy-sidebar-hover-actions-inset")
+        ?.style.getPropertyValue("--sandy-sidebar-hover-actions-inset"),
     ).toBe("calc(var(--spacing) * 22.5)");
     fireEvent.click(screen.getByRole("button", { name: "Pin" }));
     await waitFor(() =>
-      expect(ran).toEqual([{ key: "bb--core/pin", threadId: "thr_test" }]),
+      expect(ran).toEqual([{ key: "sandy--core/pin", threadId: "thr_test" }]),
     );
   });
 
@@ -659,7 +659,7 @@ describe("ThreadRow", () => {
     getDefaultStore().set(preferenceValueAtom("rowActions"), [
       "thread-list/move",
       "plugin-gone/action",
-      "bb--core/archive",
+      "sandy--core/archive",
     ]);
     renderThreadRow({
       thread: createThread({ parentThreadId: "thr_parent" }),
@@ -670,8 +670,8 @@ describe("ThreadRow", () => {
     expect(screen.getByRole("button", { name: "Archive" })).toBeTruthy();
     expect(
       document
-        .querySelector<HTMLElement>(".bb-sidebar-hover-actions-inset")
-        ?.style.getPropertyValue("--bb-sidebar-hover-actions-inset"),
+        .querySelector<HTMLElement>(".sandy-sidebar-hover-actions-inset")
+        ?.style.getPropertyValue("--sandy-sidebar-hover-actions-inset"),
     ).toBe("calc(var(--spacing) * 7.5)");
   });
 
@@ -682,14 +682,14 @@ describe("ThreadRow", () => {
     expect(screen.getByRole("button", { name: "Thread actions" })).toBeTruthy();
     expect(
       document
-        .querySelector<HTMLElement>(".bb-sidebar-hover-actions-inset")
-        ?.style.getPropertyValue("--bb-sidebar-hover-actions-inset"),
+        .querySelector<HTMLElement>(".sandy-sidebar-hover-actions-inset")
+        ?.style.getPropertyValue("--sandy-sidebar-hover-actions-inset"),
     ).toBe("calc(var(--spacing) * 0)");
   });
 
   it.each([
     [[]],
-    [["bb--core/pin", "bb--core/copyLink", "bb--core/archive"]],
+    [["sandy--core/pin", "sandy--core/copyLink", "sandy--core/archive"]],
   ] as const)(
     "reserves one action for an archived row whatever the row actions (%j)",
     (rowActions) => {
@@ -699,15 +699,15 @@ describe("ThreadRow", () => {
       });
       expect(
         document
-          .querySelector<HTMLElement>(".bb-sidebar-hover-actions-inset")
-          ?.style.getPropertyValue("--bb-sidebar-hover-actions-inset"),
+          .querySelector<HTMLElement>(".sandy-sidebar-hover-actions-inset")
+          ?.style.getPropertyValue("--sandy-sidebar-hover-actions-inset"),
       ).toBe("calc(var(--spacing) * 7.5)");
     },
   );
 
   it("starts the inline rename directly from a Rename row action", async () => {
     getDefaultStore().set(preferenceValueAtom("rowActions"), [
-      "bb--core/rename",
+      "sandy--core/rename",
     ]);
     renderThreadRow();
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
@@ -781,7 +781,7 @@ describe("ThreadRow", () => {
     await screen.findByRole("textbox", { name: "Thread name" });
     expect(
       screen
-        .getByTestId("bb-thread-actions-context-menu")
+        .getByTestId("sandy-thread-actions-context-menu")
         .getAttribute("data-disabled"),
     ).toBe("true");
   });
@@ -872,14 +872,14 @@ describe("ThreadRow", () => {
   it("marks the row as open in a split and omits the map when the thread is in no pane", () => {
     const { container, unmount } = renderSplitThreadRow();
     expect(
-      container.querySelector(".bb-sidebar-open-in-split-row"),
+      container.querySelector(".sandy-sidebar-open-in-split-row"),
     ).not.toBeNull();
     unmount();
 
     const other = renderThreadRow({ splitLayout: twoPaneLayout("thr_other") });
     expect(screen.queryByRole("img", { name: /open in split/ })).toBeNull();
     expect(
-      other.container.querySelector(".bb-sidebar-open-in-split-row"),
+      other.container.querySelector(".sandy-sidebar-open-in-split-row"),
     ).toBeNull();
   });
 
@@ -1090,7 +1090,7 @@ describe("ThreadRow", () => {
     expect(marker?.getAttribute("aria-label")).toBe("In project Web App");
     expect(marker?.querySelector('[data-icon="FolderExport"]')).not.toBeNull();
     expect(
-      marker?.parentElement?.querySelector(".bb-thread-title"),
+      marker?.parentElement?.querySelector(".sandy-thread-title"),
     ).not.toBeNull();
     expect(
       marker?.closest("[data-sidebar-thread-trailing-indicator]"),
@@ -1234,7 +1234,7 @@ describe("ThreadRow", () => {
       });
       expect(
         link.parentElement?.classList.contains(
-          "pr-(--bb-sidebar-hover-actions-inset)",
+          "pr-(--sandy-sidebar-hover-actions-inset)",
         ),
       ).toBe(true);
       const row = link.closest("[data-sidebar-rename-row]");
@@ -1373,7 +1373,7 @@ describe("ThreadRow", () => {
       const toggle = screen.getByRole("button", {
         name: `${isCollapsed ? "Expand" : "Collapse"} Parent thread threads`,
       });
-      expect(toggle.classList.contains("bb-sidebar-hover-actions")).toBe(
+      expect(toggle.classList.contains("sandy-sidebar-hover-actions")).toBe(
         expectedHoverReveal,
       );
     },
@@ -1397,7 +1397,7 @@ describe("ThreadRow", () => {
     );
     expect(tier).not.toBeNull();
     expect(
-      tier?.style.getPropertyValue("--bb-sidebar-sticky-parent-level"),
+      tier?.style.getPropertyValue("--sandy-sidebar-sticky-parent-level"),
     ).toBe("1");
     expect(tier?.style.paddingLeft).toBe("56px");
     expect(tier?.querySelector('[aria-hidden="true"].w-px')).not.toBeNull();
@@ -1759,7 +1759,7 @@ describe("ThreadRow", () => {
     await waitFor(() => expect(onDragStart).toHaveBeenCalledTimes(1));
     expect(
       screen
-        .getByTestId("bb-thread-actions-context-menu")
+        .getByTestId("sandy-thread-actions-context-menu")
         .getAttribute("data-dragging"),
     ).toBe("true");
     fireEvent.touchEnd(link, { touches: [] });

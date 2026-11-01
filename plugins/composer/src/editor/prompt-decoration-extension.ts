@@ -1,4 +1,4 @@
-import type { ExperimentalComposerDecorationSource } from "@get-bb/plugin-sdk";
+import type { ExperimentalComposerDecorationSource } from "@sandy-sdk/plugin-sdk";
 import { Extension, type Editor } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import {
@@ -152,7 +152,7 @@ function buildDecorations(
             {
               className: rule.className,
               ...(source.pluginId
-                ? { "data-bb-plugin-decoration": source.pluginId }
+                ? { "data-sandy-plugin-decoration": source.pluginId }
                 : {}),
               ruleId: rule.id,
               sourceId: source.id,

@@ -23,15 +23,15 @@ function logLine(overrides: Record<string, unknown>): string {
   });
 }
 
-describe("bb diagnostics cli-errors", () => {
+describe("sandy diagnostics cli-errors", () => {
   setupCommandOutputTestEnvironment();
   let dataDir: string;
 
   beforeEach(() => {
-    dataDir = mkdtempSync(join(tmpdir(), "bb-diagnostics-"));
+    dataDir = mkdtempSync(join(tmpdir(), "sandy-diagnostics-"));
     mkdirSync(join(dataDir, "logs"), { recursive: true });
-    vi.stubEnv("BB_DATA_DIR", dataDir);
-    vi.stubEnv("BB_CLI_ERROR_LOG", "1");
+    vi.stubEnv("SANDY_DATA_DIR", dataDir);
+    vi.stubEnv("SANDY_CLI_ERROR_LOG", "1");
   });
 
   afterEach(() => {
@@ -72,7 +72,7 @@ describe("bb diagnostics cli-errors", () => {
     );
 
     expect(collectLogLines(vi.mocked(console.log))).toEqual([
-      `No failed bb invocations recorded in ${join(dataDir, "logs", "cli-errors.jsonl")}`,
+      `No failed sandy invocations recorded in ${join(dataDir, "logs", "cli-errors.jsonl")}`,
     ]);
   });
 

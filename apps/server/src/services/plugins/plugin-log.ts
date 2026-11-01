@@ -34,12 +34,15 @@ export function appendPluginLogLine(
 
 export function logPluginBuildWarnings(args: {
   dataDir: string;
-  logger: { warn(message: string): void };
+  logger: { warn(fields: { pluginId: string }, message: string): void };
   pluginId: string;
   warnings: readonly string[];
 }): void {
   for (const warning of args.warnings) {
-    args.logger.warn(`[plugin:${args.pluginId}] ${warning}`);
+    args.logger.warn(
+      { pluginId: args.pluginId },
+      `[plugin:${args.pluginId}] ${warning}`,
+    );
     appendPluginLogLine(args.dataDir, args.pluginId, "warn", warning);
   }
 }

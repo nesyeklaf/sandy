@@ -14,7 +14,7 @@ import { normalizeBundledDts } from "./normalize-bundled-dts.mjs";
 it.each(["", path.sep])(
   "shares compiler reads across entry points with workspace suffix %j",
   async (suffix) => {
-    const root = await mkdtemp(path.join(tmpdir(), "bb-declaration-reuse-"));
+    const root = await mkdtemp(path.join(tmpdir(), "sandy-declaration-reuse-"));
     const readFile = vi.spyOn(ts.sys, "readFile");
     try {
       await writeFile(
@@ -49,25 +49,25 @@ it.each(["", path.sep])(
 );
 
 it("preserves inferred types, ambient declarations, and distinct workspace compiler options", async () => {
-  const root = await mkdtemp(path.join(tmpdir(), "bb-shared-declarations-"));
+  const root = await mkdtemp(path.join(tmpdir(), "sandy-shared-declarations-"));
   try {
     const sdk = path.join(root, "sdk");
     const contract = path.join(root, "contract");
-    await mkdir(path.join(sdk, "node_modules/@bb"), { recursive: true });
+    await mkdir(path.join(sdk, "node_modules/@sandy"), { recursive: true });
     await mkdir(contract);
-    await symlink(contract, path.join(sdk, "node_modules/@bb/contract"), "dir");
+    await symlink(contract, path.join(sdk, "node_modules/@sandy/contract"), "dir");
     await writeFile(
       path.join(contract, "package.json"),
-      JSON.stringify({ name: "@bb/contract", types: "index.ts" }),
+      JSON.stringify({ name: "@sandy/contract", types: "index.ts" }),
     );
     const entries = [path.join(sdk, "index.ts"), path.join(sdk, "other.ts")];
     await writeFile(
       entries[0],
-      'export { value, nullable, ambientValue } from "@bb/contract";\nexport const own = [1, null];',
+      'export { value, nullable, ambientValue } from "@sandy/contract";\nexport const own = [1, null];',
     );
     await writeFile(
       entries[1],
-      'export { value } from "@bb/contract";\nexport const other = "second" as const;',
+      'export { value } from "@sandy/contract";\nexport const other = "second" as const;',
     );
     await writeFile(
       path.join(contract, "index.ts"),
@@ -88,7 +88,7 @@ it("preserves inferred types, ambient declarations, and distinct workspace compi
       }),
     );
     const resolveSource = (id) =>
-      id === "@bb/contract" ? path.join(contract, "index.ts") : null;
+      id === "@sandy/contract" ? path.join(contract, "index.ts") : null;
     async function bundle(entry, plugins) {
       const build = await rollup({ input: entry, plugins });
       try {

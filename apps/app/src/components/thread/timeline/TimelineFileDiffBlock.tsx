@@ -1,14 +1,14 @@
 import { memo, useMemo } from "react";
 import { parsePatchFiles, type FileDiffMetadata } from "@pierre/diffs";
-import type { TimelineFileChange } from "@bb/server-contract";
+import type { TimelineFileChange } from "@sandy/server-contract";
 import {
   getPlainDiffFallback,
   getRenderablePatchText,
   type RenderablePatchText,
-} from "@bb/client-core";
+} from "@sandy/client-core";
 import { GitDiffCard } from "../../git-diff/GitDiffCard.js";
 import { EventCodeBlock } from "../../ui/event-code-block.js";
-import type { DiffPresentation } from "@bb/shared-ui/git-diff/renderers";
+import type { DiffPresentation } from "@sandy/shared-ui/git-diff/renderers";
 import { TimelineDetailScroll } from "./TimelineDetailScroll.js";
 
 export interface TimelineFileDiffBlockProps {

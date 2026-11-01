@@ -1,18 +1,18 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { threadEventRowSchema, turnScope } from "@bb/domain";
-import { parseSentThreadMessage } from "@bb/thread-view";
+import { threadEventRowSchema, turnScope } from "@sandy/domain";
+import { parseSentThreadMessage } from "@sandy/thread-view";
 import {
   COMPLETED_EVENT_OUTPUT_RETENTION_MS,
   events,
   migrateNextLegacyImageGenerationOutput,
-} from "@bb/db";
+} from "@sandy/db";
 import {
   threadTimelineResponseSchema,
   timelineTurnSummaryDetailsResponseSchema,
   type ThreadTimelineResponse,
   type TimelineRow,
-} from "@bb/server-contract";
+} from "@sandy/server-contract";
 import {
   TIMELINE_INLINE_OUTPUT_PREVIEW_HEAD_CHARS,
   TIMELINE_INLINE_OUTPUT_PREVIEW_TAIL_CHARS,
@@ -942,19 +942,19 @@ describe("GET /threads/:id/timeline delegated rows", () => {
       const { environment, thread } = seedThreadFixture(harness);
       const recipient = "thr_abcdefghjk";
       const message = "A message for the receiving thread. ".repeat(40);
-      const quoted = `bb thread tell ${recipient} '${message}'`;
-      const heredoc = `bb thread tell ${recipient} --message-file - <<'MESSAGE'\n${message}\nMESSAGE`;
+      const quoted = `sandy thread tell ${recipient} '${message}'`;
+      const heredoc = `sandy thread tell ${recipient} --message-file - <<'MESSAGE'\n${message}\nMESSAGE`;
       const cases = [
         { command: quoted, exitCode: 0, output: "sent", message },
         { command: heredoc, exitCode: 0, output: "sent", message },
         {
-          command: `bb thread tell ${recipient} 'short'`,
+          command: `sandy thread tell ${recipient} 'short'`,
           exitCode: 0,
           output: "acknowledgement".repeat(100),
           message: "short",
         },
         {
-          command: `bb thread tell ${recipient} '${"brief ".repeat(60)}'`,
+          command: `sandy thread tell ${recipient} '${"brief ".repeat(60)}'`,
           exitCode: 0,
           output: "sent",
           message: "brief ".repeat(60),
@@ -967,7 +967,7 @@ describe("GET /threads/:id/timeline delegated rows", () => {
           message: null,
         },
         {
-          command: `bb thread tell ${recipient} --message-file /tmp/message.txt`,
+          command: `sandy thread tell ${recipient} --message-file /tmp/message.txt`,
           exitCode: 0,
           output: "acknowledgement".repeat(100),
           message: null,

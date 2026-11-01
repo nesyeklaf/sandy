@@ -4,8 +4,8 @@ import type {
   PluginSafeModeUpdateResponse,
   PluginSettingDescriptor,
   PluginSettingsResponse,
-} from "@bb/server-contract";
-import { pluginSettingsUpdateRequestSchema } from "@bb/server-contract";
+} from "@sandy/server-contract";
+import { pluginSettingsUpdateRequestSchema } from "@sandy/server-contract";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createPluginsClient } from "./plugin-client";
 import {

@@ -3,8 +3,8 @@ import { registerServerChoiceIpc } from "../src/server-choice-ipc.js";
 import { buildDesktopServerChoices } from "../src/server-list.js";
 import { createServerTargetStore } from "../src/server-target.js";
 import {
-  BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
-  BB_DESKTOP_SELECT_SERVER_CHANNEL,
+  SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
+  SANDY_DESKTOP_SELECT_SERVER_CHANNEL,
 } from "../src/desktop-window-command-ipc.js";
 
 const ipc = vi.hoisted(() => ({ handle: vi.fn(), on: vi.fn() }));
@@ -35,7 +35,7 @@ describe("server choice IPC", () => {
       onError: () => undefined,
     });
     const list = ipc.handle.mock.calls.find(
-      ([channel]) => channel === BB_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
+      ([channel]) => channel === SANDY_DESKTOP_GET_SERVER_CHOICES_CHANNEL,
     )?.[1];
     if (!list) throw new Error("Missing list handler");
     const initial = list(event);
@@ -58,11 +58,11 @@ describe("server choice IPC", () => {
     expect(JSON.stringify(initial)).not.toContain("password");
     expect(JSON.stringify(initial)).not.toContain("/private");
     expect(() => list({ ...event, senderFrame: {} })).toThrow(
-      "limited to bb windows",
+      "limited to sandy windows",
     );
     expect(() =>
       list({ ...event, sender: { id: 99, mainFrame: frame } }),
-    ).toThrow("limited to bb windows");
+    ).toThrow("limited to sandy windows");
     await store.setCustomServerName(
       "https://user:password@custom.example/private",
       "Office",
@@ -100,7 +100,7 @@ describe("server choice IPC", () => {
       onError,
     });
     const request = ipc.on.mock.calls.find(
-      ([channel]) => channel === BB_DESKTOP_SELECT_SERVER_CHANNEL,
+      ([channel]) => channel === SANDY_DESKTOP_SELECT_SERVER_CHANNEL,
     )?.[1];
     if (!request) throw new Error("Missing select handler");
     for (const id of ["builtin", "unknown", "https://injected.example", {}, ""])

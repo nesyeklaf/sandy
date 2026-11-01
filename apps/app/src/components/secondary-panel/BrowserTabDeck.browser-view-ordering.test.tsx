@@ -9,19 +9,19 @@ import {
   waitFor,
 } from "@testing-library/react";
 import type {
-  BbDesktopBrowserApi,
-  BbDesktopBrowserAttachRequest,
-  BbDesktopBrowserSetBoundsRequest,
-  BbDesktopBrowserSetVisibleRequest,
-  BbDesktopBrowserState,
-} from "@bb/desktop-contract";
+  SandyDesktopBrowserApi,
+  SandyDesktopBrowserAttachRequest,
+  SandyDesktopBrowserSetBoundsRequest,
+  SandyDesktopBrowserSetVisibleRequest,
+  SandyDesktopBrowserState,
+} from "@sandy/desktop-contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BrowserFixedPanelTab } from "@/lib/fixed-panel-tabs-state";
 import {
-  createBbDesktopApi,
+  createSandyDesktopApi,
   createNoopDesktopBrowserApi,
-} from "@/test/bb-desktop-test-utils";
-import { POINTER_COARSE_QUERY } from "@bb/shared-ui/hooks/use-pointer-coarse";
+} from "@/test/sandy-desktop-test-utils";
+import { POINTER_COARSE_QUERY } from "@sandy/shared-ui/hooks/use-pointer-coarse";
 import { sdk } from "@/lib/sdk";
 import { BrowserTabDeck } from "./BrowserTabDeck";
 import { BrowserTabLifecycleObserver } from "./BrowserTabLifecycleObserver";
@@ -31,24 +31,24 @@ import {
 } from "./browserViewVisibilityCoordinator";
 
 type BrowserCall =
-  | { type: "attach"; request: BbDesktopBrowserAttachRequest }
+  | { type: "attach"; request: SandyDesktopBrowserAttachRequest }
   | { type: "detach"; tabId: string }
-  | { type: "setBounds"; request: BbDesktopBrowserSetBoundsRequest }
-  | { type: "setVisible"; request: BbDesktopBrowserSetVisibleRequest }
+  | { type: "setBounds"; request: SandyDesktopBrowserSetBoundsRequest }
+  | { type: "setVisible"; request: SandyDesktopBrowserSetVisibleRequest }
   | {
       type: "setVisibleWithoutFocus";
-      request: BbDesktopBrowserSetVisibleRequest;
+      request: SandyDesktopBrowserSetVisibleRequest;
     };
 
 interface RecordingBrowserApi {
-  api: BbDesktopBrowserApi;
+  api: SandyDesktopBrowserApi;
   calls: BrowserCall[];
   detachments: string[];
-  attachments: BbDesktopBrowserAttachRequest[];
-  bounds: BbDesktopBrowserSetBoundsRequest[];
-  emitState: (state: BbDesktopBrowserState) => void;
-  visibility: BbDesktopBrowserSetVisibleRequest[];
-  visibilityWithoutFocus: BbDesktopBrowserSetVisibleRequest[];
+  attachments: SandyDesktopBrowserAttachRequest[];
+  bounds: SandyDesktopBrowserSetBoundsRequest[];
+  emitState: (state: SandyDesktopBrowserState) => void;
+  visibility: SandyDesktopBrowserSetVisibleRequest[];
+  visibilityWithoutFocus: SandyDesktopBrowserSetVisibleRequest[];
 }
 
 const BROWSER_PANEL_RECT = new DOMRect(12, 24, 420, 260);
@@ -74,13 +74,13 @@ function makeBrowserTab(id: string, url: string): BrowserFixedPanelTab {
 
 function createRecordingBrowserApi(): RecordingBrowserApi {
   const calls: BrowserCall[] = [];
-  const attachments: BbDesktopBrowserAttachRequest[] = [];
-  const bounds: BbDesktopBrowserSetBoundsRequest[] = [];
+  const attachments: SandyDesktopBrowserAttachRequest[] = [];
+  const bounds: SandyDesktopBrowserSetBoundsRequest[] = [];
   const detachments: string[] = [];
-  const stateListeners: Array<(state: BbDesktopBrowserState) => void> = [];
-  const visibility: BbDesktopBrowserSetVisibleRequest[] = [];
-  const visibilityWithoutFocus: BbDesktopBrowserSetVisibleRequest[] = [];
-  const api: BbDesktopBrowserApi = {
+  const stateListeners: Array<(state: SandyDesktopBrowserState) => void> = [];
+  const visibility: SandyDesktopBrowserSetVisibleRequest[] = [];
+  const visibilityWithoutFocus: SandyDesktopBrowserSetVisibleRequest[] = [];
+  const api: SandyDesktopBrowserApi = {
     ...createNoopDesktopBrowserApi(),
     attach(request) {
       attachments.push(request);
@@ -128,8 +128,8 @@ function createRecordingBrowserApi(): RecordingBrowserApi {
   };
 }
 
-function installDesktopBrowser(api: BbDesktopBrowserApi): void {
-  window.bbDesktop = createBbDesktopApi(desktopInfo, api);
+function installDesktopBrowser(api: SandyDesktopBrowserApi): void {
+  window.sandyDesktop = createSandyDesktopApi(desktopInfo, api);
 }
 
 function createMatchMedia(
@@ -191,7 +191,7 @@ describe("BrowserTabLifecycleObserver", () => {
     cleanup();
     vi.restoreAllMocks();
     resetBrowserViewPersistence();
-    delete window.bbDesktop;
+    delete window.sandyDesktop;
   });
 
   it("destroys a closed browser view exactly once without an active deck", async () => {
@@ -235,7 +235,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
     vi.restoreAllMocks();
     resetBrowserViewPersistence();
     window.localStorage.clear();
-    delete window.bbDesktop;
+    delete window.sandyDesktop;
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       writable: true,
@@ -313,12 +313,12 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       "listInstances",
     ).mockResolvedValue({
       instances: [
-        { ...desktopTarget, label: "BB window 1" },
-        { ...desktopTarget, instanceId: "elsewhere", label: "BB window 2" },
+        { ...desktopTarget, label: "SANDY window 1" },
+        { ...desktopTarget, instanceId: "elsewhere", label: "SANDY window 2" },
       ],
     });
     render(renderTargetDeck(savedTab({ instanceId: "elsewhere" })));
-    await screen.findByText("This tab is open in another bb window");
+    await screen.findByText("This tab is open in another sandy window");
     expect(attachments).toEqual([]);
   });
 
@@ -337,7 +337,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       });
       const tab = savedTab({ instanceId: "elsewhere" });
       const view = render(renderTargetDeck(tab));
-      await screen.findByText("This tab is open in another bb window");
+      await screen.findByText("This tab is open in another sandy window");
       expect(attachments).toEqual([]);
       list.mockResolvedValue({
         instances: [{ ...desktopTarget, label: "Current" }],
@@ -364,7 +364,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       sdk.experimental_desktopBrowsers,
       "listInstances",
     ).mockResolvedValue({
-      instances: [{ ...desktopTarget, label: "BB window 1" }],
+      instances: [{ ...desktopTarget, label: "SANDY window 1" }],
     });
     render(renderTargetDeck(savedTab({ instanceId: "closed-window" })));
     await waitFor(() => expect(attachments).toHaveLength(1));
@@ -374,7 +374,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
     });
     expect(attachments[0]?.existingOnly).toBeUndefined();
     expect(
-      screen.queryByText("This tab is open in another bb window"),
+      screen.queryByText("This tab is open in another sandy window"),
     ).toBeNull();
   });
 
@@ -386,7 +386,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       sdk.experimental_desktopBrowsers,
       "listInstances",
     ).mockResolvedValue({
-      instances: [{ ...desktopTarget, label: "BB window 1" }],
+      instances: [{ ...desktopTarget, label: "SANDY window 1" }],
     });
     const orphan = savedTab({ instanceId: "closed-window" });
     const view = render(renderTargetDeck(orphan));
@@ -426,7 +426,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       sdk.experimental_desktopBrowsers,
       "listInstances",
     ).mockResolvedValue({
-      instances: [{ ...desktopTarget, label: "BB window 1" }],
+      instances: [{ ...desktopTarget, label: "SANDY window 1" }],
     });
     render(renderTargetDeck(savedTab({ instanceId: "closed-window" })));
     expect(screen.queryByText("Reconnecting to this tab")).toBeNull();
@@ -481,7 +481,7 @@ describe("BrowserTabDeck native browser first-show ordering", () => {
       .mockRejectedValueOnce(new Error("host busy"))
       .mockRejectedValueOnce(new Error("host busy"))
       .mockResolvedValue({
-        instances: [{ ...desktopTarget, label: "BB window 1" }],
+        instances: [{ ...desktopTarget, label: "SANDY window 1" }],
       });
     render(renderTargetDeck(savedTab({ instanceId: "closed-window" })));
     await waitFor(() => expect(attachments).toHaveLength(1), { timeout: 3000 });
