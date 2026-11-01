@@ -66,7 +66,10 @@ import {
   prepareTurnSubmitCommandPayload,
 } from "../../services/threads/thread-commands.js";
 import { getLastProviderThreadId } from "../../services/threads/thread-events.js";
-import { updateThreadEnvironmentDirectory } from "../../services/threads/thread-environment-directory.js";
+import {
+  directoryRequestFailure,
+  updateThreadEnvironmentDirectory,
+} from "../../services/threads/thread-environment-directory.js";
 import { stopThreadForCurrentState } from "../../services/threads/thread-lifecycle.js";
 import {
   buildThreadStatusChangeMetadata,
@@ -401,19 +404,37 @@ export function registerThreadActionRoutes(app: Hono, deps: AppDeps): void {
         "Stop the thread before moving it to another directory",
       );
     }
+    const requestFailure = directoryRequestFailure(payload.path, thread);
+    if (requestFailure !== null) {
+      throw new ApiError(400, "invalid_request", requestFailure);
+    }
     const currentEnvironment = requireEnvironment(
       deps.db,
       thread.environmentId,
     );
-    await stopThreadForCurrentState(deps, thread, {
-      id: currentEnvironment.id,
-      hostId: currentEnvironment.hostId,
-    });
+    await stopThreadForCurrentState(
+      deps,
+      thread,
+      { id: currentEnvironment.id, hostId: currentEnvironment.hostId },
+      { requireStopped: true },
+    );
+    const stoppedThread = requirePublicThread(deps.db, thread.id);
+    if (
+      stoppedThread.status === "starting" ||
+      stoppedThread.status === "active"
+    ) {
+      throw new ApiError(
+        409,
+        "invalid_request",
+        "A turn started while the directory was being changed",
+      );
+    }
     const outcome = await updateThreadEnvironmentDirectory(deps, {
       currentEnvironment,
       path: payload.path,
+      requireIdleThread: true,
       scope: threadScope(),
-      thread: requirePublicThread(deps.db, thread.id),
+      thread: stoppedThread,
     });
     if (outcome.kind === "failed") {
       throw new ApiError(409, "invalid_request", outcome.message);

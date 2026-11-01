@@ -1,6 +1,8 @@
 import { getThread, listEvents } from "@sandy/db";
 import { describe, expect, it } from "vitest";
 import {
+  listQueuedThreadCommands,
+  reportQueuedCommandError,
   reportQueuedCommandSuccess,
   waitForQueuedCommand,
 } from "../helpers/commands.js";
@@ -75,24 +77,53 @@ describe("thread environment directory", () => {
     });
   });
 
-  it("refuses a path that is not absolute", async () => {
+  it("rejects a path that is not absolute before stopping anything", async () => {
     await withTestHarness(async (harness) => {
       const { thread } = seedThreadFixture(harness, {
         thread: { status: "idle" },
       });
 
-      const responsePromise = putDirectory(harness, thread.id, "relative/dir");
+      const response = await putDirectory(harness, thread.id, "relative/dir");
+
+      expect(response.status).toBe(400);
+      expect(
+        listQueuedThreadCommands(harness, "thread.stop", thread.id),
+      ).toEqual([]);
+      expect(getThread(harness.db, thread.id)?.environmentId).toBe(
+        thread.environmentId,
+      );
+    });
+  });
+
+  it("does not move the thread when stopping its runtime fails", async () => {
+    await withTestHarness(async (harness) => {
+      const { host, project, thread } = seedThreadFixture(harness, {
+        environment: { path: "/tmp/dir-move-fail-source" },
+        thread: { status: "idle" },
+      });
+      seedEnvironment(harness.deps, {
+        hostId: host.id,
+        projectId: project.id,
+        path: "/tmp/dir-move-fail-target",
+      });
+
+      const responsePromise = putDirectory(
+        harness,
+        thread.id,
+        "/tmp/dir-move-fail-target",
+      );
       const release = await waitForQueuedCommand(
         harness,
         ({ command }) =>
           command.type === "thread.stop" && command.threadId === thread.id,
       );
-      await reportQueuedCommandSuccess(harness, release, {
-        providerCheckpointId: null,
+      await reportQueuedCommandError(harness, release, {
+        errorCode: "test_release_failure",
+        errorMessage: "Runtime shutting down",
       });
       const response = await responsePromise;
 
-      expect(response.status).toBe(409);
+      expect(response.status).toBeGreaterThanOrEqual(400);
       expect(getThread(harness.db, thread.id)?.environmentId).toBe(
         thread.environmentId,
       );

@@ -117,6 +117,16 @@ function validateDirectoryPath(path: string): string | null {
   return null;
 }
 
+export function directoryRequestFailure(
+  path: string,
+  thread: Thread,
+): string | null {
+  return (
+    validateDirectoryPath(normalizeDirectoryPath(path)) ??
+    threadWritableFailure(thread)
+  );
+}
+
 export function threadWritableFailure(thread: Thread): string | null {
   if (thread.deletedAt !== null) {
     return "Cannot update the environment directory for a deleted thread.";
@@ -276,6 +286,7 @@ export async function updateThreadEnvironmentDirectory(
   args: {
     currentEnvironment: EnvironmentRow;
     path: string;
+    requireIdleThread?: boolean;
     scope: ThreadEventScope;
     thread: Thread;
   },
@@ -356,6 +367,12 @@ export async function updateThreadEnvironmentDirectory(
 
   let attachResult: AttachEnvironmentResult;
   try {
+    if (args.requireIdleThread) {
+      const latest = getThread(deps.db, args.thread.id);
+      if (latest?.status === "starting" || latest?.status === "active") {
+        return failed("A turn started while the directory was prepared.");
+      }
+    }
     assertEnvironmentPathAvailable(deps, {
       ...targetEnvironment,
       threadId: args.thread.id,
@@ -373,7 +390,10 @@ export async function updateThreadEnvironmentDirectory(
 
   switch (attachResult.kind) {
     case "attached":
-      return { kind: "updated", path: targetEnvironment.path };
+      return {
+        kind: attachResult.changed ? "updated" : "unchanged",
+        path: targetEnvironment.path,
+      };
     case "environment_changed":
       return failed(
         "Thread environment changed while preparing the new directory. Try again with the desired path.",

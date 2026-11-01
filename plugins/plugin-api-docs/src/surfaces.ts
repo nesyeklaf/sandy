@@ -1526,6 +1526,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "PluginSandySdk.threads.experimental_listDescendants",
           "PluginSandySdk.threads.experimental_listCascade",
           "PluginSandySdk.threads.experimental_regenerateTitle",
+          "PluginSandySdk.threads.experimental_updateEnvironmentDirectory",
         ],
         firstParty: [
           "Account Pooler [Experimental]",
