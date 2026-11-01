@@ -53,8 +53,8 @@ test('end to end: no SANDY_THREAD_ID is a no-op, unsafe thread ids are ignored',
 // ---- Track drivers v2: the agent's lease ticket (sandy/work/track/docs/design-v2.md §8) ------------------------------------
 
 type Entry = { type: string; id: string; customType?: string; data?: unknown; message?: { role: string; usage?: object } };
-type ExecCall = { command: string; args: string[] };
-function leaseSetup(execOptions: { fail?: boolean; hold?: boolean; env?: Record<string, string> } = {}) {
+type ExecCall = { args: string[] };
+function leaseSetup(execOptions: { fail?: boolean; hold?: boolean } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'track-guard-'));
   mkdirSync(path.join(dir, 'threads'));
   const handlers = new Map<string, (event: any, ctx: any) => any>();
@@ -66,13 +66,13 @@ function leaseSetup(execOptions: { fail?: boolean; hold?: boolean; env?: Record<
   };
   const execs: ExecCall[] = [];
   const held: (() => void)[] = [];
-  const exec = async (command: string, args: string[]) => {
-    execs.push({ command, args });
+  const sandy = async (args: string[]) => {
+    execs.push({ args });
     if (execOptions.hold) await new Promise<void>(r => held.push(r));
     if (execOptions.fail) throw new Error('sandy unreachable');
-    return { stdout: '{"kind":"ok"}', stderr: '', code: 0, killed: false };
+    return '{"kind":"ok"}';
   };
-  stageGuard(fakePi as never, { env: { TRACK_STATE_DIR: dir, SANDY_THREAD_ID: 't1', ...execOptions.env }, exec, log: () => {} });
+  stageGuard(fakePi as never, { env: { TRACK_STATE_DIR: dir, SANDY_THREAD_ID: 't1' }, sandy, log: () => {} });
   const ctx = { sessionManager: { getBranch: () => branch } };
   const emit = (name: string, event: object) => handlers.get(name)!(event, ctx);
   const call = (toolName: string, input: Record<string, unknown>) => { const result = emit('tool_call', { type: 'tool_call', toolName, input }); return { result, input }; };
@@ -171,7 +171,7 @@ test('agent_end after the lease closed reports the lease usage (including the cl
   emit('agent_end', { type: 'agent_end', messages: [] });
   await idle();
   assert.equal(execs.length, 1);
-  assert.deepEqual({ command: execs[0]!.command, args: execs[0]!.args.slice(0, 5) }, { command: 'sandy', args: ['work', 'track', 'usage', '--ticket', 'r1.1'] });
+  assert.deepEqual(execs[0]!.args.slice(0, 5), ['work', 'track', 'usage', '--ticket', 'r1.1']);
   assert.equal(execs[0]!.args[5], '--usage');
   assert.deepEqual(reportUsage(execs[0]!), { input: 13, output: 7, cacheRead: 0, cacheWrite: 0, total: 20, messages: 2 });
   assert.equal(endMarkers(branch), 1);
@@ -181,8 +181,8 @@ test('agent_end after the lease closed reports the lease usage (including the cl
   assert.equal(execs.length, 1, 'reported once: later work belongs to no lease');
 });
 
-test('agent_end reports the old lease when the policy names another ticket or no policy file exists; SANDY_CLI picks the binary', async () => {
-  const other = leaseSetup({ env: { SANDY_CLI: '/opt/sandy' } });
+test('agent_end reports the old lease when the policy names another ticket or no policy file exists', async () => {
+  const other = leaseSetup();
   other.write(agentPolicy('r1.1'));
   other.emit('agent_start', { type: 'agent_start' });
   other.assistant(1, 1);
@@ -190,7 +190,6 @@ test('agent_end reports the old lease when the policy names another ticket or no
   other.emit('agent_end', { type: 'agent_end', messages: [] });
   await idle(); // reports go out through a one-at-a-time chain
   assert.equal(other.execs.length, 1);
-  assert.equal(other.execs[0]!.command, '/opt/sandy');
   assert.equal(other.execs[0]!.args[4], 'r1.1');
   const none = leaseSetup();
   none.write(agentPolicy('r1.1'));
