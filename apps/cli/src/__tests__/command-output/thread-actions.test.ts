@@ -408,6 +408,24 @@ describe("sandy thread action command output", () => {
     },
   );
 
+  it("sandy thread move-directory puts the path and reports the new directory", async () => {
+    const put = vi.fn(async () => ({ changed: true, path: "/work/next" }));
+    stubServerApi({ "v1.threads.:id.environment-directory.$put": put });
+
+    await runCommand(
+      ["thread", "move-directory", "thread-move", "--path", "/work/next"],
+      register,
+    );
+
+    expect(put).toHaveBeenCalledWith({
+      param: { id: "thread-move" },
+      json: { path: "/work/next" },
+    });
+    expect(collectLogLines(vi.mocked(console.log))).toContain(
+      "Thread thread-move now runs in /work/next",
+    );
+  });
+
   it("sandy thread retry defaults the turn and the reason at the boundary", async () => {
     const retryPost = vi.fn(async () => ({
       ok: true,

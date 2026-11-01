@@ -186,6 +186,7 @@ Use `--selected-model <model-id>` to discover its reasoning choices and include 
 - `sandy thread send`
 - `sandy thread retry`
 - `sandy thread stop`
+- `sandy thread move-directory`
 - `sandy thread compact`
 - `sandy thread context`
 - `sandy thread commands`

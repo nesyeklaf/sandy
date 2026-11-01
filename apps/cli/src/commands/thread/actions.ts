@@ -646,6 +646,37 @@ export function registerActionsCommands(
       ),
     );
 
+  parent
+    .command("move-directory [id]")
+    .description(
+      "Move an idle thread to another directory on its host, within its project",
+    )
+    .option("--self", "Target the current thread (from SANDY_THREAD_ID)")
+    .requiredOption("--path <dir>", "Absolute path of the target directory")
+    .option("--json", "Print machine-readable JSON output")
+    .action(
+      action(
+        async (
+          id: string | undefined,
+          opts: ThreadActionOptions & { path: string },
+        ) => {
+          const threadId = requireThreadIdOrSelf(id, opts);
+          const sdk = createCliSandySdk(getUrl());
+          const result =
+            await sdk.threads.experimental_updateEnvironmentDirectory({
+              threadId,
+              path: opts.path,
+            });
+          if (outputJson(opts, { threadId, ...result })) return;
+          console.log(
+            result.changed
+              ? `Thread ${threadId} now runs in ${result.path}`
+              : `Thread ${threadId} already runs in ${result.path}`,
+          );
+        },
+      ),
+    );
+
   for (const { name, description, method, done } of [
     {
       name: "stop",

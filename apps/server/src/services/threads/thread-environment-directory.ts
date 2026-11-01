@@ -16,7 +16,12 @@ import {
   isHostPathRoot,
   turnScope,
 } from "@sandy/domain";
-import type { DynamicTool, Thread, ToolCallResponse } from "@sandy/domain";
+import type {
+  DynamicTool,
+  Thread,
+  ThreadEventScope,
+  ToolCallResponse,
+} from "@sandy/domain";
 import type { AppDeps } from "../../types.js";
 import { runTrackedEnvironmentAttach } from "../environments/environment-engine.js";
 import { appendThreadEventInTransaction } from "./thread-events.js";
@@ -151,9 +156,9 @@ function attachReadyEnvironment(
   args: {
     currentEnvironment: EnvironmentRow;
     createdEnvironment: boolean;
+    scope: ThreadEventScope;
     targetEnvironment: ReadyEnvironment;
     thread: Thread;
-    turnId: string;
   },
 ): AttachEnvironmentResult {
   const result = deps.db.transaction(
@@ -186,7 +191,7 @@ function attachReadyEnvironment(
         threadId: latestThread.id,
         environmentId: args.targetEnvironment.id,
         type: "system/operation",
-        scope: turnScope(args.turnId),
+        scope: args.scope,
         data: {
           operation: ENVIRONMENT_DIRECTORY_UPDATE_OPERATION,
           operationId: createEventId(),
@@ -225,7 +230,7 @@ async function provisionUnmanagedEnvironmentForPath(
     path: string;
     thread: Thread;
   },
-): Promise<ReadyEnvironment | ToolCallResponse> {
+): Promise<ReadyEnvironment | { failure: string }> {
   const environment = createEnvironment(deps.db, deps.hub, {
     projectId: args.thread.projectId,
     hostId: args.currentEnvironment.hostId,
@@ -249,42 +254,46 @@ async function provisionUnmanagedEnvironmentForPath(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolCallFailure(
-      `Could not update environment directory to ${args.path}: ${message}`,
-    );
+    return {
+      failure: `Could not update environment directory to ${args.path}: ${message}`,
+    };
   }
 
   const readyEnvironment = getEnvironment(deps.db, environment.id);
   if (!readyEnvironment) {
-    return toolCallFailure("Prepared environment no longer exists.");
+    return { failure: "Prepared environment no longer exists." };
   }
-  const ready = resolveReadyEnvironment(readyEnvironment);
-  if ("failure" in ready) {
-    return toolCallFailure(ready.failure);
-  }
-  return ready;
+  return resolveReadyEnvironment(readyEnvironment);
 }
 
-export async function handleUpdateEnvironmentDirectoryToolCall(
-  deps: AppDeps,
-  args: HandleUpdateEnvironmentDirectoryToolCallArgs,
-): Promise<ToolCallResponse> {
-  const input = updateEnvironmentDirectoryInputSchema.safeParse(args.input);
-  if (!input.success) {
-    return toolCallFailure(
-      "Invalid arguments. Provide an object with an absolute path string.",
-    );
-  }
+export type ThreadEnvironmentDirectoryUpdate =
+  | { kind: "unchanged"; path: string }
+  | { kind: "updated"; path: string }
+  | { kind: "failed"; message: string };
 
-  const normalizedPath = normalizeDirectoryPath(input.data.path);
+export async function updateThreadEnvironmentDirectory(
+  deps: AppDeps,
+  args: {
+    currentEnvironment: EnvironmentRow;
+    path: string;
+    scope: ThreadEventScope;
+    thread: Thread;
+  },
+): Promise<ThreadEnvironmentDirectoryUpdate> {
+  const failed = (message: string): ThreadEnvironmentDirectoryUpdate => ({
+    kind: "failed",
+    message,
+  });
+
+  const normalizedPath = normalizeDirectoryPath(args.path);
   const pathFailure = validateDirectoryPath(normalizedPath);
   if (pathFailure) {
-    return toolCallFailure(pathFailure);
+    return failed(pathFailure);
   }
 
   const writableFailure = threadWritableFailure(args.thread);
   if (writableFailure) {
-    return toolCallFailure(writableFailure);
+    return failed(writableFailure);
   }
 
   try {
@@ -294,17 +303,13 @@ export async function handleUpdateEnvironmentDirectoryToolCall(
       threadId: args.thread.id,
     });
   } catch (error) {
-    return toolCallFailure(
-      error instanceof Error ? error.message : String(error),
-    );
+    return failed(error instanceof Error ? error.message : String(error));
   }
 
   if (
     getEnvironment(deps.db, args.currentEnvironment.id)?.path === normalizedPath
   ) {
-    return toolCallSuccess(
-      `This thread is already using ${normalizedPath} as its environment directory.`,
-    );
+    return { kind: "unchanged", path: normalizedPath };
   }
 
   const existingEnvironment = findProjectEnvironmentByHostPath(
@@ -319,7 +324,7 @@ export async function handleUpdateEnvironmentDirectoryToolCall(
   if (existingEnvironment) {
     const ready = resolveReadyEnvironment(existingEnvironment);
     if ("failure" in ready) {
-      return toolCallFailure(ready.failure);
+      return failed(ready.failure);
     }
     targetEnvironment = ready;
   } else {
@@ -331,7 +336,7 @@ export async function handleUpdateEnvironmentDirectoryToolCall(
       projectId: args.thread.projectId,
     });
     if (refusal !== null) {
-      return toolCallFailure(`${refusal}. Use a different directory.`);
+      return failed(`${refusal}. Use a different directory.`);
     }
     const provisionedEnvironment = await provisionUnmanagedEnvironmentForPath(
       deps,
@@ -342,8 +347,8 @@ export async function handleUpdateEnvironmentDirectoryToolCall(
       },
     );
 
-    if ("success" in provisionedEnvironment) {
-      return provisionedEnvironment;
+    if ("failure" in provisionedEnvironment) {
+      return failed(provisionedEnvironment.failure);
     }
     targetEnvironment = provisionedEnvironment;
     createdEnvironment = true;
@@ -358,24 +363,51 @@ export async function handleUpdateEnvironmentDirectoryToolCall(
     attachResult = attachReadyEnvironment(deps, {
       currentEnvironment: args.currentEnvironment,
       createdEnvironment,
+      scope: args.scope,
       targetEnvironment,
       thread: args.thread,
-      turnId: args.turnId,
     });
   } catch (error) {
-    return toolCallFailure(
-      error instanceof Error ? error.message : String(error),
-    );
+    return failed(error instanceof Error ? error.message : String(error));
   }
 
   switch (attachResult.kind) {
     case "attached":
-      return toolCallSuccess(successMessage(targetEnvironment.path));
+      return { kind: "updated", path: targetEnvironment.path };
     case "environment_changed":
-      return toolCallFailure(
+      return failed(
         "Thread environment changed while preparing the new directory. Try again with the desired path.",
       );
     case "thread_unavailable":
-      return toolCallFailure(attachResult.message);
+      return failed(attachResult.message);
+  }
+}
+
+export async function handleUpdateEnvironmentDirectoryToolCall(
+  deps: AppDeps,
+  args: HandleUpdateEnvironmentDirectoryToolCallArgs,
+): Promise<ToolCallResponse> {
+  const input = updateEnvironmentDirectoryInputSchema.safeParse(args.input);
+  if (!input.success) {
+    return toolCallFailure(
+      "Invalid arguments. Provide an object with an absolute path string.",
+    );
+  }
+
+  const outcome = await updateThreadEnvironmentDirectory(deps, {
+    currentEnvironment: args.currentEnvironment,
+    path: input.data.path,
+    scope: turnScope(args.turnId),
+    thread: args.thread,
+  });
+  switch (outcome.kind) {
+    case "unchanged":
+      return toolCallSuccess(
+        `This thread is already using ${outcome.path} as its environment directory.`,
+      );
+    case "updated":
+      return toolCallSuccess(successMessage(outcome.path));
+    case "failed":
+      return toolCallFailure(outcome.message);
   }
 }

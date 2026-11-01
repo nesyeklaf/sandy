@@ -1120,6 +1120,25 @@ Docs: `backend-sdk.md`.
 3. **Actions.** Confirm `archive` and `delete` are the only cascading
    actions worth previewing.
 
+## `sandy.sdk.threads.experimental_updateEnvironmentDirectory`
+
+`PUT /threads/:id/environment-directory` with `{ path }` moves an idle thread
+to another absolute directory on the host it runs on, inside its own project.
+It stops the thread's loaded runtime, reuses the project's environment for the
+path or provisions an unmanaged one, points the thread at it and appends an
+`environment_directory_update` event. It answers `{ changed, path }`, and
+rejects a starting or active thread, an archived or deleted thread, a path that
+is not absolute or is a filesystem root, and a worktree owned by another
+project. It cannot change a thread's project. Core callers: the agent tool
+`update_environment_directory` and `sandy thread move-directory`; all three
+run `updateThreadEnvironmentDirectory` in
+`apps/server/src/services/threads/thread-environment-directory.ts`.
+
+Docs: `backend-sdk.md`, `sandy guide thread-lifecycle`.
+Before stabilization, decide whether a running thread may move after its turn
+ends, whether a move across projects belongs here or in a separate
+operation, and whether the app needs a thread menu action as a third caller.
+
 ## `sandy.sdk.threads.experimental_regenerateTitle`
 
 `POST /threads/:id/title/regenerate` asks the thread-title AI service for a new
@@ -4084,7 +4103,7 @@ own value, so plugins built against the old constant keep working.
   | Retired                                                                                                                                                                                                          | Replacement                                                                                                                         |
   | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
   | `ctx.openPanel(options?)` on every launcher context                                                                                                                                                              | `ctx.experimental_panel.openTab({ tab: { id, context: { kind: "thread" }, availability: "action" }, params, title })`               |
-  | `useSandyNavigate().openThreadPanel({ actionId, params?, title? })`                                                                                                                                                 | `experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })` |
+  | `useSandyNavigate().openThreadPanel({ actionId, params?, title? })`                                                                                                                                              | `experimental_useAppPanel().openTab({ tab: { id: actionId, context: { kind: "thread" }, availability: "action" }, params, title })` |
   | `experimental_useAppPanel().experimental_openTab({ surface, ...options })`                                                                                                                                       | `experimental_useAppPanel().openTab(options)`                                                                                       |
   | `experimental_useAppPanel().openFixedTab({ surface, tab: { panelId?, id }, target? })`                                                                                                                           | `experimental_useAppPanel().openTab({ tab: { id, context, availability: "fixed" }, target })`                                       |
   | testing `renderSlot` options `openThreadPanel`, `experimental_openTab`, `experimental_openFixedTab`; logs `experimental_tabOpenCalls`, `experimental_fixedTabOpenCalls` and the `openThreadPanel` `NavigateCall` | option `experimental_panel: Partial<ExperimentalPanelController>`; log `experimental_panelCalls`                                    |

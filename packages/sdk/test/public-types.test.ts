@@ -381,6 +381,7 @@ type ExpectedThreadsKey =
   | "experimental_listCascade"
   | "experimental_listPluginMetadata"
   | "experimental_regenerateTitle"
+  | "experimental_updateEnvironmentDirectory"
   | "getPluginMetadata"
   | "updatePluginMetadata"
   | "context"
@@ -542,13 +543,21 @@ describe("SDK public type entrypoints", () => {
   });
 
   it("snapshots every SDK area and nested method group", () => {
-    expectTypeOf<keyof RootSandyRealtime>().toEqualTypeOf<ExpectedRealtimeKey>();
+    expectTypeOf<
+      keyof RootSandyRealtime
+    >().toEqualTypeOf<ExpectedRealtimeKey>();
     expectTypeOf<
       keyof RootSandySdk["environments"]
     >().toEqualTypeOf<ExpectedEnvironmentsKey>();
-    expectTypeOf<keyof RootSandySdk["files"]>().toEqualTypeOf<ExpectedFilesKey>();
-    expectTypeOf<keyof RootSandySdk["guide"]>().toEqualTypeOf<ExpectedGuideKey>();
-    expectTypeOf<keyof RootSandySdk["hosts"]>().toEqualTypeOf<ExpectedHostsKey>();
+    expectTypeOf<
+      keyof RootSandySdk["files"]
+    >().toEqualTypeOf<ExpectedFilesKey>();
+    expectTypeOf<
+      keyof RootSandySdk["guide"]
+    >().toEqualTypeOf<ExpectedGuideKey>();
+    expectTypeOf<
+      keyof RootSandySdk["hosts"]
+    >().toEqualTypeOf<ExpectedHostsKey>();
     expectTypeOf<
       keyof RootSandySdk["plugins"]
     >().toEqualTypeOf<ExpectedPluginsKey>();
@@ -588,7 +597,9 @@ describe("SDK public type entrypoints", () => {
     expectTypeOf<
       keyof RootSandySdk["terminals"]
     >().toEqualTypeOf<ExpectedTerminalsKey>();
-    expectTypeOf<keyof RootSandySdk["theme"]>().toEqualTypeOf<ExpectedThemeKey>();
+    expectTypeOf<
+      keyof RootSandySdk["theme"]
+    >().toEqualTypeOf<ExpectedThemeKey>();
     expectTypeOf<
       keyof RootSandySdk["threadSections"]
     >().toEqualTypeOf<ExpectedThreadSectionsKey>();

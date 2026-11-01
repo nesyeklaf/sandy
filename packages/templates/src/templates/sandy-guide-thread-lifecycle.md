@@ -31,6 +31,26 @@ Lifecycle:
   invalid: the recorded provider session belongs to another thread or has no
   usable identity).
 
+  sandy thread move-directory [id] --path <dir>   Move an idle thread to another directory
+    --self                                 Target current thread
+    --path <dir>                           Absolute path of the target directory on the thread's host
+
+  A thread keeps its history, project and provider conversation when it moves.
+  The target must be an absolute path that exists on the host the thread runs
+  on. sandy reuses the project's environment for that path, or creates an
+  unmanaged one; it refuses a worktree another project owns. The loaded
+  runtime is stopped first, so the next turn starts in the new directory, and
+  a `Updated environment directory` event lands in the timeline. The thread
+  must not be starting or active, and a path it already uses answers success
+  with `changed: false`. The move stays inside the thread's project: a thread
+  cannot change project, and `thread fork --environment` refuses an environment
+  of another project (HTTP 409). To use another checkout of the same project,
+  or to rescue a thread whose directory was deleted, move it with this command.
+  An agent can do the same from inside its thread with the
+  `update_environment_directory` tool; after it succeeds the agent ends its
+  turn and sandy starts the next one in the new directory.
+  SDK: `threads.experimental_updateEnvironmentDirectory({ threadId, path })`.
+
   sandy thread retry [id]                     Retry the thread's failed turn
     --self                                 Target current thread
     --turn <requestId>                     Retry this turn request id specifically; fails when it is not the thread's failed turn
