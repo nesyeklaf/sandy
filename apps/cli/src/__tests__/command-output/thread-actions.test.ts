@@ -409,7 +409,11 @@ describe("sandy thread action command output", () => {
   );
 
   it("sandy thread move-directory puts the path and reports the new directory", async () => {
-    const put = vi.fn(async () => ({ changed: true, path: "/work/next" }));
+    const put = vi.fn(async () => ({
+      changed: true,
+      path: "/work/next",
+      projectId: "proj_a",
+    }));
     stubServerApi({ "v1.threads.:id.environment-directory.$put": put });
 
     await runCommand(
@@ -422,8 +426,35 @@ describe("sandy thread action command output", () => {
       json: { path: "/work/next" },
     });
     expect(collectLogLines(vi.mocked(console.log))).toContain(
-      "Thread thread-move now runs in /work/next",
+      "Thread thread-move now runs in /work/next (project proj_a)",
     );
+  });
+
+  it("sandy thread move-directory --project sends the target project", async () => {
+    const put = vi.fn(async () => ({
+      changed: true,
+      path: "/work/next",
+      projectId: "proj_b",
+    }));
+    stubServerApi({ "v1.threads.:id.environment-directory.$put": put });
+
+    await runCommand(
+      [
+        "thread",
+        "move-directory",
+        "thread-move",
+        "--path",
+        "/work/next",
+        "--project",
+        "proj_b",
+      ],
+      register,
+    );
+
+    expect(put).toHaveBeenCalledWith({
+      param: { id: "thread-move" },
+      json: { path: "/work/next", projectId: "proj_b" },
+    });
   });
 
   it("sandy thread retry defaults the turn and the reason at the boundary", async () => {

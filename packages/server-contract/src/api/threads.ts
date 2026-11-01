@@ -867,7 +867,10 @@ export const threadOpenResponseSchema = z.object({
 export type ThreadOpenResponse = z.infer<typeof threadOpenResponseSchema>;
 
 export const threadEnvironmentDirectoryRequestSchema = z
-  .object({ path: z.string().trim().min(1) })
+  .object({
+    path: z.string().trim().min(1),
+    projectId: z.string().trim().min(1).optional(),
+  })
   .strict();
 export type ThreadEnvironmentDirectoryRequest = z.infer<
   typeof threadEnvironmentDirectoryRequestSchema
@@ -876,6 +879,7 @@ export type ThreadEnvironmentDirectoryRequest = z.infer<
 export const threadEnvironmentDirectoryResponseSchema = z.object({
   changed: z.boolean(),
   path: z.string(),
+  projectId: z.string(),
 });
 export type ThreadEnvironmentDirectoryResponse = z.infer<
   typeof threadEnvironmentDirectoryResponseSchema
