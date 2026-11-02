@@ -453,14 +453,13 @@ function isClientBlock(block: unknown): boolean {
 
 /**
  * A request that has the provider run something itself: a tool that is not a plain client tool (web search, code
- * execution, a server-side computer or editor tool, typed by the provider), declared in the tool list or inline in a
- * message; a message block of the provider's own tool work or of an unknown type; or MCP servers or a container.
+ * execution, a server-side computer or editor tool, typed by the provider), declared in the tool list, in a message list
+ * item's own tool list ({@link TOOL_LIST_ITEMS}) or inline in a message; a message block of the provider's own tool work or of an unknown type; or MCP servers or a container.
  */
 export function isServerSide(payload: unknown): boolean {
 	if (!isRecord(payload)) return false;
 	if (SERVER_FIELDS.some((field) => payload[field] !== undefined)) return true;
-	const tools = payload.tools;
-	if (Array.isArray(tools) && !tools.every(isClientTool)) return true;
+	if (!declaredTools(payload).every(isClientTool)) return true;
 	return !(messagesOf(payload) ?? []).every(isClientItem);
 }
 

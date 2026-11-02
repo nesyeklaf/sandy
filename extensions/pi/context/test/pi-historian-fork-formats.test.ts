@@ -260,6 +260,9 @@ describe("reading requests of formats other than Anthropic's", () => {
 			{ type: "function_call", call_id: "call_1", name: "read", arguments: "{}" },
 			{ type: "function_call_output", call_id: "call_1", output: "FACT" },
 			{ type: "message", role: "assistant", content: [{ type: "output_text", text: "ok" }] },
+			{ type: "additional_tools", role: "developer", tools: [{ type: "function", name: "grep", parameters: {} }] },
+			{ type: "tool_search_call", call_id: "s_1", execution: "client", status: "completed" },
+			{ type: "tool_search_output", call_id: "s_1", execution: "client", status: "completed", tools: [{ type: "custom", name: "apply_patch" }] },
 		];
 		assert.equal(isServerSide({ ...client, input }), false);
 	});
@@ -269,6 +272,11 @@ describe("reading requests of formats other than Anthropic's", () => {
 		["a provider tool call in the history", { ...client, input: [...client.input, { type: "web_search_call", id: "ws_1", status: "completed" }] }],
 		["a tool search the provider ran", { ...client, input: [...client.input, { type: "tool_search_call", execution: "server" }] }],
 		["an unknown content block", { ...client, input: [{ role: "user", content: [{ type: "input_audio" }] }] }],
+		["a provider tool added in the history", { ...client, input: [...client.input, { type: "additional_tools", role: "developer", tools: [{ type: "web_search" }] }] }],
+		[
+			"a provider tool a client tool search loaded",
+			{ ...client, input: [...client.input, { type: "tool_search_call", call_id: "s_1", execution: "client", status: "completed" }, { type: "tool_search_output", call_id: "s_1", execution: "client", status: "completed", tools: [{ type: "code_interpreter" }] }] },
+		],
 	];
 	for (const [name, payload] of provider) it(`takes a Responses request with ${name} as running work on the provider`, () => assert.equal(isServerSide(payload), true));
 
