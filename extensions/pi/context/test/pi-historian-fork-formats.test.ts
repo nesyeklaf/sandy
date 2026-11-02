@@ -40,7 +40,7 @@ function summaryRequest() {
 		maxTokens: config.historian.maxOutputTokens,
 		signal: new AbortController().signal,
 		/** The text of the first entry the summary covers whose text is long enough to be named. */
-		long: history.entries.find((entry) => selected.spans.some((span) => span.entryId === entry.id && span.probes))?.text,
+		long: history.entries.find((entry) => selected.spans.some((span) => span.entryId === entry.id && span.whole !== undefined))?.text,
 	};
 }
 

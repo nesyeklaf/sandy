@@ -33,7 +33,7 @@ export interface SummarizeRequest {
 	readonly system: string;
 	readonly prompt: string;
 	/** The prompt with the entries a request already holds named instead of shown, for a fork that continues it. */
-	readonly referencing?: (above: (probes: { readonly head: string; readonly tail: string }) => boolean) => string;
+	readonly referencing?: (above: (whole: string) => boolean) => string;
 	readonly maxTokens: number;
 	readonly signal: AbortSignal;
 }

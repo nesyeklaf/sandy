@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { resolveConfig } from "../src/core/config.ts";
 import { evidenceBudget, HISTORIAN_SYSTEM_PROMPT, historianPrompt, REFERENCE_MIN_CHARS, selectEvidence, validateCompletion } from "../src/core/historian.ts";
+import { clip } from "../src/core/serialize.ts";
 import { forkTurn } from "../src/pi/historian.ts";
 import type { SummarizeRequest } from "../src/historian/run.ts";
 import { sessionLog } from "./support/session-log.ts";
@@ -88,6 +89,24 @@ describe("the fork's summary turn over entries its request already holds", () =>
 		assert.doesNotMatch(forkTurn(request), /<entry [^>]*shown="above"/);
 	});
 
+	it("shows a long user message whole when the request holds only the head and tail a cut pinned of it", () => {
+		const log = sessionLog();
+		const pinned = log.user(lines("pinned", 3_000));
+		log.answer("Noted.");
+		tail(log);
+		const history = log.tape().history();
+		const work = selectEvidence(history, evidenceBudget(config, false));
+		assert.ok(work, "the fixture has no work");
+		const text = history.entries.find((entry) => entry.id === pinned)?.text as string;
+		const request: SummarizeRequest = { system: HISTORIAN_SYSTEM_PROMPT, prompt: historianPrompt(work), referencing: (above) => historianPrompt(work, above), maxTokens: 1_000, signal: new AbortController().signal };
+		// A cut's summary pins a long user message as its head and tail around an omission mark.
+		const turn = forkTurn(request, capture("## Earlier user messages, verbatim\n- [#" + pinned + "] " + clip(text, 1_500)));
+		const shown = entryOf(turn, pinned);
+		assert.doesNotMatch(shown, /shown="above"/, "an entry whose middle the request lacks is named");
+		assert.ok(shown.includes(text), "and is not shown whole");
+		assert.match(entryOf(forkTurn(request, capture("before " + text + " after")), pinned), /shown="above"/, "an entry one message holds whole is not named");
+	});
+
 	it("never names a short entry or a part of a long one", () => {
 		const log = sessionLog();
 		const long = essay(log, "long", 40_000);
@@ -97,8 +116,8 @@ describe("the fork's summary turn over entries its request already holds", () =>
 		assert.ok(work);
 		const span = work.spans.find((one) => one.entryId === long);
 		assert.ok(span && span.to < span.total, "the long answer is shown in spans");
-		assert.equal(span.probes, undefined, "a span of part of an entry is never named");
-		assert.ok(work.spans.every((one) => !one.probes || one.text.length >= REFERENCE_MIN_CHARS));
+		assert.equal(span.whole, undefined, "a span of part of an entry is never named");
+		assert.ok(work.spans.every((one) => one.whole === undefined || one.text.length >= REFERENCE_MIN_CHARS));
 		const everything = () => true;
 		assert.doesNotMatch(historianPrompt(work, everything), /<entry [^>]*shown="above"/);
 	});

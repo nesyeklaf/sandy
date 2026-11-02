@@ -59,25 +59,20 @@ export interface EvidenceSpan {
 	readonly digest: string;
 	/** The span is a long tool output's head and tail: `text` holds the start and the end of the whole entry, not all of it. */
 	readonly clipped?: true;
-	/** The start and the end of a long entry's text, to tell whether a request the fork continues already holds all of it. */
-	readonly probes?: { readonly head: string; readonly tail: string };
+	/**
+	 * The whole text of a long entry the span shows all of (or a long tool output's head and tail of), to tell whether a
+	 * request the fork continues already holds all of it; an entry shorter than {@link REFERENCE_MIN_CHARS} has none.
+	 */
+	readonly whole?: string;
 }
 
-/** Characters at the start and the end of an entry's text that tell a request holding it; an entry shorter than {@link REFERENCE_MIN_CHARS} is always shown. */
-const PROBE_CHARS = 200;
-/** An entry this long or longer is named instead of shown again when the fork continues a request that holds it. */
+/** An entry this long or longer is named instead of shown again when the fork continues a request that holds it whole. */
 export const REFERENCE_MIN_CHARS = 1_000;
 /** Characters of a named entry's rendering the fork is shown, so it finds the entry in the exchange above. */
 const REFERENCE_ANCHOR_CHARS = 300;
 
-function probesOf(entry: LogEntry): EvidenceSpan["probes"] {
-	const text = entry.text;
-	if (text.length < REFERENCE_MIN_CHARS) return undefined;
-	let head = text.slice(0, PROBE_CHARS);
-	let tail = text.slice(-PROBE_CHARS);
-	if (isHigh(head.charCodeAt(head.length - 1))) head = head.slice(0, -1);
-	if (isLow(tail.charCodeAt(0))) tail = tail.slice(1);
-	return { head, tail };
+function wholeOf(entry: LogEntry): string | undefined {
+	return entry.text.length >= REFERENCE_MIN_CHARS ? entry.text : undefined;
 }
 
 /** What the next summary covers once the historian's answer is accepted. */
@@ -203,8 +198,8 @@ function takeSpans(entries: readonly LogEntry[], offset: number, maxTokens: numb
 		if (clipped) {
 			// Head and tail always go whole: a stretch overshoots by at most one clipped output, and never stalls on one.
 			const cost = Math.ceil(clipped.text.length / CHARS_PER_TOKEN);
-			const probes = probesOf(entry);
-			spans.push({ entryId: entry.id, from: 0, to: clipped.total, total: clipped.total, text: clipped.text, digest: entryDigest(entry), clipped: true, ...(probes ? { probes } : {}) });
+			const whole = wholeOf(entry);
+			spans.push({ entryId: entry.id, from: 0, to: clipped.total, total: clipped.total, text: clipped.text, digest: entryDigest(entry), clipped: true, ...(whole !== undefined ? { whole } : {}) });
 			left -= cost;
 			tokens += cost;
 			covered += Math.ceil(clipped.total / CHARS_PER_TOKEN);
@@ -216,8 +211,8 @@ function takeSpans(entries: readonly LogEntry[], offset: number, maxTokens: numb
 			offset = 0;
 			continue;
 		}
-		const probes = offset === 0 && slice.to >= slice.total ? probesOf(entry) : undefined;
-		const span: EvidenceSpan = { entryId: entry.id, from: offset, to: slice.to, total: slice.total, text: slice.text, digest: entryDigest(entry), ...(probes ? { probes } : {}) };
+		const whole = offset === 0 && slice.to >= slice.total ? wholeOf(entry) : undefined;
+		const span: EvidenceSpan = { entryId: entry.id, from: offset, to: slice.to, total: slice.total, text: slice.text, digest: entryDigest(entry), ...(whole !== undefined ? { whole } : {}) };
 		spans.push(span);
 		const cost = Math.ceil(slice.text.length / CHARS_PER_TOKEN);
 		left -= cost;
@@ -500,15 +495,15 @@ export function condensePrompt(selection: CondenseSelection): string {
 }
 
 /**
- * The evidence the historian is shown. With `above`, an entry it holds (a whole entry with {@link EvidenceSpan.probes}
- * that the request continued by a fork already carries) is named by its id and opening instead of shown again: the fork
- * reads it from its cached prefix.
+ * The evidence the historian is shown. With `above`, an entry it holds (a span with {@link EvidenceSpan.whole} whose
+ * whole text the request continued by a fork already carries) is named by its id and opening instead of shown again:
+ * the fork reads it from its cached prefix.
  */
-export function historianPrompt(work: HistorianWork, above?: (probes: NonNullable<EvidenceSpan["probes"]>) => boolean): string {
+export function historianPrompt(work: HistorianWork, above?: (whole: string) => boolean): string {
 	const existing = work.previous ? renderSummary(work.previous.sections) : "";
 	const render = (span: EvidenceSpan) => {
 		const attributes = `id="${span.entryId}" characters="${span.from}-${span.to}" of="${span.total}"`;
-		if (span.probes && above?.(span.probes)) {
+		if (span.whole !== undefined && above?.(span.whole)) {
 			return `<entry ${attributes} shown="above">\n${span.text.slice(0, REFERENCE_ANCHOR_CHARS)}\n…[the whole entry is in the conversation above; record it from there]\n</entry>`;
 		}
 		return `<entry ${attributes}${span.clipped ? ' shown="head and tail"' : ""}>\n${span.text}\n</entry>`;

@@ -122,13 +122,25 @@ export const FORK_FRAME =
  * cached prefix instead of paying for it again as fresh input.
  */
 export function forkTurn(request: Pick<SummarizeRequest, "system" | "prompt" | "referencing">, capture?: Pick<Capture, "json">): string {
-	const prompt = capture && request.referencing ? request.referencing((probes) => holds(capture.json, probes)) : request.prompt;
+	if (!capture || !request.referencing) return `${FORK_FRAME}\n\n${request.system}\n\n${request.prompt}`;
+	const texts = messageTexts(JSON.parse(capture.json));
+	const prompt = request.referencing((whole) => texts.some((text) => text.includes(whole)));
 	return `${FORK_FRAME}\n\n${request.system}\n\n${prompt}`;
 }
 
-/** The serialized request holds the entry: both its opening and its end are in it, as the request encodes text. */
-function holds(json: string, probes: { readonly head: string; readonly tail: string }): boolean {
-	return json.includes(JSON.stringify(probes.head).slice(1, -1)) && json.includes(JSON.stringify(probes.tail).slice(1, -1));
+/**
+ * Every string in the request's message list, decoded: an entry the request holds stands whole inside one of them. A
+ * copy clipped to its head and tail, as a cut pins a long user message, holds no string with the whole entry.
+ */
+function messageTexts(payload: unknown): string[] {
+	const texts: string[] = [];
+	const walk = (value: unknown): void => {
+		if (typeof value === "string") texts.push(value);
+		else if (Array.isArray(value)) value.forEach(walk);
+		else if (isRecord(value)) Object.values(value).forEach(walk);
+	};
+	walk(messagesOf(payload) ?? []);
+	return texts;
 }
 
 /** Copies a wire value without its cache markers: the fork marks nothing new, so it writes no cache. */
