@@ -275,8 +275,10 @@ export interface RouteRecord {
 	readonly rejection?: ForkRejection | "miss" | "tool-call";
 	readonly forkCost?: number;
 	readonly isolatedCost?: number;
-	/** The output limit the fork was priced and sent at. */
+	/** The output limit the fork sent; unset for a format without one (Codex). */
 	readonly maxTokens?: number;
+	/** The output the fork was priced and context-checked at: the limit it sent, or the main model's own without one. */
+	readonly priceTokens?: number;
 	readonly predictedCacheRead?: number;
 	readonly cacheRead?: number;
 	readonly usage?: RouteUsage;
@@ -331,7 +333,10 @@ type ForkPlan =
 			/** The summary turn as framed for this capture. */
 			readonly turn: string;
 			readonly exchange: readonly [AssistantMessage, ...ToolResultMessage[]];
+			/** The output limit, sent in the capture's limit field; a format without one sends none. */
 			readonly maxTokens: number;
+			/** The most the fork may answer: {@link maxTokens} where it is sent, the main model's output limit where not. */
+			readonly priceTokens: number;
 			readonly forkCost: number;
 			readonly isolatedCost: number;
 	  }
@@ -449,14 +454,15 @@ export class HistorianRequests {
 		const turn = forkTurn(request, capture);
 		const maxTokens = forkOutputLimit(capture, request.maxTokens);
 		if (maxTokens > host.main.maxTokens) return { via: "isolated", rejection: "budget" };
+		const priceTokens = capture.outputLimit ? maxTokens : host.main.maxTokens;
 		const forkPromptTokens = exchangeTokens(exchange) + estimateTokens(turn);
-		if ((capture.promptTokens ?? 0) + forkPromptTokens + maxTokens > host.main.contextWindow) return { via: "isolated", rejection: "context" };
+		if ((capture.promptTokens ?? 0) + forkPromptTokens + priceTokens > host.main.contextWindow) return { via: "isolated", rejection: "context" };
 		const choice = chooseRoute(
-			{ promptTokens: estimateTokens(isolatedPrompt(request)), forkPromptTokens, outputTokens: request.maxTokens, forkOutputTokens: maxTokens },
+			{ promptTokens: estimateTokens(isolatedPrompt(request)), forkPromptTokens, outputTokens: request.maxTokens, forkOutputTokens: priceTokens },
 			capture,
 			{ main: host.main, historian: host.isolated[0]?.model },
 		);
-		if (choice.via === "fork") return { via: "fork", capture, turn, exchange, maxTokens, forkCost: choice.forkCost, isolatedCost: choice.isolatedCost };
+		if (choice.via === "fork") return { via: "fork", capture, turn, exchange, maxTokens, priceTokens, forkCost: choice.forkCost, isolatedCost: choice.isolatedCost };
 		return {
 			via: "isolated",
 			rejection: choice.reason,
@@ -516,7 +522,8 @@ export class HistorianRequests {
 			model: `${main.provider}/${main.id}`,
 			forkCost: plan.forkCost,
 			isolatedCost: plan.isolatedCost,
-			maxTokens,
+			...(capture.outputLimit ? { maxTokens } : {}),
+			priceTokens: plan.priceTokens,
 			predictedCacheRead: capture.promptTokens ?? 0,
 		};
 		let response: AssistantMessage;

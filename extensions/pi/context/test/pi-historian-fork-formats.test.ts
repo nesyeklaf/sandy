@@ -240,6 +240,26 @@ for (const format of FORMATS) {
 			assert.equal(records[0]?.rejection, "head");
 		});
 
+		it("prices the fork at the most it may answer: the output limit it sends, or the main model's own where the format sends none", async () => {
+			await mainTurn();
+			const request = summaryRequest();
+			await requests.complete(request, host());
+			const sent = (format.reasons ? 2 : 1) * request.maxTokens;
+			const priced = format.limit ? sent : main.maxTokens;
+			assert.equal(records[0]?.priceTokens, priced, "the fork was priced at another output than it may answer");
+			assert.equal(records[0]?.maxTokens, format.limit ? sent : undefined, "the ledger names an output limit the fork did not send");
+			assert.equal(records[0]?.historianVia, "fork", records[0]?.rejection);
+			assert.ok((records[0]?.forkCost ?? 0) >= (priced * main.cost.output) / 1e6, "the fork's cost leaves out output it may answer");
+		});
+
+		it("checks the fork's context at the most it may answer", async () => {
+			main = { ...main, maxTokens: main.contextWindow } as Model<Api>;
+			await mainTurn();
+			await requests.complete(summaryRequest(), host());
+			if (format.limit) assert.equal(records[0]?.historianVia, "fork", records[0]?.rejection);
+			else assert.equal(records[0]?.rejection, "context", "a fork without an output limit may answer past the context window");
+		});
+
 		it("records the format's output limit field with the capture, and leaves its cache to the provider: no one-token ping", async () => {
 			await mainTurn();
 			const capture = requests.captures.latest();
