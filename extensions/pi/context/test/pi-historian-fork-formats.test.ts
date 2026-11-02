@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "vitest";
 import { getModel, streamSimple } from "@earendil-works/pi-ai/compat";
-import type { Api, AssistantMessage, Context, Model, SimpleStreamOptions } from "@earendil-works/pi-ai";
+import type { Api, AssistantMessage, Context, Model, SimpleStreamOptions, ToolResultMessage } from "@earendil-works/pi-ai";
 import { resolveConfig } from "../src/core/config.ts";
 import { evidenceBudget, HISTORIAN_SYSTEM_PROMPT, historianPrompt, selectEvidence } from "../src/core/historian.ts";
 import { promptTokens } from "../src/core/ledger.ts";
@@ -309,4 +309,67 @@ describe("APIs the fork does not go on", () => {
 			assert.equal(records[0]?.rejection, "api-unsupported");
 		});
 	}
+});
+
+describe(`the fork after a grammar tool's call on OpenAI Responses, on pi ${VERSION}`, () => {
+	let mainServer: FakeOpenAI;
+	let historianServer: FakeOpenAI;
+	let spare: FakeOpenAI;
+	beforeEach(async () => {
+		mainServer = await new FakeOpenAI("responses").start();
+		historianServer = await new FakeOpenAI("responses").start();
+		spare = await new FakeOpenAI("responses").start();
+	});
+	afterEach(async () => {
+		await mainServer.stop();
+		await historianServer.stop();
+		await spare.stop();
+	});
+
+	const grammarTools = [
+		{
+			name: "apply_patch",
+			description: "Apply a patch.",
+			parameters: { type: "object", properties: { patch: { type: "string" } }, required: ["patch"] },
+			constrainedSampling: { type: "grammar", variants: { openai_lark: "start: /.+/" } },
+		},
+	];
+
+	it("sends no fork whose exchange differs from what pi-ai sends the main model next: a custom_tool_call stays one", async () => {
+		const base = getModel("openai", "gpt-4.1") as Model<Api>;
+		const main = { ...base, baseUrl: mainServer.baseUrl, compat: { ...base.compat, supportsOpenAIGrammarTools: true } } as Model<Api>;
+		const historian = { ...pricey(base), baseUrl: historianServer.baseUrl } as Model<Api>;
+		mainServer.responder = (request, index) =>
+			index === 0 ? [{ type: "custom_tool_call", callId: "call_1", name: "apply_patch", input: "*** patch" }] : [{ type: "text", text: citingAnswer(String(JSON.parse(lastText(request))?.[0]?.text ?? "")) }];
+		historianServer.responder = (request) => [{ type: "text", text: citingAnswer(String(JSON.parse(lastText(request))?.[0]?.text ?? "")) }];
+		const context = { ...mainContext(), tools: grammarTools as never } as Context;
+		let payload: unknown;
+		const answer = await streamSimple(main, context, { apiKey: "test-key", sessionId: "session-1", transport: "sse", onPayload: (built) => void (payload = structuredClone(built)) }).result();
+		assert.equal(answer.stopReason, "toolUse", answer.errorMessage);
+		const call = answer.content.find((block) => block.type === "toolCall");
+		assert.ok(call && call.type === "toolCall");
+		const result: ToolResultMessage = { role: "toolResult", toolCallId: call.id, toolName: call.name, content: [{ type: "text", text: "Applied." }], isError: false, timestamp: 2 };
+		const records: RouteRecord[] = [];
+		const requests = new HistorianRequests({ fork: true, now: () => 1_000_000, record: (record) => records.push(record) });
+		requests.captures.record(payload, main, 1_000_000);
+		requests.captures.confirm(main, promptTokens(answer.usage), answer);
+		requests.captures.result(result);
+
+		let next: Record<string, unknown> | undefined;
+		await streamSimple({ ...main, baseUrl: spare.baseUrl } as Model<Api>, { ...context, messages: [...context.messages, answer, result, { role: "user", content: "Go on.", timestamp: 3 }] }, {
+			apiKey: "test-key",
+			sessionId: "session-1",
+			transport: "sse",
+			onPayload: (built) => void (next = structuredClone(built) as Record<string, unknown>),
+		}).result();
+		const captured = (payload as { input: unknown[] }).input;
+		const expected = (next?.input as unknown[]).slice(captured.length, -1);
+		assert.match(JSON.stringify(expected), /"custom_tool_call"/, "pi-ai sends the call as a custom tool call");
+
+		const send = (model: Model<Api>, asked: Context, options: SimpleStreamOptions): Promise<AssistantMessage> => streamSimple(model, asked, { ...options, apiKey: "test-key" }).result();
+		await requests.complete(summaryRequest(), { send, main, isolated: [{ route: "primary", model: historian }], cacheTtlMs: 300_000, sessionId: "session-1" });
+		const fork = mainServer.requests[1];
+		if (fork) assert.deepEqual((fork.body.input as unknown[]).slice(captured.length, -1), expected, "the fork sent the exchange in another form than the main model's next request");
+		else assert.equal(records[0]?.rejection, "custom-tool");
+	});
 });

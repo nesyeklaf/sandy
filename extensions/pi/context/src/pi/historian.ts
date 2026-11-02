@@ -42,6 +42,11 @@ export type ForkRejection =
 	| "server-tools"
 	/** The main model's own answer to the capture, or a result of a tool it called, is missing or did not end normally. */
 	| "exchange"
+	/**
+	 * The exchange calls an OpenAI custom (grammar) tool: pi-ai would serialize that call as a function call in the fork,
+	 * which declares no tools of its own, not as the custom tool call the main model's next request sends.
+	 */
+	| "custom-tool"
 	/** The captured thinking budget and the summary's output do not fit the main model's output limit. */
 	| "budget"
 	/** The captured prompt, the exchange, the summary turn and the output limit do not fit the main model's context. */
@@ -439,6 +444,8 @@ export class HistorianRequests {
 		if (capture.serverSide) return { via: "isolated", rejection: "server-tools" };
 		const exchange = completedExchange(capture);
 		if (!exchange) return { via: "isolated", rejection: "exchange" };
+		const custom = capture.customTools;
+		if (custom && exchange[0].content.some((block) => block.type === "toolCall" && custom.includes(block.name))) return { via: "isolated", rejection: "custom-tool" };
 		const turn = forkTurn(request, capture);
 		const maxTokens = forkOutputLimit(capture, request.maxTokens);
 		if (maxTokens > host.main.maxTokens) return { via: "isolated", rejection: "budget" };

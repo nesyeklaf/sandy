@@ -58,6 +58,8 @@ const CLIENT_ITEMS: ReadonlySet<string> = new Set([
 	"configuration_update",
 ]);
 const CLIENT_SEARCH_ITEMS: ReadonlySet<string> = new Set(["tool_search_call", "tool_search_output"]);
+/** Message list items that declare tools in a list of their own: Responses' `additional_tools` and a tool search's output. */
+const TOOL_LIST_ITEMS: ReadonlySet<string> = new Set(["additional_tools", "tool_search_output"]);
 /** Request fields that hand the provider work of its own to run: MCP servers, a code execution container. */
 const SERVER_FIELDS = ["mcp_servers", "container"] as const;
 /**
@@ -117,6 +119,8 @@ export interface Capture {
 	readonly outputLimit?: OutputLimitField;
 	/** It asks an OpenAI-style model to reason, which counts toward the output limit without a budget of its own. */
 	readonly reasons?: true;
+	/** The OpenAI custom (grammar) tools it declares, by name; unset without one (see {@link customToolNames}). */
+	readonly customTools?: readonly string[];
 	/** Request start, epoch ms. */
 	readonly at: number;
 	/**
@@ -205,6 +209,7 @@ export class CapturePool {
 		if (bytes > CAPTURE_BYTES) return "oversized";
 		const thinkingBudget = fixedThinkingBudget(payload);
 		const outputLimit = outputLimitField(payload);
+		const customTools = customToolNames(payload);
 		const capture: Capture = {
 			route: routeOf(model),
 			api: model.api,
@@ -215,6 +220,7 @@ export class CapturePool {
 			...(thinkingBudget !== undefined ? { thinkingBudget } : {}),
 			...(outputLimit ? { outputLimit } : {}),
 			...(reasonsUnbudgeted(payload) ? { reasons: true as const } : {}),
+			...(customTools.length > 0 ? { customTools } : {}),
 			at,
 			touchedAt: at,
 			...(headers ? { headers: { ...headers } } : {}),
@@ -402,6 +408,29 @@ export function outputLimitField(payload: unknown): OutputLimitField | undefined
 export function messagesOf(payload: unknown): unknown[] | undefined {
 	const key = messageKey(payload);
 	return key && isRecord(payload) ? (payload[key] as unknown[]) : undefined;
+}
+
+/** Every tool a request declares: its tool list, then the tool lists of its message list items ({@link TOOL_LIST_ITEMS}). */
+function declaredTools(payload: Record<string, unknown>): unknown[] {
+	const nested = (messagesOf(payload) ?? []).flatMap((item) =>
+		isRecord(item) && typeof item.type === "string" && TOOL_LIST_ITEMS.has(item.type) && Array.isArray(item.tools) ? (item.tools as unknown[]) : [],
+	);
+	return [...(Array.isArray(payload.tools) ? (payload.tools as unknown[]) : []), ...nested];
+}
+
+/**
+ * The names of the OpenAI custom tools a request declares (Responses' `{type: "custom", name}`, Chat Completions'
+ * `{type: "custom", custom: {name}}`), in its tool list or inline. pi-ai serializes a call of such a tool as a custom
+ * tool call only while the context it serializes declares the tool, which the fork's own context does not. Anthropic's
+ * `custom` tools carry an input schema and are plain function tools.
+ */
+export function customToolNames(payload: unknown): string[] {
+	if (!isRecord(payload)) return [];
+	return declaredTools(payload).flatMap((tool) => {
+		if (!isRecord(tool) || tool.type !== "custom" || "input_schema" in tool) return [];
+		const name = tool.name ?? (isRecord(tool.custom) ? tool.custom.name : undefined);
+		return typeof name === "string" ? [name] : [];
+	});
 }
 
 /** A message list item that has the provider run nothing: a typed item of {@link CLIENT_ITEMS}, every block a client one. */

@@ -13,8 +13,11 @@ import { stableStringify } from "../../src/core/continuity.ts";
 
 export type FakeFormat = "responses" | "completions";
 
-/** One block of an answer: text, or encrypted reasoning (Responses only). */
-export type FakeOpenAIBlock = { readonly type: "text"; readonly text: string } | { readonly type: "reasoning"; readonly summary: string; readonly encrypted: string };
+/** One block of an answer: text, or encrypted reasoning or a grammar tool's call (Responses only). */
+export type FakeOpenAIBlock =
+	| { readonly type: "text"; readonly text: string }
+	| { readonly type: "reasoning"; readonly summary: string; readonly encrypted: string }
+	| { readonly type: "custom_tool_call"; readonly callId: string; readonly name: string; readonly input: string };
 
 export interface FakeOpenAIRequest {
 	/** The request body as received, decompressed. */
@@ -117,14 +120,17 @@ export class FakeOpenAI {
 
 function responsesEvents(blocks: readonly FakeOpenAIBlock[], n: number, total: number, cacheRead: number, output: number, length: boolean): Record<string, unknown>[] {
 	const id = `resp_fake_${n}`;
-	const items = blocks.map((block, index) =>
+	const items = blocks.map((block, index): Record<string, unknown> =>
 		block.type === "text"
 			? { type: "message", id: `msg_${n}_${index}`, role: "assistant", status: "completed", content: [{ type: "output_text", text: block.text, annotations: [] }] }
-			: { type: "reasoning", id: `rs_${n}_${index}`, summary: [{ type: "summary_text", text: block.summary }], encrypted_content: block.encrypted },
+			: block.type === "reasoning"
+				? { type: "reasoning", id: `rs_${n}_${index}`, summary: [{ type: "summary_text", text: block.summary }], encrypted_content: block.encrypted }
+				: { type: "custom_tool_call", id: `ctc_${n}_${index}`, call_id: block.callId, name: block.name, input: block.input, status: "completed" },
 	);
 	const events: Record<string, unknown>[] = [{ type: "response.created", response: { id, status: "in_progress", output: [] } }];
 	items.forEach((item, index) => {
-		events.push({ type: "response.output_item.added", output_index: index, item: { ...item, ...(item.type === "message" ? { content: [] } : { summary: [] }) } });
+		const opening = item.type === "message" ? { content: [] } : item.type === "reasoning" ? { summary: [] } : { input: "" };
+		events.push({ type: "response.output_item.added", output_index: index, item: { ...item, ...opening } });
 		if (item.type === "message") events.push({ type: "response.output_text.delta", output_index: index, content_index: 0, delta: (blocks[index] as { text: string }).text });
 		events.push({ type: "response.output_item.done", output_index: index, item });
 	});
