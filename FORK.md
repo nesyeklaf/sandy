@@ -26,7 +26,7 @@ The release builds a clean checkout of `main` and nothing else: a dirty tree, an
 
 Build requirements: Node and pnpm from `package.json`, a JDK 17 with `javac` (found under `~/.gradle/jdks` or `/usr/lib/jvm`, or set `JAVA_HOME`), and the Android SDK at `$ANDROID_HOME` (default `~/Android/Sdk`). JDK 21 does not build the APK.
 
-The version number carries on from BB 0.48.1 at the fork point. Tell builds apart by their commit.
+The version number carries on from BB 0.48.1 at the fork point. 0.49.0 is the first Sandy release (tag `v0.49.0`); tell later builds apart by their commit.
 
 ## Deploy
 
