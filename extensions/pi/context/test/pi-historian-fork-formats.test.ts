@@ -281,3 +281,32 @@ describe("reading requests of formats other than Anthropic's", () => {
 		assert.equal(parseBody(new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 1, 2])), undefined);
 	});
 });
+
+describe("APIs the fork does not go on", () => {
+	const usage = { input: 10, output: 10, cacheRead: 0, cacheWrite: 0, totalTokens: 20, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } };
+	const cost = { input: 1, output: 2, cacheRead: 0.1, cacheWrite: 0 };
+	const model = (api: string): Model<Api> =>
+		({ provider: "p", id: "m", api, baseUrl: "http://127.0.0.1:1", cost, contextWindow: 200_000, maxTokens: 32_000, reasoning: false, input: ["text"] }) as unknown as Model<Api>;
+
+	for (const api of ["mistral-conversations", "pi-messages"]) {
+		it(`keeps a summary on ${api} isolated: its client sends another payload than the hook sees`, async () => {
+			const records: RouteRecord[] = [];
+			const requests = new HistorianRequests({ fork: true, now: () => 1_000, record: (record) => records.push(record) });
+			const main = model(api);
+			const payload = { model: "m", max_tokens: 4_096, messages: [{ role: "user", content: "FACT alpha" }] };
+			assert.equal(requests.captures.record(payload, main, 1_000), "kept");
+			const reply = { role: "assistant", content: [{ type: "text", text: "ok" }], api, provider: "p", model: "m", usage, stopReason: "stop", timestamp: 2 } as AssistantMessage;
+			requests.captures.confirm(main, 1_000, reply);
+			const sent: string[] = [];
+			const send = async (asked: Model<Api>, context: Context): Promise<AssistantMessage> => {
+				sent.push(asked.api);
+				const prompt = (context.messages[0] as { content: { text: string }[] }).content[0]?.text ?? "";
+				return { ...reply, content: [{ type: "text", text: citingAnswer(prompt) }] };
+			};
+			await requests.complete(summaryRequest(), { send, main, isolated: [{ route: "primary", model: { ...model("anthropic-messages"), cost: { input: 300, output: 600, cacheRead: 30, cacheWrite: 0 } } }], cacheTtlMs: 300_000 });
+			assert.deepEqual(sent, ["anthropic-messages"], "the fork was sent");
+			assert.equal(records[0]?.historianVia, "isolated");
+			assert.equal(records[0]?.rejection, "api-unsupported");
+		});
+	}
+});

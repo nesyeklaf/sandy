@@ -29,6 +29,8 @@ export const REFRESH_LEASE_MS = 120_000;
  * Provider APIs a fork or a ping can be sent on: those whose pi-ai adapter sends through the `fetch` it is handed, so
  * the bytes about to leave can be checked against the capture. The format itself is read from the payload (its message
  * list and output limit fields); Google's and Bedrock's adapters send through their SDKs and refuse a custom fetch.
+ * Mistral's and pi-messages' adapters hand the payload hook another shape than they send (Mistral's camelCase fields,
+ * pi-messages' nested envelope), so the capture is not the request that left and they are not forked either.
  */
 export const FORK_APIS: ReadonlySet<string> = new Set([
 	"anthropic-messages",
@@ -36,8 +38,6 @@ export const FORK_APIS: ReadonlySet<string> = new Set([
 	"openai-codex-responses",
 	"azure-openai-responses",
 	"openai-completions",
-	"mistral-conversations",
-	"pi-messages",
 ]);
 /** Output limit fields of the request formats pi-ai sends; pi's cache warmer sets them to one token. */
 const OUTPUT_LIMITS = ["max_tokens", "max_output_tokens", "max_completion_tokens"] as const;
