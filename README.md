@@ -1,89 +1,56 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e40bda56-54a4-47f8-a417-6bbadf2e5b40">
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232">
-    <img alt="sandy" src="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232" width="128">
-  </picture>
+  <img alt="Sandy" src="assets/sandy-logo.svg" width="144">
 </p>
 
-# sandy
-
-[![npm version](https://img.shields.io/npm/v/sandy-app.svg)](https://www.npmjs.com/package/sandy-app)
-
-sandy is an agentic IDE that builds itself. It can control, customize, and automate
-itself, laying the groundwork for your own software factory.
-
-Every surface — the desktop app, web app, CLI, and HTTP API — is a first-class
-way to drive sandy. Work runs in threads you can follow live, steer at any point,
-or hand off to another agent.
-
-> [!NOTE]
-> sandy is in active development. Core architecture is stable, but workflows
-> and surfaces are still evolving.
+<h1 align="center">Sandy</h1>
 
 <p align="center">
-  <img alt="sandy desktop app showing a code review thread, dispatch panel, and task board" src="assets/app-screenshot.png" width="800">
+  An agentic IDE for running many coding agents at once, on your own machine.<br>
+  Hard fork of <a href="https://getbb.app">BB</a>, built and run self-hosted.
 </p>
 
-## Use sandy
+<p align="center">
+  <a href="./FORK.md">Origin and operations</a> ·
+  <a href="./docs/DESIGN.md">Design</a> ·
+  <a href="./docs/VISION.md">Vision</a> ·
+  <a href="./docs/configuration.md">Configuration</a> ·
+  <a href="./extensions/README.md">Extensions</a>
+</p>
 
-### Download the desktop app
+---
 
-The recommended way to start using sandy is the desktop app:
+Sandy runs the provider CLIs you already have (Claude Code, Codex, pi and others) as threads you can follow live, steer at any point, or hand off to another agent. Every surface is a first-class way to drive it: the web and desktop app, the `sandy` CLI, the HTTP API and the plugin SDK. It can control, customize and automate itself, which is the groundwork for your own software factory.
 
-**[Download the latest desktop app](https://github.com/nesyeklaf/sandy/releases/tag/desktop-latest)**
+> [!NOTE]
+> Sandy is in active development. The core is stable, workflows and surfaces still change.
 
-The desktop app supports macOS on Apple Silicon (arm64). The Linux x64 AppImage
-and the Windows x64 installer are alpha: expect problems, and please report
-them. Intel Mac users should run sandy with `npx` instead. Native Windows needs
-[Git for Windows](https://git-scm.com/download/win), which sandy uses for Git and
-for environment setup scripts. You can also run sandy inside
-[WSL2 (Windows Subsystem for Linux)](https://learn.microsoft.com/windows/wsl/install):
-install WSL2 first, then run the `npx` command below from your WSL2 (Linux)
-shell.
+## Where Sandy comes from
 
-Early adopters can install
-**[sandy Nightly](https://github.com/nesyeklaf/sandy/releases/tag/desktop-nightly)**
-alongside the stable desktop app. It has a separate application identity,
-yellow icon, and auto-update feed.
+Sandy is a **hard fork of [BB](https://getbb.app) by Michael Yong**, taken at BB 0.48.1 and published under the same MIT license (see [LICENSE](./LICENSE)). The BB code, its architecture and its plugin system are the foundation of everything here, and this project would not exist without that work.
 
-### Or run it anywhere with npx
+After the fork point Sandy has no upstream: nothing is merged from BB any more, the BB-hosted services (connect, accounts, hosted web app) are removed, and every change is made in this repository. The product, package and command names, the data directories and the plugin ids were renamed to Sandy. `scripts/migrate-from-bb.mjs` moves an existing BB install over. [FORK.md](./FORK.md) records the fork point, what differs from BB, and how Sandy is built, released and deployed.
 
-```bash
-npx sandy-app@latest
-```
+Several plugins in [`extensions/`](./extensions/README.md) are forks of plugins from the BB ecosystem; their origin is recorded in the `UPSTREAM.md` files.
 
-Then open `http://localhost:38886`.
+## Run Sandy
 
-To control sandy from outside sandy with the `sandy` CLI, open **Settings → General →
-Command line** and choose **Install**. See
-[The sandy Command On PATH](./docs/configuration.md#the-sandy-command-on-path).
-
-To run the newest automated build instead:
+Sandy is built from this repository. There are no hosted downloads and no `sandy-app` package on npm yet.
 
 ```bash
-npx sandy-app@nightly
+pnpm install
+scripts/fork/release.sh build     # writes ~/sandy-fork-dist/<sha>/
 ```
 
-npm 12 and later block dependency install scripts by default. sandy needs those
-scripts to build its native add-ons. If your npm version is 12 or later, allow
-the scripts for the install:
+The build produces `sandy-app-<version>.tgz` (server and machine daemon), a Linux AppImage and an Android APK. Install the server package:
 
 ```bash
-npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app@latest
+npm install -g --allow-scripts=better-sqlite3,node-pty,@parcel/watcher ~/sandy-fork-dist/<sha>/sandy-app-<version>.tgz
+sandy-app
 ```
 
-Or set the policy once for all global installs:
+Then open `http://localhost:38886`. To deploy to a remote server, see [Deploy in FORK.md](./FORK.md#deploy); it is a transient systemd unit with a tested upgrade path and rollback. To use the `sandy` command outside Sandy, open **Settings → General → Command line** and choose **Install**, see [The sandy command on PATH](./docs/configuration.md#the-sandy-command-on-path).
 
-```bash
-npm config set allow-scripts=better-sqlite3,node-pty,@parcel/watcher --location=user
-```
-
-sandy uses the provider CLI you already have authenticated.
-
-For install requirements, provider setup, configuration, and package-focused
-docs, start with
-[`packages/sandy-app`](./packages/sandy-app/README.md).
+Sandy needs Node and pnpm as pinned in `package.json`. The Android build needs a JDK 17 and the Android SDK. Native Windows needs [Git for Windows](https://git-scm.com/download/win), or use WSL2.
 
 ## Development
 
@@ -99,7 +66,7 @@ a data directory under
 `~/.sandy-dev/<checkout-instance>/` and deterministic high ports derived from the
 checkout path. The checkout instance id is the sanitized path to the checkout,
 relative to your home directory, plus a short hash suffix. Separate worktrees
-can run alongside each other and the packaged `npx sandy-app@latest` instance.
+can run alongside each other and the installed `sandy-app` instance.
 
 To test the production bundle and serving path without switching to production
 data or ports, use:
@@ -193,7 +160,7 @@ pnpm start
 
 That builds only the app, server, and host-daemon runtime artifacts, then runs
 the launcher directly against those workspace outputs. Use the `sandy-app`
-tarball smoke task when validating the published `npx sandy-app@latest` package
+tarball smoke task when validating the packed `sandy-app` package
 layout.
 
 ```bash
@@ -232,62 +199,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ### `Could not locate the bindings file`
 
-sandy uses native add-ons, for example `better-sqlite3` and `@parcel/watcher`. npm
-downloads or builds those binaries in a package install script. If npm does not
-run install scripts, the binaries are absent. sandy then stops at startup with this
-error:
+Sandy uses native add-ons (`better-sqlite3`, `node-pty`, `@parcel/watcher`). If npm does not run their install scripts, the binaries are missing and Sandy stops at startup with:
 
 ```
 Error: Could not locate the bindings file. Tried:
  → .../node_modules/better-sqlite3/build/better_sqlite3.node
 ```
 
-There are two usual causes.
+- **npm 12 or later** blocks install scripts by default. Name the add-ons in `--allow-scripts=better-sqlite3,node-pty,@parcel/watcher` when you install the tarball, or set it once with `npm config set allow-scripts=better-sqlite3,node-pty,@parcel/watcher --location=user`. npm 10 and 11 accept or ignore the flag.
+- **`ignore-scripts=true` in `~/.npmrc`**: install with `npm_config_ignore_scripts=false` set for that one command.
+- **A Node major-version change**, or a `node_modules` copied from another OS, CPU or libc: install the package again, or run `npm rebuild better-sqlite3`.
 
-The first cause is npm 12 or later. Since npm 12, npm blocks dependency install
-scripts by default and prints
-`npm warn install-scripts N packages had install scripts blocked`. Name sandy's
-native add-ons in `--allow-scripts` to let this one command run their install
-scripts:
+## License
 
-```bash
-npx --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app@latest
-```
-
-For a permanent install with the same setting, use:
-
-```bash
-npm install -g --allow-scripts=better-sqlite3,node-pty,@parcel/watcher sandy-app
-sandy-app
-```
-
-To allow them for all global installs on this machine, run
-`npm config set allow-scripts=better-sqlite3,node-pty,@parcel/watcher --location=user`.
-npm 10 and 11 accept or ignore the flag, so it is safe on every supported Node.
-
-The second cause is `ignore-scripts=true` in your `~/.npmrc`. Set the
-`npm_config_ignore_scripts` environment variable to let this one command run its
-install scripts:
-
-```bash
-npm_config_ignore_scripts=false npx sandy-app@latest
-```
-
-For a permanent install with the same setting, use:
-
-```bash
-npm_config_ignore_scripts=false npm install -g sandy-app
-sandy-app
-```
-
-The environment variable applies to that one command only. Keep
-`ignore-scripts=true` in your `~/.npmrc` if you want it for security.
-
-The same error has other causes. A Node.js major-version change after the
-install causes it. A copy of `node_modules` from a different operating system,
-CPU architecture, or libc variant also causes it. To recover, install the
-package again, or run `npm rebuild better-sqlite3`.
-
-## Acknowledgements
-
-<a href="https://blacksmith.sh"><img src="assets/blacksmith-ci.png" alt="CI powered by Blacksmith" width="400"></a>
+MIT. Copyright (c) 2026 Michael Yong (BB) and nesyeklaf (Sandy). See [LICENSE](./LICENSE).

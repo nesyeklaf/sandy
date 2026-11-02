@@ -1,14 +1,8 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e40bda56-54a4-47f8-a417-6bbadf2e5b40">
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232">
-    <img alt="sandy" src="https://github.com/user-attachments/assets/4d9d02fb-c179-449b-a38a-041955143232" width="128">
-  </picture>
+  <img alt="Sandy" src="https://raw.githubusercontent.com/nesyeklaf/sandy/main/assets/sandy-logo.svg" width="128">
 </p>
 
-# sandy
-
-[![npm version](https://img.shields.io/npm/v/sandy-app.svg)](https://www.npmjs.com/package/sandy-app)
+# Sandy
 
 sandy is an agentic IDE that builds itself. It can control, customize, and automate
 itself, laying the groundwork for your own software factory.
