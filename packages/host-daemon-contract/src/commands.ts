@@ -695,6 +695,7 @@ const discoveredSkillSchema = z.object({
   contentSha256: z.string().regex(/^[a-f0-9]{64}$/u),
   rootKind: skillRootKindSchema,
   linked: z.boolean(),
+  metadata: z.record(z.string(), z.string()),
 });
 export type DiscoveredSkill = z.infer<typeof discoveredSkillSchema>;
 

@@ -1,4 +1,5 @@
 import { firstPerIdentity, skillRegistrationId } from "@sandy/skill-index";
+import { parseSkillMetadata } from "@sandy/skill-index/metadata";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
@@ -117,9 +118,14 @@ interface ProviderSkillDiscovery {
   skills: DiscoveredSkill[];
 }
 
+type SkillSortKey = Pick<
+  SkillRegistration,
+  "scope" | "provider" | "name" | "filePath"
+>;
+
 function compareSkillSummaries(
-  left: SkillRegistration,
-  right: SkillRegistration,
+  left: SkillSortKey,
+  right: SkillSortKey,
 ): number {
   const scopeDelta =
     SKILL_SCOPE_ORDER.indexOf(left.scope) -
@@ -159,6 +165,7 @@ export function assembleSkillList(
             : null,
         filePath: skill.filePath,
         manageable: mapped.manageable && !skill.linked,
+        metadata: skill.metadata,
       });
     }
   }
@@ -167,9 +174,11 @@ export function assembleSkillList(
   );
 }
 
+type ServerSkillRegistration = Omit<SkillRegistration, "metadata">;
+
 async function listServerOwnedSkills(
   deps: AppDeps,
-): Promise<SkillRegistration[]> {
+): Promise<ServerSkillRegistration[]> {
   return (
     await resolveServerOwnedSkillCatalogEntries({
       builtinSkillsRootPath: null,
@@ -178,7 +187,7 @@ async function listServerOwnedSkills(
       skillTreeRegistry: deps.skillTreeRegistry,
     })
   )
-    .map(({ runtimeSource }): SkillRegistration | null => {
+    .map(({ runtimeSource }): ServerSkillRegistration | null => {
       if (runtimeSource.kind !== "tree") return null;
       const rootPath = path.join(
         resolveDataDirSkillsRootPath(deps.config.dataDir),
@@ -196,13 +205,15 @@ async function listServerOwnedSkills(
         manageable: true,
       };
     })
-    .filter((skill): skill is SkillRegistration => skill !== null)
+    .filter((skill): skill is ServerSkillRegistration => skill !== null)
     .sort(compareSkillSummaries);
 }
 
-async function listSandyPluginSkills(deps: AppDeps): Promise<SkillRegistration[]> {
+async function listSandyPluginSkills(
+  deps: AppDeps,
+): Promise<ServerSkillRegistration[]> {
   return (await resolveSkillCatalog(deps))
-    .map(({ provenance, runtimeSource }): SkillRegistration | null => {
+    .map(({ provenance, runtimeSource }): ServerSkillRegistration | null => {
       if (provenance.kind !== "plugin" || runtimeSource.kind !== "tree") {
         return null;
       }
@@ -223,7 +234,7 @@ async function listSandyPluginSkills(deps: AppDeps): Promise<SkillRegistration[]
         manageable: false,
       };
     })
-    .filter((skill): skill is SkillRegistration => skill !== null)
+    .filter((skill): skill is ServerSkillRegistration => skill !== null)
     .sort(compareSkillSummaries);
 }
 
@@ -256,10 +267,11 @@ async function projectSkillIndex(
       cwd: args.workspace.cwd,
     }),
   ]);
-  const serverSkills = [
+  const serverSkillEntries = [
     ...(await listServerOwnedSkills(deps)),
     ...(await listSandyPluginSkills(deps)),
   ];
+  const serverSkills: SkillRegistration[] = [];
   const identities = new Map(sharedSkills.identities);
   for (const { skills } of perProvider) {
     for (const skill of skills)
@@ -268,7 +280,8 @@ async function projectSkillIndex(
         realPath: skill.realPath,
       });
   }
-  for (const skill of serverSkills) {
+  for (const listed of serverSkillEntries) {
+    const skill = { ...listed };
     if (skill.manageable) {
       const directory = path.dirname(skill.filePath);
       const stats = await Promise.all(
@@ -287,6 +300,11 @@ async function projectSkillIndex(
         contentSha256: createHash("sha256").update(bytes).digest("hex"),
         realPath,
       });
+    serverSkills.push({
+      ...skill,
+      metadata:
+        bytes === null ? {} : parseSkillMetadata(bytes.toString("utf8")).metadata,
+    });
   }
   const disabledSources = new Set(getAppSettings(deps.db).disabledSkillSources);
   const registrations = [

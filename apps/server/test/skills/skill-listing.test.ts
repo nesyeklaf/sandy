@@ -111,8 +111,31 @@ describe("assembleSkillList", () => {
       realPath: filePath,
       contentSha256: createHash("sha256").update(filePath).digest("hex"),
       linked: false,
+      metadata: {},
     };
   }
+
+  it("carries each discovered skill's metadata map into its registration", () => {
+    const result = assembleSkillList([
+      {
+        provider: "claude-code",
+        skills: [
+          {
+            ...discovered(
+              "journeys",
+              "provider-user",
+              "/home/.claude/skills/journeys/SKILL.md",
+            ),
+            metadata: { inputs: "Feature: text" },
+          },
+          discovered("plain", "provider-user", "/home/.claude/skills/plain/SKILL.md"),
+        ],
+      },
+    ]);
+    expect(
+      Object.fromEntries(result.map((skill) => [skill.name, skill.metadata])),
+    ).toEqual({ journeys: { inputs: "Feature: text" }, plain: {} });
+  });
 
   it("de-dupes a sandy skill discovered under both providers", () => {
     const sandy = discovered(
@@ -219,6 +242,7 @@ describe("summarizeSkillRegistrations", () => {
       scope: "provider-user",
       pluginId: null,
       manageable: false,
+      metadata: {},
       realPath: overrides.filePath,
       contentSha256: createHash("sha256")
         .update(overrides.filePath)
@@ -343,6 +367,7 @@ describe("summarizeSkillRegistrations", () => {
         pluginId: null,
         filePath: only.filePath,
         manageable: false,
+        metadata: {},
         providers: ["codex"],
         duplicates: [],
       },

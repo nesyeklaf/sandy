@@ -153,6 +153,45 @@ describe("resolveSkillScanRoots + discoverSkills", () => {
     expect(byName(skills, "user-agent")?.filePath).toBe(files["user-agent"]);
   });
 
+  it("reports each skill's frontmatter metadata map, empty when absent", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const withMetadata = path.join(
+      fixture.cwd,
+      ".sandy",
+      "skills",
+      "journeys",
+      "SKILL.md",
+    );
+    await mkdir(path.dirname(withMetadata), { recursive: true });
+    await writeFile(
+      withMetadata,
+      [
+        "---",
+        "name: journeys",
+        "description: Design journeys",
+        "metadata:",
+        '  inputs: "Feature: text; Mode?: choice(new, rework)"',
+        '  outputs: "Journeys: file(journeys.md)"',
+        "  version: 2",
+        "---",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    await writeSkill(
+      path.join(fixture.cwd, ".sandy", "skills", "plain", "SKILL.md"),
+      "plain",
+    );
+
+    const skills = await listSkills(fixture, fixture.cwd, AGENT_SKILL_ROOTS);
+
+    expect(byName(skills, "journeys")?.metadata).toEqual({
+      inputs: "Feature: text; Mode?: choice(new, rework)",
+      outputs: "Journeys: file(journeys.md)",
+    });
+    expect(byName(skills, "plain")?.metadata).toEqual({});
+  });
+
   it("keeps a declared provider skill's ID stable when the workspace root moves", async () => {
     const roots = skillRoots({ project: [declared(".agent/skills")] });
     const ids: string[] = [];

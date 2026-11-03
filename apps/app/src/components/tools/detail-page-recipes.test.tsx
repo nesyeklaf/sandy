@@ -368,6 +368,7 @@ describe("Plugin detail recipe", () => {
             pluginId: "github",
             filePath: "/plugins/github/skills/review/SKILL.md",
             manageable: false,
+            metadata: {},
             providers: [],
             duplicates: [],
           },

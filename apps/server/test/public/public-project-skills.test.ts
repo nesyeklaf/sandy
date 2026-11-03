@@ -167,6 +167,7 @@ function discovered(
     realPath: filePath,
     contentSha256: createHash("sha256").update(filePath).digest("hex"),
     linked: false,
+    metadata: {},
   };
 }
 
@@ -207,6 +208,8 @@ async function writePluginSkillFixture(rootPath: string): Promise<{
       "---",
       "name: plugin-notes",
       "description: Read notes contributed by the fixture plugin.",
+      "metadata:",
+      '  inputs: "Topic: text"',
       "---",
       "",
       "# Plugin notes",
@@ -351,11 +354,14 @@ describe("public project skills route", () => {
           sessionId: session.id,
           skillsByProvider: {
             "sandy-shared": [
-              discovered(
-                "portable-review",
-                "shared-project",
-                "/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md",
-              ),
+              {
+                ...discovered(
+                  "portable-review",
+                  "shared-project",
+                  "/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md",
+                ),
+                metadata: { outputs: "Review: file(review.md)" },
+              },
               discovered(
                 "repo-sandy-skill",
                 "sandy-project",
@@ -384,6 +390,7 @@ describe("public project skills route", () => {
           filePath:
             "/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md",
           manageable: false,
+          metadata: { outputs: "Review: file(review.md)" },
           providers: [],
           duplicates: [],
         });
@@ -451,11 +458,17 @@ describe("public project skills route", () => {
           ],
           codex: [
             sandySkill,
-            discovered(
-              "cx",
-              "provider-user",
-              "/home/.codex/skills/cx/SKILL.md",
-            ),
+            {
+              ...discovered(
+                "cx",
+                "provider-user",
+                "/home/.codex/skills/cx/SKILL.md",
+              ),
+              metadata: {
+                inputs: "Feature: text",
+                outputs: "Plan: file(plan.md)",
+              },
+            },
           ],
           "acp-cursor": [
             {
@@ -486,6 +499,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/data/skills/sandy-helper/SKILL.md",
           manageable: true,
+          metadata: {},
           providers: [],
           duplicates: [],
         },
@@ -498,6 +512,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/cwd/.cursor/skills/impeccable/SKILL.md",
           manageable: false,
+          metadata: {},
           providers: ["acp-cursor"],
           duplicates: [],
         },
@@ -510,6 +525,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/cwd/.claude/skills/cp/SKILL.md",
           manageable: true,
+          metadata: {},
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -522,6 +538,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/home/.claude/skills/cu/SKILL.md",
           manageable: true,
+          metadata: {},
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -534,6 +551,10 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/home/.codex/skills/cx/SKILL.md",
           manageable: true,
+          metadata: {
+            inputs: "Feature: text",
+            outputs: "Plan: file(plan.md)",
+          },
           providers: ["codex"],
           duplicates: [],
         },
@@ -609,6 +630,7 @@ describe("public project skills route", () => {
           pluginId: installed.id,
           filePath: skillFilePath,
           manageable: false,
+          metadata: { inputs: "Topic: text" },
         });
 
         const skill = matches[0];

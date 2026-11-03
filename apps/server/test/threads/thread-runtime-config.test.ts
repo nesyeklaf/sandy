@@ -1440,6 +1440,7 @@ describe("thread runtime config", () => {
               realPath: skillFilePath,
               contentSha256: "a".repeat(64),
               linked: false,
+              metadata: {},
             },
           ],
         });

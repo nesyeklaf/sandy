@@ -344,6 +344,7 @@ export const skillRegistrationSchema = z.object({
   pluginId: z.string().min(1).nullable(),
   filePath: z.string(),
   manageable: z.boolean(),
+  metadata: z.record(z.string(), z.string()),
 });
 export type SkillRegistration = z.infer<typeof skillRegistrationSchema>;
 

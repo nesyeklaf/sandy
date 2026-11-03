@@ -44,6 +44,7 @@ function makeSkill(overrides: Partial<SkillSummary> = {}): SkillSummary {
     pluginId: null,
     filePath: "/home/u/.claude/skills/code-review/SKILL.md",
     manageable: true,
+    metadata: {},
     providers: provider === null ? [] : [provider],
     duplicates: [],
     ...overrides,

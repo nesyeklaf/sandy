@@ -4,11 +4,28 @@ export interface SkillMetadata {
   name: string | null;
   description: string | null;
   argumentHint: string | null;
+  metadata: Record<string, string>;
   error: string | null;
 }
 
+function stringEntries(value: unknown): Record<string, string> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  const entries: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string") entries[key] = entry;
+  }
+  return entries;
+}
+
 export function parseSkillMetadata(content: string): SkillMetadata {
-  const empty = { name: null, description: null, argumentHint: null };
+  const empty = {
+    name: null,
+    description: null,
+    argumentHint: null,
+    metadata: {},
+  };
   if (!/^\s*---\r?\n/u.test(content)) {
     return {
       ...empty,
@@ -25,6 +42,7 @@ export function parseSkillMetadata(content: string): SkillMetadata {
       name: field("name"),
       description: field("description"),
       argumentHint: field("argument-hint"),
+      metadata: stringEntries(data.metadata),
       error: null,
     };
   } catch (error) {

@@ -126,6 +126,7 @@ export async function discoverSkills(args: {
         contentSha256: match.contentSha256,
         rootKind: root.rootKind,
         linked: match.linked,
+        metadata: match.metadata.metadata,
       });
     }
   }

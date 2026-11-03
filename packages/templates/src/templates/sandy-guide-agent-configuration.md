@@ -61,7 +61,8 @@ Skills (.sandy/skills/):
 
   Use `sandy skill list` to inspect installed and discovered skills and copy the
   opaque skill ID. Each entry lists the agents that load it (`providers`) and
-  its `duplicates` (same-file, same-content or same-name); `--duplicates`
+  its `duplicates` (same-file, same-content or same-name); `--json` adds each
+  skill's frontmatter `metadata` map (string values only); `--duplicates`
   keeps only skills found more than once. `sandy skill sources <source> on|off`
   switches the sandy-owned sources sandy-plugins, sandy-user, sandy-project and shared
   (Settings → General → Skill sources); native agent roots stay as they are. `sandy skill show|files <skill-id>` reads that exact skill;

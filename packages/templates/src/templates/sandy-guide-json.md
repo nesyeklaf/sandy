@@ -112,7 +112,7 @@ are Unix epoch milliseconds, numbers, never ISO strings. In jq,
     {plugins: [{id, version, enabled, status, source, rootDir}]}    (wrapped in .plugins)
 
   sandy skill list --json
-    {skills: [{id, name, description, scope, provider, providers, pluginId, filePath, manageable, duplicates: [{id, scope, provider, pluginId, filePath, relation}]}]}    (wrapped in .skills; relation is same-file, same-content or same-name)
+    {skills: [{id, name, description, scope, provider, providers, pluginId, filePath, manageable, metadata, duplicates: [{id, scope, provider, pluginId, filePath, relation}]}]}    (wrapped in .skills; metadata is the SKILL.md frontmatter metadata map with string values only, {} when absent; relation is same-file, same-content or same-name)
 
   sandy marketplace list --json
     bare array
