@@ -43,10 +43,12 @@ export const TRAILING_GLYPH_BOX_CLASS = "flex size-3.5 shrink-0 items-center jus
 export function StatusOrTime({
   thread: listedThread,
   now,
+  showAge = true,
 }: {
   thread: PluginSidebarThread;
   /** Quantized clock, shared by every row in one render. */
   now: number;
+  showAge?: boolean;
 }) {
   const thread = useThreadWithDraft(listedThread);
   const workingSince = useWorkingSinceContext();
@@ -56,7 +58,11 @@ export function StatusOrTime({
     return (
       <span className="flex items-center gap-1">
         <ThreadStatusGlyph indicator="none" rowStatus={rowStatus} size="compact" />
-        <span className="tabular-nums text-2xs text-muted-foreground">{relativeTimeLabel(thread.updatedAt, now)}</span>
+        {showAge ? (
+          <span className="tabular-nums text-2xs text-muted-foreground">
+            {relativeTimeLabel(thread.updatedAt, now)}
+          </span>
+        ) : null}
       </span>
     );
   }
@@ -76,6 +82,7 @@ export function StatusOrTime({
       </span>
     );
   }
+  if (!showAge) return null;
   return (
     <span className="tabular-nums text-2xs text-muted-foreground">{relativeTimeLabel(thread.updatedAt, now)}</span>
   );

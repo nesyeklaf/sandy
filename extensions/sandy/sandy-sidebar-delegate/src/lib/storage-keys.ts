@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   // Active shelf sort mode.
   activeSort: { key: "sandy-sidebar:active-sort:v1", evictionPriority: 70 },
   showArchived: { key: "sandy-sidebar:show-archived:v1", evictionPriority: 72 },
+  rowFields: { key: "sandy-sidebar:row-fields:v1", evictionPriority: 72 },
   // Last RPC sidebar settings.
   settings: { key: "sandy-sidebar:settings-cache:v1", evictionPriority: 80 },
   // Read-only legacy project grouping migration.

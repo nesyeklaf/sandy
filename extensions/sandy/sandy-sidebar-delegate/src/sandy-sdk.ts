@@ -18,6 +18,7 @@ import {
   type EnvironmentPullRequest,
   type EnvironmentPullRequestRow,
 } from "./github-pr-status";
+import { diffStatOf, GIT_PLUGIN_ID, type DiffStat, type GitStatusRow } from "./git-status";
 
 export {
   experimental_useProviders as useProviders,
@@ -83,11 +84,6 @@ const githubPrStatusContract = {
 } satisfies PluginRpcContract;
 
 /**
- * The PR for an environment's checked-out branch, from the bundled GitHub PR
- * Status plugin. A query error, no PR, an unavailable machine, and a disabled
- * plugin all show nothing.
- */
-/**
  * The PRs of many environments in one keyed read, for shelf placement. Rows
  * that are absent or unavailable are left out, like in the single-id hook.
  */
@@ -118,6 +114,28 @@ export function useThreadPullRequestsByEnvironment(threads: readonly Pick<Plugin
   return useEnvironmentPullRequests(environmentIds);
 }
 
+const gitStatusContract = {
+  status: {
+    input: githubPrStatusContract.pullRequests.input,
+    output: schema((value): value is Record<string, GitStatusRow> => typeof value === "object" && value !== null),
+  },
+} satisfies PluginRpcContract;
+
+export function useEnvironmentDiffStat(environmentId: string | null): DiffStat | null {
+  const { data } = experimental_useRpcKeyedQuery({
+    pluginId: GIT_PLUGIN_ID,
+    contract: gitStatusContract,
+    method: "status",
+    keys: environmentId ? [environmentId] : [],
+  });
+  return environmentId ? diffStatOf(data?.[environmentId]) : null;
+}
+
+/**
+ * The PR for an environment's checked-out branch, from the bundled GitHub PR
+ * Status plugin. A query error, no PR, an unavailable machine, and a disabled
+ * plugin all show nothing.
+ */
 export function useEnvironmentPullRequest(environmentId: string | null): EnvironmentPullRequest | null {
   const { data } = experimental_useRpcKeyedQuery({
     pluginId: GITHUB_PR_STATUS_PLUGIN_ID,

@@ -54,3 +54,34 @@ export function ActivityCount({ label, count }: { label: string; count: number }
     </span>
   );
 }
+
+export function SelectCheckbox({
+  label,
+  checked,
+  onToggle,
+}: {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={`Select ${label}`}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle();
+      }}
+      className="absolute inset-0 z-10 flex cursor-pointer items-center rounded-md pl-1 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    >
+      <Icon
+        name={checked ? "CheckSquare" : "Square"}
+        className={cn("size-3.5", checked ? "text-foreground" : "text-muted-foreground")}
+        aria-hidden
+      />
+    </button>
+  );
+}

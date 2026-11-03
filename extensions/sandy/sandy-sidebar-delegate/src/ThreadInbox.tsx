@@ -51,6 +51,7 @@ import {
   childExpansionCodec,
   shelfExpansionCodec,
   showArchivedCodec,
+  rowFieldsCodec,
 } from "./lib/inbox-preference-codecs";
 import type { SlimRowKind } from "./SlimRow";
 const SETTLED_INITIAL_LIMIT = 10;
@@ -67,6 +68,8 @@ const SHELF_NAMES: Record<ReorderShelf, string> = { pinned: "Pinned", needs: "Ne
  */
 export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: PluginThreadListProps) {
   const [showArchived, setShowArchived] = usePersistedPreference(STORAGE_KEYS.showArchived.key, showArchivedCodec);
+  const [rowFields, setRowFields] = usePersistedPreference(STORAGE_KEYS.rowFields.key, rowFieldsCodec);
+  const [activityOpen, setActivityOpen] = useState(false);
   const {
     status,
     threads: allThreads,
@@ -74,7 +77,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     sections,
     delegateChildrenLoaded,
     experimental_archived: archivedPages,
-  } = useSidebarThreads({ archived: showArchived });
+  } = useSidebarThreads({ archived: showArchived || activityOpen });
   const { settings: sidebarSettings, update: updateSidebarSettings } = useSidebarSettingsState();
   const hideFinishedSubagents =
     sidebarSettings?.hideFinishedSubagents ?? DEFAULT_SIDEBAR_SETTINGS.hideFinishedSubagents;
@@ -420,6 +423,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     snoozePresets,
     lifecycle,
     childrenByParentId,
+    rowFields,
     now,
     navigate,
     onNavigate,
@@ -432,6 +436,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     setExpandedShelves,
     setActiveSortMode,
     setSettledLimit,
+    setRowFields,
     toggleProjectCollapse,
     updateSidebarSettings,
   });
@@ -479,6 +484,9 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
         reorderControls={reorderControls}
         showArchived={showArchived}
         onShowArchivedChange={setShowArchived}
+        allThreads={allThreads}
+        activityOpen={activityOpen}
+        onActivityOpenChange={setActivityOpen}
         archivedLimit={settledLimit}
         archivedHasMorePages={archivedPages?.hasNextPage ?? false}
         onLoadMoreArchived={loadMoreArchived}

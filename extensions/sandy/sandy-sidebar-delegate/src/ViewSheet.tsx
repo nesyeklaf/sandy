@@ -4,6 +4,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
 import { cn } from "./lib/utils";
 import { useInboxActions, useInboxEnvironment } from "./InboxContext";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
+import { ROW_FIELDS, ROW_FIELD_LABELS } from "./row-fields";
+import { useSelection } from "./SelectionHost";
 import {
   SHELF_DENSITIES,
   THREAD_DENSITIES,
@@ -87,8 +89,9 @@ export function ViewSheet({
   onShowArchivedChange: (show: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { sidebarSettings } = useInboxEnvironment();
-  const { updateSidebarSettings } = useInboxActions();
+  const { sidebarSettings, rowFields } = useInboxEnvironment();
+  const { updateSidebarSettings, setRowFields } = useInboxActions();
+  const selection = useSelection();
   const density = sidebarSettings?.threadDensity ?? DEFAULT_SIDEBAR_SETTINGS.threadDensity;
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -102,7 +105,7 @@ export function ViewSheet({
           <Icon name="View" className="size-3.5" aria-hidden />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" aria-label="View options" className="min-w-52 p-1">
+      <PopoverContent align="end" aria-label="View options" className="w-72 max-w-[calc(100vw-1rem)] p-1">
         <SheetSection title="Density">
           <RadioOptions
             label="Density"
@@ -128,6 +131,39 @@ export function ViewSheet({
               </span>
             </span>
           </label>
+        </SheetSection>
+        <SheetSection title="Show on rows">
+          <div className="flex flex-wrap gap-1 px-2 pb-1.5 pt-0.5">
+            {ROW_FIELDS.map((field) => (
+              <button
+                key={field}
+                type="button"
+                aria-pressed={rowFields[field]}
+                className={cn(
+                  "rounded-full border px-2 py-0.5 text-2xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                  rowFields[field]
+                    ? "border-transparent bg-sidebar-accent text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setRowFields((current) => ({ ...current, [field]: !current[field] }))}
+              >
+                {ROW_FIELD_LABELS[field]}
+              </button>
+            ))}
+          </div>
+        </SheetSection>
+        <SheetSection title="Select">
+          <button
+            type="button"
+            className={cn(OPTION_ROW, "w-full outline-none focus-visible:bg-state-hover")}
+            onClick={() => {
+              setOpen(false);
+              selection.enter();
+            }}
+          >
+            Select threads
+            <Icon name="CheckSquare" className="size-3.5" aria-hidden />
+          </button>
         </SheetSection>
       </PopoverContent>
     </Popover>

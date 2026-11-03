@@ -23,6 +23,9 @@ import { usePersistedPreference } from "./lib/use-persisted-preference";
 import type { TreeProjectInput, TreeSectionInput } from "./tree-layout";
 import { MergedArchiveAll } from "./MergedArchiveAll";
 import { ViewSheet } from "./ViewSheet";
+import { ActivityBell } from "./ActivityBell";
+import { SelectBar } from "./SelectBar";
+import { useSelection } from "./SelectionHost";
 
 export type ShelfExpansionState = Record<InboxShelfId, boolean>;
 
@@ -73,6 +76,9 @@ interface ThreadInboxViewProps {
   reorderControls: (key: string, shelf: ReorderShelf, title: string) => ThreadReorderControls;
   showArchived: boolean;
   onShowArchivedChange: (show: boolean) => void;
+  allThreads: readonly PluginSidebarThread[];
+  activityOpen: boolean;
+  onActivityOpenChange: (open: boolean) => void;
   archivedLimit: number;
   archivedHasMorePages: boolean;
   onLoadMoreArchived: () => void;
@@ -99,6 +105,9 @@ export function ThreadInboxView({
   reorderControls,
   showArchived,
   onShowArchivedChange,
+  allThreads,
+  activityOpen,
+  onActivityOpenChange,
   archivedLimit,
   archivedHasMorePages,
   onLoadMoreArchived,
@@ -107,6 +116,7 @@ export function ThreadInboxView({
   projects,
 }: ThreadInboxViewProps) {
   const [listView, setListView] = usePersistedPreference(STORAGE_KEYS.listView.key, listViewCodec);
+  const selecting = useSelection().active;
   const { setExpandedShelves, setActiveSortMode } = useInboxActions();
   const toggle = (shelf: InboxShelfId) => () =>
     setExpandedShelves((current) => ({ ...current, [shelf]: !current[shelf] }));
@@ -165,11 +175,19 @@ export function ThreadInboxView({
     <div data-sandy-sidebar-root="" className="flex min-h-0 flex-1 flex-col">
       {/* Project scope is plugin-owned; New thread lives in sandy's chrome. */}
       <ProjectScopeControls scope={scope} status={status} />
-      <TagFilterBar />
+      <div
+        className={cn(
+          "max-sm:order-last max-sm:border-t max-sm:border-border max-sm:pt-1",
+          selecting && "max-sm:hidden",
+        )}
+      >
+        <TagFilterBar />
+      </div>
       <div className="flex items-center gap-1 pr-1.5">
         <div className="min-w-0 flex-1">
           <ListViewSegment view={listView} onChange={setListView} />
         </div>
+        <ActivityBell threads={allThreads} open={activityOpen} onOpenChange={onActivityOpenChange} />
         <ViewSheet showArchived={showArchived} onShowArchivedChange={onShowArchivedChange} />
       </div>
 
@@ -256,6 +274,7 @@ export function ThreadInboxView({
           />
         )}
       </div>
+      <SelectBar threads={allThreads} />
     </div>
   );
 }

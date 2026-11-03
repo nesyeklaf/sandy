@@ -19,6 +19,8 @@ import { ProjectColorsProvider } from "./ProjectColors";
 import { WorkingSinceContext } from "./useWorkingSince";
 import { CleanSettledHost } from "./CleanSettledHost";
 import { AnswerHoldHost } from "./AnswerHoldHost";
+import { SelectionHost } from "./SelectionHost";
+import type { RowFields } from "./row-fields";
 import type { WorkingSince } from "./working-since";
 import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThreadDisplay";
 import { OpenPortsProvider } from "./OpenPorts";
@@ -36,6 +38,7 @@ interface InboxContextInputs {
   snoozePresets: readonly ConfiguredSnoozePreset[];
   lifecycle: LifecycleApi;
   childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>;
+  rowFields: RowFields;
   now: number;
   navigate: ReturnType<typeof useSandyNavigate>;
   onNavigate: () => void;
@@ -48,6 +51,7 @@ interface InboxContextInputs {
   setExpandedShelves: Dispatch<SetStateAction<ShelfExpansionState>>;
   setActiveSortMode: Dispatch<SetStateAction<ActiveSortMode>>;
   setSettledLimit: Dispatch<SetStateAction<number>>;
+  setRowFields: Dispatch<SetStateAction<RowFields>>;
   toggleProjectCollapse: (projectId: string) => void;
   updateSidebarSettings: UpdateSidebarSettings;
 }
@@ -62,6 +66,7 @@ export function useInboxContextValues({
   snoozePresets,
   lifecycle,
   childrenByParentId,
+  rowFields,
   now,
   navigate,
   onNavigate,
@@ -74,6 +79,7 @@ export function useInboxContextValues({
   setExpandedShelves,
   setActiveSortMode,
   setSettledLimit,
+  setRowFields,
   toggleProjectCollapse,
   updateSidebarSettings,
 }: InboxContextInputs) {
@@ -87,6 +93,7 @@ export function useInboxContextValues({
       snoozePresets,
       lifecycle,
       childrenByParentId,
+      rowFields,
     }),
     [
       providerById,
@@ -97,6 +104,7 @@ export function useInboxContextValues({
       snoozePresets,
       lifecycle,
       childrenByParentId,
+      rowFields,
     ],
   );
   const actions = useMemo(
@@ -112,6 +120,7 @@ export function useInboxContextValues({
       setExpandedShelves,
       setActiveSortMode,
       setSettledLimit,
+      setRowFields,
       toggleProjectCollapse,
       updateSidebarSettings,
       acknowledgeWake: (threadId: string) => void lifecycle.acknowledgeWake(threadId),
@@ -132,6 +141,7 @@ export function useInboxContextValues({
       setExpandedShelves,
       setActiveSortMode,
       setSettledLimit,
+      setRowFields,
       toggleProjectCollapse,
       updateSidebarSettings,
       lifecycle,
@@ -178,7 +188,9 @@ export function InboxProvider({
                   <InboxActivityContext.Provider value={value.activity}>
                     <ActiveThreadContext.Provider value={activeThread}>
                       <CleanSettledHost onNavigate={value.actions.onNavigate}>
-                        <AnswerHoldHost>{children}</AnswerHoldHost>
+                        <AnswerHoldHost>
+                          <SelectionHost>{children}</SelectionHost>
+                        </AnswerHoldHost>
                       </CleanSettledHost>
                     </ActiveThreadContext.Provider>
                   </InboxActivityContext.Provider>

@@ -1,4 +1,3 @@
-import { ThreadLocation, ThreadPullRequest } from "./ThreadMetadata";
 import { CompactRow } from "./CompactRow";
 import { WokeMarker } from "./WokeMarker";
 import { ShortcutHint, useSidebarThreadSplit, useThreadActions } from "./sandy-sdk";
@@ -27,7 +26,9 @@ import { OpenPortsIndicator } from "./OpenPorts";
 import { useInboxEnvironment, useInboxActions, useInboxActivity } from "./InboxContext";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { projectIconUrl as iconUrl } from "./project-icons";
-import { ActivityCount, ParkButton } from "./ThreadCardParts";
+import { ParkButton, SelectCheckbox } from "./ThreadCardParts";
+import { useSelection } from "./SelectionHost";
+import { RowMetaLine } from "./RowMetaLine";
 import { RowQuestion } from "./RowQuestion";
 import { askingThreadOf } from "./row-question";
 import { useRowFocusHandoff } from "./useRowFocusHandoff";
@@ -98,7 +99,10 @@ export function ThreadCard({
     snoozePresets,
     childrenByParentId: childrenByParent,
     sidebarSettings,
+    rowFields,
   } = useInboxEnvironment();
+  const selection = useSelection();
+  const selecting = selection.active && thread.parentThreadId == null;
   const { navigate, onNavigate, parkThread, settleThread, snoozeThread, acknowledgeWake, toggleChildExpansion } =
     useInboxActions();
   const { now } = useInboxActivity();
@@ -243,7 +247,14 @@ export function ThreadCard({
           reorder?.isDragging && "relative z-20",
         )}
       >
-        <div data-drag-visual="">
+        <div data-drag-visual="" className={cn(selecting && "relative pl-5")}>
+          {selecting ? (
+            <SelectCheckbox
+              label={threadDisplayTitle(thread)}
+              checked={selection.selectedIds.has(thread.id)}
+              onToggle={() => selection.toggle(thread.id)}
+            />
+          ) : null}
           {compact ? (
             <CompactRow
               thread={thread}
@@ -288,7 +299,7 @@ export function ThreadCard({
               trailing={
                 <span className="pointer-events-none relative flex shrink-0 items-center gap-1.5">
                   <OpenPortsIndicator thread={thread} />
-                  {childThreads.length > 0 ? (
+                  {rowFields.subagents && childThreads.length > 0 ? (
                     <ChildThreadBadge
                       threads={childThreads}
                       childrenByParent={childrenByParent}
@@ -303,10 +314,10 @@ export function ThreadCard({
                     <>
                       {unpinButton}
                       {isWoke ? <WokeMarker onDismiss={onAcknowledgeWake} /> : null}
-                      <CompactStatusOrTime thread={thread} now={now} />
+                      <CompactStatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                     </>
                   )}
-                  <ProviderGlyph providerId={thread.providerId} provider={provider} />
+                  {rowFields.provider ? <ProviderGlyph providerId={thread.providerId} provider={provider} /> : null}
                 </span>
               }
             />
@@ -411,7 +422,7 @@ export function ThreadCard({
                   <span className={cn(STATUS_SLOT_CLASS, "w-auto gap-1.5")}>
                     {unpinButton}
                     <WokeMarker onDismiss={onAcknowledgeWake} />
-                    <StatusOrTime thread={thread} now={now} />
+                    <StatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                   </span>
                 ) : (
                   <span
@@ -439,7 +450,7 @@ export function ThreadCard({
                       )}
                     >
                       {!showParkActions ? unpinButton : null}
-                      <StatusOrTime thread={thread} now={now} />
+                      <StatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                     </span>
                     {showParkActions ? (
                       <span
@@ -464,62 +475,18 @@ export function ThreadCard({
                 )}
               </div>
               {titleInline ? null : titleLine}
-              <div
-                data-settle-fade=""
-                className={cn(
-                  "pointer-events-none relative flex items-center gap-1.5 text-2xs text-muted-foreground",
-                  showEnvironment ? "mt-0.5 h-4" : "h-5",
-                )}
-              >
-                {twoLine && showProject && projectName ? (
-                  <>
-                    <span
-                      style={projectColor}
-                      className={cn(
-                        "min-w-0 max-w-[40%] shrink truncate font-medium",
-                        projectIconOnly && "sr-only",
-                        projectColor && "sandy-sidebar-project-name",
-                      )}
-                    >
-                      {projectName}
-                    </span>
-                    {!projectIconOnly && showEnvironment ? (
-                      <span aria-hidden="true" className="shrink-0 text-muted-foreground/60">
-                        ·
-                      </span>
-                    ) : null}
-                  </>
-                ) : null}
-                {/* A thread without a worktree still runs somewhere, so the
-                  machine takes the branch's place rather than leaving the line
-                  blank. */}
-                {showEnvironment ? <ThreadLocation thread={thread} /> : null}
-                <OpenPortsIndicator thread={thread} />
-                {childThreads.length > 0 ? (
-                  <ChildThreadBadge
-                    threads={childThreads}
-                    childrenByParent={childrenByParent}
-                    expanded={childrenExpanded}
-                    controls={childListId}
-                    onToggle={onToggleChildren}
-                  />
-                ) : null}
-                {thread.environment?.branchName && thread.host ? (
-                  <Icon
-                    name="Computer"
-                    aria-label={`Machine: ${thread.host.name}`}
-                    className="size-3 shrink-0 text-muted-foreground/60"
-                  />
-                ) : null}
-                {thread.activity.workflows > 0 ? (
-                  <ActivityCount label="workflows" count={thread.activity.workflows} />
-                ) : null}
-                {thread.activity.backgroundAgents > 0 ? (
-                  <ActivityCount label="background agents" count={thread.activity.backgroundAgents} />
-                ) : null}
-                {isVisible ? <ThreadPullRequest environmentId={thread.environment?.id ?? null} /> : null}
-                <ProviderGlyph providerId={thread.providerId} provider={provider} />
-              </div>
+              <RowMetaLine
+                thread={thread}
+                twoLine={twoLine}
+                showProject={showProject}
+                projectIconOnly={projectIconOnly}
+                showEnvironment={showEnvironment}
+                childThreads={childThreads}
+                childrenExpanded={childrenExpanded}
+                childListId={childListId}
+                onToggleChildren={onToggleChildren}
+                isVisible={isVisible}
+              />
               {asker && isVisible ? (
                 <RowQuestion
                   thread={thread}
