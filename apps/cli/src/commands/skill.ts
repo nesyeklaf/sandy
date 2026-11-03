@@ -132,7 +132,7 @@ export function registerSkillCommands(
               entry.scope,
               entry.providers.length > 0 ? entry.providers.join(", ") : "all",
               String(entry.duplicates.length),
-              entry.manageable ? "yes" : "no",
+              entry.writable ? "yes" : "no",
               entry.filePath,
             ]),
           ),
@@ -165,7 +165,9 @@ export function registerSkillCommands(
             path: options.path,
           });
           if (outputJson(options, result)) return;
+          console.error(`Path: ${result.filePath}`);
           console.error(`Revision: ${result.revision}`);
+          if (!result.writable) console.error("Read-only");
           process.stdout.write(result.content);
         },
       ),
@@ -187,7 +189,9 @@ export function registerSkillCommands(
     );
 
   addWorkspaceOptions(skill.command("update <skill-id>"))
-    .description("Replace an editable skill's SKILL.md from a local file")
+    .description(
+      "Replace a writable skill's SKILL.md from a local file; symlinked skills are written at their real path",
+    )
     .requiredOption("--file <path>", "Local SKILL.md to upload")
     .requiredOption(
       "--revision <sha256>",
@@ -195,13 +199,21 @@ export function registerSkillCommands(
     )
     .action(
       action(async (skillId: string, options: SkillUpdateOptions) => {
-        const result = await createCliSandySdk(getUrl()).skills.update({
+        const written = await createCliSandySdk(
+          getUrl(),
+        ).skills.experimental_write({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
           content: await readFile(options.file, "utf8"),
           revision: options.revision,
         });
+        if (written.outcome === "conflict") {
+          throw new Error(
+            `Skill changed since revision ${options.revision}${written.currentRevision === null ? "" : ` (now ${written.currentRevision})`}. Run sandy skill show ${skillId} --json, merge, and retry.`,
+          );
+        }
+        const result = { filePath: written.filePath, revision: written.revision };
         if (outputJson(options, result)) return;
         console.log(`Updated ${result.filePath}`);
       }),

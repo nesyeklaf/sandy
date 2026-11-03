@@ -1063,6 +1063,39 @@ on `sidebarMultiSelect`.
 2. **Plugin-owned experiments.** Decide whether plugins should declare their
    own experiments in Settings → Experiments rather than only read sandy's.
 
+## `sandy.sdk.skills.experimental_read` and `experimental_write`
+
+`experimental_read({ projectId, environmentId, skillId })` reads a skill's
+SKILL.md through `GET /projects/:id/skills/content` and returns
+`{ content, revision, filePath, writable }`; `filePath` is the real path
+behind a symlinked skill directory and `revision` its SHA-256.
+`experimental_write({ projectId, environmentId, skillId, content, revision })`
+sends `PATCH /projects/:id/skills/content` and returns
+`{ outcome: "written", filePath, revision }` or, when the file changed since
+`revision`, `{ outcome: "conflict", currentRevision }` instead of throwing.
+Other failures throw `SandyHttpError` (403 for built-in sandy skills and plugin
+skills, which are never writable). Sandy skills keep their confined
+`host.write_skill` roots; agent and shared skills go through
+`host.write_skill` with the skill's root, and the daemon writes the resolved
+real path of SKILL.md, refusing targets outside that root's real directory and
+inside sandy's data dir. Skill listings carry `writable` next to
+`manageable`: symlinked shared and agent skills are writable but not
+manageable (not deletable).
+
+Callers: the CLI's `sandy skill update` (conflict message with the current
+revision) and the Skill use cases plugin's Skills editor. `skills.update`
+shares the same request and keeps throwing on 409.
+
+**Audit before stabilizing.**
+
+1. **Supporting files.** Only SKILL.md is writable; decide whether editors need
+   to write bundled reference files through the same path.
+2. **Conflict shape.** `currentRevision` is null when the daemon cannot read
+   the current file; decide whether callers also need the current content to
+   merge without a second read.
+3. **Ownership.** Writable is derived from root kind, not file permissions;
+   decide whether to probe write access so read-only checkouts show as read-only.
+
 ## `sandy.sdk.threads.experimental_listAncestors`
 
 `POST /threads/ancestors` with `{ threadIds }` (1–200 ids) returns

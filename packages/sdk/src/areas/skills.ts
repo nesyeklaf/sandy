@@ -1,9 +1,12 @@
 import {
+  skillWriteConflictDetailsSchema,
   type DeleteSkillRequest,
   type SkillContentResponse,
   type SkillFilesResponse,
   type SkillListResponse,
 } from "@sandy/server-contract";
+import { z } from "zod";
+import { SandyHttpError } from "../response.js";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
 
 export interface SkillWorkspaceArgs {
@@ -33,7 +36,30 @@ export interface SkillDeleteArgs extends SkillWorkspaceArgs {
   skillId: string;
 }
 
+export type ExperimentalSkillWriteResult =
+  | { outcome: "written"; filePath: string; revision: string }
+  | { outcome: "conflict"; currentRevision: string | null };
+
+const skillWriteConflictBodySchema = z.object({
+  code: z.literal("conflict"),
+  details: skillWriteConflictDetailsSchema,
+});
+
+function readSkillWriteConflict(
+  error: unknown,
+): { currentRevision: string | null } | null {
+  if (!(error instanceof SandyHttpError) || error.status !== 409) {
+    return null;
+  }
+  const parsed = skillWriteConflictBodySchema.safeParse(error.body);
+  return parsed.success ? parsed.data.details : null;
+}
+
 export interface SkillsArea {
+  experimental_read(args: SkillIdentityArgs): Promise<SkillContentResponse>;
+  experimental_write(
+    args: SkillUpdateArgs,
+  ): Promise<ExperimentalSkillWriteResult>;
   getContent(args: SkillContentArgs): Promise<SkillContentResponse>;
   list(args: SkillListArgs): Promise<SkillListResponse>;
   listFiles(args: SkillIdentityArgs): Promise<SkillFilesResponse>;
@@ -46,21 +72,58 @@ export interface SkillsArea {
 export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
   const { transport } = args;
 
-  return {
-    async getContent(input) {
-      return transport.readJson(
-        transport.api.v1.projects[":id"].skills.content.$get(
-          {
-            param: { id: input.projectId },
-            query: {
-              skillId: input.skillId,
-              path: input.path,
-              environmentId: input.environmentId ?? "",
-            },
+  const getContent = (
+    input: SkillContentArgs,
+  ): Promise<SkillContentResponse> =>
+    transport.readJson(
+      transport.api.v1.projects[":id"].skills.content.$get(
+        {
+          param: { id: input.projectId },
+          query: {
+            skillId: input.skillId,
+            path: input.path,
+            environmentId: input.environmentId ?? "",
           },
-          ...signalRequestArgs(input.signal),
-        ),
-      );
+        },
+        ...signalRequestArgs(input.signal),
+      ),
+    );
+
+  const patchContent = (
+    input: SkillUpdateArgs,
+  ): Promise<{ filePath: string; revision: string }> =>
+    transport.readJson(
+      transport.api.v1.projects[":id"].skills.content.$patch({
+        param: { id: input.projectId },
+        json: {
+          skillId: input.skillId,
+          environmentId: input.environmentId,
+          content: input.content,
+          revision: input.revision,
+        },
+      }),
+    );
+
+  const write = async (
+    input: SkillUpdateArgs,
+  ): Promise<ExperimentalSkillWriteResult> => {
+    try {
+      const written = await patchContent(input);
+      return { outcome: "written", ...written };
+    } catch (error) {
+      const conflict = readSkillWriteConflict(error);
+      if (conflict === null) throw error;
+      return { outcome: "conflict", ...conflict };
+    }
+  };
+
+  return {
+    async experimental_read(input) {
+      return getContent({ ...input, path: "SKILL.md" });
+    },
+    experimental_write: write,
+    async getContent(input) {
+      return getContent(input);
     },
     async list(input) {
       return transport.readJson(
@@ -100,17 +163,7 @@ export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
       );
     },
     async update(input) {
-      return transport.readJson(
-        transport.api.v1.projects[":id"].skills.content.$patch({
-          param: { id: input.projectId },
-          json: {
-            skillId: input.skillId,
-            environmentId: input.environmentId,
-            content: input.content,
-            revision: input.revision,
-          },
-        }),
-      );
+      return patchContent(input);
     },
   };
 }

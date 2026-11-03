@@ -2214,4 +2214,69 @@ describe("@sandy/sdk", () => {
       },
     ]);
   });
+
+  it("reads SKILL.md and returns a typed conflict when the revision is stale", async () => {
+    const skillId = `skill_${"a".repeat(64)}`;
+    const revision = "b".repeat(64);
+    const currentRevision = "d".repeat(64);
+    const queue = createFetchQueue([
+      {
+        body: {
+          content: "# Review",
+          revision,
+          filePath: "/forge/skills/review/SKILL.md",
+          writable: true,
+        },
+      },
+      {
+        body: {
+          filePath: "/forge/skills/review/SKILL.md",
+          revision: "c".repeat(64),
+        },
+      },
+      {
+        status: 409,
+        body: {
+          code: "conflict",
+          message: "Skill changed before it was saved",
+          details: { currentRevision },
+        },
+      },
+      {
+        status: 403,
+        body: { code: "forbidden", message: "read-only" },
+      },
+    ]);
+    const sdk = createSandySdk({
+      transport: createHttpTransport({
+        baseUrl: "http://sandy.test",
+        fetch: queue.fetch,
+        runtime: "node",
+      }),
+    });
+    const target = { projectId: "proj_123", environmentId: null, skillId };
+
+    await expect(sdk.skills.experimental_read(target)).resolves.toEqual({
+      content: "# Review",
+      revision,
+      filePath: "/forge/skills/review/SKILL.md",
+      writable: true,
+    });
+    await expect(
+      sdk.skills.experimental_write({ ...target, content: "# A", revision }),
+    ).resolves.toEqual({
+      outcome: "written",
+      filePath: "/forge/skills/review/SKILL.md",
+      revision: "c".repeat(64),
+    });
+    await expect(
+      sdk.skills.experimental_write({ ...target, content: "# B", revision }),
+    ).resolves.toEqual({ outcome: "conflict", currentRevision });
+    await expect(
+      sdk.skills.experimental_write({ ...target, content: "# C", revision }),
+    ).rejects.toMatchObject({ status: 403, code: "forbidden" });
+    expect(queue.requests[0]?.url).toBe(
+      `http://sandy.test/api/v1/projects/proj_123/skills/content?skillId=${skillId}&path=SKILL.md&environmentId=`,
+    );
+  });
 });

@@ -56,7 +56,8 @@ Skills (.sandy/skills/):
   Supporting files inside injected skill trees must be ordinary files/directories.
   Listings collapse skills that share a name and identical SKILL.md content
   across roots; different content or a different name stays distinct. Existing IDs still address the original
-  registration. Linked registrations are read-only. Codex receives a selected
+  registration. Linked sandy skills are read-only; linked agent and shared skills
+  can be updated but not deleted. Codex receives a selected
   skill as a structured name/path input, including when steering an active turn.
 
   Use `sandy skill list` to inspect installed and discovered skills and copy the
@@ -67,8 +68,12 @@ Skills (.sandy/skills/):
   switches the sandy-owned sources sandy-plugins, sandy-user, sandy-project and shared
   (Settings → General → Skill sources); native agent roots stay as they are. `sandy skill show|files <skill-id>` reads that exact skill;
   `sandy skill show <skill-id> --json` returns the revision required by `sandy skill
-  update <skill-id> --revision <sha256>`. `sandy skill delete <skill-id>` and
-  update are restricted to editable, user-owned skills. These workspace-scoped
+  update <skill-id> --revision <sha256>`, along with the real `filePath` and
+  whether the skill is `writable`. Update saves sandy, agent and shared skills
+  you own, writing the file a symlinked skill resolves to; built-in sandy skills
+  and plugin skills are read-only. A stale revision fails with the current
+  revision instead of overwriting. `sandy skill delete <skill-id>` is
+  restricted to editable, user-owned skills that are not symlinks. These workspace-scoped
   commands default to `SANDY_PROJECT_ID`, then the personal project; pass
   `--project` or `--environment` when a different workspace is required.
 

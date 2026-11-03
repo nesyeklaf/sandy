@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
   collectLogLines,
@@ -30,6 +33,7 @@ describe("sandy skill commands", () => {
           scope: "codex-user",
           filePath: "/home/user/.agents/skills/review/SKILL.md",
           manageable: true,
+          writable: true,
           providers: ["codex"],
           duplicates: [],
         },
@@ -46,6 +50,56 @@ describe("sandy skill commands", () => {
     expect(collectLogLines(vi.mocked(console.log)).join("\n")).toContain(
       "review",
     );
+  });
+
+  it("reports a stale skill revision instead of overwriting the file", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "sandy-cli-skill-"));
+    try {
+      const file = join(dir, "SKILL.md");
+      await writeFile(file, "---\nname: review\n---\nEdited\n");
+      const patch = vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              code: "conflict",
+              message: "Skill changed before it was saved",
+              details: { currentRevision: "d".repeat(64) },
+            }),
+            { status: 409, headers: { "content-type": "application/json" } },
+          ),
+      );
+      stubServerApi({ "v1.projects.:id.skills.content.$patch": patch });
+
+      await expect(
+        runCommand(
+          [
+            "skill",
+            "update",
+            `skill_${"a".repeat(64)}`,
+            "--file",
+            file,
+            "--revision",
+            "b".repeat(64),
+          ],
+          register,
+        ),
+      ).rejects.toThrow("process.exit:1");
+
+      expect(patch).toHaveBeenCalledWith({
+        param: { id: "project-context" },
+        json: {
+          skillId: `skill_${"a".repeat(64)}`,
+          environmentId: null,
+          content: "---\nname: review\n---\nEdited\n",
+          revision: "b".repeat(64),
+        },
+      });
+      expect(
+        collectLogLines(vi.mocked(console.error)).join("\n"),
+      ).toContain(`now ${"d".repeat(64)}`);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it("turns one sandy skill source off and keeps the other settings", async () => {

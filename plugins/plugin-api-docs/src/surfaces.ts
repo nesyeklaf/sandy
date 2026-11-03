@@ -1505,7 +1505,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
         summary:
           "Use sandy's own API from plugin server code. With this, a plugin can:",
         bullets: [
-          "Create threads attributed to the plugin, send messages, and manage projects and machines",
+          "Create threads attributed to the plugin, send messages, manage projects, machines and skills",
           "Start plugin updates in the background and follow their progress or rollback",
           "Read Viewed state for up to 500 file paths; mark and clear return acknowledgements",
           "Retry failed environment cleanup with recover: true after inspecting processes using the workspace",
@@ -1531,6 +1531,8 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "PluginSandySdk.threads.experimental_listCascade",
           "PluginSandySdk.threads.experimental_regenerateTitle",
           "PluginSandySdk.threads.experimental_updateEnvironmentDirectory",
+          "PluginSandySdk.skills.experimental_read",
+          "PluginSandySdk.skills.experimental_write",
         ],
         firstParty: [
           "Account Pooler [Experimental]",
