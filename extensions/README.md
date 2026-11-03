@@ -9,6 +9,7 @@ sandy/genui           inline ```ui and ```app blocks in chat (fork of ComicBit/b
 sandy/bookmarks, compact-composer, files-editor, receipts, thread-namer, value   plugins forked from the BB ecosystem (see each UPSTREAM.md)
 sandy/permissions     permission modes and command blocklist (pairs with pi/permissions)
 sandy/personas        persona and skill picker in the composer
+sandy/skill-usecases  menu that groups skills by use case (keyword rules plus manual moves)
 sandy/pi-lifecycle    pi process state per session; pi-extension.ts is the pi side of it
 sandy/work           one SANDY plugin for work, pairs with pi/work: delegate/ (subagents as hidden child threads with enforced
                    tool allowlists), track/ (stages, gates, branches), workflows/ (workflows with reusable worker sessions,

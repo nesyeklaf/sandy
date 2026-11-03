@@ -1,0 +1,34 @@
+{
+  "name": "sandy-plugin-skill-usecases",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "sandy": ">=0.46",
+    "sandyPluginSdk": ">=0.6.49"
+  },
+  "sandy": {
+    "name": "Skill use cases [Experimental]",
+    "description": "A Skills by use case menu: sort skills into use cases, by keyword rules or by hand.",
+    "branding": {
+      "icon": "LayoutGrid"
+    },
+    "server": "./server.ts",
+    "app": "./app.tsx"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sandy-sdk/plugin-sdk": "file:../../../packages/plugin-sdk",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "hono": "^4.11.9",
+    "typescript": "^5.7.0"
+  },
+  "scripts": {
+    "build": "sandy plugin build",
+    "test": "node --test --experimental-strip-types *.test.ts",
+    "typecheck": "tsc -p ."
+  }
+}
