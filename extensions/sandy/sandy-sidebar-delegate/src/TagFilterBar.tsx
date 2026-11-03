@@ -1,15 +1,15 @@
 import { useMemo } from "react";
 import { PickerPopover } from "./PickerPopover";
 import { SearchScopePicker } from "./SearchScopePicker";
-import { tagItems, topicItems, withPicked } from "./tag-filter";
+import { selectedValues, tagItems, topicItems, withPicked } from "./tag-filter";
 import { setTagFilter, useTagFilter } from "./useTagFilter";
 import { useTagIndex } from "./useTagIndex";
 
 export function TagFilterBar() {
   const filter = useTagFilter();
   const index = useTagIndex();
-  const tags = useMemo(() => withPicked(tagItems(index), filter.tags), [index, filter.tags]);
-  const topics = useMemo(() => withPicked(topicItems(index), filter.topics), [index, filter.topics]);
+  const tags = useMemo(() => withPicked(tagItems(index), selectedValues(filter.tags)), [index, filter.tags]);
+  const topics = useMemo(() => withPicked(topicItems(index), selectedValues(filter.topics)), [index, filter.topics]);
   return (
     <div role="group" aria-label="Session filter" className="flex shrink-0 items-center gap-1 px-2 pb-1">
       <input
@@ -25,8 +25,8 @@ export function TagFilterBar() {
           icon="Bookmark"
           noun="topics"
           items={topics}
-          picked={filter.topics}
-          onChange={(next) => setTagFilter({ topics: next })}
+          selection={filter.topics}
+          onChange={(topics) => setTagFilter({ topics })}
         />
       )}
       {tags.length > 0 && (
@@ -34,8 +34,8 @@ export function TagFilterBar() {
           icon="Tag"
           noun="tags"
           items={tags}
-          picked={filter.tags}
-          onChange={(next) => setTagFilter({ tags: next })}
+          selection={filter.tags}
+          onChange={(tags) => setTagFilter({ tags })}
         />
       )}
     </div>

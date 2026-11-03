@@ -1,27 +1,55 @@
 import { useState } from "react";
 import { Icon, type IconName } from "./components/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
-import { matchesNeedle, type PickerItem } from "./tag-filter";
+import {
+  cycleItem,
+  type ItemState,
+  isSelecting,
+  itemState,
+  matchesNeedle,
+  NO_SELECTION,
+  type MatchMode,
+  type PickerItem,
+  type Selection,
+} from "./tag-filter";
 import { cn } from "./lib/utils";
 
 const TRIGGER =
   "flex h-6 shrink-0 items-center gap-1 rounded border border-border px-1.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
+const STATE_TEXT: Record<ItemState, string> = {
+  neutral: "not selected",
+  include: "included",
+  exclude: "excluded",
+};
+
+const MATCH_MODES: ReadonlyArray<{ mode: MatchMode; text: string; hint: string }> = [
+  { mode: "any", text: "Any", hint: "A session needs at least one included item" },
+  { mode: "all", text: "All", hint: "A session needs every included item" },
+];
+
 export function PickerPopover({
   icon,
   noun,
   items,
-  picked,
+  selection,
   onChange,
 }: {
   icon: IconName;
   noun: string;
   items: readonly PickerItem[];
-  picked: readonly string[];
-  onChange: (next: string[]) => void;
+  selection: Selection;
+  onChange: (next: Selection) => void;
 }) {
   const [needle, setNeedle] = useState("");
-  const label = picked.length === 0 ? `Filter by ${noun}` : `Filter by ${noun}: ${picked.join(", ")}`;
+  const { include, exclude } = selection;
+  const summary = [
+    include.length > 0 ? `${include.length} included` : "",
+    exclude.length > 0 ? `${exclude.length} excluded` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const label = summary === "" ? `Filter by ${noun}` : `Filter by ${noun}: ${summary}`;
   const shown = matchesNeedle(items, needle);
   return (
     <Popover>
@@ -32,13 +60,14 @@ export function PickerPopover({
           title={label}
           className={cn(
             TRIGGER,
-            picked.length > 0
+            isSelecting(selection)
               ? "bg-primary text-primary-foreground"
               : "bg-transparent text-muted-foreground hover:text-foreground",
           )}
         >
           <Icon name={icon} className="size-3.5" aria-hidden />
-          {picked.length > 0 && <span>{picked.length}</span>}
+          {include.length > 0 && <span>{include.length} ✓</span>}
+          {exclude.length > 0 && <span>{exclude.length} ✕</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -54,34 +83,53 @@ export function PickerPopover({
           className="mb-1 h-6 w-full rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
           onChange={(event) => setNeedle(event.target.value)}
         />
+        <div role="radiogroup" aria-label={`Match ${noun}`} className="mb-1 flex gap-1">
+          {MATCH_MODES.map(({ mode, text, hint }) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={selection.match === mode}
+              title={hint}
+              className={cn(
+                "flex-1 rounded border border-border px-1.5 py-0.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                selection.match === mode
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => onChange({ ...selection, match: mode })}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
         <div role="group" aria-label={noun} className="max-h-64 overflow-y-auto overscroll-contain">
           {shown.map(({ value, count }) => {
-            const selected = picked.includes(value);
+            const state = itemState(selection, value);
             return (
-              <label key={value} className="block cursor-default">
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  className="peer sr-only"
-                  onChange={() => onChange(selected ? picked.filter((entry) => entry !== value) : [...picked, value])}
-                />
-                <span className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-state-hover peer-focus-visible:bg-state-hover">
-                  <span className="flex size-3.5 shrink-0 items-center justify-center">
-                    {selected && <Icon name="Check" className="size-3.5" aria-hidden />}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{value}</span>
-                  <span className="text-muted-foreground">{count}</span>
+              <button
+                key={value}
+                type="button"
+                aria-label={`${value}, ${STATE_TEXT[state]}`}
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs outline-none hover:bg-state-hover focus-visible:bg-state-hover"
+                onClick={() => onChange(cycleItem(selection, value))}
+              >
+                <span className="flex size-3.5 shrink-0 items-center justify-center" aria-hidden>
+                  {state === "include" && <Icon name="Check" className="size-3.5" />}
+                  {state === "exclude" && <span className="text-destructive">✕</span>}
                 </span>
-              </label>
+                <span className={cn("min-w-0 flex-1 truncate", state === "exclude" && "line-through")}>{value}</span>
+                <span className="text-muted-foreground">{count}</span>
+              </button>
             );
           })}
           {shown.length === 0 && <p className="px-2 py-1.5 text-xs text-muted-foreground">Nothing found</p>}
         </div>
-        {picked.length > 0 && (
+        {isSelecting(selection) && (
           <button
             type="button"
             className="mt-1 w-full rounded-sm border-t border-border px-2 py-1.5 text-left text-xs text-muted-foreground outline-none hover:bg-state-hover hover:text-foreground focus-visible:bg-state-hover"
-            onClick={() => onChange([])}
+            onClick={() => onChange({ ...NO_SELECTION, match: selection.match })}
           >
             Clear {noun}
           </button>

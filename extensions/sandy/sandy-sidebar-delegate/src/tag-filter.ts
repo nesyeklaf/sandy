@@ -6,14 +6,52 @@ export interface TagIndex {
   segments: TopicSegment[];
 }
 
+export type MatchMode = "any" | "all";
+
+export interface Selection {
+  include: readonly string[];
+  exclude: readonly string[];
+  match: MatchMode;
+}
+
+export const NO_SELECTION: Selection = { include: [], exclude: [], match: "any" };
+
 interface TagFilter {
-  tags: readonly string[];
-  topics: readonly string[];
+  tags: Selection;
+  topics: Selection;
   query: string;
   scope: SearchScope;
 }
 
-export const NO_FILTER: TagFilter = { tags: [], topics: [], query: "", scope: "both" };
+export const NO_FILTER: TagFilter = { tags: NO_SELECTION, topics: NO_SELECTION, query: "", scope: "both" };
+
+export type ItemState = "neutral" | "include" | "exclude";
+
+export function itemState(selection: Selection, value: string): ItemState {
+  if (selection.include.includes(value)) return "include";
+  return selection.exclude.includes(value) ? "exclude" : "neutral";
+}
+
+/** Neutral becomes included, included becomes excluded, excluded becomes neutral. */
+export function cycleItem(selection: Selection, value: string): Selection {
+  const without = (list: readonly string[]) => list.filter((entry) => entry !== value);
+  switch (itemState(selection, value)) {
+    case "neutral":
+      return { ...selection, include: [...selection.include, value] };
+    case "include":
+      return { ...selection, include: without(selection.include), exclude: [...selection.exclude, value] };
+    case "exclude":
+      return { ...selection, exclude: without(selection.exclude) };
+  }
+}
+
+export function isSelecting(selection: Selection): boolean {
+  return selection.include.length > 0 || selection.exclude.length > 0;
+}
+
+export function selectedValues(selection: Selection): string[] {
+  return [...selection.include, ...selection.exclude];
+}
 
 export interface PickerItem {
   value: string;
@@ -21,7 +59,7 @@ export interface PickerItem {
 }
 
 export function isFiltering(filter: TagFilter): boolean {
-  return filter.tags.length > 0 || filter.topics.length > 0 || filter.query.trim() !== "";
+  return isSelecting(filter.tags) || isSelecting(filter.topics) || filter.query.trim() !== "";
 }
 
 /** Tags with the number of sessions that carry them, directly or through a topic. */
@@ -65,18 +103,24 @@ export function matchesNeedle(items: readonly PickerItem[], needle: string): Pic
   return text === "" ? [...items] : items.filter((item) => item.value.toLowerCase().includes(text));
 }
 
-/** Thread ids that carry at least one picked tag and have at least one picked topic, where picked. */
-function labelledThreadIds(index: TagIndex, filter: TagFilter): Set<string> {
-  const ids = new Set<string>();
-  const candidates = new Set<string>([...Object.keys(index.threadTags), ...index.segments.map((s) => s.threadId)]);
-  for (const threadId of candidates) {
-    const segments = index.segments.filter((segment) => segment.threadId === threadId);
-    const tags = [...(index.threadTags[threadId] ?? []), ...segments.flatMap((segment) => segment.tags)];
-    if (filter.tags.length > 0 && !filter.tags.some((tag) => tags.includes(tag))) continue;
-    if (filter.topics.length > 0 && !segments.some((segment) => filter.topics.includes(segment.title))) continue;
-    ids.add(threadId);
-  }
-  return ids;
+function passes(selection: Selection, have: readonly string[]): boolean {
+  if (selection.exclude.some((value) => have.includes(value))) return false;
+  if (selection.include.length === 0) return true;
+  return selection.match === "all"
+    ? selection.include.every((value) => have.includes(value))
+    : selection.include.some((value) => have.includes(value));
+}
+
+function matchesLabels(index: TagIndex, filter: TagFilter, threadId: string): boolean {
+  const segments = index.segments.filter((segment) => segment.threadId === threadId);
+  const tags = [...(index.threadTags[threadId] ?? []), ...segments.flatMap((segment) => segment.tags)];
+  return (
+    passes(filter.tags, tags) &&
+    passes(
+      filter.topics,
+      segments.map((segment) => segment.title),
+    )
+  );
 }
 
 /** `found` holds the sessions the text search matched, or null when there is no text. */
@@ -87,8 +131,8 @@ export function filterThreads<T extends { id: string }>(
   found: ReadonlySet<string> | null,
 ): T[] {
   if (!isFiltering(filter)) return threads as T[];
-  const labelled = filter.tags.length > 0 || filter.topics.length > 0 ? labelledThreadIds(index, filter) : null;
+  const labelled = isSelecting(filter.tags) || isSelecting(filter.topics);
   return threads.filter(
-    (thread) => (labelled === null || labelled.has(thread.id)) && (found === null || found.has(thread.id)),
+    (thread) => (!labelled || matchesLabels(index, filter, thread.id)) && (found === null || found.has(thread.id)),
   );
 }

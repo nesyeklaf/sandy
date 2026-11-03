@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRealtime, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { sandySidebarRpcContract } from "./contract";
 import { TOPICS_CHANNEL } from "./realtime-channels";
-import { filterThreads, type TagIndex } from "./tag-filter";
+import { filterThreads, isSelecting, type TagIndex } from "./tag-filter";
 import { useSessionSearch } from "./useSessionSearch";
 import { useTagFilter } from "./useTagFilter";
 
@@ -33,7 +33,7 @@ export function useTagIndex(enabled = true): TagIndex {
 /** The sidebar's threads, narrowed to the tags, topics and search text the filter bar holds. */
 export function useTagFilteredThreads<T extends { id: string }>(threads: readonly T[]): readonly T[] {
   const filter = useTagFilter();
-  const index = useTagIndex(filter.tags.length > 0 || filter.topics.length > 0);
+  const index = useTagIndex(isSelecting(filter.tags) || isSelecting(filter.topics));
   const found = useSessionSearch(filter.query, filter.scope);
   return useMemo(() => filterThreads(threads, index, filter, found), [threads, index, filter, found]);
 }
