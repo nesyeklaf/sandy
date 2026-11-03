@@ -50,7 +50,6 @@ describe("row statuses from other plugins", () => {
       await screen.findByRole("link", { name: /Unread work/ });
       await waitFor(() => expect(glyph("Unread work")).not.toBeNull());
       expect(glyph("Unread work")!.getAttribute("data-row-status-tone")).toBe("error");
-      // The status replaces "Unread"; the age stays beside it.
       expect(within(row("Unread work")).queryByText("Unread")).toBeNull();
       expect(glyph("Plain work")).toBeNull();
 
@@ -91,18 +90,32 @@ describe("row statuses from other plugins", () => {
 });
 
 describe("unread dot", () => {
-  it.each(["comfortable", "compact", "dense"] as const)("marks only unread rows in %s density", async (threadDensity) => {
-    render(
-      [
-        thread({ id: "fresh", title: "Fresh result", isUnread: true }),
-        thread({ id: "seen", title: "Seen result" }),
-      ],
-      undefined,
-      { getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity }) },
-    );
-    const fresh = (await screen.findByRole("link", { name: "Fresh result" })).closest("[data-parent-card], li")!;
-    await waitFor(() => expect(fresh.querySelector("[data-unread-dot]")).not.toBeNull());
-    const seen = screen.getByRole("link", { name: "Seen result" }).closest("[data-parent-card], li")!;
-    expect(seen.querySelector("[data-unread-dot]")).toBeNull();
+  it.each(["comfortable", "compact", "dense"] as const)(
+    "marks only unread rows in %s density",
+    async (threadDensity) => {
+      render(
+        [thread({ id: "fresh", title: "Fresh result", isUnread: true }), thread({ id: "seen", title: "Seen result" })],
+        undefined,
+        { getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity }) },
+      );
+      const fresh = (await screen.findByRole("link", { name: "Fresh result" })).closest("[data-parent-card], li")!;
+      await waitFor(() => expect(fresh.querySelector("[data-unread-dot]")).not.toBeNull());
+      const seen = screen.getByRole("link", { name: "Seen result" }).closest("[data-parent-card], li")!;
+      expect(seen.querySelector("[data-unread-dot]")).toBeNull();
+    },
+  );
+
+  it("colors an unread failed row's dot as a failure, not a success", async () => {
+    render([
+      thread({ id: "broken", title: "Broken run", isUnread: true, status: "error" }),
+      thread({ id: "done", title: "Done run", isUnread: true }),
+    ]);
+    const dotOf = async (name: string) => {
+      const row = (await screen.findByRole("link", { name })).closest("[data-parent-card], li")!;
+      await waitFor(() => expect(row.querySelector("[data-unread-dot]")).not.toBeNull());
+      return row.querySelector("[data-unread-dot]")!.className;
+    };
+    expect(await dotOf("Broken run")).toContain("--sandy-sidebar-tone-error");
+    expect(await dotOf("Done run")).toContain("--sandy-sidebar-tone-success");
   });
 });
