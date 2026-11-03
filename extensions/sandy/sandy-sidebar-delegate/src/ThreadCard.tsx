@@ -260,7 +260,7 @@ export function ThreadCard({
               thread={thread}
               tone="normal"
               showProject={showProject}
-              projectIconOnly={projectIconOnly}
+              projectIconOnly
               projectName={projectName}
               projectIconUrl={projectIconUrl}
               projectColor={projectColor}

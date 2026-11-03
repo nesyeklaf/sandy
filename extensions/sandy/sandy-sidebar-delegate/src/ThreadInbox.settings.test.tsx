@@ -134,9 +134,9 @@ describe("sidebar settings", () => {
     });
     const group = await screen.findByRole("region", { name: "group project" });
     await screen.findByText("Settled row");
-    const assertColor = (element: Element, showStripe: boolean) => {
+    const assertColor = (element: Element, showStripe: boolean, named = true) => {
       expect(element.querySelectorAll("[data-project-stripe]")).toHaveLength(showStripe ? 1 : 0);
-      expect(element.querySelector(".sandy-sidebar-project-name")).not.toBeNull();
+      if (named) expect(element.querySelector(".sandy-sidebar-project-name")).not.toBeNull();
       expect(element.querySelector(".sandy-sidebar-project-monogram")).not.toBeNull();
     };
     const row = (title: string) => screen.getByText(title).closest("li")!;
@@ -147,7 +147,7 @@ describe("sidebar settings", () => {
       await waitFor(() => {
         assertColor(group, true);
         assertColor(row("Full card"), display !== "grouped");
-        assertColor(row("Compact card"), display === "all");
+        assertColor(row("Compact card"), display === "all", false);
         assertColor(row("Settled row"), display === "all");
       });
       expect(within(group).getByRole("list").querySelector("[data-project-stripe]")).toBeNull();
@@ -159,9 +159,8 @@ describe("sidebar settings", () => {
     fireEvent.click(await screen.findByRole("radio", { name: "Manual order" }), { detail: 1 });
     await waitFor(() => expect(screen.queryByRole("region", { name: "group project" })).toBeNull());
     expect(document.querySelector("[data-project-stripe]")).toBeNull();
-    for (const title of ["First grouped", "Second grouped", "Full card", "Compact card", "Settled row"]) {
-      assertColor(row(title), false);
-    }
+    for (const title of ["Full card", "Settled row"]) assertColor(row(title), false);
+    for (const title of ["First grouped", "Second grouped", "Compact card"]) assertColor(row(title), false, false);
     settings = { ...settings, projectColorsEnabled: false };
     await rendered.emitRealtime("sidebar-settings", {});
     await waitFor(() => expect(document.querySelector(".sandy-sidebar-project-name")).toBeNull());

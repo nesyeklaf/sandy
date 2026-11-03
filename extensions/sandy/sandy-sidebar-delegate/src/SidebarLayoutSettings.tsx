@@ -52,7 +52,7 @@ export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSe
       </SettingRow>
       <SettingRow
         title="Hide repo names in compact cards"
-        description="Keep the repo icon and hide its name on Compact and Dense rows in Active, Pinned, and Working. Hover to see the repo name."
+        description="Keep the repo icon and hide its name on Compact rows in Waiting, Pinned, and Working. Dense rows always show only the icon. Hover to see the repo name."
         control={
           <Switch
             label="Hide repo names in compact cards"

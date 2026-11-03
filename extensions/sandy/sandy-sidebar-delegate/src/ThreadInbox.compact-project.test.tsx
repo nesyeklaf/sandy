@@ -48,7 +48,8 @@ describe("Compact project display", () => {
         await waitFor(() => {
           for (const title of ["Working thread", "Full pinned thread", "Parked thread"]) {
             const card = row(title);
-            const iconOnly = compactProjectIconOnly && title === "Working thread" && display !== "comfortable";
+            const iconOnly =
+              title === "Working thread" && (display === "dense" || (compactProjectIconOnly && display === "compact"));
             expect(within(card).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);
             expect(card.querySelector("[data-letter]")).not.toBeNull();
             if (iconOnly) expect(within(card).queryByText("·")).toBeNull();
@@ -58,6 +59,32 @@ describe("Compact project display", () => {
       }
     },
   );
+
+  it("shows only the project icon in dense rows and gives the title the width", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        projects: [{ id: "proj_1", name: "Sidebar project", isPersonal: false, href: "", settingsHref: "" }],
+        threads: [
+          thread({ id: "waiting", title: "Birch implementation" }),
+          thread({ id: "pinned", title: "Atlas planning", isPinned: true }),
+        ],
+      },
+      rpc: {
+        getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity: "dense", compactProjectIconOnly: false }),
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    await waitFor(() => {
+      for (const title of ["Birch implementation", "Atlas planning"]) {
+        const row = screen.getByText(title).closest("li")!;
+        expect(row.querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe("dense");
+        expect(row.querySelector("[data-letter]")).not.toBeNull();
+        expect(within(row).getByText("Sidebar project").classList.contains("sr-only")).toBe(true);
+        expect(within(row).queryByText("·")).toBeNull();
+      }
+    });
+  });
 
   it("limits icon-only projects to Waiting, Pinned, and Working when all cards are compact", async () => {
     const now = Date.now();
