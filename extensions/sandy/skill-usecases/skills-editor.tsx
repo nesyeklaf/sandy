@@ -1,20 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Markdown, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import type { SkillFile, SkillRow } from "./contract";
+import type { SkillRow } from "./contract";
 import {
   DESCRIPTION_MAX,
   IO_KINDS,
   applyDraft,
   emptyIoRow,
   ioRowProblems,
-  isDraftChanged,
-  parseSkillFile,
   type IoKey,
   type IoKind,
   type IoRow,
   type MetadataEntry,
   type SkillDraft,
 } from "./skill-file";
+import {
+  canSave,
+  editedDraft,
+  isDirty,
+  readDone,
+  readFailed,
+  readStarted,
+  reverted,
+  saveDone,
+  saveFailed,
+  saveStarted,
+  startEditor,
+  type EditorState,
+} from "./skill-editor-state";
 import { confirmLeaveSkill, setUnsavedSkill, skillSubPath } from "./skill-route";
 import { GHOST, INPUT, PANEL_PATH, PRIMARY, ProjectSelect, SECONDARY, errorText, useSkillUseCases, type SkillUseCasesApi } from "./shared";
 
@@ -22,8 +34,6 @@ const FIELD = INPUT + " w-full";
 const AREA = "w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm";
 const LABEL = "block text-xs text-muted-foreground";
 
-type Loaded = { file: SkillFile; draft: SkillDraft; warnings: string[] } | { file: SkillFile; error: string };
-type Conflict = { currentRevision: string | null };
 
 function useSkillNavigation() {
   const navigate = useSandyNavigate();
@@ -109,42 +119,28 @@ function MetadataRows({ entries, kept, disabled, onChange }: { entries: Metadata
   );
 }
 
-export function draftProblems(draft: SkillDraft): string[] {
-  const problems: string[] = [];
-  if (draft.description.trim() === "") problems.push("The description is empty.");
-  for (const key of ["inputs", "outputs"] as const) {
-    for (const problem of ioRowProblems(draft[key])) problems.push(key + ": " + problem);
-  }
-  return problems;
-}
-
 function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow }) {
   const projectId = api.state?.projectId ?? null;
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [conflict, setConflict] = useState<Conflict | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [state, setState] = useState<EditorState>(startEditor);
+  const current = useRef(state);
+  current.current = state;
   const [preview, setPreview] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    const read = readStarted(current.current, projectId === null ? null : { projectId, skillId: skill.id });
+    current.current = read.state;
+    setState(read.state);
     if (projectId === null) return;
-    setLoadError(null);
     api.rpc.call("readSkill", { projectId, skillId: skill.id }).then(
-      (file) => {
-        const parsed = parseSkillFile(file.content);
-        setLoaded(parsed.ok ? { file, draft: parsed.draft, warnings: parsed.warnings } : { file, error: parsed.error });
-        setConflict(null);
-        setSaveError(null);
-      },
-      (cause: unknown) => setLoadError(errorText(cause)),
+      (file) => setState((latest) => readDone(latest, read.ticket, file)),
+      (cause: unknown) => setState((latest) => readFailed(latest, read.ticket, errorText(cause))),
     );
   }, [api.rpc, projectId, skill.id]);
   useEffect(load, [load]);
 
+  const { loaded, loadError, saveError, conflict, saving, notice } = state;
   const draft = loaded !== null && "draft" in loaded ? loaded.draft : null;
-  const dirty = useMemo(() => (loaded !== null && draft !== null ? isDraftChanged(loaded.file.content, draft) : false), [loaded, draft]);
+  const dirty = useMemo(() => isDirty(state), [state]);
   useEffect(() => {
     setUnsavedSkill(dirty ? skill.name : null);
   }, [dirty, skill.name]);
@@ -167,38 +163,21 @@ function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow })
     );
 
   const writable = loaded.file.writable;
-  const problems = draftProblems(draft);
-  const edit = (patch: Partial<SkillDraft>) => {
-    setNotice(null);
-    setLoaded({ ...loaded, draft: { ...draft, ...patch } });
-  };
+  const metadataLock = loaded.metadataLock;
+  const applied = applyDraft(loaded.file.content, draft);
+  const edit = (patch: Partial<SkillDraft>) => setState((latest) => editedDraft(latest, patch));
   const save = (revision: string) => {
-    const content = applyDraft(loaded.file.content, draft);
-    setSaving(true);
-    setSaveError(null);
-    api.rpc.call("writeSkill", { projectId, skillId: skill.id, content, revision }).then(
-      (result) => {
-        setSaving(false);
-        if (result.outcome === "conflict") {
-          setConflict({ currentRevision: result.currentRevision });
-          return;
-        }
-        const parsed = parseSkillFile(content);
-        const file = { ...loaded.file, content, revision: result.revision, filePath: result.filePath };
-        setLoaded(parsed.ok ? { file, draft: parsed.draft, warnings: parsed.warnings } : { file, error: parsed.error });
-        setConflict(null);
-        setNotice("Saved to " + result.filePath);
-      },
-      (cause: unknown) => {
-        setSaving(false);
-        setSaveError(errorText(cause));
-      },
+    const step = saveStarted(current.current, revision);
+    current.current = step.state;
+    setState(step.state);
+    const { send, ticket } = step;
+    if (send === null || ticket === null) return;
+    api.rpc.call("writeSkill", send).then(
+      (result) => setState((latest) => saveDone(latest, ticket, result)),
+      (cause: unknown) => setState((latest) => saveFailed(latest, ticket, errorText(cause))),
     );
   };
-  const revert = () => {
-    const parsed = parseSkillFile(loaded.file.content);
-    if (parsed.ok) setLoaded({ file: loaded.file, draft: parsed.draft, warnings: parsed.warnings });
-  };
+  const revert = () => setState((latest) => reverted(latest));
   const length = draft.description.length;
 
   return (
@@ -214,7 +193,7 @@ function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow })
         <button type="button" className={SECONDARY} disabled={!dirty || saving} onClick={revert}>
           Revert
         </button>
-        <button type="button" className={PRIMARY} disabled={!writable || !dirty || saving || problems.length > 0} onClick={() => save(loaded.file.revision)}>
+        <button type="button" className={PRIMARY} disabled={!canSave(state)} onClick={() => save(loaded.file.revision)}>
           {saving ? "Saving…" : "Save"}
         </button>
       </div>
@@ -235,6 +214,7 @@ function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow })
             </div>
           </div>
         )}
+        {applied.ok ? null : <p role="alert" className="text-sm text-destructive">{applied.error}</p>}
         {saveError === null ? null : <p role="alert" className="text-sm text-destructive">{saveError}</p>}
         {notice === null ? null : <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
         {loaded.warnings.length === 0 ? null : (
@@ -251,10 +231,15 @@ function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow })
             {length} / {DESCRIPTION_MAX}
           </span>
         </label>
+        {metadataLock === null ? null : (
+          <p role="note" className="text-sm text-muted-foreground">
+            {metadataLock}
+          </p>
+        )}
         {(["inputs", "outputs"] as const).map((key: IoKey) => (
-          <IoRows key={key} title={key === "inputs" ? "Inputs" : "Outputs"} rows={draft[key]} disabled={!writable} onChange={(rows) => edit({ [key]: rows })} />
+          <IoRows key={key} title={key === "inputs" ? "Inputs" : "Outputs"} rows={draft[key]} disabled={!writable || metadataLock !== null} onChange={(rows) => edit({ [key]: rows })} />
         ))}
-        <MetadataRows entries={draft.metadata} kept={draft.keptMetadataKeys} disabled={!writable} onChange={(metadata) => edit({ metadata })} />
+        <MetadataRows entries={draft.metadata} kept={draft.keptMetadataKeys} disabled={!writable || metadataLock !== null} onChange={(metadata) => edit({ metadata })} />
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="flex-1 text-sm font-medium">Body</span>
@@ -323,7 +308,7 @@ export function SkillsPage({ skillName }: { skillName: string | null }) {
         {selected === undefined ? (
           <p className="p-4 text-sm text-muted-foreground">{skillName === null ? "Pick a skill to edit its description, inputs, outputs and body." : "No skill named " + skillName + " in this project."}</p>
         ) : (
-          <SkillEditor key={selected.id} api={api} skill={selected} />
+          <SkillEditor key={(state.projectId ?? "") + "\0" + selected.id} api={api} skill={selected} />
         )}
       </section>
     </div>

@@ -29,12 +29,18 @@ function draftOf(content: string): SkillDraft {
   return parsed.draft;
 }
 
+function written(base: string, draft: SkillDraft): string {
+  const applied = applyDraft(base, draft);
+  if (!applied.ok) throw new Error(applied.error);
+  return applied.content;
+}
+
 test("an untouched draft writes the file back byte for byte", () => {
   const draft = draftOf(SKILL);
-  assert.equal(applyDraft(SKILL, draft), SKILL);
+  assert.equal(written(SKILL, draft), SKILL);
   assert.equal(isDraftChanged(SKILL, draft), false);
   const crlf = SKILL.replaceAll("\n", "\r\n");
-  assert.equal(applyDraft(crlf, draftOf(crlf)), crlf);
+  assert.equal(written(crlf, draftOf(crlf)), crlf);
 });
 
 test("parsing reads description, IO rows, string metadata and keeps the rest aside", () => {
@@ -60,7 +66,7 @@ test("IO rows format back to the metadata string they came from", () => {
 });
 
 test("editing the description changes only its line and keeps order, comments and unknown keys", () => {
-  const next = applyDraft(SKILL, { ...draftOf(SKILL), description: "Ship it: with a colon # and a hash" });
+  const next = written(SKILL, { ...draftOf(SKILL), description: "Ship it: with a colon # and a hash" });
   const before = SKILL.split("\n");
   const after = next.split("\n");
   assert.equal(after.length, before.length);
@@ -73,7 +79,7 @@ test("editing the description changes only its line and keeps order, comments an
 
 test("new outputs and metadata keys are written as quoted strings under metadata", () => {
   const draft = draftOf(SKILL);
-  const next = applyDraft(SKILL, {
+  const next = written(SKILL, {
     ...draft,
     outputs: [{ name: "Report", optional: false, kind: "file", path: "report.md", values: "" }],
     metadata: [{ key: "author", value: "owner" }, { key: "version", value: "2" }],
@@ -91,13 +97,13 @@ test("new outputs and metadata keys are written as quoted strings under metadata
 
 test("removing every metadata entry drops the empty metadata block", () => {
   const plain = "---\nname: tiny\ndescription: Small\nmetadata:\n  inputs: \"Goal: text\"\n---\nBody\n";
-  const next = applyDraft(plain, { ...draftOf(plain), inputs: [] });
+  const next = written(plain, { ...draftOf(plain), inputs: [] });
   assert.equal(next, "---\nname: tiny\ndescription: Small\n---\nBody\n");
 });
 
 test("adding inputs to a skill without metadata creates the block", () => {
   const plain = "---\nname: tiny\ndescription: Small\n---\nBody\n";
-  const next = applyDraft(plain, { ...draftOf(plain), inputs: [{ name: "Goal", optional: true, kind: "text", path: "", values: "" }] });
+  const next = written(plain, { ...draftOf(plain), inputs: [{ name: "Goal", optional: true, kind: "text", path: "", values: "" }] });
   assert.equal(next, '---\nname: tiny\ndescription: Small\nmetadata:\n  inputs: "Goal?: text"\n---\nBody\n');
 });
 
@@ -106,7 +112,7 @@ test("unreadable IO entries stay as written until their rows are edited", () => 
   const parsed = parseSkillFile(broken);
   assert.ok(parsed.ok);
   assert.equal(parsed.warnings.length, 1);
-  assert.equal(applyDraft(broken, { ...parsed.draft, body: "new\n" }), broken + "new\n");
+  assert.equal(written(broken, { ...parsed.draft, body: "new\n" }), broken + "new\n");
 });
 
 test("IO row problems come from parseIo plus the PascalCase rule", () => {
@@ -120,4 +126,34 @@ test("a file without frontmatter or with broken YAML is reported, not guessed", 
   assert.deepEqual(parseSkillFile("# Just a body\n"), { ok: false, error: "The file has no frontmatter block between --- lines." });
   const broken = parseSkillFile("---\nname: [unclosed\n---\n");
   assert.equal(broken.ok, false);
+});
+
+test("metadata that is not a key: value map locks structured editing and is never replaced", () => {
+  const listed = "---\nname: x\ndescription: d\nmetadata: [one, two]\n---\nBody\n";
+  const parsed = parseSkillFile(listed);
+  assert.ok(parsed.ok);
+  assert.match(parsed.metadataLock ?? "", /metadata is not a key: value map/u);
+  const draft = parsed.draft;
+  const goal = { name: "Goal", optional: false, kind: "text", path: "", values: "" } as const;
+  assert.deepEqual(applyDraft(listed, { ...draft, inputs: [goal] }), { ok: false, error: parsed.metadataLock });
+  assert.deepEqual(applyDraft(listed, { ...draft, metadata: [{ key: "author", value: "me" }] }), { ok: false, error: parsed.metadataLock });
+  assert.equal(isDraftChanged(listed, { ...draft, inputs: [goal] }), true);
+  const described = written(listed, { ...draft, description: "new" });
+  assert.match(described, /\nmetadata: \[ one, two \]\n|\nmetadata: \[one, two\]\n/u);
+  assert.equal(draftOf(described).description, "new");
+});
+
+test("removing an anchored metadata value another key refers to is refused, not thrown", () => {
+  const anchored = "---\nname: x\ndescription: d\nmetadata:\n  author: &author forge\n  preserved: *author\n---\n";
+  const parsed = parseSkillFile(anchored);
+  assert.ok(parsed.ok);
+  assert.deepEqual(parsed.draft.metadata, [{ key: "author", value: "forge" }]);
+  assert.deepEqual(parsed.draft.keptMetadataKeys, ["preserved"]);
+  const removed = { ...parsed.draft, metadata: [] };
+  const applied = applyDraft(anchored, removed);
+  assert.equal(applied.ok, false);
+  assert.match(applied.ok ? "" : applied.error, /metadata\.author.*&author/u);
+  assert.equal(isDraftChanged(anchored, removed), true);
+  const unreferenced = "---\nname: x\ndescription: d\nmetadata:\n  author: &author forge\n---\n";
+  assert.equal(written(unreferenced, { ...draftOf(unreferenced), metadata: [] }), "---\nname: x\ndescription: d\n---\n");
 });

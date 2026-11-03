@@ -1,4 +1,4 @@
-import { type Document, isMap, isScalar, parseDocument, Scalar, YAMLMap } from "yaml";
+import { type Document, isCollection, isMap, isScalar, parseDocument, Scalar, visit, YAMLMap } from "yaml";
 import { parseIo, type IoField } from "./io.ts";
 
 export const DESCRIPTION_MAX = 200;
@@ -31,8 +31,12 @@ export interface SkillDraft {
 }
 
 export type SkillFileParse =
-  | { ok: true; draft: SkillDraft; warnings: string[] }
+  | { ok: true; draft: SkillDraft; warnings: string[]; metadataLock: string | null }
   | { ok: false; error: string };
+
+export type DraftApplication = { ok: true; content: string } | { ok: false; error: string };
+
+const METADATA_LOCK = "metadata is not a key: value map, so inputs, outputs and other metadata can only be edited in the file itself.";
 
 const FRONTMATTER = /^---\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/u;
 const IO_NAME = /^[A-Z][A-Za-z0-9]*$/u;
@@ -112,7 +116,7 @@ export function parseSkillFile(content: string): SkillFileParse {
   const metadata: MetadataEntry[] = [];
   const keptMetadataKeys: string[] = [];
   const map = readMetadata(file.doc);
-  if (file.doc.has("metadata") && map === null) warnings.push("metadata is not a key: value map and is kept as it is.");
+  const metadataLock = file.doc.has("metadata") && map === null ? METADATA_LOCK : null;
   for (const pair of map?.items ?? []) {
     const key = isScalar(pair.key) ? scalarText(pair.key.value) : null;
     if (key === null) continue;
@@ -131,6 +135,7 @@ export function parseSkillFile(content: string): SkillFileParse {
     ok: true,
     draft: { name, description, inputs: rows.inputs, outputs: rows.outputs, metadata, keptMetadataKeys, body: file.body },
     warnings,
+    metadataLock,
   };
 }
 
@@ -158,11 +163,37 @@ function ensureMetadata(doc: Document): YAMLMap {
   return created;
 }
 
-export function applyDraft(base: string, draft: SkillDraft): string {
+function isAliased(doc: Document, anchor: string): boolean {
+  let found = false;
+  visit(doc, {
+    Alias(_, alias) {
+      if (alias.source !== anchor) return undefined;
+      found = true;
+      return visit.BREAK;
+    },
+  });
+  return found;
+}
+
+function removalProblem(doc: Document, path: readonly string[]): string | null {
+  const node = doc.getIn(path, true);
+  const anchor = isScalar(node) || isCollection(node) ? node.anchor : undefined;
+  if (anchor === undefined || !isAliased(doc, anchor)) return null;
+  return path.join(".") + " is the YAML anchor &" + anchor + " that other keys refer to, so it can only be removed in the file itself.";
+}
+
+function metadataEdited(before: SkillDraft, draft: SkillDraft): boolean {
+  const entries = (metadata: readonly MetadataEntry[]) => JSON.stringify(metadata.filter((entry) => entry.key.trim() !== "").map((entry) => [entry.key.trim(), entry.value]));
+  return IO_KEYS.some((key) => !sameRows(draft[key], before[key])) || entries(draft.metadata) !== entries(before.metadata);
+}
+
+export function applyDraft(base: string, draft: SkillDraft): DraftApplication {
   const file = split(base);
+  if (typeof file === "string") return { ok: false, error: file };
   const parsed = parseSkillFile(base);
-  if (typeof file === "string" || !parsed.ok) throw new Error(typeof file === "string" ? file : "The skill file cannot be parsed.");
+  if (!parsed.ok) return { ok: false, error: parsed.error };
   const before = parsed.draft;
+  if (parsed.metadataLock !== null && metadataEdited(before, draft)) return { ok: false, error: parsed.metadataLock };
   const doc = file.doc;
   let touched = false;
   if (draft.description !== before.description) {
@@ -172,8 +203,11 @@ export function applyDraft(base: string, draft: SkillDraft): string {
   for (const key of IO_KEYS) {
     if (sameRows(draft[key], before[key])) continue;
     touched = true;
-    if (draft[key].length === 0) doc.deleteIn(["metadata", key]);
-    else {
+    if (draft[key].length === 0) {
+      const problem = removalProblem(doc, ["metadata", key]);
+      if (problem !== null) return { ok: false, error: problem };
+      doc.deleteIn(["metadata", key]);
+    } else {
       ensureMetadata(doc);
       setString(doc, ["metadata", key], formatIoRows(draft[key]));
     }
@@ -181,6 +215,8 @@ export function applyDraft(base: string, draft: SkillDraft): string {
   const next = new Map(draft.metadata.filter((entry) => entry.key.trim() !== "").map((entry) => [entry.key.trim(), entry.value] as const));
   for (const entry of before.metadata) {
     if (next.has(entry.key)) continue;
+    const problem = removalProblem(doc, ["metadata", entry.key]);
+    if (problem !== null) return { ok: false, error: problem };
     doc.deleteIn(["metadata", entry.key]);
     touched = true;
   }
@@ -192,12 +228,22 @@ export function applyDraft(base: string, draft: SkillDraft): string {
     touched = true;
   }
   const metadata = readMetadata(doc);
-  if (metadata !== null && metadata.items.length === 0 && touched) doc.delete("metadata");
-  if (!touched) return file.header + draft.body;
-  const frontmatter = doc.contents === null || (isMap(doc.contents) && doc.contents.items.length === 0) ? "" : doc.toString(TO_STRING);
-  return "---\n" + frontmatter + "---\n" + draft.body;
+  if (metadata !== null && metadata.items.length === 0 && touched) {
+    const problem = removalProblem(doc, ["metadata"]);
+    if (problem !== null) return { ok: false, error: problem };
+    doc.delete("metadata");
+  }
+  if (!touched) return { ok: true, content: file.header + draft.body };
+  let frontmatter: string;
+  try {
+    frontmatter = doc.contents === null || (isMap(doc.contents) && doc.contents.items.length === 0) ? "" : doc.toString(TO_STRING);
+  } catch (cause) {
+    return { ok: false, error: "The frontmatter cannot be written back: " + (cause instanceof Error ? cause.message : String(cause)) };
+  }
+  return { ok: true, content: "---\n" + frontmatter + "---\n" + draft.body };
 }
 
 export function isDraftChanged(base: string, draft: SkillDraft): boolean {
-  return applyDraft(base, draft) !== base;
+  const applied = applyDraft(base, draft);
+  return !applied.ok || applied.content !== base;
 }
