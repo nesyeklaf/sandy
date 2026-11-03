@@ -29,6 +29,7 @@ export function createServerBulkActions(
     serializeThreads,
     withPinParentChange,
     loadPolicyThreads,
+    settleTree,
     sameLifecycle,
     publishLifecycleChanges,
   } = lifecycle;
@@ -44,8 +45,20 @@ export function createServerBulkActions(
       write({ threadId, parkedAt: null, settledAt: null, settledOverride: "active", snoozedUntil: null, snoozedAt: null });
     });
 
+  const hasOtherPendingQuestion = async (threadId: string, deferredInteractionId: string) => {
+    for (const thread of settleTree(await loadPolicyThreads(true), threadId)) {
+      if (!thread.hasPendingInteraction) continue;
+      const pending = await ctx.sandy.sdk.threads.interactions.list({ threadId: thread.id });
+      if (pending.some((interaction) => interaction.id !== deferredInteractionId)) return true;
+    }
+    return false;
+  };
+
   const commitSnooze = (threadId: string, snoozedUntil: number, deferredInteractionId: string | null) =>
     serializeThreads([threadId], async () => {
+      if (deferredInteractionId !== null && (await hasOtherPendingQuestion(threadId, deferredInteractionId))) {
+        throw new Error("Another question arrived. Answer it or choose Later again.");
+      }
       await ctx.sandy.sdk.threads.unpin({ threadId });
       write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
     });

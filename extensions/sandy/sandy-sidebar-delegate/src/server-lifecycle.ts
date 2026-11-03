@@ -206,14 +206,16 @@ export function createServerLifecycle(ctx: ServerContext) {
         break;
       }
     }
-    const woken = ctx.db.transaction(() =>
-      path.filter((id) => {
-        const row = readOne(id);
-        if (row?.deferredInteractionId == null || row.deferredInteractionId === interactionId) return false;
-        ctx.db.prepare(`DELETE FROM thread_lifecycle WHERE thread_id = ?`).run(id);
-        return true;
-      }),
-    )();
+    const woken = await serializeThreads(path, async () =>
+      ctx.db.transaction(() =>
+        path.filter((id) => {
+          const row = readOne(id);
+          if (row?.deferredInteractionId == null || row.deferredInteractionId === interactionId) return false;
+          ctx.db.prepare(`DELETE FROM thread_lifecycle WHERE thread_id = ?`).run(id);
+          return true;
+        }),
+      )(),
+    );
     publishLifecycleChanges(woken);
   };
 

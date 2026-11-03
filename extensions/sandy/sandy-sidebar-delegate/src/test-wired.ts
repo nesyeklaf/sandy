@@ -69,12 +69,14 @@ export async function createWired(
                 pinnedAt: item.pinnedAt,
                 pinSortKey: item.pinSortKey,
                 updatedAt: item.updatedAt,
+                hasPendingInteraction: (interactions.get(item.id) ?? []).length > 0,
               }),
             ),
           ),
       },
       threads: {
         get: async ({ threadId }) => response(threadId),
+        interactions: { list: async ({ threadId }) => interactions.get(threadId) ?? [] },
         pin: async ({ threadId }) => {
           threads = threads.map((item) =>
             item.id === threadId && item.pinnedAt === null
