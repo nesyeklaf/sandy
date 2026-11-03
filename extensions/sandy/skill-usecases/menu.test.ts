@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { flowMenuItems } from "./flow-menu.ts";
+import { migrateLinear } from "./graph.ts";
 
 const source = {
   useCases: [
@@ -10,8 +11,8 @@ const source = {
   fallbackId: "other",
   fallbackLabel: "Other",
   flows: [
-    { id: "f1", useCaseId: "build", name: "Quick feature", description: "", steps: [{ skill: "quick-plan", note: "" }] },
-    { id: "f2", useCaseId: "gone", name: "Orphan", description: "", steps: [] },
+    migrateLinear({ id: "f1", useCaseId: "build", name: "Quick feature", description: "", steps: [{ skill: "quick-plan", note: "" }] }),
+    migrateLinear({ id: "f2", useCaseId: "gone", name: "Orphan", description: "", steps: [] }),
   ],
 };
 

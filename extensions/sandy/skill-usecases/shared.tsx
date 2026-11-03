@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRealtime, useRpc } from "@sandy-sdk/plugin-sdk/app";
-import type { Flow, SkillUseCaseState, rpcContract } from "./contract";
+import type { SkillUseCaseState, rpcContract } from "./contract";
+import type { Flow } from "./graph";
 
 export const PANEL_PATH = "skills-by-use-case";
 export const INPUT = "h-8 rounded-md border border-border bg-background px-2 text-sm";

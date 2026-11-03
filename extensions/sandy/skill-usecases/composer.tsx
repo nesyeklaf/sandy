@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useComposer, useRpc } from "@sandy-sdk/plugin-sdk/app";
-import { FLOW_PROVIDER_ID, type Flow, type rpcContract } from "./contract";
+import { FLOW_PROVIDER_ID, type rpcContract } from "./contract";
+import { flowSkillNames, type Flow } from "./graph";
 import { INPUT, errorText } from "./shared";
 
 export const FLOW_POPUP_ID = "flows";
@@ -52,7 +53,7 @@ export function FlowsPopup() {
             onClick={() => pick(flow)}
           >
             <span className="text-sm">{flow.name}</span>
-            <span className="text-xs text-muted-foreground">{flow.steps.map((step) => step.skill).join(" > ")}</span>
+            <span className="text-xs text-muted-foreground">{flowSkillNames(flow).join(" > ")}</span>
           </button>
         ))}
       </div>

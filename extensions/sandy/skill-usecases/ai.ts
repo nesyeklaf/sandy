@@ -1,6 +1,7 @@
 import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
-import type { FlowStep, SkillRow } from "./contract.ts";
+import type { SkillRow } from "./contract.ts";
+import type { FlowStep } from "./graph.ts";
 import type { UseCase } from "./usecases.ts";
 
 const WAIT_MS = 240_000;

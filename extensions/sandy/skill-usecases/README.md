@@ -18,9 +18,12 @@ Menu "Skills by use case" in the sidebar. It lists the skills of a project group
 
 ## Flows
 
-The sidebar lists Areas and Flows. A flow belongs to a use case and is an ordered list of skills with a note per step.
+The sidebar lists Areas and Flows. A flow belongs to a use case and is a graph of blocks joined by wires: Input (values the run starts with), Skill (an installed skill or an ad hoc instruction, with a snapshot of its inputs and outputs), Gate (a question with one exit per answer), Fork (picks a path by a choice value of an Input) and Output (the file the flow delivers). A flow saved before graphs existed is read as a chain of skill blocks and stored back as a graph.
 
-- Drag skills from the palette into the steps, drag steps to reorder (or use the arrows).
+- A flow that is still a plain chain shows as a step list: drag skills from the palette into the steps, drag steps to reorder (or use the arrows). A branching flow shows its steps read-only.
+- Check (`check.ts`) reports what would break a run: missing or changed skills, unbound or mistyped inputs, inputs produced on only some paths, gate answers and fork paths that lead nowhere, unreachable blocks, loops without a gate, and two blocks writing the same file in sequence. Each problem carries its fixes.
+- `compile.ts` turns a flow without Check errors into a track machine: one stage per skill, gate and unfolded fork, a fork right after a skill becomes that stage's branches, and an answer that finishes the flow leads to a Done stage when the same stage can also continue.
+- Skill and Input fields use the IO grammar `Name: type; Other?: type` with types `text`, `url`, `file`, `file(path)` and `choice(a, b)` (`io.ts`).
 - **Run flow** opens the composer with the ordered skills as a prompt.
 - **Create with AI**, **Suggest steps** and **Improve with AI** ask a hidden helper thread; the answer is only a proposal until accepted. Unknown skill names are dropped.
 - Deleting an area moves its flows to Other.

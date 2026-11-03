@@ -1,5 +1,6 @@
 import type { ExperimentalComposerMenuItem, PluginComposerApi } from "@sandy-sdk/plugin-sdk/app";
-import { FLOW_PROVIDER_ID, type Flow, type SkillOverview } from "./contract.ts";
+import { FLOW_PROVIDER_ID, type SkillOverview } from "./contract.ts";
+import { flowSkillNames, type Flow } from "./graph.ts";
 
 export function flowMenuItems(source: SkillOverview | null, query: string): ExperimentalComposerMenuItem[] {
   if (source === null) return [];
@@ -7,7 +8,7 @@ export function flowMenuItems(source: SkillOverview | null, query: string): Expe
   const row = (flow: Flow): ExperimentalComposerMenuItem => ({
     id: flow.id,
     label: flow.name,
-    description: flow.steps.map((step) => step.skill).join(" > "),
+    description: flowSkillNames(flow).join(" > "),
     icon: "GitBranch",
     run: ({ composer }: { composer: PluginComposerApi }) => {
       composer.insert({ provider: FLOW_PROVIDER_ID, id: flow.id, label: flow.name });

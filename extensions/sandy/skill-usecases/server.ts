@@ -7,18 +7,8 @@ import {
   flowPrompt,
   flowReplySchema,
 } from "./ai.ts";
-import {
-  CHANGED_EVENT,
-  FLOW_PROVIDER_ID,
-  MAX_USE_CASES,
-  flowSchema,
-  rpcContract,
-  useCaseSchema,
-  flowRunText,
-  type Flow,
-  type FlowStep,
-  type SkillRow,
-} from "./contract.ts";
+import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, useCaseSchema, type SkillRow } from "./contract.ts";
+import { flowRunText, flowSkillNames, flowStepLines, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
 import {
   DEFAULT_USE_CASES,
   FALLBACK_ID,
@@ -36,7 +26,7 @@ const FLOWS_KEY = "flows";
 
 const storedUseCases = z.array(useCaseSchema);
 const storedAssignments = z.record(z.string(), z.string());
-const storedFlows = z.array(flowSchema);
+const storedFlows = z.array(storedFlowSchema);
 const skillAreasInput = z.object({ area: z.string().optional() });
 const skillFlowsInput = z.object({ flow: z.string().optional(), area: z.string().optional() });
 
@@ -60,7 +50,10 @@ export default async function plugin(sandy: SandyPluginApi) {
 
   async function readFlows(): Promise<Flow[]> {
     const parsed = storedFlows.safeParse(await sandy.storage.kv.get(FLOWS_KEY));
-    return parsed.success ? parsed.data : [];
+    if (!parsed.success) return [];
+    const flows = parsed.data.map(upgradeFlow);
+    if (parsed.data.some((stored) => !("version" in stored))) await sandy.storage.kv.set(FLOWS_KEY, flows);
+    return flows;
   }
 
   async function listProjects() {
@@ -327,10 +320,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (flows.length === 0) return "No flows found.";
       return flows
         .map((item) => {
-          const steps = item.steps.map(
-            (step, index) => String(index + 1) + ". " + step.skill + (step.note === "" ? "" : " - " + step.note),
-          );
-          return [item.name + " (" + (labels.get(item.useCaseId) ?? item.useCaseId) + ", id " + item.id + ")", item.description, ...steps]
+          return [item.name + " (" + (labels.get(item.useCaseId) ?? item.useCaseId) + ", id " + item.id + ")", item.description, ...flowStepLines(item, "")]
             .filter((line) => line !== "")
             .join("\n");
         })
@@ -349,7 +339,7 @@ export default async function plugin(sandy: SandyPluginApi) {
         .map((flow) => ({
           id: flow.id,
           title: flow.name,
-          subtitle: flow.steps.map((step) => step.skill).join(" > "),
+          subtitle: flowSkillNames(flow).join(" > "),
           icon: "GitBranch",
         }));
     },
