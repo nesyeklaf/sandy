@@ -31,6 +31,12 @@ export function tagCounts(index: TagIndex): Array<{ tag: string; count: number }
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 }
 
+/** The picked tag first, so it stays visible in a single scrolling row. */
+export function pinActiveTag<T extends { tag: string }>(counts: readonly T[], active: string | null): T[] {
+  if (active === null) return [...counts];
+  return [...counts.filter((entry) => entry.tag === active), ...counts.filter((entry) => entry.tag !== active)];
+}
+
 /** Thread ids that match the tag and the text; the text searches topic titles and tags. */
 function matchingThreadIds(index: TagIndex, filter: TagFilter): Set<string> {
   const needle = filter.query.trim().toLowerCase();

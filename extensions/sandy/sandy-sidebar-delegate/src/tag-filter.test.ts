@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterByTags, isFiltering, NO_FILTER, tagCounts, type TagIndex } from "./tag-filter";
+import { filterByTags, isFiltering, NO_FILTER, pinActiveTag, tagCounts, type TagIndex } from "./tag-filter";
 
 const index: TagIndex = {
   threadTags: { a: ["bug"], b: [] },
@@ -25,6 +25,12 @@ describe("tag filter", () => {
     expect(filterByTags(threads, index, { tag: null, query: "tree" }).map((t) => t.id)).toEqual(["b"]);
     expect(filterByTags(threads, index, { tag: "sidebar", query: "TAGGING" }).map((t) => t.id)).toEqual(["a"]);
     expect(filterByTags(threads, index, { tag: "bug", query: "tree" })).toEqual([]);
+  });
+
+  it("moves the picked tag to the front and keeps the rest in order", () => {
+    const counts = tagCounts(index);
+    expect(pinActiveTag(counts, "tags").map((c) => c.tag)).toEqual(["tags", "sidebar", "bug"]);
+    expect(pinActiveTag(counts, null)).toEqual(counts);
   });
 
   it("counts sessions per tag, most used first", () => {
