@@ -78,6 +78,7 @@ const DEFAULT_SHELF_EXPANSION: ShelfExpansionState = {
 const LEGACY_SHELF_KEYS: Partial<Record<keyof ShelfExpansionState, string>> = {
   needs: "active",
   waiting: "inactive",
+  snoozed: "parked",
 };
 
 export const shelfExpansionCodec: PreferenceCodec<ShelfExpansionState> = {

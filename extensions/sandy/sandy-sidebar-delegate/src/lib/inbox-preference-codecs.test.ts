@@ -59,6 +59,11 @@ it("fills older shelf shapes and drops unknown keys without stricter primitive r
   expect(decodeStoredValue("null", shelfExpansionCodec)).toBeNull();
 });
 
+it("carries an expanded or collapsed Parked shelf over to Snoozed", () => {
+  expect(shelfExpansionCodec.decode('{"parked":true}')?.snoozed).toBe(true);
+  expect(shelfExpansionCodec.decode('{"parked":true,"snoozed":false}')?.snoozed).toBe(false);
+});
+
 it("uses legacy grouping only for missing or invalid sort modes without rewriting it", () => {
   localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "true");
   expect(activeSortCodec.decode(null)).toBe("project");
