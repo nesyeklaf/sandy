@@ -36,9 +36,13 @@ export function createServerBulkActions(
       write({ threadId, parkedAt: null, settledAt: null, settledOverride: "active", snoozedUntil: null, snoozedAt: null });
     });
 
-  const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
+  const commitSnooze = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null) => {
     await ctx.sandy.sdk.threads.unpin({ threadId });
     write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
+  };
+
+  const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
+    await commitSnooze(threadId, snoozedUntil, deferredInteractionId);
     return reclaimThreadResources(threadId);
   };
 
@@ -57,7 +61,10 @@ export function createServerBulkActions(
     return undoToken;
   };
 
-  const runEach = async (threadIds: readonly string[], change: (threadId: string, before: ThreadState) => Promise<boolean>) => {
+  const runEach = async (
+    threadIds: readonly string[],
+    change: (threadId: string, before: ThreadState) => Promise<{ pinned: boolean } | null>,
+  ) => {
     const pinOrder = await pinnedRoots();
     const pinned = new Set(pinOrder);
     const changed: BulkUndo["threads"] = [];
@@ -65,9 +72,9 @@ export function createServerBulkActions(
     for (const threadId of new Set(threadIds)) {
       const before = { pinned: pinned.has(threadId), row: readOne(threadId) };
       try {
-        if (!(await change(threadId, before))) continue;
-        const after = { pinned: (await ctx.sandy.sdk.threads.get({ threadId })).pinnedAt !== null, row: readOne(threadId) };
-        changed.push({ threadId, before, after });
+        const committed = await change(threadId, before);
+        if (committed === null) continue;
+        changed.push({ threadId, before, after: { pinned: committed.pinned, row: readOne(threadId) } });
       } catch {
         failed.push(threadId);
       }
@@ -90,17 +97,25 @@ export function createServerBulkActions(
   const handlers = {
     async pinThreads({ threadIds, pinned }) {
       return runEach(threadIds, async (threadId, before) => {
-        if (before.pinned === pinned) return false;
+        if (before.pinned === pinned) return null;
         if (pinned) await pinThread(threadId);
         else await ctx.sandy.sdk.threads.unpin({ threadId });
-        return true;
+        return { pinned };
       });
     },
     async snoozeThreads({ threadIds, snoozedUntil }) {
-      return runEach(threadIds, async (threadId) => {
-        await snoozeThread(threadId, snoozedUntil);
-        return true;
+      const result = await runEach(threadIds, async (threadId) => {
+        await commitSnooze(threadId, snoozedUntil, null);
+        return { pinned: false };
       });
+      for (const threadId of result.changed) {
+        await reclaimThreadResources(threadId).catch((error: unknown) => {
+          ctx.sandy.log.warn(
+            `Could not reclaim resources for ${threadId}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        });
+      }
+      return result;
     },
     async undoBulkAction({ undoToken }) {
       const undo = undos.get(undoToken);
