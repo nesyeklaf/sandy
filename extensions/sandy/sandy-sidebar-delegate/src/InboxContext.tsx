@@ -44,7 +44,7 @@ interface InboxContextInputs {
   onNavigate: () => void;
   parkThread: (thread: PluginSidebarThread) => void;
   settleThread: (thread: PluginSidebarThread) => void;
-  snoozeThread: (thread: PluginSidebarThread, until: number) => void;
+  snoozeThread: (thread: PluginSidebarThread, until: number, deferredInteractionId?: string) => void;
   toggleChildExpansion: (threadId: string) => void;
   setRenamingShelfLocks: ReturnType<typeof useRenamingShelfLocks>[1];
   setScope: Dispatch<SetStateAction<string[]>>;

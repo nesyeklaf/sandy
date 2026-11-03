@@ -495,7 +495,7 @@ export function ThreadCard({
                     navigate.toThread(asker.id, { split: false });
                     onNavigate();
                   }}
-                  onLater={() => onSnooze(Date.now() + LATER_MS)}
+                  onLater={(interactionId) => snoozeThread(thread, Date.now() + LATER_MS, interactionId)}
                 />
               ) : null}
             </div>

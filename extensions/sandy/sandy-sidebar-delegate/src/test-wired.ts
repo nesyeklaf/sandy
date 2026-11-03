@@ -2,7 +2,9 @@ import { copyFileSync } from "node:fs";
 import { act } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { makeThreadResponse } from "@sandy-sdk/plugin-sdk/testing";
-import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk";
+import type { PluginSidebarThread, PluginThreadEventPayloads } from "@sandy-sdk/plugin-sdk";
+
+type PendingInteraction = PluginThreadEventPayloads["interaction.pending"]["interaction"];
 import { afterEach, vi } from "vitest";
 import { toast } from "sonner";
 import plugin from "./server";
@@ -21,9 +23,15 @@ afterEach(async () => {
 /** Keep the SDK's validation and JSON wire drivers across the explicit host/app bridge. */
 export async function createWired(
   initial: PluginSidebarThread[],
-  options: { fixture?: string; rpcGate?: (method: string) => Promise<void> | undefined; terminals?: boolean } = {},
+  options: {
+    fixture?: string;
+    rpcGate?: (method: string) => Promise<void> | undefined;
+    terminals?: boolean;
+    interactions?: Record<string, PendingInteraction[]>;
+  } = {},
 ) {
   let threads = [...initial];
+  const interactions = new Map(Object.entries(options.interactions ?? {}));
   let terminalOpen = options.terminals ?? false;
   const treeIds = (threadId: string) => {
     const ids = new Set([threadId]);
@@ -239,6 +247,10 @@ export async function createWired(
                 markUnread: (args) => sandy.sdk.threads.markUnread(args),
                 archive: (args) => sandy.sdk.threads.archive(args),
                 unarchive: (args) => sandy.sdk.threads.unarchive(args),
+                interactions: {
+                  list: async ({ threadId }) => interactions.get(threadId) ?? [],
+                  resolve: async () => ({ ok: true }),
+                },
               },
             },
             // Confirmation and the Undo toast below are harness-produced, not host UI.
@@ -288,6 +300,13 @@ export async function createWired(
         if (name === "thread.deleted") {
           threads = threads.filter((item) => item.id !== threadId);
         }
+      });
+      await flush();
+    },
+    async interactionPending(threadId: string, interaction: PendingInteraction) {
+      interactions.set(threadId, [...(interactions.get(threadId) ?? []), interaction]);
+      await act(async () => {
+        await harness.behavior.emitThreadEvent("interaction.pending", { thread: response(threadId), interaction });
       });
       await flush();
     },

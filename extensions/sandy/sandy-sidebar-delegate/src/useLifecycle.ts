@@ -34,13 +34,13 @@ export interface LifecycleApi {
   resume(threadId: string): Promise<boolean>;
   settle(threadId: string): Promise<boolean>;
   unsettle(threadId: string): Promise<boolean>;
-  snooze(threadId: string, snoozedUntil: number): Promise<boolean>;
+  snooze(threadId: string, snoozedUntil: number, deferredInteractionId?: string): Promise<boolean>;
   unsnooze(threadId: string): Promise<boolean>;
 }
 
 type LifecycleMutation = "park" | "resume" | "settle" | "unsettle" | "snooze" | "unsnooze" | "acknowledgeWake";
 type LifecycleMutationRequest =
-  | { method: "snooze"; threadId: string; snoozedUntil: number }
+  | { method: "snooze"; threadId: string; snoozedUntil: number; deferredInteractionId?: string }
   | { method: "unsettle"; threadId: string; undoToken?: string }
   | {
       method: Exclude<LifecycleMutation, "snooze" | "unsettle">;
@@ -194,6 +194,7 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
           const { reclaim } = await rpc.call("snooze", {
             threadId,
             snoozedUntil: request.snoozedUntil,
+            ...(request.deferredInteractionId ? { deferredInteractionId: request.deferredInteractionId } : {}),
           });
           parkReminder = describeReclaim(reclaim);
         } else if (method === "settle") {
@@ -321,7 +322,8 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
       settle: (threadId) => mutate({ method: "settle", threadId }),
       unsettle: (threadId) => mutate({ method: "unsettle", threadId }),
       unsnooze: (threadId) => mutate({ method: "unsnooze", threadId }),
-      snooze: (threadId, snoozedUntil) => mutate({ method: "snooze", threadId, snoozedUntil }),
+      snooze: (threadId, snoozedUntil, deferredInteractionId) =>
+        mutate({ method: "snooze", threadId, snoozedUntil, deferredInteractionId }),
     };
   }, [askingParentIds, now, rows, rpc]);
 }

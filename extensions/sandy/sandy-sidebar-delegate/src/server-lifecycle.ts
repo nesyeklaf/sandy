@@ -18,6 +18,7 @@ export interface StoredLifecycleRow {
   settledOverride: SettledOverride | null;
   snoozedUntil: number | null;
   snoozedAt: number | null;
+  deferredInteractionId?: string | null;
 }
 interface LifecycleDbRow {
   thread_id: string;
@@ -26,7 +27,18 @@ interface LifecycleDbRow {
   settled_override: SettledOverride | null;
   snoozed_until: number | null;
   snoozed_at: number | null;
+  deferred_interaction_id: string | null;
 }
+
+const toStoredRow = (row: LifecycleDbRow): StoredLifecycleRow => ({
+  threadId: row.thread_id,
+  parkedAt: row.parked_at,
+  settledAt: row.settled_at,
+  settledOverride: row.settled_override,
+  snoozedUntil: row.snoozed_until,
+  snoozedAt: row.snoozed_at,
+  ...(row.deferred_interaction_id === null ? {} : { deferredInteractionId: row.deferred_interaction_id }),
+});
 
 export function createServerLifecycle(ctx: ServerContext) {
   const readAll = (): StoredLifecycleRow[] =>
@@ -34,54 +46,47 @@ export function createServerLifecycle(ctx: ServerContext) {
       ctx.db
         .prepare(
           `SELECT thread_id, settled_at, settled_override,
-                  snoozed_until, snoozed_at, parked_at
+                  snoozed_until, snoozed_at, parked_at, deferred_interaction_id
              FROM thread_lifecycle`,
         )
         .all() as LifecycleDbRow[]
-    ).map((row) => ({
-      threadId: row.thread_id,
-      parkedAt: row.parked_at,
-      settledAt: row.settled_at,
-      settledOverride: row.settled_override,
-      snoozedUntil: row.snoozed_until,
-      snoozedAt: row.snoozed_at,
-    }));
+    ).map(toStoredRow);
 
   const readOne = (threadId: string): StoredLifecycleRow | null => {
     const row = ctx.db
       .prepare(
         `SELECT thread_id, settled_at, settled_override,
-                snoozed_until, snoozed_at, parked_at
+                snoozed_until, snoozed_at, parked_at, deferred_interaction_id
            FROM thread_lifecycle
           WHERE thread_id = ?`,
       )
       .get(threadId) as LifecycleDbRow | undefined;
-    return row
-      ? {
-          threadId: row.thread_id,
-          parkedAt: row.parked_at,
-          settledAt: row.settled_at,
-          settledOverride: row.settled_override,
-          snoozedUntil: row.snoozed_until,
-          snoozedAt: row.snoozed_at,
-        }
-      : null;
+    return row ? toStoredRow(row) : null;
   };
 
   const write = (row: StoredLifecycleRow, publish = true): void => {
     ctx.db
       .prepare(
         `INSERT INTO thread_lifecycle
-         (thread_id, settled_at, settled_override, snoozed_until, snoozed_at, parked_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+         (thread_id, settled_at, settled_override, snoozed_until, snoozed_at, parked_at, deferred_interaction_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(thread_id) DO UPDATE SET
          settled_at = excluded.settled_at,
          settled_override = excluded.settled_override,
          snoozed_until = excluded.snoozed_until,
          snoozed_at = excluded.snoozed_at,
-         parked_at = excluded.parked_at`,
+         parked_at = excluded.parked_at,
+         deferred_interaction_id = excluded.deferred_interaction_id`,
       )
-      .run(row.threadId, row.settledAt, row.settledOverride, row.snoozedUntil, row.snoozedAt, row.parkedAt ?? null);
+      .run(
+        row.threadId,
+        row.settledAt,
+        row.settledOverride,
+        row.snoozedUntil,
+        row.snoozedAt,
+        row.parkedAt ?? null,
+        row.deferredInteractionId ?? null,
+      );
     if (publish) {
       ctx.sandy.realtime.publish(LIFECYCLE_CHANNEL, { threadId: row.threadId });
     }
@@ -185,6 +190,31 @@ export function createServerLifecycle(ctx: ServerContext) {
     })();
     publishLifecycleChanges(changed);
     return changed;
+  };
+
+  const wakeDeferredQuestions = async (thread: { id: string; parentThreadId: string | null }, interactionId: string) => {
+    const path = [thread.id];
+    let parentId = thread.parentThreadId;
+    while (parentId !== null && !path.includes(parentId)) {
+      path.push(parentId);
+      try {
+        parentId = (await ctx.sandy.sdk.threads.get({ threadId: parentId })).parentThreadId;
+      } catch (error) {
+        ctx.sandy.log.warn(
+          `Could not load ancestor ${parentId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        break;
+      }
+    }
+    const woken = ctx.db.transaction(() =>
+      path.filter((id) => {
+        const row = readOne(id);
+        if (row?.deferredInteractionId == null || row.deferredInteractionId === interactionId) return false;
+        ctx.db.prepare(`DELETE FROM thread_lifecycle WHERE thread_id = ?`).run(id);
+        return true;
+      }),
+    )();
+    publishLifecycleChanges(woken);
   };
 
   // Pin, reparent and tree Settle must not validate the same old state.
@@ -343,6 +373,7 @@ export function createServerLifecycle(ctx: ServerContext) {
     clearSettlingState,
     sameLifecycle,
     wakeAncestors,
+    wakeDeferredQuestions,
     withThreadChanges,
     withPinParentChange,
     readInboxOrder,

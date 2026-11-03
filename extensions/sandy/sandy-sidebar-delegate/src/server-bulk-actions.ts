@@ -36,9 +36,9 @@ export function createServerBulkActions(
       write({ threadId, parkedAt: null, settledAt: null, settledOverride: "active", snoozedUntil: null, snoozedAt: null });
     });
 
-  const snoozeThread = async (threadId: string, snoozedUntil: number) => {
+  const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
     await ctx.sandy.sdk.threads.unpin({ threadId });
-    write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now() });
+    write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
     return reclaimThreadResources(threadId);
   };
 

@@ -42,8 +42,8 @@ export function useParkActions({
     [parkActiveThread, lifecycle],
   );
   const snoozeThread = useCallback(
-    (thread: PluginSidebarThread, until: number) =>
-      void parkActiveThread(thread, () => lifecycle.snooze(thread.id, until)),
+    (thread: PluginSidebarThread, until: number, deferredInteractionId?: string) =>
+      void parkActiveThread(thread, () => lifecycle.snooze(thread.id, until, deferredInteractionId)),
     [parkActiveThread, lifecycle],
   );
   return { parkThread, settleThread, snoozeThread };

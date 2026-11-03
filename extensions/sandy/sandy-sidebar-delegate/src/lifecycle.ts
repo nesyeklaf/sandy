@@ -20,6 +20,8 @@ export interface ThreadLifecycleRow {
   snoozedUntil: number | null;
   /** When the snooze was set — used to detect activity since. */
   snoozedAt: number | null;
+  /** The pending question a Later snooze deferred; any other question wakes the thread. */
+  deferredInteractionId?: string | null;
 }
 
 /** The activity signals that outrank a user's parking decision. */
@@ -36,6 +38,10 @@ export interface ThreadActivitySignals {
 
 export type ThreadShelf = "active" | "parked" | "snoozed" | "settled";
 type WakeReason = "timer" | "attention";
+
+function defersQuestion(row: ThreadLifecycleRow): boolean {
+  return row.snoozedUntil !== null && row.deferredInteractionId != null;
+}
 
 /**
  * Why a snoozed thread is back in the active inbox, if it has woken at all.
@@ -55,7 +61,8 @@ export function resolveWakeReason(
   }
 
   const wokeOnAttention =
-    signals.hasPendingInteraction || (row.snoozedAt !== null && signals.latestAttentionAt > row.snoozedAt);
+    (signals.hasPendingInteraction && !defersQuestion(row)) ||
+    (row.snoozedAt !== null && signals.latestAttentionAt > row.snoozedAt);
   if (wokeOnAttention) return "attention";
   return row.snoozedUntil <= now ? "timer" : null;
 }
@@ -136,7 +143,7 @@ export function resolveShelf(
   now: number,
 ): ThreadShelf {
   if (row === undefined) return "active";
-  if (!canPark(signals)) return "active";
+  if (!canPark(defersQuestion(row) ? { ...signals, hasPendingInteraction: false } : signals)) return "active";
 
   if (row.parkedAt != null) {
     return signals.latestAttentionAt > row.parkedAt ? "active" : "parked";

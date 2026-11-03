@@ -335,6 +335,7 @@ export const sandySidebarRpcContract = defineRpcContract({
           settledOverride: z.enum(["active", "settled"]).nullable().optional(),
           snoozedUntil: z.number().nullable(),
           snoozedAt: z.number().nullable(),
+          deferredInteractionId: z.string().nullable().optional(),
         }),
       ),
     }),
@@ -358,6 +359,7 @@ export const sandySidebarRpcContract = defineRpcContract({
       threadId: z.string().trim().min(1),
       // Absolute wake time, so a snooze means the same thing on every device.
       snoozedUntil: z.number().int().positive(),
+      deferredInteractionId: z.string().min(1).optional(),
     }),
     output: z.object({ ok: z.boolean(), reclaim: reclaimSchema }),
   },

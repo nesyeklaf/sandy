@@ -206,8 +206,8 @@ export function createServerHandlers(
       });
       return { ok: true };
     },
-    async snooze({ threadId, snoozedUntil }) {
-      return { ok: true, reclaim: await modules.bulk.snoozeThread(threadId, snoozedUntil) };
+    async snooze({ threadId, snoozedUntil, deferredInteractionId }) {
+      return { ok: true, reclaim: await modules.bulk.snoozeThread(threadId, snoozedUntil, deferredInteractionId) };
     },
     async releaseRuntimes({ threadIds }) {
       // sandy's archive force-closes a thread's terminals but only stops its

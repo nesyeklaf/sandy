@@ -40,7 +40,7 @@ export function RowQuestion({
   thread: PluginSidebarThread;
   asker: PluginSidebarThread;
   onOpen: () => void;
-  onLater: () => void;
+  onLater: (interactionId: string) => void;
 }) {
   const sdk = useSdk();
   const hold = useAnswerHold();
@@ -140,7 +140,7 @@ export function RowQuestion({
                 BUTTON,
                 "ml-auto shrink-0 border-transparent px-1.5 text-muted-foreground hover:text-foreground",
               )}
-              onClick={onLater}
+              onClick={() => onLater(question.interactionId)}
             >
               Later
             </button>
