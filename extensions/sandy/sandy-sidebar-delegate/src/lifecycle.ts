@@ -1,38 +1,21 @@
 import type { PluginSidebarThread, PluginSidebarThreadActivity } from "@sandy-sdk/plugin-sdk";
 
-/**
- * The parked / settled / snoozed lifecycle, as pure functions over stored rows.
- *
- * This state lives in the PLUGIN's own database, never on sandy's thread. That
- * keeps a plugin concept out of sandy's schema and out of the host-daemon
- * protocol, and uninstalling the plugin takes its state with it.
- */
-
 export interface ThreadLifecycleRow {
   threadId: string;
-  /** When the user parked it to wait on someone else. */
   parkedAt?: number | null;
-  /** When the user settled it; null when it is active. */
   settledAt: number | null;
-  /** Explicit user choice. Null or absent means policy-owned state. */
   settledOverride?: "active" | "settled" | null;
-  /** Wake time for a snooze; null when it is not snoozed. */
   snoozedUntil: number | null;
-  /** When the snooze was set — used to detect activity since. */
   snoozedAt: number | null;
   deferredInteractionId?: string | null;
 }
 
-/** The activity signals that outrank a user's parking decision. */
 export interface ThreadActivitySignals {
   hasPendingInteraction: boolean;
-  /** A message waits to be sent, or one failed to send. */
   hasQueuedWork: boolean;
-  /** Any live work: runtime, workflows, background agents, plan, goals. */
   isWorking: boolean;
   hasBackgroundWork: boolean;
   isUnread: boolean;
-  /** Newest attention timestamp sandy reports for the thread. */
   latestAttentionAt: number;
 }
 
@@ -43,14 +26,6 @@ function defersQuestion(row: ThreadLifecycleRow): boolean {
   return row.snoozedUntil !== null && row.deferredInteractionId != null;
 }
 
-/**
- * Why a snoozed thread is back in the active inbox, if it has woken at all.
- *
- * The lifecycle row deliberately remains until acknowledgement. That makes
- * the Woke marker durable across reloads and gives every client the same
- * answer. A pending interaction is attention even if sandy has not advanced the
- * rolled-up timestamp yet.
- */
 export function resolveWakeReason(
   row: ThreadLifecycleRow | undefined,
   signals: ThreadActivitySignals,
@@ -67,34 +42,16 @@ export function resolveWakeReason(
   return row.snoozedUntil <= now ? "timer" : null;
 }
 
-/**
- * Whether a thread may be parked at all: the one rule manual parking and
- * automatic settle share.
- *
- * sandy has more kinds of live work than a single session status — workflows,
- * background agents, background commands, plan mode, goals — and every one of
- * them must block parking. Hiding a thread that is still working is the one
- * failure this feature cannot afford. A queued message is work about to
- * start, and a failed one is something the user has not seen go nowhere yet.
- */
 export function canPark(
   signals: Pick<ThreadActivitySignals, "hasPendingInteraction" | "hasQueuedWork" | "isWorking">,
 ): boolean {
   return !signals.hasPendingInteraction && !signals.hasQueuedWork && !signals.isWorking;
 }
 
-/** A turn sandy has accepted and not yet finished, in either thread view. */
 export function isTurnInFlight(status: PluginSidebarThread["status"]): boolean {
   return status === "active" || status === "pending" || status === "starting" || status === "stopping";
 }
 
-/**
- * Any live work at all: a turn in flight or any of sandy's activity counters.
- *
- * The one definition the sidebar and automatic settle share. They read it from
- * different sandy views, so each passes its own turn signal, but the counters
- * that make a thread busy must never differ between them.
- */
 export function hasBackgroundWork(activity: PluginSidebarThreadActivity): boolean {
   return (
     activity.workflows > 0 ||
@@ -109,15 +66,10 @@ export function hasLiveWork(activity: PluginSidebarThreadActivity, turnInFlight:
   return turnInFlight || hasBackgroundWork(activity);
 }
 
-/** Any live work at all, which blocks parking and wakes a parked thread. */
 export function isThreadWorking(thread: PluginSidebarThread): boolean {
-  // The turn status as well as the indicator: sandy paints attention before
-  // work, so an unread thread whose turn is still running shows no runtime
-  // indicator, while a monitor keeps the runtime indicator between turns.
   return hasLiveWork(thread.activity, isTurnInFlight(thread.status) || thread.indicator === "runtime");
 }
 
-/** The parking signals for a sidebar thread. */
 export function sidebarThreadSignals(thread: PluginSidebarThread): ThreadActivitySignals {
   return {
     hasPendingInteraction: thread.hasPendingInteraction,
@@ -129,18 +81,10 @@ export function sidebarThreadSignals(thread: PluginSidebarThread): ThreadActivit
   };
 }
 
-/** Whether a sidebar thread is idle enough for archive and parking actions. */
 export function canParkThread(thread: PluginSidebarThread): boolean {
   return canPark(sidebarThreadSignals(thread));
 }
 
-/**
- * Which shelf a thread belongs on right now.
- *
- * Order matters. Live work and a raised hand always win, so a parked thread
- * that starts working or asks a question comes straight back. Then snooze,
- * because a wake time is a stronger statement than a settle. Then settled.
- */
 export function resolveShelf(
   row: ThreadLifecycleRow | undefined,
   signals: ThreadActivitySignals,
@@ -163,8 +107,6 @@ export function resolveShelf(
   }
 
   if (row.settledAt !== null) {
-    // New attention since the settle un-settles it: the thread has more to
-    // say than it did when the user filed it away.
     if (signals.latestAttentionAt > row.settledAt) return "active";
     return "settled";
   }
@@ -214,13 +156,6 @@ const DURATION_UNIT_LABEL = {
   w: "week",
 } as const;
 
-/**
- * Parse durations and local calendar times, with optional custom labels.
- *
- * At most eight presets are shown. Durations range from one minute to one
- * year. A wholly invalid setting falls back to the defaults, so a typo cannot
- * remove Snooze from every context menu.
- */
 function parseSnoozePresetEntries(source: string): ConfiguredSnoozePreset[] {
   return source
     .split(",")
@@ -280,10 +215,6 @@ export function parseConfiguredSnoozePresets(configured: string): ConfiguredSnoo
   return parsed.length > 0 ? parsed : parseSnoozePresetEntries(DEFAULT_SNOOZE_PRESET_CONFIG);
 }
 
-/**
- * Compact "wakes in" label: "5m", "2h", "3d". Minutes round up so a snooze
- * never reads "0m" while the thread is still hidden.
- */
 export function snoozeWakeLabel(snoozedUntil: number, now: number): string {
   const remaining = snoozedUntil - now;
   if (remaining <= 0) return "now";
@@ -294,7 +225,6 @@ export function snoozeWakeLabel(snoozedUntil: number, now: number): string {
   return `${Math.ceil(remaining / DAY_MS)}d`;
 }
 
-/** Full local wake time for confirmation feedback after a snooze. */
 export function formatSnoozeWakeTime(snoozedUntil: number, locale?: string, timeZone?: string): string {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
@@ -303,28 +233,17 @@ export function formatSnoozeWakeTime(snoozedUntil: number, locale?: string, time
   }).format(new Date(snoozedUntil));
 }
 
-/**
- * Resolve at selection time so a menu opened before midnight never uses a
- * stale date. Calendar times follow the selecting device's local timezone.
- * An evening that has passed is unavailable, rather than silently tomorrow.
- */
 export function resolveConfiguredSnoozePreset(preset: ConfiguredSnoozePreset, now = new Date()): number | null {
   if ("durationMs" in preset) return now.getTime() + preset.durationMs;
 
   const addDays =
     preset.calendar === "next-week" ? (1 - now.getDay() + 7) % 7 || 7 : preset.calendar === "tomorrow" ? 1 : 0;
   const wake = new Date(now);
-  // Use calendar-day arithmetic to preserve the local hour across DST.
   wake.setDate(wake.getDate() + addDays);
   wake.setHours(preset.hour, preset.minute, 0, 0);
   return wake.getTime() > now.getTime() ? wake.getTime() : null;
 }
 
-/**
- * `setTimeout` delays are signed 32-bit: a far-future wake overflows and fires
- * immediately, which turns one snooze into a tight re-arm loop. Clamped, the
- * timer simply re-arms every ~24.8 days until the wake is in range.
- */
 export const MAX_TIMEOUT_MS = 2_147_483_647;
 
 export function nextWakeDelayMs(snoozedUntilValues: readonly number[], now: number): number | null {
@@ -334,13 +253,8 @@ export function nextWakeDelayMs(snoozedUntilValues: readonly number[], now: numb
   return Math.min(Math.max(0, soonest - now) + 50, MAX_TIMEOUT_MS);
 }
 
-/** The latest wake a picked date may set; presets share the same one-year cap. */
 export const MAX_SNOOZE_MS = 365 * DAY_MS;
 
-/**
- * Where the date-and-time picker starts: tomorrow at 9:00, the same default as
- * the "Tomorrow morning" shortcut.
- */
 export function defaultPickedSnooze(now = new Date()): { date: Date; time: string } {
   const date = new Date(now);
   date.setDate(date.getDate() + 1);
@@ -348,11 +262,6 @@ export function defaultPickedSnooze(now = new Date()): { date: Date; time: strin
   return { date, time: "09:00" };
 }
 
-/**
- * Combine a picked calendar day with an `HH:MM` time, in the device's local
- * timezone. Null when the time is malformed; the caller decides whether the
- * result is far enough in the future.
- */
 export function combineSnoozeDateTime(date: Date, time: string): number | null {
   const match = /^(\d{2}):(\d{2})$/.exec(time);
   if (!match) return null;
@@ -364,7 +273,6 @@ export function combineSnoozeDateTime(date: Date, time: string): number | null {
   return wake.getTime();
 }
 
-/** Picker preview: "Sun, Oct 4, 9:00 AM", with the year only when it differs. */
 export function formatPickedSnooze(snoozedUntil: number, now = new Date(), locale?: string, timeZone?: string): string {
   const wake = new Date(snoozedUntil);
   return new Intl.DateTimeFormat(locale, {

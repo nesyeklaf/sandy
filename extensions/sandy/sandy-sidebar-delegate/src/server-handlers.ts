@@ -58,8 +58,6 @@ export function createServerHandlers(
     wakeAncestors,
   } = lifecycle;
 
-  // Hover cards resolve model names on every open. Share one catalog request
-  // per environment and provider for a few minutes instead of refetching.
   const catalogs = new Map<string, { expiresAt: number; catalog: ReturnType<typeof ctx.sandy.sdk.providers.models> }>();
   const providerCatalog = (environmentId: string, providerId: string) => {
     const now = Date.now();
@@ -69,7 +67,6 @@ export function createServerHandlers(
     if (cached) return cached.catalog;
     const catalog = ctx.sandy.sdk.providers.models({ environmentId, providerId });
     catalogs.set(key, { expiresAt: now + CATALOG_TTL_MS, catalog });
-    // A failed lookup is retried on the next hover rather than cached.
     catalog.catch(() => {
       if (catalogs.get(key)?.catalog === catalog) catalogs.delete(key);
     });
@@ -109,7 +106,6 @@ export function createServerHandlers(
         const model =
           models.find((entry) => entry.id === options.model) ?? models.find((entry) => entry.model === options.model);
         const modelDisplayName = model?.displayName.trim();
-        // Effort labels arrived in SDK 0.6.49; older hosts leave them out.
         const reasoningLabel = model?.supportedReasoningEfforts
           ?.find((effort) => effort.reasoningEffort === options.reasoningLevel)
           ?.label?.trim();
@@ -119,7 +115,6 @@ export function createServerHandlers(
           ...(reasoningLabel ? { reasoningLabel } : {}),
         };
       } catch {
-        // Offline hosts and unavailable provider catalogs must still show execution details.
         return details;
       }
     },
@@ -127,11 +122,7 @@ export function createServerHandlers(
       return withPinParentChange(threadId, async () => {
         const thread = await ctx.sandy.sdk.threads.get({ threadId });
         if (parentThreadId === thread.parentThreadId) return { ok: true };
-        // Validate the parent before unpinning: a rejected update must keep the pin.
         await ctx.sandy.sdk.threads.update({ threadId, parentThreadId });
-        // A shelved tree keeps a row for every thread in it, so the new parent's
-        // row tells whether this move puts unsettled work inside one. If so,
-        // return the new ancestors to Active, as new child work does.
         const parentRow = parentThreadId == null ? null : readOne(parentThreadId);
         if (
           parentThreadId != null &&
@@ -153,9 +144,6 @@ export function createServerHandlers(
       });
     },
     async deleteThread({ threadId, childThreadsConfirmed }) {
-      // The sidebar shows its own confirmation naming the thread and project,
-      // so sandy's generic one is skipped. Deletion is recursive; sandy refuses it
-      // unless the caller confirmed the children too.
       await ctx.sandy.sdk.threads.delete({ threadId, childThreadsConfirmed });
       return { ok: true };
     },
@@ -222,11 +210,6 @@ export function createServerHandlers(
       return { ok: true, reclaim: await modules.bulk.snoozeThread(threadId, snoozedUntil, deferredInteractionId) };
     },
     async releaseRuntimes({ threadIds }) {
-      // sandy's archive force-closes a thread's terminals but only stops its
-      // runtime when a turn is in flight, so an idle thread archived from this
-      // sidebar keeps its agent session loaded. Stopping an idle thread takes
-      // sandy's release path instead. Archived threads still accept a stop, so
-      // this can race the archive, and a failure only misses a reclaim.
       await runThreadTasks(
         threadIds,
         async (threadId) => {
@@ -241,8 +224,6 @@ export function createServerHandlers(
       return { ok: true };
     },
     async acknowledgeWake({ threadId }) {
-      // A woken snooze row is retained only to make the marker durable. Once
-      // the user opens or dismisses it, the thread is ordinary active work.
       await serializeThreads([threadId], async () => clear(threadId));
       return { ok: true };
     },

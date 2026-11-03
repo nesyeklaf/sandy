@@ -16,7 +16,6 @@ const bulkChangeSchema = z
   .object({ changed: z.array(z.string()), failed: z.array(z.string()), undoToken: z.string().uuid() })
   .strict();
 
-/** Merged into the sidebar RPC contract; kept apart to stay inside the file budget. */
 export const bulkRpcShape = {
   pinThreads: {
     input: z.object({ threadIds: threadIdsSchema, pinned: z.boolean() }).strict(),

@@ -128,7 +128,11 @@ it("Later refuses to defer when a newer question is already pending", async () =
   expect((await h.call<LifecycleListResult>("listLifecycle")).rows).toEqual([]);
   expect(h.pins.get("a")).toBe(true);
   h.pendingQuestions.set("a", ["old-question"]);
-  await h.call("snooze", { threadId: "a", snoozedUntil: Date.now() + 3_600_000, deferredInteractionId: "old-question" });
+  await h.call("snooze", {
+    threadId: "a",
+    snoozedUntil: Date.now() + 3_600_000,
+    deferredInteractionId: "old-question",
+  });
   expect((await h.call<LifecycleListResult>("listLifecycle")).rows).toEqual([
     expect.objectContaining({ threadId: "a", deferredInteractionId: "old-question" }),
   ]);

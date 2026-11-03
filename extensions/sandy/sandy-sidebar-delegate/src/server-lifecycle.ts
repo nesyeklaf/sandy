@@ -5,7 +5,6 @@ import { LIFECYCLE_CHANNEL } from "./contract";
 import { canPark, hasBackgroundWork, hasLiveWork, isTurnInFlight, resolveShelf } from "./lifecycle";
 import { threadTreeIds } from "./thread-tree";
 
-/** One-time data repairs that need sandy's thread tree, which SQL cannot see. */
 export const LIFECYCLE_BACKFILLS_MIGRATION = `CREATE TABLE IF NOT EXISTS lifecycle_backfills (
   name TEXT PRIMARY KEY
 )`;
@@ -146,8 +145,6 @@ export function createServerLifecycle(ctx: ServerContext) {
     } = {},
   ) => {
     if (thread.parentThreadId === null) return [];
-    // Capture all shelves before the first lookup, including ancestors whose
-    // IDs we will only learn after an earlier request finishes.
     const previousRows = new Map(readAll().map((row) => [row.threadId, row]));
     const visited = new Set([thread.id]);
     const ancestors: string[] = [];
@@ -156,8 +153,6 @@ export function createServerLifecycle(ctx: ServerContext) {
       visited.add(parentId);
       let parent: AncestorThread | undefined;
       try {
-        // RPCs and policy passes already loaded the complete tree. Do not
-        // introduce another network failure after their shelf writes succeed.
         parent = threadsById ? threadsById.get(parentId) : await ctx.sandy.sdk.threads.get({ threadId: parentId });
       } catch (error) {
         ctx.sandy.log.warn(
@@ -169,19 +164,13 @@ export function createServerLifecycle(ctx: ServerContext) {
       ancestors.push(parent.id);
       parentId = parent.parentThreadId;
     }
-    // A Settle completed while the ancestors were loading. Keep that newer
-    // decision rather than reopening a tree that is already quiet again.
     if (readOne(thread.id)?.settledAt != null) return [];
     const changed = ctx.db.transaction(() => {
       const ids: string[] = [];
       for (const id of ancestors) {
         const row = readOne(id);
         if (!row || (row.settledAt === null && row.parkedAt == null && row.snoozedUntil === null)) continue;
-        // A newer manual shelf choice wins over this older child event and
-        // protects the ancestors above it as well.
         if (!sameLifecycle(row, previousRows.get(id) ?? null)) break;
-        // Reversing an automatic rule is not new child activity. Keep the
-        // user's manual shelf choice, including older parent-only settles.
         if (automaticOnly && (row.settledOverride != null || row.parkedAt != null || row.snoozedUntil != null)) break;
         ctx.db.prepare(`DELETE FROM thread_lifecycle WHERE thread_id = ?`).run(id);
         ids.push(id);
@@ -192,7 +181,10 @@ export function createServerLifecycle(ctx: ServerContext) {
     return changed;
   };
 
-  const wakeDeferredQuestions = async (thread: { id: string; parentThreadId: string | null }, interactionId: string) => {
+  const wakeDeferredQuestions = async (
+    thread: { id: string; parentThreadId: string | null },
+    interactionId: string,
+  ) => {
     const path = [thread.id];
     let parentId = thread.parentThreadId;
     while (parentId !== null && !path.includes(parentId)) {
@@ -219,7 +211,6 @@ export function createServerLifecycle(ctx: ServerContext) {
     publishLifecycleChanges(woken);
   };
 
-  // Pin, reparent and tree Settle must not validate the same old state.
   const pinParentChanges = new Set<string>();
 
   const threadQueues = new Map<string, Promise<void>>();
@@ -275,10 +266,6 @@ export function createServerLifecycle(ctx: ServerContext) {
     inboxThreadIds.forEach((threadId, index) => insert.run(threadId, index));
   });
 
-  // Both endpoints supply complete activity summaries. Project groups provide
-  // visible rows in one call; only the paged thread endpoint includes helpers.
-  // Use one source per read so an older project row cannot resurrect an archived
-  // or deleted thread omitted from the newer thread list.
   const loadPolicyThreads = async (includeHidden = false) => {
     if (!includeHidden) {
       const projects = await ctx.sandy.sdk.projects.list({ include: "threads", includePersonal: true });
@@ -303,7 +290,6 @@ export function createServerLifecycle(ctx: ServerContext) {
     return [...byId.values()];
   };
 
-  /** One thread under loadPolicyThreads' rules, without listing every thread. */
   const loadPolicyThread = async (threadId: string, includeHidden = false) => {
     const [thread] = await ctx.sandy.sdk.threads.list({ threadIds: [threadId], archived: false, includeHidden });
     if (!thread || thread.id !== threadId || thread.archivedAt !== null || thread.deletedAt !== null) return undefined;
@@ -341,11 +327,6 @@ export function createServerLifecycle(ctx: ServerContext) {
 
   const loadSettleTree = async (threadId: string) => settleTree(await loadPolicyThreads(true), threadId);
 
-  // Settle wrote only the root's row before it covered whole trees. Those older
-  // children sit inside a settled parent in the sidebar but count as Active on
-  // the server, where they protect a shared workspace from cleanup forever.
-  // Give each one its nearest settled ancestor's row, once, unless it has
-  // something newer to say than that settle.
   const backfillSettledChildRows = (threads: readonly CleanupThread[], now = Date.now()): string[] => {
     const done = ctx.db.prepare(`SELECT 1 FROM lifecycle_backfills WHERE name = ?`);
     if (done.get(SETTLED_CHILD_ROWS_BACKFILL)) return [];

@@ -20,7 +20,6 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-/** Keep the SDK's validation and JSON wire drivers across the explicit host/app bridge. */
 export async function createWired(
   initial: PluginSidebarThread[],
   options: {
@@ -197,8 +196,6 @@ export async function createWired(
   const slots = new Set<ReturnType<typeof renderSlot>>();
   const archiveRequests: Array<{ threadId: string; confirm: () => Promise<void>; cancel: () => void }> = [];
   let delivered = 0;
-  // Publications stay in the fake host's normalized ledger. Explicit flush is
-  // the transport pump, so events can also be driven without an app RPC call.
   async function flush() {
     while (delivered < harness.inspection.realtimeSignals.length) {
       const signal = harness.inspection.realtimeSignals[delivered++]!;
@@ -264,8 +261,6 @@ export async function createWired(
                 },
               },
             },
-            // Confirmation and the Undo toast below are harness-produced, not host UI.
-            // The real checks assert server-side archive/unarchive calls and state.
             archiveThread: async (threadId, sdk) => {
               const done = deferred<void>();
               archiveRequests.push({

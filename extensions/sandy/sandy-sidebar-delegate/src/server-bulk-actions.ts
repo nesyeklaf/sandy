@@ -42,7 +42,14 @@ export function createServerBulkActions(
       const thread = await ctx.sandy.sdk.threads.get({ threadId });
       if (thread.parentThreadId != null) throw new Error("Child threads cannot be pinned");
       await ctx.sandy.sdk.threads.pin({ threadId });
-      write({ threadId, parkedAt: null, settledAt: null, settledOverride: "active", snoozedUntil: null, snoozedAt: null });
+      write({
+        threadId,
+        parkedAt: null,
+        settledAt: null,
+        settledOverride: "active",
+        snoozedUntil: null,
+        snoozedAt: null,
+      });
     });
 
   const hasOtherPendingQuestion = async (threadId: string, deferredInteractionId: string) => {
@@ -60,7 +67,14 @@ export function createServerBulkActions(
         throw new Error("Another question arrived. Answer it or choose Later again.");
       }
       await ctx.sandy.sdk.threads.unpin({ threadId });
-      write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
+      write({
+        threadId,
+        settledAt: null,
+        settledOverride: null,
+        snoozedUntil,
+        snoozedAt: Date.now(),
+        deferredInteractionId,
+      });
     });
 
   const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
@@ -70,7 +84,9 @@ export function createServerBulkActions(
 
   const pinnedRoots = async () => {
     const threads = await loadPolicyThreads();
-    const roots = sortPinnedThreads(threads.filter((thread) => thread.pinnedAt !== null && thread.parentThreadId === null));
+    const roots = sortPinnedThreads(
+      threads.filter((thread) => thread.pinnedAt !== null && thread.parentThreadId === null),
+    );
     return roots.map((thread) => thread.id);
   };
 
@@ -110,7 +126,8 @@ export function createServerBulkActions(
       if (!restoredIds.has(threadId) || !current.includes(threadId)) continue;
       const target = pinnedNeighbors(rebaseMovedId(current, undo.pinOrder, threadId), threadId);
       const present = pinnedNeighbors(current, threadId);
-      if (target.previousThreadId === present.previousThreadId && target.nextThreadId === present.nextThreadId) continue;
+      if (target.previousThreadId === present.previousThreadId && target.nextThreadId === present.nextThreadId)
+        continue;
       const reordered = await ctx.sandy.sdk.threads.reorderPinned({ threadId, ...target });
       current = reordered.filter((thread) => thread.pinnedAt !== null).map((thread) => thread.id);
     }

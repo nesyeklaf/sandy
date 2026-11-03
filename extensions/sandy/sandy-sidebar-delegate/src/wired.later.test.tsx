@@ -77,10 +77,9 @@ it("Later on a parent defers its child's question and a new child question wakes
 });
 
 it("Later moves a question from an active turn out of Needs you", async () => {
-  const wired = await createWired(
-    [asking("ask", { status: "active", runtimeStatus: "active" })],
-    { interactions: { ask: [question("int_1", "ask")] as never } },
-  );
+  const wired = await createWired([asking("ask", { status: "active", runtimeStatus: "active" })], {
+    interactions: { ask: [question("int_1", "ask")] as never },
+  });
   await wired.call("updateSidebarSettings", { autoSettleInactive: false });
   wired.mount();
   await later(wired);
