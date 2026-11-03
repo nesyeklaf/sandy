@@ -17,6 +17,7 @@ const skillEntry = (id: string, name: string, description: string, metadata: Rec
   pluginId: null,
   filePath: "/" + id,
   manageable: true,
+  writable: true,
   providers: [],
   duplicates: [],
   metadata,
@@ -27,7 +28,7 @@ const skills = [
   skillEntry("skill_a", "debug", "Find the cause of a failure", { inputs: "failure: text; repro?: url", outputs: "diagnosis.md: file(diagnosis.md)" }),
   skillEntry("skill_b", "write-docs", "Write project docs", { inputs: "topic: choice(a); oops", outputs: "doc: banana" }),
   skillEntry("skill_c", "zebra", "Something unrelated"),
-  skillEntry("skill_d", "debug", "duplicate entry", {}, { provider: "pi", scope: "provider-user", filePath: "/home/u/.agents/skills/debug/SKILL.md", manageable: false }),
+  skillEntry("skill_d", "debug", "duplicate entry", {}, { provider: "pi", scope: "provider-user", filePath: "/home/u/.agents/skills/debug/SKILL.md", manageable: false, writable: false }),
 ];
 
 const uxSkills = UX_SKILLS.map((info, index) => skillEntry("ux_" + String(index), info.name, info.purpose, { inputs: formatIo(info.inputs), outputs: formatIo(info.outputs) }));
@@ -83,7 +84,7 @@ test("assign persists, publishes and can be cleared", async () => {
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: "learn" });
   let state = (await harness.behavior.callRpc("state", { projectId: "proj_2" })) as any;
   assert.equal(state.projectId, "proj_2");
-  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { name: "zebra", description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [] });
+  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { id: "skill_c", name: "zebra", writable: true, description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [] });
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: null });
   state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.equal(state.skills.find((s: any) => s.name === "zebra").manual, false);
@@ -280,4 +281,40 @@ test("flow_track refuses a broken flow with its Check problems and an unknown fl
   const missing = (await harness.behavior.callAgentTool("flow_track", { flow: "nope" })) as any;
   assert.equal(missing.isError, true);
   assert.match(missing.content[0].text, /No flow named "nope"/u);
+});
+
+test("writeSkill saves through the SDK, reports a conflict and only announces real writes", async () => {
+  const disk = { content: "---\nname: debug\ndescription: d\n---\n", revision: "a".repeat(64) };
+  const writes: unknown[] = [];
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => ({ skills }),
+        experimental_read: async ({ skillId }: { skillId: string }) => ({ ...disk, filePath: "/real/" + skillId + "/SKILL.md", writable: true }),
+        experimental_write: async (input: { content: string; revision: string }) => {
+          writes.push(input);
+          if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };
+          disk.content = input.content;
+          disk.revision = "b".repeat(64);
+          return { outcome: "written", filePath: "/real/skill_a/SKILL.md", revision: disk.revision };
+        },
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(state.skills.map((row: any) => [row.id, row.writable]), [["skill_a", true], ["skill_b", true], ["skill_c", true]]);
+  const read = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a" })) as any;
+  assert.deepEqual(read, { content: disk.content, revision: "a".repeat(64), filePath: "/real/skill_a/SKILL.md", writable: true });
+  const before = harness.realtimeSignals.length;
+  const written = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "new", revision: read.revision });
+  assert.deepEqual(written, { outcome: "written", filePath: "/real/skill_a/SKILL.md", revision: "b".repeat(64) });
+  assert.equal(harness.realtimeSignals.length, before + 1);
+  const stale = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "mine", revision: read.revision });
+  assert.deepEqual(stale, { outcome: "conflict", currentRevision: "b".repeat(64) });
+  assert.equal(harness.realtimeSignals.length, before + 1);
+  assert.equal(disk.content, "new");
+  assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", content: "mine", revision: "a".repeat(64) });
 });

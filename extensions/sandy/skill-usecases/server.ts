@@ -94,7 +94,9 @@ export default async function plugin(sandy: SandyPluginApi) {
       const inputs = parseIo(metadata.inputs);
       const outputs = parseIo(metadata.outputs);
       rows.push({
+        id: skill.id,
         name: skill.name,
+        writable: skill.writable,
         description: skill.description,
         scope: skill.scope,
         provider: skill.provider,
@@ -184,6 +186,15 @@ export default async function plugin(sandy: SandyPluginApi) {
       await sandy.storage.kv.set(FLOWS_KEY, flows);
       changed();
       return { ok: true };
+    },
+    async readSkill({ projectId, skillId }) {
+      const file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId });
+      return { content: file.content, revision: file.revision, filePath: file.filePath, writable: file.writable };
+    },
+    async writeSkill({ projectId, skillId, content, revision }) {
+      const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, content, revision });
+      if (result.outcome === "written") changed();
+      return result;
     },
     async recommendAssignments({ projectId }) {
       const selected = await resolveProjectId(projectId);

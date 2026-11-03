@@ -7,7 +7,7 @@ Menu "Skills by use case" in the sidebar. It lists the skills of a project group
 - Drag a skill onto an area or onto its overview entry, or use its "Move to…" select. A moved skill is pinned; "pinned ✕" returns it to automatic placement.
 - "Add area" creates an area; the header name is editable, 🗑 deletes it (skills fall back to automatic placement), ⚙ edits its keywords.
 - Automatic placement scores keywords against the skill name (weight 3) and description (weight 1). No hit means "Other".
-- Areas and pins live in the plugin's own storage, keyed by skill name; skill files are never changed. "Reset" restores the default areas.
+- Areas and pins live in the plugin's own storage, keyed by skill name; sorting never changes skill files. "Reset" restores the default areas.
 
 `npm test` runs the tests, `sandy plugin build .` builds the bundle.
 
@@ -15,6 +15,15 @@ Menu "Skills by use case" in the sidebar. It lists the skills of a project group
 
 - **Use / Copy** on a skill row opens the composer with `/skill-name ` (the slash syntax depends on the provider).
 - **Sort with AI** asks a hidden helper thread (default provider, costs tokens) to propose areas; you pick which suggestions to apply, new areas included.
+
+## Editing skills
+
+**Skills** in the sidebar opens a searchable list of the project's skills; built-in and plugin skills are marked read-only. Picking one opens its SKILL.md, read and written through `sandy.sdk.skills.experimental_read` and `experimental_write`, so a symlinked skill is saved at the file the link resolves to.
+
+- The editor covers the description (with a counter against the 200 character limit of the forge skill check), `metadata.inputs` and `metadata.outputs` as rows (name, optional, type, file path or choice values), other string metadata as key and value, and the body with a Markdown preview.
+- `skill-file.ts` edits the frontmatter through the `yaml` Document API and only touches the fields you changed: key order, comments and unknown keys stay as written, and an untouched file saves byte for byte. New metadata values are written as quoted strings. IO rows are checked with `parseIo` and the PascalCase name rule.
+- Save sends the revision the file had when it was opened. When the file changed in between, the editor offers **Reload** (drop your changes) or **Overwrite** (write your version over the new one). Leaving with unsaved changes asks first.
+- A save publishes a change, so the flow canvas rereads the skills and Check updates. **Edit skill** next to a skill block's Inputs in the Inspector opens the editor on that skill.
 
 ## Flows
 

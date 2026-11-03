@@ -4,6 +4,9 @@ import { applyFix, autoBind, bindOptions, deleteNode, forkValues, removeGateOpti
 import { GATE_OWNERS, INPUT_FIELD_TYPES, MAX_CHOICES, exitLabels, nodeTitle, orderedNodes, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type InputNode, type OutputNode, type SkillNode, type Wire } from "./graph";
 import { formatType } from "./io";
 import type { Selection } from "./flow-canvas";
+import { useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
+import { PANEL_PATH } from "./shared";
+import { skillSubPath } from "./skill-route";
 
 const FIELD = "h-8 w-full rounded-md border border-border bg-background px-2 text-sm";
 const SMALL = "rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50";
@@ -52,10 +55,13 @@ function sourceLabel(source: SourcePort): string {
   return nodeTitle(source.node) + " › " + source.port + " (" + formatType(source.type) + ")";
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="space-y-2 border-t border-border px-3 py-3 first:border-t-0">
-      <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+      <div className="flex items-center gap-2">
+        <h4 className="flex-1 text-xs font-medium text-muted-foreground">{title}</h4>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -195,6 +201,13 @@ function SkillPanel({ flow, node, skills, onChange }: { flow: Flow; node: SkillN
     onChange({ flow: bound.flow, nodeId: node.id, message: "Now uses " + info.name + (bound.notes.length === 0 ? "" : " · bound " + bound.notes.join(", ")) });
   };
   const installed = node.skill === null || skills.some((skill) => skill.name === node.skill);
+  const navigate = useSandyNavigate();
+  const editSkill =
+    node.skill !== null && installed ? (
+      <button type="button" className={SMALL} onClick={() => navigate.toPluginPanel(PANEL_PATH, { subPath: skillSubPath(node.skill) })}>
+        Edit skill
+      </button>
+    ) : null;
   return (
     <>
       <Section title="Step">
@@ -213,7 +226,7 @@ function SkillPanel({ flow, node, skills, onChange }: { flow: Flow; node: SkillN
         </label>
         <TextField label="Instruction" value={node.instruction} required={false} multiline placeholder="What the agent should do in this step" onCommit={(instruction) => save({ ...node, instruction }, "Updated the instruction")} />
       </Section>
-      <Section title="Inputs">
+      <Section title="Inputs" action={editSkill}>
         {node.inputs.length === 0 ? <p className="text-xs text-muted-foreground">This skill declares no inputs.</p> : null}
         {node.inputs.map((input) => (
           <BindSelect

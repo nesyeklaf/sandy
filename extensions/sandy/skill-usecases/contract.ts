@@ -16,7 +16,9 @@ export const useCaseSchema = z.object({
 const ioFieldSchema = z.object({ name: z.string(), optional: z.boolean(), type: ioTypeSchema });
 
 const skillRow = z.object({
+  id: z.string(),
   name: z.string(),
+  writable: z.boolean(),
   description: z.string().nullable(),
   scope: z.string(),
   provider: z.string().nullable(),
@@ -72,6 +74,20 @@ const flowProposalSchema = z.object({
 });
 export type FlowProposal = z.infer<typeof flowProposalSchema>;
 
+const skillFileSchema = z.object({
+  content: z.string(),
+  revision: z.string(),
+  filePath: z.string(),
+  writable: z.boolean(),
+});
+export type SkillFile = z.infer<typeof skillFileSchema>;
+
+const skillWriteSchema = z.discriminatedUnion("outcome", [
+  z.object({ outcome: z.literal("written"), revision: z.string(), filePath: z.string() }),
+  z.object({ outcome: z.literal("conflict"), currentRevision: z.string().nullable() }),
+]);
+export type SkillWrite = z.infer<typeof skillWriteSchema>;
+
 export const CHANGED_EVENT = "changed";
 export const FLOW_PROVIDER_ID = "flows";
 
@@ -99,6 +115,19 @@ export const rpcContract = defineRpcContract({
   saveFlows: {
     input: z.object({ flows: z.array(flowSchema).max(MAX_FLOWS) }),
     output: okSchema,
+  },
+  readSkill: {
+    input: z.object({ projectId: z.string().min(1), skillId: z.string().min(1) }),
+    output: skillFileSchema,
+  },
+  writeSkill: {
+    input: z.object({
+      projectId: z.string().min(1),
+      skillId: z.string().min(1),
+      content: z.string(),
+      revision: z.string().min(1),
+    }),
+    output: skillWriteSchema,
   },
   recommendAssignments: {
     input: z.object({ projectId: z.string().nullable() }),

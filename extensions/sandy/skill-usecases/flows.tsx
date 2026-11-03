@@ -5,6 +5,7 @@ import { check, hasErrors } from "./check";
 import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History } from "./canvas-model";
 import { FlowCanvas, type Selection } from "./flow-canvas";
 import { reconcileEditor } from "./flow-sync";
+import { confirmLeaveSkill, parseSkillPath, skillSubPath } from "./skill-route";
 import { CheckList, Inspector, Outline } from "./flow-inspector";
 import { flowRunText, flowSkillNames, linearSteps, migrateLinear, nodeTitle, withLinearSteps, type Flow } from "./graph";
 import {
@@ -29,10 +30,14 @@ function newFlowId(): string {
 
 function useFlowNavigation() {
   const navigate = useSandyNavigate();
+  const go = (subPath: string) => {
+    if (confirmLeaveSkill()) navigate.toPluginPanel(PANEL_PATH, { subPath });
+  };
   return {
-    toAreas: () => navigate.toPluginPanel(PANEL_PATH, { subPath: "" }),
-    toFlows: () => navigate.toPluginPanel(PANEL_PATH, { subPath: "flows" }),
-    toFlow: (id: string) => navigate.toPluginPanel(PANEL_PATH, { subPath: "flows/" + id }),
+    toAreas: () => go(""),
+    toFlows: () => go("flows"),
+    toFlow: (id: string) => go("flows/" + id),
+    toSkills: () => go(skillSubPath(null)),
     navigate,
   };
 }
@@ -53,6 +58,7 @@ export function FlowsSidebar({ subPath }: { subPath: string }) {
   useEffect(refetch, [refetch]);
   useRealtime("changed", refetch);
   const activeFlow = parseFlowId(subPath);
+  const onSkills = parseSkillPath(subPath) !== undefined;
   const groups = useMemo(() => {
     if (overview === null) return [];
     return [
@@ -67,8 +73,11 @@ export function FlowsSidebar({ subPath }: { subPath: string }) {
     (active ? "bg-accent font-medium" : "text-muted-foreground");
   return (
     <nav aria-label="Skills by use case" className="space-y-1 p-2">
-      <button type="button" className={row(activeFlow === undefined)} onClick={nav.toAreas}>
+      <button type="button" className={row(activeFlow === undefined && !onSkills)} onClick={nav.toAreas}>
         Areas
+      </button>
+      <button type="button" className={row(onSkills)} onClick={nav.toSkills}>
+        Skills
       </button>
       <button type="button" className={row(activeFlow === null)} onClick={nav.toFlows}>
         Flows
