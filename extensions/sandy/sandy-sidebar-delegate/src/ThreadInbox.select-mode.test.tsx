@@ -61,6 +61,22 @@ describe("select mode", () => {
     );
   });
 
+  it("keeps the count readable on a phone-width bar by showing its actions as named icons", async () => {
+    renderThreads([thread({ id: "thr_a", title: "First" }), thread({ id: "thr_b", title: "Second" })]);
+    await enterSelectMode();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Select First" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select Second" }));
+    const bar = screen.getByRole("toolbar", { name: "Selected threads" });
+    expect(bar.textContent).toBe("2 selected");
+    expect(Array.from(bar.querySelectorAll("button"), (control) => control.getAttribute("aria-label"))).toEqual([
+      "Snooze selected",
+      "Archive",
+      "Pin",
+      "Tag",
+      "Leave select mode",
+    ]);
+  });
+
   it("leaves select mode without acting", async () => {
     const rendered = renderThreads([thread({ id: "thr_a", title: "First" })]);
     await enterSelectMode();

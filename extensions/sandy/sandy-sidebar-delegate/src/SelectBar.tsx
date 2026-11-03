@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { Icon, type IconName } from "./components/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
+import { Tooltip } from "./components/Tooltip";
 import { useInboxEnvironment } from "./InboxContext";
 import { cn } from "./lib/utils";
 import { useSelection } from "./SelectionHost";
@@ -10,7 +11,7 @@ import { useBulkActions } from "./useBulkActions";
 import { useBulkArchive } from "./useBulkArchive";
 
 const BAR_BUTTON =
-  "flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40";
+  "flex size-7 shrink-0 items-center justify-center rounded-md text-xs text-muted-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40";
 
 function BarButton({
   icon,
@@ -24,10 +25,11 @@ function BarButton({
   onClick: () => void;
 }) {
   return (
-    <button type="button" className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
-      <Icon name={icon} className="size-3.5" aria-hidden />
-      {label}
-    </button>
+    <Tooltip label={label}>
+      <button type="button" aria-label={label} className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
+        <Icon name={icon} className="size-3.5" aria-hidden />
+      </button>
+    </Tooltip>
   );
 }
 
@@ -36,12 +38,13 @@ function TagButton({ disabled, onTag }: { disabled: boolean; onTag: (tag: string
   const [draft, setDraft] = useState("");
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button type="button" className={BAR_BUTTON} disabled={disabled}>
-          <Icon name="Tag" className="size-3.5" aria-hidden />
-          Tag
-        </button>
-      </PopoverTrigger>
+      <Tooltip label="Tag">
+        <PopoverTrigger asChild>
+          <button type="button" aria-label="Tag" className={BAR_BUTTON} disabled={disabled}>
+            <Icon name="Tag" className="size-3.5" aria-hidden />
+          </button>
+        </PopoverTrigger>
+      </Tooltip>
       <PopoverContent align="end" side="top" aria-label="Tag selected threads" className="w-48 p-1.5">
         <form
           onSubmit={(event) => {
@@ -93,7 +96,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
         label="Snooze selected"
         snoozePresets={snoozePresets}
         disabled={none}
-        triggerClassName={cn(BAR_BUTTON, "w-7 justify-center px-0")}
+        triggerClassName={cn(BAR_BUTTON, "border-0 p-0")}
         onSnooze={(wake) => {
           finish();
           void bulk.snooze(selected, wake);
@@ -124,14 +127,11 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
           void bulk.tag(selected, tag);
         }}
       />
-      <button
-        type="button"
-        aria-label="Leave select mode"
-        className={cn(BAR_BUTTON, "w-7 justify-center px-0")}
-        onClick={finish}
-      >
-        <Icon name="Close" className="size-3.5" aria-hidden />
-      </button>
+      <Tooltip label="Leave select mode">
+        <button type="button" aria-label="Leave select mode" className={BAR_BUTTON} onClick={finish}>
+          <Icon name="Close" className="size-3.5" aria-hidden />
+        </button>
+      </Tooltip>
     </div>
   );
 }
