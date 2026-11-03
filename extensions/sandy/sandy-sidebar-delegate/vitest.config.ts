@@ -5,6 +5,7 @@ const appTests = [
   "src/ThreadInbox.*.test.tsx",
   "src/ParentChip.test.tsx",
   "src/SubagentsChip.test.tsx",
+  "src/TagFilterBar.test.tsx",
   "src/ProjectFavicon.test.tsx",
   "src/app-worker-state.*.test.tsx",
 ];
