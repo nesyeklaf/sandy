@@ -78,6 +78,20 @@ const resolveCalls = (rendered: ReturnType<typeof renderAsking>) =>
   rendered.sdkCalls.filter((call) => call.method === "threads.interactions.resolve");
 
 describe("answer in the row", () => {
+  it("wraps long answer labels instead of cutting them and keeps Later in the row", async () => {
+    renderAsking([asking]);
+    const group = await screen.findByRole("group", { name: "Answer Login flow" });
+    const yes = within(group).getByRole("button", { name: "Yes, create feat/login" });
+    const no = within(group).getByRole("button", { name: "No, work on main" });
+    expect(group.classList.contains("flex-wrap")).toBe(true);
+    for (const option of [yes, no]) {
+      expect(option.classList.contains("truncate")).toBe(false);
+      expect(option.classList.contains("whitespace-normal")).toBe(true);
+      expect(option.classList.contains("h-6")).toBe(false);
+    }
+    expect(within(group).getByRole("button", { name: "Later" }).classList.contains("shrink-0")).toBe(true);
+  });
+
   afterEach(() => {
     vi.useRealTimers();
   });

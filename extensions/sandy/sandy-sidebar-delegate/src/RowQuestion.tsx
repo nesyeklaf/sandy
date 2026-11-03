@@ -9,8 +9,10 @@ import { useAnswerHold, useHeldAnswer } from "./AnswerHoldHost";
 import { questionAnswer, rowQuestionOf, type RowQuestion as Question, type RowQuestionOption } from "./row-question";
 import { statusToneClass } from "./StatusSlot";
 
-const BUTTON =
-  "pointer-events-auto h-6 min-w-0 max-w-full truncate rounded-md border px-2 text-xs font-medium outline-none transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transition-none";
+const BUTTON_BASE =
+  "pointer-events-auto min-w-0 max-w-full rounded-md border px-2 text-xs font-medium outline-none transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transition-none";
+const BUTTON = cn(BUTTON_BASE, "h-6 truncate");
+const OPTION_BUTTON = cn(BUTTON_BASE, "min-h-6 whitespace-normal break-words py-0.5 text-left leading-snug");
 
 function usePendingQuestion(asker: PluginSidebarThread): Question | null {
   const sdk = useSdk();
@@ -89,7 +91,7 @@ export function RowQuestion({
       <div
         role="group"
         aria-label={`Answer ${threadDisplayTitle(asker)}`}
-        className="mt-1.5 flex min-w-0 items-center gap-1.5"
+        className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5"
       >
         {held ? (
           <>
@@ -114,7 +116,7 @@ export function RowQuestion({
                   key={option.value}
                   type="button"
                   className={cn(
-                    BUTTON,
+                    OPTION_BUTTON,
                     "bg-secondary text-foreground hover:bg-sidebar-accent",
                     index === 0
                       ? "border-[color:color-mix(in_oklab,var(--sandy-sidebar-tone-pending)_45%,var(--border))]"
