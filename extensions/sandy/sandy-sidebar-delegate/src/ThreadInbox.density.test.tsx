@@ -13,6 +13,9 @@ const threads = [
   thread({ id: "asking", title: "Asking work", hasPendingInteraction: true }),
   thread({ id: "idle", title: "Idle work" }),
   thread({ id: "pinned", title: "Pinned work", isPinned: true }),
+  thread({ id: "failed", title: "Failed work", status: "error" }),
+  thread({ id: "parent", title: "Parent work" }),
+  thread({ id: "child", title: "Child work", parentThreadId: "parent", hasPendingInteraction: true }),
 ];
 
 function renderInbox(initial: Partial<typeof defaultSidebarSettings> = {}) {
@@ -45,13 +48,31 @@ describe("density", () => {
     ["comfortable", { busy: "comfortable", asking: "comfortable", idle: "comfortable" }],
     ["compact", { busy: "compact", asking: "compact", idle: "compact" }],
     ["dense", { busy: "dense", asking: "dense", idle: "dense" }],
-    ["auto", { busy: "comfortable", asking: "comfortable", idle: "compact" }],
   ] as const)("draws every row at %s density", async (threadDensity, expected) => {
     renderInbox({ threadDensity });
     await screen.findByRole("link", { name: "Busy work" });
     await waitFor(() => expect(density("Busy work")).toBe(expected.busy));
     expect(density("Asking work")).toBe(expected.asking);
     expect(density("Idle work")).toBe(expected.idle);
+  });
+
+  it("draws Needs you and Failed Comfortable, Working Compact and the rest Dense on Auto", async () => {
+    renderInbox({ threadDensity: "auto" });
+    await screen.findByRole("link", { name: "Busy work" });
+    await waitFor(() => expect(density("Busy work")).toBe("compact"));
+    expect({
+      asking: density("Asking work"),
+      rolledUpParent: density("Parent work"),
+      failed: density("Failed work"),
+      idle: density("Idle work"),
+      pinned: density("Pinned work"),
+    }).toEqual({
+      asking: "comfortable",
+      rolledUpParent: "comfortable",
+      failed: "comfortable",
+      idle: "dense",
+      pinned: "dense",
+    });
   });
 
   it("switches density from the View sheet and saves it", async () => {

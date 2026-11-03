@@ -7,7 +7,7 @@ export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSe
     <SettingsSection title="Sidebar layout" status={status}>
       <SettingRow
         title="Density"
-        description="Comfortable shows each thread on three lines, Compact on two, Dense on one. Auto gives threads that need you or are working full cards and the rest two lines. Each shelf can override this from its ⋯ menu."
+        description="Comfortable shows each thread on three lines, Compact on two, Dense on one. Auto draws Needs you and Failed as full cards, Working on two lines and the rest on one. Each shelf can override this from its ⋯ menu."
         control={
           <SettingsSelect
             aria-label="Density"

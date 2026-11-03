@@ -219,7 +219,7 @@ describe("parking threads", () => {
   });
 
   it.each([false, true])(
-    "keeps working threads full in Auto and draws quiet ones on two lines (auto %s)",
+    "draws working threads on two lines in Auto and quiet ones on one line (auto %s)",
     async (compactWorkingThreads) => {
       renderSlot(inbox, listProps, {
         sidebarThreads: {
@@ -245,8 +245,8 @@ describe("parking threads", () => {
         screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
       await screen.findByRole("link", { name: "Busy work" });
 
-      await waitFor(() => expect(density("Idle work")).toBe(compactWorkingThreads ? "compact" : "comfortable"));
-      expect(density("Busy work")).toBe("comfortable");
+      await waitFor(() => expect(density("Idle work")).toBe(compactWorkingThreads ? "dense" : "comfortable"));
+      expect(density("Busy work")).toBe(compactWorkingThreads ? "compact" : "comfortable");
       expect(density("Asking work")).toBe("comfortable");
       const busy = screen.getByRole("link", { name: "Busy work" }).closest("[data-parent-card]") as HTMLElement;
       expect(within(busy).getByText("Working")).toBeDefined();
@@ -286,7 +286,7 @@ describe("parking threads", () => {
     },
   );
 
-  it("keeps a row full in Auto until its children and agents are done", async () => {
+  it("keeps a row on two lines in Auto until its children and agents are done", async () => {
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -318,9 +318,9 @@ describe("parking threads", () => {
       screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
     await screen.findByRole("link", { name: "Waiting on child" });
 
-    await waitFor(() => expect(density("Done parent")).toBe("compact"));
-    expect(density("Waiting on child")).toBe("comfortable");
-    expect(density("Agent parent")).toBe("comfortable");
+    await waitFor(() => expect(density("Done parent")).toBe("dense"));
+    expect(density("Waiting on child")).toBe("compact");
+    expect(density("Agent parent")).toBe("compact");
     expect(density("Asking parent")).toBe("comfortable");
   });
 

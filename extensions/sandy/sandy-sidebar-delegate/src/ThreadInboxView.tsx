@@ -1,5 +1,5 @@
 import type { useSidebarThreads } from "./sandy-sdk";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { ThreadListLoading, ActiveEmptyState, WorkingEmptyState } from "./ThreadInboxEmptyStates";
 import { CompactShelf, DockableShelves, CollapsibleShelf, ProjectGroups, Shelf } from "./ThreadInboxShelves";
@@ -117,6 +117,13 @@ export function ThreadInboxView({
 }: ThreadInboxViewProps) {
   const [listView, setListView] = usePersistedPreference(STORAGE_KEYS.listView.key, listViewCodec);
   const selecting = useSelection().active;
+  const treeShelfById = useMemo(() => {
+    const byId = new Map<string, "pinned" | LockableShelf>();
+    for (const shelf of ["pinned", "needs", "failed", "working", "review", "waiting", "merged"] as const) {
+      for (const thread of shelves[shelf].visibleThreads) byId.set(thread.id, shelf);
+    }
+    return byId;
+  }, [shelves]);
   const { setExpandedShelves, setActiveSortMode } = useInboxActions();
   const toggle = (shelf: InboxShelfId) => () =>
     setExpandedShelves((current) => ({ ...current, [shelf]: !current[shelf] }));
@@ -187,7 +194,12 @@ export function ThreadInboxView({
         <div className="min-w-0 flex-1">
           <ListViewSegment view={listView} onChange={setListView} />
         </div>
-        <ActivityBell threads={allThreads} needs={shelves.needs.threads} open={activityOpen} onOpenChange={onActivityOpenChange} />
+        <ActivityBell
+          threads={allThreads}
+          needs={shelves.needs.threads}
+          open={activityOpen}
+          onOpenChange={onActivityOpenChange}
+        />
         <ViewSheet showArchived={showArchived} onShowArchivedChange={onShowArchivedChange} />
       </div>
 
@@ -213,7 +225,12 @@ export function ThreadInboxView({
             ).flatMap((shelf) => shelves[shelf].visibleThreads)}
             sections={sections}
             projects={projects}
-            renderThread={(thread) => renderActiveThread(thread, "inbox", false, false)}
+            renderThread={(thread) => {
+              const shelf = treeShelfById.get(thread.id);
+              return shelf === "pinned"
+                ? renderActiveThread(thread, "pinned", false, false)
+                : renderActiveThread(thread, "inbox", false, false, shelf);
+            }}
           />
         ) : (
           <DockableShelves

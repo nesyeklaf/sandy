@@ -23,7 +23,7 @@ export const DENSITY_LABELS: Record<ThreadDensity | ShelfDensity, string> = {
 };
 
 const DENSITY_HINTS: Record<ThreadDensity, string> = {
-  auto: "Threads that need you or are working get full cards, the rest two lines",
+  auto: "Needs you and Failed get full cards, Working two lines, the rest one line",
   comfortable: "Three lines per thread",
   compact: "Two lines per thread",
   dense: "One line per thread",
