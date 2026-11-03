@@ -69,7 +69,7 @@ upgrade_test() (
   mkdir -p "$u/data/plugins"
   (cd "$u/npm/lib/node_modules/sandy-app" && node -e '
 const D=require("better-sqlite3");
-new D(process.argv[1],{readonly:true}).backup(process.argv[2]).then(()=>console.log("db copied"),e=>{console.error(e);process.exit(1)})' \
+new D(process.argv[1],{readonly:true}).backup(process.argv[2],{progress:()=>2147483647}).then(()=>console.log("db copied"),e=>{console.error(e);process.exit(1)})' \
     "$data_dir/sandy.db" "$u/data/sandy.db") || exit 1
   for f in config.json auth-secret auth.json; do
     if [ -e "$data_dir/$f" ]; then cp -a "$data_dir/$f" "$u/data/" || exit 1; fi

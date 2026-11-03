@@ -185,7 +185,11 @@ function deliverText(flow: Flow, plan: Plan, output: OutputNode | null): string 
 }
 
 function joinText(parts: readonly string[]): string {
-  return parts.filter((part) => part.trim() !== "").join(" ");
+  return parts
+    .map((part) => part.trim())
+    .filter((part) => part !== "")
+    .map((part) => (/[.!?:]$/u.test(part) ? part : part + "."))
+    .join(" ");
 }
 
 export function compile(flow: Flow, skills: readonly SkillInfo[]): CompileResult {

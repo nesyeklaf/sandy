@@ -115,7 +115,7 @@ test("a migrated linear flow with empty IO snapshots compiles despite drift warn
   const machine = machineOf(flow);
   assert.equal(machine.id, "quick-plan");
   assert.deepEqual(machine.stages.map((item) => [item.id, item.next]), [["ux-walkthrough", [{ to: "ux-walkthrough-2" }]], ["ux-walkthrough-2", []]]);
-  assert.match(machine.stages[0]!.description, /^look closely Use the skill ux-walkthrough\.$/u);
+  assert.match(machine.stages[0]!.description, /^look closely\. Use the skill ux-walkthrough\.$/u);
 });
 
 test("a stage whose every exit finishes in the same Output is final and names what it delivers", () => {
