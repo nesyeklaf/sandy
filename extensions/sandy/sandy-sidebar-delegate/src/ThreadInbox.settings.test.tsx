@@ -286,8 +286,8 @@ describe("sidebar settings", () => {
     ]);
     expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull();
     const layout = screen.getByRole("region", { name: "Sidebar layout" });
-    expect(within(layout).getAllByText("Experimental")).toHaveLength(2);
-    expect(within(layout).getByRole("switch", { name: "Working shelf" })).toBeDefined();
+    expect(within(layout).getAllByText("Experimental")).toHaveLength(1);
+    expect(within(layout).queryByRole("switch", { name: "Working shelf" })).toBeNull();
     expect(within(layout).queryByRole("switch", { name: "Archived shelf" })).toBeNull();
     const appearance = screen.getByRole("region", { name: "Repo appearance" });
     expect(within(appearance).getByRole("switch", { name: "Repo colors" })).toBeDefined();

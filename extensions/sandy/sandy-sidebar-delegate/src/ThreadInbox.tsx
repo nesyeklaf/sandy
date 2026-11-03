@@ -101,7 +101,6 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const configuredSnoozePresets = sidebarSettings?.snoozePresets ?? DEFAULT_SIDEBAR_SETTINGS.snoozePresets;
   const snoozePresets = useMemo(() => parseConfiguredSnoozePresets(configuredSnoozePresets), [configuredSnoozePresets]);
   const dockShelvesEnabled = sidebarSettings?.dockShelves ?? DEFAULT_SIDEBAR_SETTINGS.dockShelves;
-  const workingShelfEnabled = sidebarSettings?.workingShelf ?? DEFAULT_SIDEBAR_SETTINGS.workingShelf;
   const [scope, setScope] = useProjectScope({ projects, status });
   const now = useQuantizedNow();
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
@@ -163,7 +162,6 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     renamingShelfLocks,
     scope,
     threads,
-    workingShelfEnabled,
   });
   useCollapseChildrenOnSettle(settled, lifecycle, setExpandedChildParentIds);
 
@@ -207,7 +205,15 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const attentionParentIds = useAttentionParentIds(
     sidebarSettings?.showRunningChildrenWhenCollapsed ?? DEFAULT_SIDEBAR_SETTINGS.showRunningChildrenWhenCollapsed,
     childrenByParentId,
-    [pinnedBase, needsBase, reviewBase, waitingBase],
+    {
+      pinned: pinnedBase,
+      needs: needsBase,
+      failed: failedBase,
+      working: workingBase,
+      review: reviewBase,
+      waiting: waitingBase,
+      merged: mergedBase,
+    },
   );
   const visiblePinned = useMemo(
     () => visibleShelfThreads(pinned, expandedShelves.pinned, activeListThreadId, undefined, attentionParentIds),
@@ -236,7 +242,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   }, [activeSortMode, dragOrder, inboxReorder.ids, needsBase]);
   const needs = useOrderedShelf(needsOrder, null, expandedShelves.needs, activeListThreadId, attentionParentIds);
   const failed = useOrderedShelf(failedBase, null, expandedShelves.failed, activeListThreadId, attentionParentIds);
-  const working = useOrderedShelf(workingBase, null, expandedShelves.working, activeListThreadId);
+  const working = useOrderedShelf(workingBase, null, expandedShelves.working, activeListThreadId, attentionParentIds);
   const review = useOrderedShelf(reviewBase, null, expandedShelves.review, activeListThreadId, attentionParentIds);
   const merged = useOrderedShelf(mergedBase, null, expandedShelves.merged, activeListThreadId, attentionParentIds);
   const sortedVisibleInbox = useMemo(

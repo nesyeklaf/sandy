@@ -62,18 +62,6 @@ export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSe
         }
       />
       <SettingRow
-        title="Working shelf"
-        experimental
-        description="Keep working threads in their own shelf. They return to Active when work finishes, fails, or needs you. Pinned threads stay pinned."
-        control={
-          <Switch
-            label="Working shelf"
-            checked={draft.workingShelf}
-            onChange={(checked) => update("workingShelf", checked)}
-          />
-        }
-      />
-      <SettingRow
         title="Dock shelves to the bottom"
         experimental
         description="Keep shelves below Active at the bottom of the sidebar. Expanded shelves scroll with the thread list."

@@ -6,7 +6,7 @@ export function shelfDensity(
 ): ThreadDensity {
   const override = settings.shelfDensities[shelf];
   if (override !== "default") return override;
-  return shelf === "working" && settings.threadDensity === "comfortable" ? "dense" : settings.threadDensity;
+  return settings.threadDensity;
 }
 
 export function rowDensity({

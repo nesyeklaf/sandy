@@ -26,7 +26,7 @@ describe("ThreadInbox", () => {
               id: "attention-child",
               title: "Attention child",
               parentThreadId: "attention-root",
-              indicator: "unread-error",
+              indicator: "runtime",
             }),
           ],
           projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],

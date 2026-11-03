@@ -10,13 +10,12 @@ vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 await loadInboxApp();
 
 describe("Compact project display", () => {
-  it.each(["comfortable", "compact", "dense", "working-shelf"] as const)(
+  it.each(["comfortable", "compact", "dense"] as const)(
     "updates project names without hiding icons or changing full cards (%s)",
     async (display) => {
       let settings = {
         ...defaultSidebarSettings,
-        threadDensity: display === "working-shelf" ? "comfortable" : display,
-        workingShelf: display === "working-shelf",
+        threadDensity: display,
         keepPinnedThreadsFull: true,
       };
       const view = renderSlot(inbox, listProps, {
@@ -38,7 +37,7 @@ describe("Compact project display", () => {
       const row = (title: string) => screen.getByText(title).closest("li")!;
       await waitFor(() => {
         expect(row("Working thread").querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe(
-          { comfortable: "comfortable", compact: "compact", dense: "dense", "working-shelf": "dense" }[display],
+          display,
         );
         expect(screen.getByText("Parked thread")).toBeDefined();
       });
@@ -82,7 +81,6 @@ describe("Compact project display", () => {
           ...defaultSidebarSettings,
           threadDensity: "dense",
           compactProjectIconOnly: true,
-          workingShelf: true,
         }),
         listLifecycle: () => ({
           rows: [

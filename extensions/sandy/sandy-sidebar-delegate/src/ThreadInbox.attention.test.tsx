@@ -47,7 +47,7 @@ describe("attention states", () => {
       }),
     ]);
     expect(await screen.findByLabelText("Thread working")).toBeDefined();
-    expect(screen.getByText("Working")).toBeDefined();
+    expect(screen.getByText("Working", { selector: "[data-parent-card] *" })).toBeDefined();
     expect(screen.queryByLabelText("Unread thread succeeded")).toBeNull();
   });
 });

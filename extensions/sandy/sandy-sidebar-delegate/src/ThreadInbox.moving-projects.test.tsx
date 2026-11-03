@@ -11,7 +11,7 @@ await loadInboxApp();
 describe("ThreadInbox", () => {
   describe("moving projects as a whole", () => {
     it.each([true, false])(
-      "retains scoped active and deep queued attention in a collapsed project: setting=%s",
+      "retains scoped active and deep finished attention in a collapsed project: setting=%s",
       async (showAttention) => {
         window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
         window.localStorage.setItem("sandy-sidebar:project-collapse:v1", JSON.stringify(["web"]));
@@ -30,8 +30,8 @@ describe("ThreadInbox", () => {
                   id: "deep",
                   projectId: "web",
                   parentThreadId: "grandchild",
-                  title: "Queued failed leaf",
-                  queuedWork: "failed",
+                  title: "Done leaf",
+                  indicator: "unread-success",
                 }),
               ],
               projects: [{ id: "web", name: "Web", isPersonal: false, href: "", settingsHref: "" }],
@@ -56,7 +56,7 @@ describe("ThreadInbox", () => {
           ).toEqual(showAttention ? ["Attention root", "Active root"] : ["Active root"]),
         );
         expect(within(active).getByRole("button", { name: "Web (2)", expanded: false })).toBeDefined();
-        expect(Boolean(within(active).queryByText("Queued failed leaf"))).toBe(showAttention);
+        expect(Boolean(within(active).queryByText("Done leaf"))).toBe(showAttention);
         expect(rendered.rpcCalls.filter((call) => call.method.startsWith("reorder"))).toEqual([]);
       },
     );
@@ -78,13 +78,13 @@ describe("ThreadInbox", () => {
               thread({ id: "x", projectId: "api", title: "Hidden other project", updatedAt: Date.now() }),
               thread({ id: "a1", projectId: "web", parentThreadId: "a", title: "Child a" }),
               thread({ id: "a2", projectId: "web", parentThreadId: "a1", title: "Grandchild a" }),
-              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep failed", queuedWork: "failed" }),
+              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep done", indicator: "unread-success" }),
               thread({
                 id: "b1",
                 projectId: "web",
                 parentThreadId: "b",
                 title: "Child b",
-                queuedWork: "failed",
+                indicator: "unread-success",
               }),
               ...(singleton
                 ? [
@@ -93,7 +93,7 @@ describe("ThreadInbox", () => {
                       projectId: "api",
                       parentThreadId: "x",
                       title: "Child x",
-                      queuedWork: "failed",
+                      indicator: "unread-success",
                     }),
                   ]
                 : []),
@@ -119,7 +119,7 @@ describe("ThreadInbox", () => {
           expect(rowOrder()).toEqual(singleton ? ["Web a", "Hidden other project", "Web b"] : ["Web a", "Web b"]),
         );
         expect(within(active).queryByRole("button", { name: "Web (3)" })).toBeNull();
-        expect(within(active).getByText("Deep failed")).toBeDefined();
+        expect(within(active).getByText("Deep done")).toBeDefined();
         const card = within(active).getByRole("link", { name: singleton ? "Hidden other project" : "Web a" });
         let preview: Array<string | null> | undefined;
         if (gesture === "keyboard") {
@@ -164,8 +164,8 @@ describe("ThreadInbox", () => {
             projects: [{ id: "web", name: "Web", isPersonal: false, href: "", settingsHref: "" }],
             threads: [
               ...["a", "hidden", "b"].map((id) => thread({ id, title: id, projectId: "web", updatedAt: Date.now() })),
-              thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", queuedWork: "failed" }),
-              thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", queuedWork: "failed" }),
+              thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+              thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
             ],
           },
           rpc: {
@@ -222,8 +222,8 @@ describe("ThreadInbox", () => {
               updatedAt: Date.now(),
             }),
             thread({ id: "x", title: "x", projectId: "api", updatedAt: Date.now() }),
-            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", queuedWork: "failed" }),
-            thread({ id: "cx", title: "cx", projectId: "api", parentThreadId: "x", queuedWork: "failed" }),
+            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+            thread({ id: "cx", title: "cx", projectId: "api", parentThreadId: "x", indicator: "unread-success" }),
           ],
         },
         rpc: {
@@ -268,8 +268,8 @@ describe("ThreadInbox", () => {
             ...["a", "hidden", "b", "z"].map((id) =>
               thread({ id, title: id, projectId: "web", updatedAt: Date.now() }),
             ),
-            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", queuedWork: "failed" }),
-            thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", queuedWork: "failed" }),
+            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+            thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
           ],
         },
         rpc: {
@@ -316,7 +316,7 @@ describe("ThreadInbox", () => {
           ["cx", "x", "api"],
           ["cy", "y", "zed"],
         ].map(([id, parentThreadId, projectId]) =>
-          thread({ id, title: id, parentThreadId, projectId, queuedWork: "failed" }),
+          thread({ id, title: id, parentThreadId, projectId, indicator: "unread-success" }),
         ),
       ];
       let order = ["a", "x", "y", "b", "ca", "cx", "cy"];
@@ -391,8 +391,8 @@ describe("ThreadInbox", () => {
       window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
       const rows = [
         ...["a", "hidden", "b"].map((id) => thread({ id, title: id, projectId: "web", updatedAt: Date.now() })),
-        thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", queuedWork: "failed" }),
-        thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", queuedWork: "failed" }),
+        thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+        thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
       ];
       let order = ["a", "hidden", "b", "ca", "cb"];
       const rendered = renderSlot(inbox, listProps, {

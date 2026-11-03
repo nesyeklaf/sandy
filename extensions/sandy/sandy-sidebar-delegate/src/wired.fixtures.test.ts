@@ -195,7 +195,6 @@ it.each(databaseSnapshots)(
 function assertSettingsControls(container: HTMLElement, settings: (typeof snapshots)[number]["settings"]) {
   const ui = within(container);
   for (const [label, field] of [
-    ["Working shelf", "workingShelf"],
     ["Dock shelves to the bottom", "dockShelves"],
     ["Repo colors", "projectColorsEnabled"],
     ["Settle inactive threads", "autoSettleInactive"],

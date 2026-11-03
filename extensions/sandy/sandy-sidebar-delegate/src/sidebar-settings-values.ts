@@ -57,7 +57,7 @@ export interface SidebarSettingsValues {
    * older plugin version still reads the user's choice.
    */
   compactWorkingThreads: boolean;
-  /** Experimental: move threads with live work to their own shelf. */
+  /** Legacy switch from before Working became a permanent shelf, kept so an older plugin version still reads it. */
   workingShelf: boolean;
   /** Experimental: keep the shelves below Active docked to the bottom. */
   dockShelves: boolean;

@@ -146,19 +146,19 @@ it("pins from the menu and persists a keyboard manual reorder through server and
   );
 });
 
-it("saves settings in the real settings slot and publishes the Working shelf to the inbox", async () => {
+it("saves settings in the real settings slot and publishes them to the inbox", async () => {
   const wired = await createWired([item("busy", { indicator: "runtime", runtimeStatus: "active" })]);
   wired.mount();
   wired.mount("settings");
-  const toggle = await screen.findByRole("switch", { name: "Working shelf" });
+  const toggle = await screen.findByRole("switch", { name: "Dock shelves to the bottom" });
   vi.useFakeTimers();
   fireEvent.click(toggle);
   await wired.advance(500);
   expect(
-    wired.db.prepare("SELECT json_extract(settings_json, '$.workingShelf') AS enabled FROM sidebar_settings").get(),
+    wired.db.prepare("SELECT json_extract(settings_json, '$.dockShelves') AS enabled FROM sidebar_settings").get(),
   ).toEqual({ enabled: 1 });
-  expect(within(screen.getByRole("region", { name: "Working" })).getByText("Work busy")).toBeDefined();
-  expect(await wired.call("getSidebarSettings")).toMatchObject({ workingShelf: true });
+  expect(document.querySelector("[data-shelf-dock]")).not.toBeNull();
+  expect(await wired.call("getSidebarSettings")).toMatchObject({ dockShelves: true });
 });
 
 it("publishes a custom project color to both stripe and name", async () => {

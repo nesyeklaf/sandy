@@ -11,7 +11,7 @@ import {
 } from "./inbox";
 import { activeRepresentativeThreadId, sortActiveThreads } from "./inbox-layout";
 import { isWorkingTree } from "./working-tree";
-import { threadAsksForInput, threadsWithAskingDescendants } from "./child-status";
+import { childSubtree, threadAsksForInput, threadsWithAskingDescendants } from "./child-status";
 import { threadPullRequestState, type PullRequestsByEnvironment } from "./in-review";
 import { inboxShelfOf, threadFailed, threadInboxStatus, type InboxShelfId, type LockableShelf } from "./thread-status";
 
@@ -23,7 +23,6 @@ interface InboxShelfThreadsOptions {
   renamingShelfLocks: ReadonlyMap<string, LockableShelf>;
   scope: readonly string[];
   threads: readonly PluginSidebarThread[];
-  workingShelfEnabled: boolean;
 }
 
 export function useInboxShelfThreads({
@@ -34,7 +33,6 @@ export function useInboxShelfThreads({
   renamingShelfLocks,
   scope,
   threads,
-  workingShelfEnabled,
 }: InboxShelfThreadsOptions) {
   return useMemo(() => {
     const allVisible = visibleInboxThreads(threads);
@@ -58,12 +56,12 @@ export function useInboxShelfThreads({
       archived: [],
     };
     for (const thread of visible) {
+      const children = childrenByParentId.get(thread.id) ?? [];
       const status = threadInboxStatus({
         lifecycleShelf: lifecycle.shelfFor(thread),
         asks: threadAsksForInput(thread) || askingParentIds.has(thread.id),
-        failed: threadFailed(thread),
-        workingTree:
-          workingShelfEnabled && isWorkingTree(thread, childrenByParentId.get(thread.id) ?? [], childrenByParentId),
+        failed: threadFailed(thread) || childSubtree(children, childrenByParentId).some(threadFailed),
+        workingTree: isWorkingTree(thread, children, childrenByParentId),
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
         lockedShelf: renamingShelfLocks.get(thread.id),
@@ -102,6 +100,5 @@ export function useInboxShelfThreads({
     renamingShelfLocks,
     scope,
     threads,
-    workingShelfEnabled,
   ]);
 }

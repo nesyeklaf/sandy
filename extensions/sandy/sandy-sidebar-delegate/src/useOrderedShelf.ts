@@ -27,22 +27,19 @@ export function useOrderedShelf(
 export function useAttentionParentIds(
   enabled: boolean,
   childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>,
-  shelves: readonly [
-    readonly PluginSidebarThread[],
-    readonly PluginSidebarThread[],
-    readonly PluginSidebarThread[],
-    readonly PluginSidebarThread[],
-  ],
+  shelves: Readonly<
+    Record<"pinned" | "needs" | "failed" | "working" | "review" | "waiting" | "merged", readonly PluginSidebarThread[]>
+  >,
 ) {
-  const [first, second, third, fourth] = shelves;
+  const { pinned, needs, failed, working, review, waiting, merged } = shelves;
   return useMemo(() => {
     const ids = new Set<string>();
     if (!enabled) return ids;
-    for (const thread of [...first, ...second, ...third, ...fourth]) {
+    for (const thread of [...pinned, ...needs, ...failed, ...working, ...review, ...waiting, ...merged]) {
       if (collapsedChildThreads(childrenByParentId.get(thread.id) ?? [], childrenByParentId, null, true).length > 0) {
         ids.add(thread.id);
       }
     }
     return ids;
-  }, [childrenByParentId, enabled, first, second, third, fourth]);
+  }, [childrenByParentId, enabled, pinned, needs, failed, working, review, waiting, merged]);
 }

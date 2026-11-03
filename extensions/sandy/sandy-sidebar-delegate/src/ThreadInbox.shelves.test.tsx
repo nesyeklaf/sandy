@@ -259,3 +259,60 @@ describe("parking threads", () => {
     expect(within(shelf).queryByText(/Load .* more/)).toBeNull();
   });
 });
+
+describe("B4 shelf classification", () => {
+  const projects = [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }];
+
+  it("classifies live work into Working with default settings", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [thread({ id: "busy", title: "Busy", status: "active", indicator: "runtime" })],
+        projects,
+      },
+      rpc: { listLifecycle: () => ({ rows: [] }) },
+    });
+    await screen.findByRole("link", { name: "Busy" });
+    expect(within(screen.getByRole("region", { name: "Working" })).getByRole("link", { name: "Busy" })).toBeDefined();
+  });
+
+  it("rolls a failed child into the Failed shelf", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "parent", title: "Root" }),
+          thread({ id: "child", title: "Broken", parentThreadId: "parent", status: "error", indicator: "unread-error" }),
+        ],
+        projects,
+      },
+      rpc: { listLifecycle: () => ({ rows: [] }) },
+    });
+    await screen.findByRole("link", { name: "Root" });
+    expect(within(screen.getByRole("region", { name: "Failed" })).getByRole("link", { name: "Root" })).toBeDefined();
+  });
+
+  it("keeps a question ahead of a failed child", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "parent", title: "Root" }),
+          thread({ id: "broken", title: "Broken", parentThreadId: "parent", status: "error", indicator: "unread-error" }),
+          thread({
+            id: "asking",
+            title: "Asking",
+            parentThreadId: "parent",
+            hasPendingInteraction: true,
+            indicator: "waiting-for-input",
+          }),
+        ],
+        projects,
+      },
+      rpc: { listLifecycle: () => ({ rows: [] }) },
+    });
+    const needs = await screen.findByRole("region", { name: "Needs you" });
+    expect(within(needs).getByRole("link", { name: "Root" })).toBeDefined();
+    expect(screen.queryByRole("region", { name: "Failed" })).toBeNull();
+  });
+});

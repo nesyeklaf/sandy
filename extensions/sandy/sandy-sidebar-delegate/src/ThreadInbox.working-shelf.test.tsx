@@ -365,55 +365,37 @@ describe("parking threads", () => {
     expect(button.classList.contains("pointer-events-auto")).toBe(true);
   });
 
-  it.each([true, false])(
-    "moves threads with work running under them to a Working shelf (enabled %s)",
-    async (workingShelf) => {
-      renderSlot(inbox, listProps, {
-        sidebarThreads: {
-          status: "ready",
-          threads: [
-            thread({ id: "busy", title: "Busy work", indicator: "runtime" }),
-            thread({ id: "waiting", title: "Waiting on child" }),
-            thread({ id: "child", parentThreadId: "waiting", title: "Child work", indicator: "runtime" }),
-            thread({ id: "asking", title: "Asking parent", hasPendingInteraction: true }),
-            thread({ id: "asking-child", parentThreadId: "asking", title: "Asking child", indicator: "runtime" }),
-            thread({ id: "done", title: "Done work", indicator: "unread-success", isUnread: true }),
-            thread({ id: "pinned", title: "Pinned busy", indicator: "runtime", isPinned: true }),
-          ],
-          projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-        },
-        rpc: {
-          getSidebarSettings: () => ({
-            ...defaultSidebarSettings,
-            workingShelf,
-          }),
-          listLifecycle: () => ({ rows: [] }),
-        },
-      });
-      await screen.findByRole("link", { name: "Busy work" });
-      const titlesIn = (name: string) =>
-        within(screen.getByRole("region", { name }))
-          .getAllByRole("link")
-          .map((link) => link.getAttribute("aria-label"));
+  it("moves threads with work running under them to the Working shelf", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "busy", title: "Busy work", indicator: "runtime" }),
+          thread({ id: "waiting", title: "Waiting on child" }),
+          thread({ id: "child", parentThreadId: "waiting", title: "Child work", indicator: "runtime" }),
+          thread({ id: "asking", title: "Asking parent", hasPendingInteraction: true }),
+          thread({ id: "asking-child", parentThreadId: "asking", title: "Asking child", indicator: "runtime" }),
+          thread({ id: "done", title: "Done work", indicator: "unread-success", isUnread: true }),
+          thread({ id: "pinned", title: "Pinned busy", indicator: "runtime", isPinned: true }),
+        ],
+        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
+      },
+      rpc: {
+        getSidebarSettings: () => defaultSidebarSettings,
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    await screen.findByRole("link", { name: "Busy work" });
+    const titlesIn = (name: string) =>
+      within(screen.getByRole("region", { name }))
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("aria-label"));
 
-      if (!workingShelf) {
-        await waitFor(() => expect(titlesIn("Waiting")).toContain("Busy work"));
-        expect(screen.queryByRole("region", { name: "Working" })).toBeNull();
-        return;
-      }
-      await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
-      // Done, or needing you, is Active's business; pinned stays pinned.
-      expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
-      expect(titlesIn("Waiting")).toEqual(["Done work"]);
-      expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
-      // One line like the other shelves, even with compact mode off.
-      for (const title of ["Busy work", "Waiting on child"]) {
-        const row = screen.getByRole("link", { name: title }).closest("[data-parent-card]")! as HTMLElement;
-        expect(row.classList.contains("h-8")).toBe(true);
-        expect(within(row).getByRole("img", { name: "codex" }).querySelector(".rounded-full")).not.toBeNull();
-      }
-    },
-  );
+    await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
+    expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
+    expect(titlesIn("Waiting")).toEqual(["Done work"]);
+    expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
+  });
 
   it.each([true, false])("docks the shelves after Active to the bottom when enabled (%s)", async (dockShelves) => {
     renderSlot(inbox, listProps, {

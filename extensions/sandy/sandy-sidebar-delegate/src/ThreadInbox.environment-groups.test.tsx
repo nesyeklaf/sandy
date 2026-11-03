@@ -160,16 +160,16 @@ it("keeps an open child's ancestor visible through environment, project, and she
   expect(screen.getByRole("button", { name: "Open child thread: Open child" })).toBeDefined();
 });
 
-it("keeps a running child's parent visible in a collapsed environment", () => {
+it("keeps a finished child's parent visible in a collapsed environment", () => {
   setup({
     rows: [
       thread({ id: "a", title: "Parent", environment: worktree("search") }),
       thread({ id: "b", title: "Other root", environment: worktree("search") }),
       thread({
         id: "child",
-        title: "Working child",
+        title: "Done child",
         parentThreadId: "a",
-        indicator: "runtime",
+        indicator: "unread-success",
       }),
     ],
   });
@@ -202,7 +202,7 @@ it.each(["project", "shelf"].flatMap((fold) => ["keyboard", "pointer"].map((gest
         thread({ id: "b", title: "Search review", environment: worktree("search") }),
         thread({ id: "c", title: "Menu implementation", environment: worktree("menus") }),
         thread({ id: "d", title: "Menu review", environment: worktree("menus") }),
-        thread({ id: "child", title: "Working child", parentThreadId: "c", indicator: "runtime" }),
+        thread({ id: "child", title: "Done child", parentThreadId: "c", indicator: "unread-success" }),
       ],
     });
     await waitFor(() => expect(rendered.rpcCalls.some((call) => call.method === "listInboxOrder")).toBe(true));
@@ -247,10 +247,10 @@ it.each([false, true].flatMap((enabled) => ["keyboard", "pointer"].map((gesture)
       ...["x", "c", "y"].map((id) =>
         thread({
           id: `child-${id}`,
-          title: `Working child of ${id}`,
+          title: `Done child of ${id}`,
           projectId: id === "c" ? "proj_1" : "other",
           parentThreadId: id,
-          indicator: "runtime",
+          indicator: "unread-success",
         }),
       ),
     ];
