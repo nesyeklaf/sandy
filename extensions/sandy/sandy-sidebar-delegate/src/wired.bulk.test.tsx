@@ -35,6 +35,9 @@ async function pinOrder(wired: Wired) {
   return sortPinnedThreads(threads.filter((entry) => entry.pinnedAt !== null)).map((entry) => entry.id);
 }
 
+const archivedAt = async (wired: Wired, threadId: string) =>
+  (await wired.sandy.sdk.threads.get({ threadId })).archivedAt;
+
 const pinnedAt = async (wired: Wired, threadId: string) => (await wired.sandy.sdk.threads.get({ threadId })).pinnedAt;
 
 async function select(...titles: string[]) {
@@ -103,4 +106,21 @@ it("undoes a bulk Snooze by restoring the pin, its order and the earlier lifecyc
   lastUndo()();
   await waitFor(async () => expect(await pinOrder(wired)).toEqual(["p1", "p2"]));
   expect(await wired.call("listLifecycle")).toEqual({ rows: resumedRow });
+});
+
+it("undoes a bulk Archive for the whole archived tree, children after their parent", async () => {
+  const wired = await createWired([
+    item("c", { parentThreadId: "p", title: "Child" }),
+    item("old", { parentThreadId: "p", isArchived: true, archivedAt: 1 }),
+    item("p"),
+  ]);
+  wired.mount();
+  const bar = await select("Work p");
+  fireEvent.click(within(bar).getByRole("button", { name: "Archive" }));
+  await waitFor(async () => expect(await archivedAt(wired, "c")).not.toBeNull());
+  await waitFor(() => expect(toastMocks.success).toHaveBeenCalled());
+  lastUndo()();
+  await waitFor(async () => expect(await archivedAt(wired, "c")).toBeNull());
+  expect(await archivedAt(wired, "p")).toBeNull();
+  expect(await archivedAt(wired, "old")).toBe(1);
 });

@@ -2,8 +2,27 @@ import { useCallback } from "react";
 import { useSdk, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { toast } from "./lib/toast";
 
+type Sdk = ReturnType<typeof useSdk>;
+
 function threadCount(count: number): string {
   return `${count} thread${count === 1 ? "" : "s"}`;
+}
+
+async function unarchiveTree(sdk: Sdk, threadIds: readonly string[]): Promise<string[]> {
+  let pending = [...threadIds];
+  while (pending.length > 0) {
+    const failed: string[] = [];
+    for (const threadId of pending) {
+      try {
+        await sdk.threads.unarchive({ threadId });
+      } catch {
+        failed.push(threadId);
+      }
+    }
+    if (failed.length === pending.length) return failed;
+    pending = failed;
+  }
+  return [];
 }
 
 export function useBulkArchive() {
@@ -13,18 +32,19 @@ export function useBulkArchive() {
       const threadIds = threads.map((thread) => thread.id);
       if (threadIds.length === 0) return;
       const results = await Promise.allSettled(threadIds.map((threadId) => sdk.threads.archive({ threadId })));
-      const archived = threadIds.filter((_, index) => results[index]?.status === "fulfilled");
-      if (archived.length < threadIds.length) {
-        toast.error(`Could not archive ${threadCount(threadIds.length - archived.length)}`);
-      }
-      if (archived.length === 0) return;
-      toast.success(`Archived ${threadCount(archived.length)}`, {
+      const failed = results.filter((result) => result.status === "rejected").length;
+      if (failed > 0) toast.error(`Could not archive ${threadCount(failed)}`);
+      const archived = [
+        ...new Set(results.flatMap((result) => (result.status === "fulfilled" ? result.value.archivedThreadIds : []))),
+      ];
+      const archivedRoots = threadIds.filter((_, index) => results[index]?.status === "fulfilled");
+      if (archivedRoots.length === 0) return;
+      toast.success(`Archived ${threadCount(archivedRoots.length)}`, {
         action: {
           label: "Undo",
           onClick: () => {
-            void Promise.allSettled(archived.map((threadId) => sdk.threads.unarchive({ threadId }))).then((undone) => {
-              const failed = undone.filter((result) => result.status === "rejected").length;
-              if (failed > 0) toast.error(`Could not restore ${threadCount(failed)}`);
+            void unarchiveTree(sdk, archived).then((notRestored) => {
+              if (notRestored.length > 0) toast.error(`Could not restore ${threadCount(notRestored.length)}`);
             });
           },
         },

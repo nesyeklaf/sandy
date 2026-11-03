@@ -123,12 +123,19 @@ export async function createWired(
         },
         archive: async ({ threadId }) => {
           const ids = treeIds(threadId);
+          const archivedThreadIds = threads
+            .filter((item) => ids.has(item.id) && item.archivedAt === null)
+            .map((item) => item.id);
           threads = threads.map((item) =>
-            ids.has(item.id) ? { ...item, isArchived: true, archivedAt: Date.now() } : item,
+            archivedThreadIds.includes(item.id) ? { ...item, isArchived: true, archivedAt: Date.now() } : item,
           );
-          return { ok: true, archivedThreadIds: [...ids] };
+          return { ok: true, archivedThreadIds };
         },
         unarchive: async ({ threadId }) => {
+          const parentId = threads.find((item) => item.id === threadId)?.parentThreadId ?? null;
+          if (threads.some((item) => item.id === parentId && item.archivedAt !== null)) {
+            throw new Error("Lifecycle owner must be unarchived first");
+          }
           threads = threads.map((item) =>
             item.id === threadId ? { ...item, isArchived: false, archivedAt: null } : item,
           );
