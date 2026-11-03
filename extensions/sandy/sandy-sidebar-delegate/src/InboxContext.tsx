@@ -18,6 +18,7 @@ import { ListAnimationContext, type ListAnimationController } from "./useListMot
 import { ProjectColorsProvider } from "./ProjectColors";
 import { WorkingSinceContext } from "./useWorkingSince";
 import { CleanSettledHost } from "./CleanSettledHost";
+import { AnswerHoldHost } from "./AnswerHoldHost";
 import type { WorkingSince } from "./working-since";
 import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThreadDisplay";
 import { OpenPortsProvider } from "./OpenPorts";
@@ -176,7 +177,9 @@ export function InboxProvider({
                 <InboxActionsContext.Provider value={value.actions}>
                   <InboxActivityContext.Provider value={value.activity}>
                     <ActiveThreadContext.Provider value={activeThread}>
-                      <CleanSettledHost onNavigate={value.actions.onNavigate}>{children}</CleanSettledHost>
+                      <CleanSettledHost onNavigate={value.actions.onNavigate}>
+                        <AnswerHoldHost>{children}</AnswerHoldHost>
+                      </CleanSettledHost>
                     </ActiveThreadContext.Provider>
                   </InboxActivityContext.Provider>
                 </InboxActionsContext.Provider>

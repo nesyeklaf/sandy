@@ -52,6 +52,7 @@ export function renderSlot<Props extends object>(
       unarchive: async () => ({ ok: true as const }),
       markRead: response,
       markUnread: response,
+      interactions: { list: async () => [] },
       ...options.sdk?.threads,
     },
   };

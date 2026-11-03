@@ -2,15 +2,7 @@ import { ThreadLocation, ThreadPullRequest } from "./ThreadMetadata";
 import { CompactRow } from "./CompactRow";
 import { WokeMarker } from "./WokeMarker";
 import { ShortcutHint, useSidebarThreadSplit, useThreadActions } from "./sandy-sdk";
-import {
-  useId,
-  useLayoutEffect,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEventHandler,
-  type PointerEventHandler,
-} from "react";
+import { useId, useEffect, useRef, useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
 import { useSidebarThreadShortcut, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { ChildThreadBadge, ChildThreadList, useShowsChildList } from "./ChildThreadList";
 import { Icon } from "./components/Icon";
@@ -36,9 +28,13 @@ import { useInboxEnvironment, useInboxActions, useInboxActivity } from "./InboxC
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { projectIconUrl as iconUrl } from "./project-icons";
 import { ActivityCount, ParkButton } from "./ThreadCardParts";
+import { RowQuestion } from "./RowQuestion";
+import { askingThreadOf } from "./row-question";
+import { useRowFocusHandoff } from "./useRowFocusHandoff";
 import "./settle-button.css";
 
 /** How long the settle sweep plays before the thread actually moves. */
+const LATER_MS = 60 * 60 * 1000;
 const SETTLE_SWEEP_MS = 520;
 /** A settle that worked has unmounted the card by now; one that failed has not. */
 const SETTLE_RECOVER_MS = 4_000;
@@ -134,34 +130,8 @@ export function ThreadCard({
     return () => observer.disconnect();
   }, []);
   const [isRenaming, setIsRenaming] = useState(false);
-  useLayoutEffect(() => {
-    return () => {
-      const focused = document.activeElement;
-      if (!(focused instanceof HTMLElement) || !rowRef.current?.contains(focused)) return;
-      const sidebar = rowRef.current.closest<HTMLElement>("[data-sandy-sidebar-root]");
-      const childId = focused.getAttribute("data-child-thread-id");
-      const control = focused.getAttribute("data-thread-control");
-      // Moving a row between shelf trees unmounts its focused control.
-      queueMicrotask(() => {
-        if (!sidebar?.isConnected || document.activeElement !== document.body) return;
-        const replacement = [...sidebar.querySelectorAll<HTMLAnchorElement>("a[data-sidebar-thread-id]")].find(
-          (link) => link.dataset.sidebarThreadId === thread.id,
-        );
-        const row = replacement?.closest("li");
-        const child =
-          childId &&
-          [...(row?.querySelectorAll<HTMLElement>("[data-child-thread-id]") ?? [])].find(
-            (item) => item.dataset.childThreadId === childId,
-          );
-        const matchingControl =
-          control &&
-          [...(row?.querySelectorAll<HTMLElement>("[data-thread-control]") ?? [])].find(
-            (item) => item.dataset.threadControl === control,
-          );
-        (child || matchingControl || replacement)?.focus();
-      });
-    };
-  }, [thread.id]);
+  useRowFocusHandoff(rowRef, thread.id);
+  const asker = askingThreadOf(thread, childrenByParent);
   const densityAtRenameStart = useRef<RowDensity>("comfortable");
   const [isSnoozeOpen, setIsSnoozeOpen] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
@@ -550,6 +520,17 @@ export function ThreadCard({
                 {isVisible ? <ThreadPullRequest environmentId={thread.environment?.id ?? null} /> : null}
                 <ProviderGlyph providerId={thread.providerId} provider={provider} />
               </div>
+              {asker && isVisible ? (
+                <RowQuestion
+                  thread={thread}
+                  asker={asker}
+                  onOpen={() => {
+                    navigate.toThread(asker.id, { split: false });
+                    onNavigate();
+                  }}
+                  onLater={() => onSnooze(Date.now() + LATER_MS)}
+                />
+              ) : null}
             </div>
           )}
           {showChildren ? (
