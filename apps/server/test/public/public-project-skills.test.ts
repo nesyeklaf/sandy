@@ -1201,6 +1201,103 @@ describe("public project skills route", () => {
     );
   });
 
+  it("lists shared and provider aliases of bundled provider skills and of sandy's data directory as read-only and refuses to write them", async () => {
+    await withTestHarness(
+      { sharedSkillRoots: { user: [".agents/skills"], project: [] } },
+      async (harness) => {
+        const { host, session } = seedHostSession(harness.deps, {
+          id: "host-protected-skill-alias",
+        });
+        seedPrimaryHost(harness.deps, host.id);
+        const { project } = seedProjectWithSource(harness.deps, {
+          hostId: host.id,
+          path: "/tmp/protected-skill-alias-project",
+        });
+        const bundledAliasPath = "/home/.agents/skills/builtin/SKILL.md";
+        const managedAliasPath = "/home/.agents/skills/sandy-cli/SKILL.md";
+        const providerAliasPath = "/home/.claude/skills/managed/SKILL.md";
+        const managedRealPath = join(
+          harness.deps.config.dataDir,
+          "skill-trees",
+          "abc",
+          "sandy-cli",
+          "SKILL.md",
+        );
+        const stub = registerSkillRpc(harness, {
+          hostId: host.id,
+          sessionId: session.id,
+          skillsByProvider: {
+            "sandy-shared": [
+              {
+                ...discovered("builtin", "shared-user", bundledAliasPath),
+                realPath: "/home/.codex/skills/.system/builtin/SKILL.md",
+                linked: true,
+              },
+              {
+                ...discovered("sandy-cli", "shared-user", managedAliasPath),
+                realPath: managedRealPath,
+                linked: true,
+              },
+            ],
+            "claude-code": [
+              {
+                ...discovered("managed", "provider-user", providerAliasPath),
+                realPath: managedRealPath.replace("sandy-cli", "managed"),
+                linked: true,
+              },
+            ],
+          },
+        });
+        const listed = skillListResponseSchema.parse(
+          await readJson(
+            await harness.app.request(
+              `/api/v1/projects/${project.id}/skills?environmentId=`,
+            ),
+          ),
+        );
+        expect(
+          listed.skills
+            .filter((skill) =>
+              ["builtin", "sandy-cli", "managed"].includes(skill.name),
+            )
+            .map(({ name, writable }) => ({ name, writable })),
+        ).toEqual(
+          expect.arrayContaining([
+            { name: "builtin", writable: false },
+            { name: "sandy-cli", writable: false },
+            { name: "managed", writable: false },
+          ]),
+        );
+
+        for (const filePath of [
+          bundledAliasPath,
+          managedAliasPath,
+          providerAliasPath,
+        ]) {
+          const response = await harness.app.request(
+            `/api/v1/projects/${project.id}/skills/content`,
+            {
+              method: "PATCH",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                skillId: skillId(filePath),
+                environmentId: null,
+                content: "# Modified",
+                revision: "0".repeat(64),
+              }),
+            },
+          );
+          expect(response.status).toBe(403);
+        }
+        expect(
+          stub.requests.filter(
+            (request) => request.command.type === "host.write_skill",
+          ),
+        ).toHaveLength(0);
+      },
+    );
+  });
+
   it("saves a server-owned sandy user skill on the server's disk with a revision check", async () => {
     await withTestHarness(async (harness) => {
       const skillFilePath = join(

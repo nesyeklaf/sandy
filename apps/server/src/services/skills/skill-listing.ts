@@ -1,4 +1,8 @@
-import { firstPerIdentity, skillRegistrationId } from "@sandy/skill-index";
+import {
+  firstPerIdentity,
+  isBundledProviderSkillPath,
+  skillRegistrationId,
+} from "@sandy/skill-index";
 import { parseSkillMetadata } from "@sandy/skill-index/metadata";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
@@ -8,6 +12,7 @@ import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths"
 import { getAppSettings } from "@sandy/db";
 import type { SandySkillSourceId } from "@sandy/domain";
 import { replaceFile } from "@sandy/file-transfer";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 import {
   writableSkillScopeSchema,
   type DiscoveredSkill,
@@ -78,10 +83,6 @@ function hostPathJoin(rootPath: string, segments: readonly string[]): string {
     : path.posix.join(rootPath, ...segments);
 }
 
-function isBundledProviderSkill(filePath: string): boolean {
-  return /(^|[\\/])\.system([\\/]|$)/u.test(filePath);
-}
-
 interface MappedScope {
   scope: SkillScope;
   provider: SkillProvider | null;
@@ -124,7 +125,7 @@ export function mapSkillScope(
         writable: true,
       };
     case "provider-user": {
-      const userOwned = !isBundledProviderSkill(filePath);
+      const userOwned = !isBundledProviderSkillPath(filePath);
       return {
         scope: "provider-user",
         provider,
@@ -191,6 +192,7 @@ export function assembleSkillList(
   for (const { provider, skills } of perProvider) {
     for (const skill of skills) {
       const mapped = mapSkillScope(provider, skill.rootKind, skill.filePath);
+      const bundledTarget = isBundledProviderSkillPath(skill.realPath);
       registrations.push({
         id: skill.id,
         name: skill.name,
@@ -202,9 +204,11 @@ export function assembleSkillList(
             ? (skill.name.split(":", 1)[0] ?? skill.name)
             : null,
         filePath: skill.filePath,
-        manageable: mapped.manageable && !skill.linked,
+        manageable: mapped.manageable && !skill.linked && !bundledTarget,
         writable:
-          mapped.writable && !(skill.linked && isSandyScope(mapped.scope)),
+          mapped.writable &&
+          !bundledTarget &&
+          !(skill.linked && isSandyScope(mapped.scope)),
         metadata: skill.metadata,
       });
     }
@@ -354,6 +358,9 @@ async function projectSkillIndex(
     });
   }
   const disabledSources = new Set(getAppSettings(deps.db).disabledSkillSources);
+  const realDataDir = await fs
+    .realpath(deps.config.dataDir)
+    .catch(() => deps.config.dataDir);
   const registrations = [
     ...assembleSkillList(perProvider),
     ...sharedSkills.summaries,
@@ -370,11 +377,18 @@ async function projectSkillIndex(
           Number(right.scope.endsWith("project")) ||
         compareSkillSummaries(left, right),
     )
-    .map((skill) => ({
-      ...skill,
-      realPath: identities.get(skill.id)?.realPath ?? skill.filePath,
-      contentSha256: identities.get(skill.id)?.contentSha256 ?? null,
-    }));
+    .map((skill) => {
+      const realPath = identities.get(skill.id)?.realPath ?? skill.filePath;
+      return {
+        ...skill,
+        writable:
+          skill.writable &&
+          (isSandyScope(skill.scope) ||
+            !isPathWithinDirectory(realDataDir, realPath)),
+        realPath,
+        contentSha256: identities.get(skill.id)?.contentSha256 ?? null,
+      };
+    });
   return { registrations, entries: summarizeSkillRegistrations(registrations) };
 }
 

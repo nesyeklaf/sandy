@@ -55,6 +55,10 @@ export function firstPerIdentity<T>(
   });
 }
 
+export function isBundledProviderSkillPath(filePath: string): boolean {
+  return /(^|[\\/])\.system([\\/]|$)/u.test(filePath);
+}
+
 export function isWithinSkillBoundary(
   boundary: string,
   candidate: string,

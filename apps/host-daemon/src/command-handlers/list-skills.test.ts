@@ -890,6 +890,68 @@ describe("writeHostSkill", () => {
     );
   });
 
+  it("refuses a SKILL.md symlink that resolves outside its skill directory", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const sharedRoot = path.join(fixture.homeDir, ".agents", "skills");
+    const skillDir = path.join(sharedRoot, "test");
+    await mkdir(skillDir, { recursive: true });
+    const victim = path.join(tempRoot, "unrelated.txt");
+    const original = "---\nname: test\ndescription: original\n---\n";
+    await writeFile(victim, original, "utf8");
+    await symlink(victim, path.join(skillDir, "SKILL.md"));
+
+    await expect(
+      writeHostSkill(
+        {
+          type: "host.write_skill",
+          scope: "shared-user",
+          name: "test",
+          cwd: null,
+          rootPath: sharedRoot,
+          content: "WRITTEN OUTSIDE SKILL DIRECTORY",
+          expectedSha256: createHash("sha256").update(original).digest("hex"),
+        },
+        { dataDir: fixture.dataDir },
+      ),
+    ).rejects.toMatchObject({ code: "skill_outside_root" });
+    expect(await readFile(victim, "utf8")).toBe(original);
+  });
+
+  it("refuses a shared skill that resolves into a bundled provider skill directory", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const builtinDir = path.join(
+      fixture.homeDir,
+      ".codex",
+      "skills",
+      ".system",
+      "builtin",
+    );
+    const original = "---\nname: builtin\ndescription: Built in\n---\n";
+    await mkdir(builtinDir, { recursive: true });
+    await writeFile(path.join(builtinDir, "SKILL.md"), original, "utf8");
+    const sharedRoot = path.join(fixture.homeDir, ".agents", "skills");
+    await mkdir(sharedRoot, { recursive: true });
+    await symlink(builtinDir, path.join(sharedRoot, "builtin"));
+
+    await expect(
+      writeHostSkill(
+        {
+          type: "host.write_skill",
+          scope: "shared-user",
+          name: "builtin",
+          cwd: null,
+          rootPath: sharedRoot,
+          content: "MODIFIED BUILTIN",
+          expectedSha256: createHash("sha256").update(original).digest("hex"),
+        },
+        { dataDir: fixture.dataDir },
+      ),
+    ).rejects.toMatchObject({ code: "skill_not_writable" });
+    expect(await readFile(path.join(builtinDir, "SKILL.md"), "utf8")).toBe(
+      original,
+    );
+  });
+
   it("rejects a skill name that is not a single path segment", async () => {
     const fixture = await makeWorkspaceFixture();
     await expect(

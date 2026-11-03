@@ -30,6 +30,7 @@ import {
 } from "./list-commands.js";
 import { writeHostFile } from "./file-write.js";
 import { isPathWithinDirectory } from "@sandy/process-utils";
+import { isBundledProviderSkillPath } from "@sandy/skill-index";
 
 type SkillRootResolution = DeclaredScanRootResolution;
 
@@ -261,12 +262,42 @@ export async function deleteHostSkill(
   return { deletedPath: realTarget };
 }
 
+interface ResolvedSkillFile {
+  skillDirPath: string;
+  skillFilePath: string;
+}
+
+async function resolveConfinedSkillFile(
+  realSkillDirPath: string,
+  name: string,
+): Promise<ResolvedSkillFile> {
+  const realSkillFile = await realpathOrNull(
+    path.join(realSkillDirPath, SKILL_FILE_NAME),
+  );
+  if (realSkillFile === null) {
+    throw new ExpectedCommandDispatchError(
+      "skill_not_found",
+      `Skill "${name}" not found`,
+    );
+  }
+  if (
+    realSkillFile === realSkillDirPath ||
+    !isPathWithinDirectory(realSkillDirPath, realSkillFile)
+  ) {
+    throw new CommandDispatchError(
+      "skill_outside_root",
+      `Refusing to edit "${name}": its SKILL.md resolves outside the skill directory`,
+    );
+  }
+  return { skillDirPath: realSkillDirPath, skillFilePath: realSkillFile };
+}
+
 async function resolveSandySkillFile(
   command: CommandOf<"host.write_skill"> & {
     scope: "sandy-user" | "sandy-project";
   },
   dataDir: string,
-): Promise<string> {
+): Promise<ResolvedSkillFile> {
   const sandyRoot = resolveDeletableSkillRoot(
     { scope: command.scope, cwd: command.cwd, rootPath: null },
     dataDir,
@@ -285,13 +316,13 @@ async function resolveSandySkillFile(
       "Refusing to edit a skill that resolves outside its sandy root",
     );
   }
-  return path.join(realTarget, SKILL_FILE_NAME);
+  return resolveConfinedSkillFile(realTarget, command.name);
 }
 
 async function resolveLinkedSkillFile(
   command: CommandOf<"host.write_skill">,
   dataDir: string,
-): Promise<string> {
+): Promise<ResolvedSkillFile> {
   const rootPath = command.rootPath;
   if (rootPath === null || !path.isAbsolute(rootPath)) {
     throw new CommandDispatchError(
@@ -299,23 +330,31 @@ async function resolveLinkedSkillFile(
       "rootPath must be absolute for a provider or shared skill",
     );
   }
-  const realSkillFile = await realpathOrNull(
-    path.join(rootPath, command.name, SKILL_FILE_NAME),
-  );
-  if (realSkillFile === null) {
+  const realSkillDir = await realpathOrNull(path.join(rootPath, command.name));
+  if (realSkillDir === null) {
     throw new ExpectedCommandDispatchError(
       "skill_not_found",
       `Skill "${command.name}" not found`,
     );
   }
+  const resolved = await resolveConfinedSkillFile(realSkillDir, command.name);
   const realDataDir = await realpathOrNull(dataDir);
-  if (realDataDir !== null && isPathWithinDirectory(realDataDir, realSkillFile)) {
+  if (
+    realDataDir !== null &&
+    isPathWithinDirectory(realDataDir, resolved.skillFilePath)
+  ) {
     throw new CommandDispatchError(
       "skill_not_writable",
       `Skill "${command.name}" is installed and managed by sandy and cannot be edited`,
     );
   }
-  return realSkillFile;
+  if (isBundledProviderSkillPath(resolved.skillFilePath)) {
+    throw new CommandDispatchError(
+      "skill_not_writable",
+      `Skill "${command.name}" is bundled with its provider and cannot be edited`,
+    );
+  }
+  return resolved;
 }
 
 export async function writeHostSkill(
@@ -329,7 +368,7 @@ export async function writeHostSkill(
     );
   }
   const { scope } = command;
-  const skillFilePath =
+  const { skillDirPath, skillFilePath } =
     scope === "sandy-user" || scope === "sandy-project"
       ? await resolveSandySkillFile({ ...command, scope }, options.dataDir)
       : await resolveLinkedSkillFile(command, options.dataDir);
@@ -343,7 +382,7 @@ export async function writeHostSkill(
   const result = await writeHostFile({
     type: "host.write_file",
     path: skillFilePath,
-    rootPath: path.dirname(skillFilePath),
+    rootPath: skillDirPath,
     content: command.content,
     contentEncoding: "utf8",
     createParents: false,

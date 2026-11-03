@@ -7,6 +7,7 @@ import {
   type ProviderNativeRoots,
 } from "@sandy/domain";
 import type { DiscoveredSkill } from "@sandy/host-daemon-contract";
+import { isBundledProviderSkillPath } from "@sandy/skill-index";
 import type { SkillRegistration } from "@sandy/server-contract";
 import { COMMAND_TIMEOUT_MS } from "../../constants.js";
 import type { LoggedWorkSessionDeps } from "../../types.js";
@@ -65,7 +66,7 @@ function toSharedSkill(
       pluginId: null,
       filePath: skill.filePath,
       manageable: false,
-      writable: true,
+      writable: !isBundledProviderSkillPath(skill.realPath),
       metadata: skill.metadata,
     },
   };

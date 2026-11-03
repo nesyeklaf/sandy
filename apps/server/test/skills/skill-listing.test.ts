@@ -254,6 +254,42 @@ describe("assembleSkillList", () => {
     ).toMatchObject({ scope: "sandy-project", manageable: false, writable: false });
   });
 
+  it("keeps a shared or provider skill whose real path is a bundled provider skill read-only", () => {
+    const realPath = "/home/.codex/skills/.system/builtin/SKILL.md";
+    const sharedAlias = {
+      ...discovered(
+        "builtin",
+        "shared-user",
+        "/home/.agents/skills/builtin/SKILL.md",
+      ),
+      realPath,
+      linked: true,
+    };
+    const providerAlias = {
+      ...discovered(
+        "builtin",
+        "provider-project",
+        "/cwd/.claude/skills/builtin/SKILL.md",
+      ),
+      realPath,
+      linked: true,
+    };
+
+    expect(
+      assembleSkillList([
+        { provider: "codex", skills: [sharedAlias] },
+        { provider: "claude-code", skills: [providerAlias] },
+      ]).map(({ scope, manageable, writable }) => ({
+        scope,
+        manageable,
+        writable,
+      })),
+    ).toEqual([
+      { scope: "shared-user", manageable: false, writable: false },
+      { scope: "provider-project", manageable: false, writable: false },
+    ]);
+  });
+
   it("keeps linked provider user skills visible and writable but not manageable", () => {
     const linked = {
       ...discovered(
