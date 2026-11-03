@@ -1,11 +1,11 @@
 import { expect } from "@playwright/test";
-import { test, cli, rpc, shelf, reset, open, fixture } from "./helpers.mjs";
+import { test, cli, rpc, shelf, reset, open, fixture, showArchived } from "./helpers.mjs";
 import { seed } from "./seeds.mjs";
 import { probeShelfToggle } from "./motion-probe.mjs";
 
 test.use({ reducedMotion: "no-preference" });
 
-const SHELVES = ["Pinned", "Active", "Snoozed", "Parked", "Settled"];
+const SHELVES = ["Pinned", "Waiting", "Snoozed", "Archived"];
 
 // Deterministic, so a failing walk replays the same toggles.
 function* walk(seedValue, length) {
@@ -29,7 +29,7 @@ test("no shelf or row jumps for any shelf toggle sequence, docked or not", async
   const failures = [];
   try {
     await reset(request);
-    for (const title of ["Sweep pinned", "Sweep snoozed", "Sweep settled", "Sweep active"]) {
+    for (const title of ["Sweep pinned", "Sweep snoozed", "Sweep settled", "Sweep waiting"]) {
       extra.push(await seed(title));
     }
     const [a, b, c, d] = fixture.threads;
@@ -44,6 +44,7 @@ test("no shelf or row jumps for any shelf toggle sequence, docked or not", async
     for (const docked of [true, false]) {
       await rpc(request, "updateSidebarSettings", { ...fixture.defaultSettings, dockShelves: docked });
       await open(page);
+      await showArchived(page);
       await expect(page.locator("[data-shelf-dock]")).toHaveCount(docked ? 1 : 0);
       for (const name of SHELVES) await expect(shelf(page, name)).toBeVisible();
       const record = (context, result) => {
@@ -68,10 +69,10 @@ test("no shelf or row jumps for any shelf toggle sequence, docked or not", async
       // status line, a chip, a wrapped title). Later motion must start from the
       // grown layout, not from the positions before the growth.
       await collapseAll(page);
-      for (const name of ["Pinned", "Active"]) await page.evaluate(probeShelfToggle, name);
-      for (const target of ["Pinned", "Active", "Snoozed"]) {
+      for (const name of ["Pinned", "Waiting"]) await page.evaluate(probeShelfToggle, name);
+      for (const target of ["Pinned", "Waiting", "Snoozed"]) {
         await page.evaluate(() => {
-          const row = document.querySelector('[data-sandy-sidebar-root] section[aria-label="Active"] li');
+          const row = document.querySelector('[data-sandy-sidebar-root] section[aria-label="Waiting"] li');
           const grow = document.createElement("div");
           grow.dataset.sweepGrowth = "";
           grow.style.height = "37px";

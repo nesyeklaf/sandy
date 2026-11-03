@@ -1,17 +1,18 @@
 import { expect } from "@playwright/test";
-import { test, cli, rpc, shelf, expand, reset, open, fixture } from "./helpers.mjs";
+import { test, cli, rpc, shelf, expand, reset, open, fixture, showArchived } from "./helpers.mjs";
 import { seed } from "./seeds.mjs";
 
 test.use({ reducedMotion: "no-preference" });
 
-test("docked Snoozed toggles do not animate stationary shelves below it", async ({ page, request }) => {
+test("docked Snoozed toggles do not animate the Archived shelf below it", async ({ page, request }) => {
   await reset(request);
   await rpc(request, "updateSidebarSettings", { ...fixture.defaultSettings, dockShelves: true });
   await rpc(request, "snooze", { threadId: fixture.threads[1].id, snoozedUntil: Date.now() + 86_400_000 });
   await rpc(request, "settle", { threadId: fixture.threads[2].id });
   await open(page);
+  await showArchived(page);
   const snoozed = shelf(page, "Snoozed");
-  const settled = shelf(page, "Settled");
+  const settled = shelf(page, "Archived");
   await expect(page.locator("[data-shelf-dock]")).toHaveCount(1);
   for (const section of [snoozed, settled]) {
     const toggle = section.getByRole("button", { expanded: true }).first();
@@ -56,7 +57,7 @@ test("docked Snoozed toggles do not animate stationary shelves below it", async 
 
 // Real rows on the runner's scratch server. Timing is saved with the report;
 // structural assertions catch animation regressions without a machine-specific FPS gate.
-test("large settled shelves toggle without bulk or height animations", async ({ page, request }, testInfo) => {
+test("large archived shelves toggle without bulk or height animations", async ({ page, request }, testInfo) => {
   test.setTimeout(300_000);
   const threads = [];
   const samples = [];
@@ -68,8 +69,9 @@ test("large settled shelves toggle without bulk or height animations", async ({ 
       await rpc(request, "settle", { threadId: thread.id });
     }
     await open(page);
-    await expand(page, "Settled");
-    const settled = shelf(page, "Settled");
+    await showArchived(page);
+    await expand(page, "Archived");
+    const settled = shelf(page, "Archived");
     await expect(settled.getByRole("link")).toHaveCount(10);
     await settled.getByRole("button", { name: "Load 25 more" }).click();
     await expect(settled.getByRole("link")).toHaveCount(35);
@@ -83,7 +85,7 @@ test("large settled shelves toggle without bulk or height animations", async ({ 
         projectColorsEnabled: true,
       });
       await expect(page.locator("[data-shelf-dock]")).toHaveCount(docked ? 1 : 0);
-      const toggle = settled.getByRole("button", { name: /^Settled/, expanded: true });
+      const toggle = settled.getByRole("button", { name: /^Archived/, expanded: true });
       await toggle.scrollIntoViewIfNeeded();
       // Let earlier pagination and docking transitions finish before measuring.
       await page.evaluate(async () => {
@@ -146,12 +148,12 @@ test("large settled shelves toggle without bulk or height animations", async ({ 
     // Selecting a settled thread must keep it reachable even when collapsed.
     await settled.getByRole("link").first().click();
     const selectedTitle = await settled.getByRole("link").first().getAttribute("aria-label");
-    await settled.getByRole("button", { name: /^Settled/, expanded: true }).click();
+    await settled.getByRole("button", { name: /^Archived/, expanded: true }).click();
     await expect(settled.getByRole("link")).toHaveCount(1);
     await expect(settled.getByRole("link")).toHaveAttribute("aria-label", selectedTitle);
-    await expand(page, "Settled");
+    await expand(page, "Archived");
     await expect(settled.getByRole("link")).toHaveCount(60);
-    await page.screenshot({ path: testInfo.outputPath("settled-expanded.png") });
+    await page.screenshot({ path: testInfo.outputPath("archived-expanded.png") });
   } finally {
     await testInfo.attach("shelf-motion-timing", {
       body: JSON.stringify(samples, null, 2),

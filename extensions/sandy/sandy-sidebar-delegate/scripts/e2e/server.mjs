@@ -249,7 +249,7 @@ trace_exporter = "none"
     });
     symlinkSync(runtimeModules, join(pluginDir, "node_modules"));
     await run(sandy, ["plugin", "install", `path:${pluginDir}`, "--yes"]);
-    await run(sandy, ["settings", "ui", "set", "sidebar.threadListProvider", "sandy-sidebar/inbox"]);
+    await run(sandy, ["settings", "ui", "set", "sidebar.threadListProvider", "sandy-sidebar-delegate/inbox"]);
     await run(sandy, ["settings", "general", "onboardingCompletedAt", new Date().toISOString()]);
     const repo = join(scratch, "repo");
     await run("git", ["init", "--initial-branch=main", repo]);

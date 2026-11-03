@@ -33,7 +33,7 @@ for (const [name, theme, width] of [
     const sidebar = page.locator("[data-sandy-sidebar-root]");
     expect(Math.round((await sidebar.boundingBox()).width)).toBe(width);
     await capture(page, testInfo, `${name}.png`);
-    await expect(shelf(page, "Active").getByRole("link")).toHaveCount(1);
+    await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(1);
   });
 }
 

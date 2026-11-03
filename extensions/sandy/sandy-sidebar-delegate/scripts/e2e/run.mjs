@@ -10,7 +10,7 @@ try {
     threads.push(await server.seed(title, { idle: true }));
   }
   await server.checkIsolation("seeded");
-  const settingsResponse = await fetch(`${server.url}/api/v1/plugins/sandy-sidebar/rpc/getSidebarSettings`, {
+  const settingsResponse = await fetch(`${server.url}/api/v1/plugins/sandy-sidebar-delegate/rpc/getSidebarSettings`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: "{}",
