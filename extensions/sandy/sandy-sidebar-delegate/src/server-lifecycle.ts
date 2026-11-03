@@ -2,7 +2,7 @@ import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { ServerContext } from "./server-context";
 import type { SettledOverride } from "./auto-settle";
 import { LIFECYCLE_CHANNEL } from "./contract";
-import { canPark, hasLiveWork, isTurnInFlight, resolveShelf } from "./lifecycle";
+import { canPark, hasBackgroundWork, hasLiveWork, isTurnInFlight, resolveShelf } from "./lifecycle";
 import { threadTreeIds } from "./thread-tree";
 
 /** One-time data repairs that need sandy's thread tree, which SQL cannot see. */
@@ -312,22 +312,23 @@ export function createServerLifecycle(ctx: ServerContext) {
 
   type CleanupThread = Awaited<ReturnType<typeof loadPolicyThreads>>[number];
 
-  const threadSignals = (thread: CleanupThread) => ({
-    hasPendingInteraction: thread.hasPendingInteraction,
-    hasQueuedWork: thread.queuedWork !== "none",
-    isWorking: hasLiveWork(
-      {
-        workflows: thread.activity.activeWorkflowCount,
-        backgroundAgents: thread.activity.activeBackgroundAgentCount,
-        backgroundCommands: thread.activity.activeBackgroundCommandCount,
-        planMode: thread.activity.activePlanModeCount,
-        goals: thread.activity.activeGoalCount,
-      },
-      isTurnInFlight(thread.status),
-    ),
-    isUnread: thread.lastReadAt === null || thread.latestAttentionAt > thread.lastReadAt,
-    latestAttentionAt: thread.latestAttentionAt,
-  });
+  const threadSignals = (thread: CleanupThread) => {
+    const activity = {
+      workflows: thread.activity.activeWorkflowCount,
+      backgroundAgents: thread.activity.activeBackgroundAgentCount,
+      backgroundCommands: thread.activity.activeBackgroundCommandCount,
+      planMode: thread.activity.activePlanModeCount,
+      goals: thread.activity.activeGoalCount,
+    };
+    return {
+      hasPendingInteraction: thread.hasPendingInteraction,
+      hasQueuedWork: thread.queuedWork !== "none",
+      isWorking: hasLiveWork(activity, isTurnInFlight(thread.status)),
+      hasBackgroundWork: hasBackgroundWork(activity),
+      isUnread: thread.lastReadAt === null || thread.latestAttentionAt > thread.lastReadAt,
+      latestAttentionAt: thread.latestAttentionAt,
+    };
+  };
 
   const settleTree = (threads: readonly CleanupThread[], threadId: string) => {
     const ids = new Set(threadTreeIds(threads, threadId));

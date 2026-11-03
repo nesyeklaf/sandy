@@ -22,6 +22,7 @@ const quiet: ThreadActivitySignals = {
   hasPendingInteraction: false,
   hasQueuedWork: false,
   isWorking: false,
+  hasBackgroundWork: false,
   isUnread: false,
   latestAttentionAt: 0,
 };
@@ -293,4 +294,21 @@ describe("parked shelf", () => {
       expect(resolveShelf(row({ parkedAt: 100 }), { ...quiet, ...signals }, 200)).toBe("active");
     },
   );
+});
+
+describe("a deferred question on a running turn", () => {
+  const deferredRow = row({ snoozedUntil: 5_000, snoozedAt: 500, deferredInteractionId: "int_1" });
+  const waiting = { ...quiet, hasPendingInteraction: true, isWorking: true };
+
+  it("snoozes the turn that waits on it", () => {
+    expect(resolveShelf(deferredRow, waiting, 1_000)).toBe("snoozed");
+  });
+
+  it("stays active while background work runs", () => {
+    expect(resolveShelf(deferredRow, { ...waiting, hasBackgroundWork: true }, 1_000)).toBe("active");
+  });
+
+  it("returns once the question is answered and the turn continues", () => {
+    expect(resolveShelf(deferredRow, { ...waiting, hasPendingInteraction: false }, 1_000)).toBe("active");
+  });
 });

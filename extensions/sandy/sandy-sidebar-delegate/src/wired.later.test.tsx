@@ -75,3 +75,26 @@ it("Later on a parent defers its child's question and a new child question wakes
   await wired.interactionPending("child", question("int_2", "child") as never);
   await waitFor(() => expect(screen.queryByRole("region", { name: "Needs you" })).not.toBeNull());
 });
+
+it("Later moves a question from an active turn out of Needs you", async () => {
+  const wired = await createWired(
+    [asking("ask", { status: "active", runtimeStatus: "active" })],
+    { interactions: { ask: [question("int_1", "ask")] as never } },
+  );
+  await wired.call("updateSidebarSettings", { autoSettleInactive: false });
+  wired.mount();
+  await later(wired);
+});
+
+it("Later on a parent moves its child's active-turn question out of Needs you", async () => {
+  const wired = await createWired(
+    [
+      thread({ id: "parent", title: "Release", updatedAt: Date.now() }),
+      asking("child", { parentThreadId: "parent", status: "active", runtimeStatus: "active" }),
+    ],
+    { interactions: { child: [question("int_1", "child")] as never } },
+  );
+  await wired.call("updateSidebarSettings", { autoSettleInactive: false });
+  wired.mount();
+  await later(wired);
+});

@@ -30,6 +30,7 @@ export interface ThreadActivitySignals {
   hasQueuedWork: boolean;
   /** Any live work: runtime, workflows, background agents, plan, goals. */
   isWorking: boolean;
+  hasBackgroundWork: boolean;
   isUnread: boolean;
   /** Newest attention timestamp sandy reports for the thread. */
   latestAttentionAt: number;
@@ -94,15 +95,18 @@ export function isTurnInFlight(status: PluginSidebarThread["status"]): boolean {
  * different sandy views, so each passes its own turn signal, but the counters
  * that make a thread busy must never differ between them.
  */
-export function hasLiveWork(activity: PluginSidebarThreadActivity, turnInFlight: boolean): boolean {
+export function hasBackgroundWork(activity: PluginSidebarThreadActivity): boolean {
   return (
-    turnInFlight ||
     activity.workflows > 0 ||
     activity.backgroundAgents > 0 ||
     activity.backgroundCommands > 0 ||
     activity.planMode > 0 ||
     activity.goals > 0
   );
+}
+
+export function hasLiveWork(activity: PluginSidebarThreadActivity, turnInFlight: boolean): boolean {
+  return turnInFlight || hasBackgroundWork(activity);
 }
 
 /** Any live work at all, which blocks parking and wakes a parked thread. */
@@ -119,6 +123,7 @@ export function sidebarThreadSignals(thread: PluginSidebarThread): ThreadActivit
     hasPendingInteraction: thread.hasPendingInteraction,
     hasQueuedWork: thread.queuedWork !== "none",
     isWorking: isThreadWorking(thread),
+    hasBackgroundWork: hasBackgroundWork(thread.activity),
     isUnread: thread.isUnread,
     latestAttentionAt: thread.latestAttentionAt,
   };
@@ -142,7 +147,11 @@ export function resolveShelf(
   now: number,
 ): ThreadShelf {
   if (row === undefined) return "active";
-  if (!canPark(defersQuestion(row) ? { ...signals, hasPendingInteraction: false } : signals)) return "active";
+  const waitsOnDeferredQuestion = defersQuestion(row) && signals.hasPendingInteraction;
+  const parkSignals = waitsOnDeferredQuestion
+    ? { ...signals, hasPendingInteraction: false, isWorking: signals.hasBackgroundWork }
+    : signals;
+  if (!canPark(parkSignals)) return "active";
 
   if (row.parkedAt != null) {
     return signals.latestAttentionAt > row.parkedAt ? "active" : "parked";
