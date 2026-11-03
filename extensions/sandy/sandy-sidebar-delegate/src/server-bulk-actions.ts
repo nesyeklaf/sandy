@@ -23,7 +23,15 @@ export function createServerBulkActions(
   lifecycle: ReturnType<typeof createServerLifecycle>,
   cleanup: ReturnType<typeof createServerSettleCleanup>,
 ) {
-  const { readOne, write, withPinParentChange, loadPolicyThreads, sameLifecycle, publishLifecycleChanges } = lifecycle;
+  const {
+    readOne,
+    write,
+    serializeThreads,
+    withPinParentChange,
+    loadPolicyThreads,
+    sameLifecycle,
+    publishLifecycleChanges,
+  } = lifecycle;
   const { reclaimThreadResources } = cleanup;
   const undos = new Map<string, BulkUndo>();
   ctx.sandy.onDispose(() => undos.clear());
@@ -36,10 +44,11 @@ export function createServerBulkActions(
       write({ threadId, parkedAt: null, settledAt: null, settledOverride: "active", snoozedUntil: null, snoozedAt: null });
     });
 
-  const commitSnooze = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null) => {
-    await ctx.sandy.sdk.threads.unpin({ threadId });
-    write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
-  };
+  const commitSnooze = (threadId: string, snoozedUntil: number, deferredInteractionId: string | null) =>
+    serializeThreads([threadId], async () => {
+      await ctx.sandy.sdk.threads.unpin({ threadId });
+      write({ threadId, settledAt: null, settledOverride: null, snoozedUntil, snoozedAt: Date.now(), deferredInteractionId });
+    });
 
   const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
     await commitSnooze(threadId, snoozedUntil, deferredInteractionId);
@@ -99,7 +108,7 @@ export function createServerBulkActions(
       return runEach(threadIds, async (threadId, before) => {
         if (before.pinned === pinned) return null;
         if (pinned) await pinThread(threadId);
-        else await ctx.sandy.sdk.threads.unpin({ threadId });
+        else await serializeThreads([threadId], () => ctx.sandy.sdk.threads.unpin({ threadId }));
         return { pinned };
       });
     },
@@ -125,13 +134,17 @@ export function createServerBulkActions(
       const failed: string[] = [];
       for (const { threadId, before, after } of undo.threads) {
         try {
-          const pinnedNow = (await ctx.sandy.sdk.threads.get({ threadId })).pinnedAt !== null;
-          if (pinnedNow !== after.pinned || !sameLifecycle(readOne(threadId), after.row)) continue;
-          if (before.pinned && !pinnedNow) await ctx.sandy.sdk.threads.pin({ threadId });
-          if (!before.pinned && pinnedNow) await ctx.sandy.sdk.threads.unpin({ threadId });
-          if (before.row) write(before.row, false);
-          else ctx.db.prepare("DELETE FROM thread_lifecycle WHERE thread_id = ?").run(threadId);
-          restored.push(threadId);
+          const reverted = await serializeThreads([threadId], async () => {
+            const pinnedNow = (await ctx.sandy.sdk.threads.get({ threadId })).pinnedAt !== null;
+            if (pinnedNow !== after.pinned || !sameLifecycle(readOne(threadId), after.row)) return false;
+            if (before.pinned && !pinnedNow) await ctx.sandy.sdk.threads.pin({ threadId });
+            if (!before.pinned && pinnedNow) await ctx.sandy.sdk.threads.unpin({ threadId });
+            if (!sameLifecycle(readOne(threadId), after.row)) throw new Error("Thread changed during Undo");
+            if (before.row) write(before.row, false);
+            else ctx.db.prepare("DELETE FROM thread_lifecycle WHERE thread_id = ?").run(threadId);
+            return true;
+          });
+          if (reverted) restored.push(threadId);
         } catch {
           failed.push(threadId);
         }

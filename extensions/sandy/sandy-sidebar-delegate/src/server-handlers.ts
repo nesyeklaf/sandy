@@ -46,8 +46,17 @@ export function createServerHandlers(
   const { readSidebarSettings, writeSidebarSettings } = settings;
   const { evaluatePolicies } = policy;
   const { reclaimThreadResources } = cleanup;
-  const { readOne, readAll, withPinParentChange, write, clear, readInboxOrder, replaceInboxOrder, wakeAncestors } =
-    lifecycle;
+  const {
+    readOne,
+    readAll,
+    serializeThreads,
+    withPinParentChange,
+    write,
+    clear,
+    readInboxOrder,
+    replaceInboxOrder,
+    wakeAncestors,
+  } = lifecycle;
 
   // Hover cards resolve model names on every open. Share one catalog request
   // per environment and provider for a few minutes instead of refetching.
@@ -184,25 +193,29 @@ export function createServerHandlers(
       return { ok: true };
     },
     async park({ threadId }) {
-      await ctx.sandy.sdk.threads.unpin({ threadId });
-      write({
-        threadId,
-        parkedAt: Date.now(),
-        settledAt: null,
-        settledOverride: null,
-        snoozedUntil: null,
-        snoozedAt: null,
+      await serializeThreads([threadId], async () => {
+        await ctx.sandy.sdk.threads.unpin({ threadId });
+        write({
+          threadId,
+          parkedAt: Date.now(),
+          settledAt: null,
+          settledOverride: null,
+          snoozedUntil: null,
+          snoozedAt: null,
+        });
       });
       return { ok: true, reclaim: await reclaimThreadResources(threadId) };
     },
     async resume({ threadId }) {
-      write({
-        threadId,
-        settledAt: null,
-        settledOverride: "active",
-        snoozedUntil: null,
-        snoozedAt: null,
-      });
+      await serializeThreads([threadId], async () =>
+        write({
+          threadId,
+          settledAt: null,
+          settledOverride: "active",
+          snoozedUntil: null,
+          snoozedAt: null,
+        }),
+      );
       return { ok: true };
     },
     async snooze({ threadId, snoozedUntil, deferredInteractionId }) {
@@ -224,13 +237,13 @@ export function createServerHandlers(
       return { ok: true };
     },
     async unsnooze({ threadId }) {
-      clear(threadId);
+      await serializeThreads([threadId], async () => clear(threadId));
       return { ok: true };
     },
     async acknowledgeWake({ threadId }) {
       // A woken snooze row is retained only to make the marker durable. Once
       // the user opens or dismisses it, the thread is ordinary active work.
-      clear(threadId);
+      await serializeThreads([threadId], async () => clear(threadId));
       return { ok: true };
     },
     async reorderPinned({ threadId, previousThreadId, nextThreadId }) {

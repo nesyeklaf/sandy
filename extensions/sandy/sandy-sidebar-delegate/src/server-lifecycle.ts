@@ -220,13 +220,35 @@ export function createServerLifecycle(ctx: ServerContext) {
   // Pin, reparent and tree Settle must not validate the same old state.
   const pinParentChanges = new Set<string>();
 
+  const threadQueues = new Map<string, Promise<void>>();
+
+  const serializeThreads = async <T>(threadIds: readonly string[], change: () => Promise<T>): Promise<T> => {
+    const ids = [...new Set(threadIds)];
+    const previous = Promise.all(ids.map((id) => threadQueues.get(id)));
+    let release!: () => void;
+    const done = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const tail = previous.then(() => done);
+    ids.forEach((id) => threadQueues.set(id, tail));
+    await previous;
+    try {
+      return await change();
+    } finally {
+      release();
+      ids.forEach((id) => {
+        if (threadQueues.get(id) === tail) threadQueues.delete(id);
+      });
+    }
+  };
+
   const withThreadChanges = async <T>(threadIds: string[], change: () => Promise<T>): Promise<T> => {
     if (threadIds.some((id) => pinParentChanges.has(id))) {
       throw new Error("Thread update already in progress. Try again.");
     }
     threadIds.forEach((id) => pinParentChanges.add(id));
     try {
-      return await change();
+      return await serializeThreads(threadIds, change);
     } finally {
       threadIds.forEach((id) => pinParentChanges.delete(id));
     }
@@ -374,6 +396,7 @@ export function createServerLifecycle(ctx: ServerContext) {
     sameLifecycle,
     wakeAncestors,
     wakeDeferredQuestions,
+    serializeThreads,
     withThreadChanges,
     withPinParentChange,
     readInboxOrder,

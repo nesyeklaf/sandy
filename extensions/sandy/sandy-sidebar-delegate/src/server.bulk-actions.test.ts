@@ -2,6 +2,8 @@ import { expect, it } from "vitest";
 import { makeThreadResponse } from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server";
 import { createFakePluginHost, disposers, projectThread, projectsWith } from "./test-server";
+import { deferred } from "./test-fixtures";
+import type { LifecycleListResult } from "./test-server";
 
 async function setup(initial: Record<string, boolean> = { a: false, b: false }) {
   const pins = new Map(Object.entries(initial));
@@ -50,4 +52,31 @@ it("keeps a committed pin undoable when the read after it fails", async () => {
     ["a", false],
     ["b", false],
   ]);
+});
+
+it("an Undo in flight keeps a Snooze chosen while it waited", async () => {
+  const h = await setup();
+  const result = await h.call<BulkChange>("pinThreads", { threadIds: ["a"], pinned: true });
+  const entered = deferred<void>();
+  const release = deferred<void>();
+  let first = true;
+  h.harness.inspection.sdk.stub("threads.unpin", async ({ threadId }: { threadId: string }) => {
+    if (first) {
+      first = false;
+      entered.resolve();
+      await release.promise;
+    }
+    h.pins.set(threadId, false);
+    return h.response(threadId);
+  });
+  const undo = h.call<BulkUndo>("undoBulkAction", { undoToken: result.undoToken });
+  await entered.promise;
+  const snoozedUntil = Date.now() + 3_600_000;
+  const snooze = h.call("snooze", { threadId: "a", snoozedUntil });
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  release.resolve();
+  await Promise.all([undo, snooze]);
+  const { rows } = await h.call<LifecycleListResult>("listLifecycle");
+  expect(rows).toEqual([expect.objectContaining({ threadId: "a", snoozedUntil })]);
+  expect(h.pins.get("a")).toBe(false);
 });
