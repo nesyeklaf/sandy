@@ -1029,7 +1029,7 @@ describe("host-daemon command schemas", () => {
   });
 
   it("uses the current host-daemon protocol version", () => {
-    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(262);
+    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(263);
     expect(HOST_ARTIFACT_MAX_BYTES).toBe(256 * 1024 * 1024);
   });
 
@@ -1051,7 +1051,8 @@ describe("host-daemon command schemas", () => {
     expect(contract.isCompatibleHostDaemonProtocolVersion(259)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(260)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(261)).toBe(false);
-    expect(contract.isCompatibleHostDaemonProtocolVersion(262)).toBe(true);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(262)).toBe(false);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(263)).toBe(true);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(247)).toBe(false);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(248)).toBe(true);
   });
@@ -2496,7 +2497,7 @@ describe("host-daemon command schemas", () => {
     ).toBe(false);
   });
 
-  it("limits host.write_skill to daemon-derived sandy roots", () => {
+  it("derives sandy skill roots in the daemon and requires rootPath for provider and shared skills", () => {
     const base = {
       type: "host.write_skill",
       name: "review",
@@ -2504,18 +2505,23 @@ describe("host-daemon command schemas", () => {
       content: "# Review",
       expectedSha256: "a".repeat(64),
     } as const;
+    const parses = (command: Record<string, unknown>) =>
+      hostDaemonOnlineRpcCommandSchema.safeParse({ ...base, ...command })
+        .success;
+    expect(parses({ scope: "sandy-user", rootPath: null })).toBe(true);
+    expect(parses({ scope: "sandy-user", rootPath: "/home/user/skills" })).toBe(
+      false,
+    );
+    expect(parses({ scope: "provider-user", rootPath: null })).toBe(false);
     expect(
-      hostDaemonOnlineRpcCommandSchema.safeParse({
-        ...base,
-        scope: "sandy-user",
-      }).success,
+      parses({ scope: "shared-user", rootPath: "/home/user/.agents/skills" }),
     ).toBe(true);
     expect(
-      hostDaemonOnlineRpcCommandSchema.safeParse({
-        ...base,
-        scope: "provider-user",
-      }).success,
+      parses({ scope: "sandy-builtin", rootPath: "/opt/sandy/skills" }),
     ).toBe(false);
+    expect(parses({ scope: "plugin", rootPath: "/home/user/plugin" })).toBe(
+      false,
+    );
   });
 
   it("requires file list commands to state their entry filters", () => {

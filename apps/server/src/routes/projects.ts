@@ -36,6 +36,7 @@ import {
   type ProjectResponse,
   type ProjectWithThreadsResponse,
   type PublicApiSchema,
+  type SkillWriteConflictDetails,
 } from "@sandy/server-contract";
 import type { Hono } from "hono";
 import type { AppDeps } from "../types.js";
@@ -849,7 +850,18 @@ export function registerProjectRoutes(app: Hono, deps: AppDeps): void {
       revision: payload.revision,
       workspace,
     });
-    return context.json(result);
+    if (result.outcome === "conflict") {
+      const details: SkillWriteConflictDetails = {
+        currentRevision: result.currentRevision,
+      };
+      throw new ApiError(409, "conflict", "Skill changed before it was saved", {
+        details,
+      });
+    }
+    return context.json({
+      filePath: result.filePath,
+      revision: result.revision,
+    });
   });
 
   const readProjectBranches = async (

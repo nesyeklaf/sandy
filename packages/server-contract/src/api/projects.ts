@@ -344,6 +344,7 @@ export const skillRegistrationSchema = z.object({
   pluginId: z.string().min(1).nullable(),
   filePath: z.string(),
   manageable: z.boolean(),
+  writable: z.boolean(),
   metadata: z.record(z.string(), z.string()),
 });
 export type SkillRegistration = z.infer<typeof skillRegistrationSchema>;
@@ -425,6 +426,8 @@ export type ProjectSkillContentQuery = z.infer<
 export const skillContentResponseSchema = z.object({
   content: z.string(),
   revision: skillRevisionSchema,
+  filePath: z.string(),
+  writable: z.boolean(),
 });
 export type SkillContentResponse = z.infer<typeof skillContentResponseSchema>;
 
@@ -443,6 +446,13 @@ export const updateSkillRequestSchema = z
   })
   .strict();
 export type UpdateSkillRequest = z.infer<typeof updateSkillRequestSchema>;
+
+export const skillWriteConflictDetailsSchema = z.object({
+  currentRevision: skillRevisionSchema.nullable(),
+});
+export type SkillWriteConflictDetails = z.infer<
+  typeof skillWriteConflictDetailsSchema
+>;
 
 export const projectResponseSchema = projectSchema.extend({
   sources: z.array(projectSourceSchema),

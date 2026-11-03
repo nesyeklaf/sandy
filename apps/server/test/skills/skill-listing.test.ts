@@ -16,6 +16,7 @@ describe("mapSkillScope", () => {
     scope: string;
     listedProvider: SkillProvider | null;
     manageable: boolean;
+    writable: boolean;
     filePath?: string;
   }> = [
     {
@@ -24,6 +25,7 @@ describe("mapSkillScope", () => {
       scope: "sandy-project",
       listedProvider: null,
       manageable: true,
+      writable: true,
     },
     {
       provider: "claude-code",
@@ -31,6 +33,7 @@ describe("mapSkillScope", () => {
       scope: "sandy-user",
       listedProvider: null,
       manageable: true,
+      writable: true,
     },
     {
       provider: "claude-code",
@@ -38,6 +41,7 @@ describe("mapSkillScope", () => {
       scope: "sandy-builtin",
       listedProvider: null,
       manageable: false,
+      writable: false,
     },
     {
       provider: "claude-code",
@@ -45,6 +49,7 @@ describe("mapSkillScope", () => {
       scope: "provider-project",
       listedProvider: "claude-code",
       manageable: true,
+      writable: true,
     },
     {
       provider: "claude-code",
@@ -52,6 +57,7 @@ describe("mapSkillScope", () => {
       scope: "provider-user",
       listedProvider: "claude-code",
       manageable: true,
+      writable: true,
     },
     {
       provider: "claude-code",
@@ -59,6 +65,7 @@ describe("mapSkillScope", () => {
       scope: "plugin",
       listedProvider: "claude-code",
       manageable: false,
+      writable: false,
     },
     {
       provider: "codex",
@@ -66,6 +73,23 @@ describe("mapSkillScope", () => {
       scope: "plugin",
       listedProvider: "codex",
       manageable: false,
+      writable: false,
+    },
+    {
+      provider: "sandy-shared",
+      rootKind: "shared-user",
+      scope: "shared-user",
+      listedProvider: null,
+      manageable: false,
+      writable: true,
+    },
+    {
+      provider: "sandy-shared",
+      rootKind: "shared-project",
+      scope: "shared-project",
+      listedProvider: null,
+      manageable: false,
+      writable: true,
     },
   ];
 
@@ -81,6 +105,7 @@ describe("mapSkillScope", () => {
         scope: testCase.scope,
         provider: testCase.listedProvider,
         manageable: testCase.manageable,
+        writable: testCase.writable,
       });
     });
   }
@@ -92,7 +117,12 @@ describe("mapSkillScope", () => {
         "provider-user",
         "/home/user/.codex/skills/.system/imagegen/SKILL.md",
       ),
-    ).toEqual({ scope: "provider-user", provider: "codex", manageable: false });
+    ).toEqual({
+      scope: "provider-user",
+      provider: "codex",
+      manageable: false,
+      writable: false,
+    });
   });
 });
 
@@ -204,11 +234,27 @@ describe("assembleSkillList", () => {
         scope: "provider-project",
         provider: "acp-cursor",
         manageable: false,
+        writable: true,
       }),
     );
   });
 
-  it("keeps linked provider user skills visible but not manageable", () => {
+  it("keeps a linked sandy skill read-only because the daemon only edits it in place", () => {
+    const linked = {
+      ...discovered(
+        "local",
+        "sandy-project",
+        "/cwd/.sandy/skills/local/SKILL.md",
+      ),
+      linked: true,
+    };
+
+    expect(
+      assembleSkillList([{ provider: "codex", skills: [linked] }])[0],
+    ).toMatchObject({ scope: "sandy-project", manageable: false, writable: false });
+  });
+
+  it("keeps linked provider user skills visible and writable but not manageable", () => {
     const linked = {
       ...discovered(
         "shared-link",
@@ -224,6 +270,7 @@ describe("assembleSkillList", () => {
       name: "shared-link",
       scope: "provider-user",
       manageable: false,
+      writable: true,
     });
   });
 });
@@ -242,6 +289,7 @@ describe("summarizeSkillRegistrations", () => {
       scope: "provider-user",
       pluginId: null,
       manageable: false,
+      writable: false,
       metadata: {},
       realPath: overrides.filePath,
       contentSha256: createHash("sha256")
@@ -367,6 +415,7 @@ describe("summarizeSkillRegistrations", () => {
         pluginId: null,
         filePath: only.filePath,
         manageable: false,
+        writable: false,
         metadata: {},
         providers: ["codex"],
         duplicates: [],

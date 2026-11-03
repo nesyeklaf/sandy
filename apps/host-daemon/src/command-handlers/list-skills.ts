@@ -29,6 +29,7 @@ import {
   resolveDeclaredScanRoots,
 } from "./list-commands.js";
 import { writeHostFile } from "./file-write.js";
+import { isPathWithinDirectory } from "@sandy/process-utils";
 
 type SkillRootResolution = DeclaredScanRootResolution;
 
@@ -260,22 +261,18 @@ export async function deleteHostSkill(
   return { deletedPath: realTarget };
 }
 
-export async function writeHostSkill(
-  command: CommandOf<"host.write_skill">,
-  options: { dataDir: string },
-): Promise<HostDaemonOnlineRpcResult<"host.write_skill">> {
-  if (!isSafeSkillName(command.name)) {
-    throw new CommandDispatchError(
-      "invalid_skill_name",
-      "Skill name must be a single path segment",
-    );
-  }
-  const root = resolveDeletableSkillRoot(
+async function resolveSandySkillFile(
+  command: CommandOf<"host.write_skill"> & {
+    scope: "sandy-user" | "sandy-project";
+  },
+  dataDir: string,
+): Promise<string> {
+  const sandyRoot = resolveDeletableSkillRoot(
     { scope: command.scope, cwd: command.cwd, rootPath: null },
-    options.dataDir,
+    dataDir,
   );
-  const realRoot = await realpathOrNull(root);
-  const realTarget = await realpathOrNull(path.join(root, command.name));
+  const realRoot = await realpathOrNull(sandyRoot);
+  const realTarget = await realpathOrNull(path.join(sandyRoot, command.name));
   if (realRoot === null || realTarget === null) {
     throw new ExpectedCommandDispatchError(
       "skill_not_found",
@@ -288,7 +285,54 @@ export async function writeHostSkill(
       "Refusing to edit a skill that resolves outside its sandy root",
     );
   }
-  const skillFilePath = path.join(realTarget, SKILL_FILE_NAME);
+  return path.join(realTarget, SKILL_FILE_NAME);
+}
+
+async function resolveLinkedSkillFile(
+  command: CommandOf<"host.write_skill">,
+  dataDir: string,
+): Promise<string> {
+  const rootPath = command.rootPath;
+  if (rootPath === null || !path.isAbsolute(rootPath)) {
+    throw new CommandDispatchError(
+      "invalid_path",
+      "rootPath must be absolute for a provider or shared skill",
+    );
+  }
+  const realSkillFile = await realpathOrNull(
+    path.join(rootPath, command.name, SKILL_FILE_NAME),
+  );
+  if (realSkillFile === null) {
+    throw new ExpectedCommandDispatchError(
+      "skill_not_found",
+      `Skill "${command.name}" not found`,
+    );
+  }
+  const realDataDir = await realpathOrNull(dataDir);
+  if (realDataDir !== null && isPathWithinDirectory(realDataDir, realSkillFile)) {
+    throw new CommandDispatchError(
+      "skill_not_writable",
+      `Skill "${command.name}" is installed and managed by sandy and cannot be edited`,
+    );
+  }
+  return realSkillFile;
+}
+
+export async function writeHostSkill(
+  command: CommandOf<"host.write_skill">,
+  options: { dataDir: string },
+): Promise<HostDaemonOnlineRpcResult<"host.write_skill">> {
+  if (!isSafeSkillName(command.name)) {
+    throw new CommandDispatchError(
+      "invalid_skill_name",
+      "Skill name must be a single path segment",
+    );
+  }
+  const { scope } = command;
+  const skillFilePath =
+    scope === "sandy-user" || scope === "sandy-project"
+      ? await resolveSandySkillFile({ ...command, scope }, options.dataDir)
+      : await resolveLinkedSkillFile(command, options.dataDir);
   const skillFileStat = await fs.stat(skillFilePath).catch(() => null);
   if (skillFileStat === null || !skillFileStat.isFile()) {
     throw new ExpectedCommandDispatchError(
@@ -299,7 +343,7 @@ export async function writeHostSkill(
   const result = await writeHostFile({
     type: "host.write_file",
     path: skillFilePath,
-    rootPath: realTarget,
+    rootPath: path.dirname(skillFilePath),
     content: command.content,
     contentEncoding: "utf8",
     createParents: false,

@@ -8,7 +8,11 @@ import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths"
 import { getAppSettings } from "@sandy/db";
 import type { SandySkillSourceId } from "@sandy/domain";
 import { replaceFile } from "@sandy/file-transfer";
-import type { DiscoveredSkill, SkillRootKind } from "@sandy/host-daemon-contract";
+import {
+  writableSkillScopeSchema,
+  type DiscoveredSkill,
+  type SkillRootKind,
+} from "@sandy/host-daemon-contract";
 import type {
   SkillDuplicate,
   SkillDuplicateRelation,
@@ -82,6 +86,7 @@ interface MappedScope {
   scope: SkillScope;
   provider: SkillProvider | null;
   manageable: boolean;
+  writable: boolean;
 }
 
 export function mapSkillScope(
@@ -91,25 +96,58 @@ export function mapSkillScope(
 ): MappedScope {
   switch (rootKind) {
     case "sandy-project":
-      return { scope: "sandy-project", provider: null, manageable: true };
+      return {
+        scope: "sandy-project",
+        provider: null,
+        manageable: true,
+        writable: true,
+      };
     case "sandy-data-dir":
-      return { scope: "sandy-user", provider: null, manageable: true };
+      return {
+        scope: "sandy-user",
+        provider: null,
+        manageable: true,
+        writable: true,
+      };
     case "sandy-builtin":
-      return { scope: "sandy-builtin", provider: null, manageable: false };
+      return {
+        scope: "sandy-builtin",
+        provider: null,
+        manageable: false,
+        writable: false,
+      };
     case "provider-project":
-      return { scope: "provider-project", provider, manageable: true };
-    case "provider-user":
+      return {
+        scope: "provider-project",
+        provider,
+        manageable: true,
+        writable: true,
+      };
+    case "provider-user": {
+      const userOwned = !isBundledProviderSkill(filePath);
       return {
         scope: "provider-user",
         provider,
-        manageable: !isBundledProviderSkill(filePath),
+        manageable: userOwned,
+        writable: userOwned,
       };
+    }
     case "shared-project":
-      return { scope: "shared-project", provider: null, manageable: false };
+      return {
+        scope: "shared-project",
+        provider: null,
+        manageable: false,
+        writable: true,
+      };
     case "shared-user":
-      return { scope: "shared-user", provider: null, manageable: false };
+      return {
+        scope: "shared-user",
+        provider: null,
+        manageable: false,
+        writable: true,
+      };
     case "plugin":
-      return { scope: "plugin", provider, manageable: false };
+      return { scope: "plugin", provider, manageable: false, writable: false };
   }
 }
 
@@ -165,6 +203,8 @@ export function assembleSkillList(
             : null,
         filePath: skill.filePath,
         manageable: mapped.manageable && !skill.linked,
+        writable:
+          mapped.writable && !(skill.linked && isSandyScope(mapped.scope)),
         metadata: skill.metadata,
       });
     }
@@ -175,6 +215,10 @@ export function assembleSkillList(
 }
 
 type ServerSkillRegistration = Omit<SkillRegistration, "metadata">;
+
+function isSandyScope(scope: SkillScope): boolean {
+  return scope === "sandy-user" || scope === "sandy-project";
+}
 
 async function listServerOwnedSkills(
   deps: AppDeps,
@@ -203,6 +247,7 @@ async function listServerOwnedSkills(
         pluginId: null,
         filePath: path.join(rootPath, runtimeSource.entryPath),
         manageable: true,
+        writable: true,
       };
     })
     .filter((skill): skill is ServerSkillRegistration => skill !== null)
@@ -232,6 +277,7 @@ async function listSandyPluginSkills(
         pluginId: provenance.pluginId,
         filePath: path.join(rootPath, runtimeSource.entryPath),
         manageable: false,
+        writable: false,
       };
     })
     .filter((skill): skill is ServerSkillRegistration => skill !== null)
@@ -292,6 +338,7 @@ async function projectSkillIndex(
       skill.manageable = stats.every(
         (stat) => stat !== null && !stat.isSymbolicLink(),
       );
+      skill.writable = skill.manageable;
     }
     const bytes = await fs.readFile(skill.filePath).catch(() => null);
     const realPath = await fs.realpath(skill.filePath).catch(() => null);
@@ -605,6 +652,13 @@ export async function listProjectSkillFiles(
   return { files, truncated: result.truncated };
 }
 
+export interface ProjectSkillContent {
+  content: string;
+  revision: string;
+  filePath: string;
+  writable: boolean;
+}
+
 export async function readProjectSkill(
   deps: AppDeps,
   args: {
@@ -612,8 +666,9 @@ export async function readProjectSkill(
     path: string;
     workspace: CommandWorkspace;
   },
-): Promise<{ content: string; revision: string }> {
+): Promise<ProjectSkillContent> {
   const skill = await resolveProjectSkill(deps, args);
+  const writable = args.path === SKILL_FILE_NAME && skill.writable;
   if (isServerOwnedSkill(deps, skill)) {
     const filePath =
       args.path === SKILL_FILE_NAME
@@ -627,20 +682,23 @@ export async function readProjectSkill(
     return {
       content: contents.toString("utf8"),
       revision: createHash("sha256").update(contents).digest("hex"),
+      filePath,
+      writable,
     };
   }
   const rootPath = hostPathDirname(
     args.path === SKILL_FILE_NAME ? skill.realPath : skill.filePath,
   );
+  const filePath =
+    args.path === SKILL_FILE_NAME
+      ? skill.realPath
+      : hostPathJoin(rootPath, validateServerSkillRelativePath(args.path));
   const result = await callHostRetryableOnlineRpc(deps, {
     hostId: args.workspace.hostId,
     timeoutMs: COMMAND_TIMEOUT_MS,
     command: {
       type: "host.read_file",
-      path:
-        args.path === SKILL_FILE_NAME
-          ? skill.realPath
-          : hostPathJoin(rootPath, validateServerSkillRelativePath(args.path)),
+      path: filePath,
       rootPath,
       followRootSymlink: true,
     },
@@ -652,7 +710,24 @@ export async function readProjectSkill(
         ? content.content
         : Buffer.from(content.content, "base64").toString("utf8"),
     revision: content.sha256,
+    filePath,
+    writable,
   };
+}
+
+export type ProjectSkillWriteResult =
+  | { outcome: "written"; filePath: string; revision: string }
+  | { outcome: "conflict"; currentRevision: string | null };
+
+function readOnlySkillMessage(skill: SkillRegistration): string {
+  switch (skill.scope) {
+    case "sandy-builtin":
+      return `"${skill.name}" is a built-in sandy skill and cannot be edited`;
+    case "plugin":
+      return `"${skill.name}" belongs to the plugin ${skill.pluginId ?? skill.provider ?? "that installed it"} and cannot be edited`;
+    default:
+      return `"${skill.name}" is read-only and cannot be edited`;
+  }
 }
 
 export async function writeProjectSkill(
@@ -663,24 +738,20 @@ export async function writeProjectSkill(
     revision: string;
     workspace: CommandWorkspace;
   },
-): Promise<{ filePath: string; revision: string }> {
+): Promise<ProjectSkillWriteResult> {
   const skill = await resolveProjectSkill(deps, args);
-  const editableScope = editableSkillScopeSchema.safeParse(skill.scope);
-  if (!skill.manageable || !editableScope.success) {
-    throw new ApiError(
-      403,
-      "forbidden",
-      "Bundled skills cannot be edited in sandy",
-    );
+  const writableScope = writableSkillScopeSchema.safeParse(skill.scope);
+  if (!skill.writable || !writableScope.success) {
+    throw new ApiError(403, "forbidden", readOnlySkillMessage(skill));
   }
-  if (editableScope.data === "sandy-project" && args.workspace.cwd === null) {
+  if (writableScope.data === "sandy-project" && args.workspace.cwd === null) {
     throw new ApiError(
       409,
       "invalid_request",
       "No workspace resolved for this project's skills",
     );
   }
-  if (editableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
+  if (writableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
     const result = await replaceFile({
       contents: Buffer.from(args.content, "utf8"),
@@ -688,45 +759,39 @@ export async function writeProjectSkill(
       path: skillFilePath,
     });
     if (result.outcome === "conflict") {
-      throw new ApiError(409, "conflict", "Skill changed before it was saved");
+      return { outcome: "conflict", currentRevision: result.currentSha256 };
     }
-    return { filePath: skillFilePath, revision: result.sha256 };
+    return {
+      outcome: "written",
+      filePath: skillFilePath,
+      revision: result.sha256,
+    };
   }
-  if (editableScope.data !== "sandy-user" && editableScope.data !== "sandy-project") {
-    const result = await callHostOnlineRpcForWork(deps, {
-      hostId: args.workspace.hostId,
-      timeoutMs: COMMAND_TIMEOUT_MS,
-      command: {
-        type: "host.write_file",
-        path: skill.filePath,
-        rootPath: hostPathDirname(skill.filePath),
-        content: args.content,
-        contentEncoding: "utf8",
-        createParents: false,
-        expectedSha256: args.revision,
-      },
-    });
-    if (result.outcome !== "written") {
-      throw new ApiError(409, "conflict", "Skill changed before it was saved");
-    }
-    return { filePath: skill.filePath, revision: result.sha256 };
-  }
+  const sandyScope =
+    writableScope.data === "sandy-user" ||
+    writableScope.data === "sandy-project";
+  const skillDirPath = hostPathDirname(skill.filePath);
   const result = await callHostOnlineRpcForWork(deps, {
     hostId: args.workspace.hostId,
     timeoutMs: COMMAND_TIMEOUT_MS,
     command: {
       type: "host.write_skill",
-      scope: editableScope.data,
-      name: skill.name,
+      scope: writableScope.data,
+      name: sandyScope ? skill.name : hostPathBasename(skillDirPath),
       cwd: args.workspace.cwd,
+      rootPath: sandyScope ? null : hostPathDirname(skillDirPath),
       content: args.content,
       expectedSha256: args.revision,
     },
   });
   if (result.outcome === "conflict") {
-    throw new ApiError(409, "conflict", "Skill changed before it was saved");
+    return { outcome: "conflict", currentRevision: result.currentSha256 };
   }
-  return { filePath: result.filePath, revision: result.sha256 };
+  return {
+    outcome: "written",
+    filePath: result.filePath,
+    revision: result.sha256,
+  };
 }
 
 export async function deleteProjectSkill(

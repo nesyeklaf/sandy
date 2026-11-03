@@ -793,14 +793,23 @@ const hostDeleteSkillCommandSchema = z
     }
   });
 
-const writableSandySkillScopeSchema = z.enum(["sandy-user", "sandy-project"]);
+export const writableSkillScopeSchema = z.enum([
+  "sandy-user",
+  "sandy-project",
+  "provider-user",
+  "provider-project",
+  "shared-user",
+  "shared-project",
+]);
+export type WritableSkillScope = z.infer<typeof writableSkillScopeSchema>;
 
 const hostWriteSkillCommandSchema = z
   .object({
     type: z.literal("host.write_skill"),
-    scope: writableSandySkillScopeSchema,
+    scope: writableSkillScopeSchema,
     name: z.string().min(1),
     cwd: z.string().min(1).nullable(),
+    rootPath: z.string().min(1).nullable(),
     content: z.string().min(1).max(1_000_000),
     expectedSha256: z.string().regex(/^[a-f0-9]{64}$/u),
   })
@@ -811,6 +820,22 @@ const hostWriteSkillCommandSchema = z
         code: "custom",
         path: ["cwd"],
         message: "cwd is required to edit a sandy-project skill",
+      });
+    }
+    const isSandyScope =
+      command.scope === "sandy-user" || command.scope === "sandy-project";
+    if (isSandyScope && command.rootPath !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["rootPath"],
+        message: "rootPath must be null for a sandy skill",
+      });
+    }
+    if (!isSandyScope && command.rootPath === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["rootPath"],
+        message: "rootPath is required for a provider or shared skill",
       });
     }
   });

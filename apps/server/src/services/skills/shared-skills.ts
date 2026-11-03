@@ -65,6 +65,7 @@ function toSharedSkill(
       pluginId: null,
       filePath: skill.filePath,
       manageable: false,
+      writable: true,
       metadata: skill.metadata,
     },
   };

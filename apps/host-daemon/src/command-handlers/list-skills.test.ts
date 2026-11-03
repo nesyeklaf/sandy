@@ -782,6 +782,7 @@ describe("writeHostSkill", () => {
         scope: "sandy-user",
         name: "review",
         cwd: null,
+        rootPath: null,
         content: "# Updated",
         expectedSha256: revision,
       },
@@ -801,6 +802,7 @@ describe("writeHostSkill", () => {
         scope: "sandy-user",
         name: "review",
         cwd: null,
+        rootPath: null,
         content: "# Stale overwrite",
         expectedSha256: revision,
       },
@@ -808,5 +810,101 @@ describe("writeHostSkill", () => {
     );
     expect(stale).toMatchObject({ outcome: "conflict" });
     expect(await readFile(filePath, "utf8")).toBe("# Updated");
+  });
+
+  it("writes a shared skill through its directory symlink at the expected revision", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const sourceDir = path.join(tempRoot, "forge-skills", "skills", "quick-send");
+    const sourceFile = path.join(sourceDir, "SKILL.md");
+    const original = "---\nname: quick-send\ndescription: Ship it\n---\n";
+    await mkdir(sourceDir, { recursive: true });
+    await writeFile(sourceFile, original, "utf8");
+    const sharedRoot = path.join(fixture.homeDir, ".agents", "skills");
+    await mkdir(sharedRoot, { recursive: true });
+    await symlink(sourceDir, path.join(sharedRoot, "quick-send"));
+    const command = {
+      type: "host.write_skill",
+      scope: "shared-user",
+      name: "quick-send",
+      cwd: null,
+      rootPath: sharedRoot,
+    } as const;
+
+    const written = await writeHostSkill(
+      {
+        ...command,
+        content: "# Edited",
+        expectedSha256: createHash("sha256").update(original).digest("hex"),
+      },
+      { dataDir: fixture.dataDir },
+    );
+
+    expect(written).toEqual({
+      outcome: "written",
+      filePath: await realpath(sourceFile),
+      sha256: createHash("sha256").update("# Edited").digest("hex"),
+    });
+    expect(await readFile(sourceFile, "utf8")).toBe("# Edited");
+
+    const stale = await writeHostSkill(
+      {
+        ...command,
+        content: "# Stale overwrite",
+        expectedSha256: createHash("sha256").update(original).digest("hex"),
+      },
+      { dataDir: fixture.dataDir },
+    );
+    expect(stale).toEqual({
+      outcome: "conflict",
+      currentSha256: createHash("sha256").update("# Edited").digest("hex"),
+    });
+    expect(await readFile(sourceFile, "utf8")).toBe("# Edited");
+  });
+
+  it("refuses a provider skill that resolves into sandy's managed skill store", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const managedDir = path.join(fixture.dataDir, "skill-trees", "abc", "sandy-cli");
+    const original = "---\nname: sandy-cli\ndescription: Built in\n---\n";
+    await mkdir(managedDir, { recursive: true });
+    await writeFile(path.join(managedDir, "SKILL.md"), original, "utf8");
+    const providerRoot = path.join(fixture.homeDir, ".claude", "skills");
+    await mkdir(providerRoot, { recursive: true });
+    await symlink(managedDir, path.join(providerRoot, "sandy-cli"));
+
+    await expect(
+      writeHostSkill(
+        {
+          type: "host.write_skill",
+          scope: "provider-user",
+          name: "sandy-cli",
+          cwd: null,
+          rootPath: providerRoot,
+          content: "# Hijacked",
+          expectedSha256: createHash("sha256").update(original).digest("hex"),
+        },
+        { dataDir: fixture.dataDir },
+      ),
+    ).rejects.toMatchObject({ code: "skill_not_writable" });
+    expect(await readFile(path.join(managedDir, "SKILL.md"), "utf8")).toBe(
+      original,
+    );
+  });
+
+  it("rejects a skill name that is not a single path segment", async () => {
+    const fixture = await makeWorkspaceFixture();
+    await expect(
+      writeHostSkill(
+        {
+          type: "host.write_skill",
+          scope: "shared-user",
+          name: "../escape",
+          cwd: null,
+          rootPath: path.join(fixture.homeDir, ".agents", "skills"),
+          content: "# Escape",
+          expectedSha256: "a".repeat(64),
+        },
+        { dataDir: fixture.dataDir },
+      ),
+    ).rejects.toBeInstanceOf(CommandDispatchError);
   });
 });

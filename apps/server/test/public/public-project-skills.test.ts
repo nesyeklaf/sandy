@@ -141,7 +141,7 @@ function registerSkillRpc(
               }
             : {
                 outcome: "written" as const,
-                filePath: `/data/skills/${request.command.name}/SKILL.md`,
+                filePath: `${request.command.rootPath ?? "/data/skills"}/${request.command.name}/SKILL.md`,
                 sha256: "1".repeat(64),
               },
         };
@@ -303,8 +303,10 @@ describe("public project skills route", () => {
         expect(edit.status).toBe(200);
         expect(stub.requests.map((request) => request.command)).toContainEqual(
           expect.objectContaining({
-            type: "host.write_file",
-            path: native.filePath,
+            type: "host.write_skill",
+            scope: "provider-user",
+            rootPath: "/home/.claude/skills",
+            name: "review",
             content: "# Updated native review",
           }),
         );
@@ -390,6 +392,7 @@ describe("public project skills route", () => {
           filePath:
             "/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md",
           manageable: false,
+          writable: true,
           metadata: { outputs: "Review: file(review.md)" },
           providers: [],
           duplicates: [],
@@ -499,6 +502,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/data/skills/sandy-helper/SKILL.md",
           manageable: true,
+          writable: true,
           metadata: {},
           providers: [],
           duplicates: [],
@@ -512,6 +516,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/cwd/.cursor/skills/impeccable/SKILL.md",
           manageable: false,
+          writable: true,
           metadata: {},
           providers: ["acp-cursor"],
           duplicates: [],
@@ -525,6 +530,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/cwd/.claude/skills/cp/SKILL.md",
           manageable: true,
+          writable: true,
           metadata: {},
           providers: ["claude-code"],
           duplicates: [],
@@ -538,6 +544,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/home/.claude/skills/cu/SKILL.md",
           manageable: true,
+          writable: true,
           metadata: {},
           providers: ["claude-code"],
           duplicates: [],
@@ -551,6 +558,7 @@ describe("public project skills route", () => {
           pluginId: null,
           filePath: "/home/.codex/skills/cx/SKILL.md",
           manageable: true,
+          writable: true,
           metadata: {
             inputs: "Feature: text",
             outputs: "Plan: file(plan.md)",
@@ -630,6 +638,7 @@ describe("public project skills route", () => {
           pluginId: installed.id,
           filePath: skillFilePath,
           manageable: false,
+          writable: false,
           metadata: { inputs: "Topic: text" },
         });
 
@@ -875,6 +884,8 @@ describe("public project skills route", () => {
       ).toEqual({
         content: "# Layout reference",
         revision: "0".repeat(64),
+        filePath: "/home/.codex/skills/documents/references/layout.md",
+        writable: false,
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.read_file",
@@ -1000,12 +1011,12 @@ describe("public project skills route", () => {
         revision: "1".repeat(64),
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
-        type: "host.write_file",
-        path: "/home/.claude/skills/moss-notes/SKILL.md",
-        rootPath: "/home/.claude/skills/moss-notes",
+        type: "host.write_skill",
+        scope: "provider-user",
+        name: "moss-notes",
+        cwd: "/tmp/claude-skill-edit-project",
+        rootPath: "/home/.claude/skills",
         content: "# Updated Moss notes",
-        contentEncoding: "utf8",
-        createParents: false,
         expectedSha256: "0".repeat(64),
       });
     });
@@ -1050,6 +1061,10 @@ describe("public project skills route", () => {
           },
         );
         expect(response.status).toBe(409);
+        expect(await readJson(response)).toMatchObject({
+          code: "conflict",
+          details: { currentRevision: "2".repeat(64) },
+        });
       }
 
       expect(stub.requests.map((request) => request.command)).toContainEqual({
@@ -1057,19 +1072,133 @@ describe("public project skills route", () => {
         scope: "sandy-user",
         name: "review",
         cwd: "/tmp/stale-skill-edit-project",
+        rootPath: null,
         content: "# Stale",
         expectedSha256: "0".repeat(64),
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
-        type: "host.write_file",
-        path: providerPath,
-        rootPath: "/home/.claude/skills/review",
+        type: "host.write_skill",
+        scope: "provider-user",
+        name: "review",
+        cwd: "/tmp/stale-skill-edit-project",
+        rootPath: "/home/.claude/skills",
         content: "# Stale",
-        contentEncoding: "utf8",
-        createParents: false,
         expectedSha256: "0".repeat(64),
       });
     });
+  });
+
+  it("reads and writes a symlinked shared skill at its real path and refuses built-in and plugin skills", async () => {
+    await withTestHarness(
+      { sharedSkillRoots: { user: [".agents/skills"], project: [] } },
+      async (harness) => {
+        const { host, session } = seedHostSession(harness.deps, {
+          id: "host-shared-skill-edit",
+        });
+        seedPrimaryHost(harness.deps, host.id);
+        const { project } = seedProjectWithSource(harness.deps, {
+          hostId: host.id,
+          path: "/tmp/shared-skill-edit-project",
+        });
+        const linkPath = "/home/.agents/skills/quick-send/SKILL.md";
+        const realPath = "/home/forge-skills/skills/quick-send/SKILL.md";
+        const builtinPath = "/opt/sandy/skills/sandy-cli/SKILL.md";
+        const pluginPath = "/home/.claude/plugins/tools/skills/lint/SKILL.md";
+        const stub = registerSkillRpc(harness, {
+          hostId: host.id,
+          sessionId: session.id,
+          skillsByProvider: {
+            "sandy-shared": [
+              {
+                ...discovered("quick-send", "shared-user", linkPath),
+                realPath,
+                linked: true,
+              },
+            ],
+            "claude-code": [
+              discovered("sandy-cli", "sandy-builtin", builtinPath),
+              discovered("tools:lint", "plugin", pluginPath),
+            ],
+          },
+          fileContents: { [realPath]: "---\nname: quick-send\n---\n" },
+        });
+        const listed = skillListResponseSchema.parse(
+          await readJson(
+            await harness.app.request(
+              `/api/v1/projects/${project.id}/skills?environmentId=`,
+            ),
+          ),
+        );
+        expect(
+          listed.skills.map(({ name, manageable, writable }) => ({
+            name,
+            manageable,
+            writable,
+          })),
+        ).toEqual(
+          expect.arrayContaining([
+            { name: "quick-send", manageable: false, writable: true },
+            { name: "sandy-cli", manageable: false, writable: false },
+            { name: "tools:lint", manageable: false, writable: false },
+          ]),
+        );
+
+        const read = skillContentResponseSchema.parse(
+          await readJson(
+            await harness.app.request(
+              `/api/v1/projects/${project.id}/skills/content?${new URLSearchParams(
+                { skillId: skillId(linkPath), environmentId: "", path: "SKILL.md" },
+              )}`,
+            ),
+          ),
+        );
+        expect(read).toEqual({
+          content: "---\nname: quick-send\n---\n",
+          revision: "0".repeat(64),
+          filePath: realPath,
+          writable: true,
+        });
+
+        const save = (id: string) =>
+          harness.app.request(`/api/v1/projects/${project.id}/skills/content`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              skillId: id,
+              environmentId: null,
+              content: "---\nname: quick-send\n---\nEdited\n",
+              revision: read.revision,
+            }),
+          });
+        const written = await save(skillId(linkPath));
+        expect(written.status).toBe(200);
+        expect(stub.requests.map((request) => request.command)).toContainEqual({
+          type: "host.write_skill",
+          scope: "shared-user",
+          name: "quick-send",
+          cwd: "/tmp/shared-skill-edit-project",
+          rootPath: "/home/.agents/skills",
+          content: "---\nname: quick-send\n---\nEdited\n",
+          expectedSha256: "0".repeat(64),
+        });
+
+        const builtin = await save(skillId(builtinPath));
+        expect(builtin.status).toBe(403);
+        expect(await readJson(builtin)).toMatchObject({
+          message: expect.stringContaining("built-in sandy skill"),
+        });
+        const plugin = await save(skillId(pluginPath));
+        expect(plugin.status).toBe(403);
+        expect(await readJson(plugin)).toMatchObject({
+          message: expect.stringContaining("belongs to the plugin"),
+        });
+        expect(
+          stub.requests.filter(
+            (request) => request.command.type === "host.write_skill",
+          ),
+        ).toHaveLength(1);
+      },
+    );
   });
 
   it("saves a server-owned sandy user skill on the server's disk with a revision check", async () => {
