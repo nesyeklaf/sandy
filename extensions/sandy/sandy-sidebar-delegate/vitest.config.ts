@@ -20,6 +20,7 @@ const common = {
 
 export default defineConfig({
   resolve: {
+    dedupe: ["react", "react-dom", "@testing-library/react"],
     // Load the real SVG data through leaf exports instead of the full barrel.
     alias: [
       {
