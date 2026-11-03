@@ -2,7 +2,8 @@ import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { completeCloudTitle } from "./cloud-title";
 import { createHiddenHelper, type HiddenHelper } from "./hidden-helper";
 
-type Timeline = Awaited<ReturnType<SandyPluginApi["sdk"]["threads"]["timeline"]>>;
+type TimelineRead = Awaited<ReturnType<SandyPluginApi["sdk"]["threads"]["timeline"]>>;
+type Timeline = Extract<TimelineRead, { rows: unknown }>;
 type Row = Timeline["rows"][number];
 const MESSAGE_LIMIT = 3;
 const MESSAGE_CHAR_LIMIT = 8_000;
@@ -29,7 +30,7 @@ export async function lastUserMessages(sandy: SandyPluginApi, threadId: string) 
   let cursor: Timeline["timelinePage"]["olderCursor"] = null;
   const cursors = new Set<string>();
   while (found.size < MESSAGE_LIMIT) {
-    const page = await sandy.sdk.threads.timeline({
+    const page: TimelineRead = await sandy.sdk.threads.timeline({
       threadId,
       segmentLimit: "3",
       includeNestedRows: "true",
@@ -40,6 +41,7 @@ export async function lastUserMessages(sandy: SandyPluginApi, threadId: string) 
           }
         : {}),
     });
+    if (!("rows" in page)) throw new Error("Could not read the latest user messages");
     for (const row of userRows(page.rows)) found.set(row.id, row);
     cursor = page.timelinePage.olderCursor;
     if (!cursor) break;

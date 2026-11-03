@@ -133,6 +133,7 @@ export function thread(overrides: Partial<PluginSidebarThread> = {}): PluginSide
     title: "A thread",
     titleFallback: null,
     parentThreadId: null,
+    parentNotifications: "auto",
     sectionId: null,
     originKind: null,
     originPluginId: null,
