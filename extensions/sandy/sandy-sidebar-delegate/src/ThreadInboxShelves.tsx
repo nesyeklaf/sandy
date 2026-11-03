@@ -14,6 +14,8 @@ import type { ProjectViewUnit } from "./inbox-layout";
 import { EnvironmentGroup } from "./EnvironmentGroup";
 import { environmentLabel } from "./environment-groups";
 import { useInboxEnvironment, useInboxActions, useInboxActivity } from "./InboxContext";
+import { ShelfDensityMenu } from "./ViewSheet";
+import type { DensityShelf } from "./sidebar-settings-values";
 
 export const SETTLED_PAGE_SIZE = 25;
 
@@ -143,6 +145,7 @@ export function CollapsibleShelf({
   action,
   children,
   hidden = false,
+  densityShelf,
 }: {
   label: string;
   icon: IconName;
@@ -153,7 +156,12 @@ export function CollapsibleShelf({
   action?: React.ReactNode;
   children: React.ReactNode;
   hidden?: boolean;
+  densityShelf?: DensityShelf;
 }) {
+  const controls = [
+    action,
+    densityShelf ? <ShelfDensityMenu key="density" shelf={densityShelf} label={label} /> : null,
+  ].filter(Boolean);
   return (
     <section aria-label={label} hidden={hidden}>
       <div className="relative">
@@ -174,7 +182,9 @@ export function CollapsibleShelf({
             {expanded ? label : `${label} (${count})`}
           </span>
           <span className="h-px flex-1 bg-sidebar-border" />
-          {action ? <span aria-hidden="true" className="size-4 shrink-0" /> : null}
+          {controls.length > 0 ? (
+            <span aria-hidden="true" className={cn("shrink-0", controls.length > 1 ? "h-4 w-9" : "size-4")} />
+          ) : null}
           <span className={TRAILING_GLYPH_BOX_CLASS}>
             <Icon
               name="ChevronDown"
@@ -185,7 +195,9 @@ export function CollapsibleShelf({
             />
           </span>
         </button>
-        {action}
+        {controls.length > 0 ? (
+          <span className="absolute bottom-1 right-[1.875rem] z-10 flex items-center gap-1">{controls}</span>
+        ) : null}
       </div>
       {children}
     </section>

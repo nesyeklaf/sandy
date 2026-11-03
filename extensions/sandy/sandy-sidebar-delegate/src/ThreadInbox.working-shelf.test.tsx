@@ -217,7 +217,7 @@ describe("parking threads", () => {
   });
 
   it.each([false, true])(
-    "folds working threads to one line only when the experiment is on (%s)",
+    "keeps working threads full in Auto and draws quiet ones on two lines (auto %s)",
     async (compactWorkingThreads) => {
       renderSlot(inbox, listProps, {
         sidebarThreads: {
@@ -234,27 +234,27 @@ describe("parking threads", () => {
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
             inactiveThreadsEnabled: false,
-            threadDisplay: compactWorkingThreads ? "compact-working" : "full",
+            threadDensity: compactWorkingThreads ? "auto" : "comfortable",
             compactWorkingThreads,
           }),
           listLifecycle: () => ({ rows: [] }),
         },
       });
-      const card = (title: string) => screen.getByRole("link", { name: title }).closest("[data-parent-card]")!;
+      const density = (title: string) =>
+        screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
       await screen.findByRole("link", { name: "Busy work" });
 
-      await waitFor(() => expect(card("Busy work").classList.contains("h-8")).toBe(compactWorkingThreads));
-      expect(card("Asking work").classList.contains("h-8")).toBe(false);
-      expect(card("Idle work").classList.contains("h-8")).toBe(false);
-      // The folded row keeps sandy's spinner and the full label for screen readers.
-      expect(card("Busy work").querySelector('[data-icon="Loading"]') !== null).toBe(compactWorkingThreads);
-      expect(within(card("Busy work") as HTMLElement).getByText("Working")).toBeDefined();
+      await waitFor(() => expect(density("Idle work")).toBe(compactWorkingThreads ? "compact" : "comfortable"));
+      expect(density("Busy work")).toBe("comfortable");
+      expect(density("Asking work")).toBe("comfortable");
+      const busy = screen.getByRole("link", { name: "Busy work" }).closest("[data-parent-card]") as HTMLElement;
+      expect(within(busy).getByText("Working")).toBeDefined();
     },
   );
 
   it.each([false, true])(
-    "keeps a compact row's working children folded until expanded (compact %s)",
-    async (compactWorkingThreads) => {
+    "keeps a dense row's working children folded until expanded (dense %s)",
+    async (dense) => {
       renderSlot(inbox, listProps, {
         sidebarThreads: {
           status: "ready",
@@ -269,24 +269,24 @@ describe("parking threads", () => {
             ...defaultSidebarSettings,
             inactiveThreadsEnabled: false,
             showRunningChildrenWhenCollapsed: true,
-            threadDisplay: compactWorkingThreads ? "compact-working" : "full",
-            compactWorkingThreads,
+            threadDensity: dense ? "dense" : "comfortable",
+            compactWorkingThreads: dense,
           }),
           listLifecycle: () => ({ rows: [] }),
         },
       });
       await screen.findByRole("link", { name: "Parent work" });
       // The full card surfaces a working child; the one-line row does not.
-      await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(compactWorkingThreads));
+      await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(dense));
 
-      if (compactWorkingThreads) {
+      if (dense) {
         fireEvent.click(screen.getByRole("button", { name: /1 child thread/ }));
         expect(await screen.findByText("Child work")).toBeDefined();
       }
     },
   );
 
-  it("keeps a row compact until its children and agents are done", async () => {
+  it("keeps a row full in Auto until its children and agents are done", async () => {
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -309,21 +309,20 @@ describe("parking threads", () => {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
           inactiveThreadsEnabled: false,
-          threadDisplay: "compact-working",
+          threadDensity: "auto",
           compactWorkingThreads: true,
         }),
         listLifecycle: () => ({ rows: [] }),
       },
     });
-    const isCompact = (title: string) =>
-      screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.classList.contains("h-8");
+    const density = (title: string) =>
+      screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
     await screen.findByRole("link", { name: "Waiting on child" });
 
-    await waitFor(() => expect(isCompact("Waiting on child")).toBe(true));
-    expect(isCompact("Agent parent")).toBe(true);
-    // The parent's own question outranks its children's work.
-    expect(isCompact("Asking parent")).toBe(false);
-    expect(isCompact("Done parent")).toBe(false);
+    await waitFor(() => expect(density("Done parent")).toBe("compact"));
+    expect(density("Waiting on child")).toBe("comfortable");
+    expect(density("Agent parent")).toBe("comfortable");
+    expect(density("Asking parent")).toBe("comfortable");
   });
 
   it("counts live descendants despite unread success and keeps requests for input in Active", () => {
@@ -357,7 +356,7 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          threadDisplay: "compact-working",
+          threadDensity: "auto",
           compactWorkingThreads: true,
         }),
         listLifecycle: () => ({ rows: [] }),

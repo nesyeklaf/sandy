@@ -9,13 +9,13 @@ vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 await loadInboxApp();
 
 describe("Compact project display", () => {
-  it.each(["full", "compact-working", "compact-all", "working-shelf"])(
+  it.each(["comfortable", "compact", "dense", "working-shelf"] as const)(
     "updates project names without hiding icons or changing full cards (%s)",
     async (display) => {
       let settings = {
         ...defaultSidebarSettings,
         inactiveThreadsEnabled: false,
-        threadDisplay: display === "working-shelf" ? "full" : display,
+        threadDensity: display === "working-shelf" ? "comfortable" : display,
         workingShelf: display === "working-shelf",
         keepPinnedThreadsFull: true,
       };
@@ -37,7 +37,9 @@ describe("Compact project display", () => {
       fireEvent.click(await screen.findByRole("button", { name: "Parked (1)" }));
       const row = (title: string) => screen.getByText(title).closest("li")!;
       await waitFor(() => {
-        expect(row("Working thread").querySelector(".h-8") !== null).toBe(display !== "full");
+        expect(row("Working thread").querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe(
+          { comfortable: "comfortable", compact: "compact", dense: "dense", "working-shelf": "dense" }[display],
+        );
         expect(screen.getByText("Parked thread")).toBeDefined();
       });
 
@@ -47,7 +49,7 @@ describe("Compact project display", () => {
         await waitFor(() => {
           for (const title of ["Working thread", "Full pinned thread", "Parked thread"]) {
             const card = row(title);
-            const iconOnly = compactProjectIconOnly && title === "Working thread" && display !== "full";
+            const iconOnly = compactProjectIconOnly && title === "Working thread" && display !== "comfortable";
             expect(within(card).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);
             expect(card.querySelector("[data-letter]")).not.toBeNull();
             if (iconOnly) expect(within(card).queryByText("·")).toBeNull();
@@ -77,7 +79,7 @@ describe("Compact project display", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          threadDisplay: "compact-all",
+          threadDensity: "dense",
           compactProjectIconOnly: true,
           workingShelf: true,
         }),
@@ -92,7 +94,7 @@ describe("Compact project display", () => {
     });
     for (const shelf of ["Inactive", "Parked", "Snoozed", "Settled"]) {
       const region = await screen.findByRole("region", { name: shelf });
-      const collapsed = within(region).queryByRole("button", { expanded: false });
+      const collapsed = within(region).queryByRole("button", { name: new RegExp(`^${shelf} \\(`), expanded: false });
       if (collapsed) fireEvent.click(collapsed);
     }
     await waitFor(() => {

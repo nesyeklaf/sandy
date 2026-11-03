@@ -55,7 +55,7 @@ describe("lifecycle RPC", () => {
       childSortField: "activity",
       childSortDirection: "descending",
       childIconStyle: "provider",
-      threadDisplay: "compact-working",
+      threadDensity: "auto",
       compactWorkingThreads: true,
       workingShelf: true,
       dockShelves: true,
@@ -77,7 +77,7 @@ describe("lifecycle RPC", () => {
         childIconStyle: "provider",
       }),
     ).resolves.toMatchObject({
-      threadDisplay: "compact-working",
+      threadDensity: "auto",
       compactWorkingThreads: true,
       workingShelf: true,
       dockShelves: true,
@@ -261,12 +261,15 @@ it.each(["", "{broken", "null", "[]", "42", '"settings"'])("defaults malformed J
 });
 
 it.each([
-  [{ compactWorkingThreads: true }, "compact-working"],
-  [{ compactWorkingThreads: false }, "full"],
-  // A newer version's choice this version doesn't know falls back to the switch it kept in step.
-  [{ threadDisplay: "dense-future", compactWorkingThreads: true }, "compact-working"],
-  [{ threadDisplay: "dense-future", compactWorkingThreads: false }, "full"],
-])("reads thread display %j from settings saved without a known value", async (stored, threadDisplay) => {
+  [{ compactWorkingThreads: true }, "auto"],
+  [{ compactWorkingThreads: false }, "comfortable"],
+  [{ threadDisplay: "full", compactWorkingThreads: false }, "comfortable"],
+  [{ threadDisplay: "compact-working", compactWorkingThreads: true }, "auto"],
+  [{ threadDisplay: "compact-all", compactWorkingThreads: true }, "dense"],
+  [{ threadDisplay: "toString", compactWorkingThreads: false }, "comfortable"],
+  [{ threadDensity: "huge-future", compactWorkingThreads: true }, "auto"],
+  [{ threadDensity: "huge-future", compactWorkingThreads: false }, "comfortable"],
+])("reads thread density %j from settings saved without a known value", async (stored, threadDensity) => {
   const { sandy, harness } = createFakePluginHost({ pluginId: "sandy-sidebar" });
   await plugin(sandy);
   disposers.push(() => harness.lifecycle.dispose());
@@ -275,22 +278,51 @@ it.each([
     .prepare("UPDATE sidebar_settings SET settings_json = ? WHERE id = 1")
     .run(JSON.stringify(stored));
   await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toMatchObject({
-    threadDisplay,
-    compactWorkingThreads: threadDisplay !== "full",
+    threadDensity,
+    compactWorkingThreads: threadDensity !== "comfortable",
   });
 });
 
-it("keeps the legacy switch in step when thread display changes", async () => {
+it("keeps the legacy switch in step when density changes", async () => {
+  const harness = await loadPlugin();
+  for (const [threadDensity, compactWorkingThreads] of [
+    ["auto", true],
+    ["dense", true],
+    ["compact", true],
+    ["comfortable", false],
+  ] as const) {
+    await expect(harness.behavior.callRpc("updateSidebarSettings", { threadDensity })).resolves.toMatchObject({
+      threadDensity,
+      compactWorkingThreads,
+    });
+  }
+  await expect(
+    harness.behavior.callRpc("updateSidebarSettings", { compactWorkingThreads: true }),
+  ).resolves.toMatchObject({ threadDensity: "auto", compactWorkingThreads: true });
+});
+
+it("stores per-shelf density overrides and keeps the rest at default", async () => {
   const harness = await loadPlugin();
   await expect(
-    harness.behavior.callRpc("updateSidebarSettings", { threadDisplay: "compact-working" }),
-  ).resolves.toMatchObject({ threadDisplay: "compact-working", compactWorkingThreads: true });
-  // An older version reads Compact all as the old switch turned on.
-  await expect(
-    harness.behavior.callRpc("updateSidebarSettings", { threadDisplay: "compact-all" }),
-  ).resolves.toMatchObject({ threadDisplay: "compact-all", compactWorkingThreads: true });
-  await expect(harness.behavior.callRpc("updateSidebarSettings", { threadDisplay: "full" })).resolves.toMatchObject({
-    threadDisplay: "full",
-    compactWorkingThreads: false,
+    harness.behavior.callRpc("updateSidebarSettings", {
+      shelfDensities: {
+        pinned: "comfortable",
+        active: "default",
+        working: "dense",
+        review: "default",
+        inactive: "compact",
+      },
+    }),
+  ).resolves.toMatchObject({
+    shelfDensities: {
+      pinned: "comfortable",
+      active: "default",
+      working: "dense",
+      review: "default",
+      inactive: "compact",
+    },
+  });
+  await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toMatchObject({
+    shelfDensities: { pinned: "comfortable", working: "dense", inactive: "compact" },
   });
 });

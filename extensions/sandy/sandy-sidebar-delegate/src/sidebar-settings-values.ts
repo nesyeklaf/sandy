@@ -9,8 +9,20 @@ export type ChildThreadSortDirection = (typeof CHILD_THREAD_SORT_DIRECTIONS)[num
 export const CHILD_THREAD_ICON_STYLES = ["disc", "provider"] as const;
 export type ChildThreadIconStyle = (typeof CHILD_THREAD_ICON_STYLES)[number];
 
-export const THREAD_DISPLAYS = ["full", "compact-working", "compact-all"] as const;
-export type ThreadDisplay = (typeof THREAD_DISPLAYS)[number];
+export const THREAD_DENSITIES = ["auto", "comfortable", "compact", "dense"] as const;
+export type ThreadDensity = (typeof THREAD_DENSITIES)[number];
+export type RowDensity = Exclude<ThreadDensity, "auto">;
+export const SHELF_DENSITIES = ["default", "comfortable", "compact", "dense"] as const;
+export type ShelfDensity = (typeof SHELF_DENSITIES)[number];
+export const DENSITY_SHELVES = ["pinned", "active", "working", "review", "inactive"] as const;
+export type DensityShelf = (typeof DENSITY_SHELVES)[number];
+export type ShelfDensities = Record<DensityShelf, ShelfDensity>;
+
+const LEGACY_THREAD_DISPLAY_DENSITY: Record<string, ThreadDensity> = {
+  full: "comfortable",
+  "compact-working": "auto",
+  "compact-all": "dense",
+};
 
 export const PROJECT_COLOR_DISPLAYS = ["all", "full", "grouped"] as const;
 export type ProjectColorDisplay = (typeof PROJECT_COLOR_DISPLAYS)[number];
@@ -33,16 +45,18 @@ export interface SidebarSettingsValues {
   childSortField: ChildThreadSortField;
   childSortDirection: ChildThreadSortDirection;
   childIconStyle: ChildThreadIconStyle;
-  /** How Pinned, Active, and Inactive threads are drawn. */
-  threadDisplay: ThreadDisplay;
+  /** How many lines each thread row takes; auto picks per thread. */
+  threadDensity: ThreadDensity;
+  /** Per-shelf density overrides; default follows threadDensity. */
+  shelfDensities: ShelfDensities;
   /** Show only project icons on compact Active, Pinned, and Working cards. */
   compactProjectIconOnly: boolean;
-  /** With Compact all threads: keep pinned threads as full cards. */
+  /** Below Comfortable: keep pinned threads as full cards. */
   keepPinnedThreadsFull: boolean;
-  /** With Compact all threads: keep threads that just woke as full cards. */
+  /** Below Comfortable: keep threads that just woke as full cards. */
   keepWokeThreadsFull: boolean;
   /**
-   * Legacy switch that threadDisplay replaced. Kept in step with it so an
+   * Legacy switch that threadDensity replaced. Kept in step with it so an
    * older plugin version still reads the user's choice.
    */
   compactWorkingThreads: boolean;
@@ -67,7 +81,8 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
   childSortField: "created",
   childSortDirection: "ascending",
   childIconStyle: "disc",
-  threadDisplay: "full",
+  threadDensity: "comfortable",
+  shelfDensities: { pinned: "default", active: "default", working: "default", review: "default", inactive: "default" },
   compactProjectIconOnly: false,
   keepPinnedThreadsFull: false,
   keepWokeThreadsFull: false,
@@ -92,12 +107,27 @@ function oneOf<const T extends string>(allowed: readonly T[], value: unknown, fa
 }
 
 /**
- * The thread display from an untrusted record. Settings saved before the
- * choice existed carry only the old switch, which still decides it.
+ * The thread density from an untrusted record. Settings saved before density
+ * carry the old threadDisplay choice or, older still, only the old switch;
+ * both map onto a density here, once.
  */
-export function threadDisplayOf(value: { threadDisplay?: unknown; compactWorkingThreads?: unknown }): ThreadDisplay {
-  if (THREAD_DISPLAYS.includes(value.threadDisplay as ThreadDisplay)) return value.threadDisplay as ThreadDisplay;
-  return value.compactWorkingThreads === true ? "compact-working" : "full";
+export function threadDensityOf(value: {
+  threadDensity?: unknown;
+  threadDisplay?: unknown;
+  compactWorkingThreads?: unknown;
+}): ThreadDensity {
+  if (THREAD_DENSITIES.includes(value.threadDensity as ThreadDensity)) return value.threadDensity as ThreadDensity;
+  if (typeof value.threadDisplay === "string" && Object.hasOwn(LEGACY_THREAD_DISPLAY_DENSITY, value.threadDisplay)) {
+    return LEGACY_THREAD_DISPLAY_DENSITY[value.threadDisplay]!;
+  }
+  return value.compactWorkingThreads === true ? "auto" : "comfortable";
+}
+
+export function shelfDensitiesOf(value: unknown): ShelfDensities {
+  const record = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+  return Object.fromEntries(
+    DENSITY_SHELVES.map((shelf) => [shelf, oneOf(SHELF_DENSITIES, record[shelf], "default")]),
+  ) as ShelfDensities;
 }
 
 export function projectColorDisplayOf(value: unknown): ProjectColorDisplay {

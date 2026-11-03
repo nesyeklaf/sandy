@@ -5,6 +5,7 @@ import { useInboxEnvironment, useInboxActions } from "./InboxContext";
 import { useIsActiveThread } from "./useActiveThread";
 import type { ActiveSortMode } from "./inbox-layout";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
+import { shelfDensity } from "./density";
 
 type ActiveShelfKind = "pinned" | "inbox";
 
@@ -19,7 +20,6 @@ const InboxThread = memo(function InboxThread({
   shelf,
   reorderable,
   showProject,
-  compact,
   renameShelf,
   showEnvironment,
   isWoke,
@@ -31,7 +31,6 @@ const InboxThread = memo(function InboxThread({
   shelf: ActiveShelfKind;
   reorderable: boolean;
   showProject: boolean;
-  compact: boolean;
   renameShelf: "active" | "working" | "review" | "inactive";
   showEnvironment: boolean;
   isWoke: boolean;
@@ -73,12 +72,8 @@ const InboxThread = memo(function InboxThread({
           ? undefined
           : threadReorderControls(thread, shelf)
       }
-      compactWhenWorking={compact || settings.threadDisplay === "compact-working"}
-      compactAlways={
-        settings.threadDisplay === "compact-all" &&
-        !(shelf === "pinned" && settings.keepPinnedThreadsFull) &&
-        !(isWoke && settings.keepWokeThreadsFull)
-      }
+      density={shelfDensity(settings, shelf === "pinned" ? "pinned" : renameShelf)}
+      keepFull={(shelf === "pinned" && settings.keepPinnedThreadsFull) || (isWoke && settings.keepWokeThreadsFull)}
     />
   );
 });
@@ -99,7 +94,6 @@ export function createInboxThreadRenderer({
     shelf: ActiveShelfKind,
     reorderable = true,
     showProject = true,
-    compact = false,
     renameShelf: "active" | "working" | "review" | "inactive" = "active",
     showEnvironment = true,
   ) => (
@@ -109,7 +103,6 @@ export function createInboxThreadRenderer({
       shelf={shelf}
       reorderable={reorderable}
       showProject={showProject}
-      compact={compact}
       renameShelf={renameShelf}
       showEnvironment={showEnvironment}
       isWoke={wokeThreadIds.has(thread.id)}

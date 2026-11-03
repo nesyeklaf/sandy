@@ -179,7 +179,9 @@ describe("ThreadInbox", () => {
     });
     await screen.findByRole("region", { name: shelf });
     if (shelf === "Inactive") {
-      fireEvent.click(within(screen.getByRole("region", { name: shelf })).getByRole("button", { expanded: false }));
+      fireEvent.click(
+        within(screen.getByRole("region", { name: shelf })).getByRole("button", { name: /^Inactive/, expanded: false }),
+      );
     }
     const titles = () =>
       within(screen.getByRole("region", { name: shelf }))

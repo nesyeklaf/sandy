@@ -24,6 +24,7 @@ import { listViewCodec } from "./lib/inbox-preference-codecs";
 import { STORAGE_KEYS } from "./lib/storage-keys";
 import { usePersistedPreference } from "./lib/use-persisted-preference";
 import type { TreeProjectInput, TreeSectionInput } from "./tree-layout";
+import { ViewSheet } from "./ViewSheet";
 
 export interface ShelfExpansionState {
   active: boolean;
@@ -60,7 +61,6 @@ interface ThreadInboxViewProps {
     shelf: "pinned" | "inbox",
     reorderable?: boolean,
     showProject?: boolean,
-    compact?: boolean,
     renameShelf?: "active" | "working" | "review" | "inactive",
     showEnvironment?: boolean,
   ) => ReactNode;
@@ -106,7 +106,12 @@ export function ThreadInboxView({
       {/* Project scope is plugin-owned; New thread lives in sandy's chrome. */}
       <ProjectScopeControls scope={scope} status={status} />
       <TagFilterBar />
-      <ListViewSegment view={listView} onChange={setListView} />
+      <div className="flex items-center gap-1 pr-1.5">
+        <div className="min-w-0 flex-1">
+          <ListViewSegment view={listView} onChange={setListView} />
+        </div>
+        <ViewSheet />
+      </div>
 
       <p role="status" aria-live="polite" className="sr-only">
         {reorderAnnouncement}
@@ -149,6 +154,7 @@ export function ThreadInboxView({
                   <CollapsibleShelf
                     label="Pinned"
                     icon="Pin"
+                    densityShelf="pinned"
                     count={pinned.threads.length}
                     expanded={expandedShelves.pinned}
                     onToggle={() =>
@@ -167,6 +173,7 @@ export function ThreadInboxView({
                   <CollapsibleShelf
                     label="Needs you"
                     icon="Pulse"
+                    densityShelf="active"
                     count={inbox.threads.length}
                     expanded={expandedShelves.active}
                     onToggle={() =>
@@ -192,7 +199,7 @@ export function ThreadInboxView({
                           reorderControls(unit.key, "inbox", `${name} ${unit.environment ? "environment" : "project"}`)
                         }
                         renderThread={(thread, grouped, environmentGrouped) =>
-                          renderActiveThread(thread, "inbox", true, !grouped, false, "active", !environmentGrouped)
+                          renderActiveThread(thread, "inbox", true, !grouped, "active", !environmentGrouped)
                         }
                       />
                     ) : inbox.visibleThreads.length > 0 ? (
@@ -224,6 +231,7 @@ export function ThreadInboxView({
                   <CollapsibleShelf
                     label="Working"
                     icon="Loading"
+                    densityShelf="working"
                     animateIcon
                     count={working.threads.length}
                     expanded={expandedShelves.working}
@@ -235,9 +243,8 @@ export function ThreadInboxView({
                     }
                   >
                     <Shelf label={null}>
-                      {/* One line, like every shelf after Active. */}
                       {working.visibleThreads.map((thread) =>
-                        renderActiveThread(thread, "inbox", false, true, true, "working"),
+                        renderActiveThread(thread, "inbox", false, true, "working"),
                       )}
                     </Shelf>
                   </CollapsibleShelf>
@@ -246,6 +253,7 @@ export function ThreadInboxView({
                   <CollapsibleShelf
                     label="In review"
                     icon="GitPullRequest"
+                    densityShelf="review"
                     count={review.threads.length}
                     expanded={expandedShelves.review}
                     onToggle={() =>
@@ -257,7 +265,7 @@ export function ThreadInboxView({
                   >
                     <Shelf label={null}>
                       {review.visibleThreads.map((thread) =>
-                        renderActiveThread(thread, "inbox", false, true, false, "review"),
+                        renderActiveThread(thread, "inbox", false, true, "review"),
                       )}
                     </Shelf>
                   </CollapsibleShelf>
@@ -266,6 +274,7 @@ export function ThreadInboxView({
                   <CollapsibleShelf
                     label="Inactive"
                     icon="PauseCircle"
+                    densityShelf="inactive"
                     count={inactive.threads.length}
                     expanded={expandedShelves.inactive}
                     onToggle={() =>
@@ -277,7 +286,7 @@ export function ThreadInboxView({
                   >
                     <Shelf label={null}>
                       {inactive.visibleThreads.map((thread) =>
-                        renderActiveThread(thread, "inbox", false, true, false, "inactive"),
+                        renderActiveThread(thread, "inbox", false, true, "inactive"),
                       )}
                     </Shelf>
                   </CollapsibleShelf>

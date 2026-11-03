@@ -87,7 +87,7 @@ describe("ThreadInbox", () => {
     expect(within(inactive).queryByText("Stale work")).toBeNull();
     expect(within(pinned).getByText("Pinned old work")).toBeDefined();
 
-    fireEvent.click(within(inactive).getByRole("button", { expanded: false }));
+    fireEvent.click(within(inactive).getByRole("button", { name: /^Inactive/, expanded: false }));
     expect(within(inactive).getByText("Stale work")).toBeDefined();
   });
 

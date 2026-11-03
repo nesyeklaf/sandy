@@ -180,7 +180,9 @@ it("removes obsolete archive-preview cache keys before an early save", async () 
     pending.resolve(DEFAULT_SIDEBAR_SETTINGS);
   });
   expect(screen.getByRole("switch", { name: "Working shelf" }).getAttribute("aria-checked")).toBe("true");
-  expect(JSON.parse(localStorage.getItem("sandy-sidebar:settings-cache:v1")!)).not.toHaveProperty("archivedShelfEnabled");
+  expect(JSON.parse(localStorage.getItem("sandy-sidebar:settings-cache:v1")!)).not.toHaveProperty(
+    "archivedShelfEnabled",
+  );
 });
 
 it("keeps the typing debounce when an earlier settings save finishes", async () => {
@@ -245,27 +247,27 @@ it("replaces the compact switch with a thread display choice", async () => {
       },
     },
   );
-  const picker = await screen.findByRole("combobox", { name: "Thread display" });
+  const picker = await screen.findByRole("combobox", { name: "Density" });
   const projectIconOnly = screen.getByRole("switch", { name: "Hide repo names in compact cards" });
   expect(projectIconOnly.getAttribute("aria-checked")).toBe("false");
   expect(screen.queryByRole("switch", { name: "Compact working threads" })).toBeNull();
   expect([...(picker as HTMLSelectElement).options].map((option) => option.textContent)).toEqual([
-    "Full cards",
-    "Compact working threads",
-    "Compact all threads",
+    "Auto",
+    "Comfortable",
+    "Compact",
+    "Dense",
   ]);
-  expect((picker as HTMLSelectElement).value).toBe("full");
-  fireEvent.change(picker, { target: { value: "compact-working" } });
-  await waitFor(() => expect(writes).toEqual([{ threadDisplay: "compact-working" }]));
-  // The Compact all options appear only with that choice.
+  expect((picker as HTMLSelectElement).value).toBe("comfortable");
   expect(screen.queryByRole("switch", { name: "Keep pinned threads full" })).toBeNull();
-  fireEvent.change(picker, { target: { value: "compact-all" } });
+  fireEvent.change(picker, { target: { value: "auto" } });
+  await waitFor(() => expect(writes).toEqual([{ threadDensity: "auto" }]));
+  fireEvent.change(picker, { target: { value: "dense" } });
   fireEvent.click(await screen.findByRole("switch", { name: "Keep pinned threads full" }));
   fireEvent.click(screen.getByRole("switch", { name: "Keep woken threads full" }));
   fireEvent.click(projectIconOnly);
   await waitFor(() =>
     expect(stored).toMatchObject({
-      threadDisplay: "compact-all",
+      threadDensity: "dense",
       compactProjectIconOnly: true,
       keepPinnedThreadsFull: true,
       keepWokeThreadsFull: true,

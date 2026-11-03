@@ -22,6 +22,7 @@ import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThrea
 import { OpenPortsProvider } from "./OpenPorts";
 import type { ActiveSortMode } from "./inbox-layout";
 import type { useRenamingShelfLocks } from "./useRenamingShelfLocks";
+import type { UpdateSidebarSettings } from "./useSidebarSettings";
 import { ActiveThreadContext, useActiveThreadWithin, type ActiveThreadStore } from "./useActiveThread";
 
 interface InboxContextInputs {
@@ -46,6 +47,7 @@ interface InboxContextInputs {
   setActiveSortMode: Dispatch<SetStateAction<ActiveSortMode>>;
   setSettledLimit: Dispatch<SetStateAction<number>>;
   toggleProjectCollapse: (projectId: string) => void;
+  updateSidebarSettings: UpdateSidebarSettings;
 }
 
 /** Shared inbox values have separate identities for data, handlers, and activity. */
@@ -71,6 +73,7 @@ export function useInboxContextValues({
   setActiveSortMode,
   setSettledLimit,
   toggleProjectCollapse,
+  updateSidebarSettings,
 }: InboxContextInputs) {
   const environment = useMemo(
     () => ({
@@ -108,6 +111,7 @@ export function useInboxContextValues({
       setActiveSortMode,
       setSettledLimit,
       toggleProjectCollapse,
+      updateSidebarSettings,
       acknowledgeWake: (threadId: string) => void lifecycle.acknowledgeWake(threadId),
       openThread: (threadId: string) => {
         navigate.toThread(threadId, { split: false });
@@ -127,6 +131,7 @@ export function useInboxContextValues({
       setActiveSortMode,
       setSettledLimit,
       toggleProjectCollapse,
+      updateSidebarSettings,
       lifecycle,
     ],
   );

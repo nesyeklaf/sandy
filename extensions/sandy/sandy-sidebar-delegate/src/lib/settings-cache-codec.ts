@@ -3,7 +3,8 @@ import {
   childThreadSettingsOf,
   DEFAULT_SIDEBAR_SETTINGS,
   projectColorDisplayOf,
-  threadDisplayOf,
+  shelfDensitiesOf,
+  threadDensityOf,
   type SidebarSettingsValues,
 } from "../sidebar-settings-values";
 
@@ -38,11 +39,12 @@ export function decodeSettingsCache(input: unknown): SidebarSettingsValues | nul
   return currentSettingsOnly({
     ...value,
     ...childThreadSettingsOf(value),
-    threadDisplay: threadDisplayOf(value),
+    threadDensity: threadDensityOf(value),
+    shelfDensities: shelfDensitiesOf(value.shelfDensities),
     compactProjectIconOnly: value.compactProjectIconOnly === true,
     keepPinnedThreadsFull: value.keepPinnedThreadsFull === true,
     keepWokeThreadsFull: value.keepWokeThreadsFull === true,
-    compactWorkingThreads: threadDisplayOf(value) !== "full",
+    compactWorkingThreads: threadDensityOf(value) !== "comfortable",
     workingShelf: value.workingShelf === true,
     dockShelves: value.dockShelves === true,
     projectColorsEnabled: value.projectColorsEnabled === true,

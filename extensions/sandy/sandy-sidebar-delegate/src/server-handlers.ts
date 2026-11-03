@@ -155,10 +155,10 @@ export function createServerHandlers(
     async updateSidebarSettings(values) {
       const stored = readSidebarSettings();
       const next = { ...stored, ...values };
-      // Keep the legacy switch in step with thread display, both ways.
-      if (values.threadDisplay !== undefined) next.compactWorkingThreads = values.threadDisplay !== "full";
+      // Keep the legacy switch in step with thread density, both ways.
+      if (values.threadDensity !== undefined) next.compactWorkingThreads = values.threadDensity !== "comfortable";
       else if (values.compactWorkingThreads !== undefined)
-        next.threadDisplay = values.compactWorkingThreads ? "compact-working" : "full";
+        next.threadDensity = values.compactWorkingThreads ? "auto" : "comfortable";
       writeSidebarSettings(next);
       ctx.sandy.realtime.publish(SIDEBAR_SETTINGS_CHANNEL, {});
       if (

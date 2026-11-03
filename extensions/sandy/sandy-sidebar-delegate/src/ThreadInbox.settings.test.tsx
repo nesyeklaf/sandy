@@ -80,7 +80,9 @@ describe("sidebar settings", () => {
     const group = await screen.findByRole("region", { name: "add_on project" });
     await waitFor(() =>
       expect(
-        (group.querySelector("[data-project-stripe]") as HTMLElement)?.style.getPropertyValue("--sandy-sidebar-project"),
+        (group.querySelector("[data-project-stripe]") as HTMLElement)?.style.getPropertyValue(
+          "--sandy-sidebar-project",
+        ),
       ).toBe("#123456"),
     );
     expect(group.querySelectorAll("[data-project-stripe]")).toHaveLength(1);
@@ -103,7 +105,8 @@ describe("sidebar settings", () => {
       ...defaultSidebarSettings,
       projectColorsEnabled: true,
       inactiveThreadsEnabled: false,
-      threadDisplay: "compact-working" as const,
+      threadDensity: "dense" as const,
+      keepPinnedThreadsFull: true,
       compactWorkingThreads: true,
     };
     const rendered = renderSlot(inbox, listProps, {
@@ -119,14 +122,8 @@ describe("sidebar settings", () => {
         threads: [
           thread({ id: "a", projectId: "group", title: "First grouped" }),
           thread({ id: "b", projectId: "group", title: "Second grouped" }),
-          thread({ id: "single", projectId: "single", title: "Full card" }),
-          thread({
-            id: "busy",
-            projectId: "busy",
-            title: "Compact card",
-            indicator: "runtime",
-            indicatorLabel: "Working",
-          }),
+          thread({ id: "single", projectId: "single", title: "Full card", isPinned: true }),
+          thread({ id: "busy", projectId: "busy", title: "Compact card" }),
           thread({ id: "settled", projectId: "settled", title: "Settled row" }),
         ],
       },
@@ -290,7 +287,7 @@ describe("sidebar settings", () => {
     ]);
     expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull();
     const layout = screen.getByRole("region", { name: "Sidebar layout" });
-    expect(within(layout).getAllByText("Experimental")).toHaveLength(3);
+    expect(within(layout).getAllByText("Experimental")).toHaveLength(2);
     expect(within(layout).getByRole("switch", { name: "Working shelf" })).toBeDefined();
     expect(within(layout).queryByRole("switch", { name: "Archived shelf" })).toBeNull();
     const appearance = screen.getByRole("region", { name: "Repo appearance" });

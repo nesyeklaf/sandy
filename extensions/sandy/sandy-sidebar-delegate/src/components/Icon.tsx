@@ -39,6 +39,16 @@ import {
   UserAdd01Icon,
   WorkflowCircle03Icon,
   Yoga02Icon,
+  MoreHorizontalIcon,
+  PreferenceHorizontalIcon,
+  Notification01Icon,
+  CheckmarkSquare02Icon,
+  SquareIcon,
+  Archive02Icon,
+  Alert02Icon,
+  GitMergeIcon,
+  HourglassIcon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "../lib/utils";
 
@@ -82,6 +92,16 @@ const ICON_MAP = {
   Terminal: ComputerTerminal01Icon,
   UserRoundPlus: UserAdd01Icon,
   Workflow: WorkflowCircle03Icon,
+  More: MoreHorizontalIcon,
+  View: PreferenceHorizontalIcon,
+  Bell: Notification01Icon,
+  CheckSquare: CheckmarkSquare02Icon,
+  Square: SquareIcon,
+  Archive: Archive02Icon,
+  Alert: Alert02Icon,
+  GitMerge: GitMergeIcon,
+  Hourglass: HourglassIcon,
+  Close: Cancel01Icon,
 } as const satisfies Record<string, IconSvgElement>;
 
 export type IconName = keyof typeof ICON_MAP;

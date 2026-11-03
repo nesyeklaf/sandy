@@ -14,7 +14,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Subtle repo grouping for repos with multiple active threads
 - Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
 - Pinned, Active, Inactive, Snoozed, Parked, and Settled shelves
-- Full cards, compact working threads, or compact all threads, with options to keep pinned or woken threads full
+- Density from the View button: Auto, Comfortable (three lines), Compact (two lines), or Dense (one line), with a per-shelf override in each shelf's ⋯ menu and options to keep pinned or woken threads full
 - Searchable multi-repo filtering, remembered per window across reloads
 - Optional repo colors with per-repo color selection. Names stay colored in every mode; show stripes in full and collapsed mode, full mode only, or grouped repos only
 - Automatic repo icons with custom overrides

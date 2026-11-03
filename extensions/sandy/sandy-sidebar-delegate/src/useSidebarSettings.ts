@@ -14,6 +14,19 @@ import { cachedSidebarSettings, cacheSidebarSettings, type SidebarSettingsValues
  * Null until the first load when nothing is cached yet.
  */
 export function useSidebarSettings(): SidebarSettingsValues | null {
+  return useSidebarSettingsState().settings;
+}
+
+export type UpdateSidebarSettings = (patch: Partial<SidebarSettingsValues>) => Promise<void>;
+
+/**
+ * The saved settings plus an optimistic writer: the patch shows at once, the
+ * server's answer replaces it, and a failed write reloads the saved values.
+ */
+export function useSidebarSettingsState(): {
+  settings: SidebarSettingsValues | null;
+  update: UpdateSidebarSettings;
+} {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
   const loadRequestSeq = useRef(0);
   const [settings, setSettings] = useState<SidebarSettingsValues | null>(() => cachedSidebarSettings(rpc));
@@ -37,5 +50,18 @@ export function useSidebarSettings(): SidebarSettingsValues | null {
   useRealtime(SIDEBAR_SETTINGS_CHANNEL, () => {
     void load();
   });
-  return settings;
+  const update = useCallback<UpdateSidebarSettings>(
+    async (patch) => {
+      const seq = ++loadRequestSeq.current;
+      setSettings((current) => (current ? { ...current, ...patch } : current));
+      try {
+        const result = await rpc.call("updateSidebarSettings", patch);
+        if (seq === loadRequestSeq.current) setSettings(cacheSidebarSettings(rpc, result));
+      } catch {
+        void load();
+      }
+    },
+    [load, rpc],
+  );
+  return { settings, update };
 }

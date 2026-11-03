@@ -33,8 +33,8 @@ const releaseSettings = {
   workingShelf: true,
   dockShelves: true,
 };
-// Releases before Thread display saved only the switch, which now decides it.
-const migratedThreadDisplay = { threadDisplay: "compact-working" } as const;
+// Releases before Thread display saved only the switch, which now decides density.
+const migratedThreadDisplay = { threadDensity: "auto" } as const;
 const snapshots = [
   {
     version: "v0.2.34",
@@ -209,7 +209,7 @@ function assertSettingsControls(container: HTMLElement, settings: (typeof snapsh
   }
   expect(ui.getByRole("textbox", { name: "Snooze shortcuts" })).toHaveProperty("value", settings.snoozePresets);
   for (const [label, field] of [
-    ["Thread display", "threadDisplay"],
+    ["Density", "threadDensity"],
     ["Child threads sort field", "childSortField"],
     ["Child threads sort direction", "childSortDirection"],
     ["Child thread icon", "childIconStyle"],

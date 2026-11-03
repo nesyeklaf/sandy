@@ -33,7 +33,7 @@ import { useInboxReorder } from "./useInboxReorder";
 import { useInboxProjectGroups } from "./useInboxProjectGroups";
 import { environmentUnitKey } from "./environment-groups";
 import { useWorkingSince } from "./useWorkingSince";
-import { useSidebarSettings } from "./useSidebarSettings";
+import { useSidebarSettingsState } from "./useSidebarSettings";
 import { withoutFinishedDelegateChildren } from "./delegate-children";
 import { useProjectScope } from "./useProjectScope";
 import { useTagFilteredThreads } from "./useTagIndex";
@@ -60,7 +60,7 @@ type ActiveShelfKind = "pinned" | "inbox";
  */
 export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: PluginThreadListProps) {
   const { status, threads: allThreads, projects, sections, delegateChildrenLoaded } = useSidebarThreads();
-  const sidebarSettings = useSidebarSettings();
+  const { settings: sidebarSettings, update: updateSidebarSettings } = useSidebarSettingsState();
   const hideFinishedSubagents =
     sidebarSettings?.hideFinishedSubagents ?? DEFAULT_SIDEBAR_SETTINGS.hideFinishedSubagents;
   const taggedThreads = useTagFilteredThreads(allThreads);
@@ -441,6 +441,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     setActiveSortMode,
     setSettledLimit,
     toggleProjectCollapse,
+    updateSidebarSettings,
   });
   const activeThreadStore = useActiveThreadStore(activeThreadId ?? null);
   const renderActiveThread = createInboxThreadRenderer({

@@ -24,7 +24,7 @@ function renderCompactAll(
       getSidebarSettings: () => ({
         ...defaultSidebarSettings,
         inactiveThreadsEnabled: false,
-        threadDisplay: "compact-all",
+        threadDensity: "dense",
         compactWorkingThreads: true,
         ...settings,
       }),
@@ -37,7 +37,7 @@ function renderCompactAll(
   });
 }
 
-describe("Compact all threads", () => {
+describe("Dense density", () => {
   it("keeps every Active and Pinned thread on one line with its signals", async () => {
     renderCompactAll([
       thread({ id: "idle", title: "Idle work" }),
@@ -115,7 +115,7 @@ describe("Compact all threads", () => {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
           inactiveThreadsEnabled: false,
-          threadDisplay: "compact-all",
+          threadDensity: "dense",
         }),
         listLifecycle: () => ({
           rows: [{ threadId: "settled", settledAt: Date.now(), snoozedUntil: null, snoozedAt: null }],

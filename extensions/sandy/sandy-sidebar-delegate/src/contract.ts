@@ -6,7 +6,8 @@ import {
   CHILD_THREAD_SORT_DIRECTIONS,
   CHILD_THREAD_ICON_STYLES,
   PROJECT_COLOR_DISPLAYS,
-  THREAD_DISPLAYS,
+  SHELF_DENSITIES,
+  THREAD_DENSITIES,
 } from "./sidebar-settings-values";
 import { configuredSnoozePresetError } from "./lifecycle";
 export {
@@ -150,7 +151,16 @@ export const sidebarSettingsSchema = z
     childSortField: z.enum(CHILD_THREAD_SORT_FIELDS),
     childSortDirection: z.enum(CHILD_THREAD_SORT_DIRECTIONS),
     childIconStyle: z.enum(CHILD_THREAD_ICON_STYLES),
-    threadDisplay: z.enum(THREAD_DISPLAYS),
+    threadDensity: z.enum(THREAD_DENSITIES),
+    shelfDensities: z
+      .object({
+        pinned: z.enum(SHELF_DENSITIES),
+        active: z.enum(SHELF_DENSITIES),
+        working: z.enum(SHELF_DENSITIES),
+        review: z.enum(SHELF_DENSITIES),
+        inactive: z.enum(SHELF_DENSITIES),
+      })
+      .strict(),
     compactProjectIconOnly: z.boolean(),
     keepPinnedThreadsFull: z.boolean(),
     keepWokeThreadsFull: z.boolean(),

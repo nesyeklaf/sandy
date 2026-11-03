@@ -37,7 +37,7 @@ for (const [name, theme, width] of [
   });
 }
 
-test("sidebar snapshot Compact all threads", async ({ page, request }, testInfo) => {
+test("sidebar snapshot Dense density", async ({ page, request }, testInfo) => {
   test.skip(process.platform !== "darwin", "Reviewed baselines are macOS only; Linux runs all behavior flows");
   await reset(request);
   const [atlas, birch, cedar, delta] = fixture.threads;
@@ -45,7 +45,7 @@ test("sidebar snapshot Compact all threads", async ({ page, request }, testInfo)
     await cli(["thread", "pin", atlas.id]);
     await rpc(request, "snooze", { threadId: cedar.id, snoozedUntil: Date.now() + 7 * 86_400_000 });
     await rpc(request, "settle", { threadId: delta.id });
-    await rpc(request, "updateSidebarSettings", { threadDisplay: "compact-all" });
+    await rpc(request, "updateSidebarSettings", { threadDensity: "dense" });
     await open(page);
     for (const name of ["Pinned", "Snoozed", "Settled"]) await expand(page, name);
     await expect(link(page, atlas.title, "Pinned")).toBeVisible();
@@ -54,7 +54,7 @@ test("sidebar snapshot Compact all threads", async ({ page, request }, testInfo)
     for (const title of [atlas.title, birch.title])
       await expect(page.getByRole("link", { name: title, exact: true }).locator("xpath=..")).toHaveClass(/\bh-8\b/);
     await page.mouse.move(1000, 750);
-    await capture(page, testInfo, "compact-all.png");
+    await capture(page, testInfo, "dense.png");
   } finally {
     await rpc(request, "updateSidebarSettings", fixture.defaultSettings);
   }

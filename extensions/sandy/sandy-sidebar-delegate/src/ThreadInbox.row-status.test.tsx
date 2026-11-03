@@ -17,20 +17,20 @@ const glyph = (title: string) => row(title).querySelector(`[data-row-status="${s
 function renderWithStatus(
   threads: PluginSidebarThread[],
   marked: string[],
-  { rows = [], threadDisplay = "full" }: { rows?: unknown[]; threadDisplay?: string } = {},
+  { rows = [], threadDensity = "comfortable" }: { rows?: unknown[]; threadDensity?: string } = {},
 ) {
   return renderSlot(inbox, listProps, {
     sidebarThreads: { status: "ready", threads, projects },
     sidebarRowStatuses: Object.fromEntries(marked.map((id) => [id, sandbox])),
     rpc: {
-      getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: false, threadDisplay }),
+      getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: false, threadDensity }),
       listLifecycle: () => ({ rows }),
     },
   });
 }
 
 describe("row statuses from other plugins", () => {
-  it.each(["full", "compact-all"])(
+  it.each(["comfortable", "dense"])(
     "draws sandy's glyph with its tone in place of a quiet status (%s)",
     async (display) => {
       renderWithStatus(
@@ -41,7 +41,7 @@ describe("row statuses from other plugins", () => {
         ],
         ["unread", "settled"],
         {
-          threadDisplay: display,
+          threadDensity: display,
           rows: [{ threadId: "settled", settledAt: 200, snoozedUntil: null, snoozedAt: null }],
         },
       );

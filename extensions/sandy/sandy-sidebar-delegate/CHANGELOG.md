@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Thread display is now **Density**, set from the new View button beside the layout switch or in Sidebar layout: Auto, Comfortable, Compact, or Dense. Comfortable is the three-line card, Compact a new two-line row, Dense the one-line row. Auto draws threads that need you or are working as full cards and the rest on two lines. Each shelf's ⋯ menu overrides the density for that shelf. Your choice carries over: Full cards becomes Comfortable, Compact working threads becomes Auto, Compact all threads becomes Dense.
 - What the plugin called "project" in its UI is now called "repo", because it is the repository. Settings keys and stored data are unchanged.
 
 ## [0.3.7] - 2026-10-23

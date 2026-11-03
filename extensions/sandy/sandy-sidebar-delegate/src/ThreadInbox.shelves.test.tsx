@@ -89,8 +89,8 @@ describe("parking threads", () => {
     let inactiveShelf = screen.getByRole("region", { name: "Inactive" });
     let settledShelf = await screen.findByRole("region", { name: "Settled" });
     let snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
-    fireEvent.click(within(activeShelf).getByRole("button", { expanded: true }));
-    fireEvent.click(within(inactiveShelf).getByRole("button"));
+    fireEvent.click(within(activeShelf).getByRole("button", { name: /^Needs you/, expanded: true }));
+    fireEvent.click(within(inactiveShelf).getByRole("button", { name: /^Inactive/ }));
     fireEvent.click(within(settledShelf).getByRole("button", { expanded: false }));
     fireEvent.click(within(snoozedShelf).getByRole("button"));
     expect(within(activeShelf).queryByText("Active work")).toBeNull();
@@ -169,7 +169,7 @@ describe("parking threads", () => {
 
     const inactiveShelf = screen.getByRole("region", { name: "Inactive" });
     const settledShelf = screen.getByRole("region", { name: "Settled" });
-    expect(within(inactiveShelf).getByRole("button", { expanded: false })).toBeDefined();
+    expect(within(inactiveShelf).getByRole("button", { name: /^Inactive/, expanded: false })).toBeDefined();
     expect(within(settledShelf).getByRole("button", { expanded: false })).toBeDefined();
     expect(screen.queryByRole("region", { name: "Needs you" })).toBeNull();
     expect(screen.queryByText("Inactive work")).toBeNull();
