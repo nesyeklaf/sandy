@@ -6,14 +6,14 @@ export interface TagIndex {
 }
 
 interface TagFilter {
-  tag: string | null;
+  tags: readonly string[];
   query: string;
 }
 
-export const NO_FILTER: TagFilter = { tag: null, query: "" };
+export const NO_FILTER: TagFilter = { tags: [], query: "" };
 
 export function isFiltering(filter: TagFilter): boolean {
-  return filter.tag !== null || filter.query.trim() !== "";
+  return filter.tags.length > 0 || filter.query.trim() !== "";
 }
 
 /** Tags with the number of sessions that carry them, directly or through a topic. */
@@ -31,12 +31,17 @@ export function tagCounts(index: TagIndex): Array<{ tag: string; count: number }
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 }
 
-export function pinActiveTag<T extends { tag: string }>(counts: readonly T[], active: string | null): T[] {
-  if (active === null) return [...counts];
-  return [...counts.filter((entry) => entry.tag === active), ...counts.filter((entry) => entry.tag !== active)];
+export function toggleTag(tags: readonly string[], tag: string): string[] {
+  return tags.includes(tag) ? tags.filter((entry) => entry !== tag) : [...tags, tag];
 }
 
-/** Thread ids that match the tag and the text; the text searches topic titles and tags. */
+/** Every tag worth listing: the known ones by use, then picked tags that no session carries any more. */
+export function pickerTags(counts: ReadonlyArray<{ tag: string; count: number }>, picked: readonly string[]) {
+  const known = new Set(counts.map((entry) => entry.tag));
+  return [...counts, ...picked.filter((tag) => !known.has(tag)).map((tag) => ({ tag, count: 0 }))];
+}
+
+/** Thread ids that carry at least one picked tag and match the text; the text searches topic titles and tags. */
 function matchingThreadIds(index: TagIndex, filter: TagFilter): Set<string> {
   const needle = filter.query.trim().toLowerCase();
   const ids = new Set<string>();
@@ -45,7 +50,7 @@ function matchingThreadIds(index: TagIndex, filter: TagFilter): Set<string> {
   for (const threadId of candidates) {
     const segments = index.segments.filter((segment) => segment.threadId === threadId);
     const tags = [...tagsOf(threadId), ...segments.flatMap((segment) => segment.tags)];
-    if (filter.tag !== null && !tags.includes(filter.tag)) continue;
+    if (filter.tags.length > 0 && !filter.tags.some((tag) => tags.includes(tag))) continue;
     if (needle !== "") {
       const haystack = [...tags, ...segments.map((segment) => segment.title)];
       if (!haystack.some((text) => text.toLowerCase().includes(needle))) continue;

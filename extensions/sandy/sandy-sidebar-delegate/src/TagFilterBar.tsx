@@ -1,5 +1,7 @@
-import { useMemo, useRef } from "react";
-import { pinActiveTag, tagCounts } from "./tag-filter";
+import { useMemo, useState } from "react";
+import { Icon } from "./components/Icon";
+import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
+import { pickerTags, tagCounts, toggleTag } from "./tag-filter";
 import { setTagFilter, useTagFilter } from "./useTagFilter";
 import { useTagIndex } from "./useTagIndex";
 import { cn } from "./lib/utils";
@@ -7,46 +9,72 @@ import { cn } from "./lib/utils";
 export function TagFilterBar() {
   const filter = useTagFilter();
   const index = useTagIndex();
-  const row = useRef<HTMLDivElement>(null);
-  const counts = useMemo(() => pinActiveTag(tagCounts(index), filter.tag), [index, filter.tag]);
-  if (counts.length === 0 && filter.tag === null && filter.query === "") return null;
+  const [open, setOpen] = useState(false);
+  const counts = useMemo(() => tagCounts(index), [index]);
+  const tags = useMemo(() => pickerTags(counts, filter.tags), [counts, filter.tags]);
+  if (tags.length === 0 && filter.query === "") return null;
+  const picked = filter.tags.length;
+  const label = picked === 0 ? "Filter by tags" : `Filter by tags: ${filter.tags.join(", ")}`;
   return (
-    <div role="group" aria-label="Tag filter" className="flex shrink-0 flex-col gap-1 px-2 pb-1">
+    <div role="group" aria-label="Tag filter" className="flex shrink-0 items-center gap-1 px-2 pb-1">
       <input
         value={filter.query}
         aria-label="Search topics and tags"
         placeholder="Search topics and tags"
-        className="h-6 rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+        className="h-6 min-w-0 flex-1 rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
         onChange={(event) => setTagFilter({ query: event.target.value })}
       />
-      <div
-        ref={row}
-        className="flex flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {counts.map(({ tag, count }) => {
-          const active = filter.tag === tag;
-          return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={label}
+            title={label}
+            className={cn(
+              "flex h-6 shrink-0 items-center gap-1 rounded border border-border px-1.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              picked > 0
+                ? "bg-primary text-primary-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Icon name="Tag" className="size-3.5" />
+            {picked > 0 && <span>{picked}</span>}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" aria-label="Tags" className="w-60 p-1">
+          <div role="group" aria-label="Tags" className="max-h-72 overflow-y-auto overscroll-contain">
+            {tags.map(({ tag, count }) => {
+              const selected = filter.tags.includes(tag);
+              return (
+                <label key={tag} className="block cursor-default">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    className="peer sr-only"
+                    onChange={() => setTagFilter({ tags: toggleTag(filter.tags, tag) })}
+                  />
+                  <span className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-state-hover peer-focus-visible:bg-state-hover">
+                    <span className="flex size-3.5 shrink-0 items-center justify-center">
+                      {selected && <Icon name="Check" className="size-3.5" />}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{tag}</span>
+                    <span className="text-muted-foreground">{count}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {picked > 0 && (
             <button
-              key={tag}
               type="button"
-              aria-pressed={active}
-              title={`Show sessions tagged ${tag}`}
-              onClick={() => {
-                setTagFilter({ tag: active ? null : tag });
-                if (row.current) row.current.scrollLeft = 0;
-              }}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-sidebar-accent text-muted-foreground hover:text-foreground",
-              )}
+              className="mt-1 w-full rounded-sm border-t border-border px-2 py-1.5 text-left text-xs text-muted-foreground outline-none hover:bg-state-hover hover:text-foreground focus-visible:bg-state-hover"
+              onClick={() => setTagFilter({ tags: [] })}
             >
-              {tag} {count}
+              Clear tags
             </button>
-          );
-        })}
-      </div>
+          )}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

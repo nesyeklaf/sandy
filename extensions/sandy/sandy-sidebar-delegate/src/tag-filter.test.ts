@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterByTags, isFiltering, NO_FILTER, pinActiveTag, tagCounts, type TagIndex } from "./tag-filter";
+import { filterByTags, isFiltering, NO_FILTER, pickerTags, tagCounts, toggleTag, type TagIndex } from "./tag-filter";
 
 const index: TagIndex = {
   threadTags: { a: ["bug"], b: [] },
@@ -17,20 +17,33 @@ describe("tag filter", () => {
   });
 
   it("matches a tag on the session or on one of its topics", () => {
-    expect(filterByTags(threads, index, { tag: "bug", query: "" }).map((t) => t.id)).toEqual(["a"]);
-    expect(filterByTags(threads, index, { tag: "sidebar", query: "" }).map((t) => t.id)).toEqual(["a", "b"]);
+    expect(filterByTags(threads, index, { tags: ["bug"], query: "" }).map((t) => t.id)).toEqual(["a"]);
+    expect(filterByTags(threads, index, { tags: ["sidebar"], query: "" }).map((t) => t.id)).toEqual(["a", "b"]);
+  });
+
+  it("keeps sessions that carry any of several picked tags", () => {
+    expect(filterByTags(threads, index, { tags: ["bug", "sidebar"], query: "" }).map((t) => t.id)).toEqual(["a", "b"]);
+    expect(filterByTags(threads, index, { tags: ["tags", "unknown"], query: "" }).map((t) => t.id)).toEqual(["a"]);
   });
 
   it("searches topic titles and tags, case-insensitively, together with the tag", () => {
-    expect(filterByTags(threads, index, { tag: null, query: "tree" }).map((t) => t.id)).toEqual(["b"]);
-    expect(filterByTags(threads, index, { tag: "sidebar", query: "TAGGING" }).map((t) => t.id)).toEqual(["a"]);
-    expect(filterByTags(threads, index, { tag: "bug", query: "tree" })).toEqual([]);
+    expect(filterByTags(threads, index, { tags: [], query: "tree" }).map((t) => t.id)).toEqual(["b"]);
+    expect(filterByTags(threads, index, { tags: ["sidebar"], query: "TAGGING" }).map((t) => t.id)).toEqual(["a"]);
+    expect(filterByTags(threads, index, { tags: ["bug"], query: "tree" })).toEqual([]);
   });
 
-  it("moves the picked tag to the front and keeps the rest in order", () => {
-    const counts = tagCounts(index);
-    expect(pinActiveTag(counts, "tags").map((c) => c.tag)).toEqual(["tags", "sidebar", "bug"]);
-    expect(pinActiveTag(counts, null)).toEqual(counts);
+  it("toggles a tag in the picked list", () => {
+    expect(toggleTag(["a"], "b")).toEqual(["a", "b"]);
+    expect(toggleTag(["a", "b"], "a")).toEqual(["b"]);
+  });
+
+  it("lists a picked tag that no session carries any more so it can be unpicked", () => {
+    expect(pickerTags(tagCounts(index), ["gone"]).map((c) => [c.tag, c.count])).toEqual([
+      ["sidebar", 2],
+      ["bug", 1],
+      ["tags", 1],
+      ["gone", 0],
+    ]);
   });
 
   it("counts sessions per tag, most used first", () => {
