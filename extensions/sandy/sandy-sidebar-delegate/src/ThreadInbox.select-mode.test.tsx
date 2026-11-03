@@ -153,15 +153,59 @@ describe("diff and PR fields", () => {
 });
 
 describe("activity bell", () => {
+  it("counts a hidden delegate question once, on the parent row it rolls into", async () => {
+    const now = Date.now();
+    renderThreads([
+      thread({ id: "parent", title: "Root", latestAttentionAt: now - 600_000 }),
+      thread({
+        id: "child",
+        title: "Hidden question",
+        parentThreadId: "parent",
+        originPluginId: "work",
+        isHidden: true,
+        hasPendingInteraction: true,
+        indicator: "waiting-for-input",
+        latestAttentionAt: now - 60_000,
+      }),
+    ]);
+    await screen.findByRole("region", { name: "Needs you" });
+    fireEvent.click(screen.getByRole("button", { name: "Activity, 1 thread needs you" }));
+    const feed = within(await screen.findByRole("dialog", { name: "Activity" })).getByRole("list", {
+      name: "Activity feed",
+    });
+    expect(
+      within(feed)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual([expect.stringContaining("Root asked a question")]);
+  });
+
+  it("counts Needs you rows: indicator-only questions count, asking siblings share their parent's row", async () => {
+    renderThreads([
+      thread({ id: "indicator", title: "Indicator only", indicator: "waiting-for-input" }),
+      thread({ id: "parent", title: "Parent" }),
+      thread({ id: "c1", title: "Child one", parentThreadId: "parent", hasPendingInteraction: true }),
+      thread({ id: "c2", title: "Child two", parentThreadId: "parent", hasPendingInteraction: true }),
+      thread({ id: "c3", title: "Child three", parentThreadId: "parent", hasPendingInteraction: true }),
+    ]);
+    const needs = await screen.findByRole("region", { name: "Needs you" });
+    expect(
+      within(needs)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("aria-label")),
+    ).toEqual(expect.arrayContaining(["Indicator only", "Parent"]));
+    expect(screen.getByRole("button", { name: "Activity, 2 threads need you" })).toBeTruthy();
+  });
+
   it("lists the last day's events and restores an archived thread", async () => {
     const now = Date.now();
     const rendered = renderThreads([
       thread({ id: "thr_q", title: "Asks", hasPendingInteraction: true, latestAttentionAt: now - 60_000 }),
       thread({ id: "thr_gone", title: "Gone", isArchived: true, archivedAt: now - 120_000 }),
     ]);
-    fireEvent.click(await screen.findByRole("button", { name: "Activity, 1 question waiting" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Activity, 1 thread needs you" }));
     const dialog = await screen.findByRole("dialog", { name: "Activity" });
-    expect(within(dialog).getByText("1 question waits in Needs you")).toBeTruthy();
+    expect(within(dialog).getByText("1 thread waits in Needs you")).toBeTruthy();
     const feed = within(dialog).getByRole("list", { name: "Activity feed" });
     expect(
       within(feed)

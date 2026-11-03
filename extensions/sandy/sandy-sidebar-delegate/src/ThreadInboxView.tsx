@@ -187,7 +187,7 @@ export function ThreadInboxView({
         <div className="min-w-0 flex-1">
           <ListViewSegment view={listView} onChange={setListView} />
         </div>
-        <ActivityBell threads={allThreads} open={activityOpen} onOpenChange={onActivityOpenChange} />
+        <ActivityBell threads={allThreads} needs={shelves.needs.threads} open={activityOpen} onOpenChange={onActivityOpenChange} />
         <ViewSheet showArchived={showArchived} onShowArchivedChange={onShowArchivedChange} />
       </div>
 

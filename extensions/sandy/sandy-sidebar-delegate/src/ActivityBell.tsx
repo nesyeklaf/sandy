@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSdk, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
-import { ACTIVITY_LABELS, activityFeed, waitingQuestionCount } from "./activity-feed";
+import { ACTIVITY_LABELS, activityFeed } from "./activity-feed";
 import { Icon } from "./components/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
 import { threadDisplayTitle } from "./inbox";
@@ -17,19 +17,21 @@ const KIND_TONE = {
 
 export function ActivityBell({
   threads,
+  needs,
   open,
   onOpenChange,
 }: {
   threads: readonly PluginSidebarThread[];
+  needs: readonly PluginSidebarThread[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const sdk = useSdk();
   const { openThread } = useInboxActions();
   const [openedAt, setOpenedAt] = useState(() => Date.now());
-  const waiting = waitingQuestionCount(threads);
-  const feed = useMemo(() => (open ? activityFeed(threads, openedAt) : []), [open, threads, openedAt]);
-  const label = `Activity, ${waiting} question${waiting === 1 ? "" : "s"} waiting`;
+  const waiting = needs.length;
+  const feed = useMemo(() => (open ? activityFeed(threads, needs, openedAt) : []), [open, threads, needs, openedAt]);
+  const label = `Activity, ${waiting} ${waiting === 1 ? "thread needs" : "threads need"} you`;
   return (
     <Popover
       open={open}
@@ -60,7 +62,7 @@ export function ActivityBell({
         <h3 className="px-2 pb-0.5 pt-1 text-2xs font-medium text-muted-foreground">Last 24 hours</h3>
         {waiting > 0 ? (
           <p className="mx-1 mb-1 rounded-sm bg-sidebar-accent/60 px-2 py-1.5 text-xs">
-            {waiting} question{waiting === 1 ? "" : "s"} wait{waiting === 1 ? "s" : ""} in Needs you
+            {waiting} {waiting === 1 ? "thread waits" : "threads wait"} in Needs you
           </p>
         ) : null}
         {feed.length === 0 ? (
