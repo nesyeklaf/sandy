@@ -249,7 +249,16 @@ export async function createWired(
                 unarchive: (args) => sandy.sdk.threads.unarchive(args),
                 interactions: {
                   list: async ({ threadId }) => interactions.get(threadId) ?? [],
-                  resolve: async () => ({ ok: true }),
+                  resolve: async ({ threadId, interactionId }) => {
+                    const pending = interactions.get(threadId) ?? [];
+                    const resolved = pending.find((interaction) => interaction.id === interactionId);
+                    if (!resolved) throw new Error(`No pending interaction ${interactionId}`);
+                    interactions.set(
+                      threadId,
+                      pending.filter((interaction) => interaction !== resolved),
+                    );
+                    return resolved;
+                  },
                 },
               },
             },

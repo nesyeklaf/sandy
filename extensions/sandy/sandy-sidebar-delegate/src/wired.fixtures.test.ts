@@ -289,7 +289,7 @@ it.each(snapshots)(
         ...(id === "busy" ? { indicator: "runtime" as const, runtimeStatus: "active" as const } : {}),
       }),
     );
-    const wired = await createWired(threads, { rpcGate: gate.promise });
+    const wired = await createWired(threads, { rpcGate: () => gate.promise });
     const inboxSlot = wired.mount();
     const settingsSlot = wired.mount("settings");
     const archivedShelf = screen.getByRole("region", { name: "Archived" });
@@ -358,8 +358,9 @@ it.each(snapshots)("reads $version legacy grouping when active-sort is absent", 
   // active-grouping is a legacy fallback; active-sort takes priority in the full dump.
   localStorage.setItem("sandy-sidebar:active-grouping:v1", fixture["sandy-sidebar:active-grouping:v1"]!);
   expect(localStorage.getItem("sandy-sidebar:active-sort:v1")).toBeNull();
+  const gate = deferred<void>();
   const wired = await createWired([thread({ id: "first" }), thread({ id: "second" })], {
-    rpcGate: deferred<void>().promise,
+    rpcGate: () => gate.promise,
   });
   wired.mount();
   expect(screen.getByRole("button", { name: "Sort active threads: Repo" })).toBeDefined();
