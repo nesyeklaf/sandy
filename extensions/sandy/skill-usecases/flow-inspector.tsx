@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Fix, Problem, SkillInfo, SourcePort } from "./check";
 import { applyFix, autoBind, bindOptions, deleteNode, forkValues, removeGateOption, removePath, removeWire, summaryText, syncForkPaths, syncSkill, type Edit } from "./canvas-model";
-import { GATE_OWNERS, INPUT_FIELD_TYPES, exitLabels, nodeTitle, orderedNodes, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type InputNode, type OutputNode, type SkillNode, type Wire } from "./graph";
+import { GATE_OWNERS, INPUT_FIELD_TYPES, MAX_CHOICES, exitLabels, nodeTitle, orderedNodes, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type InputNode, type OutputNode, type SkillNode, type Wire } from "./graph";
 import { formatType } from "./io";
 import type { Selection } from "./flow-canvas";
 
@@ -299,7 +299,7 @@ function InputPanel({ flow, node, onChange }: { flow: Flow; node: InputNode; onC
                 label="Options, comma separated"
                 value={field.options.join(", ")}
                 onCommit={(raw) => {
-                  const options = [...new Set(raw.split(",").map((item) => item.trim()).filter((item) => item !== ""))].slice(0, 40);
+                  const options = [...new Set(raw.split(",").map((item) => item.trim()).filter((item) => item !== ""))].slice(0, MAX_CHOICES);
                   save(setFields(node.fields.map((item, at) => (at === index ? { ...item, options } : item))), "Updated the options of " + field.name);
                 }}
               />
@@ -448,7 +448,7 @@ function ForkPanel({ flow, node, onChange }: { flow: Flow; node: ForkNode; onCha
           <button
             type="button"
             className={SMALL}
-            disabled={node.paths.length >= 12}
+            disabled={node.paths.length >= MAX_CHOICES}
             onClick={() => {
               let label = "Path";
               for (let n = 2; node.paths.some((path) => path.label === label); n += 1) label = "Path " + String(n);

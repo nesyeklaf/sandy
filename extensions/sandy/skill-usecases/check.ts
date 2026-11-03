@@ -40,7 +40,9 @@ export type FixAction =
   | { kind: "label-skip"; port: number }
   | { kind: "remove-wire"; wireId: string }
   | { kind: "insert-gate"; wireId: string }
-  | { kind: "override-path"; output: string };
+  | { kind: "override-path"; output: string }
+  | { kind: "require-output"; nodeId: string; output: string }
+  | { kind: "optional-input"; input: string };
 
 export interface Fix {
   label: string;
@@ -242,6 +244,25 @@ function checkBinding(shape: Shape, target: FlowNode, input: string, need: IoTyp
   if (gap !== null) error(title + ': input "' + input + '" is ' + gap, need === null ? [unbind] : [...bindFix(shape, target, input, need, binding), unbind]);
 }
 
+function checkGuaranteed(shape: Shape, target: SkillNode, input: string, need: IoType, binding: Binding, problems: Problem[]): void {
+  const source = shape.byId.get(binding.nodeId);
+  if (source?.kind !== "skill") return;
+  const output = source.outputs.find((item) => item.name === binding.port);
+  if (output === undefined || !output.optional) return;
+  const alternative = candidates(shape, target, need).find((item) => item.node.kind !== "skill" || item.node.outputs.some((other) => other.name === item.port && !other.optional));
+  problems.push({
+    severity: "error",
+    nodeId: target.id,
+    message:
+      target.name + ': input "' + input + '" is required, but ' + source.name + " › " + output.name + " is optional, so the run can reach " + target.name + " without it. Make the output required or the input optional.",
+    fixes: [
+      ...(source.skill === null ? [{ label: "Make " + output.name + " required", action: { kind: "require-output", nodeId: source.id, output: output.name } } as const] : []),
+      ...(target.skill === null ? [{ label: "Make " + input + " optional", action: { kind: "optional-input", input } } as const] : []),
+      ...(alternative === undefined ? [] : [{ label: "Bind to " + nodeTitle(alternative.node) + " › " + alternative.port, action: { kind: "bind", input, source: { nodeId: alternative.node.id, port: alternative.port } } } as const]),
+    ],
+  });
+}
+
 function bindingsOf(node: FlowNode): Binding[] {
   switch (node.kind) {
     case "skill":
@@ -296,6 +317,7 @@ function checkSkill(shape: Shape, node: SkillNode, skills: readonly SkillInfo[],
   for (const input of node.inputs) {
     if (input.bind !== null) {
       checkBinding(shape, node, input.name, input.type, input.bind, problems);
+      if (!input.optional) checkGuaranteed(shape, node, input.name, input.type, input.bind, problems);
       continue;
     }
     if (input.optional) continue;

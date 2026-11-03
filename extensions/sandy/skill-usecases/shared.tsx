@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRealtime, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { SkillUseCaseState, rpcContract } from "./contract";
 import type { Flow } from "./graph";
+import { acked, edited, fetched, fetchStarted, isSaving, startSync } from "./flow-sync";
 
 export const PANEL_PATH = "skills-by-use-case";
 export const INPUT = "h-8 rounded-md border border-border bg-background px-2 text-sm";
@@ -46,10 +47,17 @@ export function useSkillUseCases() {
   const [projectId, setProjectIdState] = useState<string | null>(readStoredProject);
   const [state, setState] = useState<SkillUseCaseState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const sync = useRef(startSync());
   const refetch = useCallback(() => {
+    const started = fetchStarted(sync.current);
+    sync.current = started.sync;
     rpc.call("state", { projectId }).then(
       (next) => {
-        setState(next);
+        const result = fetched(sync.current, started.ticket, next.flows);
+        sync.current = result.sync;
+        const flows = result.flows;
+        if (flows === null) return;
+        setState({ ...next, flows });
         setError(null);
       },
       (cause: unknown) => setError(errorText(cause)),
@@ -92,14 +100,38 @@ export function useSkillUseCases() {
           },
     );
   }, []);
+  const send = useCallback(
+    (flows: Flow[]) => {
+      const settle = () => {
+        const step = acked(sync.current);
+        sync.current = step.sync;
+        if (step.send === null) refetch();
+        else send(step.send);
+      };
+      rpc.call("saveFlows", { flows }).then(
+        (result) => {
+          if (!result.ok) setError("That change was rejected.");
+          settle();
+        },
+        (cause: unknown) => {
+          setError(errorText(cause));
+          settle();
+        },
+      );
+    },
+    [rpc, refetch],
+  );
   const saveFlows = useCallback(
     (flows: Flow[]) => {
       setState((current) => (current === null ? current : { ...current, flows }));
-      run(rpc.call("saveFlows", { flows }));
+      const step = edited(sync.current, flows);
+      sync.current = step.sync;
+      if (step.send !== null) send(step.send);
     },
-    [rpc, run],
+    [send],
   );
-  return { state, error, setError, setProjectId, rpc, run, moveLocally, saveFlows };
+  const savingFlows = useCallback(() => isSaving(sync.current), []);
+  return { state, error, setError, setProjectId, rpc, run, moveLocally, saveFlows, savingFlows };
 }
 
 export type SkillUseCasesApi = ReturnType<typeof useSkillUseCases>;

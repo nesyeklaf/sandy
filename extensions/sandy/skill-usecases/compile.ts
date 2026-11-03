@@ -1,5 +1,5 @@
 import { check, hasErrors, outputFile, sourcePort, type Problem, type SkillInfo } from "./check.ts";
-import { exitLabels, inputFieldText, nodeTitle, orderedNodes, startNodes, type Binding, type Flow, type FlowNode, type ForkNode } from "./graph.ts";
+import { exitLabels, inputFieldText, nodeTitle, orderedNodes, startNodes, type Binding, type Flow, type FlowNode, type ForkNode, type OutputNode } from "./graph.ts";
 
 export type MachineRule = { type: "outputs" } | { type: "user"; prompt: string };
 
@@ -55,7 +55,7 @@ function unique(base: string, taken: Set<string>): string {
   return candidate;
 }
 
-type Exit = { label: string; target: FlowNode | null };
+type Exit = { port: number; target: FlowNode | null };
 
 interface Plan {
   stageOf: Map<string, string>;
@@ -95,6 +95,10 @@ function planStages(flow: Flow): Plan {
   return { stageOf, folded, outputName };
 }
 
+export function freeInputName(name: string): string {
+  return name.replace(/\./gu, "·");
+}
+
 function bindingRef(flow: Flow, plan: Plan, binding: Binding): string {
   const source = sourcePort(flow, binding);
   if (source?.node.kind === "skill") {
@@ -102,55 +106,82 @@ function bindingRef(flow: Flow, plan: Plan, binding: Binding): string {
     const name = plan.outputName.get(source.node.id + "\u0000" + source.port);
     if (stage !== undefined && name !== undefined) return stage + "." + name;
   }
-  return binding.port;
+  return freeInputName(binding.port);
+}
+
+function bindingFile(flow: Flow, binding: Binding): string {
+  const source = sourcePort(flow, binding);
+  if (source?.node.kind !== "skill") return source?.port ?? binding.port;
+  const output = source.node.outputs.find((item) => item.name === source.port);
+  return output === undefined ? source.port : (outputFile(output) ?? source.port);
 }
 
 function exitsOf(flow: Flow, node: FlowNode): Exit[] {
   const byId = (id: string | undefined) => (id === undefined ? null : (flow.nodes.find((item) => item.id === id) ?? null));
-  if (node.kind === "gate")
-    return node.options.map((option, port) => ({ label: option, target: node.ends.includes(port) ? null : byId(flow.wires.find((wire) => wire.from === node.id && wire.port === port)?.to) }));
-  if (node.kind === "fork") return exitLabels(node).map((label, port) => ({ label, target: byId(flow.wires.find((wire) => wire.from === node.id && wire.port === port)?.to) }));
-  return flow.wires.filter((wire) => wire.from === node.id).map((wire) => ({ label: "", target: byId(wire.to) }));
+  const wired = (port: number) => byId(flow.wires.find((wire) => wire.from === node.id && wire.port === port)?.to);
+  if (node.kind === "gate") return node.options.map((_, port) => ({ port, target: node.ends.includes(port) ? null : wired(port) }));
+  if (node.kind === "fork") return exitLabels(node).map((_, port) => ({ port, target: wired(port) }));
+  return flow.wires.filter((wire) => wire.from === node.id).map((wire) => ({ port: wire.port, target: byId(wire.to) }));
 }
 
-function forkWhen(flow: Flow, fork: ForkNode, labels: string[]): string {
-  const by = fork.choice === null ? "the choice" : (sourcePort(flow, fork.choice)?.port ?? fork.choice.port);
-  return by + " is " + labels.join(" or ");
-}
-
-function routes(flow: Flow, plan: Plan, node: FlowNode, problems: Problem[]): { edges: MachineEdge[]; finishes: boolean; delivers: FlowNode[] } {
-  const fork = plan.folded.get(node.id);
-  const routed = fork ?? node;
-  const exits = exitsOf(flow, routed);
-  const groups = new Map<string, string[]>();
-  const delivers: FlowNode[] = [];
-  let finishes = false;
-  for (const exit of exits) {
-    if (exit.target === null || exit.target.kind === "output") {
-      finishes = true;
-      if (exit.target !== null) delivers.push(exit.target);
-      continue;
-    }
-    const to = plan.stageOf.get(exit.target.id);
-    if (to === undefined) continue;
-    groups.set(to, [...(groups.get(to) ?? []), exit.label]);
-  }
-  if (exits.length === 0) finishes = true;
-  if (routed.kind === "skill" && groups.size + (finishes && exits.length > 0 ? 1 : 0) > 1)
-    problems.push({ severity: "error", nodeId: routed.id, message: nodeTitle(routed) + " leads to several blocks at once. A track runs one stage at a time: put a gate or a fork in between.", fixes: [] });
-  const when = (labels: string[]) => (routed.kind === "fork" ? forkWhen(flow, routed, labels) : routed.kind === "gate" ? labels.join(" or ") : undefined);
-  const branching = groups.size + (finishes ? 1 : 0) > 1;
-  const edges = [...groups].map(([to, labels]) => {
-    const text = branching ? when(labels) : undefined;
-    return text === undefined ? { to } : { to, when: text };
+function forkWhen(flow: Flow, fork: ForkNode, ports: readonly number[]): string {
+  const source = fork.choice === null ? null : sourcePort(flow, fork.choice);
+  const by = fork.choice === null ? "the choice" : (source?.port ?? fork.choice.port);
+  const named = ports.flatMap((port) => {
+    const path = fork.paths[port];
+    return path === undefined ? [] : [path.label];
   });
-  return { edges, finishes, delivers };
+  if (!ports.includes(fork.paths.length) || fork.otherwise === null) return by + " is " + named.join(" or ");
+  const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const values = source?.type.kind === "choice" ? source.type.values : [];
+  const unmatched = values.filter((value) => !fork.paths.some((path) => same(path.label, value)));
+  if (unmatched.length > 0) return by + " is " + [...named, ...unmatched].join(" or ");
+  const rest = by + " is none of " + fork.paths.map((path) => path.label).join(", ");
+  return named.length === 0 ? rest : by + " is " + named.join(" or ") + ", or " + rest;
 }
 
-function deliverText(flow: Flow, plan: Plan, outputs: readonly FlowNode[]): string {
-  return outputs
-    .flatMap((node) => (node.kind === "output" ? ["Deliver " + node.label + (node.source === null ? "" : " from " + bindingRef(flow, plan, node.source)) + "."] : []))
-    .join(" ");
+function whenOf(flow: Flow, routed: FlowNode, ports: readonly number[]): string | undefined {
+  if (routed.kind === "fork") return forkWhen(flow, routed, ports);
+  if (routed.kind === "gate") return ports.flatMap((port) => (routed.options[port] === undefined ? [] : [routed.options[port]])).join(" or ");
+  return undefined;
+}
+
+interface Route {
+  key: string;
+  to: string | null;
+  output: OutputNode | null;
+  ports: number[];
+}
+
+function routes(flow: Flow, plan: Plan, node: FlowNode, problems: Problem[]): { routed: FlowNode; routes: Route[] } {
+  const routed = plan.folded.get(node.id) ?? node;
+  const exits = exitsOf(flow, routed);
+  const found = new Map<string, Route>();
+  const add = (key: string, route: Omit<Route, "key" | "ports">, port: number | null) => {
+    const known = found.get(key) ?? { key, ...route, ports: [] };
+    if (port !== null) known.ports.push(port);
+    found.set(key, known);
+  };
+  if (exits.length === 0) add(FINISH + "end", { to: null, output: null }, null);
+  for (const exit of exits) {
+    if (exit.target === null) add(FINISH + "end", { to: null, output: null }, exit.port);
+    else if (exit.target.kind === "output") add(FINISH + exit.target.id, { to: null, output: exit.target }, exit.port);
+    else {
+      const to = plan.stageOf.get(exit.target.id);
+      if (to !== undefined) add("stage:" + to, { to, output: null }, exit.port);
+    }
+  }
+  const all = [...found.values()];
+  if (routed.kind === "skill" && all.length > 1)
+    problems.push({ severity: "error", nodeId: routed.id, message: nodeTitle(routed) + " leads to several blocks at once. A track runs one stage at a time: put a gate or a fork in between.", fixes: [] });
+  return { routed, routes: [...all.filter((route) => route.to !== null), ...all.filter((route) => route.to === null)] };
+}
+
+const FINISH = "finish:";
+
+function deliverText(flow: Flow, plan: Plan, output: OutputNode | null): string {
+  if (output === null) return "";
+  return "Deliver " + output.label + (output.source === null ? "" : " from " + bindingRef(flow, plan, output.source)) + ".";
 }
 
 function joinText(parts: readonly string[]): string {
@@ -163,8 +194,7 @@ export function compile(flow: Flow, skills: readonly SkillInfo[]): CompileResult
   const plan = planStages(flow);
   const problems: Problem[] = [];
   const stages: MachineStage[] = [];
-  const finishing: { stage: MachineStage; delivers: FlowNode[] }[] = [];
-  const allDelivers: FlowNode[] = [];
+  const pending: { stage: MachineStage; routed: FlowNode; route: Route }[] = [];
   for (const node of orderedNodes(flow)) {
     const id = plan.stageOf.get(node.id);
     if (id === undefined) continue;
@@ -181,7 +211,18 @@ export function compile(flow: Flow, skills: readonly SkillInfo[]): CompileResult
     if (node.kind === "gate") {
       stage.description = joinText([node.question, "Answer with one of: " + node.options.join(", ") + "."]);
       stage.inputs = node.material.map((binding) => bindingRef(flow, plan, binding));
-      if (node.owner !== "agent") stage.gate.push({ type: "user", prompt: node.question });
+      if (node.owner !== "agent") {
+        const names = new Set<string>();
+        stage.outputs = node.material.map((binding) => {
+          const file = bindingFile(flow, binding);
+          return { name: unique(slug(file, "file"), names), description: "Show the owner " + file + " from " + bindingRef(flow, plan, binding) + ": its path and what to look at", optional: false };
+        });
+        if (stage.outputs.length > 0) {
+          stage.description = joinText([stage.description, "Before you ask, submit each file to show so the owner sees it in the approval form."]);
+          stage.gate.push({ type: "outputs" });
+        }
+        stage.gate.push({ type: "user", prompt: node.question });
+      }
     }
     if (node.kind === "fork") {
       const by = node.choice === null ? "the choice" : (sourcePort(flow, node.choice)?.port ?? node.choice.port);
@@ -190,25 +231,33 @@ export function compile(flow: Flow, skills: readonly SkillInfo[]): CompileResult
     }
     const fork = plan.folded.get(node.id);
     if (fork?.choice !== null && fork !== undefined) stage.inputs = [...new Set([...stage.inputs, bindingRef(flow, plan, fork.choice)])];
-    const route = routes(flow, plan, node, problems);
-    stage.next = route.edges;
-    allDelivers.push(...route.delivers);
-    if (route.finishes) finishing.push({ stage, delivers: route.delivers });
+    const routing = routes(flow, plan, node, problems);
+    const branching = routing.routes.length > 1;
+    for (const route of routing.routes) {
+      if (route.to === null) {
+        if (branching) pending.push({ stage, routed: routing.routed, route });
+        else stage.description = joinText([stage.description, deliverText(flow, plan, route.output)]);
+        continue;
+      }
+      const when = branching ? whenOf(flow, routing.routed, route.ports) : undefined;
+      stage.next.push(when === undefined ? { to: route.to } : { to: route.to, when });
+    }
     stages.push(stage);
   }
-  const mixed = finishing.filter((item) => item.stage.next.length > 0);
-  if (mixed.length > 0) {
-    const doneId = unique(DONE_STAGE, new Set(stages.map((stage) => stage.id)));
-    const delivers = [...new Set(allDelivers)];
-    stages.push({ id: doneId, title: "Done", description: joinText([deliverText(flow, plan, delivers), "The flow is finished."]), inputs: [], outputs: [], gate: [], next: [] });
-    for (const item of mixed) {
-      const routed = plan.folded.get(flow.nodes.find((node) => plan.stageOf.get(node.id) === item.stage.id)?.id ?? "") ?? flow.nodes.find((node) => plan.stageOf.get(node.id) === item.stage.id);
-      const labels = routed === undefined ? [] : exitsOf(flow, routed).filter((exit) => exit.target === null || exit.target.kind === "output").map((exit) => exit.label);
-      const when = routed?.kind === "fork" ? forkWhen(flow, routed, labels) : labels.join(" or ");
-      item.stage.next.push(when === "" ? { to: doneId } : { to: doneId, when });
-    }
+  const finishes = [...new Map(pending.map((item) => [item.route.key, item.route.output] as const))];
+  const taken = new Set(stages.map((stage) => stage.id));
+  const doneOf = new Map<string, string>();
+  for (const [key, output] of finishes) {
+    const id = finishes.length === 1 || output === null ? unique(DONE_STAGE, taken) : unique(slug(DONE_STAGE + " " + output.label, DONE_STAGE), taken);
+    doneOf.set(key, id);
+    const title = finishes.length === 1 || output === null ? "Done" : "Done: " + output.label;
+    stages.push({ id, title, description: joinText([deliverText(flow, plan, output), "The flow is finished."]), inputs: [], outputs: [], gate: [], next: [] });
   }
-  for (const item of finishing) if (item.stage.next.length === 0) item.stage.description = joinText([item.stage.description, deliverText(flow, plan, item.delivers)]);
+  for (const item of pending) {
+    const to = doneOf.get(item.route.key)!;
+    const when = whenOf(flow, item.routed, item.route.ports);
+    item.stage.next.push(when === undefined || when === "" ? { to } : { to, when });
+  }
   const starts = startNodes(flow);
   const first = starts.flatMap((node) => (node.kind === "input" ? flow.wires.filter((wire) => wire.from === node.id).map((wire) => wire.to) : [node.id]))[0];
   const startStage = first === undefined ? undefined : (plan.stageOf.get(first) ?? stages[0]?.id);
@@ -216,7 +265,7 @@ export function compile(flow: Flow, skills: readonly SkillInfo[]): CompileResult
   const begin = stages.find((stage) => stage.id === startStage);
   if (begin !== undefined && fields.length > 0) {
     begin.description = joinText(["Ask the owner first for " + fields.map(inputFieldText).join("; ") + ".", begin.description]);
-    begin.inputs = [...new Set([...fields.map((field) => field.name), ...begin.inputs])];
+    begin.inputs = [...new Set([...fields.map((field) => freeInputName(field.name)), ...begin.inputs])];
   }
   if (stages.length === 0 || startStage === undefined) problems.push({ severity: "error", nodeId: null, message: "The flow has no step to run.", fixes: [] });
   if (stages.length > MAX_STAGES) problems.push({ severity: "error", nodeId: null, message: "The flow compiles to " + String(stages.length) + " stages; a track holds at most " + String(MAX_STAGES) + ".", fixes: [] });

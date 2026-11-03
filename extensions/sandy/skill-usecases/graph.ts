@@ -3,6 +3,7 @@ import type { IoType } from "./io.ts";
 
 export const MAX_NODES = 80;
 export const MAX_WIRES = 200;
+export const MAX_CHOICES = 40;
 
 const nodeId = z.string().min(1).max(60);
 const label = z.string().trim().min(1).max(200);
@@ -41,7 +42,7 @@ export const INPUT_FIELD_TYPES = ["text", "url", "choice"] as const;
 const inputFieldSchema = z.object({
   name: label,
   type: z.enum(INPUT_FIELD_TYPES),
-  options: z.array(z.string().trim().min(1).max(80)).max(40),
+  options: z.array(z.string().trim().min(1).max(80)).max(MAX_CHOICES),
   prompt: z.string().max(400),
 });
 export type InputField = z.infer<typeof inputFieldSchema>;
@@ -78,7 +79,7 @@ export const forkNodeSchema = z.object({
   name: label,
   ...position,
   choice: bindingSchema.nullable(),
-  paths: z.array(forkPathSchema).min(1).max(12),
+  paths: z.array(forkPathSchema).min(1).max(MAX_CHOICES),
   otherwise: forkPathSchema.nullable(),
 });
 export type ForkNode = z.infer<typeof forkNodeSchema>;

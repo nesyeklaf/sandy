@@ -4,6 +4,7 @@ import { skillInfo, type FlowProposal, type SkillOverview, type rpcContract } fr
 import { check, hasErrors } from "./check";
 import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History } from "./canvas-model";
 import { FlowCanvas, type Selection } from "./flow-canvas";
+import { reconcileEditor } from "./flow-sync";
 import { CheckList, Inspector, Outline } from "./flow-inspector";
 import { flowRunText, flowSkillNames, linearSteps, migrateLinear, nodeTitle, withLinearSteps, type Flow } from "./graph";
 import {
@@ -223,7 +224,7 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flow; onDeleted: () => void }) {
-  const { state, rpc, saveFlows, setError } = api;
+  const { state, rpc, saveFlows, savingFlows, setError } = api;
   const nav = useFlowNavigation();
   const [history, setHistory] = useState<History>(() => startHistory(needsLayout(flow) ? layout(flow) : flow));
   const [selection, setSelection] = useState<Selection>(null);
@@ -240,7 +241,14 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
     setConfirming(false);
     setMessage("");
   }, [flow.id]);
+  useEffect(() => {
+    setHistory((before) => reconcileEditor(before, flow, savingFlows()));
+  }, [flow, savingFlows]);
   const current = history.present.id === flow.id ? history.present : flow;
+  useEffect(() => {
+    if (selection?.kind === "node" && !current.nodes.some((node) => node.id === selection.id)) setSelection(null);
+    else if (selection?.kind === "wire" && !current.wires.some((wire) => wire.id === selection.id)) setSelection(null);
+  }, [current, selection]);
   const skills = useMemo(() => (state === null ? [] : state.skills.map(skillInfo)), [state]);
   const problems = useMemo(() => check(current, skills), [current, skills]);
   const historyRef = useRef(history);

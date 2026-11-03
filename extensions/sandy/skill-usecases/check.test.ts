@@ -97,6 +97,22 @@ test("a binding to an output made on only some fork paths is an error naming the
   find(problems, /input "artifact" is only produced on path Deep \(missing on Quick, Medium\)/u);
 });
 
+const adHoc = (flow: Flow, id: string, change: (node: Extract<FlowNode, { kind: "skill" }>) => FlowNode) => edit(flow, id, (node) => (node.kind === "skill" ? change({ ...node, skill: null }) : node));
+
+test("a required input bound to an optional output is an error with fixes on both sides", () => {
+  const flow = adHoc(uxFlow(), "frame", (node) => ({ ...node, outputs: node.outputs.map((output) => ({ ...output, optional: true })) }));
+  const problem = find(run(flow), /ux-users: input "frame" is required, but frame-the-problem › frame.md is optional/u);
+  assert.equal(problem.severity, "error");
+  assert.equal(problem.nodeId, "users");
+  assert.deepEqual(problem.fixes.map((fix) => fix.action), [{ kind: "require-output", nodeId: "frame", output: "frame.md" }]);
+  const both = adHoc(flow, "users", (node) => node);
+  assert.deepEqual(
+    find(run(both), /ux-users: input "frame" is required/u).fixes.map((fix) => fix.label),
+    ["Make frame.md required", "Make frame optional"],
+  );
+  none(run(adHoc(flow, "users", (node) => ({ ...node, inputs: node.inputs.map((input) => ({ ...input, optional: true })) }))), /ux-users: input "frame" is required/u);
+});
+
 test("a gate option with no wire and no finish is an error; finishing there passes", () => {
   const cut = withoutWire(uxFlow(), "w10");
   const problem = find(run(cut), /"keep" leads nowhere/u);

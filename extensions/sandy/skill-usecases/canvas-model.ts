@@ -1,5 +1,5 @@
 import { bindCandidates, inputFieldType, outputFile, sourcePort, type FixAction, type SkillInfo, type SourcePort } from "./check.ts";
-import { backWires, exitLabels, nodeTitle, wireAt, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type SkillNode, type Wire } from "./graph.ts";
+import { backWires, exitLabels, MAX_CHOICES, nodeTitle, wireAt, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type SkillNode, type Wire } from "./graph.ts";
 import { satisfies, type IoType } from "./io.ts";
 
 export const NODE_W = 240;
@@ -435,12 +435,14 @@ export function applyFix(flow: Flow, nodeId: string | null, action: FixAction, s
     }
     case "add-path":
       if (node.kind !== "fork") return done(flow, "Not a fork");
+      if (node.paths.length >= MAX_CHOICES) return done(flow, "A fork has at most " + String(MAX_CHOICES) + " paths");
       return done(addForkPath(flow, node, action.value), "Added path '" + action.value + "'");
     case "remove-value":
       if (node.kind !== "fork") return done(flow, "Not a fork");
       return done(editChoiceValues(flow, node, (values) => values.filter((value) => !same(value, action.value))), "Removed value '" + action.value + "'");
     case "add-value":
       if (node.kind !== "fork") return done(flow, "Not a fork");
+      if (node.paths.length >= MAX_CHOICES || (forkValues(flow, node)?.length ?? 0) >= MAX_CHOICES) return done(flow, "A choice has at most " + String(MAX_CHOICES) + " values");
       return done(editChoiceValues(flow, node, (values) => [...values, action.value.toLowerCase()]), "Added '" + action.value + "' to the choice");
     case "remove-path":
       return done(removePath(flow, node.id, action.port), "Removed a path");
@@ -462,6 +464,14 @@ export function applyFix(flow: Flow, nodeId: string | null, action: FixAction, s
       const asked: GateNode = { ...gate, question: "Repeat " + nodeTitle(to) + "?", options: ["repeat", "stop"], ends: [1] };
       return { ...edit, flow: replaceNode(edit.flow, asked), message: "Inserted a gate that asks before repeating " + nodeTitle(to) };
     }
+    case "require-output": {
+      const source = flow.nodes.find((item) => item.id === action.nodeId);
+      if (source?.kind !== "skill") return done(flow, "The block is gone");
+      return done(replaceNode(flow, { ...source, outputs: source.outputs.map((item) => (item.name === action.output ? { ...item, optional: false } : item)) }), action.output + " is now required");
+    }
+    case "optional-input":
+      if (node.kind !== "skill") return done(flow, "Not a skill");
+      return done(replaceNode(flow, { ...node, inputs: node.inputs.map((item) => (item.name === action.input ? { ...item, optional: true } : item)) }), action.input + " is now optional");
     case "override-path": {
       if (node.kind !== "skill") return done(flow, "Not a skill");
       const output = node.outputs.find((item) => item.name === action.output);

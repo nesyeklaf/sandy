@@ -249,6 +249,15 @@ test("skill rows carry the IO parsed from SKILL.md metadata and report malformed
   ]);
 });
 
+test("a skill listed by an older host without metadata still yields a row with no IO", async () => {
+  const { metadata: _dropped, ...bare } = skillEntry("skill_old", "legacy", "Listed before metadata existed");
+  const harness = await boot("{}", [...skills, bare]);
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const legacy = state.skills.find((s: any) => s.name === "legacy");
+  assert.deepEqual([legacy.inputs, legacy.outputs, legacy.ioErrors], [[], [], []]);
+  assert.ok(state.skills.some((s: any) => s.name === "debug"));
+});
+
 test("flow_track compiles the UX flow into a machine the track accepts", async () => {
   const harness = await boot("{}", uxSkills);
   assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true });

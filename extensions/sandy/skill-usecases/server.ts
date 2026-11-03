@@ -30,6 +30,7 @@ const FLOWS_KEY = "flows";
 const storedUseCases = z.array(useCaseSchema);
 const storedAssignments = z.record(z.string(), z.string());
 const storedFlows = z.array(storedFlowSchema);
+const skillMetadata = z.object({ inputs: z.string().optional().catch(undefined), outputs: z.string().optional().catch(undefined) }).catch({});
 const skillAreasInput = z.object({ area: z.string().optional() });
 const skillFlowsInput = z.object({ flow: z.string().optional(), area: z.string().optional() });
 const flowTrackInput = z.object({ flow: z.string().min(1) });
@@ -89,8 +90,9 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (seen.has(skill.name)) continue;
       seen.add(skill.name);
       const { useCaseId, manual } = resolveUseCase(skill, useCases, assignments);
-      const inputs = parseIo(skill.metadata.inputs);
-      const outputs = parseIo(skill.metadata.outputs);
+      const metadata = skillMetadata.parse(skill.metadata);
+      const inputs = parseIo(metadata.inputs);
+      const outputs = parseIo(metadata.outputs);
       rows.push({
         name: skill.name,
         description: skill.description,

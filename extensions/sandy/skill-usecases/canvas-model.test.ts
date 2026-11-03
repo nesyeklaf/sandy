@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { check, hasErrors, type Problem } from "./check.ts";
 import { applyFix, autoBind, blockedReason, connect, deleteNode, insertNode, layout, needsLayout, record, redo, startHistory, summaryText, syncForkPaths, undo, HISTORY_LIMIT } from "./canvas-model.ts";
-import type { Flow, FlowNode } from "./graph.ts";
+import { flowSchema, MAX_CHOICES, type Flow, type FlowNode } from "./graph.ts";
 import { UX_SKILLS, edit, uxFlow, wire } from "./ux-flow.fixture.ts";
 
 const skill = (name: string) => ({ kind: "skill" as const, skill: UX_SKILLS.find((item) => item.name === name)! });
@@ -131,6 +131,16 @@ test("fork values and paths are fixed from either side", () => {
   assert.deepEqual(errors(applyFix(flow, remove.problem.nodeId, remove.fix.action, UX_SKILLS).flow), []);
 });
 
+test("a required input bound to an optional output is fixed by requiring the output or relaxing the input", () => {
+  const flow = edit(uxFlow(), "frame", (node) => (node.kind === "skill" ? { ...node, skill: null, outputs: node.outputs.map((output) => ({ ...output, optional: true })) } : node));
+  const looser = edit(flow, "users", (node) => (node.kind === "skill" ? { ...node, skill: null } : node));
+  const required = fixFor(looser, /ux-users: input "frame" is required/u, /^Make frame.md required$/u);
+  assert.deepEqual(errors(applyFix(looser, required.problem.nodeId, required.fix.action, UX_SKILLS).flow), []);
+  const relaxed = fixFor(looser, /ux-users: input "frame" is required/u, /^Make frame optional$/u);
+  const after = applyFix(looser, relaxed.problem.nodeId, relaxed.fix.action, UX_SKILLS).flow;
+  assert.equal(errors(after).some((problem) => /ux-users: input "frame"/u.test(problem.message)), false);
+});
+
 test("an output path conflict is fixed with a free path", () => {
   const flow = edit(uxFlow(), "proto", (node) => (node.kind === "skill" ? { ...node, outputs: node.outputs.map((output) => ({ ...output, path: "journeys.md" })) } : node));
   const { problem, fix } = fixFor(flow, /both write journeys.md/u, /^Change the path of prototypes$/u);
@@ -146,6 +156,28 @@ test("fork paths follow the bound choice values and keep their wires", () => {
   const fork = nodeOf(synced, "fork");
   assert.deepEqual(fork.kind === "fork" && fork.paths.map((path) => path.label), ["Deep", "Quick"]);
   assert.deepEqual(synced.wires.filter((item) => item.from === "fork").map((item) => [item.port, item.to]).sort(), [[0, "proto"], [1, "walk"]]);
+});
+
+test("a fork follows every value an Input choice may hold and the flow stays savable", () => {
+  for (const count of [13, MAX_CHOICES]) {
+    const many = edit(uxFlow(), "input", (node) => (node.kind === "input" ? { ...node, fields: node.fields.map((field) => (field.name === "depth" ? { ...field, options: Array.from({ length: count }, (_, index) => "p" + String(index)) } : field)) } : node));
+    assert.equal(flowSchema.safeParse(many).success, true);
+    const synced = syncForkPaths(many, "fork");
+    const fork = nodeOf(synced, "fork");
+    assert.equal(fork.kind === "fork" ? fork.paths.length : 0, count);
+    assert.equal(flowSchema.safeParse(synced).success, true, "a synced fork with " + String(count) + " paths must save");
+  }
+});
+
+test("a fix that would grow a choice past its limit is refused with the reason", () => {
+  const full = edit(uxFlow(), "input", (node) => (node.kind === "input" ? { ...node, fields: node.fields.map((field) => (field.name === "depth" ? { ...field, options: Array.from({ length: MAX_CHOICES }, (_, index) => "p" + String(index)) } : field)) } : node));
+  const synced = syncForkPaths(full, "fork");
+  const added = applyFix(synced, "fork", { kind: "add-value", value: "extra" }, UX_SKILLS);
+  assert.equal(added.flow, synced);
+  assert.match(added.message, /at most 40/u);
+  const path = applyFix(synced, "fork", { kind: "add-path", value: "extra" }, UX_SKILLS);
+  assert.equal(path.flow, synced);
+  assert.match(path.message, /at most 40/u);
 });
 
 test("layout spreads the fixture into rows without overlap", () => {
