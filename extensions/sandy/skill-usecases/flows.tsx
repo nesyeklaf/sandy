@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRealtime, useRpc, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import { flowRunText, type Flow, type FlowProposal, FlowStep, SkillOverview, SkillRow, rpcContract } from "./contract";
+import type { FlowProposal, SkillOverview, SkillRow, rpcContract } from "./contract";
+import { flowRunText, flowSkillNames, flowStepLines, linearSteps, migrateLinear, withLinearSteps, type Flow, type FlowStep } from "./graph";
 import {
   GHOST,
   INPUT,
@@ -78,7 +79,7 @@ export function FlowsSidebar({ subPath }: { subPath: string }) {
           {group.flows.map((flow) => (
             <button key={flow.id} type="button" className={row(activeFlow === flow.id) + " pl-5"} onClick={() => nav.toFlow(flow.id)}>
               <span className="min-w-0 flex-1 truncate">{flow.name}</span>
-              <span className="text-xs tabular-nums">{flow.steps.length}</span>
+              <span className="text-xs tabular-nums">{flow.nodes.length}</span>
             </button>
           ))}
         </div>
@@ -137,19 +138,21 @@ function FlowCreator({ api, onCreated }: { api: SkillUseCasesApi; onCreated: (id
     onCreated(flow.id);
   };
   const createEmpty = () =>
-    create({ id: newFlowId(), useCaseId: areaId, name: name.trim() === "" ? "New flow" : name.trim(), description: goal.trim(), steps: [] });
+    create(migrateLinear({ id: newFlowId(), useCaseId: areaId, name: name.trim() === "" ? "New flow" : name.trim(), description: goal.trim(), steps: [] }));
   const createWithAi = () => {
     setAsking(true);
     rpc.call("recommendFlow", { projectId: state.projectId, useCaseId: areaId, goal, current: null }).then(
       ({ proposal }) => {
         setAsking(false);
-        create({
-          id: newFlowId(),
-          useCaseId: areaId,
-          name: name.trim() === "" ? proposal.name || "New flow" : name.trim(),
-          description: proposal.description,
-          steps: proposal.steps,
-        });
+        create(
+          migrateLinear({
+            id: newFlowId(),
+            useCaseId: areaId,
+            name: name.trim() === "" ? proposal.name || "New flow" : name.trim(),
+            description: proposal.description,
+            steps: proposal.steps,
+          }),
+        );
       },
       (cause: unknown) => {
         setAsking(false);
@@ -200,7 +203,7 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
           <button type="button" onClick={() => onOpen(flow.id)} className="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left hover:bg-accent/50">
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{flow.name}</span>
-              <span className="block truncate text-xs text-muted-foreground">{flow.steps.map((step) => step.skill).join(" → ") || "No steps yet"}</span>
+              <span className="block truncate text-xs text-muted-foreground">{flowSkillNames(flow).join(" → ") || "No steps yet"}</span>
             </span>
             <span className="rounded bg-muted px-1.5 text-[11px] leading-5 text-muted-foreground">{labels.get(flow.useCaseId) ?? flow.useCaseId}</span>
           </button>
@@ -381,13 +384,14 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
   if (state === null) return null;
   const update = (change: Partial<Flow>) =>
     saveFlows(state.flows.map((item) => (item.id === flow.id ? { ...item, ...change } : item)));
-  const setSteps = (steps: FlowStep[]) => update({ steps });
+  const steps = linearSteps(flow);
+  const setSteps = (next: FlowStep[]) => update(withLinearSteps(flow, next));
   const areas = [...state.useCases.map((useCase) => ({ id: useCase.id, label: useCase.label })), { id: state.fallbackId, label: state.fallbackLabel }];
   const askAi = () => {
     setAsking(true);
     setSuggestion(null);
     rpc
-      .call("recommendFlow", { projectId: state.projectId, useCaseId: flow.useCaseId, goal: goal.trim() === "" ? flow.description : goal, current: flow.steps.length === 0 ? null : flow.steps })
+      .call("recommendFlow", { projectId: state.projectId, useCaseId: flow.useCaseId, goal: goal.trim() === "" ? flow.description : goal, current: steps === null || steps.length === 0 ? null : steps })
       .then(
         (result) => {
           setAsking(false);
@@ -399,8 +403,9 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
         },
       );
   };
-  const used = new Set(flow.steps.map((step) => step.skill));
-  const missing = flow.steps.filter((step) => !state.skills.some((skill) => skill.name === step.skill));
+  const names = flowSkillNames(flow);
+  const used = new Set(names);
+  const missing = names.filter((skill) => !state.skills.some((row) => row.name === skill));
   return (
     <div className="flex h-full flex-col" onDragEnd={() => setDrag(null)}>
       <div className="space-y-2 border-b border-border px-4 py-3 md:px-5">
@@ -423,7 +428,7 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           <button
             type="button"
             className={PRIMARY}
-            disabled={flow.steps.length === 0}
+            disabled={flow.nodes.length === 0}
             onClick={() =>
               nav.navigate.toCompose({
                 ...(state.projectId === null ? {} : { projectId: state.projectId }),
@@ -434,7 +439,7 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           >
             Run flow
           </button>
-          <button type="button" className={SECONDARY} disabled={flow.steps.length === 0} onClick={() => copyText(flowRunText(flow))}>
+          <button type="button" className={SECONDARY} disabled={flow.nodes.length === 0} onClick={() => copyText(flowRunText(flow))}>
             Copy
           </button>
           {confirming ? (
@@ -467,12 +472,14 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           defaultValue={flow.description}
           onBlur={(event) => event.target.value !== flow.description && update({ description: event.target.value })}
         />
+        {steps === null ? null : (
         <div className="flex flex-wrap gap-2">
           <input aria-label="Goal for AI" placeholder="Goal for the AI (optional)" className={INPUT + " min-w-48 flex-1"} value={goal} onChange={(event) => setGoal(event.target.value)} />
           <button type="button" className={SECONDARY} disabled={asking} onClick={askAi}>
-            {asking ? "Asking AI…" : flow.steps.length === 0 ? "Suggest steps" : "Improve with AI"}
+            {asking ? "Asking AI…" : steps.length === 0 ? "Suggest steps" : "Improve with AI"}
           </button>
         </div>
+        )}
         {api.error === null ? null : <p role="alert" className="text-sm text-destructive">{api.error}</p>}
       </div>
       <div className="grid min-h-0 flex-1 gap-4 p-4 md:grid-cols-[minmax(0,1fr)_20rem] md:p-5">
@@ -483,7 +490,7 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
               label="Use these steps"
               onAccept={() => {
                 update({
-                  steps: suggestion.proposal.steps,
+                  ...withLinearSteps(flow, suggestion.proposal.steps),
                   ...(flow.description === "" && suggestion.proposal.description !== "" ? { description: suggestion.proposal.description } : {}),
                 });
                 setSuggestion(null);
@@ -493,12 +500,25 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           )}
           {missing.length === 0 ? null : (
             <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">
-              Not installed in this project: {missing.map((step) => step.skill).join(", ")}
+              Not installed in this project: {missing.join(", ")}
             </p>
           )}
-          <StepList steps={flow.steps} drag={drag} setDrag={setDrag} onChange={setSteps} />
+          {steps === null ? (
+            <>
+              <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">This flow branches. The list shows it read-only; branches are edited on the flow canvas.</p>
+              <ol className="space-y-1 text-sm" aria-label="Flow steps">
+                {flowStepLines(flow, "").map((line, index) => (
+                  <li key={index}>{line}</li>
+                ))}
+              </ol>
+            </>
+          ) : (
+            <StepList steps={steps} drag={drag} setDrag={setDrag} onChange={setSteps} />
+          )}
         </div>
-        <Palette skills={state.skills} areaId={flow.useCaseId} used={used} setDrag={setDrag} onAdd={(name) => setSteps([...flow.steps, { skill: name, note: "" }])} />
+        {steps === null ? null : (
+          <Palette skills={state.skills} areaId={flow.useCaseId} used={used} setDrag={setDrag} onAdd={(name) => setSteps([...steps, { skill: name, note: "" }])} />
+        )}
       </div>
     </div>
   );

@@ -1,43 +1,16 @@
 import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
+import { flowSchema, flowStepSchema } from "./graph.ts";
 
 export const MAX_USE_CASES = 24;
 export const MAX_KEYWORDS = 40;
 export const MAX_FLOWS = 100;
-export const MAX_STEPS = 40;
 
 export const useCaseSchema = z.object({
   id: z.string().min(1).max(40),
   label: z.string().trim().min(1).max(60),
   keywords: z.array(z.string().trim().min(1).max(40)).max(MAX_KEYWORDS),
 });
-
-export const flowStepSchema = z.object({
-  skill: z.string().min(1).max(200),
-  note: z.string().max(300),
-});
-export type FlowStep = z.infer<typeof flowStepSchema>;
-
-export const flowSchema = z.object({
-  id: z.string().min(1).max(60),
-  useCaseId: z.string().min(1).max(40),
-  name: z.string().trim().min(1).max(80),
-  description: z.string().max(400),
-  steps: z.array(flowStepSchema).max(MAX_STEPS),
-});
-export type Flow = z.infer<typeof flowSchema>;
-
-export function flowRunText(flow: Flow): string {
-  const steps = flow.steps.map(
-    (step, index) => String(index + 1) + ". /" + step.skill + (step.note === "" ? "" : " - " + step.note),
-  );
-  return [
-    'Run the flow "' + flow.name + '" step by step. Use each skill in this order and tell me when a step is done:',
-    ...steps,
-    "If a skill is not installed, follow its note instead.",
-    "",
-  ].join("\n");
-}
 
 const skillRow = z.object({
   name: z.string(),
