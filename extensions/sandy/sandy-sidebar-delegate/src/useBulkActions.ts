@@ -10,63 +10,68 @@ function threadCount(count: number): string {
   return `${count} thread${count === 1 ? "" : "s"}`;
 }
 
-async function each(threadIds: readonly string[], run: (threadId: string) => Promise<unknown>): Promise<string[]> {
-  const results = await Promise.allSettled(threadIds.map(run));
-  return threadIds.filter((_, index) => results[index]?.status === "fulfilled");
-}
+type BulkChange = { changed: string[]; failed: string[]; undoToken: string };
 
-function reportUndo(label: string) {
-  return (done: readonly string[], total: number) => {
-    if (done.length < total) toast.error(`Could not ${label} ${threadCount(total - done.length)}`);
-  };
+async function bulkChange(failure: string, run: () => Promise<BulkChange>): Promise<BulkChange | null> {
+  try {
+    return await run();
+  } catch {
+    toast.error(failure);
+    return null;
+  }
 }
 
 export function useBulkActions() {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
 
-  const snooze = useCallback(
-    async (threads: readonly Target[], snoozedUntil: number) => {
-      const ids = threads.map((thread) => thread.id);
-      const done = await each(ids, (threadId) => rpc.call("snooze", { threadId, snoozedUntil }));
-      if (done.length < ids.length) toast.error(`Could not snooze ${threadCount(ids.length - done.length)}`);
-      if (done.length === 0) return;
-      toast.success(`Snoozed ${threadCount(done.length)}`, {
-        description: `Wakes ${formatSnoozeWakeTime(snoozedUntil)}`,
-        action: {
-          label: "Undo",
-          onClick: () => {
-            void each(done, (threadId) => rpc.call("unsnooze", { threadId })).then((undone) =>
-              reportUndo("wake")(undone, done.length),
-            );
-          },
+  const undo = useCallback(
+    (undoToken: string) => {
+      void rpc.call("undoBulkAction", { undoToken }).then(
+        ({ failed }) => {
+          if (failed.length > 0) toast.error(`Could not undo ${threadCount(failed.length)}`);
         },
-      });
+        () => toast.error("Could not undo this change"),
+      );
     },
     [rpc],
+  );
+
+  const snooze = useCallback(
+    async (threads: readonly Target[], snoozedUntil: number) => {
+      const threadIds = threads.map((thread) => thread.id);
+      if (threadIds.length === 0) return;
+      const result = await bulkChange(`Could not snooze ${threadCount(threadIds.length)}`, () =>
+        rpc.call("snoozeThreads", { threadIds, snoozedUntil }),
+      );
+      if (!result) return;
+      if (result.failed.length > 0) toast.error(`Could not snooze ${threadCount(result.failed.length)}`);
+      if (result.changed.length === 0) return;
+      toast.success(`Snoozed ${threadCount(result.changed.length)}`, {
+        description: `Wakes ${formatSnoozeWakeTime(snoozedUntil)}`,
+        action: { label: "Undo", onClick: () => undo(result.undoToken) },
+      });
+    },
+    [rpc, undo],
   );
 
   const pin = useCallback(
     async (threads: readonly Pick<PluginSidebarThread, "id" | "isPinned" | "parentThreadId">[]) => {
       const topLevel = threads.filter((thread) => thread.parentThreadId == null);
       const unpinning = topLevel.length > 0 && topLevel.every((thread) => thread.isPinned);
-      const ids = topLevel.filter((thread) => thread.isPinned === unpinning).map((thread) => thread.id);
-      if (ids.length === 0) return;
-      const done = await each(ids, (threadId) => rpc.call("pin", { threadId }));
+      const threadIds = topLevel.filter((thread) => thread.isPinned === unpinning).map((thread) => thread.id);
+      if (threadIds.length === 0) return;
       const verb = unpinning ? "unpin" : "pin";
-      if (done.length < ids.length) toast.error(`Could not ${verb} ${threadCount(ids.length - done.length)}`);
-      if (done.length === 0) return;
-      toast.success(`${unpinning ? "Unpinned" : "Pinned"} ${threadCount(done.length)}`, {
-        action: {
-          label: "Undo",
-          onClick: () => {
-            void each(done, (threadId) => rpc.call("pin", { threadId })).then((undone) =>
-              reportUndo(unpinning ? "pin" : "unpin")(undone, done.length),
-            );
-          },
-        },
+      const result = await bulkChange(`Could not ${verb} ${threadCount(threadIds.length)}`, () =>
+        rpc.call("pinThreads", { threadIds, pinned: !unpinning }),
+      );
+      if (!result) return;
+      if (result.failed.length > 0) toast.error(`Could not ${verb} ${threadCount(result.failed.length)}`);
+      if (result.changed.length === 0) return;
+      toast.success(`${unpinning ? "Unpinned" : "Pinned"} ${threadCount(result.changed.length)}`, {
+        action: { label: "Undo", onClick: () => undo(result.undoToken) },
       });
     },
-    [rpc],
+    [rpc, undo],
   );
 
   const tag = useCallback(

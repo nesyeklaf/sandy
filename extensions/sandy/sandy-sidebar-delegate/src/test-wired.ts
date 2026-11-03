@@ -7,6 +7,7 @@ import { afterEach, vi } from "vitest";
 import { toast } from "sonner";
 import plugin from "./server";
 import { sandySidebarRpcContract } from "./contract";
+import { sortPinnedThreads } from "./pinned-order";
 import { createFakePluginHost, projectThread, projectsWith, standardProject } from "./test-server";
 import { inbox, sidebarSettings, listProps, defaultProviders } from "./test-inbox";
 import { deferred } from "./test-fixtures";
@@ -68,9 +69,27 @@ export async function createWired(
         get: async ({ threadId }) => response(threadId),
         pin: async ({ threadId }) => {
           threads = threads.map((item) =>
-            item.id === threadId ? { ...item, isPinned: true, pinnedAt: Date.now(), pinSortKey: "UU" } : item,
+            item.id === threadId && item.pinnedAt === null
+              ? { ...item, isPinned: true, pinnedAt: Date.now(), pinSortKey: "UU" }
+              : item,
           );
           return response(threadId);
+        },
+        reorderPinned: async ({ threadId, previousThreadId, nextThreadId }) => {
+          const order = sortPinnedThreads(threads.filter((item) => item.pinnedAt !== null)).map((item) => item.id);
+          const without = order.filter((id) => id !== threadId);
+          const at =
+            previousThreadId !== null
+              ? without.indexOf(previousThreadId) + 1
+              : nextThreadId !== null
+                ? without.indexOf(nextThreadId)
+                : without.length;
+          const next = [...without.slice(0, at), threadId, ...without.slice(at)];
+          threads = threads.map((item) => {
+            const index = next.indexOf(item.id);
+            return index < 0 ? item : { ...item, pinSortKey: `k${String(index).padStart(4, "0")}` };
+          });
+          return next.map(response);
         },
         unpin: async ({ threadId }) => {
           threads = threads.map((item) =>

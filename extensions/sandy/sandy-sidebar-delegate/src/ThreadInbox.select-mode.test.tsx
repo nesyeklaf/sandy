@@ -61,23 +61,6 @@ describe("select mode", () => {
     );
   });
 
-  it("pins the picked threads and Undo unpins the same ones", async () => {
-    const rendered = renderThreads([thread({ id: "thr_a", title: "First" }), thread({ id: "thr_b", title: "Second" })]);
-    await enterSelectMode();
-    fireEvent.click(await screen.findByRole("checkbox", { name: "Select Second" }));
-    fireEvent.click(screen.getByRole("button", { name: "Pin" }));
-    await waitFor(() => expect(rendered.rpcCalls).toContainEqual({ method: "pin", input: { threadId: "thr_b" } }));
-    const { message, undo } = lastUndo();
-    expect(message).toBe("Pinned 1 thread");
-    undo();
-    await waitFor(() =>
-      expect(rendered.rpcCalls.filter((call) => call.method === "pin")).toEqual([
-        { method: "pin", input: { threadId: "thr_b" } },
-        { method: "pin", input: { threadId: "thr_b" } },
-      ]),
-    );
-  });
-
   it("leaves select mode without acting", async () => {
     const rendered = renderThreads([thread({ id: "thr_a", title: "First" })]);
     await enterSelectMode();

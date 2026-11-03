@@ -9,6 +9,7 @@ import type { createServerDelegateChildren } from "./server-delegate-children";
 import type { createServerSessionSearch } from "./server-session-search";
 import type { createServerTopics } from "./server-topics";
 import type { createServerAnchors } from "./server-anchors";
+import type { createServerBulkActions } from "./server-bulk-actions";
 import type { createServerSettings } from "./server-settings";
 import type { createServerPolicy } from "./server-policy";
 import type { createServerSettleCleanup } from "./server-settle-cleanup";
@@ -39,6 +40,7 @@ export function createServerHandlers(
     topics: ReturnType<typeof createServerTopics>;
     sessionSearch: ReturnType<typeof createServerSessionSearch>;
     anchors: ReturnType<typeof createServerAnchors>;
+    bulk: ReturnType<typeof createServerBulkActions>;
   },
 ) {
   const { readSidebarSettings, writeSidebarSettings } = settings;
@@ -179,23 +181,8 @@ export function createServerHandlers(
       return { rows: readAll() };
     },
     async pin({ threadId }) {
-      return withPinParentChange(threadId, async () => {
-        const thread = await ctx.sandy.sdk.threads.get({ threadId });
-        if (thread.parentThreadId != null) {
-          throw new Error("Child threads cannot be pinned");
-        }
-        // Preserve the previous shelf if the native pin fails.
-        await ctx.sandy.sdk.threads.pin({ threadId });
-        write({
-          threadId,
-          parkedAt: null,
-          settledAt: null,
-          settledOverride: "active",
-          snoozedUntil: null,
-          snoozedAt: null,
-        });
-        return { ok: true };
-      });
+      await modules.bulk.pinThread(threadId);
+      return { ok: true };
     },
     async park({ threadId }) {
       await ctx.sandy.sdk.threads.unpin({ threadId });
@@ -220,19 +207,7 @@ export function createServerHandlers(
       return { ok: true };
     },
     async snooze({ threadId, snoozedUntil }) {
-      await ctx.sandy.sdk.threads.unpin({ threadId });
-      const now = Date.now();
-      write({
-        threadId,
-        settledAt: null,
-        settledOverride: null,
-        snoozedUntil,
-        snoozedAt: now,
-      });
-      // A snooze is a parked thread with a return date, and the shortest
-      // preset is half an hour. Nobody snoozes a conversation they are in the
-      // middle of, so the wake time is not worth keeping a runtime warm for.
-      return { ok: true, reclaim: await reclaimThreadResources(threadId) };
+      return { ok: true, reclaim: await modules.bulk.snoozeThread(threadId, snoozedUntil) };
     },
     async releaseRuntimes({ threadIds }) {
       // sandy's archive force-closes a thread's terminals but only stops its
@@ -317,6 +292,7 @@ export function createServerHandlers(
     ...modules.topics.handlers,
     ...modules.sessionSearch.handlers,
     ...modules.anchors.handlers,
+    ...modules.bulk.handlers,
     ...handlers,
   } satisfies ServerHandlers;
 }

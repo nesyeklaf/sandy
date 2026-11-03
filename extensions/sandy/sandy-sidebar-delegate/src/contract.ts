@@ -96,6 +96,9 @@ const orderedThreadIdsSchema = z
     }
   });
 const threadIdsSchema = orderedThreadIdsSchema.min(1);
+const bulkChangeSchema = z
+  .object({ changed: z.array(z.string()), failed: z.array(z.string()), undoToken: z.string().uuid() })
+  .strict();
 export const cleanupIssueSchema = z.object({
   threadId: z.string(),
   resource: z.enum(["thread", "terminal", "port"]),
@@ -357,6 +360,18 @@ export const sandySidebarRpcContract = defineRpcContract({
       snoozedUntil: z.number().int().positive(),
     }),
     output: z.object({ ok: z.boolean(), reclaim: reclaimSchema }),
+  },
+  pinThreads: {
+    input: z.object({ threadIds: threadIdsSchema, pinned: z.boolean() }).strict(),
+    output: bulkChangeSchema,
+  },
+  snoozeThreads: {
+    input: z.object({ threadIds: threadIdsSchema, snoozedUntil: z.number().int().positive() }).strict(),
+    output: bulkChangeSchema,
+  },
+  undoBulkAction: {
+    input: z.object({ undoToken: z.string().uuid() }).strict(),
+    output: z.object({ restored: z.array(z.string()), failed: z.array(z.string()) }).strict(),
   },
   releaseRuntimes: {
     input: z.object({ threadIds: threadIdsSchema }).strict(),

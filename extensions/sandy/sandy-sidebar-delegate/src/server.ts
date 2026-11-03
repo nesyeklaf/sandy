@@ -21,6 +21,7 @@ import { createServerSettleActions } from "./server-settle-actions";
 import { createServerPolicy } from "./server-policy";
 import { createServerDelegateChildren } from "./server-delegate-children";
 import { createServerHandlers } from "./server-handlers";
+import { createServerBulkActions } from "./server-bulk-actions";
 
 export type { StoredLifecycleRow } from "./server-lifecycle";
 
@@ -143,6 +144,7 @@ export default async function plugin(sandy: SandyPluginApi) {
   const topics = createServerTopics(ctx, helper);
   const sessionSearch = createServerSessionSearch(ctx);
   const anchors = createServerAnchors(ctx, helper);
+  const bulk = createServerBulkActions(ctx, lifecycle, cleanup);
   const handlers = createServerHandlers(
     ctx,
     lifecycle,
@@ -153,7 +155,7 @@ export default async function plugin(sandy: SandyPluginApi) {
     getOpenPorts,
     threadPullRequests,
     regenerateTitle,
-    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, anchors },
+    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, anchors, bulk },
   );
   const { resolveProjectIcon } = icons;
   const { wakeAncestors, clearSettlingState, clear } = lifecycle;
