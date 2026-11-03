@@ -50,20 +50,28 @@ export function RowQuestion({
   const who = asker.id === thread.id ? null : threadDisplayTitle(asker).split(":")[0];
   const answer = (option: RowQuestionOption) => {
     const { interactionId, threadId } = question;
-    hold.hold(interactionId, { label: option.label }, () => {
-      sdk.threads.interactions
-        .resolve({ threadId, interactionId, resolution: questionAnswer(question, option) })
-        .catch((error: unknown) =>
-          toast.error("Could not send the answer", {
-            description: error instanceof Error ? error.message : String(error),
-          }),
-        );
-    });
-    toast.success(`Answered “${option.label}”`, {
+    const toastId = toast.success(`Answered “${option.label}”`, {
       description: threadDisplayTitle(thread),
       duration: ANSWER_HOLD_MS,
       action: { label: "Undo", onClick: () => hold.cancel(interactionId) },
     });
+    hold.hold(
+      interactionId,
+      { label: option.label },
+      () =>
+        sdk.threads.interactions
+          .resolve({ threadId, interactionId, resolution: questionAnswer(question, option) })
+          .then(
+            () => {},
+            (error: unknown) => {
+              toast.error("Could not send the answer", {
+                description: error instanceof Error ? error.message : String(error),
+              });
+              throw error;
+            },
+          ),
+      () => toast.dismiss(toastId),
+    );
   };
   return (
     <div data-row-question="" className="pointer-events-none relative mt-1.5 min-w-0">
@@ -85,14 +93,18 @@ export function RowQuestion({
       >
         {held ? (
           <>
-            <span className="min-w-0 truncate text-xs text-muted-foreground">Answered “{held.label}”</span>
-            <button
-              type="button"
-              className={cn(BUTTON, "shrink-0 border-transparent text-muted-foreground hover:text-foreground")}
-              onClick={() => hold.cancel(question.interactionId)}
-            >
-              Undo
-            </button>
+            <span className="min-w-0 truncate text-xs text-muted-foreground">
+              {held.sending ? "Sending" : "Answered"} “{held.label}”
+            </span>
+            {held.sending ? null : (
+              <button
+                type="button"
+                className={cn(BUTTON, "shrink-0 border-transparent text-muted-foreground hover:text-foreground")}
+                onClick={() => hold.cancel(question.interactionId)}
+              >
+                Undo
+              </button>
+            )}
           </>
         ) : (
           <>

@@ -123,6 +123,48 @@ describe("answer in the row", () => {
     expect(resolveCalls(rendered)).toEqual([]);
   });
 
+  it("drops the held answer when the sidebar unmounts", async () => {
+    const rendered = renderAsking([asking]);
+    const group = await screen.findByRole("group", { name: "Answer Login flow" });
+    vi.useFakeTimers();
+    fireEvent.click(within(group).getByRole("button", { name: "Yes, create feat/login" }));
+    rendered.lifecycle.unmount();
+    act(() => vi.advanceTimersByTime(ANSWER_HOLD_MS * 2));
+    expect(resolveCalls(rendered)).toEqual([]);
+  });
+
+  it("drops the held answer when the user opens another thread", async () => {
+    const rendered = renderAsking([asking, thread({ id: "thr_b", title: "Other" })]);
+    const group = await screen.findByRole("group", { name: "Answer Login flow" });
+    vi.useFakeTimers();
+    fireEvent.click(within(group).getByRole("button", { name: "Yes, create feat/login" }));
+    const InboxComponent = inbox.component;
+    rendered.rerender(<InboxComponent {...listProps} activeThreadId="thr_b" />);
+    act(() => vi.advanceTimersByTime(ANSWER_HOLD_MS * 2));
+    expect(resolveCalls(rendered)).toEqual([]);
+    expect(within(group).getByRole("button", { name: "Yes, create feat/login" })).toBeTruthy();
+    expect(toastMocks.dismiss).toHaveBeenCalled();
+  });
+
+  it("sends one answer while the first is still on its way", async () => {
+    const resolve = vi.fn(() => new Promise(() => {}));
+    const rendered = renderSlot(inbox, listProps, {
+      sidebarThreads: { status: "ready", threads: [asking], projects: [] },
+      sdk: { threads: { interactions: { list: async () => [branchQuestion], resolve } } } as never,
+      rpc: { listLifecycle: () => ({ rows: [] }) },
+    });
+    const group = await screen.findByRole("group", { name: "Answer Login flow" });
+    vi.useFakeTimers();
+    fireEvent.click(within(group).getByRole("button", { name: "Yes, create feat/login" }));
+    act(() => vi.advanceTimersByTime(ANSWER_HOLD_MS));
+    expect(within(group).getByText("Sending “Yes, create feat/login”")).toBeTruthy();
+    expect(within(group).queryByRole("button", { name: "No, work on main" })).toBeNull();
+    expect(within(group).queryByRole("button", { name: "Undo" })).toBeNull();
+    act(() => vi.advanceTimersByTime(ANSWER_HOLD_MS * 2));
+    expect(resolve).toHaveBeenCalledOnce();
+    rendered.lifecycle.unmount();
+  });
+
   it("snoozes the thread for an hour on Later", async () => {
     const rendered = renderAsking([asking]);
     const group = await screen.findByRole("group", { name: "Answer Login flow" });

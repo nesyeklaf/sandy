@@ -1,14 +1,16 @@
 export const ANSWER_HOLD_MS = 5000;
 
-export type HeldAnswer = { label: string };
+export type HeldAnswer = { label: string; sending: boolean };
 
-type Entry = HeldAnswer & { timer: ReturnType<typeof setTimeout>; send: () => void };
+type Entry =
+  | { view: HeldAnswer; sending: false; timer: ReturnType<typeof setTimeout>; discard: () => void }
+  | { view: HeldAnswer; sending: true };
 
 export type AnswerHold = {
-  hold(key: string, answer: HeldAnswer, send: () => void): void;
+  hold(key: string, answer: { label: string }, send: () => Promise<void>, discard?: () => void): void;
   cancel(key: string): boolean;
   get(key: string): HeldAnswer | null;
-  flushAll(): void;
+  discardAll(): void;
   subscribe(listener: () => void): () => void;
 };
 
@@ -18,37 +20,42 @@ export function createAnswerHold(delayMs = ANSWER_HOLD_MS): AnswerHold {
   const emit = () => {
     for (const listener of listeners) listener();
   };
-  const release = (key: string) => {
-    const entry = entries.get(key);
-    if (!entry) return;
-    entries.delete(key);
+  const release = (key: string, label: string, send: () => Promise<void>) => {
+    entries.set(key, { view: { label, sending: true }, sending: true });
     emit();
-    entry.send();
+    send().catch(() => {
+      entries.delete(key);
+      emit();
+    });
+  };
+  const drop = (key: string): boolean => {
+    const entry = entries.get(key);
+    if (!entry || entry.sending) return false;
+    clearTimeout(entry.timer);
+    entries.delete(key);
+    entry.discard();
+    return true;
   };
   return {
-    hold(key, answer, send) {
-      const previous = entries.get(key);
-      if (previous) clearTimeout(previous.timer);
-      entries.set(key, { label: answer.label, send, timer: setTimeout(() => release(key), delayMs) });
+    hold(key, answer, send, discard = () => {}) {
+      if (entries.get(key)?.sending) return;
+      drop(key);
+      const timer = setTimeout(() => release(key, answer.label, send), delayMs);
+      entries.set(key, { view: { label: answer.label, sending: false }, sending: false, timer, discard });
       emit();
     },
     cancel(key) {
-      const entry = entries.get(key);
-      if (!entry) return false;
-      clearTimeout(entry.timer);
-      entries.delete(key);
-      emit();
-      return true;
+      const dropped = drop(key);
+      if (dropped) emit();
+      return dropped;
     },
     get(key) {
-      const entry = entries.get(key);
-      return entry ? { label: entry.label } : null;
+      return entries.get(key)?.view ?? null;
     },
-    flushAll() {
-      for (const [key, entry] of [...entries]) {
-        clearTimeout(entry.timer);
-        release(key);
-      }
+    discardAll() {
+      let dropped = false;
+      for (const key of [...entries.keys()]) dropped = drop(key) || dropped;
+      if (dropped) emit();
     },
     subscribe(listener) {
       listeners.add(listener);

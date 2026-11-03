@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createAnswerHold, type AnswerHold, type HeldAnswer } from "./answer-hold";
+import { ActiveThreadContext } from "./useActiveThread";
 
 const AnswerHoldContext = createContext<AnswerHold | null>(null);
 
 export function AnswerHoldHost({ children }: { children: ReactNode }) {
   const [hold] = useState(createAnswerHold);
-  useEffect(() => () => hold.flushAll(), [hold]);
+  const activeThread = useContext(ActiveThreadContext);
+  useEffect(() => activeThread?.subscribe(() => hold.discardAll()), [activeThread, hold]);
+  useEffect(() => () => hold.discardAll(), [hold]);
   return <AnswerHoldContext.Provider value={hold}>{children}</AnswerHoldContext.Provider>;
 }
 
@@ -16,6 +19,5 @@ export function useAnswerHold(): AnswerHold {
 }
 
 export function useHeldAnswer(hold: AnswerHold, key: string | null): HeldAnswer | null {
-  const label = useSyncExternalStore(hold.subscribe, () => (key ? (hold.get(key)?.label ?? null) : null));
-  return label === null ? null : { label };
+  return useSyncExternalStore(hold.subscribe, () => (key ? hold.get(key) : null));
 }
