@@ -321,9 +321,18 @@ export function flowStepLines(flow: Flow, skillPrefix: "" | "/"): string[] {
 }
 
 export function flowRunText(flow: Flow): string {
-  const linear = linearSteps(flow) !== null;
-  const intro = linear
-    ? 'Run the flow "' + flow.name + '" step by step. Use each skill in this order and tell me when a step is done:'
-    : 'Run the flow "' + flow.name + '" step by step. Follow the numbered steps, take the branch that each answer or value names, and tell me when a step is done:';
-  return [intro, ...flowStepLines(flow, "/"), "If a skill is not installed, follow its note instead.", ""].join("\n");
+  const fallback =
+    linearSteps(flow) !== null
+      ? "If stage_start is not available, use each skill in this order instead and tell me when a step is done:"
+      : "If stage_start is not available, follow the numbered steps instead, take the branch that each answer or value names, and tell me when a step is done:";
+  return [
+    'Run the flow "' + flow.name + '" as a track.',
+    "1. Call flow_track with flow " + JSON.stringify(flow.id) + ". It returns the flow compiled into a track machine, or the problems that keep it from running.",
+    '2. Call stage_start with that machine and the note "Flow ' + flow.name + '", then work stage by stage with stage_status, stage_submit and stage_advance.',
+    "If flow_track reports problems, tell me what to fix and stop.",
+    fallback,
+    ...flowStepLines(flow, "/"),
+    "If a skill is not installed, follow its note instead.",
+    "",
+  ].join("\n");
 }

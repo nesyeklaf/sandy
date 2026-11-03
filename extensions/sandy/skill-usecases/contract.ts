@@ -1,6 +1,7 @@
 import { defineRpcContract } from "@sandy-sdk/plugin-sdk";
 import { z } from "zod";
-import { flowSchema, flowStepSchema } from "./graph.ts";
+import type { SkillInfo } from "./check.ts";
+import { flowSchema, flowStepSchema, ioTypeSchema } from "./graph.ts";
 
 export const MAX_USE_CASES = 24;
 export const MAX_KEYWORDS = 40;
@@ -12,6 +13,8 @@ export const useCaseSchema = z.object({
   keywords: z.array(z.string().trim().min(1).max(40)).max(MAX_KEYWORDS),
 });
 
+const ioFieldSchema = z.object({ name: z.string(), optional: z.boolean(), type: ioTypeSchema });
+
 const skillRow = z.object({
   name: z.string(),
   description: z.string().nullable(),
@@ -20,8 +23,15 @@ const skillRow = z.object({
   useCaseId: z.string(),
   manual: z.boolean(),
   sources: z.array(z.string()),
+  inputs: z.array(ioFieldSchema),
+  outputs: z.array(ioFieldSchema),
+  ioErrors: z.array(z.string()),
 });
 export type SkillRow = z.infer<typeof skillRow>;
+
+export function skillInfo(row: SkillRow): SkillInfo {
+  return { name: row.name, purpose: row.description ?? "", inputs: row.inputs, outputs: row.outputs };
+}
 
 const projectSchema = z.object({ id: z.string(), name: z.string() });
 

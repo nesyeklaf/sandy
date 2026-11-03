@@ -7,7 +7,10 @@ import {
   flowPrompt,
   flowReplySchema,
 } from "./ai.ts";
-import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, useCaseSchema, type SkillRow } from "./contract.ts";
+import { parseIo } from "./io.ts";
+import type { Problem } from "./check.ts";
+import { compile } from "./compile.ts";
+import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, skillInfo, useCaseSchema, type SkillRow } from "./contract.ts";
 import { flowRunText, flowSkillNames, flowStepLines, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
 import {
   DEFAULT_USE_CASES,
@@ -29,6 +32,12 @@ const storedAssignments = z.record(z.string(), z.string());
 const storedFlows = z.array(storedFlowSchema);
 const skillAreasInput = z.object({ area: z.string().optional() });
 const skillFlowsInput = z.object({ flow: z.string().optional(), area: z.string().optional() });
+const flowTrackInput = z.object({ flow: z.string().min(1) });
+
+function problemText(problem: Problem): string {
+  const fixes = problem.fixes.length === 0 ? "" : " (fix in the editor: " + problem.fixes.map((fix) => fix.label).join(", ") + ")";
+  return "- " + problem.message + fixes;
+}
 
 function slug(label: string, taken: ReadonlySet<string>): string {
   const base = label.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "").slice(0, 30) || "area";
@@ -80,6 +89,8 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (seen.has(skill.name)) continue;
       seen.add(skill.name);
       const { useCaseId, manual } = resolveUseCase(skill, useCases, assignments);
+      const inputs = parseIo(skill.metadata.inputs);
+      const outputs = parseIo(skill.metadata.outputs);
       rows.push({
         name: skill.name,
         description: skill.description,
@@ -88,6 +99,9 @@ export default async function plugin(sandy: SandyPluginApi) {
         useCaseId,
         manual,
         sources: [...(sourcesByName.get(skill.name) ?? [])].sort(),
+        inputs: inputs.fields,
+        outputs: outputs.fields,
+        ioErrors: [...inputs.errors.map((error) => "inputs: " + error), ...outputs.errors.map((error) => "outputs: " + error)],
       });
     }
     return rows.sort((a, b) => a.name.localeCompare(b.name));
@@ -328,6 +342,27 @@ export default async function plugin(sandy: SandyPluginApi) {
     },
   });
 
+  sandy.agents.registerTool({
+    name: "flow_track",
+    description:
+      "Compile one of the user's saved skill flows (name or id) into a track machine. Returns the machine as JSON to pass to stage_start({machine, note}), or the Check problems that block the run.",
+    presentation: { label: { pending: "Compiling flow", completed: "Compiled flow" } },
+    parameters: { type: "object", properties: { flow: { type: "string" } }, required: ["flow"], additionalProperties: false },
+    async execute(params, ctx) {
+      const wanted = flowTrackInput.parse(params).flow.trim().toLowerCase();
+      const flow = (await readFlows()).find((item) => item.id.toLowerCase() === wanted || item.name.toLowerCase() === wanted);
+      if (flow === undefined) return { content: [{ type: "text", text: "No flow named " + JSON.stringify(wanted) + ". Call skill_flows to list the saved flows." }], isError: true };
+      const rows = await skillRows(ctx.projectId, await readUseCases(), await readAssignments());
+      const result = compile(flow, rows.map(skillInfo));
+      if (!result.ok)
+        return {
+          content: [{ type: "text", text: 'The flow "' + flow.name + '" cannot run as a track yet. Fix these problems in the flow editor first:\n' + result.problems.map(problemText).join("\n") }],
+          isError: true,
+        };
+      return JSON.stringify(result.machine, null, 2);
+    },
+  });
+
   sandy.ui.registerMentionProvider({
     id: FLOW_PROVIDER_ID,
     label: "Flows",
@@ -351,9 +386,9 @@ export default async function plugin(sandy: SandyPluginApi) {
   });
 
   sandy.agents.configure(() => ({
-    tools: ["skill_areas", "skill_flows"],
+    tools: ["skill_areas", "skill_flows", "flow_track"],
     skills: [],
     instructions:
-      "The user sorts skills into use-case areas and ordered flows. Call skill_areas to find the right skill for a task and skill_flows when the user names a flow or asks for a workflow.",
+      "The user sorts skills into use-case areas and flows. Call skill_areas to find the right skill for a task and skill_flows when the user names a flow or asks for a workflow. To run a flow, call flow_track for it and start the returned machine with stage_start.",
   }));
 }

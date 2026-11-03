@@ -2,24 +2,44 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import plugin from "./server.ts";
+import { machineSchema } from "../work/track/machine.ts";
 import { migrateLinear, type FlowStep } from "./graph.ts";
+import { formatIo } from "./io.ts";
+import { UX_SKILLS, uxFlow } from "./ux-flow.fixture.ts";
 import { classify, DEFAULT_USE_CASES, FALLBACK_ID, resolveUseCase, sourceOf } from "./usecases.ts";
 
+const skillEntry = (id: string, name: string, description: string, metadata: Record<string, string> = {}, extra: Record<string, unknown> = {}) => ({
+  id,
+  name,
+  description,
+  provider: null,
+  scope: "user",
+  pluginId: null,
+  filePath: "/" + id,
+  manageable: true,
+  providers: [],
+  duplicates: [],
+  metadata,
+  ...extra,
+});
+
 const skills = [
-  { id: "skill_a", name: "debug", description: "Find the cause of a failure", provider: null, scope: "user", pluginId: null, filePath: "/a", manageable: true, providers: [], duplicates: [] },
-  { id: "skill_b", name: "write-docs", description: "Write project docs", provider: null, scope: "user", pluginId: null, filePath: "/b", manageable: true, providers: [], duplicates: [] },
-  { id: "skill_c", name: "zebra", description: "Something unrelated", provider: null, scope: "user", pluginId: null, filePath: "/c", manageable: true, providers: [], duplicates: [] },
-  { id: "skill_d", name: "debug", description: "duplicate entry", provider: "pi", scope: "provider-user", pluginId: null, filePath: "/home/u/.agents/skills/debug/SKILL.md", manageable: false, providers: [], duplicates: [] },
+  skillEntry("skill_a", "debug", "Find the cause of a failure", { inputs: "failure: text; repro?: url", outputs: "diagnosis.md: file(diagnosis.md)" }),
+  skillEntry("skill_b", "write-docs", "Write project docs", { inputs: "topic: choice(a); oops", outputs: "doc: banana" }),
+  skillEntry("skill_c", "zebra", "Something unrelated"),
+  skillEntry("skill_d", "debug", "duplicate entry", {}, { provider: "pi", scope: "provider-user", filePath: "/home/u/.agents/skills/debug/SKILL.md", manageable: false }),
 ];
+
+const uxSkills = UX_SKILLS.map((info, index) => skillEntry("ux_" + String(index), info.name, info.purpose, { inputs: formatIo(info.inputs), outputs: formatIo(info.outputs) }));
 
 const deletedThreads: string[] = [];
 
-async function boot(reply = "{}") {
+async function boot(reply = "{}", listed: readonly unknown[] = skills) {
   const { sandy, harness } = createFakePluginHost({
     pluginId: "skill-usecases",
     sdk: {
       projects: { list: async () => [{ id: "proj_1", name: "One" }, { id: "proj_2", name: "Two" }] },
-      skills: { list: async () => ({ skills }) },
+      skills: { list: async () => ({ skills: listed }) },
       threads: {
         spawn: async () => ({ id: "thr_ai" }),
         wait: async () => ({}),
@@ -63,7 +83,7 @@ test("assign persists, publishes and can be cleared", async () => {
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: "learn" });
   let state = (await harness.behavior.callRpc("state", { projectId: "proj_2" })) as any;
   assert.equal(state.projectId, "proj_2");
-  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { name: "zebra", description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"] });
+  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { name: "zebra", description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [] });
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: null });
   state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.equal(state.skills.find((s: any) => s.name === "zebra").manual, false);
@@ -174,8 +194,9 @@ test("the ~ mention provider finds flows by name and resolves one into run instr
   assert.deepEqual(found.map((item) => [item.id, item.title, item.subtitle]), [["f1", "Fix it", "debug > write-docs"]]);
   assert.equal((await provider.search({ trigger: "~", query: "", projectId: null, threadId: null })).length, 2);
   const resolved = (await provider.resolve("f1")) as { context: string };
-  assert.match(resolved.context, /"Fix it" step by step/u);
-  assert.match(resolved.context, /1\. \/debug - find cause\n2\. \/write-docs\n/u);
+  assert.match(resolved.context, /^Run the flow "Fix it" as a track\.\n1\. Call flow_track with flow "f1"\./u);
+  assert.match(resolved.context, /stage_start with that machine and the note "Flow Fix it"/u);
+  assert.match(resolved.context, /use each skill in this order instead.*\n1\. \/debug - find cause\n2\. \/write-docs\n/u);
   await assert.rejects(async () => provider.resolve("gone"), /no longer exists/u);
 });
 
@@ -206,4 +227,48 @@ test("a branching flow saves and resolves into run text with its branches", asyn
   assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [branching] }), { ok: true });
   const resolved = (await harness.registrations.mentionProviders[0]!.resolve("g1")) as { context: string };
   assert.match(resolved.context, /1\. \/debug\n2\. Ask me: Good enough\? \(yes -> finish, no -> step 1\)/u);
+});
+
+test("skill rows carry the IO parsed from SKILL.md metadata and report malformed entries", async () => {
+  const harness = await boot();
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const debug = state.skills.find((s: any) => s.name === "debug");
+  assert.deepEqual(debug.inputs, [
+    { name: "failure", optional: false, type: { kind: "text" } },
+    { name: "repro", optional: true, type: { kind: "url" } },
+  ]);
+  assert.deepEqual(debug.outputs, [{ name: "diagnosis.md", optional: false, type: { kind: "file", path: "diagnosis.md" } }]);
+  assert.deepEqual(debug.ioErrors, []);
+  const docs = state.skills.find((s: any) => s.name === "write-docs");
+  assert.deepEqual(docs.inputs, []);
+  assert.deepEqual(docs.outputs, []);
+  assert.deepEqual(docs.ioErrors, [
+    'inputs: entry 1 "topic": choice(...) needs at least two values',
+    'inputs: entry 2 "oops" has no type, write "Name: type"',
+    'outputs: entry 1 "doc": unknown type "banana", use text, url, file, file(path) or choice(a, b)',
+  ]);
+});
+
+test("flow_track compiles the UX flow into a machine the track accepts", async () => {
+  const harness = await boot("{}", uxSkills);
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true });
+  const text = (await harness.behavior.callAgentTool("flow_track", { flow: "UX design" })) as string;
+  const parsed = machineSchema.safeParse(JSON.parse(text));
+  assert.equal(parsed.success, true, parsed.success ? "" : JSON.stringify(parsed.error.issues));
+  assert.equal(JSON.parse(text).start, "frame-the-problem");
+  assert.equal(await harness.behavior.callAgentTool("flow_track", { flow: "ux" }), text);
+});
+
+test("flow_track refuses a broken flow with its Check problems and an unknown flow by name", async () => {
+  const harness = await boot("{}", uxSkills);
+  const flow = uxFlow();
+  const broken = { ...flow, useCaseId: "plan", wires: flow.wires.filter((item) => item.id !== "w10") };
+  await harness.behavior.callRpc("saveFlows", { flows: [broken] });
+  const refused = (await harness.behavior.callAgentTool("flow_track", { flow: "ux" })) as any;
+  assert.equal(refused.isError, true);
+  assert.match(refused.content[0].text, /cannot run as a track yet/u);
+  assert.match(refused.content[0].text, /"keep" leads nowhere.*\(fix in the editor: Finish here, Add Output after keep\)/u);
+  const missing = (await harness.behavior.callAgentTool("flow_track", { flow: "nope" })) as any;
+  assert.equal(missing.isError, true);
+  assert.match(missing.content[0].text, /No flow named "nope"/u);
 });

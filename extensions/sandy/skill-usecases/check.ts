@@ -208,6 +208,10 @@ function candidates(shape: Shape, target: FlowNode, type: IoType): SourcePort[] 
   return found.sort((a, b) => order.indexOf(b.node.id) - order.indexOf(a.node.id));
 }
 
+export function bindCandidates(flow: Flow, target: FlowNode, type: IoType): SourcePort[] {
+  return candidates(shapeOf(flow), target, type);
+}
+
 function bindFix(shape: Shape, target: FlowNode, input: string, type: IoType, current: Binding | null): Fix[] {
   const alternative = candidates(shape, target, type).find((item) => current === null || item.node.id !== current.nodeId || item.port !== current.port);
   if (alternative === undefined) return [];

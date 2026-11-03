@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRealtime, useRpc, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import type { FlowProposal, SkillOverview, SkillRow, rpcContract } from "./contract";
-import { flowRunText, flowSkillNames, flowStepLines, linearSteps, migrateLinear, withLinearSteps, type Flow, type FlowStep } from "./graph";
+import { skillInfo, type FlowProposal, type SkillOverview, type rpcContract } from "./contract";
+import { check, hasErrors } from "./check";
+import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History } from "./canvas-model";
+import { FlowCanvas, type Selection } from "./flow-canvas";
+import { CheckList, Inspector, Outline } from "./flow-inspector";
+import { flowRunText, flowSkillNames, linearSteps, migrateLinear, nodeTitle, withLinearSteps, type Flow } from "./graph";
 import {
   GHOST,
   INPUT,
@@ -16,7 +20,6 @@ import {
   type SkillUseCasesApi,
 } from "./shared";
 
-type Drag = { kind: "skill"; name: string } | { kind: "step"; index: number } | null;
 type Suggestion = { rationale: string; proposal: FlowProposal };
 
 function newFlowId(): string {
@@ -205,7 +208,7 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
               <span className="block truncate text-sm font-medium">{flow.name}</span>
               <span className="block truncate text-xs text-muted-foreground">{flowSkillNames(flow).join(" → ") || "No steps yet"}</span>
             </span>
-            <span className="rounded bg-muted px-1.5 text-[11px] leading-5 text-muted-foreground">{labels.get(flow.useCaseId) ?? flow.useCaseId}</span>
+            <span className="rounded bg-muted px-1.5 text-xs leading-5 text-muted-foreground">{labels.get(flow.useCaseId) ?? flow.useCaseId}</span>
           </button>
         </li>
       ))}
@@ -213,185 +216,88 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
   );
 }
 
-function StepList({
-  steps,
-  drag,
-  setDrag,
-  onChange,
-}: {
-  steps: FlowStep[];
-  drag: Drag;
-  setDrag: (drag: Drag) => void;
-  onChange: (steps: FlowStep[]) => void;
-}) {
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const dropAt = (index: number) => {
-    setOverIndex(null);
-    if (drag === null) return;
-    if (drag.kind === "skill") {
-      if (steps.some((step) => step.skill === drag.name)) {
-        setDrag(null);
-        return;
-      }
-      onChange([...steps.slice(0, index), { skill: drag.name, note: "" }, ...steps.slice(index)]);
-    } else {
-      const moved = steps[drag.index];
-      if (moved !== undefined) {
-        const rest = steps.filter((_, position) => position !== drag.index);
-        const target = index > drag.index ? index - 1 : index;
-        onChange([...rest.slice(0, target), moved, ...rest.slice(target)]);
-      }
-    }
-    setDrag(null);
-  };
-  const slot = (index: number) => (
-    <li
-      key={"slot-" + index}
-      aria-hidden="true"
-      onDragOver={(event) => {
-        event.preventDefault();
-        setOverIndex(index);
-      }}
-      onDragLeave={() => setOverIndex(null)}
-      onDrop={(event) => {
-        event.preventDefault();
-        dropAt(index);
-      }}
-      className={"rounded transition-all " + (overIndex === index ? "h-8 border-2 border-dashed border-primary" : drag !== null ? "h-3" : "h-1")}
-    />
-  );
-  const swap = (from: number, to: number) => {
-    const next = [...steps];
-    const moved = next[from];
-    const other = next[to];
-    if (moved === undefined || other === undefined) return;
-    next[from] = other;
-    next[to] = moved;
-    onChange(next);
-  };
-  return (
-    <ol className="space-y-0" aria-label="Flow steps">
-      {steps.flatMap((step, index) => [
-        slot(index),
-        <li
-          key={step.skill}
-          draggable
-          onDragStart={(event) => {
-            event.dataTransfer.setData("text/plain", step.skill);
-            event.dataTransfer.effectAllowed = "move";
-            setDrag({ kind: "step", index });
-          }}
-          className="flex cursor-grab items-start gap-2 rounded-lg border bg-card/60 px-3 py-2 active:cursor-grabbing"
-        >
-          <span className="mt-0.5 w-5 shrink-0 text-sm tabular-nums text-muted-foreground">{index + 1}</span>
-          <div className="min-w-0 flex-1 space-y-1">
-            <span className="text-sm font-medium">{step.skill}</span>
-            <input
-              aria-label={"Note for " + step.skill}
-              placeholder="What this step achieves"
-              className="h-7 w-full rounded border border-transparent bg-transparent px-1 text-xs text-muted-foreground hover:border-border focus:border-border"
-              defaultValue={step.note}
-              onBlur={(event) => event.target.value !== step.note && onChange(steps.map((item, position) => (position === index ? { ...item, note: event.target.value } : item)))}
-            />
-          </div>
-          <button type="button" className={GHOST} aria-label="Move up" disabled={index === 0} onClick={() => swap(index, index - 1)}>
-            ↑
-          </button>
-          <button type="button" className={GHOST} aria-label="Move down" disabled={index === steps.length - 1} onClick={() => swap(index, index + 1)}>
-            ↓
-          </button>
-          <button type="button" className={GHOST} aria-label={"Remove " + step.skill} onClick={() => onChange(steps.filter((_, position) => position !== index))}>
-            ✕
-          </button>
-        </li>,
-      ])}
-      {slot(steps.length)}
-      {steps.length === 0 ? (
-        <li className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Drag skills here from the list on the right</li>
-      ) : null}
-    </ol>
-  );
-}
+type Tab = "inspect" | "check" | "outline";
 
-function Palette({
-  skills,
-  areaId,
-  used,
-  setDrag,
-  onAdd,
-}: {
-  skills: SkillRow[];
-  areaId: string;
-  used: ReadonlySet<string>;
-  setDrag: (drag: Drag) => void;
-  onAdd: (name: string) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [onlyArea, setOnlyArea] = useState(true);
-  const shown = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return skills
-      .filter((skill) => !used.has(skill.name))
-      .filter((skill) => (!onlyArea || needle !== "" || skill.useCaseId === areaId))
-      .filter((skill) => needle === "" || skill.name.toLowerCase().includes(needle) || (skill.description ?? "").toLowerCase().includes(needle));
-  }, [skills, used, query, onlyArea, areaId]);
-  return (
-    <aside aria-label="Skills" className="flex min-h-0 flex-col gap-2">
-      <input type="search" aria-label="Search skills" placeholder="Search skills" className={INPUT} value={query} onChange={(event) => setQuery(event.target.value)} />
-      <label className="flex items-center gap-2 text-xs text-muted-foreground">
-        <input type="checkbox" checked={onlyArea} onChange={(event) => setOnlyArea(event.target.checked)} />
-        Only this use case (search always looks everywhere)
-      </label>
-      <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
-        {shown.map((skill) => (
-          <li
-            key={skill.name}
-            draggable
-            onDragStart={(event) => {
-              event.dataTransfer.setData("text/plain", skill.name);
-              event.dataTransfer.effectAllowed = "copy";
-              setDrag({ kind: "skill", name: skill.name });
-            }}
-            className="flex cursor-grab items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-accent/50"
-          >
-            <div className="min-w-0 flex-1">
-              <span className="text-sm font-medium">{skill.name}</span>
-              {skill.description === null ? null : <p className="line-clamp-2 text-xs text-muted-foreground">{skill.description}</p>}
-            </div>
-            <button type="button" className={GHOST} aria-label={"Add " + skill.name} onClick={() => onAdd(skill.name)}>
-              +
-            </button>
-          </li>
-        ))}
-        {shown.length === 0 ? <li className="p-2 text-xs text-muted-foreground">No matching skills.</li> : null}
-      </ul>
-    </aside>
-  );
+function isTyping(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 }
 
 function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flow; onDeleted: () => void }) {
   const { state, rpc, saveFlows, setError } = api;
   const nav = useFlowNavigation();
-  const [drag, setDrag] = useState<Drag>(null);
+  const [history, setHistory] = useState<History>(() => startHistory(needsLayout(flow) ? layout(flow) : flow));
+  const [selection, setSelection] = useState<Selection>(null);
+  const [tab, setTab] = useState<Tab>("inspect");
+  const [message, setMessage] = useState("");
   const [goal, setGoal] = useState("");
   const [asking, setAsking] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [confirming, setConfirming] = useState(false);
   useEffect(() => {
+    setHistory(startHistory(needsLayout(flow) ? layout(flow) : flow));
+    setSelection(null);
     setSuggestion(null);
     setConfirming(false);
+    setMessage("");
   }, [flow.id]);
+  const current = history.present.id === flow.id ? history.present : flow;
+  const skills = useMemo(() => (state === null ? [] : state.skills.map(skillInfo)), [state]);
+  const problems = useMemo(() => check(current, skills), [current, skills]);
+  const historyRef = useRef(history);
+  historyRef.current = history;
+  const persist = (next: Flow) => {
+    if (state !== null) saveFlows(state.flows.map((item) => (item.id === next.id ? next : item)));
+  };
+  const commit = (edit: Edit) => {
+    if (edit.flow !== current) {
+      setHistory(record(historyRef.current, edit.flow));
+      persist(edit.flow);
+    }
+    if (edit.nodeId !== null && edit.flow.nodes.some((node) => node.id === edit.nodeId)) {
+      setSelection({ kind: "node", id: edit.nodeId });
+      setTab("inspect");
+    } else if (selection?.kind === "node" && !edit.flow.nodes.some((node) => node.id === selection.id)) setSelection(null);
+    else if (selection?.kind === "wire" && !edit.flow.wires.some((wire) => wire.id === selection.id)) setSelection(null);
+    setMessage(edit.message);
+  };
+  const step = (direction: "undo" | "redo") => {
+    const before = historyRef.current;
+    const next = direction === "undo" ? undo(before) : redo(before);
+    if (next === before) return;
+    setHistory(next);
+    persist(next.present);
+    setMessage(direction === "undo" ? "Undone" : "Redone");
+  };
+  const removeSelection = () => {
+    if (selection?.kind === "node") {
+      const node = current.nodes.find((item) => item.id === selection.id);
+      if (node !== undefined) commit({ flow: deleteNode(current, node.id), nodeId: null, message: "Deleted " + nodeTitle(node) });
+    } else if (selection?.kind === "wire") commit({ flow: removeWire(current, selection.id), nodeId: null, message: "Removed the wire" });
+  };
+  const keys = useRef({ step, removeSelection });
+  keys.current = { step, removeSelection };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (isTyping(event.target)) return;
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && event.key.toLowerCase() === "z") keys.current.step(event.shiftKey ? "redo" : "undo");
+      else if (mod && event.key.toLowerCase() === "y") keys.current.step("redo");
+      else if (event.key === "Delete" || event.key === "Backspace") keys.current.removeSelection();
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   if (state === null) return null;
-  const update = (change: Partial<Flow>) =>
-    saveFlows(state.flows.map((item) => (item.id === flow.id ? { ...item, ...change } : item)));
-  const steps = linearSteps(flow);
-  const setSteps = (next: FlowStep[]) => update(withLinearSteps(flow, next));
+  const update = (change: Partial<Flow>, text: string) => commit({ flow: { ...current, ...change }, nodeId: null, message: text });
+  const steps = linearSteps(current);
   const areas = [...state.useCases.map((useCase) => ({ id: useCase.id, label: useCase.label })), { id: state.fallbackId, label: state.fallbackLabel }];
   const askAi = () => {
     setAsking(true);
     setSuggestion(null);
     rpc
-      .call("recommendFlow", { projectId: state.projectId, useCaseId: flow.useCaseId, goal: goal.trim() === "" ? flow.description : goal, current: steps === null || steps.length === 0 ? null : steps })
+      .call("recommendFlow", { projectId: state.projectId, useCaseId: current.useCaseId, goal: goal.trim() === "" ? current.description : goal, current: steps === null || steps.length === 0 ? null : steps })
       .then(
         (result) => {
           setAsking(false);
@@ -403,21 +309,25 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
         },
       );
   };
-  const names = flowSkillNames(flow);
-  const used = new Set(names);
-  const missing = names.filter((skill) => !state.skills.some((row) => row.name === skill));
+  const errors = problems.filter((problem) => problem.severity === "error").length;
+  const blocked = current.nodes.length === 0 ? "Add a block first" : hasErrors(problems) ? "Fix the errors in Check first" : null;
+  const tabButton = (id: Tab, label: string) => (
+    <button type="button" role="tab" aria-selected={tab === id} className={"h-8 flex-1 border-b-2 text-sm " + (tab === id ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")} onClick={() => setTab(id)}>
+      {label}
+    </button>
+  );
   return (
-    <div className="flex h-full flex-col" onDragEnd={() => setDrag(null)}>
+    <div className="flex h-full flex-col">
       <div className="space-y-2 border-b border-border px-4 py-3 md:px-5">
         <div className="flex flex-wrap items-center gap-2">
           <input
-            key={flow.id + "-name"}
+            key={current.id + "-name-" + current.name}
             aria-label="Flow name"
             className={INPUT + " min-w-48 flex-1 text-base font-semibold"}
-            defaultValue={flow.name}
-            onBlur={(event) => event.target.value.trim() !== "" && event.target.value.trim() !== flow.name && update({ name: event.target.value.trim() })}
+            defaultValue={current.name}
+            onBlur={(event) => event.target.value.trim() !== "" && event.target.value.trim() !== current.name && update({ name: event.target.value.trim() }, "Renamed the flow")}
           />
-          <select aria-label="Use case" className={INPUT} value={flow.useCaseId} onChange={(event) => update({ useCaseId: event.target.value })}>
+          <select aria-label="Use case" className={INPUT} value={current.useCaseId} onChange={(event) => update({ useCaseId: event.target.value }, "Moved the flow")}>
             {areas.map((area) => (
               <option key={area.id} value={area.id}>
                 {area.label}
@@ -425,21 +335,28 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
             ))}
           </select>
           <ProjectSelect state={state} onChange={api.setProjectId} />
+          <button type="button" className={GHOST} aria-label="Undo" title="Undo (Ctrl+Z)" disabled={history.past.length === 0} onClick={() => step("undo")}>
+            ↶
+          </button>
+          <button type="button" className={GHOST} aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled={history.future.length === 0} onClick={() => step("redo")}>
+            ↷
+          </button>
           <button
             type="button"
             className={PRIMARY}
-            disabled={flow.nodes.length === 0}
+            disabled={blocked !== null}
+            title={blocked ?? "Start a thread that runs this flow as a track"}
             onClick={() =>
               nav.navigate.toCompose({
                 ...(state.projectId === null ? {} : { projectId: state.projectId }),
-                initialPrompt: flowRunText(flow),
+                initialPrompt: flowRunText(current),
                 focusPrompt: true,
               })
             }
           >
             Run flow
           </button>
-          <button type="button" className={SECONDARY} disabled={flow.nodes.length === 0} onClick={() => copyText(flowRunText(flow))}>
+          <button type="button" className={SECONDARY} disabled={current.nodes.length === 0} onClick={() => copyText(flowRunText(current))}>
             Copy
           </button>
           {confirming ? (
@@ -448,7 +365,7 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
                 type="button"
                 className={GHOST + " !text-destructive"}
                 onClick={() => {
-                  saveFlows(state.flows.filter((item) => item.id !== flow.id));
+                  saveFlows(state.flows.filter((item) => item.id !== current.id));
                   onDeleted();
                 }}
               >
@@ -459,66 +376,84 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
               </button>
             </>
           ) : (
-            <button type="button" className={GHOST} onClick={() => setConfirming(true)}>
+            <button type="button" className={GHOST} aria-label="Delete flow" onClick={() => setConfirming(true)}>
               🗑
             </button>
           )}
         </div>
         <input
-          key={flow.id + "-description"}
+          key={current.id + "-description-" + current.description}
           aria-label="Description"
           placeholder="What is this flow for?"
           className={INPUT + " w-full"}
-          defaultValue={flow.description}
-          onBlur={(event) => event.target.value !== flow.description && update({ description: event.target.value })}
+          defaultValue={current.description}
+          onBlur={(event) => event.target.value !== current.description && update({ description: event.target.value }, "Updated the description")}
         />
         {steps === null ? null : (
-        <div className="flex flex-wrap gap-2">
-          <input aria-label="Goal for AI" placeholder="Goal for the AI (optional)" className={INPUT + " min-w-48 flex-1"} value={goal} onChange={(event) => setGoal(event.target.value)} />
-          <button type="button" className={SECONDARY} disabled={asking} onClick={askAi}>
-            {asking ? "Asking AI…" : steps.length === 0 ? "Suggest steps" : "Improve with AI"}
-          </button>
-        </div>
+          <div className="flex flex-wrap gap-2">
+            <input aria-label="Goal for AI" placeholder="Goal for the AI (optional)" className={INPUT + " min-w-48 flex-1"} value={goal} onChange={(event) => setGoal(event.target.value)} />
+            <button type="button" className={SECONDARY} disabled={asking} onClick={askAi}>
+              {asking ? "Asking AI…" : steps.length === 0 ? "Suggest steps" : "Improve with AI"}
+            </button>
+          </div>
+        )}
+        {suggestion === null ? null : (
+          <SuggestionCard
+            suggestion={suggestion}
+            label="Use these steps"
+            onAccept={() => {
+              commit({
+                flow: layout({
+                  ...withLinearSteps(current, suggestion.proposal.steps),
+                  ...(current.description === "" && suggestion.proposal.description !== "" ? { description: suggestion.proposal.description } : {}),
+                }),
+                nodeId: null,
+                message: "Used the AI steps",
+              });
+              setSuggestion(null);
+            }}
+            onClose={() => setSuggestion(null)}
+          />
         )}
         {api.error === null ? null : <p role="alert" className="text-sm text-destructive">{api.error}</p>}
       </div>
-      <div className="grid min-h-0 flex-1 gap-4 p-4 md:grid-cols-[minmax(0,1fr)_20rem] md:p-5">
-        <div className="min-h-0 space-y-3 overflow-y-auto">
-          {suggestion === null ? null : (
-            <SuggestionCard
-              suggestion={suggestion}
-              label="Use these steps"
-              onAccept={() => {
-                update({
-                  ...withLinearSteps(flow, suggestion.proposal.steps),
-                  ...(flow.description === "" && suggestion.proposal.description !== "" ? { description: suggestion.proposal.description } : {}),
-                });
-                setSuggestion(null);
-              }}
-              onClose={() => setSuggestion(null)}
-            />
-          )}
-          {missing.length === 0 ? null : (
-            <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">
-              Not installed in this project: {missing.join(", ")}
-            </p>
-          )}
-          {steps === null ? (
-            <>
-              <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">This flow branches. The list shows it read-only; branches are edited on the flow canvas.</p>
-              <ol className="space-y-1 text-sm" aria-label="Flow steps">
-                {flowStepLines(flow, "").map((line, index) => (
-                  <li key={index}>{line}</li>
-                ))}
-              </ol>
-            </>
-          ) : (
-            <StepList steps={steps} drag={drag} setDrag={setDrag} onChange={setSteps} />
-          )}
-        </div>
-        {steps === null ? null : (
-          <Palette skills={state.skills} areaId={flow.useCaseId} used={used} setDrag={setDrag} onAdd={(name) => setSteps([...steps, { skill: name, note: "" }])} />
-        )}
+      <div className="flex min-h-0 flex-1">
+        <FlowCanvas
+          flow={current}
+          skills={skills}
+          problems={problems}
+          selection={selection}
+          fitKey={current.id}
+          message={message}
+          onSelect={(next) => {
+            setSelection(next);
+            if (next !== null) setTab("inspect");
+          }}
+          onChange={commit}
+        />
+        <aside aria-label="Flow details" className="flex w-80 shrink-0 flex-col border-l border-border">
+          <div role="tablist" className="flex border-b border-border px-2">
+            {tabButton("inspect", "Inspector")}
+            {tabButton("check", errors > 0 ? "Check · " + String(errors) : problems.length > 0 ? "Check · " + String(problems.length) : "Check ✓")}
+            {tabButton("outline", "Outline")}
+          </div>
+          <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
+            {tab === "inspect" ? <Inspector flow={current} selection={selection} skills={skills} problems={problems} onChange={commit} /> : null}
+            {tab === "check" ? (
+              <CheckList
+                flow={current}
+                problems={problems}
+                skills={skills}
+                onChange={commit}
+                onSelect={(next) => {
+                  setSelection(next);
+                  setTab("inspect");
+                }}
+              />
+            ) : null}
+            {tab === "outline" ? <Outline flow={current} problems={problems} selection={selection} onSelect={setSelection} /> : null}
+          </div>
+        </aside>
       </div>
     </div>
   );
