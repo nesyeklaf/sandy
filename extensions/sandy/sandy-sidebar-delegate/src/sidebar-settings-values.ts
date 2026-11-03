@@ -1,4 +1,3 @@
-import { DEFAULT_INACTIVE_AFTER_HOURS } from "./inactive";
 import { DEFAULT_SNOOZE_PRESET_CONFIG } from "./lifecycle";
 
 export const CHILD_THREAD_SORT_FIELDS = ["created", "activity"] as const;
@@ -14,7 +13,7 @@ export type ThreadDensity = (typeof THREAD_DENSITIES)[number];
 export type RowDensity = Exclude<ThreadDensity, "auto">;
 export const SHELF_DENSITIES = ["default", "comfortable", "compact", "dense"] as const;
 export type ShelfDensity = (typeof SHELF_DENSITIES)[number];
-export const DENSITY_SHELVES = ["pinned", "active", "working", "review", "inactive"] as const;
+export const DENSITY_SHELVES = ["pinned", "needs", "failed", "working", "review", "waiting", "merged"] as const;
 export type DensityShelf = (typeof DENSITY_SHELVES)[number];
 export type ShelfDensities = Record<DensityShelf, ShelfDensity>;
 
@@ -34,8 +33,6 @@ export interface ChildThreadSort {
 
 export interface SidebarSettingsValues {
   snoozePresets: string;
-  inactiveThreadsEnabled: boolean;
-  inactiveAfterHours: number;
   showRunningChildrenWhenCollapsed: boolean;
   /** Leave finished delegate children and workflow workers out of the thread list. */
   hideFinishedSubagents: boolean;
@@ -71,8 +68,6 @@ export interface SidebarSettingsValues {
 
 export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
   snoozePresets: DEFAULT_SNOOZE_PRESET_CONFIG,
-  inactiveThreadsEnabled: true,
-  inactiveAfterHours: DEFAULT_INACTIVE_AFTER_HOURS,
   showRunningChildrenWhenCollapsed: true,
   hideFinishedSubagents: true,
   autoSettleInactive: true,
@@ -82,7 +77,15 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
   childSortDirection: "ascending",
   childIconStyle: "disc",
   threadDensity: "comfortable",
-  shelfDensities: { pinned: "default", active: "default", working: "default", review: "default", inactive: "default" },
+  shelfDensities: {
+    pinned: "default",
+    needs: "default",
+    failed: "default",
+    working: "default",
+    review: "default",
+    waiting: "default",
+    merged: "default",
+  },
   compactProjectIconOnly: false,
   keepPinnedThreadsFull: false,
   keepWokeThreadsFull: false,
@@ -123,10 +126,15 @@ export function threadDensityOf(value: {
   return value.compactWorkingThreads === true ? "auto" : "comfortable";
 }
 
+const LEGACY_DENSITY_SHELVES: Partial<Record<DensityShelf, string>> = { needs: "active", waiting: "inactive" };
+
 export function shelfDensitiesOf(value: unknown): ShelfDensities {
   const record = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
   return Object.fromEntries(
-    DENSITY_SHELVES.map((shelf) => [shelf, oneOf(SHELF_DENSITIES, record[shelf], "default")]),
+    DENSITY_SHELVES.map((shelf) => {
+      const legacy = LEGACY_DENSITY_SHELVES[shelf];
+      return [shelf, oneOf(SHELF_DENSITIES, record[shelf] ?? (legacy ? record[legacy] : undefined), "default")];
+    }),
   ) as ShelfDensities;
 }
 

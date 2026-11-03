@@ -16,7 +16,7 @@ const threads = [
 ];
 
 function renderInbox(initial: Partial<typeof defaultSidebarSettings> = {}) {
-  let saved = { ...defaultSidebarSettings, inactiveThreadsEnabled: false, ...initial };
+  let saved = { ...defaultSidebarSettings, ...initial };
   const writes: unknown[] = [];
   renderSlot(inbox, listProps, {
     sidebarThreads: {
@@ -75,7 +75,7 @@ describe("density", () => {
   it("overrides one shelf's density from its menu and leaves the others alone", async () => {
     const { writes } = renderInbox();
     await screen.findByRole("link", { name: "Idle work" });
-    fireEvent.click(screen.getByRole("button", { name: "Density for Needs you: Default" }));
+    fireEvent.click(screen.getByRole("button", { name: "Density for Waiting: Default" }));
     fireEvent.click(await screen.findByRole("radio", { name: "Compact" }));
     await waitFor(() => expect(density("Idle work")).toBe("compact"));
     expect(density("Pinned work")).toBe("comfortable");
@@ -83,14 +83,16 @@ describe("density", () => {
       {
         shelfDensities: {
           pinned: "default",
-          active: "compact",
+          needs: "default",
+          failed: "default",
           working: "default",
           review: "default",
-          inactive: "default",
+          waiting: "compact",
+          merged: "default",
         },
       },
     ]);
-    expect(screen.getByRole("button", { name: "Density for Needs you: Compact" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Density for Waiting: Compact" })).toBeDefined();
   });
 
   it("keeps pinned threads full below Comfortable when asked to", async () => {

@@ -57,7 +57,6 @@ describe("ThreadInbox", () => {
           listLifecycle: () => ({ rows: [] }),
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
             threadDensity: display === "working-shelf" ? "comfortable" : display,
             workingShelf: display === "working-shelf",
           }),
@@ -70,7 +69,7 @@ describe("ThreadInbox", () => {
           { comfortable: "comfortable", compact: "compact", dense: "dense", "working-shelf": "dense" }[display],
         );
       });
-      const region = screen.getByRole("region", { name: display === "working-shelf" ? "Working" : "Needs you" });
+      const region = screen.getByRole("region", { name: display === "working-shelf" ? "Working" : "Waiting" });
       const glyph = within(region).getByRole("img", { name: "Pi" });
       const row = glyph.closest("[data-parent-card]")! as HTMLElement;
       expect(within(row).getByText("Working")).toBeDefined();

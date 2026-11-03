@@ -1,18 +1,22 @@
 // @vitest-environment jsdom
-import { expect, it, vi } from "vitest";
+import { expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { createWired } from "./test-wired";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { loadInboxApp, thread, toastMocks, parkFromCard } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 const item = (id = "a", extra: Parameters<typeof thread>[0] = {}) =>
   thread({ id, title: `Work ${id}`, updatedAt: Date.now(), ...extra });
 const row = (title = "Work a") => screen.getByText(title).closest("li")!;
 const lifecycle = (wired: Awaited<ReturnType<typeof createWired>>, id = "a") =>
   wired.db.prepare("SELECT * FROM thread_lifecycle WHERE thread_id = ?").get(id);
-async function shelf(name: string) {
+const REGIONS: Record<string, string> = { Parked: "Snoozed", Settled: "Archived" };
+async function shelf(label: string) {
+  const name = REGIONS[label] ?? label;
   const region = await screen.findByRole("region", { name });
   const heading = within(region).getByRole("button", { name: new RegExp(`^${name}`) });
   if (heading.getAttribute("aria-expanded") === "false") fireEvent.click(heading);
@@ -57,7 +61,7 @@ it("parks through the card and resumes from Parked", async () => {
   expect(within(parked).getByText("Work a")).toBeDefined();
   fireEvent.click(within(parked).getByRole("button", { name: "Resume thread" }));
   await saved(wired, "settled_override", "active");
-  expect(within(await screen.findByRole("region", { name: "Needs you" })).getByText("Work a")).toBeDefined();
+  expect(within(await screen.findByRole("region", { name: "Waiting" })).getByText("Work a")).toBeDefined();
   expect(lifecycle(wired)).toMatchObject({ parked_at: null });
 });
 
@@ -108,9 +112,9 @@ it("pins from the menu and persists a keyboard manual reorder through server and
       result: { inboxThreadIds: [] },
     }),
   );
-  expect(
-    within(observer.getByRole("region", { name: "Needs you" })).getAllByRole("listitem")[0]!.textContent,
-  ).toContain("Work a");
+  expect(within(observer.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
+    "Work a",
+  );
   fireEvent.keyDown(sender.getByRole("link", { name: "Work a" }), { key: "ArrowDown", altKey: true });
   await waitFor(() =>
     expect(wired.db.prepare("SELECT thread_id FROM inbox_order ORDER BY sort_index").all()).toEqual([
@@ -122,23 +126,23 @@ it("pins from the menu and persists a keyboard manual reorder through server and
   expect(JSON.parse(localStorage.getItem("sandy-sidebar:inbox-order-cache:v1")!)).toEqual(["b", "a"]);
   await waitFor(() =>
     expect(
-      within(observer.getByRole("region", { name: "Needs you" })).getAllByRole("listitem")[0]!.textContent,
+      within(observer.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent,
     ).toContain("Work b"),
   );
   expect(receiver.rpcReplies).toContainEqual({ method: "listInboxOrder", result: { inboxThreadIds: ["b", "a"] } });
   wired.unmount(receiver);
   wired.unmount(slot);
   slot = wired.mount();
-  expect(within(screen.getByRole("region", { name: "Needs you" })).getAllByRole("listitem")[0]!.textContent).toContain(
+  expect(within(screen.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
     "Work b",
   );
   wired.unmount(slot);
   localStorage.removeItem("sandy-sidebar:inbox-order-cache:v1");
   wired.mount();
   await waitFor(() =>
-    expect(
-      within(screen.getByRole("region", { name: "Needs you" })).getAllByRole("listitem")[0]!.textContent,
-    ).toContain("Work b"),
+    expect(within(screen.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
+      "Work b",
+    ),
   );
 });
 
@@ -175,7 +179,9 @@ it("publishes a custom project color to both stripe and name", async () => {
     ).toBe("#123456"),
   );
   expect(
-    (row().querySelector(".sandy-sidebar-project-name") as HTMLElement).style.getPropertyValue("--sandy-sidebar-project"),
+    (row().querySelector(".sandy-sidebar-project-name") as HTMLElement).style.getPropertyValue(
+      "--sandy-sidebar-project",
+    ),
   ).toBe("#123456");
   expect(wired.db.prepare("SELECT * FROM project_colors").all()).toEqual([{ project_id: "proj_1", color: "#123456" }]);
 });
@@ -188,7 +194,7 @@ it("child activity publishes lifecycle changes that reopen a settled parent", as
   await wired.event("thread.active", "child");
   expect(lifecycle(wired)).toBeUndefined();
   expect(lifecycle(wired, "child")).toBeUndefined();
-  await within(await screen.findByRole("region", { name: "Needs you" })).findByText("Work a");
+  await within(await screen.findByRole("region", { name: "Waiting" })).findByText("Work a");
 });
 
 it("Clean uses the real preview token and renders the cleanup result shape", async () => {
@@ -199,7 +205,10 @@ it("Clean uses the real preview token and renders the cleanup result shape", asy
     .run("a", Date.now());
   const slot = wired.mount();
   const settled = await shelf("Settled");
-  fireEvent.click(within(settled).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+  fireEvent.contextMenu(within(settled).getByText("Work a"));
+  fireEvent.click(
+    within(await screen.findByRole("menu", { name: "Thread actions" })).getByText("Close terminals and ports…"),
+  );
   const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
   await within(dialog).findByText("1 terminal to close");
   fireEvent.click(within(dialog).getByRole("button", { name: "Clean resources" }));
@@ -234,9 +243,11 @@ it("thread.deleted clears lifecycle and order and publishes both channels to the
   expect(wired.db.prepare("SELECT thread_id FROM inbox_order ORDER BY sort_index").all()).toEqual([{ thread_id: "b" }]);
   await waitFor(() => expect(JSON.parse(localStorage.getItem("sandy-sidebar:inbox-order-cache:v1")!)).toEqual(["b"]));
   expect(
-    JSON.parse(localStorage.getItem("sandy-sidebar:lifecycle-cache:v1")!).map((row: { threadId: string }) => row.threadId),
+    JSON.parse(localStorage.getItem("sandy-sidebar:lifecycle-cache:v1")!).map(
+      (row: { threadId: string }) => row.threadId,
+    ),
   ).toEqual(["b"]);
-  const remaining = screen.getByRole("region", { name: "Parked" });
+  const remaining = screen.getByRole("region", { name: "Snoozed" });
   expect(within(remaining).getByText("Work b")).toBeDefined();
   expect(within(remaining).queryByText("Work a")).toBeNull();
   expect(within(remaining).getAllByRole("listitem")).toHaveLength(1);

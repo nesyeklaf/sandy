@@ -29,6 +29,8 @@ export const environmentGroupingCodec: PreferenceCodec<boolean> = {
   encode: String,
 };
 
+export const showArchivedCodec: PreferenceCodec<boolean> = environmentGroupingCodec;
+
 export type ListView = "flow" | "tree";
 
 export const listViewCodec: PreferenceCodec<ListView> = {
@@ -61,31 +63,35 @@ export const childExpansionCodec: PreferenceCodec<Set<string>> = {
 };
 
 const DEFAULT_SHELF_EXPANSION: ShelfExpansionState = {
-  active: true,
   pinned: true,
+  needs: true,
+  failed: true,
   working: true,
   review: true,
-  inactive: false,
-  parked: false,
+  waiting: true,
+  merged: false,
   snoozed: false,
-  settled: false,
+  archived: false,
 };
+
+const LEGACY_SHELF_KEYS: Partial<Record<keyof ShelfExpansionState, string>> = {
+  needs: "active",
+  waiting: "inactive",
+};
+
 export const shelfExpansionCodec: PreferenceCodec<ShelfExpansionState> = {
   fallback: () => DEFAULT_SHELF_EXPANSION,
   decode: (stored) => {
     if (!stored) return null;
-    const parsed = JSON.parse(stored) as Partial<ShelfExpansionState>;
-    return {
-      // Older shapes did not include independently collapsible Active or Pinned.
-      active: parsed.active !== false,
-      pinned: parsed.pinned !== false,
-      working: parsed.working !== false,
-      review: parsed.review !== false,
-      inactive: parsed.inactive === true,
-      parked: parsed.parked === true,
-      snoozed: parsed.snoozed === true,
-      settled: parsed.settled === true,
-    };
+    const parsed: unknown = JSON.parse(stored);
+    if (parsed === null) return null;
+    const record = typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    const entries = Object.entries(DEFAULT_SHELF_EXPANSION).map(([shelf, fallback]) => {
+      const legacy = LEGACY_SHELF_KEYS[shelf as keyof ShelfExpansionState];
+      const value = record[shelf] ?? (legacy ? record[legacy] : undefined);
+      return [shelf, typeof value === "boolean" ? value : fallback];
+    });
+    return Object.fromEntries(entries) as ShelfExpansionState;
   },
   encode: JSON.stringify,
 };

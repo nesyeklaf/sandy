@@ -2,7 +2,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
-import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings-values";
 import { inbox, thread, listProps, render, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
@@ -13,10 +12,10 @@ describe("ThreadInbox", () => {
   it("shows active threads in a collapsible Active shelf", () => {
     render([thread({ id: "a", title: "First active" }), thread({ id: "b", title: "Second active" })]);
 
-    const activeShelf = screen.getByRole("region", { name: "Needs you" });
+    const activeShelf = screen.getByRole("region", { name: "Waiting" });
     expect(within(activeShelf).getByRole("button", { expanded: true })).toBeDefined();
     fireEvent.click(within(activeShelf).getByRole("button", { expanded: true }));
-    expect(within(activeShelf).getByText("Needs you (2)")).toBeDefined();
+    expect(within(activeShelf).getByText("Waiting (2)")).toBeDefined();
     expect(within(activeShelf).queryByText("First active")).toBeNull();
     expect(within(activeShelf).queryByText("Second active")).toBeNull();
   });
@@ -35,124 +34,10 @@ describe("ThreadInbox", () => {
       },
     );
 
-    const activeShelf = screen.getByRole("region", { name: "Needs you" });
+    const activeShelf = screen.getByRole("region", { name: "Waiting" });
     fireEvent.click(within(activeShelf).getByRole("button", { expanded: true }));
     expect(within(activeShelf).getByText("Open active")).toBeDefined();
     expect(within(activeShelf).queryByText("Other active")).toBeNull();
-  });
-
-  it("moves stale unpinned threads to a collapsed Inactive shelf", () => {
-    const storedSettings = {
-      ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-        inactiveThreadsEnabled: true,
-        inactiveAfterHours: 6,
-      },
-    };
-    localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
-
-    const now = Date.now();
-    renderSlot(inbox, listProps, {
-      sidebarThreads: {
-        status: "ready",
-        threads: [
-          thread({
-            id: "recent",
-            title: "Recent work",
-            updatedAt: now - 60 * 60 * 1_000,
-          }),
-          thread({
-            id: "stale",
-            title: "Stale work",
-            updatedAt: now - 7 * 60 * 60 * 1_000,
-          }),
-          thread({
-            id: "stale-pin",
-            title: "Pinned old work",
-            isPinned: true,
-            updatedAt: now - 7 * 60 * 60 * 1_000,
-          }),
-        ],
-        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-      },
-      rpc: { getSidebarSettings: () => storedSettings, listLifecycle: () => ({ rows: [] }) },
-    });
-
-    const active = screen.getByRole("region", { name: "Needs you" });
-    const inactive = screen.getByRole("region", { name: "Inactive" });
-    const pinned = screen.getByRole("region", { name: "Pinned" });
-    expect(within(active).getByText("Recent work")).toBeDefined();
-    expect(within(active).queryByText("Stale work")).toBeNull();
-    expect(within(inactive).getByText("Inactive (1)")).toBeDefined();
-    expect(within(inactive).queryByText("Stale work")).toBeNull();
-    expect(within(pinned).getByText("Pinned old work")).toBeDefined();
-
-    fireEvent.click(within(inactive).getByRole("button", { name: /^Inactive/, expanded: false }));
-    expect(within(inactive).getByText("Stale work")).toBeDefined();
-  });
-
-  it("keeps stale threads Active when the feature is disabled", () => {
-    const storedSettings = {
-      ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-        inactiveThreadsEnabled: false,
-        inactiveAfterHours: 6,
-      },
-    };
-    localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
-
-    renderSlot(inbox, listProps, {
-      sidebarThreads: {
-        status: "ready",
-        threads: [
-          thread({
-            id: "stale",
-            title: "Still active",
-            updatedAt: Date.now() - 24 * 60 * 60 * 1_000,
-          }),
-        ],
-        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-      },
-      rpc: { getSidebarSettings: () => storedSettings, listLifecycle: () => ({ rows: [] }) },
-    });
-
-    expect(within(screen.getByRole("region", { name: "Needs you" })).getByText("Still active")).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Inactive" })).toBeNull();
-  });
-
-  it("uses the configured inactivity threshold", () => {
-    const storedSettings = {
-      ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-        inactiveThreadsEnabled: true,
-        inactiveAfterHours: 8,
-      },
-    };
-    localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
-
-    const now = Date.now();
-    renderSlot(inbox, listProps, {
-      sidebarThreads: {
-        status: "ready",
-        threads: [
-          thread({
-            id: "seven-hours",
-            title: "Seven hours old",
-            updatedAt: now - 7 * 60 * 60 * 1_000,
-          }),
-          thread({
-            id: "nine-hours",
-            title: "Nine hours old",
-            updatedAt: now - 9 * 60 * 60 * 1_000,
-          }),
-        ],
-        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-      },
-      rpc: { getSidebarSettings: () => storedSettings, listLifecycle: () => ({ rows: [] }) },
-    });
-
-    expect(within(screen.getByRole("region", { name: "Needs you" })).getByText("Seven hours old")).toBeDefined();
-    expect(within(screen.getByRole("region", { name: "Inactive" })).getByText("Inactive (1)")).toBeDefined();
   });
 
   it("sorts active threads from the subtle header menu", async () => {
@@ -193,7 +78,7 @@ describe("ThreadInbox", () => {
       ],
     );
 
-    const activeShelf = screen.getByRole("region", { name: "Needs you" });
+    const activeShelf = screen.getByRole("region", { name: "Waiting" });
     const sortMenu = within(activeShelf).getByRole("button", {
       name: "Sort active threads: Manual order",
     });
@@ -353,9 +238,9 @@ describe("ThreadInbox", () => {
       },
     );
 
-    const active = await screen.findByRole("region", { name: "Needs you" });
+    const active = await screen.findByRole("region", { name: "Waiting" });
     expect(within(active).getByRole("button", { name: "Web (2)" })).toBeDefined();
-    fireEvent.click(within(active).getByRole("button", { name: "Needs you", expanded: true }));
+    fireEvent.click(within(active).getByRole("button", { name: "Waiting", expanded: true }));
     expect(within(active).queryByRole("button", { name: "Web (2)" })).toBeNull();
     expect(
       within(active)

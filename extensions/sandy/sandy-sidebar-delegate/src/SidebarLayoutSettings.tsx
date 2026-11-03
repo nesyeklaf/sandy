@@ -1,21 +1,8 @@
-import { MAX_INACTIVE_AFTER_HOURS, MIN_INACTIVE_AFTER_HOURS } from "./inactive";
 import { THREAD_DENSITIES, type ThreadDensity } from "./sidebar-settings-values";
 import { DENSITY_LABELS } from "./ViewSheet";
-import {
-  InlineNumber,
-  SettingRow,
-  SettingsSection,
-  SettingsSelect,
-  Switch,
-  type SettingsDraftSectionProps,
-} from "./settings-ui";
+import { SettingRow, SettingsSection, SettingsSelect, Switch, type SettingsDraftSectionProps } from "./settings-ui";
 
-export function SidebarLayoutSettings({
-  draft,
-  update,
-  status,
-  inactiveHoursValid,
-}: SettingsDraftSectionProps & { inactiveHoursValid: boolean }) {
+export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSectionProps) {
   return (
     <SettingsSection title="Sidebar layout" status={status}>
       <SettingRow
@@ -86,32 +73,6 @@ export function SidebarLayoutSettings({
           />
         }
       />
-      <SettingRow
-        title="Inactive shelf"
-        description="Move quiet, unpinned threads out of Active. New activity brings them back."
-        control={
-          <Switch
-            label="Inactive shelf"
-            checked={draft.inactiveThreadsEnabled}
-            onChange={(checked) => update("inactiveThreadsEnabled", checked)}
-          />
-        }
-      >
-        {draft.inactiveThreadsEnabled ? (
-          <InlineNumber
-            label="Hours before inactive"
-            prefix="After"
-            suffix="hours without activity"
-            value={draft.inactiveAfterHours}
-            min={MIN_INACTIVE_AFTER_HOURS}
-            max={MAX_INACTIVE_AFTER_HOURS}
-            valid={inactiveHoursValid}
-            errorId="inactive-hours-error"
-            onChange={(value) => update("inactiveAfterHours", value)}
-          />
-        ) : null}
-      </SettingRow>
-
       <SettingRow
         title="Dock shelves to the bottom"
         experimental

@@ -24,8 +24,6 @@ export function decodeSettingsCache(input: unknown): SidebarSettingsValues | nul
   const value = input as Partial<SidebarSettingsValues>;
   if (
     typeof value.snoozePresets !== "string" ||
-    typeof value.inactiveThreadsEnabled !== "boolean" ||
-    typeof value.inactiveAfterHours !== "number" ||
     typeof value.showRunningChildrenWhenCollapsed !== "boolean" ||
     typeof value.autoSettleInactive !== "boolean" ||
     typeof value.autoSettleAfterDays !== "number" ||

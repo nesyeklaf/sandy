@@ -3,11 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings-values";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, SETTLED_NOTHING, thread, listProps, parkFromMenu, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+
+const REGIONS = { Parked: "Snoozed", Snoozed: "Snoozed", Settled: "Archived" } as const;
 
 describe("row context menu", () => {
   describe.each([
@@ -21,9 +24,9 @@ describe("row context menu", () => {
     it.each(["pinned", "active", "empty"])("follows the same navigation with %s candidates", async (destination) => {
       const storedSettings = {
         ...DEFAULT_SIDEBAR_SETTINGS,
-        ...{ inactiveThreadsEnabled: true, inactiveAfterHours: 6 },
       };
       localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
+      localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
 
       const now = Date.now();
       const rendered = renderSlot(
@@ -46,7 +49,6 @@ describe("row context menu", () => {
                     thread({ id: "last-active", title: "Last active", updatedAt: now, createdAt: 100 }),
                   ]
                 : []),
-              thread({ id: "inactive", title: "Inactive" }),
             ],
             projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
           },
@@ -68,7 +70,7 @@ describe("row context menu", () => {
         },
       );
 
-      const region = await screen.findByRole("region", { name: shelf });
+      const region = await screen.findByRole("region", { name: REGIONS[shelf] });
       await parkFromMenu(within(region).getByText("Current"), action);
       await waitFor(() =>
         expect(rendered.navigateCalls).toEqual([

@@ -6,8 +6,10 @@ import { useIsActiveThread } from "./useActiveThread";
 import type { ActiveSortMode } from "./inbox-layout";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { shelfDensity } from "./density";
+import type { ReorderShelf } from "./drag-reorder-geometry";
+import type { LockableShelf } from "./thread-status";
 
-type ActiveShelfKind = "pinned" | "inbox";
+type ActiveShelfKind = ReorderShelf;
 
 const NO_CHILDREN: readonly PluginSidebarThread[] = [];
 
@@ -31,7 +33,7 @@ const InboxThread = memo(function InboxThread({
   shelf: ActiveShelfKind;
   reorderable: boolean;
   showProject: boolean;
-  renameShelf: "active" | "working" | "review" | "inactive";
+  renameShelf: LockableShelf;
   showEnvironment: boolean;
   isWoke: boolean;
   childrenExpanded: boolean;
@@ -57,7 +59,7 @@ const InboxThread = memo(function InboxThread({
     <ThreadCard
       thread={thread}
       showProject={showProject}
-      projectIconOnly={renameShelf !== "inactive" && settings.compactProjectIconOnly}
+      projectIconOnly={settings.compactProjectIconOnly}
       showEnvironment={showEnvironment}
       isActive={isActive}
       isWoke={isWoke}
@@ -68,7 +70,7 @@ const InboxThread = memo(function InboxThread({
       reorder={
         !reorderable ||
         (shelf === "pinned" && thread.pinSortKey == null) ||
-        (shelf === "inbox" && (activeSortMode === "activity" || activeSortMode === "created"))
+        (shelf !== "pinned" && (activeSortMode === "activity" || activeSortMode === "created"))
           ? undefined
           : threadReorderControls(thread, shelf)
       }
@@ -94,7 +96,7 @@ export function createInboxThreadRenderer({
     shelf: ActiveShelfKind,
     reorderable = true,
     showProject = true,
-    renameShelf: "active" | "working" | "review" | "inactive" = "active",
+    renameShelf: LockableShelf = "waiting",
     showEnvironment = true,
   ) => (
     <InboxThread

@@ -6,8 +6,7 @@ import { cn } from "./lib/utils";
 import { ProjectFavicon, ProjectStripe } from "./ProjectFavicon";
 import { useProjectColor } from "./ProjectColors";
 import type { ThreadReorderControls } from "./ThreadCard";
-import { SlimRow } from "./SlimRow";
-import { CleanSettledDialog } from "./CleanSettledDialog";
+import { SlimRow, type SlimRowKind } from "./SlimRow";
 import { TRAILING_GLYPH_BOX_CLASS } from "./StatusSlot";
 import { projectIconUrl } from "./project-icons";
 import type { ProjectViewUnit } from "./inbox-layout";
@@ -20,9 +19,8 @@ import type { DensityShelf } from "./sidebar-settings-values";
 export const SETTLED_PAGE_SIZE = 25;
 
 /**
- * A collapsed shelf of parked threads. The header stays while anything is
- * parked — the count is the whole footprint when collapsed — and the shelf
- * vanishes entirely at zero.
+ * A shelf of one-line rows: snoozed and parked threads, or archived ones.
+ * The header stays while anything is on it, and the shelf vanishes at zero.
  */
 export function CompactShelf({
   label,
@@ -30,9 +28,10 @@ export function CompactShelf({
   threads,
   expanded,
   onToggle,
-  shelf,
+  kindFor,
   visibleThreads,
-  settledLimit,
+  limit = threads.length,
+  hasMorePages = false,
   onLoadMore,
   expandedChildParentIds,
 }: {
@@ -41,41 +40,27 @@ export function CompactShelf({
   threads: readonly PluginSidebarThread[];
   expanded: boolean;
   onToggle: () => void;
-  shelf: "parked" | "snoozed" | "settled";
+  kindFor: (thread: PluginSidebarThread) => SlimRowKind;
   visibleThreads: readonly PluginSidebarThread[];
-  settledLimit?: number;
+  limit?: number;
+  hasMorePages?: boolean;
   onLoadMore?: () => void;
   expandedChildParentIds: ReadonlySet<string>;
 }) {
   const { lifecycle } = useInboxEnvironment();
   const { now: clockNow } = useInboxActivity();
-  const { onNavigate } = useInboxActions();
   const attachListMotionRef = useListMotion<HTMLUListElement>();
   const now = useMemo(() => Date.now(), [clockNow, visibleThreads]);
-  if (threads.length === 0 && shelf !== "settled") return null;
-  const limit = shelf === "settled" ? (settledLimit ?? threads.length) : threads.length;
-  const hasMore = shelf === "settled" && threads.length > limit;
+  if (threads.length === 0) return null;
+  const hasMore = threads.length > limit || hasMorePages;
   return (
-    <CollapsibleShelf
-      label={label}
-      hidden={threads.length === 0}
-      icon={icon}
-      count={threads.length}
-      expanded={expanded}
-      onToggle={onToggle}
-      action={
-        shelf === "settled" ? (
-          <CleanSettledDialog threadIds={threads.map((thread) => thread.id)} onNavigate={onNavigate} />
-        ) : undefined
-      }
-    >
+    <CollapsibleShelf label={label} icon={icon} count={threads.length} expanded={expanded} onToggle={onToggle}>
       <ul ref={attachListMotionRef} className="flex flex-col gap-px">
         {visibleThreads.map((thread) => (
           <SlimRow
             key={thread.id}
             thread={thread}
-            shelf={shelf}
-            parkedAt={lifecycle.parkedAtFor(thread)}
+            shelf={kindFor(thread)}
             wakeAt={lifecycle.wakeAtFor(thread)}
             now={now}
             childrenExpanded={expandedChildParentIds.has(thread.id)}
@@ -88,7 +73,7 @@ export function CompactShelf({
           onClick={onLoadMore}
           className="ml-2.5 mt-1 rounded px-1.5 py-1 text-2xs font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
         >
-          Load {Math.min(SETTLED_PAGE_SIZE, threads.length - limit)} more
+          {threads.length > limit ? `Load ${Math.min(SETTLED_PAGE_SIZE, threads.length - limit)} more` : "Load more"}
         </button>
       ) : null}
     </CollapsibleShelf>
@@ -144,7 +129,6 @@ export function CollapsibleShelf({
   onToggle,
   action,
   children,
-  hidden = false,
   densityShelf,
 }: {
   label: string;
@@ -155,7 +139,6 @@ export function CollapsibleShelf({
   onToggle: () => void;
   action?: React.ReactNode;
   children: React.ReactNode;
-  hidden?: boolean;
   densityShelf?: DensityShelf;
 }) {
   const controls = [
@@ -163,7 +146,7 @@ export function CollapsibleShelf({
     densityShelf ? <ShelfDensityMenu key="density" shelf={densityShelf} label={label} /> : null,
   ].filter(Boolean);
   return (
-    <section aria-label={label} hidden={hidden}>
+    <section aria-label={label}>
       <div className="relative">
         <button
           type="button"

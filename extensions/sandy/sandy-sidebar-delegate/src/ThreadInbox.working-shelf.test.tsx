@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { isWorkingTree } from "./working-tree";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   SETTLED_NOTHING,
@@ -16,6 +17,7 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("parking threads", () => {
   it("moves a settled thread to the Settled shelf", async () => {
@@ -39,8 +41,8 @@ describe("parking threads", () => {
       },
     });
     // The shelf renders once the lifecycle read resolves.
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    expect(within(shelf).getByText(/Settled \(1\)/)).toBeDefined();
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    expect(within(shelf).getByText(/Archived \(1\)/)).toBeDefined();
     // Collapsed by default: parked work is out of the way, never gone.
     expect(screen.queryByText("Finished work")).toBeNull();
     fireEvent.click(within(shelf).getByRole("button", { expanded: false }));
@@ -84,7 +86,7 @@ describe("parking threads", () => {
       },
     });
     expect(await screen.findByText("Still running")).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
     expect(screen.queryByLabelText("Settle thread")).toBeNull();
   });
 
@@ -116,7 +118,7 @@ describe("parking threads", () => {
       },
     });
     expect(await screen.findByText("Not done")).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
     expect(screen.queryByLabelText("Settle thread")).toBeNull();
   });
 
@@ -192,7 +194,7 @@ describe("parking threads", () => {
       rpc: { listLifecycle: () => ({ rows: [] }), snooze, settle },
     });
 
-    expect(await screen.findByText("Failed")).toBeDefined();
+    expect(within((await screen.findByText("Failed work")).closest("li")!).getByText("Failed")).toBeDefined();
     expect(screen.getByText("Unread")).toBeDefined();
     expect(screen.getByText(/^\d+m$/)).toBeDefined();
 
@@ -233,7 +235,6 @@ describe("parking threads", () => {
           // Fixture threads are old; keep them all in Active.
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
             threadDensity: compactWorkingThreads ? "auto" : "comfortable",
             compactWorkingThreads,
           }),
@@ -267,7 +268,6 @@ describe("parking threads", () => {
         rpc: {
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
             showRunningChildrenWhenCollapsed: true,
             threadDensity: dense ? "dense" : "comfortable",
             compactWorkingThreads: dense,
@@ -308,7 +308,6 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           threadDensity: "auto",
           compactWorkingThreads: true,
         }),
@@ -386,7 +385,6 @@ describe("parking threads", () => {
         rpc: {
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
             workingShelf,
           }),
           listLifecycle: () => ({ rows: [] }),
@@ -399,13 +397,14 @@ describe("parking threads", () => {
           .map((link) => link.getAttribute("aria-label"));
 
       if (!workingShelf) {
-        await waitFor(() => expect(titlesIn("Needs you")).toContain("Busy work"));
+        await waitFor(() => expect(titlesIn("Waiting")).toContain("Busy work"));
         expect(screen.queryByRole("region", { name: "Working" })).toBeNull();
         return;
       }
       await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
       // Done, or needing you, is Active's business; pinned stays pinned.
-      expect(titlesIn("Needs you")).toEqual(["Asking parent", "Done work"]);
+      expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
+      expect(titlesIn("Waiting")).toEqual(["Done work"]);
       expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
       // One line like the other shelves, even with compact mode off.
       for (const title of ["Busy work", "Waiting on child"]) {
@@ -426,7 +425,6 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           dockShelves,
         }),
         listLifecycle: () => ({
@@ -442,8 +440,8 @@ describe("parking threads", () => {
         }),
       },
     });
-    const settled = await screen.findByRole("region", { name: "Settled" });
-    const active = screen.getByRole("region", { name: "Needs you" });
+    const settled = await screen.findByRole("region", { name: "Archived" });
+    const active = screen.getByRole("region", { name: "Waiting" });
     await waitFor(() => expect(settled.closest("[data-shelf-dock]") !== null).toBe(dockShelves));
     // Active never moves into the dock; it scrolls in the space above.
     expect(active.closest("[data-shelf-dock]")).toBeNull();

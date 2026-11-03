@@ -1,5 +1,5 @@
 import { memo, useId, useState } from "react";
-import { useSidebarThreadShortcut, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
+import { useSdk, useSidebarThreadShortcut, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { Icon } from "./components/Icon";
 import { Tooltip } from "./components/Tooltip";
 import { ChildThreadBadge, ChildThreadList, useShowsChildList } from "./ChildThreadList";
@@ -15,8 +15,18 @@ import { rowKeyshortcuts } from "./lib/keyshortcuts";
 import { useInboxEnvironment, useInboxActions } from "./InboxContext";
 import { useIsActiveThread } from "./useActiveThread";
 import { projectIconUrl as iconUrl } from "./project-icons";
+import { useOpenCleanSettled } from "./CleanSettledHost";
 
 const NO_CHILDREN: readonly PluginSidebarThread[] = [];
+
+export type SlimRowKind = "parked" | "snoozed" | "settled" | "archived";
+
+const RESTORE_LABELS: Record<SlimRowKind, string> = {
+  parked: "Resume thread",
+  snoozed: "Wake thread now",
+  settled: "Un-settle thread",
+  archived: "Restore thread",
+};
 
 /**
  * A parked, snoozed, or settled thread: one line instead of a card, with its
@@ -29,14 +39,12 @@ const NO_CHILDREN: readonly PluginSidebarThread[] = [];
 export const SlimRow = memo(function SlimRow({
   thread,
   shelf,
-  parkedAt,
   wakeAt,
   now,
   childrenExpanded,
 }: {
   thread: PluginSidebarThread;
-  shelf: "parked" | "snoozed" | "settled";
-  parkedAt?: number | null;
+  shelf: SlimRowKind;
   wakeAt: number | null;
   now: number;
   childrenExpanded: boolean;
@@ -44,6 +52,7 @@ export const SlimRow = memo(function SlimRow({
   const { projectNameById, projectIconRevision, snoozePresets, lifecycle, childrenByParentId } = useInboxEnvironment();
   const { navigate, onNavigate, parkThread, settleThread, snoozeThread, toggleChildExpansion } = useInboxActions();
   const isActive = useIsActiveThread(thread.id);
+  const sdk = useSdk();
   const childThreads = childrenByParentId.get(thread.id) ?? NO_CHILDREN;
   const childListId = useId();
   // Shelved rows stay one line: children show only when expanded, or on the
@@ -59,20 +68,26 @@ export const SlimRow = memo(function SlimRow({
       ? void lifecycle.resume(thread.id)
       : shelf === "snoozed"
         ? void lifecycle.unsnooze(thread.id)
-        : void lifecycle.unsettle(thread.id);
+        : shelf === "archived"
+          ? void sdk.threads.unarchive({ threadId: thread.id })
+          : void lifecycle.unsettle(thread.id);
   const projectColor = useProjectColor(thread.projectId);
   const shortcut = useSidebarThreadShortcut(thread.id);
   const title = threadDisplayTitle(thread);
   const rowLabel = projectName ? `${projectName} · ${title}` : title;
   const [isRenaming, setIsRenaming] = useState(false);
+  const openClean = useOpenCleanSettled();
 
   return (
     <RowContextMenu
       thread={thread}
-      onPark={shelf !== "parked" ? onPark : undefined}
+      onPark={shelf === "snoozed" || shelf === "settled" ? onPark : undefined}
       onResume={shelf === "parked" ? onRestore : undefined}
-      onSettle={shelf !== "settled" ? onSettle : undefined}
-      canSnooze={shelf !== "snoozed"}
+      onSettle={shelf === "parked" || shelf === "snoozed" ? onSettle : undefined}
+      canSnooze={shelf !== "snoozed" && shelf !== "archived"}
+      canArchive={shelf !== "archived"}
+      onUnarchive={shelf === "archived" ? onRestore : undefined}
+      onClean={shelf === "settled" && openClean ? () => openClean([thread.id]) : undefined}
       snoozePresets={snoozePresets}
       onSnooze={onSnooze}
       onWake={shelf === "snoozed" ? onRestore : undefined}
@@ -118,32 +133,18 @@ export const SlimRow = memo(function SlimRow({
               ) : (
                 <span className="pointer-events-none relative flex min-w-5 shrink-0 items-center justify-end tabular-nums text-2xs text-muted-foreground/60 [@media(hover:none)]:gap-2">
                   <span className="flex items-center transition-opacity duration-150 ease-out [@media(hover:hover)]:group-hover/slim:opacity-0 motion-reduce:transition-none">
-                    {shelf === "parked" && parkedAt != null ? (
-                      `Waiting ${Math.max(0, Math.floor((now - parkedAt) / 86_400_000))}d`
+                    {shelf === "parked" ? (
+                      "Parked"
                     ) : shelf === "snoozed" && wakeAt !== null ? (
                       snoozeWakeLabel(wakeAt, now)
                     ) : (
                       <StatusOrTime thread={thread} now={now} />
                     )}
                   </span>
-                  <Tooltip
-                    label={
-                      shelf === "parked"
-                        ? "Resume thread"
-                        : shelf === "snoozed"
-                          ? "Wake thread now"
-                          : "Un-settle thread"
-                    }
-                  >
+                  <Tooltip label={RESTORE_LABELS[shelf]}>
                     <button
                       type="button"
-                      aria-label={
-                        shelf === "parked"
-                          ? "Resume thread"
-                          : shelf === "snoozed"
-                            ? "Wake thread now"
-                            : "Un-settle thread"
-                      }
+                      aria-label={RESTORE_LABELS[shelf]}
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();

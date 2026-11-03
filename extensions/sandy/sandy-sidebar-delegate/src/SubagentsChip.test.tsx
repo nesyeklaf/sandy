@@ -86,8 +86,6 @@ function deferred<T>() {
 
 const defaultSidebarSettings = {
   snoozePresets: "30m, 2h, 1d, 1w",
-  inactiveThreadsEnabled: true,
-  inactiveAfterHours: 6,
   showRunningChildrenWhenCollapsed: true,
   autoSettleInactive: true,
   autoSettleAfterDays: 3,

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useSandyNavigate, type PluginSidebarThread, type PluginThreadListProps } from "@sandy-sdk/plugin-sdk/app";
 import { useInboxShelfThreads } from "./useInboxShelfThreads";
 import { createDragReorderHandler } from "./drag-reorder";
-import type { InboxDragOrder } from "./drag-reorder-geometry";
+import type { InboxDragOrder, ReorderShelf } from "./drag-reorder-geometry";
 import { ThreadInboxView } from "./ThreadInboxView";
 import { useQuantizedNow } from "./useQuantizedNow";
 import { useProjectIconRevision } from "./useProjectIconRevision";
@@ -27,6 +27,7 @@ import { useChildThreadDisplayValue } from "./ChildThreadDisplay";
 import { useLifecycle } from "./useLifecycle";
 import type { createDragPreview } from "./drag-preview";
 import { usePinnedReorder } from "./usePinnedReorder";
+import { useParkActions } from "./useParkActions";
 import { useCollapseChildrenOnSettle } from "./useCollapseChildrenOnSettle";
 import { useActiveThreadStore } from "./useActiveThread";
 import { useInboxReorder } from "./useInboxReorder";
@@ -41,14 +42,20 @@ import { threadDisplayTitle } from "./inbox";
 import { useAttentionParentIds, useOrderedShelf } from "./useOrderedShelf";
 import { movePinnedIdByOffset, orderPinnedThreads, rebaseMovedId } from "./pinned-order";
 import { parseConfiguredSnoozePresets } from "./lifecycle";
-import { parseInactiveAfterHours } from "./inactive";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { useScrollFade } from "./useScrollFade";
+import { SETTLED_PAGE_SIZE } from "./ThreadInboxShelves";
 import { usePersistedPreference } from "./lib/use-persisted-preference";
-import { activeSortCodec, childExpansionCodec, shelfExpansionCodec } from "./lib/inbox-preference-codecs";
+import {
+  activeSortCodec,
+  childExpansionCodec,
+  shelfExpansionCodec,
+  showArchivedCodec,
+} from "./lib/inbox-preference-codecs";
+import type { SlimRowKind } from "./SlimRow";
 const SETTLED_INITIAL_LIMIT = 10;
 
-type ActiveShelfKind = "pinned" | "inbox";
+const SHELF_NAMES: Record<ReorderShelf, string> = { pinned: "Pinned", needs: "Needs you", inbox: "Waiting" };
 
 /**
  * The sidebar's scrolling list. Manual order is durable; optional views sort
@@ -59,7 +66,15 @@ type ActiveShelfKind = "pinned" | "inbox";
  * project scope picker.
  */
 export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: PluginThreadListProps) {
-  const { status, threads: allThreads, projects, sections, delegateChildrenLoaded } = useSidebarThreads();
+  const [showArchived, setShowArchived] = usePersistedPreference(STORAGE_KEYS.showArchived.key, showArchivedCodec);
+  const {
+    status,
+    threads: allThreads,
+    projects,
+    sections,
+    delegateChildrenLoaded,
+    experimental_archived: archivedPages,
+  } = useSidebarThreads({ archived: showArchived });
   const { settings: sidebarSettings, update: updateSidebarSettings } = useSidebarSettingsState();
   const hideFinishedSubagents =
     sidebarSettings?.hideFinishedSubagents ?? DEFAULT_SIDEBAR_SETTINGS.hideFinishedSubagents;
@@ -82,11 +97,6 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   activeThreadIdRef.current = activeThreadId;
   const configuredSnoozePresets = sidebarSettings?.snoozePresets ?? DEFAULT_SIDEBAR_SETTINGS.snoozePresets;
   const snoozePresets = useMemo(() => parseConfiguredSnoozePresets(configuredSnoozePresets), [configuredSnoozePresets]);
-  const inactiveAfterHours = parseInactiveAfterHours(
-    // Keep the loading view active until saved or cached settings are available.
-    sidebarSettings?.inactiveThreadsEnabled ?? false,
-    String(sidebarSettings?.inactiveAfterHours ?? DEFAULT_SIDEBAR_SETTINGS.inactiveAfterHours),
-  );
   const dockShelvesEnabled = sidebarSettings?.dockShelves ?? DEFAULT_SIDEBAR_SETTINGS.dockShelves;
   const workingShelfEnabled = sidebarSettings?.workingShelf ?? DEFAULT_SIDEBAR_SETTINGS.workingShelf;
   const [scope, setScope] = useProjectScope({ projects, status });
@@ -131,21 +141,21 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const {
     activeListThreadId,
     pinnedBase,
-    inboxBase,
+    needsBase,
+    failedBase,
     workingBase,
     reviewBase,
-    inactiveBase,
+    waitingBase,
+    mergedBase,
     allPinnedBase,
     allInboxBase,
-    parked,
     snoozed,
+    archived,
     settled,
   } = useInboxShelfThreads({
     activeThreadId,
     childrenByParentId,
-    inactiveAfterHours,
     lifecycle,
-    now,
     pullRequests,
     renamingShelfLocks,
     scope,
@@ -187,13 +197,14 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     const ordered = orderPinnedThreads(pinnedBase, pinnedReorder.ids);
     return orderPinnedThreads(ordered, dragOrder?.shelf === "pinned" ? dragOrder.ids : null);
   }, [dragOrder, pinnedBase, pinnedReorder.ids]);
-  const orderedInbox = useMemo(() => orderPinnedThreads(inboxBase, inboxReorder.ids), [inboxBase, inboxReorder.ids]);
-  // Working and Inactive keep Active's manual order, so a thread that leaves
-  // for either comes back to the slot it left.
+  const orderedInbox = useMemo(
+    () => orderPinnedThreads(waitingBase, inboxReorder.ids),
+    [waitingBase, inboxReorder.ids],
+  );
   const attentionParentIds = useAttentionParentIds(
     sidebarSettings?.showRunningChildrenWhenCollapsed ?? DEFAULT_SIDEBAR_SETTINGS.showRunningChildrenWhenCollapsed,
     childrenByParentId,
-    [pinnedBase, inboxBase, reviewBase, inactiveBase],
+    [pinnedBase, needsBase, reviewBase, waitingBase],
   );
   const visiblePinned = useMemo(
     () => visibleShelfThreads(pinned, expandedShelves.pinned, activeListThreadId, undefined, attentionParentIds),
@@ -202,7 +213,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const projectGroups = useInboxProjectGroups({
     orderedInbox,
     dragOrder,
-    expanded: expandedShelves.active,
+    expanded: expandedShelves.waiting,
     activeThreadId: activeListThreadId,
     attentionIds: attentionParentIds,
     projectNameById,
@@ -216,31 +227,33 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   } = projectGroups;
   const projectGroupsRef = useRef(projectGroups);
   projectGroupsRef.current = projectGroups;
-  const order = inboxReorder.ids;
-  const working = useOrderedShelf(workingBase, order, expandedShelves.working, activeListThreadId);
-  const review = useOrderedShelf(reviewBase, order, expandedShelves.review, activeListThreadId, attentionParentIds);
-  const inactive = useOrderedShelf(
-    inactiveBase,
-    order,
-    expandedShelves.inactive,
-    activeListThreadId,
-    attentionParentIds,
-  );
+  const needsOrder = useMemo(() => {
+    const ordered = sortActiveThreads(orderPinnedThreads(needsBase, inboxReorder.ids), activeSortMode);
+    return orderPinnedThreads(ordered, dragOrder?.shelf === "needs" ? dragOrder.ids : null);
+  }, [activeSortMode, dragOrder, inboxReorder.ids, needsBase]);
+  const needs = useOrderedShelf(needsOrder, null, expandedShelves.needs, activeListThreadId, attentionParentIds);
+  const failed = useOrderedShelf(failedBase, null, expandedShelves.failed, activeListThreadId, attentionParentIds);
+  const working = useOrderedShelf(workingBase, null, expandedShelves.working, activeListThreadId);
+  const review = useOrderedShelf(reviewBase, null, expandedShelves.review, activeListThreadId, attentionParentIds);
+  const merged = useOrderedShelf(mergedBase, null, expandedShelves.merged, activeListThreadId, attentionParentIds);
   const sortedVisibleInbox = useMemo(
     () => sortActiveThreads(visibleInbox, activeSortMode),
     [activeSortMode, visibleInbox],
   );
-  // Leaving a thread follows Pinned, then Active, including collapsed rows.
+  // Leaving a thread follows the shelves top to bottom, including collapsed rows.
   const nextThreadCandidates = useMemo(
     () => [
       ...pinned,
+      ...needs.threads,
+      ...failed.threads,
+      ...working.threads,
+      ...review.threads,
       ...(activeSortMode === "project"
         ? inboxProjectUnits.flatMap((unit) => (unit.kind === "thread" ? [unit.thread] : unit.threads))
         : sortActiveThreads(inbox, activeSortMode)),
-      ...working.threads,
-      ...review.threads,
+      ...merged.threads,
     ],
-    [activeSortMode, inbox, inboxProjectUnits, pinned, review, working],
+    [activeSortMode, failed, inbox, inboxProjectUnits, merged, needs, pinned, review, working],
   );
   const nextThreadCandidatesRef = useRef(nextThreadCandidates);
   nextThreadCandidatesRef.current = nextThreadCandidates;
@@ -253,9 +266,10 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   // those are what the gesture is about.
   const reorderTargetsRef = useRef({
     pinned: pinnedReorder,
+    needs: inboxReorder,
     inbox: inboxReorder,
   });
-  reorderTargetsRef.current = { pinned: pinnedReorder, inbox: inboxReorder };
+  reorderTargetsRef.current = { pinned: pinnedReorder, needs: inboxReorder, inbox: inboxReorder };
   const storedOrderUnitsRef = useRef(projectGroups.orderUnits);
   storedOrderUnitsRef.current = projectGroups.orderUnits;
   const activeSortModeRef = useRef(activeSortMode);
@@ -266,22 +280,20 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
    * among the top-level units.
    */
   const reorderScope = useCallback(
-    (key: string, shelf: "pinned" | "inbox"): ReorderScope => {
+    (key: string, shelf: ReorderShelf): ReorderScope => {
       if (shelf === "inbox" && activeSortMode === "project") {
         return projectGroups.reorderScope(key);
       }
-      return {
-        mode: "thread",
-        ids: (shelf === "pinned" ? visiblePinned : visibleInbox).map((candidate) => candidate.id),
-      };
+      const visible = shelf === "pinned" ? visiblePinned : shelf === "needs" ? needs.visibleThreads : visibleInbox;
+      return { mode: "thread", ids: visible.map((candidate) => candidate.id) };
     },
-    [activeSortMode, projectGroups, visibleInbox, visiblePinned],
+    [activeSortMode, needs.visibleThreads, projectGroups, visibleInbox, visiblePinned],
   );
   const reorderScopeRef = useRef(reorderScope);
   reorderScopeRef.current = reorderScope;
   const commitReorder = useCallback(
     (
-      shelf: "pinned" | "inbox",
+      shelf: ReorderShelf,
       mode: ReorderMode,
       previewIds: readonly string[],
       movingId: string,
@@ -294,7 +306,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
       }
       const live = reorderTargetsRef.current.inbox;
       const ids =
-        activeSortModeRef.current === "project" || mode === "unit"
+        shelf === "inbox" && (activeSortModeRef.current === "project" || mode === "unit")
           ? projectGroupsRef.current.rebaseOrder(live.ids, previewIds, movingId, parentKey)
           : rebaseMovedId(live.ids, previewIds, movingId);
       if (ids) void live.reorder(ids);
@@ -310,7 +322,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
    * thread id, or a project unit key for a header.
    */
   const reorderControls = useCallback(
-    (key: string, shelf: "pinned" | "inbox", title: string): ThreadReorderControls => {
+    (key: string, shelf: ReorderShelf, title: string): ThreadReorderControls => {
       const target = reorderTargetsRef.current[shelf];
       return {
         disabled: target.isReordering,
@@ -337,7 +349,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
           event.stopPropagation();
           const { mode, ids: currentIds, parentKey } = reorderScopeRef.current(key, shelf);
           const ids = movePinnedIdByOffset(currentIds, key, event.key === "ArrowUp" ? -1 : 1);
-          const shelfName = shelf === "pinned" ? "Pinned" : "Needs you";
+          const shelfName = SHELF_NAMES[shelf];
           setReorderAnnouncement(
             sameOrder(ids, currentIds)
               ? `${title} is already ${event.key === "ArrowUp" ? "first" : "last"} in ${shelfName}`
@@ -357,67 +369,47 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     ],
   );
   const threadReorderControls = useCallback(
-    (thread: PluginSidebarThread, shelf: "pinned" | "inbox") =>
-      reorderControls(thread.id, shelf, threadDisplayTitle(thread)),
+    (thread: PluginSidebarThread, shelf: ReorderShelf) => reorderControls(thread.id, shelf, threadDisplayTitle(thread)),
     [reorderControls],
   );
 
-  const visibleParked = useMemo(
-    () => visibleShelfThreads(parked, expandedShelves.parked, activeListThreadId),
-    [activeListThreadId, expandedShelves.parked, parked],
-  );
   const visibleSnoozed = useMemo(
     () => visibleShelfThreads(snoozed, expandedShelves.snoozed, activeListThreadId),
     [activeListThreadId, expandedShelves.snoozed, snoozed],
   );
-  const visibleSettled = useMemo(
-    () => visibleShelfThreads(settled, expandedShelves.settled, activeListThreadId, settledLimit),
-    [activeListThreadId, expandedShelves.settled, settled, settledLimit],
+  const visibleArchived = useMemo(
+    () => visibleShelfThreads(archived, expandedShelves.archived, activeListThreadId, settledLimit),
+    [activeListThreadId, expandedShelves.archived, archived, settledLimit],
   );
   const wokeThreadIds = useMemo(
     () =>
       new Set(
-        [...pinned, ...inbox, ...working.threads, ...review.threads, ...inactive.threads]
+        [...pinned, ...needs.threads, ...failed.threads, ...inbox, ...review.threads, ...merged.threads]
           .filter((thread) => lifecycle.wokeFor(thread))
           .map((thread) => thread.id),
       ),
-    [inactive, inbox, lifecycle, pinned, review, working],
+    [failed, inbox, lifecycle, merged, needs, pinned, review],
   );
-
-  const parkActiveThread = useCallback(
-    async (thread: PluginSidebarThread, mutation: () => Promise<boolean>) => {
-      const parked = await mutation();
-      if (!parked || activeThreadIdRef.current !== thread.id) return;
-
-      // Read the latest list after the request, since another client may
-      // have moved or reordered the first candidate while it was pending.
-      const nextThread = nextThreadCandidatesRef.current.find((candidate) => candidate.id !== thread.id);
-      if (nextThread) {
-        navigate.toThread(nextThread.id);
-      } else {
-        navigate.toCompose({
-          projectId: thread.projectId,
-          focusPrompt: true,
-        });
-      }
-      onNavigate();
+  const slimRowKind = useCallback(
+    (thread: PluginSidebarThread): SlimRowKind => {
+      if (thread.isArchived) return "archived";
+      const shelf = lifecycle.shelfFor(thread);
+      return shelf === "parked" ? "parked" : shelf === "settled" ? "settled" : "snoozed";
     },
-    [navigate, onNavigate],
+    [lifecycle],
   );
+  const loadMoreArchived = useCallback(() => {
+    setSettledLimit((limit) => limit + SETTLED_PAGE_SIZE);
+    if (archivedPages?.hasNextPage && !archivedPages.isFetchingNextPage) void archivedPages.fetchNextPage();
+  }, [archivedPages]);
 
-  const parkThread = useCallback(
-    (thread: PluginSidebarThread) => void parkActiveThread(thread, () => lifecycle.park(thread.id)),
-    [parkActiveThread, lifecycle],
-  );
-  const settleThread = useCallback(
-    (thread: PluginSidebarThread) => void parkActiveThread(thread, () => lifecycle.settle(thread.id)),
-    [parkActiveThread, lifecycle],
-  );
-  const snoozeThread = useCallback(
-    (thread: PluginSidebarThread, until: number) =>
-      void parkActiveThread(thread, () => lifecycle.snooze(thread.id, until)),
-    [parkActiveThread, lifecycle],
-  );
+  const { parkThread, settleThread, snoozeThread } = useParkActions({
+    lifecycle,
+    navigate,
+    onNavigate,
+    activeThreadIdRef,
+    nextThreadCandidatesRef,
+  });
 
   const inboxContext = useInboxContextValues({
     providerById,
@@ -462,13 +454,14 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
       <ThreadInboxView
         shelves={{
           pinned: { threads: pinned, visibleThreads: visiblePinned },
-          inbox: { threads: inbox, visibleThreads: visibleInbox },
+          needs,
+          failed,
           working,
           review,
-          inactive,
+          waiting: { threads: inbox, visibleThreads: sortedVisibleInbox },
+          merged,
           snoozed: { threads: snoozed, visibleThreads: visibleSnoozed },
-          parked: { threads: parked, visibleThreads: visibleParked },
-          settled: { threads: settled, visibleThreads: visibleSettled },
+          archived: { threads: archived, visibleThreads: visibleArchived },
         }}
         scope={scope}
         reorderAnnouncement={reorderAnnouncement}
@@ -484,8 +477,12 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
         inboxProjectView={inboxProjectView}
         environmentGrouping={projectGroups}
         reorderControls={reorderControls}
-        sortedVisibleInbox={sortedVisibleInbox}
-        settledLimit={settledLimit}
+        showArchived={showArchived}
+        onShowArchivedChange={setShowArchived}
+        archivedLimit={settledLimit}
+        archivedHasMorePages={archivedPages?.hasNextPage ?? false}
+        onLoadMoreArchived={loadMoreArchived}
+        slimRowKind={slimRowKind}
         sections={sections}
         projects={projects}
       />

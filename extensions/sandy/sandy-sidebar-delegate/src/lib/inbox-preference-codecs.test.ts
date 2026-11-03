@@ -38,15 +38,16 @@ it("caps child expansion before deduplication on read and only on storage prune"
 });
 
 it("fills older shelf shapes and drops unknown keys without stricter primitive rejection", () => {
-  expect(shelfExpansionCodec.decode('{"settled":true,"unknown":true}')).toEqual({
-    active: true,
+  expect(shelfExpansionCodec.decode('{"settled":true,"active":false,"inactive":true,"merged":false,"unknown":true}')).toEqual({
     pinned: true,
+    needs: false,
+    failed: true,
     working: true,
     review: true,
-    inactive: false,
-    parked: false,
+    waiting: true,
+    merged: false,
     snoozed: false,
-    settled: true,
+    archived: false,
   });
   for (const value of [true, 1, [], "old"]) {
     expect(shelfExpansionCodec.decode(JSON.stringify(value))).toEqual(shelfExpansionCodec.fallback());

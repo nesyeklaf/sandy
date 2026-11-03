@@ -32,8 +32,10 @@ export {
  * says whether the server's list has arrived, so callers do not treat a
  * parent's not-yet-loaded children as gone.
  */
-export function useSidebarThreads() {
-  const state = experimental_useSidebarThreads();
+export function useSidebarThreads(options?: { archived?: boolean }) {
+  const state = experimental_useSidebarThreads(
+    options?.archived ? { experimental_lifecycles: ["active", "archived"] } : undefined,
+  );
   const delegateChildren = useDelegateChildren();
   const merged = useMemo(
     () => mergeDelegateChildren(state.threads, delegateChildren.children),

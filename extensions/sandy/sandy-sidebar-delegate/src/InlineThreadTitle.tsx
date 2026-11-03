@@ -4,6 +4,7 @@ import { toast } from "./lib/toast";
 import { cn } from "./lib/utils";
 import { threadDisplayTitle, threadStoredTitle, threadTitleHasMentions } from "./inbox";
 import { ThreadTitle } from "./ThreadTitle";
+import { statusToneClass } from "./StatusSlot";
 
 /** Inline title editing shared by full cards and parked rows. */
 export function InlineThreadTitle({
@@ -45,12 +46,24 @@ export function InlineThreadTitle({
 
   if (!editing) {
     return (
-      <ThreadTitle
-        threadId={thread.id}
-        title={threadDisplayTitle(thread)}
-        mentions={threadTitleHasMentions(thread)}
-        className={className}
-      />
+      <>
+        {thread.isUnread ? (
+          <span
+            aria-hidden="true"
+            data-unread-dot=""
+            className={cn(
+              "mr-1.5 inline-block size-[5px] shrink-0 rounded-full bg-current align-middle",
+              statusToneClass("unread-success"),
+            )}
+          />
+        ) : null}
+        <ThreadTitle
+          threadId={thread.id}
+          title={threadDisplayTitle(thread)}
+          mentions={threadTitleHasMentions(thread)}
+          className={className}
+        />
+      </>
     );
   }
 

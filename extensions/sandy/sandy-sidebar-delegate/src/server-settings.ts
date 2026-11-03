@@ -64,8 +64,6 @@ export async function createServerSettings(ctx: ServerContext) {
       const values = legacy.values;
       const hasLegacyValues = [
         "snoozePresets",
-        "inactiveThreadsEnabled",
-        "inactiveAfterHours",
         "showRunningChildrenWhenCollapsed",
         "autoSettleInactive",
         "autoSettleAfterDays",
@@ -75,14 +73,6 @@ export async function createServerSettings(ctx: ServerContext) {
         ...DEFAULT_SIDEBAR_SETTINGS,
         snoozePresets:
           typeof values.snoozePresets === "string" ? values.snoozePresets : DEFAULT_SIDEBAR_SETTINGS.snoozePresets,
-        inactiveThreadsEnabled:
-          typeof values.inactiveThreadsEnabled === "boolean"
-            ? values.inactiveThreadsEnabled
-            : DEFAULT_SIDEBAR_SETTINGS.inactiveThreadsEnabled,
-        inactiveAfterHours:
-          typeof values.inactiveAfterHours === "string"
-            ? Number(values.inactiveAfterHours)
-            : DEFAULT_SIDEBAR_SETTINGS.inactiveAfterHours,
         showRunningChildrenWhenCollapsed:
           typeof values.showRunningChildrenWhenCollapsed === "boolean"
             ? values.showRunningChildrenWhenCollapsed

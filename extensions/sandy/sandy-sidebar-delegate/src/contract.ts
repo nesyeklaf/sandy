@@ -141,8 +141,6 @@ export const sidebarSettingsSchema = z
       .refine((value) => configuredSnoozePresetError(value) === null, {
         message: "Use one to eight valid snooze shortcuts",
       }),
-    inactiveThreadsEnabled: z.boolean(),
-    inactiveAfterHours: z.number().int().min(1).max(720),
     showRunningChildrenWhenCollapsed: z.boolean(),
     hideFinishedSubagents: z.boolean(),
     autoSettleInactive: z.boolean(),
@@ -155,10 +153,12 @@ export const sidebarSettingsSchema = z
     shelfDensities: z
       .object({
         pinned: z.enum(SHELF_DENSITIES),
-        active: z.enum(SHELF_DENSITIES),
+        needs: z.enum(SHELF_DENSITIES),
+        failed: z.enum(SHELF_DENSITIES),
         working: z.enum(SHELF_DENSITIES),
         review: z.enum(SHELF_DENSITIES),
-        inactive: z.enum(SHELF_DENSITIES),
+        waiting: z.enum(SHELF_DENSITIES),
+        merged: z.enum(SHELF_DENSITIES),
       })
       .strict(),
     compactProjectIconOnly: z.boolean(),

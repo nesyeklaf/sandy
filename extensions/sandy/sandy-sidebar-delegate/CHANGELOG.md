@@ -13,6 +13,7 @@
 ### Changed
 
 - Thread display is now **Density**, set from the new View button beside the layout switch or in Sidebar layout: Auto, Comfortable, Compact, or Dense. Comfortable is the three-line card, Compact a new two-line row, Dense the one-line row. Auto draws threads that need you or are working as full cards and the rest on two lines. Each shelf's ⋯ menu overrides the density for that shelf. Your choice carries over: Full cards becomes Comfortable, Compact working threads becomes Auto, Compact all threads becomes Dense.
+- Shelves follow the thread's status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed. Waiting holds idle threads, so the Inactive shelf and its hour threshold are gone. Parked threads sit in Snoozed with the label "Parked". Settled threads leave the shelves and show, with archived threads, under View → Show archived; Clean moved into a settled row's ⋯ menu. The Merged shelf header archives all its threads at once, with Undo.
 - What the plugin called "project" in its UI is now called "repo", because it is the repository. Settings keys and stored data are unchanged.
 
 ## [0.3.7] - 2026-10-23

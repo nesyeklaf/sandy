@@ -13,7 +13,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Manual ordering plus Recent activity, Date created, and Repo sort modes
 - Subtle repo grouping for repos with multiple active threads
 - Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
-- Pinned, Active, Inactive, Snoozed, Parked, and Settled shelves
+- Shelves by status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
 - Density from the View button: Auto, Comfortable (three lines), Compact (two lines), or Dense (one line), with a per-shelf override in each shelf's ⋯ menu and options to keep pinned or woken threads full
 - Searchable multi-repo filtering, remembered per window across reloads
 - Optional repo colors with per-repo color selection. Names stay colored in every mode; show stripes in full and collapsed mode, full mode only, or grouped repos only
@@ -21,7 +21,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Expandable child-thread indicators with running and attention states, on shelf rows too
 - Live status, branch, pull request, and provider details, plus statuses set by other plugins
 - Workspace port discovery, hover-card details, and optional browser links
-- A Clean button in Settled that previews and closes live terminals and verified thread-owned listening ports, while protecting Active and Working threads
+- A Clean action in a settled row's ⋯ menu that previews and closes live terminals and verified thread-owned listening ports, while protecting Active and Working threads
 - Configurable inactive-thread and automatic cleanup rules
 - Native sandy navigation, split, rename, archive, and delete flows
 - Repo submenu on thread cards for settings, rename, local paths, and removal

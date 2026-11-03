@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, thread, listProps, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("ThreadInbox", () => {
   it("reveals the active child without persisted expansion", () => {
@@ -141,8 +143,8 @@ describe("ThreadInbox", () => {
       },
     );
 
-    const settled = await screen.findByRole("region", { name: "Settled" });
-    expect(within(settled).getByRole("button", { name: /^Settled/, expanded: false })).toBeDefined();
+    const settled = await screen.findByRole("region", { name: "Archived" });
+    expect(within(settled).getByRole("button", { name: /^Archived/, expanded: false })).toBeDefined();
     expect(within(settled).getByText("Parked parent")).toBeDefined();
   });
 

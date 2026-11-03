@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, thread, listProps, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("scoped active representative regressions", () => {
   it.each([
@@ -45,8 +47,8 @@ describe("scoped active representative regressions", () => {
       fireEvent.keyDown(screen.getByLabelText(/Repo scope/), { key: "Enter" });
       fireEvent.click(screen.getByRole("row", { name: scope }));
     }
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    expect(within(shelf).getByRole("button", { name: /^Settled/, expanded: false })).toBeDefined();
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    expect(within(shelf).getByRole("button", { name: /^Archived/, expanded: false })).toBeDefined();
     expect(within(shelf).getByText(expected === "parent" ? "Parent A" : "Child B")).toBeDefined();
     expect(within(shelf).getAllByRole("link")).toHaveLength(1);
     expect(rendered.rpcCalls.filter((call) => /Parent|reorder|Pinned/.test(call.method))).toEqual([]);
@@ -56,7 +58,7 @@ describe("scoped active representative regressions", () => {
     ["A", "Grandchild A"],
     ["B", "Deep B"],
   ])("chooses the nearest alternating-project flat ancestor in %s", async (scope, title) => {
-    window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+    window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
     renderSlot(
       inbox,
       { ...listProps, activeThreadId: "deep" },
@@ -99,7 +101,7 @@ describe("scoped active representative regressions", () => {
   it.each(["missing", "archived", "same-project", "unknown"])(
     "handles %s active ancestry after settled limit",
     async (mode) => {
-      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ settled: true }));
+      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ archived: true }));
       const parent = thread({ id: "parent", title: "Representative", isArchived: mode === "archived" });
       const child = thread({ id: "child", title: "Orphan", parentThreadId: mode === "missing" ? "missing" : "parent" });
       const rows = [
@@ -124,7 +126,7 @@ describe("scoped active representative regressions", () => {
           },
         },
       );
-      const shelf = await screen.findByRole("region", { name: "Settled" });
+      const shelf = await screen.findByRole("region", { name: "Archived" });
       const expected = mode === "same-project" ? "Representative" : "Orphan";
       if (mode === "unknown") {
         expect(within(shelf).queryByText("Representative")).toBeNull();

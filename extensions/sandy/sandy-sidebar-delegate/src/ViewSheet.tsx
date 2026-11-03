@@ -79,7 +79,13 @@ function SheetSection({ title, children }: { title: string; children: ReactNode 
   );
 }
 
-export function ViewSheet() {
+export function ViewSheet({
+  showArchived,
+  onShowArchivedChange,
+}: {
+  showArchived: boolean;
+  onShowArchivedChange: (show: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
   const { sidebarSettings } = useInboxEnvironment();
   const { updateSidebarSettings } = useInboxActions();
@@ -106,6 +112,22 @@ export function ViewSheet() {
             hints={DENSITY_HINTS}
             onChange={(threadDensity) => void updateSidebarSettings({ threadDensity })}
           />
+        </SheetSection>
+        <SheetSection title="Show">
+          <label className="block cursor-default">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              className="peer sr-only"
+              onChange={(event) => onShowArchivedChange(event.target.checked)}
+            />
+            <span className={OPTION_ROW}>
+              Show archived
+              <span className="flex size-3.5 items-center justify-center">
+                {showArchived ? <Icon name="Check" className="size-4" aria-hidden /> : null}
+              </span>
+            </span>
+          </label>
         </SheetSection>
       </PopoverContent>
     </Popover>

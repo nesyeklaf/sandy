@@ -17,6 +17,7 @@ import type { ShelfExpansionState } from "./ThreadInboxView";
 import { ListAnimationContext, type ListAnimationController } from "./useListMotion";
 import { ProjectColorsProvider } from "./ProjectColors";
 import { WorkingSinceContext } from "./useWorkingSince";
+import { CleanSettledHost } from "./CleanSettledHost";
 import type { WorkingSince } from "./working-since";
 import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThreadDisplay";
 import { OpenPortsProvider } from "./OpenPorts";
@@ -174,7 +175,9 @@ export function InboxProvider({
               <InboxEnvironmentContext.Provider value={value.environment}>
                 <InboxActionsContext.Provider value={value.actions}>
                   <InboxActivityContext.Provider value={value.activity}>
-                    <ActiveThreadContext.Provider value={activeThread}>{children}</ActiveThreadContext.Provider>
+                    <ActiveThreadContext.Provider value={activeThread}>
+                      <CleanSettledHost onNavigate={value.actions.onNavigate}>{children}</CleanSettledHost>
+                    </ActiveThreadContext.Provider>
                   </InboxActivityContext.Provider>
                 </InboxActionsContext.Provider>
               </InboxEnvironmentContext.Provider>

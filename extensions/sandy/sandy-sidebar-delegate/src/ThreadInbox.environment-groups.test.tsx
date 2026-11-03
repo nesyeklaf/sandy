@@ -155,7 +155,7 @@ it("keeps an open child's ancestor visible through environment, project, and she
   fireEvent.click(screen.getByRole("button", { name: "Sidebar (2)" }));
   expect(screen.queryByRole("button", { name: "search (2)" })).toBeNull();
   expect(screen.getByRole("link", { name: "Parent" })).toBeDefined();
-  fireEvent.click(screen.getByRole("button", { name: "Needs you" }));
+  fireEvent.click(screen.getByRole("button", { name: "Waiting" }));
   expect(screen.queryByRole("button", { name: "Sidebar (2)" })).toBeNull();
   expect(screen.getByRole("button", { name: "Open child thread: Open child" })).toBeDefined();
 });
@@ -206,8 +206,8 @@ it.each(["project", "shelf"].flatMap((fold) => ["keyboard", "pointer"].map((gest
       ],
     });
     await waitFor(() => expect(rendered.rpcCalls.some((call) => call.method === "listInboxOrder")).toBe(true));
-    fireEvent.click(screen.getByRole("button", { name: fold === "project" ? "Sidebar (4)" : "Needs you" }));
-    const active = screen.getByRole("region", { name: "Needs you" });
+    fireEvent.click(screen.getByRole("button", { name: fold === "project" ? "Sidebar (4)" : "Waiting" }));
+    const active = screen.getByRole("region", { name: "Waiting" });
     const visible = () =>
       within(active)
         .getAllByRole("link")
@@ -217,7 +217,7 @@ it.each(["project", "shelf"].flatMap((fold) => ["keyboard", "pointer"].map((gest
     const row = screen.getByRole("link", { name: "Search implementation" });
     if (gesture === "keyboard") {
       fireEvent.keyDown(row, { key: "ArrowDown", altKey: true });
-      expect(screen.getByText("Search implementation moved to 2 of 2 in Needs you")).toBeDefined();
+      expect(screen.getByText("Search implementation moved to 2 of 2 in Waiting")).toBeDefined();
     } else {
       vi.mocked(document.elementFromPoint).mockReturnValue(
         screen.getByRole("link", { name: "Menu implementation" }).closest("li")!,
@@ -257,8 +257,8 @@ it.each([false, true].flatMap((enabled) => ["keyboard", "pointer"].map((gesture)
     const rendered = setup({ enabled, activeThreadId: "a", rows });
     await waitFor(() => expect(rendered.rpcCalls.some((call) => call.method === "listInboxOrder")).toBe(true));
     await rendered.pushOrder(rows.map((row) => row.id));
-    fireEvent.click(screen.getByRole("button", { name: "Needs you" }));
-    const active = screen.getByRole("region", { name: "Needs you" });
+    fireEvent.click(screen.getByRole("button", { name: "Waiting" }));
+    const active = screen.getByRole("region", { name: "Waiting" });
     const visible = () =>
       within(active)
         .getAllByRole("link")
@@ -269,7 +269,7 @@ it.each([false, true].flatMap((enabled) => ["keyboard", "pointer"].map((gesture)
       await act(async () => {
         fireEvent.keyDown(row, { key: "ArrowDown", altKey: true });
       });
-      expect(screen.getByRole("status").textContent).toBe("A moved to 2 of 2 in Needs you");
+      expect(screen.getByRole("status").textContent).toBe("A moved to 2 of 2 in Waiting");
     } else {
       vi.mocked(document.elementFromPoint).mockReturnValue(
         within(active).getByRole("link", { name: "X" }).closest("li")!,
@@ -294,7 +294,7 @@ it.each([false, true].flatMap((enabled) => ["keyboard", "pointer"].map((gesture)
     expect(visible()).toEqual(["C", "X", "A", "Y"]);
     if (gesture === "keyboard") {
       fireEvent.keyDown(row, { key: "ArrowDown", altKey: true });
-      expect(screen.getByRole("status").textContent).toBe("A is already last in Needs you");
+      expect(screen.getByRole("status").textContent).toBe("A is already last in Waiting");
       expect(rendered.save).toHaveBeenCalledTimes(1);
     }
   },

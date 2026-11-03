@@ -10,8 +10,6 @@ describe("lifecycle RPC", () => {
     await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toEqual({
       ...DEFAULT_SIDEBAR_SETTINGS,
       snoozePresets: "1h, Wait refresh (5 hours)=5h, evening@18:00, tomorrow@09:00, next-week@09:00",
-      inactiveThreadsEnabled: true,
-      inactiveAfterHours: 6,
       showRunningChildrenWhenCollapsed: true,
       autoSettleInactive: true,
       autoSettleAfterDays: 3,
@@ -28,8 +26,6 @@ describe("lifecycle RPC", () => {
     await expect(
       harness.behavior.callRpc("updateSidebarSettings", {
         snoozePresets: "10m, 4h",
-        inactiveThreadsEnabled: false,
-        inactiveAfterHours: 12,
         showRunningChildrenWhenCollapsed: false,
         autoSettleInactive: false,
         autoSettleAfterDays: 7,
@@ -46,8 +42,6 @@ describe("lifecycle RPC", () => {
     ).resolves.toEqual({
       ...DEFAULT_SIDEBAR_SETTINGS,
       snoozePresets: "10m, 4h",
-      inactiveThreadsEnabled: false,
-      inactiveAfterHours: 12,
       showRunningChildrenWhenCollapsed: false,
       autoSettleInactive: false,
       autoSettleAfterDays: 7,
@@ -66,8 +60,6 @@ describe("lifecycle RPC", () => {
     await expect(
       harness.behavior.callRpc("updateSidebarSettings", {
         snoozePresets: "10m, 4h",
-        inactiveThreadsEnabled: false,
-        inactiveAfterHours: 12,
         showRunningChildrenWhenCollapsed: false,
         autoSettleInactive: false,
         autoSettleAfterDays: 7,
@@ -114,8 +106,6 @@ describe("lifecycle RPC", () => {
     await expect(
       harness.behavior.callRpc("updateSidebarSettings", {
         snoozePresets: "later",
-        inactiveThreadsEnabled: true,
-        inactiveAfterHours: 6,
         showRunningChildrenWhenCollapsed: true,
         autoSettleInactive: true,
         autoSettleAfterDays: 3,
@@ -154,7 +144,6 @@ describe("lifecycle RPC", () => {
             schema: {},
             values: {
               snoozePresets: "20m, 6h",
-              inactiveThreadsEnabled: false,
               inactiveAfterHours: "18",
               showRunningChildrenWhenCollapsed: false,
               autoSettleInactive: false,
@@ -171,8 +160,6 @@ describe("lifecycle RPC", () => {
     await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toEqual({
       ...DEFAULT_SIDEBAR_SETTINGS,
       snoozePresets: "20m, 6h",
-      inactiveThreadsEnabled: false,
-      inactiveAfterHours: 18,
       showRunningChildrenWhenCollapsed: false,
       autoSettleInactive: false,
       autoSettleAfterDays: 14,
@@ -203,7 +190,6 @@ it("writes only JSON and keeps historical columns unchanged across reloads", asy
   const next = {
     ...DEFAULT_SIDEBAR_SETTINGS,
     snoozePresets: "20m, 6h",
-    inactiveAfterHours: 18,
     workingShelf: true,
     compactProjectIconOnly: true,
   };
@@ -228,7 +214,6 @@ it("defaults missing and invalid JSON fields without losing valid settings", asy
   db.prepare("UPDATE sidebar_settings SET settings_json = ? WHERE id = 1").run(
     JSON.stringify({
       snoozePresets: "20m, 6h",
-      inactiveAfterHours: 18,
       autoSettleInactive: false,
       inactiveThreadsEnabled: "false",
       autoSettleAfterDays: -1,
@@ -241,7 +226,6 @@ it("defaults missing and invalid JSON fields without losing valid settings", asy
   await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toEqual({
     ...DEFAULT_SIDEBAR_SETTINGS,
     snoozePresets: "20m, 6h",
-    inactiveAfterHours: 18,
     autoSettleInactive: false,
   });
 });
@@ -307,22 +291,24 @@ it("stores per-shelf density overrides and keeps the rest at default", async () 
     harness.behavior.callRpc("updateSidebarSettings", {
       shelfDensities: {
         pinned: "comfortable",
-        active: "default",
+        needs: "default",
+        failed: "default",
         working: "dense",
         review: "default",
-        inactive: "compact",
+        waiting: "compact",
+        merged: "default",
       },
     }),
   ).resolves.toMatchObject({
     shelfDensities: {
       pinned: "comfortable",
-      active: "default",
+      needs: "default",
       working: "dense",
       review: "default",
-      inactive: "compact",
+      waiting: "compact",
     },
   });
   await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toMatchObject({
-    shelfDensities: { pinned: "comfortable", working: "dense", inactive: "compact" },
+    shelfDensities: { pinned: "comfortable", working: "dense", waiting: "compact" },
   });
 });

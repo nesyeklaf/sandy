@@ -34,6 +34,8 @@ type RowContextMenuProps = {
   onUnsettle?: () => void;
   onWake?: () => void;
   onRename?: () => void;
+  onUnarchive?: () => void;
+  onClean?: () => void;
 };
 
 /** Keep the plugin's menus, but build their actions and dialogs only on first open. */
@@ -63,6 +65,8 @@ function RowMenuContents({
   onUnsettle,
   onWake,
   onRename,
+  onUnarchive,
+  onClean,
 }: Omit<RowContextMenuProps, "children">) {
   const actions = useThreadActions(thread, {
     keys: ["sandy--core/split", "sandy--core/pin", "sandy--core/read", "sandy--core/rename", "sandy--core/archive"],
@@ -119,6 +123,7 @@ function RowMenuContents({
     onResume ||
     onSettle ||
     onUnsettle ||
+    onUnarchive ||
     onWake ||
     (canSnooze && onSnooze && snoozePresets.length > 0)
   );
@@ -216,6 +221,16 @@ function RowMenuContents({
               {onUnsettle ? (
                 <Item icon="Pulse" onSelect={onUnsettle}>
                   Un-settle
+                </Item>
+              ) : null}
+              {onUnarchive ? (
+                <Item icon="Pulse" onSelect={onUnarchive}>
+                  Restore
+                </Item>
+              ) : null}
+              {onClean ? (
+                <Item icon="Clean" onSelect={onClean}>
+                  Close terminals and ports…
                 </Item>
               ) : null}
               <Separator />

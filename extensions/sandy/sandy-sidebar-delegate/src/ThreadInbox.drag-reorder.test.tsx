@@ -26,7 +26,7 @@ describe("ThreadInbox", () => {
               id: "attention-child",
               title: "Attention child",
               parentThreadId: "attention-root",
-              indicator: "waiting-for-input",
+              indicator: "unread-error",
             }),
           ],
           projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
@@ -74,7 +74,7 @@ describe("ThreadInbox", () => {
         .getAllByRole("link")
         .map((row) => row.getAttribute("aria-label")),
     ).toEqual(["Idle root", "Attention root"]);
-    expect(within(pinned).getByRole("button", { name: "Open child thread: Attention child, Needs you" })).toBeDefined();
+    expect(within(pinned).getByRole("button", { name: /^Open child thread: Attention child,/ })).toBeDefined();
     fireEvent.pointerUp(window, { clientX: 20, clientY: 30, pointerId: 1 });
     await waitFor(() =>
       expect(reorderInput).toEqual({
@@ -90,7 +90,7 @@ describe("ThreadInbox", () => {
         .map((row) => row.getAttribute("aria-label")),
     ).toEqual(["Attention root"]);
     expect(within(pinned).queryByRole("link", { name: "Idle root" })).toBeNull();
-    expect(within(pinned).getByRole("button", { name: "Open child thread: Attention child, Needs you" })).toBeDefined();
+    expect(within(pinned).getByRole("button", { name: /^Open child thread: Attention child,/ })).toBeDefined();
     await act(async () => {
       pending.resolve({ pinnedThreadIds: ["idle-root", "attention-root"] });
       await pending.promise;
@@ -100,14 +100,14 @@ describe("ThreadInbox", () => {
         .getAllByRole("link")
         .map((row) => row.getAttribute("aria-label")),
     ).toEqual(["Attention root"]);
-    expect(within(pinned).getByRole("button", { name: "Open child thread: Attention child, Needs you" })).toBeDefined();
+    expect(within(pinned).getByRole("button", { name: /^Open child thread: Attention child,/ })).toBeDefined();
     fireEvent.click(within(pinned).getByRole("button", { name: /^Pinned/, expanded: false }));
     expect(
       within(pinned)
         .getAllByRole("link")
         .map((row) => row.getAttribute("aria-label")),
     ).toEqual(["Idle root", "Attention root"]);
-    expect(within(pinned).getByRole("button", { name: "Open child thread: Attention child, Needs you" })).toBeDefined();
+    expect(within(pinned).getByRole("button", { name: /^Open child thread: Attention child,/ })).toBeDefined();
   });
 
   it.each(

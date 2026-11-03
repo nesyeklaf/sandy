@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, thread, listProps, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 const shelves = [
   { name: "Snoozed", row: { settledAt: null, snoozedUntil: Date.now() + 86_400_000, snoozedAt: Date.now() } },
-  { name: "Parked", row: { settledAt: null, snoozedUntil: null, snoozedAt: null, parkedAt: Date.now() - 1_000 } },
-  { name: "Settled", row: { settledAt: 200, snoozedUntil: null, snoozedAt: null } },
+  { name: "Snoozed", row: { settledAt: null, snoozedUntil: null, snoozedAt: null, parkedAt: Date.now() - 1_000 } },
+  { name: "Archived", row: { settledAt: 200, snoozedUntil: null, snoozedAt: null } },
 ] as const;
 
 describe("children of shelved threads", () => {

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
@@ -14,7 +15,6 @@ describe("Compact project display", () => {
     async (display) => {
       let settings = {
         ...defaultSidebarSettings,
-        inactiveThreadsEnabled: false,
         threadDensity: display === "working-shelf" ? "comfortable" : display,
         workingShelf: display === "working-shelf",
         keepPinnedThreadsFull: true,
@@ -34,7 +34,7 @@ describe("Compact project display", () => {
           listLifecycle: () => ({ rows: [{ threadId: "parked", parkedAt: Date.now() }] }),
         },
       });
-      fireEvent.click(await screen.findByRole("button", { name: "Parked (1)" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Snoozed (1)" }));
       const row = (title: string) => screen.getByText(title).closest("li")!;
       await waitFor(() => {
         expect(row("Working thread").querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe(
@@ -60,8 +60,9 @@ describe("Compact project display", () => {
     },
   );
 
-  it("limits icon-only projects to Active, Pinned, and Working when all cards are compact", async () => {
+  it("limits icon-only projects to Waiting, Pinned, and Working when all cards are compact", async () => {
     const now = Date.now();
+    localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -92,18 +93,24 @@ describe("Compact project display", () => {
         }),
       },
     });
-    for (const shelf of ["Inactive", "Parked", "Snoozed", "Settled"]) {
+    for (const shelf of ["Snoozed", "Archived"]) {
       const region = await screen.findByRole("region", { name: shelf });
       const collapsed = within(region).queryByRole("button", { name: new RegExp(`^${shelf} \\(`), expanded: false });
       if (collapsed) fireEvent.click(collapsed);
     }
     await waitFor(() => {
-      for (const shelf of ["Needs you", "Pinned", "Working", "Inactive", "Parked", "Snoozed", "Settled"]) {
+      for (const [shelf, title] of [
+        ["Waiting", "Active"],
+        ["Waiting", "Inactive"],
+        ["Pinned", "Pinned"],
+        ["Working", "Working"],
+        ["Snoozed", "Parked"],
+        ["Snoozed", "Snoozed"],
+        ["Archived", "Settled"],
+      ] as const) {
         const region = screen.getByRole("region", { name: shelf });
-        const row = within(region)
-          .getByText(`${shelf === "Needs you" ? "Active" : shelf} thread`)
-          .closest("li")!;
-        const iconOnly = ["Needs you", "Pinned", "Working"].includes(shelf);
+        const row = within(region).getByText(`${title} thread`).closest("li")!;
+        const iconOnly = ["Waiting", "Pinned", "Working"].includes(shelf);
         expect(row.querySelector(".h-8")).not.toBeNull();
         expect(row.querySelector("[data-letter]")).not.toBeNull();
         expect(within(row).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);

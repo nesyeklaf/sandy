@@ -101,8 +101,6 @@ export const SETTLED_NOTHING = {
 
 export const defaultSidebarSettings = {
   snoozePresets: "30m, 2h, 1d, 1w",
-  inactiveThreadsEnabled: true,
-  inactiveAfterHours: 6,
   showRunningChildrenWhenCollapsed: true,
   autoSettleInactive: true,
   autoSettleAfterDays: 3,
@@ -111,7 +109,15 @@ export const defaultSidebarSettings = {
   childSortDirection: "ascending",
   childIconStyle: "disc",
   threadDensity: "comfortable",
-  shelfDensities: { pinned: "default", active: "default", working: "default", review: "default", inactive: "default" },
+  shelfDensities: {
+    pinned: "default",
+    needs: "default",
+    failed: "default",
+    working: "default",
+    review: "default",
+    waiting: "default",
+    merged: "default",
+  },
   compactProjectIconOnly: false,
   keepPinnedThreadsFull: false,
   keepWokeThreadsFull: false,
