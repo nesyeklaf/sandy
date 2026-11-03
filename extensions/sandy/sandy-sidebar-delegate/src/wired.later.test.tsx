@@ -97,3 +97,48 @@ it("Later on a parent moves its child's active-turn question out of Needs you", 
   wired.mount();
   await later(wired);
 });
+
+async function laterKeepsTreeActive(wired: Awaited<ReturnType<typeof createWired>>) {
+  await wired.call("updateSidebarSettings", { autoSettleInactive: false });
+  wired.mount();
+  const needs = await screen.findByRole("region", { name: "Needs you" });
+  fireEvent.click(await within(needs).findByRole("button", { name: "Later" }));
+  await waitFor(() => expect(wired.db.prepare("SELECT 1 FROM thread_lifecycle").all()).toHaveLength(1));
+  await wired.flush();
+  expect(screen.queryByRole("region", { name: "Snoozed" })).toBeNull();
+  expect(screen.queryByRole("region", { name: "Needs you" })).not.toBeNull();
+}
+
+it("Later on a child's question keeps the parent's own running turn active", async () => {
+  const wired = await createWired(
+    [
+      thread({
+        id: "parent",
+        title: "Running parent",
+        status: "active",
+        runtimeStatus: "active",
+        indicator: "runtime",
+        updatedAt: Date.now(),
+      }),
+      asking("child", { parentThreadId: "parent", status: "active", runtimeStatus: "active" }),
+    ],
+    { interactions: { child: [question("int_child", "child")] as never } },
+  );
+  await laterKeepsTreeActive(wired);
+});
+
+it("Later on a waiting parent keeps its child's background command active", async () => {
+  const wired = await createWired(
+    [
+      asking("parent", { status: "active", runtimeStatus: "active" }),
+      thread({
+        id: "child",
+        title: "Background task",
+        parentThreadId: "parent",
+        activity: { workflows: 0, backgroundAgents: 0, backgroundCommands: 1, planMode: 0, goals: 0 },
+      }),
+    ],
+    { interactions: { parent: [question("int_parent", "parent")] as never } },
+  );
+  await laterKeepsTreeActive(wired);
+});

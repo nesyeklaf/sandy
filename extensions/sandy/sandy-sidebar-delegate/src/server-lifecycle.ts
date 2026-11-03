@@ -310,7 +310,9 @@ export function createServerLifecycle(ctx: ServerContext) {
       hasPendingInteraction: thread.hasPendingInteraction,
       hasQueuedWork: thread.queuedWork !== "none",
       isWorking: hasLiveWork(activity, isTurnInFlight(thread.status)),
-      hasBackgroundWork: hasBackgroundWork(activity),
+      hasUnblockedWork: thread.hasPendingInteraction
+        ? hasBackgroundWork(activity)
+        : hasLiveWork(activity, isTurnInFlight(thread.status)),
       isUnread: thread.lastReadAt === null || thread.latestAttentionAt > thread.lastReadAt,
       latestAttentionAt: thread.latestAttentionAt,
     };

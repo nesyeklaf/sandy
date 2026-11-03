@@ -22,7 +22,7 @@ const quiet: ThreadActivitySignals = {
   hasPendingInteraction: false,
   hasQueuedWork: false,
   isWorking: false,
-  hasBackgroundWork: false,
+  hasUnblockedWork: false,
   isUnread: false,
   latestAttentionAt: 0,
 };
@@ -298,8 +298,8 @@ describe("a deferred question on a running turn", () => {
     expect(resolveShelf(deferredRow, waiting, 1_000)).toBe("snoozed");
   });
 
-  it("stays active while background work runs", () => {
-    expect(resolveShelf(deferredRow, { ...waiting, hasBackgroundWork: true }, 1_000)).toBe("active");
+  it("stays active while work that does not wait on a question runs", () => {
+    expect(resolveShelf(deferredRow, { ...waiting, hasUnblockedWork: true }, 1_000)).toBe("active");
   });
 
   it("returns once the question is answered and the turn continues", () => {

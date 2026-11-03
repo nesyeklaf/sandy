@@ -14,12 +14,13 @@ import {
   resolveShelf,
   resolveWakeReason,
   sidebarThreadSignals,
+  threadHasUnblockedWork,
   type ThreadLifecycleRow,
   type ThreadShelf,
 } from "./lifecycle";
 import { createCachedRpcState } from "./lib/cached-rpc-state";
 import { lifecycleRowsCodec } from "./lib/lifecycle-cache-codec";
-import { threadsWithAskingDescendants } from "./child-status";
+import { threadsWithAskingDescendants, threadsWithDescendantsWhere } from "./child-status";
 import { resolveThreadTitlesIn } from "./inbox";
 
 export interface LifecycleApi {
@@ -104,6 +105,11 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
     () => new Set(askingParentKey === "" ? [] : askingParentKey.split("\n")),
     [askingParentKey],
   );
+  const unblockedWorkParentKey = [...threadsWithDescendantsWhere(threads, threadHasUnblockedWork)].sort().join("\n");
+  const unblockedWorkParentIds = useMemo(
+    () => new Set(unblockedWorkParentKey === "" ? [] : unblockedWorkParentKey.split("\n")),
+    [unblockedWorkParentKey],
+  );
 
   // Responses can land out of order (a mutation's refresh racing a realtime
   // one), and an older list would silently restore state the user just
@@ -172,7 +178,11 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
     // back from any shelf, ends a snooze, and blocks parking it again.
     const signalsFor = (thread: PluginSidebarThread) => {
       const signals = sidebarThreadSignals(thread);
-      return askingParentIds.has(thread.id) ? { ...signals, hasPendingInteraction: true } : signals;
+      return {
+        ...signals,
+        hasPendingInteraction: signals.hasPendingInteraction || askingParentIds.has(thread.id),
+        hasUnblockedWork: signals.hasUnblockedWork || unblockedWorkParentIds.has(thread.id),
+      };
     };
     // One mutation per thread at a time. The write publishes on the realtime
     // channel, and that subscription refreshes every client after success.
@@ -325,5 +335,5 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
       snooze: (threadId, snoozedUntil, deferredInteractionId) =>
         mutate({ method: "snooze", threadId, snoozedUntil, deferredInteractionId }),
     };
-  }, [askingParentIds, now, rows, rpc]);
+  }, [askingParentIds, now, rows, rpc, unblockedWorkParentIds]);
 }

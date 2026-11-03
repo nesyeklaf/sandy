@@ -1,4 +1,5 @@
 import type { PluginSidebarThread, PluginSidebarThreadActivity } from "@sandy-sdk/plugin-sdk";
+import { threadAsksForInput } from "./child-status";
 
 export interface ThreadLifecycleRow {
   threadId: string;
@@ -14,7 +15,7 @@ export interface ThreadActivitySignals {
   hasPendingInteraction: boolean;
   hasQueuedWork: boolean;
   isWorking: boolean;
-  hasBackgroundWork: boolean;
+  hasUnblockedWork: boolean;
   isUnread: boolean;
   latestAttentionAt: number;
 }
@@ -70,12 +71,16 @@ export function isThreadWorking(thread: PluginSidebarThread): boolean {
   return hasLiveWork(thread.activity, isTurnInFlight(thread.status) || thread.indicator === "runtime");
 }
 
+export function threadHasUnblockedWork(thread: PluginSidebarThread): boolean {
+  return threadAsksForInput(thread) ? hasBackgroundWork(thread.activity) : isThreadWorking(thread);
+}
+
 export function sidebarThreadSignals(thread: PluginSidebarThread): ThreadActivitySignals {
   return {
     hasPendingInteraction: thread.hasPendingInteraction,
     hasQueuedWork: thread.queuedWork !== "none",
     isWorking: isThreadWorking(thread),
-    hasBackgroundWork: hasBackgroundWork(thread.activity),
+    hasUnblockedWork: threadHasUnblockedWork(thread),
     isUnread: thread.isUnread,
     latestAttentionAt: thread.latestAttentionAt,
   };
@@ -93,7 +98,7 @@ export function resolveShelf(
   if (row === undefined) return "active";
   const waitsOnDeferredQuestion = defersQuestion(row) && signals.hasPendingInteraction;
   const parkSignals = waitsOnDeferredQuestion
-    ? { ...signals, hasPendingInteraction: false, isWorking: signals.hasBackgroundWork }
+    ? { ...signals, hasPendingInteraction: false, isWorking: signals.hasUnblockedWork }
     : signals;
   if (!canPark(parkSignals)) return "active";
 

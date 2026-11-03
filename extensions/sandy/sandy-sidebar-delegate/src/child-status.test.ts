@@ -6,7 +6,9 @@ import {
   childStatusSummary,
   childSubtree,
   threadsWithAskingDescendants,
+  threadsWithDescendantsWhere,
 } from "./child-status";
+import { threadHasUnblockedWork } from "./lifecycle";
 
 function thread(overrides: Partial<PluginSidebarThread> = {}): PluginSidebarThread {
   return {
@@ -159,5 +161,29 @@ describe("threadsWithAskingDescendants", () => {
         ]),
       ].sort(),
     ).toEqual(["a"]);
+  });
+});
+
+describe("threadsWithDescendantsWhere with threadHasUnblockedWork", () => {
+  const background = { workflows: 0, backgroundAgents: 0, backgroundCommands: 1, planMode: 0, goals: 0 };
+
+  it("excuses only the turn that waits on its own question", () => {
+    const threads = [
+      thread({ id: "root" }),
+      thread({ id: "asker", parentThreadId: "root", status: "active", hasPendingInteraction: true }),
+    ];
+    expect(threadsWithDescendantsWhere(threads, threadHasUnblockedWork).size).toBe(0);
+  });
+
+  it("marks ancestors of a running turn or background work elsewhere in the tree", () => {
+    const threads = [
+      thread({ id: "root", status: "active", hasPendingInteraction: true }),
+      thread({ id: "runner", parentThreadId: "root", status: "active" }),
+      thread({ id: "other" }),
+      thread({ id: "asker", parentThreadId: "other", hasPendingInteraction: true, activity: background }),
+      thread({ id: "quiet" }),
+      thread({ id: "quiet-child", parentThreadId: "quiet" }),
+    ];
+    expect([...threadsWithDescendantsWhere(threads, threadHasUnblockedWork)].sort()).toEqual(["other", "root"]);
   });
 });
