@@ -12,6 +12,7 @@ import { createServerSettings } from "./server-settings";
 import { createServerLifecycle, LIFECYCLE_BACKFILLS_MIGRATION } from "./server-lifecycle";
 import { createServerProjectIcons } from "./server-project-icons";
 import { createServerProjectColors } from "./server-project-colors";
+import { createServerSessionSearch } from "./server-session-search";
 import { createServerTopics, TOPICS_MIGRATIONS } from "./server-topics";
 import { createServerAnchors, ANCHORS_MIGRATIONS } from "./server-anchors";
 import { createServerProjectManagement } from "./server-project-management";
@@ -140,6 +141,7 @@ export default async function plugin(sandy: SandyPluginApi) {
   const policy = createServerPolicy(ctx, lifecycle, settings, cleanup, threadPortActions);
   const delegateChildren = createServerDelegateChildren(ctx);
   const topics = createServerTopics(ctx, helper);
+  const sessionSearch = createServerSessionSearch(ctx);
   const anchors = createServerAnchors(ctx, helper);
   const handlers = createServerHandlers(
     ctx,
@@ -151,7 +153,7 @@ export default async function plugin(sandy: SandyPluginApi) {
     getOpenPorts,
     threadPullRequests,
     regenerateTitle,
-    { icons, colors, projects, settle, delegateChildren, topics, anchors },
+    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, anchors },
   );
   const { resolveProjectIcon } = icons;
   const { wakeAncestors, clearSettlingState, clear } = lifecycle;

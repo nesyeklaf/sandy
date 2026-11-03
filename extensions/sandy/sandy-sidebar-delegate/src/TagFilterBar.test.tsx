@@ -7,12 +7,27 @@ import { setTagFilter, useTagFilter } from "./useTagFilter";
 vi.mock("./useTagIndex", () => ({
   useTagIndex: () => ({
     threadTags: { a: ["alpha", "beta", "gamma"], b: ["beta", "gamma"], c: ["gamma"] },
-    segments: [],
+    segments: [
+      { id: "s1", threadId: "a", fromSeq: 1, toSeq: 2, title: "Design talk", tags: [] },
+      { id: "s2", threadId: "b", fromSeq: 1, toSeq: 2, title: "Bug hunt", tags: [] },
+    ],
   }),
 }));
 
 function Probe() {
-  return <output data-testid="tags">{useTagFilter().tags.join(",")}</output>;
+  const filter = useTagFilter();
+  return <output data-testid="filter">{JSON.stringify(filter)}</output>;
+}
+
+const filterNow = () => JSON.parse(screen.getByTestId("filter").textContent ?? "{}");
+
+function renderBar() {
+  render(
+    <>
+      <TagFilterBar />
+      <Probe />
+    </>,
+  );
 }
 
 afterEach(() => {
@@ -20,49 +35,61 @@ afterEach(() => {
   setTagFilter(NO_FILTER);
 });
 
-function openPicker() {
-  render(
-    <>
-      <TagFilterBar />
-      <Probe />
-    </>,
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
-}
-
-describe("tag filter bar", () => {
-  it("shows no tag chips, only a button that opens the list", () => {
-    render(<TagFilterBar />);
+describe("session filter bar", () => {
+  it("has a search field and one button each for search scope, topics and tags, but no tag chips", () => {
+    renderBar();
+    expect(screen.getByRole("textbox", { name: "Search sessions" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Search in: Names and content" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Filter by topics" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Filter by tags" })).toBeTruthy();
     expect(screen.queryByRole("checkbox")).toBeNull();
-    expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
+
+  it("types the search text into the filter", () => {
+    renderBar();
+    fireEvent.change(screen.getByRole("textbox", { name: "Search sessions" }), { target: { value: "login" } });
+    expect(filterNow().query).toBe("login");
+  });
+
+  it("chooses where to search", () => {
+    renderBar();
+    fireEvent.click(screen.getByRole("button", { name: /Search in/ }));
+    fireEvent.click(screen.getByRole("radio", { name: "Session content" }));
+    expect(filterNow().scope).toBe("content");
+    expect(screen.getByRole("button", { name: "Search in: Session content" })).toBeTruthy();
   });
 
   it("picks several tags and shows how many are picked", () => {
-    openPicker();
+    renderBar();
+    fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
     fireEvent.click(screen.getByRole("checkbox", { name: /alpha/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /gamma/ }));
-    expect(screen.getByTestId("tags").textContent).toBe("alpha,gamma");
+    expect(filterNow().tags).toEqual(["alpha", "gamma"]);
     expect(screen.getByRole("button", { name: "Filter by tags: alpha, gamma" }).textContent).toBe("2");
   });
 
-  it("unpicks one tag and clears all", () => {
-    setTagFilter({ tags: ["alpha", "beta"] });
-    render(
-      <>
-        <TagFilterBar />
-        <Probe />
-      </>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /Filter by tags/ }));
-    fireEvent.click(screen.getByRole("checkbox", { name: /alpha/ }));
-    expect(screen.getByTestId("tags").textContent).toBe("beta");
-    fireEvent.click(screen.getByRole("button", { name: "Clear tags" }));
-    expect(screen.getByTestId("tags").textContent).toBe("");
+  it("searches inside the tag list", () => {
+    renderBar();
+    fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "ALP" } });
+    expect(screen.getAllByRole("checkbox").map((box) => box.closest("label")?.textContent)).toEqual(["alpha1"]);
+    fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "zzz" } });
+    expect(screen.getByText("Nothing found")).toBeTruthy();
+  });
+
+  it("picks topics, searches them and clears them", () => {
+    renderBar();
+    fireEvent.click(screen.getByRole("button", { name: "Filter by topics" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Search topics" }), { target: { value: "bug" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /Bug hunt/ }));
+    expect(filterNow().topics).toEqual(["Bug hunt"]);
+    fireEvent.click(screen.getByRole("button", { name: "Clear topics" }));
+    expect(filterNow().topics).toEqual([]);
   });
 
   it("lists a picked tag that no session carries so it can be unpicked", () => {
     setTagFilter({ tags: ["gone"] });
-    render(<TagFilterBar />);
+    renderBar();
     fireEvent.click(screen.getByRole("button", { name: /Filter by tags/ }));
     expect((screen.getByRole("checkbox", { name: /gone/ }) as HTMLInputElement).checked).toBe(true);
   });

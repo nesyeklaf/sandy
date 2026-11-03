@@ -6,6 +6,7 @@ import type { createServerProjectColors } from "./server-project-colors";
 import type { createServerProjectManagement } from "./server-project-management";
 import type { createServerSettleActions } from "./server-settle-actions";
 import type { createServerDelegateChildren } from "./server-delegate-children";
+import type { createServerSessionSearch } from "./server-session-search";
 import type { createServerTopics } from "./server-topics";
 import type { createServerAnchors } from "./server-anchors";
 import type { createServerSettings } from "./server-settings";
@@ -36,6 +37,7 @@ export function createServerHandlers(
     settle: ReturnType<typeof createServerSettleActions>;
     delegateChildren: ReturnType<typeof createServerDelegateChildren>;
     topics: ReturnType<typeof createServerTopics>;
+    sessionSearch: ReturnType<typeof createServerSessionSearch>;
     anchors: ReturnType<typeof createServerAnchors>;
   },
 ) {
@@ -313,6 +315,7 @@ export function createServerHandlers(
     ...modules.projects.handlers,
     ...modules.delegateChildren.handlers,
     ...modules.topics.handlers,
+    ...modules.sessionSearch.handlers,
     ...modules.anchors.handlers,
     ...handlers,
   } satisfies ServerHandlers;

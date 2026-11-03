@@ -30,6 +30,8 @@ export { default as PlugSocketIcon } from "@hugeicons/core-free-icons/PlugSocket
 export { default as Pulse01Icon } from "@hugeicons/core-free-icons/Pulse01Icon";
 export { default as Search01Icon } from "@hugeicons/core-free-icons/Search01Icon";
 export { default as StopCircleIcon } from "@hugeicons/core-free-icons/StopCircleIcon";
+export { default as Bookmark01Icon } from "@hugeicons/core-free-icons/Bookmark01Icon";
+export { default as FilterHorizontalIcon } from "@hugeicons/core-free-icons/FilterHorizontalIcon";
 export { default as Tag01Icon } from "@hugeicons/core-free-icons/Tag01Icon";
 export { default as Target02Icon } from "@hugeicons/core-free-icons/Target02Icon";
 export { default as Tick02Icon } from "@hugeicons/core-free-icons/Tick02Icon";

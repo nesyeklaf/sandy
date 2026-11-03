@@ -17,6 +17,7 @@ export {
   PROJECT_ICONS_CHANNEL,
   DELEGATE_CHILDREN_CHANNEL,
 } from "./realtime-channels";
+import { searchRpcShape } from "./search-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 
@@ -226,6 +227,7 @@ const delegateChildSchema = z.object({
 
 export const sandySidebarRpcContract = defineRpcContract({
   ...topicsRpcShape,
+  ...searchRpcShape,
   ...anchorsRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
