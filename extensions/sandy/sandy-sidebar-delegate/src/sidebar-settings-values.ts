@@ -42,22 +42,13 @@ export interface SidebarSettingsValues {
   childSortField: ChildThreadSortField;
   childSortDirection: ChildThreadSortDirection;
   childIconStyle: ChildThreadIconStyle;
-  /** How many lines each thread row takes; auto picks per thread. */
   threadDensity: ThreadDensity;
-  /** Per-shelf density overrides; default follows threadDensity. */
   shelfDensities: ShelfDensities;
   /** Show only project icons on compact Active, Pinned, and Working cards. */
   compactProjectIconOnly: boolean;
-  /** Below Comfortable: keep pinned threads as full cards. */
   keepPinnedThreadsFull: boolean;
-  /** Below Comfortable: keep threads that just woke as full cards. */
   keepWokeThreadsFull: boolean;
-  /**
-   * Legacy switch that threadDensity replaced. Kept in step with it so an
-   * older plugin version still reads the user's choice.
-   */
   compactWorkingThreads: boolean;
-  /** Legacy switch from before Working became a permanent shelf, kept so an older plugin version still reads it. */
   workingShelf: boolean;
   /** Experimental: keep the shelves below Active docked to the bottom. */
   dockShelves: boolean;
@@ -109,11 +100,6 @@ function oneOf<const T extends string>(allowed: readonly T[], value: unknown, fa
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
-/**
- * The thread density from an untrusted record. Settings saved before density
- * carry the old threadDisplay choice or, older still, only the old switch;
- * both map onto a density here, once.
- */
 export function threadDensityOf(value: {
   threadDensity?: unknown;
   threadDisplay?: unknown;

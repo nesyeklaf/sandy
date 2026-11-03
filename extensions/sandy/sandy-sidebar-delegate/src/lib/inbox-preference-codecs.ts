@@ -24,13 +24,11 @@ export const pinnedProjectsCodec: PreferenceCodec<string[]> = {
   storage: "local",
 };
 
-export const environmentGroupingCodec: PreferenceCodec<boolean> = {
+export const offByDefaultCodec: PreferenceCodec<boolean> = {
   fallback: () => false,
   decode: (stored) => (stored === "true" ? true : stored === "false" ? false : null),
   encode: String,
 };
-
-export const showArchivedCodec: PreferenceCodec<boolean> = environmentGroupingCodec;
 
 export type ListView = "flow" | "tree";
 

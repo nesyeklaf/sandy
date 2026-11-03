@@ -50,7 +50,7 @@ import {
   activeSortCodec,
   childExpansionCodec,
   shelfExpansionCodec,
-  showArchivedCodec,
+  offByDefaultCodec,
   rowFieldsCodec,
 } from "./lib/inbox-preference-codecs";
 import type { SlimRowKind } from "./SlimRow";
@@ -67,7 +67,7 @@ const SHELF_NAMES: Record<ReorderShelf, string> = { pinned: "Pinned", needs: "Ne
  * project scope picker.
  */
 export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: PluginThreadListProps) {
-  const [showArchived, setShowArchived] = usePersistedPreference(STORAGE_KEYS.showArchived.key, showArchivedCodec);
+  const [showArchived, setShowArchived] = usePersistedPreference(STORAGE_KEYS.showArchived.key, offByDefaultCodec);
   const [rowFields, setRowFields] = usePersistedPreference(STORAGE_KEYS.rowFields.key, rowFieldsCodec);
   const [activityOpen, setActivityOpen] = useState(false);
   const {
@@ -205,15 +205,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const attentionParentIds = useAttentionParentIds(
     sidebarSettings?.showRunningChildrenWhenCollapsed ?? DEFAULT_SIDEBAR_SETTINGS.showRunningChildrenWhenCollapsed,
     childrenByParentId,
-    {
-      pinned: pinnedBase,
-      needs: needsBase,
-      failed: failedBase,
-      working: workingBase,
-      review: reviewBase,
-      waiting: waitingBase,
-      merged: mergedBase,
-    },
+    [pinnedBase, needsBase, failedBase, workingBase, reviewBase, waitingBase, mergedBase],
   );
   const visiblePinned = useMemo(
     () => visibleShelfThreads(pinned, expandedShelves.pinned, activeListThreadId, undefined, attentionParentIds),
@@ -249,7 +241,6 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     () => sortActiveThreads(visibleInbox, activeSortMode),
     [activeSortMode, visibleInbox],
   );
-  // Leaving a thread follows the shelves top to bottom, including collapsed rows.
   const nextThreadCandidates = useMemo(
     () => [
       ...pinned,

@@ -28,7 +28,6 @@ export function ParkButton({
         settling && "text-[color:var(--sandy-sidebar-settle-active)]",
       )}
     >
-      {/* Move only the artwork so hovering an edge cannot move the hit area. */}
       <span
         aria-hidden="true"
         className="sandy-sidebar-settle-art pointer-events-none relative flex size-full items-center justify-center rounded-[inherit]"

@@ -37,8 +37,6 @@ test("Clean from an archived row shows zero resources and empty cleanup changes 
   await showArchived(page);
   await (await menu(page, thread.title)).getByRole("menuitem", { name: "Settle", exact: true }).click();
   await expect(link(page, thread.title)).toHaveCount(0);
-  // All seeds share a checkout. Settle the rest so workspace protection does
-  // not hide resources merely because another fixture is still in Waiting.
   for (const { id } of fixture.threads.slice(1)) await rpc(request, "settle", { threadId: id });
   await expand(page, "Archived");
   await expect(shelf(page, "Archived").getByRole("link")).toHaveCount(fixture.threads.length);

@@ -461,7 +461,11 @@
                       "../**/useScrollFade.test",
                       "../**/useTopicBands.test",
                       "./**/wired.flows.test",
-                      "../**/wired.flows.test"
+                      "../**/wired.flows.test",
+                      "./**/wired.bulk.test",
+                      "../**/wired.bulk.test",
+                      "./**/wired.later.test",
+                      "../**/wired.later.test"
                     ],
                     "message": "Shared modules must not import TSX app modules."
                   },
@@ -944,7 +948,9 @@
                       "**/test-slot",
                       "**/useScrollFade.test",
                       "**/useTopicBands.test",
-                      "**/wired.flows.test"
+                      "**/wired.flows.test",
+                      "**/wired.bulk.test",
+                      "**/wired.later.test"
                     ],
                     "message": "Node runtime modules must not import TSX app modules."
                   },

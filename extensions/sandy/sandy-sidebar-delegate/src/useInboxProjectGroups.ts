@@ -5,7 +5,7 @@ import { allOrderUnits, layoutActiveGroups, projectGroupView, siblingScope, unit
 import { projectOrderUnits, visibleShelfThreads } from "./inbox-layout";
 import type { ProjectViewUnit, ReorderScope } from "./inbox-layout";
 import { orderSubsetInPlace, rebaseMovedUnit } from "./pinned-order";
-import { environmentGroupingCodec, projectCollapseCodec } from "./lib/inbox-preference-codecs";
+import { offByDefaultCodec, projectCollapseCodec } from "./lib/inbox-preference-codecs";
 import { STORAGE_KEYS } from "./lib/storage-keys";
 import { usePersistedPreference } from "./lib/use-persisted-preference";
 
@@ -32,7 +32,7 @@ export function useInboxProjectGroups({
 }) {
   const [groupEnvironments, setGroupEnvironments] = usePersistedPreference(
     STORAGE_KEYS.environmentGrouping.key,
-    environmentGroupingCodec,
+    offByDefaultCodec,
   );
   const collapseCodec = useMemo(
     () => ({

@@ -21,6 +21,7 @@ export {
 import { searchRpcShape } from "./search-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
+import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
 
 export const openPortSchema = z.object({
   port: z.number().int().min(1).max(65535),
@@ -84,21 +85,6 @@ const reclaimSchema = z.object({
   keptTerminals: z.number().int().nonnegative(),
   stoppedRuntime: z.boolean(),
 });
-const orderedThreadIdsSchema = z
-  .array(z.string().trim().min(1))
-  .max(10_000)
-  .superRefine((threadIds, context) => {
-    if (new Set(threadIds).size !== threadIds.length) {
-      context.addIssue({
-        code: "custom",
-        message: "Thread ids must be unique",
-      });
-    }
-  });
-const threadIdsSchema = orderedThreadIdsSchema.min(1);
-const bulkChangeSchema = z
-  .object({ changed: z.array(z.string()), failed: z.array(z.string()), undoToken: z.string().uuid() })
-  .strict();
 export const cleanupIssueSchema = z.object({
   threadId: z.string(),
   resource: z.enum(["thread", "terminal", "port"]),
@@ -242,6 +228,7 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...topicsRpcShape,
   ...searchRpcShape,
   ...anchorsRpcShape,
+  ...bulkRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),
@@ -362,18 +349,6 @@ export const sandySidebarRpcContract = defineRpcContract({
       deferredInteractionId: z.string().min(1).optional(),
     }),
     output: z.object({ ok: z.boolean(), reclaim: reclaimSchema }),
-  },
-  pinThreads: {
-    input: z.object({ threadIds: threadIdsSchema, pinned: z.boolean() }).strict(),
-    output: bulkChangeSchema,
-  },
-  snoozeThreads: {
-    input: z.object({ threadIds: threadIdsSchema, snoozedUntil: z.number().int().positive() }).strict(),
-    output: bulkChangeSchema,
-  },
-  undoBulkAction: {
-    input: z.object({ undoToken: z.string().uuid() }).strict(),
-    output: z.object({ restored: z.array(z.string()), failed: z.array(z.string()) }).strict(),
   },
   releaseRuntimes: {
     input: z.object({ threadIds: threadIdsSchema }).strict(),

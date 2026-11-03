@@ -20,7 +20,6 @@ export interface ThreadLifecycleRow {
   snoozedUntil: number | null;
   /** When the snooze was set — used to detect activity since. */
   snoozedAt: number | null;
-  /** The pending question a Later snooze deferred; any other question wakes the thread. */
   deferredInteractionId?: string | null;
 }
 

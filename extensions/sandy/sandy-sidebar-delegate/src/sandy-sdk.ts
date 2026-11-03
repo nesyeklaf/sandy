@@ -131,11 +131,6 @@ export function useEnvironmentDiffStat(environmentId: string | null): DiffStat |
   return environmentId ? diffStatOf(data?.[environmentId]) : null;
 }
 
-/**
- * The PR for an environment's checked-out branch, from the bundled GitHub PR
- * Status plugin. A query error, no PR, an unavailable machine, and a disabled
- * plugin all show nothing.
- */
 export function useEnvironmentPullRequest(environmentId: string | null): EnvironmentPullRequest | null {
   const { data } = experimental_useRpcKeyedQuery({
     pluginId: GITHUB_PR_STATUS_PLUGIN_ID,

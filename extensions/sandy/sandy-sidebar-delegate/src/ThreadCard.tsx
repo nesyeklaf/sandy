@@ -51,12 +51,6 @@ export interface ThreadReorderControls {
   onKeyDown: KeyboardEventHandler<HTMLElement>;
 }
 
-/**
- * Three-line card when comfortable, two lines when compact, one line when
- * dense. Project groups omit the project line. Status follows manual
- * reorders. Controls sit above a full-bleed anchor for valid markup and
- * keyboard access.
- */
 export function ThreadCard({
   thread,
   showProject = true,
@@ -85,9 +79,7 @@ export function ThreadCard({
   childThreads: readonly PluginSidebarThread[];
   childrenExpanded: boolean;
   reorder?: ThreadReorderControls;
-  /** The shelf's density; auto picks per thread from its state. */
   density?: ThreadDensity;
-  /** Draw a full card whatever the density says. */
   keepFull?: boolean;
   onRenamingChange?: (editing: boolean) => void;
 }) {

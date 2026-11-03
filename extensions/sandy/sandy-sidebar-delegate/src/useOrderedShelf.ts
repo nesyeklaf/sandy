@@ -23,15 +23,15 @@ export function useOrderedShelf(
   return { threads, visibleThreads };
 }
 
+type Shelf = readonly PluginSidebarThread[];
+
 /** Keep the root of an attention path reachable when its shelf is folded. */
 export function useAttentionParentIds(
   enabled: boolean,
   childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>,
-  shelves: Readonly<
-    Record<"pinned" | "needs" | "failed" | "working" | "review" | "waiting" | "merged", readonly PluginSidebarThread[]>
-  >,
+  shelves: readonly [Shelf, Shelf, Shelf, Shelf, Shelf, Shelf, Shelf],
 ) {
-  const { pinned, needs, failed, working, review, waiting, merged } = shelves;
+  const [pinned, needs, failed, working, review, waiting, merged] = shelves;
   return useMemo(() => {
     const ids = new Set<string>();
     if (!enabled) return ids;

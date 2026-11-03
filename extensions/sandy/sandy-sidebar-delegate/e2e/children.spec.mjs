@@ -32,8 +32,6 @@ test("parent child-thread chip expands and collapses its children", async ({ pag
   await expect(chip).toHaveAttribute("aria-expanded", "false");
   await expect(childList).toBeHidden();
 
-  // Settling folds the children; the chip on the Archived row expands them
-  // again with a real click, above the row's full-bleed link.
   await chip.click();
   await expect(chip).toHaveAttribute("aria-expanded", "true");
   await showArchived(page);

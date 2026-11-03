@@ -8,7 +8,6 @@ export function useRowFocusHandoff(rowRef: RefObject<HTMLLIElement | null>, thre
       const sidebar = rowRef.current.closest<HTMLElement>("[data-sandy-sidebar-root]");
       const childId = focused.getAttribute("data-child-thread-id");
       const control = focused.getAttribute("data-thread-control");
-      // Moving a row between shelf trees unmounts its focused control.
       queueMicrotask(() => {
         if (!sidebar?.isConnected || document.activeElement !== document.body) return;
         const replacement = [...sidebar.querySelectorAll<HTMLAnchorElement>("a[data-sidebar-thread-id]")].find(

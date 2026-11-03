@@ -157,7 +157,6 @@ export function createServerHandlers(
     async updateSidebarSettings(values) {
       const stored = readSidebarSettings();
       const next = { ...stored, ...values };
-      // Keep the legacy switch in step with thread density, both ways.
       if (values.threadDensity !== undefined) next.compactWorkingThreads = values.threadDensity !== "comfortable";
       else if (values.compactWorkingThreads !== undefined)
         next.threadDensity = values.compactWorkingThreads ? "auto" : "comfortable";

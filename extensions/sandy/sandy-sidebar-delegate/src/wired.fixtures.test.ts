@@ -33,7 +33,6 @@ const releaseSettings = {
   dockShelves: true,
 };
 const releaseCache = { ...releaseSettings, inactiveThreadsEnabled: false, inactiveAfterHours: 12 };
-// Releases before Thread display saved only the switch, which now decides density.
 const migratedThreadDisplay = { threadDensity: "auto" } as const;
 const snapshots = [
   {

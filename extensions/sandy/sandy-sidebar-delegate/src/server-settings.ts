@@ -30,8 +30,6 @@ export async function createServerSettings(ctx: ServerContext) {
       if (stored === null || typeof stored !== "object" || Array.isArray(stored)) {
         throw new Error("Expected a JSON object");
       }
-      // Merge defaults before parsing so older JSON also covers new fields.
-      // Density falls back to the old display choice, not the default.
       const threadDensity = threadDensityOf(stored);
       return sidebarSettingsSchema.parse(
         storedSettingsSchema.parse({

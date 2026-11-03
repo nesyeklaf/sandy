@@ -18,10 +18,6 @@ import type { DensityShelf } from "./sidebar-settings-values";
 
 export const SETTLED_PAGE_SIZE = 25;
 
-/**
- * A shelf of one-line rows: snoozed and parked threads, or archived ones.
- * The header stays while anything is on it, and the shelf vanishes at zero.
- */
 export function CompactShelf({
   label,
   icon,

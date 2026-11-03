@@ -19,10 +19,6 @@ export function useSidebarSettings(): SidebarSettingsValues | null {
 
 export type UpdateSidebarSettings = (patch: Partial<SidebarSettingsValues>) => Promise<void>;
 
-/**
- * The saved settings plus an optimistic writer: the patch shows at once, the
- * server's answer replaces it, and a failed write reloads the saved values.
- */
 export function useSidebarSettingsState(): {
   settings: SidebarSettingsValues | null;
   update: UpdateSidebarSettings;

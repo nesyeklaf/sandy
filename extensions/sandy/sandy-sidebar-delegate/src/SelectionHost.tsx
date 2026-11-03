@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
-export interface Selection {
+interface Selection {
   active: boolean;
   selectedIds: ReadonlySet<string>;
   enter: () => void;

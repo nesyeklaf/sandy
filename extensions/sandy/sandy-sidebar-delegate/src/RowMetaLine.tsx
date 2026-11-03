@@ -68,9 +68,6 @@ export function RowMetaLine({
           ) : null}
         </>
       ) : null}
-      {/* A thread without a worktree still runs somewhere, so the
-        machine takes the branch's place rather than leaving the line
-        blank. */}
       {showEnvironment ? <ThreadLocation thread={thread} /> : null}
       <OpenPortsIndicator thread={thread} />
       {fields.subagents && childThreads.length > 0 ? (
