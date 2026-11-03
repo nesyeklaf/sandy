@@ -1,13 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { pinActiveTag, tagCounts } from "./tag-filter";
 import { setTagFilter, useTagFilter } from "./useTagFilter";
 import { useTagIndex } from "./useTagIndex";
 import { cn } from "./lib/utils";
 
-/** A topic search and one scrolling row of tag chips above the list; picking a tag narrows the sessions. */
 export function TagFilterBar() {
   const filter = useTagFilter();
   const index = useTagIndex();
+  const row = useRef<HTMLDivElement>(null);
   const counts = useMemo(() => pinActiveTag(tagCounts(index), filter.tag), [index, filter.tag]);
   if (counts.length === 0 && filter.tag === null && filter.query === "") return null;
   return (
@@ -19,7 +19,10 @@ export function TagFilterBar() {
         className="h-6 rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
         onChange={(event) => setTagFilter({ query: event.target.value })}
       />
-      <div className="flex flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={row}
+        className="flex flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {counts.map(({ tag, count }) => {
           const active = filter.tag === tag;
           return (
@@ -28,7 +31,10 @@ export function TagFilterBar() {
               type="button"
               aria-pressed={active}
               title={`Show sessions tagged ${tag}`}
-              onClick={() => setTagFilter({ tag: active ? null : tag })}
+              onClick={() => {
+                setTagFilter({ tag: active ? null : tag });
+                if (row.current) row.current.scrollLeft = 0;
+              }}
               className={cn(
                 "shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
                 active
