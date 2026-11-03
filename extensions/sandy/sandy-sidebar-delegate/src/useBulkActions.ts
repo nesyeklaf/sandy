@@ -70,24 +70,27 @@ export function useBulkActions() {
   );
 
   const tag = useCallback(
-    async (threads: readonly Target[], tag: string, currentTags: Readonly<Record<string, readonly string[]>>) => {
+    async (threads: readonly Target[], tag: string) => {
       const clean = tag.trim().toLowerCase();
-      if (!clean) return;
-      const previous = new Map(threads.map((thread) => [thread.id, [...(currentTags[thread.id] ?? [])]]));
-      const ids = [...previous.entries()].filter(([, tags]) => !tags.includes(clean)).map(([id]) => id);
-      if (ids.length === 0) return;
-      const done = await each(ids, (ownerId) =>
-        rpc.call("setTopicTags", { kind: "thread", ownerId, tags: [...(previous.get(ownerId) ?? []), clean] }),
-      );
-      if (done.length < ids.length) toast.error(`Could not tag ${threadCount(ids.length - done.length)}`);
-      if (done.length === 0) return;
-      toast.success(`Tagged ${threadCount(done.length)} with ${clean}`, {
+      if (!clean || threads.length === 0) return;
+      const threadIds = threads.map((thread) => thread.id);
+      let result: { tagged: string[]; atLimit: string[] };
+      try {
+        result = await rpc.call("tagThreads", { threadIds, tag: clean });
+      } catch {
+        toast.error(`Could not tag ${threadCount(threadIds.length)}`);
+        return;
+      }
+      const { tagged, atLimit } = result;
+      if (atLimit.length > 0) toast.error(`${threadCount(atLimit.length)} already have the most tags allowed`);
+      if (tagged.length === 0) return;
+      toast.success(`Tagged ${threadCount(tagged.length)} with ${clean}`, {
         action: {
           label: "Undo",
           onClick: () => {
-            void each(done, (ownerId) =>
-              rpc.call("setTopicTags", { kind: "thread", ownerId, tags: previous.get(ownerId) ?? [] }),
-            ).then((undone) => reportUndo("untag")(undone, done.length));
+            void rpc.call("untagThreads", { threadIds: tagged, tag: clean }).catch(() => {
+              toast.error(`Could not untag ${threadCount(tagged.length)}`);
+            });
           },
         },
       });

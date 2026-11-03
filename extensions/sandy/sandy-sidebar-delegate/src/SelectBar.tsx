@@ -8,7 +8,6 @@ import { useSelection } from "./SelectionHost";
 import { SnoozeSelect } from "./SnoozeSelect";
 import { useBulkActions } from "./useBulkActions";
 import { useBulkArchive } from "./useBulkArchive";
-import { useTagIndex } from "./useTagIndex";
 
 const BAR_BUTTON =
   "flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40";
@@ -73,7 +72,6 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const { snoozePresets } = useInboxEnvironment();
   const archive = useBulkArchive();
   const bulk = useBulkActions();
-  const index = useTagIndex(selection.active);
   const selected = useMemo(
     () => threads.filter((thread) => selection.selectedIds.has(thread.id)),
     [threads, selection.selectedIds],
@@ -123,7 +121,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
         disabled={none}
         onTag={(tag) => {
           finish();
-          void bulk.tag(selected, tag, index.threadTags);
+          void bulk.tag(selected, tag);
         }}
       />
       <button

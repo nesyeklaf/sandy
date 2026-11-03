@@ -3,6 +3,7 @@ import { z } from "zod";
 const threadId = z.string().trim().min(1);
 const seq = z.number().int().min(0);
 const tag = z.string().trim().min(1).max(40);
+export const MAX_TOPIC_TAGS = 20;
 
 export const topicMessageSchema = z.object({
   seq,
@@ -52,9 +53,21 @@ export const topicsRpcShape = {
   },
   setTopicTags: {
     input: z
-      .object({ kind: z.enum(["thread", "segment"]), ownerId: z.string().min(1), tags: z.array(tag).max(20) })
+      .object({
+        kind: z.enum(["thread", "segment"]),
+        ownerId: z.string().min(1),
+        tags: z.array(tag).max(MAX_TOPIC_TAGS),
+      })
       .strict(),
     output: z.object({ tags: z.array(z.string()) }),
+  },
+  tagThreads: {
+    input: z.object({ threadIds: z.array(threadId).min(1).max(500), tag }).strict(),
+    output: z.object({ tagged: z.array(z.string()), atLimit: z.array(z.string()) }),
+  },
+  untagThreads: {
+    input: z.object({ threadIds: z.array(threadId).min(1).max(500), tag }).strict(),
+    output: z.object({ untagged: z.array(z.string()) }),
   },
   suggestTopics: {
     input: z.object({ threadId }).strict(),

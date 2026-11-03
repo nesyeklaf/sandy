@@ -20,7 +20,7 @@ afterEach(async () => {
 /** Keep the SDK's validation and JSON wire drivers across the explicit host/app bridge. */
 export async function createWired(
   initial: PluginSidebarThread[],
-  options: { fixture?: string; rpcGate?: Promise<void>; terminals?: boolean } = {},
+  options: { fixture?: string; rpcGate?: (method: string) => Promise<void> | undefined; terminals?: boolean } = {},
 ) {
   let threads = [...initial];
   let terminalOpen = options.terminals ?? false;
@@ -174,7 +174,7 @@ export async function createWired(
       Object.keys(sandySidebarRpcContract).map((method) => [
         method,
         async (input: unknown) => {
-          await options.rpcGate;
+          await options.rpcGate?.(method);
           const result = await harness.behavior.callRpc(method, input);
           replies.push({ method, result });
           return result;
