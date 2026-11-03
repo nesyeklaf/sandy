@@ -1,4 +1,7 @@
-import type { DiscoveredSkill, SkillRootKind } from "@sandy/host-daemon-contract";
+import type {
+  DiscoveredSkill,
+  SkillRootKind,
+} from "@sandy/host-daemon-contract";
 import { createHash } from "node:crypto";
 import type { SkillProvider } from "@sandy/server-contract";
 import { describe, expect, it } from "vitest";
@@ -158,7 +161,11 @@ describe("assembleSkillList", () => {
             ),
             metadata: { inputs: "Feature: text" },
           },
-          discovered("plain", "provider-user", "/home/.claude/skills/plain/SKILL.md"),
+          discovered(
+            "plain",
+            "provider-user",
+            "/home/.claude/skills/plain/SKILL.md",
+          ),
         ],
       },
     ]);
@@ -195,7 +202,11 @@ describe("assembleSkillList", () => {
             "provider-user",
             "/home/.claude/skills/zed/SKILL.md",
           ),
-          discovered("alpha", "sandy-project", "/cwd/.sandy/skills/alpha/SKILL.md"),
+          discovered(
+            "alpha",
+            "sandy-project",
+            "/cwd/.sandy/skills/alpha/SKILL.md",
+          ),
         ],
       },
       {
@@ -251,7 +262,11 @@ describe("assembleSkillList", () => {
 
     expect(
       assembleSkillList([{ provider: "codex", skills: [linked] }])[0],
-    ).toMatchObject({ scope: "sandy-project", manageable: false, writable: false });
+    ).toMatchObject({
+      scope: "sandy-project",
+      manageable: false,
+      writable: false,
+    });
   });
 
   it("keeps a shared or provider skill whose real path is a bundled provider skill read-only", () => {

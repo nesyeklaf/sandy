@@ -116,8 +116,19 @@ describe("resolveSkillScanRoots + discoverSkills", () => {
   it("classifies the host-owned sandy project root and the declared provider roots only", async () => {
     const fixture = await makeWorkspaceFixture();
     const files = {
-      "proj-sandy": path.join(fixture.cwd, ".sandy", "skills", "proj-sandy", "SKILL.md"),
-      "data-sandy": path.join(fixture.dataDir, "skills", "data-sandy", "SKILL.md"),
+      "proj-sandy": path.join(
+        fixture.cwd,
+        ".sandy",
+        "skills",
+        "proj-sandy",
+        "SKILL.md",
+      ),
+      "data-sandy": path.join(
+        fixture.dataDir,
+        "skills",
+        "data-sandy",
+        "SKILL.md",
+      ),
       "proj-agent": path.join(
         fixture.cwd,
         ".agent",
@@ -345,7 +356,13 @@ describe("resolveSkillScanRoots + discoverSkills", () => {
   it("classifies configured shared user and project roots without the sandy project root", async () => {
     const fixture = await makeWorkspaceFixture();
     await writeSkill(
-      path.join(fixture.cwd, ".sandy", "skills", "sandy-project-skill", "SKILL.md"),
+      path.join(
+        fixture.cwd,
+        ".sandy",
+        "skills",
+        "sandy-project-skill",
+        "SKILL.md",
+      ),
       "sandy-project-skill",
     );
     await writeSkill(
@@ -814,7 +831,12 @@ describe("writeHostSkill", () => {
 
   it("writes a shared skill through its directory symlink at the expected revision", async () => {
     const fixture = await makeWorkspaceFixture();
-    const sourceDir = path.join(tempRoot, "forge-skills", "skills", "quick-send");
+    const sourceDir = path.join(
+      tempRoot,
+      "forge-skills",
+      "skills",
+      "quick-send",
+    );
     const sourceFile = path.join(sourceDir, "SKILL.md");
     const original = "---\nname: quick-send\ndescription: Ship it\n---\n";
     await mkdir(sourceDir, { recursive: true });
@@ -863,7 +885,12 @@ describe("writeHostSkill", () => {
 
   it("refuses a provider skill that resolves into sandy's managed skill store", async () => {
     const fixture = await makeWorkspaceFixture();
-    const managedDir = path.join(fixture.dataDir, "skill-trees", "abc", "sandy-cli");
+    const managedDir = path.join(
+      fixture.dataDir,
+      "skill-trees",
+      "abc",
+      "sandy-cli",
+    );
     const original = "---\nname: sandy-cli\ndescription: Built in\n---\n";
     await mkdir(managedDir, { recursive: true });
     await writeFile(path.join(managedDir, "SKILL.md"), original, "utf8");

@@ -1147,7 +1147,11 @@ describe("public project skills route", () => {
           await readJson(
             await harness.app.request(
               `/api/v1/projects/${project.id}/skills/content?${new URLSearchParams(
-                { skillId: skillId(linkPath), environmentId: "", path: "SKILL.md" },
+                {
+                  skillId: skillId(linkPath),
+                  environmentId: "",
+                  path: "SKILL.md",
+                },
               )}`,
             ),
           ),

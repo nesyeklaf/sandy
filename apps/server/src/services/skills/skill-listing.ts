@@ -354,7 +354,9 @@ async function projectSkillIndex(
     serverSkills.push({
       ...skill,
       metadata:
-        bytes === null ? {} : parseSkillMetadata(bytes.toString("utf8")).metadata,
+        bytes === null
+          ? {}
+          : parseSkillMetadata(bytes.toString("utf8")).metadata,
     });
   }
   const disabledSources = new Set(getAppSettings(deps.db).disabledSkillSources);
@@ -861,7 +863,10 @@ export async function deleteProjectSkill(
   }
   let daemonName = skill.name;
   let rootPath: string | null = null;
-  if (editableScope.data !== "sandy-user" && editableScope.data !== "sandy-project") {
+  if (
+    editableScope.data !== "sandy-user" &&
+    editableScope.data !== "sandy-project"
+  ) {
     const skillDirPath = hostPathDirname(skill.filePath);
     daemonName = hostPathBasename(skillDirPath);
     rootPath = hostPathDirname(skillDirPath);
