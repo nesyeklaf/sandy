@@ -1,71 +1,71 @@
-import { useSyncExternalStore } from "react";
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { useRealtime, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { sandySidebarRpcContract } from "./contract";
 import { LAST_MESSAGE_CHANNEL } from "./realtime-channels";
-
-type Rpc = ReturnType<typeof useRpc<typeof sandySidebarRpcContract>>;
+import { RemoteStore } from "./remote-store";
 
 const NO_MESSAGES: ReadonlyMap<string, string> = new Map();
 
-/**
- * One batched read per RPC client, shared by every row that shows a last
- * message, so a hundred mounted rows still cost one request. It fetches only
- * while a row is mounted.
- */
-class LastMessagesStore {
-  private messages = NO_MESSAGES;
-  private readonly listeners = new Set<() => void>();
-  private requestSeq = 0;
-  private refreshScheduled = false;
-
-  constructor(private readonly rpc: Rpc) {}
-
-  readonly messageFor = (threadId: string): string | null => this.messages.get(threadId) ?? null;
-
-  readonly subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-    if (this.listeners.size === 1) void this.refresh();
+function createLastMessagesStore() {
+  const requested = new Map<string, number>();
+  const remote: RemoteStore<ReadonlyMap<string, string>> = new RemoteStore(NO_MESSAGES, async (rpc) => {
+    if (requested.size === 0) return NO_MESSAGES;
+    const result = await rpc.call("listLastMessages", { threadIds: [...requested.keys()].sort() });
+    return new Map(result.messages.map((message) => [message.threadId, message.text]));
+  });
+  const subscribe = (threadId: string, listener: () => void): (() => void) => {
+    requested.set(threadId, (requested.get(threadId) ?? 0) + 1);
+    const unsubscribe = remote.subscribe(listener);
+    remote.invalidate();
     return () => {
-      this.listeners.delete(listener);
-      if (this.listeners.size === 0) this.requestSeq += 1;
+      unsubscribe();
+      const remaining = (requested.get(threadId) ?? 1) - 1;
+      if (remaining === 0) requested.delete(threadId);
+      else requested.set(threadId, remaining);
     };
   };
-
-  readonly refreshSoon = (): void => {
-    if (this.refreshScheduled) return;
-    this.refreshScheduled = true;
-    queueMicrotask(() => {
-      this.refreshScheduled = false;
-      void this.refresh();
-    });
-  };
-
-  private async refresh(): Promise<void> {
-    const seq = ++this.requestSeq;
-    try {
-      const result = await this.rpc.call("listLastMessages", {});
-      if (seq !== this.requestSeq) return;
-      this.messages = new Map(result.messages.map((message) => [message.threadId, message.text]));
-      for (const listener of this.listeners) listener();
-    } catch {
-      // The next realtime signal or remount tries again.
-    }
-  }
+  return { remote, subscribe };
 }
 
-const stores = new WeakMap<object, LastMessagesStore>();
+type LastMessagesStore = ReturnType<typeof createLastMessagesStore>;
 
-function storeFor(rpc: Rpc): LastMessagesStore {
-  let store = stores.get(rpc);
-  if (store === undefined) {
-    store = new LastMessagesStore(rpc);
-    stores.set(rpc, store);
-  }
-  return store;
+const LastMessagesContext = createContext<LastMessagesStore | null>(null);
+
+function LastMessagesRealtime({ store }: { store: LastMessagesStore }) {
+  useRealtime(LAST_MESSAGE_CHANNEL, store.remote.invalidate);
+  return null;
 }
+
+export function LastMessagesProvider({ enabled, children }: { enabled: boolean; children: ReactNode }) {
+  const rpc = useRpc<typeof sandySidebarRpcContract>();
+  const [store] = useState(() => {
+    const created = createLastMessagesStore();
+    created.remote.bind(rpc);
+    return created;
+  });
+  return createElement(
+    LastMessagesContext.Provider,
+    { value: store },
+    children,
+    enabled ? createElement(LastMessagesRealtime, { store }) : null,
+  );
+}
+
+const noSubscription = (): (() => void) => () => {};
 
 export function useLastMessage(threadId: string): string | null {
-  const store = storeFor(useRpc<typeof sandySidebarRpcContract>());
-  useRealtime(LAST_MESSAGE_CHANNEL, store.refreshSoon);
-  return useSyncExternalStore(store.subscribe, () => store.messageFor(threadId));
+  const store = useContext(LastMessagesContext);
+  const subscribe = useCallback(
+    (listener: () => void) => (store === null ? noSubscription() : store.subscribe(threadId, listener)),
+    [store, threadId],
+  );
+  return useSyncExternalStore(subscribe, () => store?.remote.getState().get(threadId) ?? null);
 }

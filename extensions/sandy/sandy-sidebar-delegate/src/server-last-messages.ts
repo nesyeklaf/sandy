@@ -39,8 +39,13 @@ export function createServerLastMessages(ctx: ServerContext) {
   });
 
   const handlers = {
-    async listLastMessages() {
-      const rows = ctx.db.prepare(`SELECT thread_id, text FROM thread_last_message`).all() as Array<{
+    async listLastMessages({ threadIds }) {
+      const rows = ctx.db
+        .prepare(
+          `SELECT thread_id, text FROM thread_last_message
+           WHERE thread_id IN (SELECT value FROM json_each(?))`,
+        )
+        .all(JSON.stringify(threadIds)) as Array<{
         thread_id: string;
         text: string;
       }>;

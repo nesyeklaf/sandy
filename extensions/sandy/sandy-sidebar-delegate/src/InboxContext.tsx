@@ -24,6 +24,7 @@ import type { RowFields } from "./row-fields";
 import type { WorkingSince } from "./working-since";
 import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThreadDisplay";
 import { OpenPortsProvider } from "./OpenPorts";
+import { LastMessagesProvider } from "./useLastMessages";
 import type { ActiveSortMode } from "./inbox-layout";
 import type { useRenamingShelfLocks } from "./useRenamingShelfLocks";
 import type { UpdateSidebarSettings } from "./useSidebarSettings";
@@ -183,19 +184,21 @@ export function InboxProvider({
         <WorkingSinceContext.Provider value={workingSince}>
           <ChildThreadDisplayContext.Provider value={childDisplay}>
             <OpenPortsProvider>
-              <InboxEnvironmentContext.Provider value={value.environment}>
-                <InboxActionsContext.Provider value={value.actions}>
-                  <InboxActivityContext.Provider value={value.activity}>
-                    <ActiveThreadContext.Provider value={activeThread}>
-                      <CleanSettledHost onNavigate={value.actions.onNavigate}>
-                        <AnswerHoldHost>
-                          <SelectionHost>{children}</SelectionHost>
-                        </AnswerHoldHost>
-                      </CleanSettledHost>
-                    </ActiveThreadContext.Provider>
-                  </InboxActivityContext.Provider>
-                </InboxActionsContext.Provider>
-              </InboxEnvironmentContext.Provider>
+              <LastMessagesProvider enabled={value.environment.rowFields.lastMessage}>
+                <InboxEnvironmentContext.Provider value={value.environment}>
+                  <InboxActionsContext.Provider value={value.actions}>
+                    <InboxActivityContext.Provider value={value.activity}>
+                      <ActiveThreadContext.Provider value={activeThread}>
+                        <CleanSettledHost onNavigate={value.actions.onNavigate}>
+                          <AnswerHoldHost>
+                            <SelectionHost>{children}</SelectionHost>
+                          </AnswerHoldHost>
+                        </CleanSettledHost>
+                      </ActiveThreadContext.Provider>
+                    </InboxActivityContext.Provider>
+                  </InboxActionsContext.Provider>
+                </InboxEnvironmentContext.Provider>
+              </LastMessagesProvider>
             </OpenPortsProvider>
           </ChildThreadDisplayContext.Provider>
         </WorkingSinceContext.Provider>

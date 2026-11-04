@@ -13,8 +13,8 @@ interface StoredMessage {
   text: string;
 }
 
-const messages = async (harness: Harness) =>
-  ((await harness.behavior.callRpc("listLastMessages", {})) as { messages: StoredMessage[] }).messages;
+const messages = async (harness: Harness, threadIds = ["thr_1", "thr_2", "thr_3"]) =>
+  ((await harness.behavior.callRpc("listLastMessages", { threadIds })) as { messages: StoredMessage[] }).messages;
 
 describe("last message storage", () => {
   it("stores the assistant text of a thread that went idle", async () => {
@@ -23,7 +23,15 @@ describe("last message storage", () => {
     expect(await messages(harness)).toEqual([{ threadId: "thr_1", text: "All checks pass." }]);
   });
 
-  it("answers every stored thread in one read", async () => {
+  it("answers only the requested threads", async () => {
+    const harness = await loadPlugin();
+    await idle(harness, "thr_1", "First");
+    await idle(harness, "thr_2", "Second");
+    expect(await messages(harness, ["thr_2", "thr_missing"])).toEqual([{ threadId: "thr_2", text: "Second" }]);
+    expect(await messages(harness, [])).toEqual([]);
+  });
+
+  it("answers every requested thread in one read", async () => {
     const harness = await loadPlugin();
     await idle(harness, "thr_1", "First");
     await idle(harness, "thr_2", "Second");

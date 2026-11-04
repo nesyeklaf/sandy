@@ -1,4 +1,4 @@
-import { createContext, useContext, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from "react";
 import { useSandyNavigate, useSdk } from "@sandy-sdk/plugin-sdk/app";
 import type { PluginSdkApp, PluginThreadActionEntry } from "@sandy-sdk/plugin-sdk/app";
 import {
@@ -29,6 +29,19 @@ runtime.experimental_useSidebarThreadSplit = (threadId) => {
     },
   };
 };
+
+const sdkUseRpc = runtime.useRpc;
+
+/** Core's useRpc builds a new client per hook instance; the SDK fake shares one. Returns the restore function. */
+export function giveEachHookItsOwnRpcClient(): () => void {
+  runtime.useRpc = (() => {
+    const shared = sdkUseRpc();
+    return useMemo(() => ({ call: shared.call }), [shared]);
+  }) as typeof runtime.useRpc;
+  return () => {
+    runtime.useRpc = sdkUseRpc;
+  };
+}
 
 /** Supply core registrations explicitly: the official fake does not emulate them. */
 export function renderSlot<Props extends object>(
