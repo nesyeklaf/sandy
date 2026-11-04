@@ -20,6 +20,18 @@ const tagsOf = (wired: Wired, id: string) =>
       .all(id) as Array<{ tag: string }>
   ).map((row) => row.tag);
 
+const topicsOf = (wired: Wired, id: string) =>
+  (
+    wired.db.prepare("SELECT topic FROM thread_topics WHERE thread_id = ? ORDER BY topic").all(id) as Array<{
+      topic: string;
+    }>
+  ).map((row) => row.topic);
+
+const ideas = (wired: Wired) =>
+  (wired.db.prepare("SELECT thread_id FROM thread_ideas ORDER BY thread_id").all() as Array<{ thread_id: string }>).map(
+    (row) => row.thread_id,
+  );
+
 function lastUndo(): () => void {
   const [, options] = toastMocks.success.mock.calls.at(-1)! as [
     string,
@@ -63,6 +75,45 @@ it("tags while the tag index is still loading without dropping existing tags", a
   lastUndo()();
   await waitFor(() => expect(tagsOf(wired, "b")).toEqual([]));
   expect(tagsOf(wired, "a")).toEqual(["existing"]);
+});
+
+it("files the picked sessions under a topic and Undo removes it only where it was added", async () => {
+  const wired = await createWired([item("a"), item("b")]);
+  await wired.call("setThreadTopics", { threadId: "a", topics: ["Release"] });
+  wired.mount();
+  const bar = await select("Work a", "Work b");
+  fireEvent.click(within(bar).getByRole("button", { name: "Thema" }));
+  const input = await screen.findByRole("textbox", { name: "Thema" });
+  fireEvent.change(input, { target: { value: "Release" } });
+  fireEvent.submit(input.closest("form")!);
+  await waitFor(() => expect(topicsOf(wired, "b")).toEqual(["Release"]));
+  expect(toastMocks.success.mock.calls.at(-1)?.[0]).toBe("Added 1 thread to Release");
+  lastUndo()();
+  await waitFor(() => expect(topicsOf(wired, "b")).toEqual([]));
+  expect(topicsOf(wired, "a")).toEqual(["Release"]);
+});
+
+it("marks the picked sessions as ideas and Undo unmarks only the ones it marked", async () => {
+  const wired = await createWired([item("a"), item("b")]);
+  await wired.call("setIdea", { threadIds: ["a"], idea: true });
+  wired.mount();
+  const bar = await select("Work a", "Work b");
+  fireEvent.click(within(bar).getByRole("button", { name: "Als Idee markieren" }));
+  await waitFor(() => expect(ideas(wired)).toEqual(["a", "b"]));
+  expect(toastMocks.success.mock.calls.at(-1)?.[0]).toBe("Marked 1 thread as idea");
+  lastUndo()();
+  await waitFor(() => expect(ideas(wired)).toEqual(["a"]));
+});
+
+it("takes the idea mark off when every picked session is already an idea", async () => {
+  const wired = await createWired([item("a"), item("b")]);
+  await wired.call("setIdea", { threadIds: ["a", "b"], idea: true });
+  wired.mount();
+  const bar = await select("Work a", "Work b");
+  fireEvent.click(await within(bar).findByRole("button", { name: "Keine Idee mehr" }));
+  await waitFor(() => expect(ideas(wired)).toEqual([]));
+  lastUndo()();
+  await waitFor(() => expect(ideas(wired)).toEqual(["a", "b"]));
 });
 
 it("undoes a bulk Pin by unpinning again and restoring the lifecycle row", async () => {
