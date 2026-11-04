@@ -7,6 +7,7 @@
 
 ### Added
 
+- View → Show on rows has a **Last message** field, off by default. It shows the thread's latest assistant text as one truncated line on Comfortable and Compact rows and never on Dense rows. The plugin keeps the text per thread in its own database when the thread goes idle and the app reads all of them in one request, so a thread shows a line once its next turn ends. Needs no newer sandy: the `thread.idle` event is in sandy 0.47.0.
 - **Tree** layout next to **Flow**: sessions grouped by sandy section (shown as "Projekt"), then repo, then session. Sessions without a section sit under "Ohne Projekt"; sessions without a repo sit directly under their section. Collapsed headers show the worst status of their sessions. The choice is remembered.
 - **In Projekt…** in a session's context menu moves it into a sandy section or back out.
 
