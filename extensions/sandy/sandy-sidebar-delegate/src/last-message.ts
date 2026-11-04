@@ -1,4 +1,4 @@
-export const LAST_MESSAGE_MAX_LENGTH = 300;
+const LAST_MESSAGE_MAX_LENGTH = 300;
 
 export function lastMessageLine(assistantText: string | null): string | null {
   const text = assistantText?.replace(/\s+/g, " ").trim() ?? "";

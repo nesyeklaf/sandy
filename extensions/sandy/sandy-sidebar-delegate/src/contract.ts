@@ -17,7 +17,6 @@ export {
   PROJECT_COLORS_CHANNEL,
   PROJECT_ICONS_CHANNEL,
   DELEGATE_CHILDREN_CHANNEL,
-  LAST_MESSAGE_CHANNEL,
 } from "./realtime-channels";
 import { searchRpcShape } from "./search-contract";
 import { lastMessageRpcShape } from "./last-message-contract";

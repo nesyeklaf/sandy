@@ -8,7 +8,13 @@ type Harness = Awaited<ReturnType<typeof loadPlugin>>;
 const idle = (harness: Harness, threadId: string, lastAssistantText: string | null) =>
   harness.behavior.emitThreadEvent("thread.idle", { thread: makeThreadResponse({ id: threadId }), lastAssistantText });
 
-const messages = async (harness: Harness) => (await harness.behavior.callRpc("listLastMessages", {})).messages;
+interface StoredMessage {
+  threadId: string;
+  text: string;
+}
+
+const messages = async (harness: Harness) =>
+  ((await harness.behavior.callRpc("listLastMessages", {})) as { messages: StoredMessage[] }).messages;
 
 describe("last message storage", () => {
   it("stores the assistant text of a thread that went idle", async () => {
