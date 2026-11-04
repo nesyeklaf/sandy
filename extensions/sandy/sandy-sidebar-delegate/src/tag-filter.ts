@@ -3,7 +3,24 @@ import type { TopicSegment } from "./topics-contract";
 
 export interface TagIndex {
   threadTags: Record<string, string[]>;
+  threadTopics: Record<string, string[]>;
   segments: TopicSegment[];
+}
+
+export type LabelLevel = "session" | "segment";
+
+export const LABEL_LEVELS: readonly LabelLevel[] = ["session", "segment"];
+
+const LEVEL_SEPARATOR = "\u001f";
+
+export function labelKey(level: LabelLevel, value: string): string {
+  return `${level}${LEVEL_SEPARATOR}${value}`;
+}
+
+function parseLabelKey(key: string): { level: LabelLevel; value: string } {
+  const at = key.indexOf(LEVEL_SEPARATOR);
+  const level = key.slice(0, at);
+  return { level: level === "session" ? "session" : "segment", value: key.slice(at + 1) };
 }
 
 export type MatchMode = "any" | "all";
@@ -54,6 +71,8 @@ export function selectedValues(selection: Selection): string[] {
 }
 
 export interface PickerItem {
+  key: string;
+  level: LabelLevel;
   value: string;
   count: number;
 }
@@ -62,40 +81,45 @@ export function isFiltering(filter: TagFilter): boolean {
   return isSelecting(filter.tags) || isSelecting(filter.topics) || filter.query.trim() !== "";
 }
 
-/** Tags with the number of sessions that carry them, directly or through a topic. */
+type Owners = Map<string, Set<string>>;
+
+function addOwner(owners: Owners, value: string, threadId: string): void {
+  const set = owners.get(value) ?? new Set<string>();
+  set.add(threadId);
+  owners.set(value, set);
+}
+
+function sessionOwners(labels: Record<string, string[]>): Owners {
+  const owners: Owners = new Map();
+  for (const [threadId, values] of Object.entries(labels)) for (const value of values) addOwner(owners, value, threadId);
+  return owners;
+}
+
+/** Tags with the number of sessions that carry them, once for the session itself and once for its areas. */
 export function tagItems(index: TagIndex): PickerItem[] {
-  const owners = new Map<string, Set<string>>();
-  const add = (tag: string, threadId: string) => {
-    const set = owners.get(tag) ?? new Set<string>();
-    set.add(threadId);
-    owners.set(tag, set);
-  };
-  for (const [threadId, tags] of Object.entries(index.threadTags)) for (const tag of tags) add(tag, threadId);
-  for (const segment of index.segments) for (const tag of segment.tags) add(tag, segment.threadId);
-  return sortedItems(owners);
+  const segment: Owners = new Map();
+  for (const entry of index.segments) for (const tag of entry.tags) addOwner(segment, tag, entry.threadId);
+  return [...sortedItems("session", sessionOwners(index.threadTags)), ...sortedItems("segment", segment)];
 }
 
-/** Topic titles with the number of sessions that have a topic of that title. */
+/** Session topics and area titles with the number of sessions that have them. */
 export function topicItems(index: TagIndex): PickerItem[] {
-  const owners = new Map<string, Set<string>>();
-  for (const segment of index.segments) {
-    const set = owners.get(segment.title) ?? new Set<string>();
-    set.add(segment.threadId);
-    owners.set(segment.title, set);
-  }
-  return sortedItems(owners);
+  const segment: Owners = new Map();
+  for (const entry of index.segments) addOwner(segment, entry.title, entry.threadId);
+  return [...sortedItems("session", sessionOwners(index.threadTopics)), ...sortedItems("segment", segment)];
 }
 
-function sortedItems(owners: ReadonlyMap<string, ReadonlySet<string>>): PickerItem[] {
+function sortedItems(level: LabelLevel, owners: Owners): PickerItem[] {
   return [...owners.entries()]
-    .map(([value, set]) => ({ value, count: set.size }))
+    .map(([value, set]) => ({ key: labelKey(level, value), level, value, count: set.size }))
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
 }
 
 /** The known items, then picked ones that no session carries any more, so they can still be unpicked. */
 export function withPicked(items: readonly PickerItem[], picked: readonly string[]): PickerItem[] {
-  const known = new Set(items.map((item) => item.value));
-  return [...items, ...picked.filter((value) => !known.has(value)).map((value) => ({ value, count: 0 }))];
+  const known = new Set(items.map((item) => item.key));
+  const gone = picked.filter((key) => !known.has(key)).map((key) => ({ key, ...parseLabelKey(key), count: 0 }));
+  return [...items, ...gone];
 }
 
 export function matchesNeedle(items: readonly PickerItem[], needle: string): PickerItem[] {
@@ -111,16 +135,24 @@ function passes(selection: Selection, have: readonly string[]): boolean {
     : selection.include.some((value) => have.includes(value));
 }
 
+function levelKeys(session: readonly string[], segment: readonly string[]): string[] {
+  return [
+    ...session.map((value) => labelKey("session", value)),
+    ...segment.map((value) => labelKey("segment", value)),
+  ];
+}
+
 function matchesLabels(index: TagIndex, filter: TagFilter, threadId: string): boolean {
   const segments = index.segments.filter((segment) => segment.threadId === threadId);
-  const tags = [...(index.threadTags[threadId] ?? []), ...segments.flatMap((segment) => segment.tags)];
-  return (
-    passes(filter.tags, tags) &&
-    passes(
-      filter.topics,
-      segments.map((segment) => segment.title),
-    )
+  const tags = levelKeys(
+    index.threadTags[threadId] ?? [],
+    segments.flatMap((segment) => segment.tags),
   );
+  const topics = levelKeys(
+    index.threadTopics[threadId] ?? [],
+    segments.map((segment) => segment.title),
+  );
+  return passes(filter.tags, tags) && passes(filter.topics, topics);
 }
 
 /** `found` holds the sessions the text search matched, or null when there is no text. */

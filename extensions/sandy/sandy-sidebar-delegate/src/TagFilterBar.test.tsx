@@ -1,14 +1,15 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TagFilterBar } from "./TagFilterBar";
-import { NO_FILTER } from "./tag-filter";
+import { labelKey, NO_FILTER } from "./tag-filter";
 import { setTagFilter, useTagFilter } from "./useTagFilter";
 
 vi.mock("./useTagIndex", () => ({
   useTagIndex: () => ({
     threadTags: { a: ["alpha", "beta", "gamma"], b: ["beta", "gamma"], c: ["gamma"] },
+    threadTopics: { c: ["Bug hunt"] },
     segments: [
-      { id: "s1", threadId: "a", fromSeq: 1, toSeq: 2, title: "Design talk", tags: [] },
+      { id: "s1", threadId: "a", fromSeq: 1, toSeq: 2, title: "Design talk", tags: ["gamma"] },
       { id: "s2", threadId: "b", fromSeq: 1, toSeq: 2, title: "Bug hunt", tags: [] },
     ],
   }),
@@ -64,12 +65,27 @@ describe("session filter bar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
     fireEvent.click(screen.getByRole("button", { name: "alpha, not selected" }));
     fireEvent.click(screen.getByRole("button", { name: "beta, not selected" }));
-    expect(filterNow().tags).toMatchObject({ include: ["alpha", "beta"], exclude: [], match: "any" });
+    const [alpha, beta] = [labelKey("session", "alpha"), labelKey("session", "beta")];
+    expect(filterNow().tags).toMatchObject({ include: [alpha, beta], exclude: [], match: "any" });
     fireEvent.click(screen.getByRole("button", { name: "beta, included" }));
-    expect(filterNow().tags).toMatchObject({ include: ["alpha"], exclude: ["beta"] });
+    expect(filterNow().tags).toMatchObject({ include: [alpha], exclude: [beta] });
     expect(screen.getByRole("button", { name: "Filter by tags: 1 included, 1 excluded" }).textContent).toBe("1 ✓1 ✕");
     fireEvent.click(screen.getByRole("button", { name: "beta, excluded" }));
-    expect(filterNow().tags).toMatchObject({ include: ["alpha"], exclude: [] });
+    expect(filterNow().tags).toMatchObject({ include: [alpha], exclude: [] });
+  });
+
+  it("shows a value carried on both levels once per section, each with its own count, and picks one level", () => {
+    renderBar();
+    fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
+    const sessionSection = screen.getByRole("group", { name: "Session" });
+    const areaSection = screen.getByRole("group", { name: "In Bereichen" });
+    expect(within(sessionSection).getByRole("button", { name: "gamma, not selected" }).textContent).toBe("gamma3");
+    expect(within(areaSection).getByRole("button", { name: "gamma, not selected" }).textContent).toBe("gamma1");
+    fireEvent.click(within(areaSection).getByRole("button", { name: "gamma, not selected" }));
+    expect(filterNow().tags.include).toEqual([labelKey("segment", "gamma")]);
+    expect(within(sessionSection).getByRole("button", { name: "gamma, not selected" })).toBeTruthy();
+    fireEvent.click(within(areaSection).getByRole("button", { name: "gamma, included" }));
+    expect(filterNow().tags).toMatchObject({ include: [], exclude: [labelKey("segment", "gamma")] });
   });
 
   it("switches between any and all and keeps the mode when clearing", () => {
@@ -86,7 +102,8 @@ describe("session filter bar", () => {
     renderBar();
     fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "ALP" } });
-    expect(screen.getByRole("group", { name: "tags" }).textContent).toBe("alpha1");
+    expect(screen.getByRole("group", { name: "Session" }).textContent).toBe("Sessionalpha1");
+    expect(screen.queryByRole("group", { name: "In Bereichen" })).toBeNull();
     fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "zzz" } });
     expect(screen.getByText("Nothing found")).toBeTruthy();
   });
@@ -95,14 +112,17 @@ describe("session filter bar", () => {
     renderBar();
     fireEvent.click(screen.getByRole("button", { name: "Filter by topics" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search topics" }), { target: { value: "bug" } });
-    fireEvent.click(screen.getByRole("button", { name: "Bug hunt, not selected" }));
-    expect(filterNow().topics.include).toEqual(["Bug hunt"]);
+    const areaSection = screen.getByRole("group", { name: "In Bereichen" });
+    fireEvent.click(within(areaSection).getByRole("button", { name: "Bug hunt, not selected" }));
+    expect(filterNow().topics.include).toEqual([labelKey("segment", "Bug hunt")]);
+    fireEvent.click(within(screen.getByRole("group", { name: "Session" })).getByRole("button", { name: /Bug hunt/ }));
+    expect(filterNow().topics.include).toEqual([labelKey("segment", "Bug hunt"), labelKey("session", "Bug hunt")]);
     fireEvent.click(screen.getByRole("button", { name: "Clear topics" }));
     expect(filterNow().topics.include).toEqual([]);
   });
 
   it("lists a picked tag that no session carries so it can be unpicked", () => {
-    setTagFilter({ tags: { include: ["gone"], exclude: [], match: "any" } });
+    setTagFilter({ tags: { include: [labelKey("session", "gone")], exclude: [], match: "any" } });
     renderBar();
     fireEvent.click(screen.getByRole("button", { name: /Filter by tags/ }));
     expect(screen.getByRole("button", { name: "gone, included" })).toBeTruthy();

@@ -6,7 +6,7 @@ import { filterThreads, isSelecting, type TagIndex } from "./tag-filter";
 import { useSessionSearch } from "./useSessionSearch";
 import { useTagFilter } from "./useTagFilter";
 
-const EMPTY: TagIndex = { threadTags: {}, segments: [] };
+const EMPTY: TagIndex = { threadTags: {}, threadTopics: {}, segments: [] };
 
 /** Every tag and topic the server knows, refreshed when they change. */
 export function useTagIndex(enabled = true): TagIndex {
