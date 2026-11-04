@@ -17,8 +17,10 @@ export {
   PROJECT_COLORS_CHANNEL,
   PROJECT_ICONS_CHANNEL,
   DELEGATE_CHILDREN_CHANNEL,
+  LAST_MESSAGE_CHANNEL,
 } from "./realtime-channels";
 import { searchRpcShape } from "./search-contract";
+import { lastMessageRpcShape } from "./last-message-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
@@ -229,6 +231,7 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...searchRpcShape,
   ...anchorsRpcShape,
   ...bulkRpcShape,
+  ...lastMessageRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),

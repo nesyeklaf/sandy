@@ -15,6 +15,7 @@ import { createServerProjectColors } from "./server-project-colors";
 import { createServerSessionSearch } from "./server-session-search";
 import { createServerTopics, TOPICS_MIGRATIONS } from "./server-topics";
 import { createServerAnchors, ANCHORS_MIGRATIONS } from "./server-anchors";
+import { createServerLastMessages, LAST_MESSAGES_MIGRATIONS } from "./server-last-messages";
 import { createServerProjectManagement } from "./server-project-management";
 import { createServerSettleCleanup } from "./server-settle-cleanup";
 import { createServerSettleActions } from "./server-settle-actions";
@@ -119,6 +120,7 @@ const migrations = [
   ...TOPICS_MIGRATIONS,
   ...ANCHORS_MIGRATIONS,
   `ALTER TABLE thread_lifecycle ADD COLUMN deferred_interaction_id TEXT`,
+  ...LAST_MESSAGES_MIGRATIONS,
 ];
 
 export default async function plugin(sandy: SandyPluginApi) {
@@ -144,6 +146,7 @@ export default async function plugin(sandy: SandyPluginApi) {
   const delegateChildren = createServerDelegateChildren(ctx);
   const topics = createServerTopics(ctx, helper);
   const sessionSearch = createServerSessionSearch(ctx);
+  const lastMessages = createServerLastMessages(ctx);
   const anchors = createServerAnchors(ctx, helper);
   const bulk = createServerBulkActions(ctx, lifecycle, cleanup);
   const handlers = createServerHandlers(
@@ -156,7 +159,7 @@ export default async function plugin(sandy: SandyPluginApi) {
     getOpenPorts,
     threadPullRequests,
     regenerateTitle,
-    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, anchors, bulk },
+    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, lastMessages, anchors, bulk },
   );
   const { resolveProjectIcon } = icons;
   const { wakeAncestors, wakeDeferredQuestions, clearSettlingState, clear } = lifecycle;
