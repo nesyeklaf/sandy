@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import plugin from "./server";
 import { createFakePluginHost, disposers, standardProject } from "./test-server";
 
@@ -174,7 +174,10 @@ describe("project icons", () => {
     expect(failed.headers.get("cache-control")).toBe("no-store");
 
     hostReady = true;
+    const retryAt = Date.now() + 31_000;
+    vi.spyOn(Date, "now").mockReturnValue(retryAt);
     const recovered = await harness.behavior.fetchHttp("GET", "/project-icon?projectId=proj_1");
+    vi.restoreAllMocks();
     expect(recovered.status).toBe(200);
     await expect(recovered.text()).resolves.toContain("<svg");
   });

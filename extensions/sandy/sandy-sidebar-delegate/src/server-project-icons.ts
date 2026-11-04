@@ -43,7 +43,13 @@ const PROJECT_ICON_MAX_BYTES = 1_000_000;
 
 const PROJECT_ICON_CACHE_MS = 5 * 60_000;
 
-const PROJECT_ICON_MISS_CACHE_MS = 30_000;
+const PROJECT_ICON_MISS_CACHE_MS = 60 * 60_000;
+
+const PROJECT_ICON_RETRY_MS = 30_000;
+
+const PROJECT_ICON_MAX_RETRY_MS = 15 * 60_000;
+
+class ProjectIconsUnavailableError extends Error {}
 
 // Only a file that does not exist is a real miss. Any other read failure, such
 // as a host that is still connecting, must not be cached as "no icon".
@@ -82,6 +88,8 @@ export function createServerProjectIcons(ctx: ServerContext) {
 
   const defaultProjectHostIds = new Map<string, Promise<string | null>>();
 
+  const unavailableProjectIcons = new Map<string, { failures: number; retryAt: number }>();
+
   const readProjectIconOverride = (projectId: string): string | null =>
     (
       ctx.db
@@ -107,6 +115,9 @@ export function createServerProjectIcons(ctx: ServerContext) {
     projectIconGenerations.set(projectId, (projectIconGenerations.get(projectId) ?? 0) + 1);
     for (const key of projectIconCache.keys()) {
       if (key.startsWith(`${projectId}\0`)) projectIconCache.delete(key);
+    }
+    for (const key of unavailableProjectIcons.keys()) {
+      if (key.startsWith(`${projectId}\0`)) unavailableProjectIcons.delete(key);
     }
     for (const key of pendingProjectIconResolutions.keys()) {
       if (key.startsWith(`${projectId}\0`)) {
@@ -158,7 +169,7 @@ export function createServerProjectIcons(ctx: ServerContext) {
       };
     } catch (error) {
       if (isMissingFileError(error)) return null;
-      throw error;
+      throw new ProjectIconsUnavailableError(`Project icon files for ${projectId} could not be read`, { cause: error });
     }
   };
 
@@ -190,14 +201,8 @@ export function createServerProjectIcons(ctx: ServerContext) {
     if (customPath) candidates.push(customPath);
     candidates.push(...PROJECT_ICON_CANDIDATES);
     let icon: ResolvedProjectIcon | null = null;
-    let unavailable = false;
     for (const candidate of new Set(candidates)) {
-      try {
-        icon = await tryProjectIcon(projectId, environmentId, candidate);
-      } catch {
-        unavailable = true;
-        continue;
-      }
+      icon = await tryProjectIcon(projectId, environmentId, candidate);
       if (icon) break;
     }
     if (!icon) {
@@ -216,12 +221,14 @@ export function createServerProjectIcons(ctx: ServerContext) {
           if (icon) break;
         } catch (error) {
           // Each source file is optional.
-          if (!isMissingFileError(error)) unavailable = true;
+          if (error instanceof ProjectIconsUnavailableError) throw error;
+          if (!isMissingFileError(error)) {
+            throw new ProjectIconsUnavailableError(`Project icon files for ${projectId} could not be read`, {
+              cause: error,
+            });
+          }
         }
       }
-    }
-    if (!icon && unavailable) {
-      throw new Error(`Project icon files for ${projectId} could not be read`);
     }
     if (projectIconGeneration(projectId) === generation) {
       projectIconCache.set(cacheKey, {
@@ -240,12 +247,31 @@ export function createServerProjectIcons(ctx: ServerContext) {
     }
     const pending = pendingProjectIconResolutions.get(cacheKey);
     if (pending) return pending;
+    const unavailable = unavailableProjectIcons.get(cacheKey);
+    if (unavailable && unavailable.retryAt > Date.now()) {
+      return Promise.reject(new ProjectIconsUnavailableError(`Project icon files for ${projectId} are unavailable`));
+    }
     const generation = projectIconGeneration(projectId);
-    const resolution = resolveProjectIconUncached(projectId, environmentId, generation).finally(() => {
-      if (pendingProjectIconResolutions.get(cacheKey) === resolution) {
-        pendingProjectIconResolutions.delete(cacheKey);
-      }
-    });
+    const resolution = resolveProjectIconUncached(projectId, environmentId, generation)
+      .then(
+        (icon) => {
+          unavailableProjectIcons.delete(cacheKey);
+          return icon;
+        },
+        (error: unknown) => {
+          if (projectIconGeneration(projectId) === generation) {
+            const failures = (unavailableProjectIcons.get(cacheKey)?.failures ?? 0) + 1;
+            const delay = Math.min(PROJECT_ICON_RETRY_MS * 2 ** (failures - 1), PROJECT_ICON_MAX_RETRY_MS);
+            unavailableProjectIcons.set(cacheKey, { failures, retryAt: Date.now() + delay });
+          }
+          throw error;
+        },
+      )
+      .finally(() => {
+        if (pendingProjectIconResolutions.get(cacheKey) === resolution) {
+          pendingProjectIconResolutions.delete(cacheKey);
+        }
+      });
     pendingProjectIconResolutions.set(cacheKey, resolution);
     return resolution;
   };
