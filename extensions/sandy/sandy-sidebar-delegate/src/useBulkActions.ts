@@ -4,6 +4,7 @@ import type { sandySidebarRpcContract } from "./contract";
 import { formatSnoozeWakeTime } from "./lifecycle";
 import { toast } from "./lib/toast";
 import { useMarkIdeas } from "./useIdeas";
+import { useMarkOrchestrators } from "./useOrchestrators";
 
 type Target = Pick<PluginSidebarThread, "id">;
 
@@ -25,6 +26,7 @@ async function bulkChange(failure: string, run: () => Promise<BulkChange>): Prom
 export function useBulkActions() {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
   const markIdeas = useMarkIdeas();
+  const markOrchestrators = useMarkOrchestrators();
 
   const undo = useCallback(
     (undoToken: string) => {
@@ -163,5 +165,34 @@ export function useBulkActions() {
     [markIdeas],
   );
 
-  return { snooze, pin, tag, topic, idea };
+  const orchestrator = useCallback(
+    async (threads: readonly Target[], orchestrator: boolean) => {
+      const threadIds = threads.map((thread) => thread.id);
+      if (threadIds.length === 0) return;
+      let changed: string[];
+      try {
+        changed = await markOrchestrators(threadIds, orchestrator);
+      } catch {
+        toast.error(`Could not change the orchestrator mark of ${threadCount(threadIds.length)}`);
+        return;
+      }
+      if (changed.length === 0) return;
+      toast.success(
+        orchestrator
+          ? `Marked ${threadCount(changed.length)} as orchestrator`
+          : `Removed the orchestrator mark from ${threadCount(changed.length)}`,
+        {
+          action: {
+            label: "Undo",
+            onClick: () => {
+              void markOrchestrators(changed, !orchestrator).catch(() => toast.error("Could not undo this change"));
+            },
+          },
+        },
+      );
+    },
+    [markOrchestrators],
+  );
+
+  return { snooze, pin, tag, topic, idea, orchestrator };
 }

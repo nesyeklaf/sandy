@@ -75,6 +75,7 @@ describe("select mode", () => {
       "Tag",
       "Thema",
       "Als Idee markieren",
+      "Als Orchestrator markieren",
       "Leave select mode",
     ]);
   });

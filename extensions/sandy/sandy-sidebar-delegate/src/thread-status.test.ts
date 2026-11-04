@@ -15,6 +15,7 @@ const idle: ThreadStatusSignals = {
   woke: false,
   pullRequestState: null,
   idea: false,
+  orchestrator: false,
 };
 
 describe("threadInboxStatus", () => {
@@ -47,6 +48,13 @@ describe("threadInboxStatus", () => {
     ["a snoozed idea", { idea: true, lifecycleShelf: "snoozed" }, "snoozed"],
     ["a settled idea", { idea: true, lifecycleShelf: "settled" }, "archived"],
     ["an idea renamed while waiting", { idea: true, lockedShelf: "waiting" }, "waiting"],
+    ["an idle orchestrator", { orchestrator: true }, "orchestrators"],
+    ["an orchestrator at work", { orchestrator: true, workingTree: true }, "orchestrators"],
+    ["an orchestrator in review", { orchestrator: true, pullRequestState: "open" }, "orchestrators"],
+    ["an orchestrator that also is an idea", { orchestrator: true, idea: true }, "orchestrators"],
+    ["an orchestrator that asks", { orchestrator: true, asks: true }, "needs"],
+    ["an orchestrator that failed", { orchestrator: true, failed: true }, "failed"],
+    ["a snoozed orchestrator", { orchestrator: true, lifecycleShelf: "snoozed" }, "snoozed"],
   ])("puts %s on its shelf", (_, signals, expected) => {
     expect(threadInboxStatus({ ...idle, ...signals })).toBe(expected);
   });

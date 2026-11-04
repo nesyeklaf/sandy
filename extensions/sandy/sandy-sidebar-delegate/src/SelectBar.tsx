@@ -10,6 +10,7 @@ import { SnoozeSelect } from "./SnoozeSelect";
 import { useBulkActions } from "./useBulkActions";
 import { useBulkArchive } from "./useBulkArchive";
 import { useIdeaIds } from "./useIdeas";
+import { useOrchestratorIds } from "./useOrchestrators";
 
 const BAR_BUTTON =
   "flex size-7 shrink-0 items-center justify-center rounded-md text-xs text-muted-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40";
@@ -91,6 +92,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const archive = useBulkArchive();
   const bulk = useBulkActions();
   const ideaIds = useIdeaIds();
+  const orchestratorIds = useOrchestratorIds();
   const selected = useMemo(
     () => threads.filter((thread) => selection.selectedIds.has(thread.id)),
     [threads, selection.selectedIds],
@@ -99,6 +101,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const none = selected.length === 0;
   const allPinned = !none && selected.every((thread) => thread.isPinned);
   const allIdeas = !none && selected.every((thread) => ideaIds.has(thread.id));
+  const allOrchestrators = !none && selected.every((thread) => orchestratorIds.has(thread.id));
   const finish = () => selection.exit();
   return (
     <div
@@ -160,6 +163,15 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
         onClick={() => {
           finish();
           void bulk.idea(selected, !allIdeas);
+        }}
+      />
+      <BarButton
+        icon="Orchestrator"
+        label={allOrchestrators ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
+        disabled={none}
+        onClick={() => {
+          finish();
+          void bulk.orchestrator(selected, !allOrchestrators);
         }}
       />
       <Tooltip label="Leave select mode">

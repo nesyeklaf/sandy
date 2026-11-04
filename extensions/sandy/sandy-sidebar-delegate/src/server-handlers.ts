@@ -9,6 +9,7 @@ import type { createServerDelegateChildren } from "./server-delegate-children";
 import type { createServerSessionSearch } from "./server-session-search";
 import type { createServerLastMessages } from "./server-last-messages";
 import type { createServerIdeas } from "./server-ideas";
+import type { createServerOrchestrators } from "./server-orchestrators";
 import type { createServerTopics } from "./server-topics";
 import type { createServerAnchors } from "./server-anchors";
 import type { createServerBulkActions } from "./server-bulk-actions";
@@ -43,6 +44,7 @@ export function createServerHandlers(
     sessionSearch: ReturnType<typeof createServerSessionSearch>;
     lastMessages: ReturnType<typeof createServerLastMessages>;
     ideas: ReturnType<typeof createServerIdeas>;
+    orchestrators: ReturnType<typeof createServerOrchestrators>;
     anchors: ReturnType<typeof createServerAnchors>;
     bulk: ReturnType<typeof createServerBulkActions>;
   },
@@ -290,6 +292,7 @@ export function createServerHandlers(
     ...modules.sessionSearch.handlers,
     ...modules.lastMessages.handlers,
     ...modules.ideas.handlers,
+    ...modules.orchestrators.handlers,
     ...modules.anchors.handlers,
     ...modules.bulk.handlers,
     ...handlers,

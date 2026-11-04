@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import type { LifecycleApi } from "./useLifecycle";
 import { useIdeaIds } from "./useIdeas";
+import { useOrchestratorIds } from "./useOrchestrators";
 import {
   filterByProjects,
   hideChildrenOfVisibleParents,
@@ -36,6 +37,7 @@ export function useInboxShelfThreads({
   threads,
 }: InboxShelfThreadsOptions) {
   const ideaIds = useIdeaIds();
+  const orchestratorIds = useOrchestratorIds();
   return useMemo(() => {
     const allVisible = visibleInboxThreads(threads);
     const visible = hideChildrenOfVisibleParents(filterByProjects(allVisible, scope));
@@ -53,6 +55,7 @@ export function useInboxShelfThreads({
       working: [],
       review: [],
       waiting: [],
+      orchestrators: [],
       ideas: [],
       merged: [],
       snoozed: [],
@@ -68,6 +71,7 @@ export function useInboxShelfThreads({
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
         idea: ideaIds.has(thread.id),
+        orchestrator: orchestratorIds.has(thread.id),
         lockedShelf: renamingShelfLocks.get(thread.id),
       });
       shelves[inboxShelfOf(status, thread.isPinned)].push(thread);
@@ -77,12 +81,15 @@ export function useInboxShelfThreads({
       activeListThreadId: activeRepresentativeThreadId(threads, activeThreadId, visible),
       pinnedBase: shelves.pinned,
       needsBase: sortByCreatedAtDescending(shelves.needs),
-      failedBase: sortActiveThreads(shelves.failed, "activity"),
-      workingBase: sortActiveThreads(shelves.working, "activity"),
-      reviewBase: sortActiveThreads(shelves.review, "activity"),
+      statusBases: {
+        failed: sortActiveThreads(shelves.failed, "activity"),
+        orchestrators: sortActiveThreads(shelves.orchestrators, "activity"),
+        working: sortActiveThreads(shelves.working, "activity"),
+        review: sortActiveThreads(shelves.review, "activity"),
+        ideas: sortByCreatedAtDescending(shelves.ideas),
+        merged: sortActiveThreads(shelves.merged, "activity"),
+      },
       waitingBase: sortByCreatedAtDescending(shelves.waiting),
-      ideasBase: sortByCreatedAtDescending(shelves.ideas),
-      mergedBase: sortActiveThreads(shelves.merged, "activity"),
       allPinnedBase: allSplit.pinned,
       allInboxBase: sortByCreatedAtDescending(allSplit.inbox),
       snoozed: [...shelves.snoozed].sort(
@@ -102,6 +109,7 @@ export function useInboxShelfThreads({
     childrenByParentId,
     ideaIds,
     lifecycle,
+    orchestratorIds,
     pullRequests,
     renamingShelfLocks,
     scope,

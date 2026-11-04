@@ -61,6 +61,7 @@ describe("row context menu", () => {
       "Mark unread",
       "Tags & Themen…",
       "Als Idee markieren",
+      "Als Orchestrator markieren",
       "Copy",
       "Archive",
       "Delete",

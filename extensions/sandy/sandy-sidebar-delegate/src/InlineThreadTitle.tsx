@@ -8,6 +8,7 @@ import { statusToneClass } from "./StatusSlot";
 import { threadFailed } from "./thread-status";
 import { Icon } from "./components/Icon";
 import { useIsIdea } from "./useIdeas";
+import { useIsOrchestrator } from "./useOrchestrators";
 
 export function InlineThreadTitle({
   thread,
@@ -22,6 +23,7 @@ export function InlineThreadTitle({
 }) {
   const sdk = useSdk();
   const isIdea = useIsIdea(thread.id);
+  const isOrchestrator = useIsOrchestrator(thread.id);
   const title = threadStoredTitle(thread);
   const [draft, setDraft] = useState(title);
   const finished = useRef(false);
@@ -58,6 +60,15 @@ export function InlineThreadTitle({
               statusToneClass(threadFailed(thread) ? "unread-error" : "unread-success"),
             )}
           />
+        ) : null}
+        {isOrchestrator ? (
+          <span
+            aria-hidden="true"
+            data-orchestrator-mark=""
+            className="mr-1 inline-flex shrink-0 align-[-0.125em] text-[color:var(--sandy-sidebar-tone-pending)]"
+          >
+            <Icon name="Orchestrator" className="size-3" aria-hidden />
+          </span>
         ) : null}
         {isIdea ? (
           <span

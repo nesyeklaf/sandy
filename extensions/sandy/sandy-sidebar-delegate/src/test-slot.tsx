@@ -141,7 +141,7 @@ export function renderSlot<Props extends object>(
   rendered.rerender = rerender;
   rendered.lifecycle.rerender = rerender;
   const allRpcCalls = rendered.rpcCalls;
-  const backgroundReads = new Set(["listDelegateChildren", "listIdeas"]);
+  const backgroundReads = new Set(["listDelegateChildren", "listIdeas", "listOrchestrators"]);
   Object.defineProperty(rendered, "rpcCalls", {
     get: () => allRpcCalls.filter((call) => !backgroundReads.has(call.method)),
   });

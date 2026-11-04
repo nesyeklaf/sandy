@@ -11,6 +11,7 @@ import { DeleteThreadDialog } from "./DeleteThreadDialog";
 import { SnoozePickerDialog } from "./SnoozePickerDialog";
 import { SessionLabelsDialog } from "./SessionLabelsDialog";
 import { useIsIdea, useMarkIdeas } from "./useIdeas";
+import { useIsOrchestrator, useMarkOrchestrators } from "./useOrchestrators";
 import { Icon, type IconName } from "./components/Icon";
 import { cn } from "./lib/utils";
 import { usePortalScopeProps } from "./lib/portal-scope";
@@ -95,6 +96,14 @@ function RowMenuContents({
   const [editingLabels, setEditingLabels] = useState(false);
   const isIdea = useIsIdea(thread.id);
   const markIdeas = useMarkIdeas();
+  const isOrchestrator = useIsOrchestrator(thread.id);
+  const markOrchestrators = useMarkOrchestrators();
+  const toggleOrchestrator = () =>
+    markOrchestrators([thread.id], !isOrchestrator).catch((error: unknown) => {
+      toast.error("Could not change the orchestrator mark", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    });
   const toggleIdea = () =>
     markIdeas([thread.id], !isIdea).catch((error: unknown) => {
       toast.error("Could not change the idea mark", {
@@ -264,6 +273,9 @@ function RowMenuContents({
               </Item>
               <Item icon="Bulb" onSelect={() => void toggleIdea()}>
                 {isIdea ? "Keine Idee mehr" : "Als Idee markieren"}
+              </Item>
+              <Item icon="Orchestrator" onSelect={() => void toggleOrchestrator()}>
+                {isOrchestrator ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
               </Item>
               <Separator />
               <CopySubmenu thread={thread} />
