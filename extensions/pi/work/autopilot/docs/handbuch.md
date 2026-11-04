@@ -100,7 +100,7 @@ nicht teurer ist.
 | `plan-run <aufgabe>` | der allgemeine Fahrer: plant, arbeitet Schritt für Schritt, prüft, bessert nach (unten) |
 | `resume` | setzt den neuesten unfertigen plan-run dieser Sitzung fort, nach Neuladen oder Neustart |
 | `fix <testdatei>` | macht eine rote Testdatei grün; das Modell schreibt nur den Patch, alles andere ist Code |
-| `ship review [base]` / `ship release [from]` | Review-Befunde für einen Diff / Release Notes seit dem letzten Tag |
+| `ship review [base]` / `ship release [from]` | Review-Befunde für einen Diff (Beleg aus einem Lauf, sonst als ungeprüft markiert) / Release Notes seit dem letzten Tag |
 | `verify <befehl>` | Track-Stage, die eine Testsuite laufen lässt und das Ergebnis einreicht |
 | `backend-tests`, `frontend-tests` | messen eine Testdatei (Vitest bzw. Playwright) |
 | `steer-probe`, `track-probe` | Sonden, die die Mechanik vorführen |
