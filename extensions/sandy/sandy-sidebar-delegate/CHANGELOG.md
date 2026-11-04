@@ -12,6 +12,13 @@
 
 ### Changed
 
+- Thread display is now **Density**, set from the new View button beside the layout switch or in Sidebar layout: Auto, Comfortable, Compact, or Dense. Comfortable is the three-line card, Compact a new two-line row, Dense the one-line row. Auto draws Needs you and Failed as full cards, Working on two lines and the rest on one. Each shelf's ⋯ menu overrides the density for that shelf. Your choice carries over: Full cards becomes Comfortable, Compact working threads becomes Auto, Compact all threads becomes Dense.
+- Shelves follow the thread's status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed. Waiting holds idle threads, so the Inactive shelf and its hour threshold are gone. Parked threads sit in Snoozed with the label "Parked". Settled threads leave the shelves and show, with archived threads, under View → Show archived; Clean moved into a settled row's ⋯ menu. The Merged shelf header archives all its threads at once, with Undo.
+- A row that asks you something shows the question in the row, also when a folded child asks. A single-choice question offers its answers as buttons: a tap answers after five seconds, and Undo in the toast takes it back. Later snoozes the thread for an hour. Approvals, free-text and multi-part questions show Open instead. Dense rows stay on one line.
+- View → Show on rows turns row fields on or off: diff +/−, PR number with its check state, host, provider, subagents, and age. All start on. The diff is the branch's lines changed since its merge base plus uncommitted edits, from sandy's Git plugin.
+- View → Select threads puts checkboxes on the rows. The bar at the bottom snoozes, archives, pins, or tags the picked threads together, with Undo for each.
+- The bell beside the View button lists the last 24 hours: threads that asked, failed, or finished, and threads archived in that time with Restore. Its badge counts the questions waiting in Needs you.
+- On phone widths the search sits at the bottom of the sidebar, with its scope and tag/topic pickers.
 - What the plugin called "project" in its UI is now called "repo", because it is the repository. Settings keys and stored data are unchanged.
 
 ## [0.3.7] - 2026-10-23

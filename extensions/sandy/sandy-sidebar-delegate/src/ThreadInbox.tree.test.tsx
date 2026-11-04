@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
-import { inbox, thread, listProps, loadInboxApp } from "./test-inbox";
+import { inbox, thread, listProps, loadInboxApp, defaultSidebarSettings } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
@@ -41,6 +41,32 @@ function renderTree(update = vi.fn(async () => ({})), create = vi.fn(async () =>
 }
 
 describe("tree layout", () => {
+  it("draws each row at its shelf's Auto density", async () => {
+    window.localStorage.clear();
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "busy", title: "Busy one", projectId: "proj_1", indicator: "runtime" }),
+          thread({ id: "ask", title: "Asking one", projectId: "proj_1", hasPendingInteraction: true }),
+          thread({ id: "idle", title: "Idle one", projectId: "proj_1" }),
+        ],
+        projects,
+        sections,
+      },
+      rpc: {
+        getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity: "auto" }),
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
+    const density = (title: string) =>
+      screen.getByRole("link", { name: title }).closest("[data-parent-card]")?.getAttribute("data-row-density");
+    await waitFor(() => expect(density("Busy one")).toBe("compact"));
+    expect(density("Asking one")).toBe("comfortable");
+    expect(density("Idle one")).toBe("dense");
+  });
+
   it("groups sessions by section, then repo, and remembers the layout", async () => {
     renderTree();
     fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));

@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { seededTest as test } from "./seeds.mjs";
-import { cli, rpc, shelf, link, menu, reset, open } from "./helpers.mjs";
+import { cli, rpc, shelf, link, menu, reset, open, showArchived } from "./helpers.mjs";
 
 test("parent child-thread chip expands and collapses its children", async ({ page, request, family }) => {
   await reset(request);
@@ -15,7 +15,7 @@ test("parent child-thread chip expands and collapses its children", async ({ pag
     await expect.poll(async () => (await cli(["thread", "get", child.id])).thread.parentThreadId).toBe(parent.id);
     await expect(link(page, child.title)).toHaveCount(0);
   }
-  const row = shelf(page, "Active")
+  const row = shelf(page, "Waiting")
     .getByRole("listitem")
     .filter({ has: page.getByRole("link", { name: parent.title, exact: true }) });
   const chip = row.getByRole("button", { name: /^2 child threads/ });
@@ -32,13 +32,12 @@ test("parent child-thread chip expands and collapses its children", async ({ pag
   await expect(chip).toHaveAttribute("aria-expanded", "false");
   await expect(childList).toBeHidden();
 
-  // Settling folds the children; the chip on the Settled row expands them
-  // again with a real click, above the row's full-bleed link.
   await chip.click();
   await expect(chip).toHaveAttribute("aria-expanded", "true");
+  await showArchived(page);
   await rpc(request, "settle", { threadId: parent.id });
-  const settled = shelf(page, "Settled");
-  const header = settled.getByRole("button", { name: /^Settled/ });
+  const settled = shelf(page, "Archived");
+  const header = settled.getByRole("button", { name: /^Archived/ });
   if ((await header.getAttribute("aria-expanded")) === "false") await header.click();
   const settledRow = settled
     .getByRole("listitem")

@@ -1,48 +1,29 @@
-import { MAX_INACTIVE_AFTER_HOURS, MIN_INACTIVE_AFTER_HOURS } from "./inactive";
-import { THREAD_DISPLAYS, type ThreadDisplay } from "./sidebar-settings-values";
-import {
-  InlineNumber,
-  SettingRow,
-  SettingsSection,
-  SettingsSelect,
-  Switch,
-  type SettingsDraftSectionProps,
-} from "./settings-ui";
+import { THREAD_DENSITIES, type ThreadDensity } from "./sidebar-settings-values";
+import { DENSITY_LABELS } from "./ViewSheet";
+import { SettingRow, SettingsSection, SettingsSelect, Switch, type SettingsDraftSectionProps } from "./settings-ui";
 
-const THREAD_DISPLAY_LABELS: Record<ThreadDisplay, string> = {
-  full: "Full cards",
-  "compact-working": "Compact working threads",
-  "compact-all": "Compact all threads",
-};
-
-export function SidebarLayoutSettings({
-  draft,
-  update,
-  status,
-  inactiveHoursValid,
-}: SettingsDraftSectionProps & { inactiveHoursValid: boolean }) {
+export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSectionProps) {
   return (
     <SettingsSection title="Sidebar layout" status={status}>
       <SettingRow
-        title="Thread display"
-        experimental
-        description="Full cards show each thread on three lines. Compact working threads use one line while a thread or its child agents are working. Compact all threads keeps every thread on one line, with its status, unread state, and children chip."
+        title="Density"
+        description="Comfortable shows each thread on three lines, Compact on two, Dense on one. Auto draws Needs you and Failed as full cards, Working on two lines and the rest on one. Each shelf can override this from its ⋯ menu."
         control={
           <SettingsSelect
-            aria-label="Thread display"
-            value={draft.threadDisplay}
-            onChange={(event) => update("threadDisplay", event.target.value as ThreadDisplay)}
+            aria-label="Density"
+            value={draft.threadDensity}
+            onChange={(event) => update("threadDensity", event.target.value as ThreadDensity)}
             className="w-52"
           >
-            {THREAD_DISPLAYS.map((display) => (
-              <option key={display} value={display}>
-                {THREAD_DISPLAY_LABELS[display]}
+            {THREAD_DENSITIES.map((density) => (
+              <option key={density} value={density}>
+                {DENSITY_LABELS[density]}
               </option>
             ))}
           </SettingsSelect>
         }
       >
-        {draft.threadDisplay === "compact-all" ? (
+        {draft.threadDensity !== "comfortable" ? (
           <div className="border-l-2 border-border">
             <SettingRow
               title="Keep pinned threads full"
@@ -71,7 +52,7 @@ export function SidebarLayoutSettings({
       </SettingRow>
       <SettingRow
         title="Hide repo names in compact cards"
-        description="Keep the repo icon and hide its name on compact cards in Active, Pinned, and Working. Hover to see the repo name."
+        description="Keep the repo icon and hide its name on Compact rows in Waiting, Pinned, and Working. Dense rows always show only the icon. Hover to see the repo name."
         control={
           <Switch
             label="Hide repo names in compact cards"
@@ -80,44 +61,6 @@ export function SidebarLayoutSettings({
           />
         }
       />
-      <SettingRow
-        title="Working shelf"
-        experimental
-        description="Keep working threads in their own shelf. They return to Active when work finishes, fails, or needs you. Pinned threads stay pinned."
-        control={
-          <Switch
-            label="Working shelf"
-            checked={draft.workingShelf}
-            onChange={(checked) => update("workingShelf", checked)}
-          />
-        }
-      />
-      <SettingRow
-        title="Inactive shelf"
-        description="Move quiet, unpinned threads out of Active. New activity brings them back."
-        control={
-          <Switch
-            label="Inactive shelf"
-            checked={draft.inactiveThreadsEnabled}
-            onChange={(checked) => update("inactiveThreadsEnabled", checked)}
-          />
-        }
-      >
-        {draft.inactiveThreadsEnabled ? (
-          <InlineNumber
-            label="Hours before inactive"
-            prefix="After"
-            suffix="hours without activity"
-            value={draft.inactiveAfterHours}
-            min={MIN_INACTIVE_AFTER_HOURS}
-            max={MAX_INACTIVE_AFTER_HOURS}
-            valid={inactiveHoursValid}
-            errorId="inactive-hours-error"
-            onChange={(value) => update("inactiveAfterHours", value)}
-          />
-        ) : null}
-      </SettingRow>
-
       <SettingRow
         title="Dock shelves to the bottom"
         experimental

@@ -231,7 +231,7 @@ describe("card metadata", () => {
       }),
     ]);
     expect(await screen.findByLabelText("Agent is working")).toBeDefined();
-    expect(screen.getByText("Working").className).toContain("text-[color:var(--sandy-sidebar-tone-working)]");
+    expect(screen.getByText("Working", { selector: "[data-parent-card] *" }).className).toContain("text-[color:var(--sandy-sidebar-tone-working)]");
     expect(screen.queryByText("3h")).toBeNull();
   });
 
@@ -264,7 +264,7 @@ describe("card metadata", () => {
 
   it("stamps a thread that starts working and persists the stamp", async () => {
     render([thread({ id: "thr_run", indicator: "runtime" })]);
-    expect(await screen.findByText("Working")).toBeDefined();
+    expect(await screen.findByText("Working", { selector: "[data-parent-card] *" })).toBeDefined();
     await waitFor(() => {
       const stored = JSON.parse(window.localStorage.getItem("sandy-sidebar:working-since:v1") ?? "{}") as Record<
         string,
@@ -318,7 +318,7 @@ describe("card metadata", () => {
     expect(await screen.findByText("Queued")).toBeDefined();
     expect(screen.getByLabelText("A message is waiting to send")).toBeDefined();
     expect(screen.getAllByText("Queued")).toHaveLength(1);
-    expect(screen.getByText("Working")).toBeDefined();
+    expect(screen.getByText("Working", { selector: "[data-parent-card] *" })).toBeDefined();
   });
 
   // An indicator this plugin does not know must fall through to the age label

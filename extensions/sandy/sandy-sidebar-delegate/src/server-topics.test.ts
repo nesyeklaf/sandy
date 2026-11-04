@@ -121,6 +121,30 @@ describe("topic segments and tags", () => {
   });
 });
 
+describe("bulk thread tags", () => {
+  it("adds a tag without dropping existing ones and Undo removes only that tag", async () => {
+    const { handlers } = setup([]);
+    await handlers.setTopicTags({ kind: "thread", ownerId: "a", tags: ["existing"] });
+    await handlers.setTopicTags({ kind: "thread", ownerId: "b", tags: ["new"] });
+    await handlers.setTopicTags({
+      kind: "thread",
+      ownerId: "full",
+      tags: Array.from({ length: 20 }, (_, index) => `t${index}`),
+    });
+    const result = await handlers.tagThreads({ threadIds: ["a", "b", "full", "c"], tag: " New " });
+    expect(result).toEqual({ tagged: ["a", "c"], atLimit: ["full"] });
+    const all = await handlers.listAllTags();
+    expect(all.threadTags.a).toEqual(["existing", "new"]);
+    expect(all.threadTags.b).toEqual(["new"]);
+    expect(all.threadTags.c).toEqual(["new"]);
+    expect(await handlers.untagThreads({ threadIds: result.tagged, tag: "new" })).toEqual({ untagged: ["a", "c"] });
+    const after = await handlers.listAllTags();
+    expect(after.threadTags.a).toEqual(["existing"]);
+    expect(after.threadTags.b).toEqual(["new"]);
+    expect(after.threadTags.c).toBeUndefined();
+  });
+});
+
 describe("topic suggestions", () => {
   it("asks the helper about the turns and returns validated, unsaved suggestions", async () => {
     const { handlers, runs } = setup([user(1, "add tagging"), agent(2, "done"), user(3, "build tree")]);

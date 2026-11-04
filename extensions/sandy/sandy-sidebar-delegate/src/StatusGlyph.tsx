@@ -96,15 +96,18 @@ function ShineIcon({
 export function CompactStatusOrTime({
   thread: listedThread,
   now,
+  showAge = true,
 }: {
   thread: PluginSidebarThread;
   /** Quantized clock, shared by every row in one render. */
   now: number;
+  showAge?: boolean;
 }) {
   const thread = useThreadWithDraft(listedThread);
   const workingSince = useWorkingSinceContext();
   const status = threadShortStatus(thread);
-  if (status === null || !status.showsDuration) return <StatusOrTime thread={listedThread} now={now} />;
+  if (status === null || !status.showsDuration)
+    return <StatusOrTime thread={listedThread} now={now} showAge={showAge} />;
   const startedAt = workingSince.get(thread.id);
   const elapsed = startedAt === undefined ? "now" : relativeTimeLabel(startedAt, now);
   return (

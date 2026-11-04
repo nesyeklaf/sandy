@@ -16,7 +16,6 @@ import { ChildThreadSettings } from "./ChildThreadSettings";
 import { DeviceSettings } from "./DeviceSettings";
 import { ProjectManagement } from "./ProjectManagement";
 import { configuredSnoozePresetError, parseConfiguredSnoozePresets } from "./lifecycle";
-import { MAX_INACTIVE_AFTER_HOURS, MIN_INACTIVE_AFTER_HOURS } from "./inactive";
 import { MAX_AUTO_SETTLE_AFTER_DAYS, MIN_AUTO_SETTLE_AFTER_DAYS } from "./auto-settle";
 import type { SaveStatus } from "./settings-ui";
 
@@ -27,8 +26,6 @@ const SAVED_VISIBLE_MS = 2_000;
 
 /** The section each setting lives in, so its save feedback shows there. */
 const SECTION_BY_SETTING: Record<keyof SidebarSettingsValues, string> = {
-  inactiveThreadsEnabled: "Sidebar layout",
-  inactiveAfterHours: "Sidebar layout",
   snoozePresets: "Thread behavior",
   autoSettleInactive: "Thread behavior",
   autoSettleAfterDays: "Thread behavior",
@@ -38,7 +35,8 @@ const SECTION_BY_SETTING: Record<keyof SidebarSettingsValues, string> = {
   childSortField: "Child threads",
   childSortDirection: "Child threads",
   childIconStyle: "Child threads",
-  threadDisplay: "Sidebar layout",
+  threadDensity: "Sidebar layout",
+  shelfDensities: "Sidebar layout",
   compactProjectIconOnly: "Sidebar layout",
   keepPinnedThreadsFull: "Sidebar layout",
   keepWokeThreadsFull: "Sidebar layout",
@@ -49,8 +47,6 @@ const SECTION_BY_SETTING: Record<keyof SidebarSettingsValues, string> = {
   projectColorDisplay: "Project appearance",
 };
 
-const validHours = (value: number) =>
-  Number.isInteger(value) && value >= MIN_INACTIVE_AFTER_HOURS && value <= MAX_INACTIVE_AFTER_HOURS;
 const validDays = (value: number) =>
   Number.isInteger(value) && value >= MIN_AUTO_SETTLE_AFTER_DAYS && value <= MAX_AUTO_SETTLE_AFTER_DAYS;
 
@@ -126,19 +122,12 @@ export function SidebarSettings() {
   });
 
   const dirty = dirtyFields.current.size > 0;
-  const inactiveHoursValid =
-    Number.isInteger(draft.inactiveAfterHours) &&
-    draft.inactiveAfterHours >= MIN_INACTIVE_AFTER_HOURS &&
-    draft.inactiveAfterHours <= MAX_INACTIVE_AFTER_HOURS;
   const autoSettleDaysValid =
     Number.isInteger(draft.autoSettleAfterDays) &&
     draft.autoSettleAfterDays >= MIN_AUTO_SETTLE_AFTER_DAYS &&
     draft.autoSettleAfterDays <= MAX_AUTO_SETTLE_AFTER_DAYS;
   const snoozePresetsError = configuredSnoozePresetError(draft.snoozePresets);
-  const hasValidationError =
-    (draft.inactiveThreadsEnabled && !inactiveHoursValid) ||
-    (draft.autoSettleInactive && !autoSettleDaysValid) ||
-    snoozePresetsError !== null;
+  const hasValidationError = (draft.autoSettleInactive && !autoSettleDaysValid) || snoozePresetsError !== null;
   const snoozePreview = snoozePresetsError
     ? []
     : parseConfiguredSnoozePresets(draft.snoozePresets).map((preset) => preset.label);
@@ -154,7 +143,6 @@ export function SidebarSettings() {
 
   const validDraft = (value: SidebarSettingsValues) =>
     configuredSnoozePresetError(value.snoozePresets) === null &&
-    (!value.inactiveThreadsEnabled || validHours(value.inactiveAfterHours)) &&
     (!value.autoSettleInactive || validDays(value.autoSettleAfterDays));
 
   const save = async () => {
@@ -167,7 +155,6 @@ export function SidebarSettings() {
       while (dirtyFields.current.size && validDraft(draftRef.current)) {
         const sentVersions = new Map(dirtyFields.current);
         const sent = { ...draftRef.current };
-        if (!validHours(sent.inactiveAfterHours)) sent.inactiveAfterHours = DEFAULT_SIDEBAR_SETTINGS.inactiveAfterHours;
         if (!validDays(sent.autoSettleAfterDays))
           sent.autoSettleAfterDays = DEFAULT_SIDEBAR_SETTINGS.autoSettleAfterDays;
         const patch = Object.fromEntries([...sentVersions.keys()].map((key) => [key, sent[key]]));
@@ -234,12 +221,7 @@ export function SidebarSettings() {
 
   return (
     <div className="max-w-3xl space-y-8 pb-4">
-      <SidebarLayoutSettings
-        draft={draft}
-        update={update}
-        status={statusFor("Sidebar layout")}
-        inactiveHoursValid={inactiveHoursValid}
-      />
+      <SidebarLayoutSettings draft={draft} update={update} status={statusFor("Sidebar layout")} />
 
       <ProjectAppearanceSection draft={draft} update={update} status={statusFor("Project appearance")} />
 

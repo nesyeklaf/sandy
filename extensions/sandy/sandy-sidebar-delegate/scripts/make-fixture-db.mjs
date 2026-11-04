@@ -82,8 +82,6 @@ try {
     await harness.behavior.callRpc("updateSidebarSettings", {
       ...(await harness.behavior.callRpc("getSidebarSettings", {})),
       snoozePresets: "1h, 4h, 2d",
-      inactiveThreadsEnabled: false,
-      inactiveAfterHours: 12,
       autoSettleInactive: false,
       autoSettleAfterDays: 7,
       autoSettleOnMerge: false,

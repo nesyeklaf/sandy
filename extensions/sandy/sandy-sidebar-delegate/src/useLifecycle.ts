@@ -14,12 +14,13 @@ import {
   resolveShelf,
   resolveWakeReason,
   sidebarThreadSignals,
+  threadHasUnblockedWork,
   type ThreadLifecycleRow,
   type ThreadShelf,
 } from "./lifecycle";
 import { createCachedRpcState } from "./lib/cached-rpc-state";
 import { lifecycleRowsCodec } from "./lib/lifecycle-cache-codec";
-import { threadsWithAskingDescendants } from "./child-status";
+import { threadsWithAskingDescendants, threadsWithDescendantsWhere } from "./child-status";
 import { resolveThreadTitlesIn } from "./inbox";
 
 export interface LifecycleApi {
@@ -34,13 +35,13 @@ export interface LifecycleApi {
   resume(threadId: string): Promise<boolean>;
   settle(threadId: string): Promise<boolean>;
   unsettle(threadId: string): Promise<boolean>;
-  snooze(threadId: string, snoozedUntil: number): Promise<boolean>;
+  snooze(threadId: string, snoozedUntil: number, deferredInteractionId?: string): Promise<boolean>;
   unsnooze(threadId: string): Promise<boolean>;
 }
 
 type LifecycleMutation = "park" | "resume" | "settle" | "unsettle" | "snooze" | "unsnooze" | "acknowledgeWake";
 type LifecycleMutationRequest =
-  | { method: "snooze"; threadId: string; snoozedUntil: number }
+  | { method: "snooze"; threadId: string; snoozedUntil: number; deferredInteractionId?: string }
   | { method: "unsettle"; threadId: string; undoToken?: string }
   | {
       method: Exclude<LifecycleMutation, "snooze" | "unsettle">;
@@ -103,6 +104,11 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
   const askingParentIds = useMemo(
     () => new Set(askingParentKey === "" ? [] : askingParentKey.split("\n")),
     [askingParentKey],
+  );
+  const unblockedWorkParentKey = [...threadsWithDescendantsWhere(threads, threadHasUnblockedWork)].sort().join("\n");
+  const unblockedWorkParentIds = useMemo(
+    () => new Set(unblockedWorkParentKey === "" ? [] : unblockedWorkParentKey.split("\n")),
+    [unblockedWorkParentKey],
   );
 
   // Responses can land out of order (a mutation's refresh racing a realtime
@@ -172,7 +178,11 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
     // back from any shelf, ends a snooze, and blocks parking it again.
     const signalsFor = (thread: PluginSidebarThread) => {
       const signals = sidebarThreadSignals(thread);
-      return askingParentIds.has(thread.id) ? { ...signals, hasPendingInteraction: true } : signals;
+      return {
+        ...signals,
+        hasPendingInteraction: signals.hasPendingInteraction || askingParentIds.has(thread.id),
+        hasUnblockedWork: signals.hasUnblockedWork || unblockedWorkParentIds.has(thread.id),
+      };
     };
     // One mutation per thread at a time. The write publishes on the realtime
     // channel, and that subscription refreshes every client after success.
@@ -194,6 +204,7 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
           const { reclaim } = await rpc.call("snooze", {
             threadId,
             snoozedUntil: request.snoozedUntil,
+            ...(request.deferredInteractionId ? { deferredInteractionId: request.deferredInteractionId } : {}),
           });
           parkReminder = describeReclaim(reclaim);
         } else if (method === "settle") {
@@ -321,7 +332,8 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
       settle: (threadId) => mutate({ method: "settle", threadId }),
       unsettle: (threadId) => mutate({ method: "unsettle", threadId }),
       unsnooze: (threadId) => mutate({ method: "unsnooze", threadId }),
-      snooze: (threadId, snoozedUntil) => mutate({ method: "snooze", threadId, snoozedUntil }),
+      snooze: (threadId, snoozedUntil, deferredInteractionId) =>
+        mutate({ method: "snooze", threadId, snoozedUntil, deferredInteractionId }),
     };
-  }, [askingParentIds, now, rows, rpc]);
+  }, [askingParentIds, now, rows, rpc, unblockedWorkParentIds]);
 }

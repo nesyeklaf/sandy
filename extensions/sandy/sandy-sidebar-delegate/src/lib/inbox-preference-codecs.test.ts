@@ -38,15 +38,16 @@ it("caps child expansion before deduplication on read and only on storage prune"
 });
 
 it("fills older shelf shapes and drops unknown keys without stricter primitive rejection", () => {
-  expect(shelfExpansionCodec.decode('{"settled":true,"unknown":true}')).toEqual({
-    active: true,
+  expect(shelfExpansionCodec.decode('{"settled":true,"active":false,"inactive":true,"merged":false,"unknown":true}')).toEqual({
     pinned: true,
+    needs: false,
+    failed: true,
     working: true,
     review: true,
-    inactive: false,
-    parked: false,
+    waiting: true,
+    merged: false,
     snoozed: false,
-    settled: true,
+    archived: false,
   });
   for (const value of [true, 1, [], "old"]) {
     expect(shelfExpansionCodec.decode(JSON.stringify(value))).toEqual(shelfExpansionCodec.fallback());
@@ -56,6 +57,11 @@ it("fills older shelf shapes and drops unknown keys without stricter primitive r
     working: false,
   });
   expect(decodeStoredValue("null", shelfExpansionCodec)).toBeNull();
+});
+
+it("carries an expanded or collapsed Parked shelf over to Snoozed", () => {
+  expect(shelfExpansionCodec.decode('{"parked":true}')?.snoozed).toBe(true);
+  expect(shelfExpansionCodec.decode('{"parked":true,"snoozed":false}')?.snoozed).toBe(false);
 });
 
 it("uses legacy grouping only for missing or invalid sort modes without rewriting it", () => {

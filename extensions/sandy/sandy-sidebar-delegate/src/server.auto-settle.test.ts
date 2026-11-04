@@ -32,7 +32,6 @@ describe("automatic settle evaluation", () => {
             ok: true as const,
             schema: {},
             values: {
-              inactiveThreadsEnabled: false,
               autoSettleInactive: false,
               autoSettleOnMerge: false,
             },
@@ -520,8 +519,6 @@ describe("automatic settle evaluation", () => {
     await expect(
       harness.behavior.callRpc("updateSidebarSettings", {
         snoozePresets: "30m, 2h, 1d, 1w",
-        inactiveThreadsEnabled: true,
-        inactiveAfterHours: 6,
         showRunningChildrenWhenCollapsed: true,
         autoSettleInactive: false,
         autoSettleAfterDays: 3,

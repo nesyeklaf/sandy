@@ -13,15 +13,20 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Manual ordering plus Recent activity, Date created, and Repo sort modes
 - Subtle repo grouping for repos with multiple active threads
 - Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
-- Pinned, Active, Inactive, Snoozed, Parked, and Settled shelves
-- Full cards, compact working threads, or compact all threads, with options to keep pinned or woken threads full
+- Shelves by status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
+- Questions in the row: answer a single-choice question with one tap (Undo within five seconds), or Later to snooze it for an hour
+- Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents and age, each one on or off
+- Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin or Tag them together from the bar at the bottom, each with Undo
+- Activity bell beside the View button: the last 24 hours of asked, failed and finished threads, plus threads archived in that time with Restore; the badge counts questions waiting in Needs you
+- On phone widths the search with its scope and tag/topic pickers sits at the bottom of the sidebar
+- Density from the View button: Auto, Comfortable (three lines), Compact (two lines), or Dense (one line), with a per-shelf override in each shelf's ⋯ menu and options to keep pinned or woken threads full
 - Searchable multi-repo filtering, remembered per window across reloads
 - Optional repo colors with per-repo color selection. Names stay colored in every mode; show stripes in full and collapsed mode, full mode only, or grouped repos only
 - Automatic repo icons with custom overrides
 - Expandable child-thread indicators with running and attention states, on shelf rows too
 - Live status, branch, pull request, and provider details, plus statuses set by other plugins
 - Workspace port discovery, hover-card details, and optional browser links
-- A Clean button in Settled that previews and closes live terminals and verified thread-owned listening ports, while protecting Active and Working threads
+- A Clean action in a settled row's ⋯ menu that previews and closes live terminals and verified thread-owned listening ports, while protecting Active and Working threads
 - Configurable inactive-thread and automatic cleanup rules
 - Native sandy navigation, split, rename, archive, and delete flows
 - Repo submenu on thread cards for settings, rename, local paths, and removal

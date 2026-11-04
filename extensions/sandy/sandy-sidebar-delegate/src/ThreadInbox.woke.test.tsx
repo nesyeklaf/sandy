@@ -205,9 +205,9 @@ it("keeps parked threads parked when opened and offers Resume with Undo", async 
       park,
     },
   });
-  const shelf = await screen.findByRole("region", { name: "Parked" });
+  const shelf = await screen.findByRole("region", { name: "Snoozed" });
   fireEvent.click(within(shelf).getByRole("button"));
-  expect(within(shelf).getByText("Waiting 5d")).toBeDefined();
+  expect(within(shelf).getByText("Parked")).toBeDefined();
   fireEvent.click(within(shelf).getByRole("link", { name: "sandy · Awaiting review" }));
   expect(resume).not.toHaveBeenCalled();
   expect(rendered.navigateCalls).toContainEqual({

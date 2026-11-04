@@ -5,6 +5,7 @@ import { MAX_CHILD_EXPANSION, pruneChildExpansion } from "./safe-storage";
 import { readStorageRaw } from "./storage-codec";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { PreferenceCodec } from "./use-persisted-preference";
+import { DEFAULT_ROW_FIELDS, ROW_FIELDS, type RowField, type RowFields } from "../row-fields";
 
 export const projectScopeCodec: PreferenceCodec<string[]> = {
   storage: "session",
@@ -23,7 +24,7 @@ export const pinnedProjectsCodec: PreferenceCodec<string[]> = {
   storage: "local",
 };
 
-export const environmentGroupingCodec: PreferenceCodec<boolean> = {
+export const offByDefaultCodec: PreferenceCodec<boolean> = {
   fallback: () => false,
   decode: (stored) => (stored === "true" ? true : stored === "false" ? false : null),
   encode: String,
@@ -61,31 +62,36 @@ export const childExpansionCodec: PreferenceCodec<Set<string>> = {
 };
 
 const DEFAULT_SHELF_EXPANSION: ShelfExpansionState = {
-  active: true,
   pinned: true,
+  needs: true,
+  failed: true,
   working: true,
   review: true,
-  inactive: false,
-  parked: false,
+  waiting: true,
+  merged: false,
   snoozed: false,
-  settled: false,
+  archived: false,
 };
+
+const LEGACY_SHELF_KEYS: Partial<Record<keyof ShelfExpansionState, string>> = {
+  needs: "active",
+  waiting: "inactive",
+  snoozed: "parked",
+};
+
 export const shelfExpansionCodec: PreferenceCodec<ShelfExpansionState> = {
   fallback: () => DEFAULT_SHELF_EXPANSION,
   decode: (stored) => {
     if (!stored) return null;
-    const parsed = JSON.parse(stored) as Partial<ShelfExpansionState>;
-    return {
-      // Older shapes did not include independently collapsible Active or Pinned.
-      active: parsed.active !== false,
-      pinned: parsed.pinned !== false,
-      working: parsed.working !== false,
-      review: parsed.review !== false,
-      inactive: parsed.inactive === true,
-      parked: parsed.parked === true,
-      snoozed: parsed.snoozed === true,
-      settled: parsed.settled === true,
-    };
+    const parsed: unknown = JSON.parse(stored);
+    if (parsed === null) return null;
+    const record = typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    const entries = Object.entries(DEFAULT_SHELF_EXPANSION).map(([shelf, fallback]) => {
+      const legacy = LEGACY_SHELF_KEYS[shelf as keyof ShelfExpansionState];
+      const value = record[shelf] ?? (legacy ? record[legacy] : undefined);
+      return [shelf, typeof value === "boolean" ? value : fallback];
+    });
+    return Object.fromEntries(entries) as ShelfExpansionState;
   },
   encode: JSON.stringify,
 };
@@ -98,4 +104,20 @@ export const activeSortCodec: PreferenceCodec<ActiveSortMode> = {
     return readStorageRaw(STORAGE_KEYS.activeGrouping.key) === "true" ? "project" : "manual";
   },
   encode: (value) => value,
+};
+
+export const rowFieldsCodec: PreferenceCodec<RowFields> = {
+  fallback: () => DEFAULT_ROW_FIELDS,
+  decode: (stored) => {
+    const value: unknown = JSON.parse(stored ?? "null");
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(
+      ROW_FIELDS.map((field) => {
+        const flag = record[field];
+        return [field, typeof flag === "boolean" ? flag : DEFAULT_ROW_FIELDS[field]];
+      }),
+    ) as Record<RowField, boolean>;
+  },
+  encode: JSON.stringify,
 };

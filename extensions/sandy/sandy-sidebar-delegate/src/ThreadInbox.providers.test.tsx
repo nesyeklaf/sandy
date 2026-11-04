@@ -9,7 +9,7 @@ vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 await loadInboxApp();
 
 describe("ThreadInbox", () => {
-  it.each(["full", "compact-working", "compact-all", "working-shelf"])(
+  it.each(["comfortable", "compact", "dense"] as const)(
     "renders provider names, logos, and theme tints from sandy's directory (%s)",
     async (display) => {
       const view = renderSlot(inbox, listProps, {
@@ -57,18 +57,18 @@ describe("ThreadInbox", () => {
           listLifecycle: () => ({ rows: [] }),
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
-            threadDisplay: display === "working-shelf" ? "full" : display,
-            workingShelf: display === "working-shelf",
+            threadDensity: display,
           }),
         },
       });
 
       await waitFor(() => {
         const row = screen.getByRole("link", { name: "Pi thread" }).closest("[data-parent-card]")!;
-        expect(row.classList.contains("h-8")).toBe(display !== "full");
+        expect(row.getAttribute("data-row-density")).toBe(
+          display,
+        );
       });
-      const region = screen.getByRole("region", { name: display === "working-shelf" ? "Working" : "Needs you" });
+      const region = screen.getByRole("region", { name: "Working" });
       const glyph = within(region).getByRole("img", { name: "Pi" });
       const row = glyph.closest("[data-parent-card]")! as HTMLElement;
       expect(within(row).getByText("Working")).toBeDefined();

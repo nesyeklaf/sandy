@@ -19,7 +19,7 @@ for (const [name, theme, width] of [
     await open(page, { theme, width });
     await page.getByRole("button", { name: "Sort active threads: Manual order" }).click();
     await expect(page.getByRole("checkbox", { name: "Group by worktree" })).toHaveCount(0);
-    await page.getByRole("dialog", { name: "Sort active threads" }).getByText("Project", { exact: true }).click();
+    await page.getByRole("dialog", { name: "Sort active threads" }).getByText("Repo", { exact: true }).click();
     const toggle = page.getByRole("checkbox", { name: "Group by worktree" });
     await expect(toggle).not.toBeChecked();
     await toggle.focus();
@@ -56,6 +56,6 @@ for (const [name, theme, width] of [
       .click();
     await page.keyboard.press("Escape");
     await expect(search).toHaveCount(0);
-    await expect(shelf(page, "Active").getByRole("link")).toHaveCount(4);
+    await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(4);
   });
 }

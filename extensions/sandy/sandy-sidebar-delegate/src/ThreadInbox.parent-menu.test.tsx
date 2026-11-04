@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { makeThreadResponse } from "@sandy-sdk/plugin-sdk/testing";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   defaultSidebarSettings,
@@ -17,6 +18,7 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("parent thread menu", () => {
   it("orders parent choices by recent activity regardless of pin, shelf, or sidebar sort", async () => {
@@ -58,7 +60,7 @@ describe("parent thread menu", () => {
         ],
       },
       rpc: {
-        getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: true, inactiveAfterHours: 6 }),
+        getSidebarSettings: () => ({ ...defaultSidebarSettings }),
         listLifecycle: () => ({
           rows: [
             { threadId: "settled", settledAt: now, snoozedUntil: null, snoozedAt: null },
@@ -68,8 +70,8 @@ describe("parent thread menu", () => {
         }),
       },
     });
-    await screen.findByRole("region", { name: "Inactive" });
-    await screen.findByRole("region", { name: "Settled" });
+    await screen.findByRole("region", { name: "Waiting" });
+    await screen.findByRole("region", { name: "Archived" });
     fireEvent.contextMenu(await screen.findByText("Choose my parent"));
     fireEvent.keyDown(screen.getByRole("menuitem", { name: "Parent" }), { key: "ArrowRight" });
     const search = await screen.findByRole("textbox", { name: "Search parent threads" });

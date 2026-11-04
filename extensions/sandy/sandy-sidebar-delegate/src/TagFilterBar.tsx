@@ -1,52 +1,43 @@
-import { useMemo, useRef } from "react";
-import { pinActiveTag, tagCounts } from "./tag-filter";
+import { useMemo } from "react";
+import { PickerPopover } from "./PickerPopover";
+import { SearchScopePicker } from "./SearchScopePicker";
+import { selectedValues, tagItems, topicItems, withPicked } from "./tag-filter";
 import { setTagFilter, useTagFilter } from "./useTagFilter";
 import { useTagIndex } from "./useTagIndex";
-import { cn } from "./lib/utils";
 
 export function TagFilterBar() {
   const filter = useTagFilter();
   const index = useTagIndex();
-  const row = useRef<HTMLDivElement>(null);
-  const counts = useMemo(() => pinActiveTag(tagCounts(index), filter.tag), [index, filter.tag]);
-  if (counts.length === 0 && filter.tag === null && filter.query === "") return null;
+  const tags = useMemo(() => withPicked(tagItems(index), selectedValues(filter.tags)), [index, filter.tags]);
+  const topics = useMemo(() => withPicked(topicItems(index), selectedValues(filter.topics)), [index, filter.topics]);
   return (
-    <div role="group" aria-label="Tag filter" className="flex shrink-0 flex-col gap-1 px-2 pb-1">
+    <div role="group" aria-label="Session filter" className="flex shrink-0 items-center gap-1 px-2 pb-1">
       <input
         value={filter.query}
-        aria-label="Search topics and tags"
-        placeholder="Search topics and tags"
-        className="h-6 rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+        aria-label="Search sessions"
+        placeholder="Search sessions"
+        className="h-6 min-w-0 flex-1 rounded border border-border bg-transparent px-1.5 text-xs outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
         onChange={(event) => setTagFilter({ query: event.target.value })}
       />
-      <div
-        ref={row}
-        className="flex flex-nowrap gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {counts.map(({ tag, count }) => {
-          const active = filter.tag === tag;
-          return (
-            <button
-              key={tag}
-              type="button"
-              aria-pressed={active}
-              title={`Show sessions tagged ${tag}`}
-              onClick={() => {
-                setTagFilter({ tag: active ? null : tag });
-                if (row.current) row.current.scrollLeft = 0;
-              }}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-sidebar-accent text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {tag} {count}
-            </button>
-          );
-        })}
-      </div>
+      <SearchScopePicker scope={filter.scope} onChange={(scope) => setTagFilter({ scope })} />
+      {topics.length > 0 && (
+        <PickerPopover
+          icon="Bookmark"
+          noun="topics"
+          items={topics}
+          selection={filter.topics}
+          onChange={(topics) => setTagFilter({ topics })}
+        />
+      )}
+      {tags.length > 0 && (
+        <PickerPopover
+          icon="Tag"
+          noun="tags"
+          items={tags}
+          selection={filter.tags}
+          onChange={(tags) => setTagFilter({ tags })}
+        />
+      )}
     </div>
   );
 }

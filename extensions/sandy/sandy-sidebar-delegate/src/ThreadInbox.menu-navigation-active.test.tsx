@@ -130,9 +130,9 @@ describe("row context menu", () => {
           },
         );
 
-        const active = await screen.findByRole("region", { name: "Needs you" });
+        const active = await screen.findByRole("region", { name: "Waiting" });
         if (collapsed) {
-          fireEvent.click(within(active).getByRole("button", { name: "Needs you", expanded: true }));
+          fireEvent.click(within(active).getByRole("button", { name: "Waiting", expanded: true }));
         }
         const current = within(active).getByText("Current").closest("li")!;
         await parkFromCard(current, action);
@@ -178,7 +178,7 @@ describe("row context menu", () => {
       firstSettled = true;
       await rendered.emitRealtime("lifecycle", {});
       await waitFor(() =>
-        expect(within(screen.getByRole("region", { name: "Needs you" })).queryByText("First active")).toBeNull(),
+        expect(within(screen.getByRole("region", { name: "Waiting" })).queryByText("First active")).toBeNull(),
       );
       pendingSettle.resolve({ ok: true, reclaim: SETTLED_NOTHING });
       await waitFor(() =>

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 await loadInboxApp();
@@ -18,6 +19,7 @@ describe("shelf render isolation", () => {
       return candidate;
     };
     const titleReads = (id: string) => reads.get(id)!.mock.calls.length;
+    localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
     const settled = Array.from({ length: 60 }, (_, index) => observedThread(`settled-${index}`, `Finished ${index}`));
     renderSlot(inbox, listProps, {
       sidebarThreads: {
@@ -28,7 +30,6 @@ describe("shelf render isolation", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           projectColorsEnabled: true,
         }),
         getProjectColors: () => ({ colors: { proj_1: "#123456" } }),
@@ -45,10 +46,10 @@ describe("shelf render isolation", () => {
         }),
       },
     });
-    const parked = await screen.findByRole("region", { name: "Parked" });
+    const parked = await screen.findByRole("region", { name: "Snoozed" });
     fireEvent.click(within(parked).getByRole("button", { expanded: false }));
     await screen.findByRole("link", { name: /Parked work/ });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
+    const shelf = await screen.findByRole("region", { name: "Archived" });
     await waitFor(() => expect(titleReads("active")).toBeGreaterThan(0));
     const activeRenders = titleReads("active");
     const parkedRenders = titleReads("parked");
@@ -67,8 +68,8 @@ describe("shelf render isolation", () => {
     // An active-shelf toggle must also leave the loaded settled rows alone.
     const settledRenders = titleReads("settled-0");
     fireEvent.click(
-      within(screen.getByRole("region", { name: "Needs you" })).getByRole("button", {
-        name: /^Needs you/,
+      within(screen.getByRole("region", { name: "Waiting" })).getByRole("button", {
+        name: /^Waiting/,
         expanded: true,
       }),
     );

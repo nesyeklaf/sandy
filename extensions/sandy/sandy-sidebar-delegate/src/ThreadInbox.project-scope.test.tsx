@@ -105,11 +105,13 @@ it("keeps selection usable when session storage is unavailable", () => {
 });
 
 it("filters every shelf without changing lifecycle or order", async () => {
-  const shelves = ["Pinned", "Needs you", "Working", "Inactive", "Snoozed", "Parked", "Settled"];
+  const shelves = ["Pinned", "Waiting", "Working", "Inactive", "Snoozed", "Parked", "Settled"];
+  const regions: Record<string, string> = { Inactive: "Waiting", Parked: "Snoozed", Settled: "Archived" };
   const now = Date.now();
+  localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
   localStorage.setItem(
     STORAGE_KEYS.shelfExpansion.key,
-    JSON.stringify(Object.fromEntries(shelves.map((s) => [s.toLowerCase(), true]))),
+    JSON.stringify({ pinned: true, waiting: true, working: true, snoozed: true, archived: true }),
   );
   sessionStorage.setItem(STORAGE_KEYS.projectScope.key, JSON.stringify(["Alpha", "Gamma"]));
   const threads = projects.flatMap(({ id }) =>
@@ -138,8 +140,10 @@ it("filters every shelf without changing lifecycle or order", async () => {
     },
   });
   for (const shelf of shelves) {
-    const region = await screen.findByRole("region", { name: shelf });
-    await waitFor(() => expect(within(region).getAllByRole("link")).toHaveLength(2));
+    const name = regions[shelf] ?? shelf;
+    const region = await screen.findByRole("region", { name });
+    const sharing = shelves.filter((s) => (regions[s] ?? s) === name).length;
+    await waitFor(() => expect(within(region).getAllByRole("link")).toHaveLength(2 * sharing));
     expect(within(region).getByText(`Alpha ${shelf}`)).toBeDefined();
     expect(within(region).getByText(`Gamma ${shelf}`)).toBeDefined();
     expect(screen.queryByText(`Beta ${shelf}`)).toBeNull();

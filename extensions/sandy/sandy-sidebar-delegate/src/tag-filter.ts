@@ -1,3 +1,4 @@
+import type { SearchScope } from "./search-contract";
 import type { TopicSegment } from "./topics-contract";
 
 export interface TagIndex {
@@ -5,19 +6,64 @@ export interface TagIndex {
   segments: TopicSegment[];
 }
 
-interface TagFilter {
-  tag: string | null;
-  query: string;
+export type MatchMode = "any" | "all";
+
+export interface Selection {
+  include: readonly string[];
+  exclude: readonly string[];
+  match: MatchMode;
 }
 
-export const NO_FILTER: TagFilter = { tag: null, query: "" };
+export const NO_SELECTION: Selection = { include: [], exclude: [], match: "any" };
+
+interface TagFilter {
+  tags: Selection;
+  topics: Selection;
+  query: string;
+  scope: SearchScope;
+}
+
+export const NO_FILTER: TagFilter = { tags: NO_SELECTION, topics: NO_SELECTION, query: "", scope: "both" };
+
+export type ItemState = "neutral" | "include" | "exclude";
+
+export function itemState(selection: Selection, value: string): ItemState {
+  if (selection.include.includes(value)) return "include";
+  return selection.exclude.includes(value) ? "exclude" : "neutral";
+}
+
+/** Neutral becomes included, included becomes excluded, excluded becomes neutral. */
+export function cycleItem(selection: Selection, value: string): Selection {
+  const without = (list: readonly string[]) => list.filter((entry) => entry !== value);
+  switch (itemState(selection, value)) {
+    case "neutral":
+      return { ...selection, include: [...selection.include, value] };
+    case "include":
+      return { ...selection, include: without(selection.include), exclude: [...selection.exclude, value] };
+    case "exclude":
+      return { ...selection, exclude: without(selection.exclude) };
+  }
+}
+
+export function isSelecting(selection: Selection): boolean {
+  return selection.include.length > 0 || selection.exclude.length > 0;
+}
+
+export function selectedValues(selection: Selection): string[] {
+  return [...selection.include, ...selection.exclude];
+}
+
+export interface PickerItem {
+  value: string;
+  count: number;
+}
 
 export function isFiltering(filter: TagFilter): boolean {
-  return filter.tag !== null || filter.query.trim() !== "";
+  return isSelecting(filter.tags) || isSelecting(filter.topics) || filter.query.trim() !== "";
 }
 
 /** Tags with the number of sessions that carry them, directly or through a topic. */
-export function tagCounts(index: TagIndex): Array<{ tag: string; count: number }> {
+export function tagItems(index: TagIndex): PickerItem[] {
   const owners = new Map<string, Set<string>>();
   const add = (tag: string, threadId: string) => {
     const set = owners.get(tag) ?? new Set<string>();
@@ -26,37 +72,67 @@ export function tagCounts(index: TagIndex): Array<{ tag: string; count: number }
   };
   for (const [threadId, tags] of Object.entries(index.threadTags)) for (const tag of tags) add(tag, threadId);
   for (const segment of index.segments) for (const tag of segment.tags) add(tag, segment.threadId);
-  return [...owners.entries()]
-    .map(([tag, set]) => ({ tag, count: set.size }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  return sortedItems(owners);
 }
 
-export function pinActiveTag<T extends { tag: string }>(counts: readonly T[], active: string | null): T[] {
-  if (active === null) return [...counts];
-  return [...counts.filter((entry) => entry.tag === active), ...counts.filter((entry) => entry.tag !== active)];
-}
-
-/** Thread ids that match the tag and the text; the text searches topic titles and tags. */
-function matchingThreadIds(index: TagIndex, filter: TagFilter): Set<string> {
-  const needle = filter.query.trim().toLowerCase();
-  const ids = new Set<string>();
-  const tagsOf = (threadId: string) => index.threadTags[threadId] ?? [];
-  const candidates = new Set<string>([...Object.keys(index.threadTags), ...index.segments.map((s) => s.threadId)]);
-  for (const threadId of candidates) {
-    const segments = index.segments.filter((segment) => segment.threadId === threadId);
-    const tags = [...tagsOf(threadId), ...segments.flatMap((segment) => segment.tags)];
-    if (filter.tag !== null && !tags.includes(filter.tag)) continue;
-    if (needle !== "") {
-      const haystack = [...tags, ...segments.map((segment) => segment.title)];
-      if (!haystack.some((text) => text.toLowerCase().includes(needle))) continue;
-    }
-    ids.add(threadId);
+/** Topic titles with the number of sessions that have a topic of that title. */
+export function topicItems(index: TagIndex): PickerItem[] {
+  const owners = new Map<string, Set<string>>();
+  for (const segment of index.segments) {
+    const set = owners.get(segment.title) ?? new Set<string>();
+    set.add(segment.threadId);
+    owners.set(segment.title, set);
   }
-  return ids;
+  return sortedItems(owners);
 }
 
-export function filterByTags<T extends { id: string }>(threads: readonly T[], index: TagIndex, filter: TagFilter): T[] {
+function sortedItems(owners: ReadonlyMap<string, ReadonlySet<string>>): PickerItem[] {
+  return [...owners.entries()]
+    .map(([value, set]) => ({ value, count: set.size }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+
+/** The known items, then picked ones that no session carries any more, so they can still be unpicked. */
+export function withPicked(items: readonly PickerItem[], picked: readonly string[]): PickerItem[] {
+  const known = new Set(items.map((item) => item.value));
+  return [...items, ...picked.filter((value) => !known.has(value)).map((value) => ({ value, count: 0 }))];
+}
+
+export function matchesNeedle(items: readonly PickerItem[], needle: string): PickerItem[] {
+  const text = needle.trim().toLowerCase();
+  return text === "" ? [...items] : items.filter((item) => item.value.toLowerCase().includes(text));
+}
+
+function passes(selection: Selection, have: readonly string[]): boolean {
+  if (selection.exclude.some((value) => have.includes(value))) return false;
+  if (selection.include.length === 0) return true;
+  return selection.match === "all"
+    ? selection.include.every((value) => have.includes(value))
+    : selection.include.some((value) => have.includes(value));
+}
+
+function matchesLabels(index: TagIndex, filter: TagFilter, threadId: string): boolean {
+  const segments = index.segments.filter((segment) => segment.threadId === threadId);
+  const tags = [...(index.threadTags[threadId] ?? []), ...segments.flatMap((segment) => segment.tags)];
+  return (
+    passes(filter.tags, tags) &&
+    passes(
+      filter.topics,
+      segments.map((segment) => segment.title),
+    )
+  );
+}
+
+/** `found` holds the sessions the text search matched, or null when there is no text. */
+export function filterThreads<T extends { id: string }>(
+  threads: readonly T[],
+  index: TagIndex,
+  filter: TagFilter,
+  found: ReadonlySet<string> | null,
+): T[] {
   if (!isFiltering(filter)) return threads as T[];
-  const ids = matchingThreadIds(index, filter);
-  return threads.filter((thread) => ids.has(thread.id));
+  const labelled = isSelecting(filter.tags) || isSelecting(filter.topics);
+  return threads.filter(
+    (thread) => (!labelled || matchesLabels(index, filter, thread.id)) && (found === null || found.has(thread.id)),
+  );
 }

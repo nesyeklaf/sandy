@@ -12,6 +12,7 @@ import { createServerSettings } from "./server-settings";
 import { createServerLifecycle, LIFECYCLE_BACKFILLS_MIGRATION } from "./server-lifecycle";
 import { createServerProjectIcons } from "./server-project-icons";
 import { createServerProjectColors } from "./server-project-colors";
+import { createServerSessionSearch } from "./server-session-search";
 import { createServerTopics, TOPICS_MIGRATIONS } from "./server-topics";
 import { createServerAnchors, ANCHORS_MIGRATIONS } from "./server-anchors";
 import { createServerProjectManagement } from "./server-project-management";
@@ -20,6 +21,7 @@ import { createServerSettleActions } from "./server-settle-actions";
 import { createServerPolicy } from "./server-policy";
 import { createServerDelegateChildren } from "./server-delegate-children";
 import { createServerHandlers } from "./server-handlers";
+import { createServerBulkActions } from "./server-bulk-actions";
 
 export type { StoredLifecycleRow } from "./server-lifecycle";
 
@@ -116,6 +118,7 @@ const migrations = [
   LIFECYCLE_BACKFILLS_MIGRATION,
   ...TOPICS_MIGRATIONS,
   ...ANCHORS_MIGRATIONS,
+  `ALTER TABLE thread_lifecycle ADD COLUMN deferred_interaction_id TEXT`,
 ];
 
 export default async function plugin(sandy: SandyPluginApi) {
@@ -140,7 +143,9 @@ export default async function plugin(sandy: SandyPluginApi) {
   const policy = createServerPolicy(ctx, lifecycle, settings, cleanup, threadPortActions);
   const delegateChildren = createServerDelegateChildren(ctx);
   const topics = createServerTopics(ctx, helper);
+  const sessionSearch = createServerSessionSearch(ctx);
   const anchors = createServerAnchors(ctx, helper);
+  const bulk = createServerBulkActions(ctx, lifecycle, cleanup);
   const handlers = createServerHandlers(
     ctx,
     lifecycle,
@@ -151,10 +156,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     getOpenPorts,
     threadPullRequests,
     regenerateTitle,
-    { icons, colors, projects, settle, delegateChildren, topics, anchors },
+    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, anchors, bulk },
   );
   const { resolveProjectIcon } = icons;
-  const { wakeAncestors, clearSettlingState, clear } = lifecycle;
+  const { wakeAncestors, wakeDeferredQuestions, clearSettlingState, clear } = lifecycle;
   ctx.sandy.http.route("GET", "/project-icon", async (context) => {
     const projectId = context.req.query("projectId")?.trim();
     const environmentId = context.req.query("environmentId")?.trim() || null;
@@ -185,6 +190,10 @@ export default async function plugin(sandy: SandyPluginApi) {
   // sidebar nesting reachable. Siblings retain their own settled state.
   ctx.sandy.events.on("thread.created", async ({ thread }) => {
     await wakeAncestors(thread);
+  });
+
+  ctx.sandy.events.on("interaction.pending", async ({ thread, interaction }) => {
+    await wakeDeferredQuestions(thread, interaction.id);
   });
 
   ctx.sandy.events.on("thread.active", async ({ thread }) => {

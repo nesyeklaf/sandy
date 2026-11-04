@@ -4,8 +4,9 @@ import { toast } from "./lib/toast";
 import { cn } from "./lib/utils";
 import { threadDisplayTitle, threadStoredTitle, threadTitleHasMentions } from "./inbox";
 import { ThreadTitle } from "./ThreadTitle";
+import { statusToneClass } from "./StatusSlot";
+import { threadFailed } from "./thread-status";
 
-/** Inline title editing shared by full cards and parked rows. */
 export function InlineThreadTitle({
   thread,
   editing,
@@ -18,7 +19,6 @@ export function InlineThreadTitle({
   className?: string;
 }) {
   const sdk = useSdk();
-  // Edit the stored title so saving never flattens mention tokens into names.
   const title = threadStoredTitle(thread);
   const [draft, setDraft] = useState(title);
   const finished = useRef(false);
@@ -45,12 +45,24 @@ export function InlineThreadTitle({
 
   if (!editing) {
     return (
-      <ThreadTitle
-        threadId={thread.id}
-        title={threadDisplayTitle(thread)}
-        mentions={threadTitleHasMentions(thread)}
-        className={className}
-      />
+      <>
+        {thread.isUnread ? (
+          <span
+            aria-hidden="true"
+            data-unread-dot=""
+            className={cn(
+              "mr-1.5 inline-block size-[5px] shrink-0 rounded-full bg-current align-middle",
+              statusToneClass(threadFailed(thread) ? "unread-error" : "unread-success"),
+            )}
+          />
+        ) : null}
+        <ThreadTitle
+          threadId={thread.id}
+          title={threadDisplayTitle(thread)}
+          mentions={threadTitleHasMentions(thread)}
+          className={className}
+        />
+      </>
     );
   }
 
@@ -93,7 +105,6 @@ export function InlineThreadTitle({
 
 function saveTitle(sdk: ReturnType<typeof useSdk>, threadId: string, title: string) {
   void sdk.threads.update({ threadId, title }).catch((error) => {
-    // The SDK rolls back; preserve the former sidebar rename's error feedback.
     toast.error("Failed to update thread", {
       description: error instanceof Error ? error.message.replace(/^HTTP \d+: /, "") : undefined,
     });

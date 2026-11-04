@@ -39,7 +39,7 @@ export function ActiveSortPicker({
             }
           }}
           className={cn(
-            "absolute bottom-1 right-[1.875rem] z-10 flex size-4 items-center justify-between rounded-md border-0 bg-transparent p-0 text-muted-foreground/40 shadow-none transition-colors duration-150 hover:bg-sidebar-accent hover:text-muted-foreground hover:duration-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-ring",
+            "flex size-4 items-center justify-between rounded-md border-0 bg-transparent p-0 text-muted-foreground/40 shadow-none transition-colors duration-150 hover:bg-sidebar-accent hover:text-muted-foreground hover:duration-0 focus:outline-none focus:ring-0 focus-visible:ring-1 focus-visible:ring-ring",
             mode !== "manual" && "bg-sidebar-accent/60 text-muted-foreground/80",
           )}
         >
