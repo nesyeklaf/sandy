@@ -44,6 +44,7 @@ const SHELF_HEADERS: Record<InboxShelfId, { label: string; icon: IconName }> = {
   working: { label: "Working", icon: "Loading" },
   review: { label: "In review", icon: "GitPullRequest" },
   waiting: { label: "Waiting", icon: "Hourglass" },
+  orchestrators: { label: "Orchestratoren", icon: "Orchestrator" },
   ideas: { label: "Ideen", icon: "Bulb" },
   merged: { label: "Merged", icon: "GitMerge" },
   snoozed: { label: "Snoozed", icon: "Clock" },
@@ -257,6 +258,7 @@ export function ThreadInboxView({
                   sortPicker,
                 )}
                 {plainShelf("failed")}
+                {plainShelf("orchestrators")}
                 {plainShelf("working")}
                 {plainShelf("review")}
                 {cardShelf(

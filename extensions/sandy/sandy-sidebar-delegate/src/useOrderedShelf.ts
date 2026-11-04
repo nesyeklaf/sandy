@@ -25,6 +25,30 @@ export function useOrderedShelf(
 
 type Shelf = readonly PluginSidebarThread[];
 
+type StatusShelf = "failed" | "orchestrators" | "working" | "review" | "ideas" | "merged";
+
+export function useStatusShelves(
+  bases: Readonly<Record<StatusShelf, Shelf>>,
+  expanded: Readonly<Record<StatusShelf, boolean>>,
+  activeThreadId: string | null,
+  attentionParentIds: ReadonlySet<string>,
+) {
+  return {
+    failed: useOrderedShelf(bases.failed, null, expanded.failed, activeThreadId, attentionParentIds),
+    orchestrators: useOrderedShelf(
+      bases.orchestrators,
+      null,
+      expanded.orchestrators,
+      activeThreadId,
+      attentionParentIds,
+    ),
+    working: useOrderedShelf(bases.working, null, expanded.working, activeThreadId, attentionParentIds),
+    review: useOrderedShelf(bases.review, null, expanded.review, activeThreadId, attentionParentIds),
+    ideas: useOrderedShelf(bases.ideas, null, expanded.ideas, activeThreadId, attentionParentIds),
+    merged: useOrderedShelf(bases.merged, null, expanded.merged, activeThreadId, attentionParentIds),
+  };
+}
+
 /** Keep the root of an attention path reachable when its shelf is folded. */
 export function useAttentionParentIds(
   enabled: boolean,

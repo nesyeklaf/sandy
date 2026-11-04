@@ -21,6 +21,7 @@ export {
 import { searchRpcShape } from "./search-contract";
 import { lastMessageRpcShape } from "./last-message-contract";
 import { ideasRpcShape } from "./ideas-contract";
+import { orchestratorsRpcShape } from "./orchestrators-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
@@ -129,6 +130,7 @@ const shelfDensitiesShape = {
   working: z.enum(SHELF_DENSITIES),
   review: z.enum(SHELF_DENSITIES),
   waiting: z.enum(SHELF_DENSITIES),
+  orchestrators: z.enum(SHELF_DENSITIES),
   ideas: z.enum(SHELF_DENSITIES),
   merged: z.enum(SHELF_DENSITIES),
 };
@@ -233,6 +235,7 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...bulkRpcShape,
   ...lastMessageRpcShape,
   ...ideasRpcShape,
+  ...orchestratorsRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),
@@ -314,7 +317,11 @@ export const sandySidebarRpcContract = defineRpcContract({
     // Save only edited fields. Full payloads from older clients remain valid.
     input: sidebarSettingsSchema.partial().extend({
       shelfDensities: z
-        .object({ ...shelfDensitiesShape, ideas: shelfDensitiesShape.ideas.optional() })
+        .object({
+          ...shelfDensitiesShape,
+          orchestrators: shelfDensitiesShape.orchestrators.optional(),
+          ideas: shelfDensitiesShape.ideas.optional(),
+        })
         .strict()
         .optional(),
     }),

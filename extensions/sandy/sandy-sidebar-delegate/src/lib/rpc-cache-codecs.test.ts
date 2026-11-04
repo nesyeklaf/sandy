@@ -95,6 +95,7 @@ describe("settings cache thread density", () => {
       working: "dense",
       review: "default",
       waiting: "default",
+      orchestrators: "default",
       ideas: "default",
       merged: "default",
     });

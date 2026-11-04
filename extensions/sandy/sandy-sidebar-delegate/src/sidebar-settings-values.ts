@@ -20,6 +20,7 @@ export const DENSITY_SHELVES = [
   "working",
   "review",
   "waiting",
+  "orchestrators",
   "ideas",
   "merged",
 ] as const;
@@ -84,6 +85,7 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
     working: "default",
     review: "default",
     waiting: "default",
+    orchestrators: "default",
     ideas: "default",
     merged: "default",
   },
