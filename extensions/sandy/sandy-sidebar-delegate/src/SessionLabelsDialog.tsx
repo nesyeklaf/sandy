@@ -15,16 +15,26 @@ interface SessionLabels {
 function useSessionLabels(threadId: string, enabled: boolean) {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
   const [labels, setLabels] = useState<SessionLabels | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const refresh = useCallback(async () => {
-    const result = await rpc.call("listTopics", { threadId });
-    setLabels({ tags: result.threadTags, topics: result.threadTopics });
+    try {
+      const result = await rpc.call("listTopics", { threadId });
+      setLabels({ tags: result.threadTags, topics: result.threadTopics });
+      setLoadFailed(false);
+    } catch {
+      setLoadFailed(true);
+    }
   }, [rpc, threadId]);
   useEffect(() => {
-    if (enabled) refresh().catch(() => setLabels({ tags: [], topics: [] }));
+    if (enabled) void refresh();
   }, [enabled, refresh]);
   useRealtime(TOPICS_CHANNEL, () => {
-    if (enabled) void refresh().catch(() => undefined);
+    if (enabled) void refresh();
   });
+  const retry = () => {
+    setLoadFailed(false);
+    void refresh();
+  };
   const save = async (write: () => Promise<SessionLabels>) => {
     try {
       setLabels(await write());
@@ -42,7 +52,7 @@ function useSessionLabels(threadId: string, enabled: boolean) {
       const result = await rpc.call("setThreadTopics", { threadId, topics });
       return { tags: labels?.tags ?? [], topics: result.topics };
     });
-  return { labels, setTags, setTopics };
+  return { labels, loadFailed, retry, setTags, setTopics };
 }
 
 export function SessionLabelsDialog({
@@ -57,7 +67,7 @@ export function SessionLabelsDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const portalScope = usePortalScopeProps();
-  const { labels, setTags, setTopics } = useSessionLabels(threadId, open);
+  const { labels, loadFailed, retry, setTags, setTopics } = useSessionLabels(threadId, open);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -69,7 +79,18 @@ export function SessionLabelsDialog({
         >
           <Dialog.Title className="text-sm font-semibold leading-5">Tags & Themen</Dialog.Title>
           <Dialog.Description className="truncate text-xs text-muted-foreground">{title}</Dialog.Description>
-          {labels === null ? (
+          {labels === null && loadFailed ? (
+            <div role="alert" className="mt-3 flex items-center justify-between gap-2 text-xs">
+              <span className="text-muted-foreground">Tags und Themen konnten nicht geladen werden.</span>
+              <button
+                type="button"
+                onClick={retry}
+                className="h-7 shrink-0 rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          ) : labels === null ? (
             <p className="mt-3 text-xs text-muted-foreground">Lädt…</p>
           ) : (
             <div className="mt-3 flex flex-col gap-3 text-xs">
