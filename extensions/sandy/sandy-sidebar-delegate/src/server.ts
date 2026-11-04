@@ -13,7 +13,7 @@ import { createServerLifecycle, LIFECYCLE_BACKFILLS_MIGRATION } from "./server-l
 import { createServerProjectIcons } from "./server-project-icons";
 import { createServerProjectColors } from "./server-project-colors";
 import { createServerSessionSearch } from "./server-session-search";
-import { createServerTopics, TOPICS_MIGRATIONS } from "./server-topics";
+import { createServerTopics, SESSION_TOPICS_MIGRATIONS, TOPICS_MIGRATIONS } from "./server-topics";
 import { createServerAnchors, ANCHORS_MIGRATIONS } from "./server-anchors";
 import { createServerLastMessages, LAST_MESSAGES_MIGRATIONS } from "./server-last-messages";
 import { createServerProjectManagement } from "./server-project-management";
@@ -121,6 +121,7 @@ const migrations = [
   ...ANCHORS_MIGRATIONS,
   `ALTER TABLE thread_lifecycle ADD COLUMN deferred_interaction_id TEXT`,
   ...LAST_MESSAGES_MIGRATIONS,
+  ...SESSION_TOPICS_MIGRATIONS,
 ];
 
 export default async function plugin(sandy: SandyPluginApi) {
