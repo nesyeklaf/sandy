@@ -15,7 +15,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
 - Shelves by status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
 - Questions in the row: answer a single-choice question with one tap (Undo within five seconds), or Later to snooze it for an hour
-- Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents and age, each one on or off
+- Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents, age and last message, each one on or off. Last message starts off: it shows the thread's latest assistant text as one truncated line under the title on Comfortable and Compact rows, never on Dense ones. The plugin stores that text when a thread goes idle (the `thread.idle` event), so a thread shows a line after its next turn ends and nothing before
 - Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin or Tag them together from the bar at the bottom, each with Undo
 - Activity bell beside the View button: the last 24 hours of asked, failed and finished threads, plus threads archived in that time with Restore; the badge counts questions waiting in Needs you
 - On phone widths the search with its scope and tag/topic pickers sits at the bottom of the sidebar
