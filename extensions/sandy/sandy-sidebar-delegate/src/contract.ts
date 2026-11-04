@@ -19,6 +19,8 @@ export {
   DELEGATE_CHILDREN_CHANNEL,
 } from "./realtime-channels";
 import { searchRpcShape } from "./search-contract";
+import { lastMessageRpcShape } from "./last-message-contract";
+import { ideasRpcShape } from "./ideas-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
@@ -120,6 +122,16 @@ const projectIconPathSchema = z
   .refine((path) => normalizeProjectIconPath(path) !== null, {
     message: "Choose a relative SVG, PNG, ICO, JPEG, GIF, AVIF, or WebP path",
   });
+const shelfDensitiesShape = {
+  pinned: z.enum(SHELF_DENSITIES),
+  needs: z.enum(SHELF_DENSITIES),
+  failed: z.enum(SHELF_DENSITIES),
+  working: z.enum(SHELF_DENSITIES),
+  review: z.enum(SHELF_DENSITIES),
+  waiting: z.enum(SHELF_DENSITIES),
+  ideas: z.enum(SHELF_DENSITIES),
+  merged: z.enum(SHELF_DENSITIES),
+};
 export const sidebarSettingsSchema = z
   .object({
     snoozePresets: z
@@ -139,17 +151,7 @@ export const sidebarSettingsSchema = z
     childSortDirection: z.enum(CHILD_THREAD_SORT_DIRECTIONS),
     childIconStyle: z.enum(CHILD_THREAD_ICON_STYLES),
     threadDensity: z.enum(THREAD_DENSITIES),
-    shelfDensities: z
-      .object({
-        pinned: z.enum(SHELF_DENSITIES),
-        needs: z.enum(SHELF_DENSITIES),
-        failed: z.enum(SHELF_DENSITIES),
-        working: z.enum(SHELF_DENSITIES),
-        review: z.enum(SHELF_DENSITIES),
-        waiting: z.enum(SHELF_DENSITIES),
-        merged: z.enum(SHELF_DENSITIES),
-      })
-      .strict(),
+    shelfDensities: z.object(shelfDensitiesShape).strict(),
     compactProjectIconOnly: z.boolean(),
     keepPinnedThreadsFull: z.boolean(),
     keepWokeThreadsFull: z.boolean(),
@@ -229,6 +231,8 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...searchRpcShape,
   ...anchorsRpcShape,
   ...bulkRpcShape,
+  ...lastMessageRpcShape,
+  ...ideasRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),
@@ -308,7 +312,12 @@ export const sandySidebarRpcContract = defineRpcContract({
   },
   updateSidebarSettings: {
     // Save only edited fields. Full payloads from older clients remain valid.
-    input: sidebarSettingsSchema.partial(),
+    input: sidebarSettingsSchema.partial().extend({
+      shelfDensities: z
+        .object({ ...shelfDensitiesShape, ideas: shelfDensitiesShape.ideas.optional() })
+        .strict()
+        .optional(),
+    }),
     output: sidebarSettingsSchema,
   },
   listLifecycle: {

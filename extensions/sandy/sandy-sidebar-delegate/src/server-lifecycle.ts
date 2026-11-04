@@ -279,13 +279,20 @@ export function createServerLifecycle(ctx: ServerContext) {
     }
     const byId = new Map<string, Awaited<ReturnType<typeof ctx.sandy.sdk.threads.list>>[number]>();
     const limit = 100;
-    for (let offset = 0; ; offset += limit) {
-      const page = await ctx.sandy.sdk.threads.list({ archived: false, includeHidden: true, limit, offset });
-      for (const thread of page) {
-        if (thread.archivedAt === null && thread.deletedAt === null) byId.set(thread.id, { ...thread });
-        else byId.delete(thread.id);
+    const pagesPerRound = 4;
+    for (let offsets = [0]; ; ) {
+      const pages = await Promise.all(
+        offsets.map((offset) => ctx.sandy.sdk.threads.list({ archived: false, includeHidden: true, limit, offset })),
+      );
+      for (const page of pages) {
+        for (const thread of page) {
+          if (thread.archivedAt === null && thread.deletedAt === null) byId.set(thread.id, { ...thread });
+          else byId.delete(thread.id);
+        }
       }
-      if (page.length < limit) break;
+      if (pages.some((page) => page.length < limit)) break;
+      const next = offsets[offsets.length - 1]! + limit;
+      offsets = Array.from({ length: pagesPerRound }, (_, index) => next + index * limit);
     }
     return [...byId.values()];
   };

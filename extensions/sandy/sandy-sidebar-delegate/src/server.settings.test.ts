@@ -285,6 +285,20 @@ it("keeps the legacy switch in step when density changes", async () => {
   ).resolves.toMatchObject({ threadDensity: "auto", compactWorkingThreads: true });
 });
 
+it("accepts shelf densities from an open tab that predates the ideas shelf", async () => {
+  const harness = await loadPlugin();
+  const { ideas: _ideas, ...withoutIdeas } = DEFAULT_SIDEBAR_SETTINGS.shelfDensities;
+  await expect(
+    harness.behavior.callRpc("updateSidebarSettings", { shelfDensities: { ...withoutIdeas, working: "dense" } }),
+  ).resolves.toMatchObject({ shelfDensities: { working: "dense", ideas: "default" } });
+  await harness.behavior.callRpc("updateSidebarSettings", {
+    shelfDensities: { ...DEFAULT_SIDEBAR_SETTINGS.shelfDensities, ideas: "compact" },
+  });
+  await expect(
+    harness.behavior.callRpc("updateSidebarSettings", { shelfDensities: { ...withoutIdeas, pinned: "dense" } }),
+  ).resolves.toMatchObject({ shelfDensities: { pinned: "dense", ideas: "compact" } });
+});
+
 it("stores per-shelf density overrides and keeps the rest at default", async () => {
   const harness = await loadPlugin();
   await expect(
@@ -296,6 +310,7 @@ it("stores per-shelf density overrides and keeps the rest at default", async () 
         working: "dense",
         review: "default",
         waiting: "compact",
+        ideas: "dense",
         merged: "default",
       },
     }),
@@ -306,9 +321,10 @@ it("stores per-shelf density overrides and keeps the rest at default", async () 
       working: "dense",
       review: "default",
       waiting: "compact",
+      ideas: "dense",
     },
   });
   await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toMatchObject({
-    shelfDensities: { pinned: "comfortable", working: "dense", waiting: "compact" },
+    shelfDensities: { pinned: "comfortable", working: "dense", waiting: "compact", ideas: "dense" },
   });
 });

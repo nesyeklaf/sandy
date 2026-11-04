@@ -138,6 +138,8 @@
                   },
                   {
                     "group": [
+                      "../**/RowLastMessage",
+                      "../**/ThreadInbox.last-message.test",
                       "./**/*.tsx",
                       "../**/*.tsx",
                       "./**/ActiveSortPicker",
@@ -195,9 +197,11 @@
                       "./**/ParentNotificationsMenu",
                       "../**/ParentNotificationsMenu",
                       "./**/ParentThreadMenu",
+                      "./**/RowLastMessage",
                       "./**/SectionAssignMenu",
                       "./**/TagEditor",
                       "./**/TagFilterBar",
+                      "./**/ThreadInbox.last-message.test",
                       "./**/TopicDraftForm",
                       "./**/TopicHeader",
                       "./**/TopicMap",
@@ -276,6 +280,8 @@
                       "../**/SearchScopePicker",
                       "../**/SelectBar",
                       "../**/SelectionHost",
+                      "./**/SessionLabelsDialog",
+                      "../**/SessionLabelsDialog",
                       "./**/SidebarSettings",
                       "../**/SidebarSettings",
                       "./**/SidebarSettings.test",
@@ -356,6 +362,8 @@
                       "../**/ThreadInbox.loading.test",
                       "./**/ThreadInbox.menu-editing.test",
                       "../**/ThreadInbox.menu-editing.test",
+                      "./**/ThreadInbox.menu-labels.test",
+                      "../**/ThreadInbox.menu-labels.test",
                       "./**/ThreadInbox.menu-lifecycle.test",
                       "../**/ThreadInbox.menu-lifecycle.test",
                       "./**/ThreadInbox.menu-navigation-active.test",
@@ -465,7 +473,9 @@
                       "./**/wired.bulk.test",
                       "../**/wired.bulk.test",
                       "./**/wired.later.test",
-                      "../**/wired.later.test"
+                      "../**/wired.later.test",
+                      "./**/SessionLabelsDialog.test",
+                      "../**/SessionLabelsDialog.test"
                     ],
                     "message": "Shared modules must not import TSX app modules."
                   },
@@ -816,9 +826,11 @@
                       "**/ParentChip.test",
                       "**/ParentNotificationsMenu",
                       "**/ParentThreadMenu",
+                      "**/RowLastMessage",
                       "**/SectionAssignMenu",
                       "**/TagEditor",
                       "**/TagFilterBar",
+                      "**/ThreadInbox.last-message.test",
                       "**/TopicDraftForm",
                       "**/TopicHeader",
                       "**/TopicMap",
@@ -856,6 +868,7 @@
                       "**/SearchScopePicker",
                       "**/SelectBar",
                       "**/SelectionHost",
+                      "**/SessionLabelsDialog",
                       "**/SidebarSettings",
                       "**/SidebarSettings.test",
                       "**/SlimRow",
@@ -896,6 +909,7 @@
                       "**/ThreadInbox.inbox-order.test",
                       "**/ThreadInbox.loading.test",
                       "**/ThreadInbox.menu-editing.test",
+                      "**/ThreadInbox.menu-labels.test",
                       "**/ThreadInbox.menu-lifecycle.test",
                       "**/ThreadInbox.menu-navigation-active.test",
                       "**/ThreadInbox.menu-navigation-compact.test",
@@ -950,7 +964,8 @@
                       "**/useTopicBands.test",
                       "**/wired.flows.test",
                       "**/wired.bulk.test",
-                      "**/wired.later.test"
+                      "**/wired.later.test",
+                      "**/SessionLabelsDialog.test"
                     ],
                     "message": "Node runtime modules must not import TSX app modules."
                   },

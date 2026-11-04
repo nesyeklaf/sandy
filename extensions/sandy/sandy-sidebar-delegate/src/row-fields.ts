@@ -1,4 +1,4 @@
-export const ROW_FIELDS = ["diff", "pr", "host", "provider", "subagents", "age"] as const;
+export const ROW_FIELDS = ["diff", "pr", "host", "provider", "subagents", "age", "lastMessage"] as const;
 export type RowField = (typeof ROW_FIELDS)[number];
 export type RowFields = Readonly<Record<RowField, boolean>>;
 
@@ -9,6 +9,7 @@ export const ROW_FIELD_LABELS: Record<RowField, string> = {
   provider: "Provider",
   subagents: "Subagents",
   age: "Age",
+  lastMessage: "Last message",
 };
 
 export const DEFAULT_ROW_FIELDS: RowFields = {
@@ -18,4 +19,5 @@ export const DEFAULT_ROW_FIELDS: RowFields = {
   provider: true,
   subagents: true,
   age: true,
+  lastMessage: false,
 };

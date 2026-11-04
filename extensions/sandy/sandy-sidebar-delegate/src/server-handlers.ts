@@ -7,6 +7,8 @@ import type { createServerProjectManagement } from "./server-project-management"
 import type { createServerSettleActions } from "./server-settle-actions";
 import type { createServerDelegateChildren } from "./server-delegate-children";
 import type { createServerSessionSearch } from "./server-session-search";
+import type { createServerLastMessages } from "./server-last-messages";
+import type { createServerIdeas } from "./server-ideas";
 import type { createServerTopics } from "./server-topics";
 import type { createServerAnchors } from "./server-anchors";
 import type { createServerBulkActions } from "./server-bulk-actions";
@@ -39,6 +41,8 @@ export function createServerHandlers(
     delegateChildren: ReturnType<typeof createServerDelegateChildren>;
     topics: ReturnType<typeof createServerTopics>;
     sessionSearch: ReturnType<typeof createServerSessionSearch>;
+    lastMessages: ReturnType<typeof createServerLastMessages>;
+    ideas: ReturnType<typeof createServerIdeas>;
     anchors: ReturnType<typeof createServerAnchors>;
     bulk: ReturnType<typeof createServerBulkActions>;
   },
@@ -153,7 +157,7 @@ export function createServerHandlers(
     },
     async updateSidebarSettings(values) {
       const stored = readSidebarSettings();
-      const next = { ...stored, ...values };
+      const next = { ...stored, ...values, shelfDensities: { ...stored.shelfDensities, ...values.shelfDensities } };
       if (values.threadDensity !== undefined) next.compactWorkingThreads = values.threadDensity !== "comfortable";
       else if (values.compactWorkingThreads !== undefined)
         next.threadDensity = values.compactWorkingThreads ? "auto" : "comfortable";
@@ -284,6 +288,8 @@ export function createServerHandlers(
     ...modules.delegateChildren.handlers,
     ...modules.topics.handlers,
     ...modules.sessionSearch.handlers,
+    ...modules.lastMessages.handlers,
+    ...modules.ideas.handlers,
     ...modules.anchors.handlers,
     ...modules.bulk.handlers,
     ...handlers,

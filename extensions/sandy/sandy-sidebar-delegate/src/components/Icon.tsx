@@ -48,6 +48,7 @@ import {
   Alert02Icon,
   GitMergeIcon,
   HourglassIcon,
+  BulbIcon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "../lib/utils";
@@ -101,6 +102,7 @@ const ICON_MAP = {
   Alert: Alert02Icon,
   GitMerge: GitMergeIcon,
   Hourglass: HourglassIcon,
+  Bulb: BulbIcon,
   Close: Cancel01Icon,
 } as const satisfies Record<string, IconSvgElement>;
 

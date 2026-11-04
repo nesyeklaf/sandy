@@ -47,4 +47,5 @@ export { default as Archive02Icon } from "@hugeicons/core-free-icons/Archive02Ic
 export { default as Alert02Icon } from "@hugeicons/core-free-icons/Alert02Icon";
 export { default as GitMergeIcon } from "@hugeicons/core-free-icons/GitMergeIcon";
 export { default as HourglassIcon } from "@hugeicons/core-free-icons/HourglassIcon";
+export { default as BulbIcon } from "@hugeicons/core-free-icons/BulbIcon";
 export { default as Cancel01Icon } from "@hugeicons/core-free-icons/Cancel01Icon";

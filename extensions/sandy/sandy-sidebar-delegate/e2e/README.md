@@ -1,8 +1,13 @@
 # Sidebar browser tests
 
-Install dependencies with `npm ci`, the fixture provider CLI, and Chromium:
+Install dependencies with `npm ci`, the fixture provider CLI, `lsof` (the credential guard and the
+plugin's port scan call it; `apt install lsof` on Linux), and Chromium. The `sandy-app` dev dependency is a
+link to `packages/sandy-app` of this repository, which has no `dist` until it is built; the launcher stops
+with the command when it is missing. Build the SDK types and sandy-app once from the repository root:
 
 ```sh
+pnpm exec turbo run build:types --filter=@sandy-sdk/plugin-sdk
+pnpm exec turbo run build --filter=sandy-app
 npm install --global @openai/codex@0.162.1
 npx --no-install playwright install chromium
 # On Linux, install the browser's OS dependencies too:
@@ -89,7 +94,8 @@ this is a create-and-cancel fixture, not a guarantee that no turn ever starts.
 It supplies idle rows without completed agent output. The quick smoke keeps
 the original seven-day scheduled fixture.
 
-The launcher checks `codex --version` before starting the scratch server. CI
+The launcher checks `codex --version` and `lsof -v` before starting the scratch server. The guard allows the
+one `codex` executable it resolves on PATH, which standalone installs keep under `~/.codex`. CI
 installs the pinned CLI above; no login or credentials are needed. Without the
 executable, provider startup can fail before cancellation reaches the thread,
 leaving it in `error`. On suite failure, the runner saves server output and

@@ -13,7 +13,16 @@ export type ThreadDensity = (typeof THREAD_DENSITIES)[number];
 export type RowDensity = Exclude<ThreadDensity, "auto">;
 export const SHELF_DENSITIES = ["default", "comfortable", "compact", "dense"] as const;
 export type ShelfDensity = (typeof SHELF_DENSITIES)[number];
-export const DENSITY_SHELVES = ["pinned", "needs", "failed", "working", "review", "waiting", "merged"] as const;
+export const DENSITY_SHELVES = [
+  "pinned",
+  "needs",
+  "failed",
+  "working",
+  "review",
+  "waiting",
+  "ideas",
+  "merged",
+] as const;
 export type DensityShelf = (typeof DENSITY_SHELVES)[number];
 export type ShelfDensities = Record<DensityShelf, ShelfDensity>;
 
@@ -75,6 +84,7 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
     working: "default",
     review: "default",
     waiting: "default",
+    ideas: "default",
     merged: "default",
   },
   compactProjectIconOnly: false,

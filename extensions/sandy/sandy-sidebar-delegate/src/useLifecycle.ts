@@ -50,6 +50,18 @@ type LifecycleMutationRequest =
 
 const lifecycleCache = createCachedRpcState(STORAGE_KEYS.lifecycle.key, lifecycleRowsCodec);
 
+type LifecycleRpc = ReturnType<typeof useRpc<typeof sandySidebarRpcContract>>;
+let runningAutoSettleEvaluation: Promise<{ changedThreadIds: string[] }> | null = null;
+
+function evaluateAutoSettleOnce(rpc: LifecycleRpc): Promise<{ changedThreadIds: string[] }> {
+  if (runningAutoSettleEvaluation) return runningAutoSettleEvaluation;
+  const evaluation = rpc.call("evaluateAutoSettle", {}).finally(() => {
+    if (runningAutoSettleEvaluation === evaluation) runningAutoSettleEvaluation = null;
+  });
+  runningAutoSettleEvaluation = evaluation;
+  return evaluation;
+}
+
 const SUCCESS_MESSAGE: Record<Exclude<LifecycleMutation, "snooze" | "acknowledgeWake">, string> = {
   park: "Thread parked",
   resume: "Thread returned to the inbox",
@@ -142,8 +154,7 @@ export function useLifecycle(threads: readonly PluginSidebarThread[]): Lifecycle
   // state immediately. The backend coalesces concurrent clients and does the
   // thread and PR work in one batch.
   useEffect(() => {
-    void rpc
-      .call("evaluateAutoSettle", {})
+    void evaluateAutoSettleOnce(rpc)
       .then(({ changedThreadIds }) => {
         if (changedThreadIds.length > 0) void refresh();
       })

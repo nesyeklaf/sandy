@@ -15,8 +15,10 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
 - Shelves by status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
 - Questions in the row: answer a single-choice question with one tap (Undo within five seconds), or Later to snooze it for an hour
-- Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents and age, each one on or off
-- Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin or Tag them together from the bar at the bottom, each with Undo
+- Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents, age and last message, each one on or off. Last message starts off: it shows the thread's latest assistant text as one truncated line under the title on Comfortable and Compact rows, never on Dense ones. The plugin stores that text when a thread goes idle (the `thread.idle` event), so a thread shows a line after its next turn ends and nothing before
+- Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin, Tag, add a Thema (topic) or mark them as Idee together from the bar at the bottom, each with Undo
+- Session tags and topics (Themen): a row's ⋯ menu opens **Tags & Themen…** to edit the session's own tags and topics; on phone widths it opens as a bottom sheet. The tag and topic pickers above the list show two sections, **Session** (labels set on the session) and **In Bereichen** (labels of topic ranges inside it), each with counts; a label picked in one section matches only on that level
+- Ideas: **Als Idee markieren** in a row's ⋯ menu (or the bulk bar) puts an idle session on the **Ideen** shelf right after Waiting and shows a lightbulb before its title at every density. **Keine Idee mehr** takes the mark off. An idea that asks, fails, works, has a PR, is snoozed or is settled sits on that shelf instead and keeps the lightbulb
 - Activity bell beside the View button: the last 24 hours of asked, failed and finished threads, plus threads archived in that time with Restore; the badge counts questions waiting in Needs you
 - On phone widths the search with its scope and tag/topic pickers sits at the bottom of the sidebar
 - Density from the View button: Auto, Comfortable (three lines), Compact (two lines), or Dense (one line), with a per-shelf override in each shelf's ⋯ menu and options to keep pinned or woken threads full
@@ -36,6 +38,28 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 Park threads while waiting on someone else. Use **Park thread** in the context menu and **Resume** when ready. Parked threads have no timer and are excluded from automatic cleanup. Opening one leaves it parked; new thread activity brings it back to Active.
 
 Use **Parent** in a thread's context menu to search threads in the same repo, choose a parent, or select **None** to remove it. The current parent is checked; the thread itself and its descendants are excluded.
+
+## CLI
+
+The plugin adds no `sandy` commands of its own. Its RPC methods are callable with `sandy plugin rpc call`, which validates the input against the plugin's schema on the server. The input is a JSON file:
+
+```sh
+echo '{"threadIds":["thr_abc123"],"topic":"Release"}' > /tmp/topic.json
+sandy plugin rpc call sandy-sidebar-delegate addThreadTopic --input-file /tmp/topic.json
+```
+
+| Method | Input | Result |
+| --- | --- | --- |
+| `listAllTags` | `{}` | `{ threadTags, threadTopics, segments }`: session tags and topics per thread id, plus every topic range with its tags |
+| `listTopics` | `{ threadId }` | `{ segments, threadTags, threadTopics }` of one session |
+| `setTopicTags` | `{ kind: "thread" \| "segment", ownerId, tags }` | `{ tags }`, replacing the session's or the range's tags |
+| `tagThreads` / `untagThreads` | `{ threadIds, tag }` | `{ tagged, atLimit }` / `{ untagged }` |
+| `setThreadTopics` | `{ threadId, topics }` | `{ topics }`, replacing the session's topics |
+| `addThreadTopic` / `removeThreadTopic` | `{ threadIds, topic }` | `{ added, atLimit }` / `{ removed }` |
+| `listIdeas` | `{}` | `{ threadIds }` marked as ideas |
+| `setIdea` | `{ threadIds, idea: boolean }` | `{ changed }`: only the sessions whose mark changed, so passing them back with the opposite `idea` undoes the call |
+
+Tags are stored lowercase; topics keep their case. A session holds at most 20 tags and 20 topics; bulk calls report sessions at that limit in `atLimit`. Bulk calls take 1 to 500 thread ids. The methods are not listed by `sandy plugin rpc list`, because the plugin does not register them as discoverable.
 
 ## Install
 

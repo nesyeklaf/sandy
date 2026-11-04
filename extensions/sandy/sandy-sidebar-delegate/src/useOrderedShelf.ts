@@ -29,17 +29,16 @@ type Shelf = readonly PluginSidebarThread[];
 export function useAttentionParentIds(
   enabled: boolean,
   childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>,
-  shelves: readonly [Shelf, Shelf, Shelf, Shelf, Shelf, Shelf, Shelf],
+  shelves: readonly Shelf[],
 ) {
-  const [pinned, needs, failed, working, review, waiting, merged] = shelves;
   return useMemo(() => {
     const ids = new Set<string>();
     if (!enabled) return ids;
-    for (const thread of [...pinned, ...needs, ...failed, ...working, ...review, ...waiting, ...merged]) {
+    for (const thread of shelves.flat()) {
       if (collapsedChildThreads(childrenByParentId.get(thread.id) ?? [], childrenByParentId, null, true).length > 0) {
         ids.add(thread.id);
       }
     }
     return ids;
-  }, [childrenByParentId, enabled, pinned, needs, failed, working, review, waiting, merged]);
+  }, [childrenByParentId, enabled, ...shelves]);
 }

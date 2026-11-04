@@ -15,6 +15,7 @@ import { delegate } from "./launch.ts";
 import { formatDelegationTable, listDelegations } from "./list.ts";
 import { migrations } from "./migrations.ts";
 import { sleepUnlessAborted } from "./sleep.ts";
+import { createPanelRefresh } from "./panel-refresh.ts";
 import { createPanelHost, panelAckFailures, panelList, panelMerge, panelSend, panelSetHidden, panelStop, panelWriterDetails, authorizePanel, promptAudit } from "./panel.ts";
 import { enrichDelegations, statusFor } from "./status.ts";
 import { waitCeilingMs, waitFields, waitForDelegation } from "./wait.ts";
@@ -62,6 +63,8 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
   seedBuiltinAgents(db);
 
   const { launchHost: host, watchdogHost, waitHost, controlHost, statusHost } = createSandyHosts(sandy, workers);
+  const panelHost = createPanelHost(sandy);
+  const panel = createPanelRefresh(sandy, db, (threadId) => panelList(db, statusHost, panelHost, threadId));
 
   // Worker slots for the workflows part (server/workers.ts), called in process through the link.
   workers.delegate = {
@@ -130,6 +133,7 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     async execute(params, ctx) {
       const current = await settings.get();
       const result = await delegate(db, host, ctx.threadId, params, current);
+      panel.touch(ctx.threadId);
       if (!result.ok) return { content: [{ type: "text", text: json({ ok: false, ...result.refusal }) }], isError: true };
       if (params.mode !== "wait" || result.launched.threadId === null) return json({ ok: true, ...result.launched });
       const outcome = await waitForDelegation(db, waitHost, {
@@ -161,6 +165,7 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     parameters: sendParameters,
     async execute(params, ctx) {
       const result = await sendToDelegation(db, controlHost, await settings.get(), { callerThreadId: ctx.threadId, ...params });
+      panel.touch(ctx.threadId);
       if (!result.ok) return { content: [{ type: "text", text: json({ ok: false, ...result.refusal }) }], isError: true };
       return json(result);
     },
@@ -175,6 +180,7 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
         return { content: [{ type: "text", text: json({ ok: false, code: "bad_arguments", message: "pass exactly one of delegationId or all:true" }) }], isError: true };
       }
       const result = await stopDelegations(db, controlHost, await settings.get(), { callerThreadId: ctx.threadId, ...params });
+      panel.touch(ctx.threadId);
       if (!result.ok) return { content: [{ type: "text", text: json({ ok: false, ...result.refusal }) }], isError: true };
       return json(result);
     },
@@ -244,7 +250,6 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
   // the sandy_delegate_* tools. Accepted residual: "client" also covers agents and CLI callers, SANDY gives no
   // owner identity for a client; this refuses plugin callers only, and the panel methods act only on the
   // named thread's own delegations.
-  const panelHost = createPanelHost(sandy);
   const clientOnly = (method: string, kind: string) => {
     if (kind !== "client") throw new Error(`${method} is for the owner's client only`);
   };
@@ -256,12 +261,13 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     async answerQuestion({ delegationId, questionId, answer }, context) {
       clientOnly("answerQuestion", context.experimental_caller.kind);
       const outcome = await answerQuestionByRpc(db, controlHost, await settings.get(), { delegationId, questionId, answer });
+      panel.touchDelegation(delegationId);
       if (!outcome.ok) throw new Error(outcome.message);
       return { questionId: outcome.questionId, delivery: outcome.delivery };
     },
     async listDelegates({ threadId }, context) {
       clientOnly("listDelegates", context.experimental_caller.kind);
-      return panelList(db, statusHost, panelHost, threadId);
+      return panel.list(threadId);
     },
     async promptAudit({ threadId, delegationId }, context) {
       clientOnly("promptAudit", context.experimental_caller.kind);
@@ -270,12 +276,16 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     async sendToDelegate({ threadId, delegationId, message, mode }, context) {
       clientOnly("sendToDelegate", context.experimental_caller.kind);
       const sent = refused(await panelSend(db, controlHost, await settings.get(), threadId, { delegationId, message, mode }));
+      panel.touch(threadId);
+      panel.touchDelegation(delegationId);
       const detail = sent.status === "delivered" ? `delivered (${sent.sandyDelivery}${sent.readmitted ? ", readmitted" : ""})` : sent.status === "queued" ? sent.message : `answered question ${sent.questionId} (${sent.delivery})`;
       return { status: sent.status, delegationId: sent.delegationId, detail };
     },
     async stopDelegates({ threadId, delegationId }, context) {
       clientOnly("stopDelegates", context.experimental_caller.kind);
       const stopped = refused(await panelStop(db, controlHost, await settings.get(), threadId, delegationId === undefined ? { all: true } : { delegationId }));
+      panel.touch(threadId);
+      for (const entry of stopped.stopped) panel.touchDelegation(entry.delegationId);
       return {
         stopped: stopped.stopped.map(({ delegationId: id, state, stopConfirmed, error }) => ({ delegationId: id, state, stopConfirmed, ...(error === undefined ? {} : { error }) })),
         skipped: stopped.skipped,
@@ -283,11 +293,16 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     },
     async ackFailures({ threadId, delegationId }, context) {
       clientOnly("ackFailures", context.experimental_caller.kind);
-      return { acknowledged: refused(await panelAckFailures(db, statusHost, threadId, delegationId)).acknowledged };
+      const acknowledged = refused(await panelAckFailures(db, statusHost, threadId, delegationId)).acknowledged;
+      panel.touch(threadId);
+      return { acknowledged };
     },
     async setDelegateHidden({ threadId, delegationId, hidden }, context) {
       clientOnly("setDelegateHidden", context.experimental_caller.kind);
-      return { hidden: refused(await panelSetHidden(db, panelHost, threadId, delegationId, hidden)).hidden };
+      const result = refused(await panelSetHidden(db, panelHost, threadId, delegationId, hidden));
+      panel.touch(threadId);
+      panel.touchDelegation(delegationId);
+      return { hidden: result.hidden };
     },
     async writerDetails({ threadId, delegationId }, context) {
       clientOnly("writerDetails", context.experimental_caller.kind);
@@ -296,6 +311,8 @@ export default async function plugin(sandy: SandyPluginApi, workers: WorkersLink
     async mergeDelegate({ threadId, delegationId }, context) {
       clientOnly("mergeDelegate", context.experimental_caller.kind);
       const merged = refused(await panelMerge(db, statusHost, panelHost, threadId, delegationId));
+      panel.touch(threadId);
+      panel.touchDelegation(delegationId);
       sandy.log.info(`panel merge of ${delegationId} in ${threadId}: ${merged.result.status}`);
       return merged.result;
     },
