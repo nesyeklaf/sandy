@@ -45,6 +45,7 @@ it("fills older shelf shapes and drops unknown keys without stricter primitive r
     working: true,
     review: true,
     waiting: true,
+    ideas: true,
     merged: false,
     snoozed: false,
     archived: false,
