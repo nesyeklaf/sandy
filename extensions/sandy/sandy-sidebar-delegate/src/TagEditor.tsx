@@ -9,7 +9,6 @@ const KIND_TEXT = {
   topic: { noun: "Thema", placeholder: "+ Thema", lowercase: false },
 } as const;
 
-/** Chips with an inline field: Enter adds, the cross removes. Tags are lowercased, topics keep their case. */
 export function TagEditor({
   tags,
   label,

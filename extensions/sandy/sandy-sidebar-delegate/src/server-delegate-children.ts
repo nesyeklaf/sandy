@@ -58,13 +58,6 @@ function toDelegateChildRecord(thread: ListedThread): DelegateChildRecord {
   };
 }
 
-/**
- * Hidden delegate children and workflows-plus workers, which the host's
- * sidebar thread array does not carry. One shared list serves every caller:
- * thread events mark single children for a targeted lookup, and a full listing
- * of each origin plugin runs only at start and in the background once the list
- * is older than the app's poll interval.
- */
 export function createServerDelegateChildren(ctx: ServerContext) {
   const listOrigin = async (originPluginId: string): Promise<DelegateChildRecord[]> => {
     const records: DelegateChildRecord[] = [];

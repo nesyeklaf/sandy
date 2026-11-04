@@ -95,14 +95,12 @@ function sessionOwners(labels: Record<string, string[]>): Owners {
   return owners;
 }
 
-/** Tags with the number of sessions that carry them, once for the session itself and once for its areas. */
 export function tagItems(index: TagIndex): PickerItem[] {
   const segment: Owners = new Map();
   for (const entry of index.segments) for (const tag of entry.tags) addOwner(segment, tag, entry.threadId);
   return [...sortedItems("session", sessionOwners(index.threadTags)), ...sortedItems("segment", segment)];
 }
 
-/** Session topics and area titles with the number of sessions that have them. */
 export function topicItems(index: TagIndex): PickerItem[] {
   const segment: Owners = new Map();
   for (const entry of index.segments) addOwner(segment, entry.title, entry.threadId);
