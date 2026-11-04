@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import ship, { changedFiles, onChangedFiles, parseArgs } from "./ship.ts";
+import ship, { changedFiles, findingsMarkdown, onChangedFiles, parseArgs } from "./ship.ts";
 
 test("the stage and its ref come from the args; no args leaves the stage open", () => {
 	assert.deepEqual(parseArgs("review origin/main"), { stage: "review", ref: "origin/main" });
@@ -101,11 +101,48 @@ test("lease + review submits the kept findings as markdown and advances once", a
 	const result: any = await ship("review origin/main", { session: reviewSession(calls) as never, lease: lease as never });
 	const submit = calls.filter((call) => call[0] === "submit");
 	assert.deepEqual(submit, [
-		["submit", { outputs: { findings: "- [high] Leaks the handle (src/a.ts:7): close is never called\nDropped 1 finding(s) on files the diff does not touch." } }],
+		["submit", { outputs: { findings: "- [high] [unverified] Leaks the handle (src/a.ts:7): close is never called\nDropped 1 finding(s) on files the diff does not touch." } }],
 	]);
 	assert.equal(calls.filter((call) => call[0] === "advance").length, 1);
 	assert.equal(result.attempts.length, 1);
 	assert.equal(result.findings.length, 1);
+});
+
+test("a finding with evidence is verified and quotes it; one without names its check", async () => {
+	const calls: Call[] = [];
+	const value = {
+		findings: [
+			{ severity: "high", title: "Leaks the handle", file: "src/a.ts", line: 7, evidence: "node /tmp/probe.js\nopen handles: 1" },
+			{ severity: "medium", title: "Maybe slow", file: "src/a.ts", check: "pnpm exec vitest run src/a.test.ts" },
+		],
+	};
+	const result: any = await ship("review origin/main", { session: reviewSession(calls, value) as never });
+	assert.deepEqual(result.findings.map((f: any) => f.verified), [true, false]);
+	assert.equal(
+		findingsMarkdown(result.findings, []),
+		"- [high] Leaks the handle (src/a.ts:7)\n  evidence: node /tmp/probe.js\n  open handles: 1\n" +
+			"- [medium] [unverified] Maybe slow (src/a.ts)\n  check: pnpm exec vitest run src/a.test.ts",
+	);
+	const step: any = calls.find((call) => call[0] === "step")?.[1];
+	assert.ok(step.tools.includes("bash"));
+	assert.ok(step.schema.properties.findings.items.properties.evidence);
+});
+
+test("a review that changes tracked files fails instead of returning findings", async () => {
+	const calls: Call[] = [];
+	const session = reviewSession(calls);
+	let stepped = false;
+	const exec = session.exec;
+	session.exec = async (command: string, args: string[]) => {
+		if (args[0] === "status") return { code: 0, stdout: stepped ? " M src/a.ts\0" : "", stderr: "" };
+		return exec(command, args);
+	};
+	const step = session.step;
+	session.step = async (input: unknown) => {
+		stepped = true;
+		return step(input);
+	};
+	await assert.rejects(ship("review origin/main", { session: session as never }), /changed tracked files/);
 });
 
 test("lease + review with no findings submits No findings.", async () => {
@@ -183,9 +220,9 @@ test("without a lease ship returns the stage result as before", async () => {
 		stage: "review",
 		base: "origin/main",
 		files: ["src/a.ts"],
-		findings: [reviewValue.findings[0]],
-		dropped: [reviewValue.findings[1]],
+		findings: [{ ...reviewValue.findings[0], verified: false }],
+		dropped: [{ ...reviewValue.findings[1], verified: false }],
 	});
 	const none = await ship("review origin/main", { session: reviewSession([]) as never, lease: null });
-	assert.deepEqual((none as any).findings, [reviewValue.findings[0]]);
+	assert.deepEqual((none as any).findings, [{ ...reviewValue.findings[0], verified: false }]);
 });
