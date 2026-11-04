@@ -7,6 +7,28 @@ import { toast } from "./lib/toast";
 import { TOPICS_CHANNEL } from "./realtime-channels";
 import { TagEditor } from "./TagEditor";
 
+const REALIZE_FALLBACK_MS = 120;
+
+function useRealizedOnce(open: boolean) {
+  const [realized, setRealized] = useState(false);
+  useEffect(() => {
+    if (!open || realized) return;
+    let outer = 0;
+    let inner = 0;
+    const realize = () => setRealized(true);
+    outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(realize);
+    });
+    const fallback = setTimeout(realize, REALIZE_FALLBACK_MS);
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+      clearTimeout(fallback);
+    };
+  }, [open, realized]);
+  return realized;
+}
+
 interface SessionLabels {
   tags: string[];
   topics: string[];
@@ -68,10 +90,10 @@ export function SessionLabelsDialog({
 }) {
   const portalScope = usePortalScopeProps();
   const { labels, loadFailed, retry, setTags, setTopics } = useSessionLabels(threadId, open);
+  const realized = useRealizedOnce(open);
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
       <Dialog.Portal>
-        <Dialog.Overlay {...portalScope} className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
           {...portalScope}
           onContextMenu={(event) => event.stopPropagation()}
@@ -90,7 +112,7 @@ export function SessionLabelsDialog({
                 Erneut versuchen
               </button>
             </div>
-          ) : labels === null ? (
+          ) : labels === null || !realized ? (
             <p className="mt-3 text-xs text-muted-foreground">Lädt…</p>
           ) : (
             <div className="mt-3 flex flex-col gap-3 text-xs">
