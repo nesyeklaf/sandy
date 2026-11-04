@@ -3,6 +3,8 @@ import { z } from "zod";
 const threadId = z.string().trim().min(1);
 const seq = z.number().int().min(0);
 const tag = z.string().trim().min(1).max(40);
+const topic = z.string().trim().min(1).max(40);
+const threadIds = z.array(threadId).min(1).max(500);
 export const MAX_TOPIC_TAGS = 20;
 
 export const topicMessageSchema = z.object({
@@ -33,7 +35,11 @@ export const topicsRpcShape = {
   },
   listTopics: {
     input: z.object({ threadId }).strict(),
-    output: z.object({ segments: z.array(topicSegmentSchema), threadTags: z.array(z.string()) }),
+    output: z.object({
+      segments: z.array(topicSegmentSchema),
+      threadTags: z.array(z.string()),
+      threadTopics: z.array(z.string()),
+    }),
   },
   saveTopic: {
     input: z
@@ -62,12 +68,24 @@ export const topicsRpcShape = {
     output: z.object({ tags: z.array(z.string()) }),
   },
   tagThreads: {
-    input: z.object({ threadIds: z.array(threadId).min(1).max(500), tag }).strict(),
+    input: z.object({ threadIds, tag }).strict(),
     output: z.object({ tagged: z.array(z.string()), atLimit: z.array(z.string()) }),
   },
   untagThreads: {
-    input: z.object({ threadIds: z.array(threadId).min(1).max(500), tag }).strict(),
+    input: z.object({ threadIds, tag }).strict(),
     output: z.object({ untagged: z.array(z.string()) }),
+  },
+  setThreadTopics: {
+    input: z.object({ threadId, topics: z.array(topic).max(MAX_TOPIC_TAGS) }).strict(),
+    output: z.object({ topics: z.array(z.string()) }),
+  },
+  addThreadTopic: {
+    input: z.object({ threadIds, topic }).strict(),
+    output: z.object({ added: z.array(z.string()), atLimit: z.array(z.string()) }),
+  },
+  removeThreadTopic: {
+    input: z.object({ threadIds, topic }).strict(),
+    output: z.object({ removed: z.array(z.string()) }),
   },
   suggestTopics: {
     input: z.object({ threadId }).strict(),
@@ -79,6 +97,7 @@ export const topicsRpcShape = {
     input: z.object({}).strict(),
     output: z.object({
       threadTags: z.record(z.string(), z.array(z.string())),
+      threadTopics: z.record(z.string(), z.array(z.string())),
       segments: z.array(topicSegmentSchema),
     }),
   },

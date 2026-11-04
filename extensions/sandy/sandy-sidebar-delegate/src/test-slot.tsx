@@ -129,10 +129,11 @@ export function renderSlot<Props extends object>(
   rendered.rerender = rerender;
   rendered.lifecycle.rerender = rerender;
   // rpcCalls is what the UI sent because of a user action. The background
-  // delegate-children read is not one, so tests asserting "no rpc" skip it.
+  // delegate-children and idea reads are not one, so tests asserting "no rpc" skip them.
   const allRpcCalls = rendered.rpcCalls;
+  const backgroundReads = new Set(["listDelegateChildren", "listIdeas"]);
   Object.defineProperty(rendered, "rpcCalls", {
-    get: () => allRpcCalls.filter((call) => call.method !== "listDelegateChildren"),
+    get: () => allRpcCalls.filter((call) => !backgroundReads.has(call.method)),
   });
   return Object.assign(rendered, { threadActionCalls, splitSourceCalls });
 }

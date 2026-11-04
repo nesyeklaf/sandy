@@ -148,6 +148,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     workingBase,
     reviewBase,
     waitingBase,
+    ideasBase,
     mergedBase,
     allPinnedBase,
     allInboxBase,
@@ -205,7 +206,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const attentionParentIds = useAttentionParentIds(
     sidebarSettings?.showRunningChildrenWhenCollapsed ?? DEFAULT_SIDEBAR_SETTINGS.showRunningChildrenWhenCollapsed,
     childrenByParentId,
-    [pinnedBase, needsBase, failedBase, workingBase, reviewBase, waitingBase, mergedBase],
+    [pinnedBase, needsBase, failedBase, workingBase, reviewBase, waitingBase, ideasBase, mergedBase],
   );
   const visiblePinned = useMemo(
     () => visibleShelfThreads(pinned, expandedShelves.pinned, activeListThreadId, undefined, attentionParentIds),
@@ -236,6 +237,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const failed = useOrderedShelf(failedBase, null, expandedShelves.failed, activeListThreadId, attentionParentIds);
   const working = useOrderedShelf(workingBase, null, expandedShelves.working, activeListThreadId, attentionParentIds);
   const review = useOrderedShelf(reviewBase, null, expandedShelves.review, activeListThreadId, attentionParentIds);
+  const ideas = useOrderedShelf(ideasBase, null, expandedShelves.ideas, activeListThreadId, attentionParentIds);
   const merged = useOrderedShelf(mergedBase, null, expandedShelves.merged, activeListThreadId, attentionParentIds);
   const sortedVisibleInbox = useMemo(
     () => sortActiveThreads(visibleInbox, activeSortMode),
@@ -251,9 +253,10 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
       ...(activeSortMode === "project"
         ? inboxProjectUnits.flatMap((unit) => (unit.kind === "thread" ? [unit.thread] : unit.threads))
         : sortActiveThreads(inbox, activeSortMode)),
+      ...ideas.threads,
       ...merged.threads,
     ],
-    [activeSortMode, failed, inbox, inboxProjectUnits, merged, needs, pinned, review, working],
+    [activeSortMode, failed, ideas, inbox, inboxProjectUnits, merged, needs, pinned, review, working],
   );
   const nextThreadCandidatesRef = useRef(nextThreadCandidates);
   nextThreadCandidatesRef.current = nextThreadCandidates;
@@ -461,6 +464,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
           working,
           review,
           waiting: { threads: inbox, visibleThreads: sortedVisibleInbox },
+          ideas,
           merged,
           snoozed: { threads: snoozed, visibleThreads: visibleSnoozed },
           archived: { threads: archived, visibleThreads: visibleArchived },

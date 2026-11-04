@@ -7,3 +7,4 @@ export const DELEGATE_CHILDREN_CHANNEL = "delegate-children";
 export const LAST_MESSAGE_CHANNEL = "last-message";
 export const TOPICS_CHANNEL = "topics";
 export const ANCHORS_CHANNEL = "anchors";
+export const IDEAS_CHANNEL = "ideas";

@@ -9,6 +9,7 @@ import { ActiveSortPicker } from "./ActiveSortPicker";
 import type { IconName } from "./components/Icon";
 import type { ReorderShelf } from "./drag-reorder-geometry";
 import type { InboxShelfId, LockableShelf } from "./thread-status";
+import { DENSITY_SHELVES } from "./sidebar-settings-values";
 import type { SlimRowKind } from "./SlimRow";
 import { ProjectScopeControls } from "./ProjectScopeControls";
 import { TagFilterBar } from "./TagFilterBar";
@@ -43,6 +44,7 @@ const SHELF_HEADERS: Record<InboxShelfId, { label: string; icon: IconName }> = {
   working: { label: "Working", icon: "Loading" },
   review: { label: "In review", icon: "GitPullRequest" },
   waiting: { label: "Waiting", icon: "Hourglass" },
+  ideas: { label: "Ideen", icon: "Bulb" },
   merged: { label: "Merged", icon: "GitMerge" },
   snoozed: { label: "Snoozed", icon: "Clock" },
   archived: { label: "Archived", icon: "Archive" },
@@ -119,7 +121,7 @@ export function ThreadInboxView({
   const selecting = useSelection().active;
   const treeShelfById = useMemo(() => {
     const byId = new Map<string, "pinned" | LockableShelf>();
-    for (const shelf of ["pinned", "needs", "failed", "working", "review", "waiting", "merged"] as const) {
+    for (const shelf of DENSITY_SHELVES) {
       for (const thread of shelves[shelf].visibleThreads) byId.set(thread.id, shelf);
     }
     return byId;
@@ -175,7 +177,7 @@ export function ThreadInboxView({
       onLoadMore={shelf === "archived" ? onLoadMoreArchived : undefined}
     />
   );
-  const cardShelfCount = (["pinned", "needs", "failed", "working", "review", "waiting", "merged"] as const).filter(
+  const cardShelfCount = DENSITY_SHELVES.filter(
     (shelf) => shelves[shelf].threads.length > 0,
   );
   return (
@@ -221,7 +223,7 @@ export function ThreadInboxView({
         ) : listView === "tree" ? (
           <ThreadTreeView
             threads={(
-              ["pinned", "needs", "failed", "working", "review", "waiting", "merged", "snoozed"] as const
+              [...DENSITY_SHELVES, "snoozed"] as const
             ).flatMap((shelf) => shelves[shelf].visibleThreads)}
             sections={sections}
             projects={projects}
@@ -277,6 +279,7 @@ export function ThreadInboxView({
                   ),
                   sortPicker,
                 )}
+                {plainShelf("ideas")}
                 {cardShelfCount.length === 0 ? <ActiveEmptyState /> : null}
                 {cardShelfCount.length === 1 && cardShelfCount[0] === "working" ? <WorkingEmptyState /> : null}
               </>

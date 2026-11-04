@@ -20,6 +20,7 @@ export {
 } from "./realtime-channels";
 import { searchRpcShape } from "./search-contract";
 import { lastMessageRpcShape } from "./last-message-contract";
+import { ideasRpcShape } from "./ideas-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
@@ -148,6 +149,7 @@ export const sidebarSettingsSchema = z
         working: z.enum(SHELF_DENSITIES),
         review: z.enum(SHELF_DENSITIES),
         waiting: z.enum(SHELF_DENSITIES),
+        ideas: z.enum(SHELF_DENSITIES),
         merged: z.enum(SHELF_DENSITIES),
       })
       .strict(),
@@ -231,6 +233,7 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...anchorsRpcShape,
   ...bulkRpcShape,
   ...lastMessageRpcShape,
+  ...ideasRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),

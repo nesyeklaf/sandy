@@ -14,6 +14,7 @@ const idle: ThreadStatusSignals = {
   workingTree: false,
   woke: false,
   pullRequestState: null,
+  idea: false,
 };
 
 describe("threadInboxStatus", () => {
@@ -36,6 +37,16 @@ describe("threadInboxStatus", () => {
     ["a settled thread", { lifecycleShelf: "settled", asks: true }, "archived"],
     ["a renaming lock", { lockedShelf: "working", asks: true }, "working"],
     ["a renaming lock under a snooze", { lockedShelf: "waiting", lifecycleShelf: "snoozed" }, "snoozed"],
+    ["an idle idea", { idea: true }, "ideas"],
+    ["a woken idea", { idea: true, woke: true, workingTree: true }, "ideas"],
+    ["an idea that asks", { idea: true, asks: true }, "needs"],
+    ["an idea that failed", { idea: true, failed: true }, "failed"],
+    ["an idea at work", { idea: true, workingTree: true }, "working"],
+    ["an idea in review", { idea: true, pullRequestState: "open" }, "review"],
+    ["a merged idea", { idea: true, pullRequestState: "merged" }, "merged"],
+    ["a snoozed idea", { idea: true, lifecycleShelf: "snoozed" }, "snoozed"],
+    ["a settled idea", { idea: true, lifecycleShelf: "settled" }, "archived"],
+    ["an idea renamed while waiting", { idea: true, lockedShelf: "waiting" }, "waiting"],
   ])("puts %s on its shelf", (_, signals, expected) => {
     expect(threadInboxStatus({ ...idle, ...signals })).toBe(expected);
   });
@@ -48,6 +59,7 @@ describe("inboxShelfOf", () => {
     ["working", "pinned"],
     ["review", "pinned"],
     ["waiting", "pinned"],
+    ["ideas", "pinned"],
     ["merged", "pinned"],
     ["snoozed", "snoozed"],
     ["archived", "archived"],

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import type { LifecycleApi } from "./useLifecycle";
+import { useIdeaIds } from "./useIdeas";
 import {
   filterByProjects,
   hideChildrenOfVisibleParents,
@@ -34,6 +35,7 @@ export function useInboxShelfThreads({
   scope,
   threads,
 }: InboxShelfThreadsOptions) {
+  const ideaIds = useIdeaIds();
   return useMemo(() => {
     const allVisible = visibleInboxThreads(threads);
     const visible = hideChildrenOfVisibleParents(filterByProjects(allVisible, scope));
@@ -51,6 +53,7 @@ export function useInboxShelfThreads({
       working: [],
       review: [],
       waiting: [],
+      ideas: [],
       merged: [],
       snoozed: [],
       archived: [],
@@ -64,6 +67,7 @@ export function useInboxShelfThreads({
         workingTree: isWorkingTree(thread, children, childrenByParentId),
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
+        idea: ideaIds.has(thread.id),
         lockedShelf: renamingShelfLocks.get(thread.id),
       });
       shelves[inboxShelfOf(status, thread.isPinned)].push(thread);
@@ -77,6 +81,7 @@ export function useInboxShelfThreads({
       workingBase: sortActiveThreads(shelves.working, "activity"),
       reviewBase: sortActiveThreads(shelves.review, "activity"),
       waitingBase: sortByCreatedAtDescending(shelves.waiting),
+      ideasBase: sortByCreatedAtDescending(shelves.ideas),
       mergedBase: sortActiveThreads(shelves.merged, "activity"),
       allPinnedBase: allSplit.pinned,
       allInboxBase: sortByCreatedAtDescending(allSplit.inbox),
@@ -95,6 +100,7 @@ export function useInboxShelfThreads({
   }, [
     activeThreadId,
     childrenByParentId,
+    ideaIds,
     lifecycle,
     pullRequests,
     renamingShelfLocks,

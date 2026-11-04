@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Icon, type IconName } from "./components/Icon";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/Popover";
 import {
@@ -6,6 +6,8 @@ import {
   type ItemState,
   isSelecting,
   itemState,
+  LABEL_LEVELS,
+  type LabelLevel,
   matchesNeedle,
   NO_SELECTION,
   type MatchMode,
@@ -21,6 +23,11 @@ const STATE_TEXT: Record<ItemState, string> = {
   neutral: "not selected",
   include: "included",
   exclude: "excluded",
+};
+
+const LEVEL_TEXT: Record<LabelLevel, string> = {
+  session: "Session",
+  segment: "In Bereichen",
 };
 
 const MATCH_MODES: ReadonlyArray<{ mode: MatchMode; text: string; hint: string }> = [
@@ -42,6 +49,7 @@ export function PickerPopover({
   onChange: (next: Selection) => void;
 }) {
   const [needle, setNeedle] = useState("");
+  const sectionId = useId();
   const { include, exclude } = selection;
   const summary = [
     include.length > 0 ? `${include.length} included` : "",
@@ -104,23 +112,36 @@ export function PickerPopover({
           ))}
         </div>
         <div role="group" aria-label={noun} className="max-h-64 overflow-y-auto overscroll-contain">
-          {shown.map(({ value, count }) => {
-            const state = itemState(selection, value);
+          {LABEL_LEVELS.map((level) => {
+            const section = shown.filter((item) => item.level === level);
+            if (section.length === 0) return null;
             return (
-              <button
-                key={value}
-                type="button"
-                aria-label={`${value}, ${STATE_TEXT[state]}`}
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs outline-none hover:bg-state-hover focus-visible:bg-state-hover"
-                onClick={() => onChange(cycleItem(selection, value))}
-              >
-                <span className="flex size-3.5 shrink-0 items-center justify-center" aria-hidden>
-                  {state === "include" && <Icon name="Check" className="size-3.5" />}
-                  {state === "exclude" && <span className="text-destructive">✕</span>}
-                </span>
-                <span className={cn("min-w-0 flex-1 truncate", state === "exclude" && "line-through")}>{value}</span>
-                <span className="text-muted-foreground">{count}</span>
-              </button>
+              <div key={level} role="group" aria-labelledby={`${sectionId}-${level}`}>
+                <p id={`${sectionId}-${level}`} className="px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground">
+                  {LEVEL_TEXT[level]}
+                </p>
+                {section.map(({ key, value, count }) => {
+                  const state = itemState(selection, key);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-label={`${value}, ${STATE_TEXT[state]}`}
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs outline-none hover:bg-state-hover focus-visible:bg-state-hover"
+                      onClick={() => onChange(cycleItem(selection, key))}
+                    >
+                      <span className="flex size-3.5 shrink-0 items-center justify-center" aria-hidden>
+                        {state === "include" && <Icon name="Check" className="size-3.5" />}
+                        {state === "exclude" && <span className="text-destructive">✕</span>}
+                      </span>
+                      <span className={cn("min-w-0 flex-1 truncate", state === "exclude" && "line-through")}>
+                        {value}
+                      </span>
+                      <span className="text-muted-foreground">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
           {shown.length === 0 && <p className="px-2 py-1.5 text-xs text-muted-foreground">Nothing found</p>}

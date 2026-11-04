@@ -73,6 +73,8 @@ describe("select mode", () => {
       "Archive",
       "Pin",
       "Tag",
+      "Thema",
+      "Als Idee markieren",
       "Leave select mode",
     ]);
   });

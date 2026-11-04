@@ -296,6 +296,7 @@ it("stores per-shelf density overrides and keeps the rest at default", async () 
         working: "dense",
         review: "default",
         waiting: "compact",
+        ideas: "dense",
         merged: "default",
       },
     }),
@@ -306,9 +307,10 @@ it("stores per-shelf density overrides and keeps the rest at default", async () 
       working: "dense",
       review: "default",
       waiting: "compact",
+      ideas: "dense",
     },
   });
   await expect(harness.behavior.callRpc("getSidebarSettings", {})).resolves.toMatchObject({
-    shelfDensities: { pinned: "comfortable", working: "dense", waiting: "compact" },
+    shelfDensities: { pinned: "comfortable", working: "dense", waiting: "compact", ideas: "dense" },
   });
 });
