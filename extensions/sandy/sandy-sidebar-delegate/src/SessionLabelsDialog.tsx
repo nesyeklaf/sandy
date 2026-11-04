@@ -45,7 +45,6 @@ function useSessionLabels(threadId: string, enabled: boolean) {
   return { labels, setTags, setTopics };
 }
 
-/** The session's own tags and topics, as a centered dialog and a bottom drawer on compact screens. */
 export function SessionLabelsDialog({
   threadId,
   title,

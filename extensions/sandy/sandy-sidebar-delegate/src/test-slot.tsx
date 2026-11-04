@@ -32,7 +32,6 @@ runtime.experimental_useSidebarThreadSplit = (threadId) => {
 
 const sdkUseRpc = runtime.useRpc;
 
-/** Core's useRpc builds a new client per hook instance; the SDK fake shares one. Returns the restore function. */
 export function giveEachHookItsOwnRpcClient(): () => void {
   runtime.useRpc = (() => {
     const shared = sdkUseRpc();
