@@ -473,7 +473,9 @@
                       "./**/wired.bulk.test",
                       "../**/wired.bulk.test",
                       "./**/wired.later.test",
-                      "../**/wired.later.test"
+                      "../**/wired.later.test",
+                      "./**/SessionLabelsDialog.test",
+                      "../**/SessionLabelsDialog.test"
                     ],
                     "message": "Shared modules must not import TSX app modules."
                   },
@@ -962,7 +964,8 @@
                       "**/useTopicBands.test",
                       "**/wired.flows.test",
                       "**/wired.bulk.test",
-                      "**/wired.later.test"
+                      "**/wired.later.test",
+                      "**/SessionLabelsDialog.test"
                     ],
                     "message": "Node runtime modules must not import TSX app modules."
                   },

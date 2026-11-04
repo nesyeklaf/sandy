@@ -2,41 +2,33 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
-import { createFakePluginHost } from "./test-server";
-import plugin from "./server";
+import { createLabelsHost } from "./test-wired";
 import { SessionLabelsDialog } from "./SessionLabelsDialog";
 import { TOPICS_CHANNEL } from "./realtime-channels";
 
-const disposers: Array<() => Promise<void>> = [];
-afterEach(async () => {
+afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
-  await Promise.all(disposers.splice(0).map((dispose) => dispose()));
 });
 
-async function mountDialog(readFails: (call: number) => boolean, onOpenChange: (open: boolean) => void = () => undefined) {
-  const { sandy, harness } = createFakePluginHost({ pluginId: "sandy-sidebar" });
-  await plugin(sandy);
-  disposers.push(() => harness.lifecycle.dispose());
-  await harness.behavior.callRpc("setTopicTags", { kind: "thread", ownerId: "t", tags: ["existing"] });
-  await harness.behavior.callRpc("setThreadTopics", { threadId: "t", topics: ["Existing Topic"] });
+async function mountDialog(
+  readFails: (call: number) => boolean,
+  onOpenChange: (open: boolean) => void = () => undefined,
+) {
+  const host = await createLabelsHost("t", { tags: ["existing"], topics: ["Existing Topic"] });
   let reads = 0;
-  const writes = vi.fn((input: unknown) => harness.behavior.callRpc("setTopicTags", input as never));
+  const writes = vi.fn(host.setTopicTags);
   const listTopics = vi.fn(async () => {
     reads += 1;
     if (readFails(reads)) throw new Error("temporary network error");
-    return harness.behavior.callRpc("listTopics", { threadId: "t" });
+    return host.listTopics();
   });
   const rendered = renderSlot(
     { component: SessionLabelsDialog },
     { threadId: "t", title: "Thread", open: true, onOpenChange },
     { rpc: { listTopics, setTopicTags: writes } },
   );
-  const storedTags = () =>
-    (sandy.storage.database().prepare("SELECT tag FROM topic_tags WHERE owner_id = 't' ORDER BY tag").all() as Array<{ tag: string }>).map(
-      (row) => row.tag,
-    );
-  return { rendered, listTopics, writes, storedTags };
+  return { rendered, listTopics, writes, storedTags: host.storedTags };
 }
 
 describe("SessionLabelsDialog", () => {

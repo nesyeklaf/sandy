@@ -328,3 +328,24 @@ export async function createWired(
     },
   };
 }
+
+export async function createLabelsHost(threadId: string, seed: { tags: string[]; topics: string[] }) {
+  const { sandy, harness } = createFakePluginHost({ pluginId: "sandy-sidebar" });
+  await plugin(sandy);
+  disposers.push(() => harness.lifecycle.dispose());
+  await harness.behavior.callRpc("setTopicTags", { kind: "thread", ownerId: threadId, tags: seed.tags });
+  await harness.behavior.callRpc("setThreadTopics", { threadId, topics: seed.topics });
+  return {
+    listTopics: () => harness.behavior.callRpc("listTopics", { threadId }),
+    setTopicTags: (input: unknown) => harness.behavior.callRpc("setTopicTags", input as never),
+    storedTags: () =>
+      (
+        sandy.storage
+          .database()
+          .prepare("SELECT tag FROM topic_tags WHERE owner_id = ? ORDER BY tag")
+          .all(threadId) as Array<{
+          tag: string;
+        }>
+      ).map((row) => row.tag),
+  };
+}
