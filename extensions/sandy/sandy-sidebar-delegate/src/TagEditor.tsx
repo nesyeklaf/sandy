@@ -4,19 +4,28 @@ import { cn } from "./lib/utils";
 import { hueOf } from "./topic-layout";
 import "./topics.css";
 
-/** Chips with an inline field: Enter adds, the cross removes. */
+const KIND_TEXT = {
+  tag: { noun: "Tag", placeholder: "+ Tag", lowercase: true },
+  topic: { noun: "Thema", placeholder: "+ Thema", lowercase: false },
+} as const;
+
+/** Chips with an inline field: Enter adds, the cross removes. Tags are lowercased, topics keep their case. */
 export function TagEditor({
   tags,
   label,
+  kind = "tag",
   onChange,
 }: {
   tags: readonly string[];
   label: string;
+  kind?: keyof typeof KIND_TEXT;
   onChange: (tags: string[]) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const text = KIND_TEXT[kind];
   const add = () => {
-    const next = draft.trim().toLowerCase();
+    const trimmed = draft.trim();
+    const next = text.lowercase ? trimmed.toLowerCase() : trimmed;
     setDraft("");
     if (next && !tags.includes(next)) onChange([...tags, next]);
   };
@@ -27,7 +36,7 @@ export function TagEditor({
           {tag}
           <button
             type="button"
-            aria-label={`Tag ${tag} entfernen`}
+            aria-label={`${text.noun} ${tag} entfernen`}
             className="text-muted-foreground hover:text-foreground"
             onClick={() => onChange(tags.filter((existing) => existing !== tag))}
           >
@@ -38,7 +47,7 @@ export function TagEditor({
       <input
         value={draft}
         aria-label={label}
-        placeholder="+ Tag"
+        placeholder={text.placeholder}
         maxLength={40}
         className={cn(
           "h-5 w-16 rounded bg-transparent px-1 text-2xs outline-none placeholder:text-muted-foreground",
