@@ -57,18 +57,22 @@ export function createServerPolicy(
   let pullRequestLookupFailing = false;
   const loadPullRequests = async (environmentIds: readonly string[]) => {
     const results = new Map<string, AutoSettlePullRequest>();
+    const signal = AbortSignal.timeout(PULL_REQUEST_LOOKUP_TIMEOUT_MS);
+    const batches: string[][] = [];
     for (let start = 0; start < environmentIds.length; start += MAX_PULL_REQUEST_KEYS) {
-      const keys = environmentIds.slice(start, start + MAX_PULL_REQUEST_KEYS);
-      let rows: Record<string, unknown> = {};
+      batches.push(environmentIds.slice(start, start + MAX_PULL_REQUEST_KEYS));
+    }
+    const lookUpBatch = async (keys: string[]): Promise<Record<string, unknown>> => {
       try {
-        rows = await ctx.sandy.sdk.plugins.callRpc({
+        const rows = await ctx.sandy.sdk.plugins.callRpc({
           pluginId: GITHUB_PR_STATUS_PLUGIN_ID,
           method: "pullRequests",
           input: { keys },
           outputSchema: z.record(z.string(), z.unknown()),
-          signal: AbortSignal.timeout(PULL_REQUEST_LOOKUP_TIMEOUT_MS),
+          signal,
         });
         pullRequestLookupFailing = false;
+        return rows;
       } catch (error) {
         if (!pullRequestLookupFailing) {
           ctx.sandy.log.warn(
@@ -78,7 +82,12 @@ export function createServerPolicy(
           );
         }
         pullRequestLookupFailing = true;
+        return {};
       }
+    };
+    const batchRows = await Promise.all(batches.map(lookUpBatch));
+    batches.forEach((keys, index) => {
+      const rows = batchRows[index] ?? {};
       for (const environmentId of keys) {
         const row = pullRequestRowSchema.safeParse(rows[environmentId]);
         if (!row.success || row.data.outcome === "unavailable") {
@@ -93,7 +102,7 @@ export function createServerPolicy(
           });
         }
       }
-    }
+    });
     return results;
   };
 
