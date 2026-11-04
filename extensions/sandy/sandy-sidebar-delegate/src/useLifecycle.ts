@@ -51,15 +51,14 @@ type LifecycleMutationRequest =
 const lifecycleCache = createCachedRpcState(STORAGE_KEYS.lifecycle.key, lifecycleRowsCodec);
 
 type LifecycleRpc = ReturnType<typeof useRpc<typeof sandySidebarRpcContract>>;
-const runningAutoSettleEvaluations = new WeakMap<LifecycleRpc, Promise<{ changedThreadIds: string[] }>>();
+let runningAutoSettleEvaluation: Promise<{ changedThreadIds: string[] }> | null = null;
 
 function evaluateAutoSettleOnce(rpc: LifecycleRpc): Promise<{ changedThreadIds: string[] }> {
-  const running = runningAutoSettleEvaluations.get(rpc);
-  if (running) return running;
+  if (runningAutoSettleEvaluation) return runningAutoSettleEvaluation;
   const evaluation = rpc.call("evaluateAutoSettle", {}).finally(() => {
-    if (runningAutoSettleEvaluations.get(rpc) === evaluation) runningAutoSettleEvaluations.delete(rpc);
+    if (runningAutoSettleEvaluation === evaluation) runningAutoSettleEvaluation = null;
   });
-  runningAutoSettleEvaluations.set(rpc, evaluation);
+  runningAutoSettleEvaluation = evaluation;
   return evaluation;
 }
 

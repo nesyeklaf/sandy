@@ -1,7 +1,7 @@
 import type { useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { sandySidebarRpcContract } from "./contract";
 
-export type SidebarRpc = ReturnType<typeof useRpc<typeof sandySidebarRpcContract>>;
+type SidebarRpc = ReturnType<typeof useRpc<typeof sandySidebarRpcContract>>;
 
 export class RemoteStore<State> {
   private state: State;
