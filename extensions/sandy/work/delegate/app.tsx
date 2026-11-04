@@ -9,6 +9,7 @@ import {
 } from "@sandy-sdk/plugin-sdk/app";
 import type { PluginAppBuilder } from "@sandy-sdk/plugin-sdk/app";
 import { rpcContract } from "./contract.ts";
+import { useDelegates } from "./use-delegates.ts";
 import { useOpenWork } from "../work-tab-link.ts";
 import type { PanelRow } from "./panel-types.ts";
 import {
@@ -62,7 +63,6 @@ function QuestionForm({ interaction, submit, cancel }: PluginPendingInteractionP
   );
 }
 
-const POLL_MS = 3000;
 const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 const TONE_CLASS: Record<StatusTone, string> = {
@@ -94,17 +94,6 @@ const useRequestedDelegation = (): string | null =>
     },
     () => requestedDelegation,
   );
-
-function useDelegates(threadId: string, enabled = true) {
-  const query = experimental_useRpcQuery({ contract: rpcContract, method: "listDelegates", input: { threadId }, enabled });
-  const { refetch } = query;
-  useEffect(() => {
-    if (!enabled) return;
-    const timer = setInterval(() => void refetch(), POLL_MS);
-    return () => clearInterval(timer);
-  }, [refetch, enabled]);
-  return query;
-}
 
 // Runs one panel action at a time and keeps its last message (or error) for the row.
 function useAction(after: () => void) {
