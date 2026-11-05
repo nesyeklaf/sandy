@@ -12,10 +12,10 @@ import {
   type ReactNode,
   type SVGProps,
 } from "react";
-import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ACCENT, finiteNumber, formatNumber, isObject, tone, type Tone } from "../values";
 import type { Value } from "../../core/types";
+import { observeContentRect } from "./sizeObserver";
 import { CHART_DRAW_MS, EASE_OUT_EXPO, FADE, useEntrance, type Entrance } from "./motion";
 
 /** Series colors in order: the accent, its quiet counterpart, then the tones. */
@@ -170,18 +170,7 @@ export function useWidth<T extends HTMLElement>(): [(element: T | null) => () =>
   const [width, setWidth] = useState(0);
   const ref = useCallback((element: T | null) => {
     if (element === null) return () => {};
-    let first = true;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry === undefined) return;
-      const next = entry.contentRect.width;
-      if (first) {
-        first = false;
-        flushSync(() => setWidth(next));
-      } else setWidth(next);
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
+    return observeContentRect(element, (rect) => setWidth(rect.width));
   }, []);
   return [ref, width];
 }

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, type ReactNode } from "react";
+import { act, Profiler, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Value } from "../core/types";
@@ -35,25 +35,30 @@ const runtime: UiRuntime = {
 const observers = new Set<{ report(width: number, height: number): void }>();
 
 class FakeResizeObserver {
-  private target: Element | null = null;
+  private readonly targets = new Set<Element>();
   constructor(private readonly callback: ResizeObserverCallback) {
     observers.add(this);
   }
   observe(target: Element) {
-    this.target = target;
+    this.targets.add(target);
   }
-  unobserve() {}
+  unobserve(target: Element) {
+    this.targets.delete(target);
+  }
   disconnect() {
     observers.delete(this);
   }
   report(width: number, height: number) {
-    if (this.target === null) return;
-    const entry = {
-      target: this.target,
-      contentRect: new DOMRect(0, 0, width, height),
-      borderBoxSize: [{ inlineSize: width, blockSize: height }],
-    } as unknown as ResizeObserverEntry;
-    this.callback([entry], this as unknown as ResizeObserver);
+    if (this.targets.size === 0) return;
+    const entries = [...this.targets].map(
+      (target) =>
+        ({
+          target,
+          contentRect: new DOMRect(0, 0, width, height),
+          borderBoxSize: [{ inlineSize: width, blockSize: height }],
+        }) as unknown as ResizeObserverEntry,
+    );
+    this.callback(entries, this as unknown as ResizeObserver);
   }
 }
 
@@ -250,6 +255,47 @@ describe("useWidth", () => {
     expect(container.textContent).toBe("321");
     report(400, 100);
     expect(container.textContent).toBe("400");
+  });
+});
+
+describe("useWidth with several consumers", () => {
+  function Frame({ id }: { id: number }) {
+    const [ref, width] = useWidth<HTMLDivElement>();
+    return (
+      <div ref={ref} data-testid={`frame-${id}`}>
+        {width}
+      </div>
+    );
+  }
+
+  it("commits the first reports of elements mounted together once, not once per element", () => {
+    let commits = 0;
+    render(
+      <Profiler id="frames" onRender={() => (commits += 1)}>
+        {[0, 1, 2, 3, 4].map((id) => (
+          <Frame key={id} id={id} />
+        ))}
+      </Profiler>,
+    );
+    commits = 0;
+    deliverWithoutAct(250, 100);
+    const widths = [...container.querySelectorAll("[data-testid^=frame-]")].map((frame) => frame.textContent);
+    expect(widths).toEqual(["250", "250", "250", "250", "250"]);
+    expect(commits).toBe(1);
+  });
+
+  it("shares one observer and releases it when the last consumer unmounts", () => {
+    render(
+      <>
+        <Frame id={0} />
+        <Frame id={1} />
+      </>,
+    );
+    expect(observers.size).toBe(1);
+    render(<Frame id={0} />);
+    expect(observers.size).toBe(1);
+    render(<div />);
+    expect(observers.size).toBe(0);
   });
 });
 

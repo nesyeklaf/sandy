@@ -5,7 +5,6 @@
 // toggle, and always the screen-reader version) has the same level sorted by
 // size.
 import { useCallback, useMemo, useState } from "react";
-import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
 import { formatAmount, formatShare } from "../../core/perf-units";
 import { findNode, GROUP_HEADER, layoutTreemap, readTreemap, trail, type Tile, type TreeNode } from "../../core/treemap";
@@ -14,6 +13,7 @@ import { ErrorLine } from "./display";
 import { FOCUS_RING } from "./inputs";
 import { RISE, useEntrance } from "./motion";
 import { Frame, Heading, Quiet, Segmented, TEXT_BUTTON } from "./perfKit";
+import { observeContentRect } from "./sizeObserver";
 
 /** List rows shown before "Show N more". */
 const LIST_PAGE = 50;
@@ -151,18 +151,9 @@ function useBox<T extends HTMLElement>(): [(element: T | null) => () => void, { 
   const [box, setBox] = useState({ width: 0, height: 0 });
   const ref = useCallback((element: T | null) => {
     if (element === null) return () => {};
-    let first = true;
-    const observer = new ResizeObserver((entries) => {
-      const rect = entries[0]?.contentRect;
-      if (rect === undefined) return;
-      const update = () => setBox((previous) => (previous.width === rect.width && previous.height === rect.height ? previous : { width: rect.width, height: rect.height }));
-      if (first) {
-        first = false;
-        flushSync(update);
-      } else update();
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
+    return observeContentRect(element, (rect) =>
+      setBox((previous) => (previous.width === rect.width && previous.height === rect.height ? previous : { width: rect.width, height: rect.height })),
+    );
   }, []);
   return [ref, box];
 }
