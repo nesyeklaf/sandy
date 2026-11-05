@@ -58,14 +58,14 @@ Premortem: {% $premortem.Premortem %}
 {% case value="owner" when=any($review.Checks, "unclear") /%}
 {% case value="pass" /%}
 {% /derive %}
-{% next to="weigh" when=equals($review.Verdict, "fix") label="A must is broken: go back to weigh" max=2 exceeded="owner" /%}
+{% next to="weigh" when=equals($review.Verdict, "fix") label="A must is broken: go back to weigh" max=2 exceeded="decide" /%}
 {% next to="decide" when=equals($review.Verdict, "owner") label="A must is unclear: the owner decides" /%}
 {% next to="done" label="All musts met: finish" /%}
 {% /stage %}
 
 {% stage id="decide" gate="user" %}
-Show the owner the unclear musts with their reasons and ask: fix or pass.
-{% output name="Decision" type="choice(fix, pass)" /%}
+Give the owner the broken or unclear musts with their reasons. The owner picks fix or pass.
+{% output name="Decision" type="choice(fix, pass)" by="owner" /%}
 {% next to="weigh" when=equals($decide.Decision, "fix") label="The owner says fix: go back to weigh" /%}
 {% next to="done" label="The owner says pass: finish" /%}
 {% /stage %}

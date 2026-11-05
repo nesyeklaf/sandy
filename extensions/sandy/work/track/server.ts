@@ -27,7 +27,7 @@ const KEY_PREFIX = "run:";
  */
 const TICKET_MARKER = "⟦track-ticket⟧";
 
-const decisionSchema = z.object({ approved: z.boolean(), note: z.string().max(2000).optional() });
+const decisionSchema = z.object({ approved: z.boolean(), note: z.string().max(2000).optional(), picks: z.record(z.string().max(200), z.string().max(200)).optional() });
 const usageSchema = z
   .object({ input: z.number(), output: z.number(), cacheRead: z.number(), cacheWrite: z.number(), total: z.number(), messages: z.number() })
   .strict();
@@ -150,7 +150,8 @@ export default async function plugin(sandy: SandyPluginApi) {
       const decision = decisionSchema.safeParse(value);
       const approved = decision.success && decision.data.approved;
       const what = form.rendererId === "track-approval" ? "track" : form.rendererId === "force-proposal" ? "force proposal" : "gate";
-      return { title: clip(`${approved ? "Approved" : "Rejected"} ${what}: ${form.title}`, 80), ...(decision.success && decision.data.note ? { detail: decision.data.note } : {}) };
+      const picks = decision.success && approved && decision.data.picks ? Object.entries(decision.data.picks).map(([k, v]) => `${k}: ${v}`).join(", ") : "";
+      return { title: clip(picks ? `Picked ${picks}: ${form.title}` : `${approved ? "Approved" : "Rejected"} ${what}: ${form.title}`, 80), ...(decision.success && decision.data.note ? { detail: decision.data.note } : {}) };
     };
     return {
       threadId,

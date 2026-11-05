@@ -123,7 +123,10 @@ test("an explicit to that differs from the decided edge is refused naming it and
   assert.equal(right.run.outputs.review?.Verdict, "fix");
 });
 
-test("fix, owner (decide), fix count two weigh traversals; the third fix hits the round limit and only then permits a force proposal", () => {
+const answer = (run: Run, approved: boolean, picks?: Record<string, string>) =>
+  commit(run, { by: "system", op: "answered", runId: run.runId, ticket: ticket(run) as never, formId: lease(run).work!.id, approved, ...(picks ? { picks } : {}) });
+
+test("fix, owner (decide), fix count two weigh traversals; the third fix routes to decide, where the owner's pick decides", () => {
   let run = atReview();
   assert.match(refusal(commit(run, { by: "agent", op: "proposeForce", ticket: ticket(run), to: "weigh", reason: "r" }).reply), /The track decides the branch/);
   run = submit(run, { Checks: "- 1: broken — slow\n- 2: met" }).run;
@@ -133,12 +136,18 @@ test("fix, owner (decide), fix count two weigh traversals; the third fix hits th
   run = submit(run, { Checks: "- 1: unclear — which load\n- 2: met" }).run;
   run = advance(run).run;
   assert.equal(stageNow(run), "decide");
-  run = submit(run, { Decision: "fix" }).run;
+  assert.match(refusal(submit(run, { Decision: "fix" }).reply), /picked by the owner in the gate form/);
+  assert.match(statusText(run), /The owner picks Decision \(fix, pass\) in the gate form/);
+  assert.match(refusal(advance(run, "weigh").reply), /call stage_advance without to/);
   const asked = advance(run);
   assert.equal(asked.reply.kind, "pending");
-  const work = lease(asked.run).work!;
-  run = commit(asked.run, { by: "system", op: "answered", runId: run.runId, ticket: ticket(asked.run) as never, formId: work.id, approved: true }).run;
+  run = answer(asked.run, true).run;
+  assert.equal(stageNow(run), "decide");
+  assert.match(String(lease(run).outcome && JSON.stringify(lease(run).outcome)), /without picking Decision \(fix, pass\)/);
+  run = advance(run).run;
+  run = answer(run, true, { Decision: "fix" }).run;
   assert.equal(stageNow(run), "weigh");
+  assert.equal(run.outputs.decide?.Decision, "fix");
   assert.match(endText(run.log.at(-1)!.end), /because equals\(\$decide\.Decision, "fix"\)/);
   run = toReview(run);
   run = submit(run, { Checks: "- 1: broken — still slow\n- 2: met" }).run;
@@ -149,8 +158,29 @@ test("fix, owner (decide), fix count two weigh traversals; the third fix hits th
   run = JSON.parse(JSON.stringify(toReview(run))) as Run;
   assert.equal(run.edgeCounts?.["review>weigh"], 2, "edgeCounts survive save and load");
   run = submit(run, { Checks: "- 1: broken — again\n- 2: met" }).run;
-  assert.match(refusal(advance(run).reply), /^round limit reached: ask the owner/);
   assert.match(statusText(run), /at most 2 times, taken 2/);
+  run = advance(run).run;
+  assert.equal(stageNow(run), "decide");
+  assert.match(endText(run.log.at(-1)!.end), /round limit reached: "weigh" was taken 2 of at most 2 times/);
+  run = advance(run).run;
+  run = answer(run, true, { Decision: "pass" }).run;
+  assert.equal(run.state.kind, "done");
+});
+
+test("exceeded=owner refuses the exhausted branch and only then permits a force proposal", () => {
+  const owner: Machine = { ...think, stages: think.stages.map((s) => (s.id === "review" ? { ...s, next: s.next.map((e) => (e.to === "weigh" ? { ...e, exceeded: "owner" } : e)) } : s)) };
+  let run = commit(null, { by: "agent", op: "start", source: { kind: "skill", skill: "think-it-through", machine: owner }, inputs: { Task: "pick a db", Choice: "sqlite or postgres" } }).run;
+  run = submit(run, { Frame: "the frame", Clear: "yes", Musts: "1. fast\n2. cheap" }).run;
+  run = advance(run).run;
+  for (let i = 0; i < 2; i++) {
+    run = toReview(run);
+    run = submit(run, { Checks: "- 1: broken — slow\n- 2: met" }).run;
+    run = advance(run).run;
+    assert.equal(stageNow(run), "weigh");
+  }
+  run = toReview(run);
+  run = submit(run, { Checks: "- 1: broken — again\n- 2: met" }).run;
+  assert.match(refusal(advance(run).reply), /^round limit reached: ask the owner/);
   assert.equal(commit(run, { by: "agent", op: "proposeForce", ticket: ticket(run), to: "premortem", reason: "the owner should pick" }).reply.kind, "pending");
 });
 
