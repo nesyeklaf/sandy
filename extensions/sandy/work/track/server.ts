@@ -379,9 +379,7 @@ export default async function plugin(sandy: SandyPluginApi) {
   sandy.agents.contributeInstructions(({ threadId }) => {
     const run = mirror.get(threadId);
     if (!run || run.state.kind !== "active") return null;
-    const lease = run.state.lease;
-    const stage = run.machine.stages.find((s) => s.id === lease.stage);
-    return `A track "${run.machine.title}" is active in this thread, current stage "${stage?.title ?? lease.stage}". Call stage_status before you continue.`;
+    return `A track "${run.machine.title}" is active in this thread. Call stage_status for the current stage before you continue.`;
   });
 
   // ---- owner RPC (Stages tab) -----------------------------------------------------------------------------------

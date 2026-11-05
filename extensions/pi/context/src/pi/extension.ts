@@ -3,7 +3,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
 import { type ContextConfig, type ContextConfigInput, carriedTokens, resolveConfig } from "../core/config.ts";
-import { requestShape } from "../core/continuity.ts";
+import { headParts, requestShape } from "../core/continuity.ts";
 import { type CutPlan, planCut } from "../core/cut.ts";
 import {
 	CUT_REQUEST_CHANNEL,
@@ -125,6 +125,8 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		let ledger = new Ledger();
 		let ledgerFile: string | undefined;
 		let sessionId = "";
+		let sessionFile: string | undefined;
+		let requestHead: Record<string, number> = {};
 		let requests = new RequestTracker();
 		/** Reason for the cache break the next request will show. */
 		let pendingCut: string | undefined;
@@ -332,6 +334,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			lastSizeProblem = undefined;
 			taskDone = readBranch(ctx.sessionManager.getBranch()).taskCutPending;
 			sessionId = ctx.sessionManager.getSessionId();
+			sessionFile = ctx.sessionManager.getSessionFile();
 			ledgerFile =
 				options.ledgerFile === false
 					? undefined
@@ -418,10 +421,12 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			writeLedger({
 				t: new Date(now()).toISOString(),
 				session: sessionId,
+				...(sessionFile ? { file: sessionFile } : {}),
 				class: judged.requestClass,
 				...(reason !== undefined && planned ? { reason, ...(position ? { position } : {}) } : {}),
 				...(judged.continuity.kind === "broken" ? { at: judged.continuity.at } : {}),
 				items: judged.items,
+				head: requestHead,
 				model: judged.model,
 				prompt,
 				usage,
@@ -466,6 +471,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		pi.on("before_provider_request", (event, ctx) => {
 			const shape = requestShape(event.payload);
 			if (!shape) return undefined;
+			requestHead = headParts(event.payload);
 			requests.begin(shape, ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined);
 			return undefined;
 		});

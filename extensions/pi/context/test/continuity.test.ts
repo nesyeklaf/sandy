@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { compareShapes, hash53, requestShape, type RequestShape } from "../src/core/continuity.ts";
+import { compareShapes, hash53, headParts, requestShape, type RequestShape } from "../src/core/continuity.ts";
 import {
 	answerUsage,
 	classifyRequest,
@@ -206,5 +206,16 @@ describe("conversation ledger", () => {
 		fresh.begin(shape(1), "m", undefined);
 		assert.equal(fresh.settle(accepted)?.requestClass, "first");
 		assert.equal(ledgers.size, 2);
+	});
+});
+
+describe("head parts", () => {
+	it("names the head field that changed and ignores messages and volatile fields", () => {
+		const before = headParts({ ...payload([{ role: "user", content: "a" }]), tools: [{ name: "t" }] });
+		const after = headParts({ ...payload([{ role: "user", content: "b" }], "sys 2"), tools: [{ name: "t" }], max_tokens: 5 });
+		assert.deepEqual(Object.keys(before), ["model", "system", "tools"]);
+		assert.equal(before.model, after.model);
+		assert.equal(before.tools, after.tools);
+		assert.notEqual(before.system, after.system);
 	});
 });

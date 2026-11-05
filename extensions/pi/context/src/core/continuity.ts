@@ -82,6 +82,13 @@ export function requestShape(payload: unknown): RequestShape | undefined {
 	return { head: hashValue(head), items: (payload[key] as unknown[]).map(hashValue) };
 }
 
+export function headParts(payload: unknown): Record<string, number> {
+	if (!isRecord(payload)) return {};
+	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
+	const names = Object.keys(payload).filter((name) => name !== key && !VOLATILE_KEYS.has(name));
+	return Object.fromEntries(names.sort().map((name) => [name, hashValue(payload[name])]));
+}
+
 export function compareShapes(previous: RequestShape | undefined, next: RequestShape): Continuity {
 	if (!previous) return { kind: "first" };
 	if (previous.head !== next.head) return { kind: "broken", at: "head" };
