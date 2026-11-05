@@ -5,7 +5,7 @@
 import { TOOLS } from "./tools.ts";
 
 /** Name of the system prompt section; pi wraps it in a tag of the same name. */
-export const GUIDANCE_SECTION = "sandy-context";
+export const GUIDANCE_SECTION = "context";
 
 export const CONTEXT_GUIDANCE = [
 	"This session can run indefinitely. At planned points older history is cut out of your context; nothing is deleted, and the complete log stays searchable.",
@@ -43,5 +43,5 @@ export function guidanceFor(selectedTools: readonly string[], hiddenTools: reado
 export function notebookReminder(tokensLeft: number, empty: boolean): string {
 	const left = Math.max(0, Math.round(tokensLeft / 1_000));
 	const state = empty ? "Your notebook is empty." : "You have not updated your notebook since the last cut.";
-	return `[sandy-context] A context cut is coming in about ${left}k tokens. ${state} Update it now with the complete current state (goal, user constraints, decisions, plan and where you are), then continue with your task. Do not mention this reminder to the user.`;
+	return `[context] A context cut is coming in about ${left}k tokens. ${state} Update it now with the complete current state (goal, user constraints, decisions, plan and where you are), then continue with your task. Do not mention this reminder to the user.`;
 }

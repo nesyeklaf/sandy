@@ -3,6 +3,7 @@ import { describe, it } from "vitest";
 import { condensePrompt } from "../src/core/historian.ts";
 import {
 	applyCondensed,
+	citedIds,
 	CONDENSE_TARGET,
 	condenseSelection,
 	fitToBudget,
@@ -100,6 +101,7 @@ describe("anchored summary", () => {
 describe("condensing", () => {
 	const facts = Array.from({ length: 40 }, (_, i) => `fact number ${i} with some padding text (#f${i})`);
 	const full = mergeSummary(undefined, { state: ["now"], facts, errors: ["one error (#e1)", "two (#e2)"] }, "f39");
+	const fullOrder = new Map([...facts.map((_, i) => "f" + i), "e1", "e2"].map((id, at) => [id, at]));
 
 	it("selects nothing while the summary fits", () => {
 		assert.equal(condenseSelection(full, 10_000), undefined);
@@ -130,10 +132,10 @@ describe("condensing", () => {
 		const condensed = parseSummaryDelta(
 			"## Facts and findings\n- facts 0 to 9 (#f0 … #f9)\n## Errors and fixes\n- one error and two, at length and in detail (#e1, #e2)",
 		);
-		const result = applyCondensed(full, selection, condensed);
+		const result = applyCondensed(full, selection, condensed, fullOrder);
 		assert.deepEqual(result.sections.facts, ["facts 0 to 9 (#f0 … #f9)", ...facts.slice(10)]);
 		assert.deepEqual(result.sections.errors, full.sections.errors);
-		assert.deepEqual(applyCondensed(full, selection, {}).sections, full.sections);
+		assert.deepEqual(applyCondensed(full, selection, {}, fullOrder).sections, full.sections);
 	});
 });
 
@@ -177,6 +179,10 @@ describe("retention over many passes", () => {
 
 	function run(condense: boolean) {
 		const budget = 1_200;
+		// The history's order, as the historian hands it to the condenser: a range covers every entry between its ends.
+		const order = new Map(
+			Array.from({ length: ROUNDS }, (_, round) => Array.from({ length: 10 }, (_, item) => id(round + 1, item))).flat().map((one, at) => [one, at]),
+		);
 		let summary: SummaryState | undefined;
 		let calls = 0;
 		for (let round = 1; round <= ROUNDS; round++) {
@@ -184,7 +190,7 @@ describe("retention over many passes", () => {
 			const selection = condense ? condenseSelection(next, budget) : undefined;
 			if (selection) {
 				calls++;
-				next = applyCondensed(next, selection, mechanicalCondenser(selection));
+				next = applyCondensed(next, selection, mechanicalCondenser(selection), order);
 			}
 			summary = fitToBudget(next, budget);
 			assert.ok(summaryTokens(summary) <= budget);
@@ -206,5 +212,50 @@ describe("retention over many passes", () => {
 		console.log(
 			`retention after ${ROUNDS} passes: drop ${dropped.kept}/${ROUNDS}, condense ${condensed.kept}/${ROUNDS} with ${condensed.calls} condenser calls`,
 		);
+	});
+});
+
+describe("sourced summaries", () => {
+	const sourced: SummaryState = {
+		...mergeSummary(undefined, { goal: ["never touch billing (#u1)"], facts: ["a (#t1)", "b (#t2)", "c (#t3)"] }, "t3"),
+		sources: [{ fromId: "u1", throughId: "t3", digest: "0123456789abcdef" }],
+		partial: { entryId: "t4", offset: 120, digest: "fedcba9876543210" },
+		supersedes: "cp1",
+	};
+
+	it("reads back the stretches, the partial entry and the checkpoint it replaces", () => {
+		assert.deepEqual(readSummaryState(JSON.parse(JSON.stringify(sourced))), sourced);
+		assert.equal(readSummaryState({ ...sourced, sources: [{ fromId: "u1" }] }), undefined);
+		assert.equal(readSummaryState({ ...sourced, partial: { entryId: "t4", offset: 0, digest: "x" } }), undefined);
+		assert.equal(readSummaryState({ ...sourced, supersedes: 7 }), undefined);
+	});
+
+	it("names the entries an item depends on, and every entry inside a range once the order is known", () => {
+		assert.deepEqual(citedIds("x (#a, #b)"), ["a", "b"]);
+		assert.deepEqual(citedIds("no citation"), []);
+		const order = new Map(["a", "m1", "m2", "b", "z"].map((id, at) => [id, at]));
+		assert.deepEqual(citedIds("x (#a … #b)", order).sort(), ["a", "b", "m1", "m2"]);
+	});
+
+	it("keeps the originals when the condensed items drop an entry the originals cited", () => {
+		const selection = { facts: sourced.sections.facts };
+		const shorter = ["a+b (#t1, #t2)"];
+		assert.ok(estimateTokens(shorter[0] as string) < selection.facts.reduce((sum, item) => sum + estimateTokens(item), 0), "only the dropped id rejects it");
+		const order = new Map(["u1", "t1", "t2", "t3"].map((id, at) => [id, at]));
+		const lossy = applyCondensed(sourced, selection, { facts: shorter }, order);
+		assert.deepEqual(lossy.sections.facts, sourced.sections.facts, "#t3 would no longer be found by an edit of it");
+		const whole = applyCondensed(sourced, selection, { facts: ["all (#t1 … #t3)"] }, order);
+		assert.deepEqual(whole.sections.facts, ["all (#t1 … #t3)"], "a range covers what is between its ends");
+	});
+
+	it("reads a new range in the history's order, never in the order the originals cited their entries", () => {
+		const facts = ["A long record names fact A at length (#a)", "A long record names fact C at length (#c)", "A long record names fact B at length (#b)"];
+		const summary = { ...mergeSummary(undefined, { facts }, "c") };
+		const order = new Map(["a", "b", "c"].map((id, at) => [id, at]));
+		assert.deepEqual(applyCondensed(summary, { facts }, { facts: ["All A/B/C (#a … #b)"] }, order).sections.facts, facts, "#c lies after the range");
+		assert.deepEqual(applyCondensed(summary, { facts }, { facts: ["All A/B/C (#a … #c)"] }, order).sections.facts, ["All A/B/C (#a … #c)"]);
+		// Without the history's order a range's inside is unknown, so a range proves nothing: the originals stay.
+		// @ts-expect-error the history's order is required
+		assert.deepEqual(applyCondensed(summary, { facts }, { facts: ["All A/B/C (#a … #b)"] }).sections.facts, facts);
 	});
 });

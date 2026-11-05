@@ -70,11 +70,15 @@ export function hashValue(value: unknown): number {
 	return hash53(stableStringify(value));
 }
 
+/** The field a request format keeps its message list in (`messages`, `input` or `contents`), or undefined. */
+export function messageKey(payload: unknown): (typeof MESSAGE_ARRAYS)[number] | undefined {
+	return isRecord(payload) ? MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name])) : undefined;
+}
+
 /** Shape of a provider payload, or undefined when it has no recognizable message list. */
 export function requestShape(payload: unknown): RequestShape | undefined {
-	if (!isRecord(payload)) return undefined;
-	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
-	if (!key) return undefined;
+	const key = messageKey(payload);
+	if (!isRecord(payload) || !key) return undefined;
 	const head: Record<string, unknown> = {};
 	for (const [name, value] of Object.entries(payload)) {
 		if (name !== key && !VOLATILE_KEYS.has(name)) head[name] = value;

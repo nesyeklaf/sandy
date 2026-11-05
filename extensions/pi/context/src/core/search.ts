@@ -190,8 +190,8 @@ export class TopHits {
 	}
 }
 
-/** A short window of the text around the first query term it contains. */
-export function snippet(text: string, query: string, width = 280): string {
+/** A short window of the text around the first query term it contains, and where in the text the window starts. */
+export function snippetWindow(text: string, query: string, width = 280): { readonly text: string; readonly start: number } {
 	const lower = text.toLowerCase();
 	let at = -1;
 	for (const term of new Set(tokenize(query))) {
@@ -201,5 +201,10 @@ export function snippet(text: string, query: string, width = 280): string {
 	const start = Math.max(0, at < 0 ? 0 : at - Math.floor(width / 3));
 	const end = Math.min(text.length, start + width);
 	const window = text.slice(start, end).replace(/\s+/g, " ").trim();
-	return `${start > 0 ? "…" : ""}${window}${end < text.length ? "…" : ""}`;
+	return { text: `${start > 0 ? "…" : ""}${window}${end < text.length ? "…" : ""}`, start };
+}
+
+/** A short window of the text around the first query term it contains. */
+export function snippet(text: string, query: string, width = 280): string {
+	return snippetWindow(text, query, width).text;
 }

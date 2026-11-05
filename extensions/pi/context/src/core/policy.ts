@@ -1,4 +1,5 @@
 import { type CacheTtl, type ContextConfig, carriedTokens } from "./config.ts";
+import { PROVIDER_TOKENS_PER_ESTIMATE } from "./tokens.ts";
 
 /** Why a cut happened. Every cut is a planned cache break. */
 export type CutReason = "watermark" | "cold" | "model" | "task" | "threshold" | "overflow" | "manual";
@@ -20,11 +21,16 @@ export interface CutThresholds {
 	readonly hard: number;
 }
 
-export function cutThresholds(config: ContextConfig, contextWindow: number | undefined): CutThresholds {
+/** `reserve` is the room pi keeps for the answer in this session; see {@link CutEnvelope}. */
+export function cutThresholds(
+	config: ContextConfig,
+	contextWindow: number | undefined,
+	reserve: number = PI_RESERVE,
+): CutThresholds {
 	const window = contextWindow !== undefined && contextWindow > 0 ? contextWindow : Number.POSITIVE_INFINITY;
 	const hard = Math.max(
 		1,
-		Math.min(config.watermarkTokens + config.deferMarginTokens, config.hardCapTokens, window - 2 * PI_RESERVE),
+		Math.min(config.watermarkTokens + config.deferMarginTokens, config.hardCapTokens, window - 2 * reserve),
 	);
 	return { soft: Math.min(config.watermarkTokens, hard), hard };
 }
@@ -89,8 +95,65 @@ export const HARD_CUT_MIN_SHARE = 0.25;
  * own near the model window, on a window of 1M tokens at over 900k.
  */
 export function cutAccepted(size: CutSize, hard: number): boolean {
-	if (cutShrinks(size)) return true;
-	return size.contextTokens >= hard && size.contextTokens - projectedTokens(size) >= size.contextTokens * HARD_CUT_MIN_SHARE;
+	return cutFrees(projectedTokens(size), size.contextTokens, size.limit, hard);
+}
+
+/** {@link cutAccepted} for a cut expected to leave `expected` tokens of a prompt of `contextTokens`. */
+export function cutFrees(expected: number, contextTokens: number, limit: number, hard: number): boolean {
+	if (expected < limit) return true;
+	return contextTokens >= hard && contextTokens - expected >= contextTokens * HARD_CUT_MIN_SHARE;
+}
+
+/**
+ * What every request after a cut carries besides the log, and the room pi keeps free. All of it is estimated from
+ * text, four characters per token scaled by {@link PROVIDER_TOKENS_PER_ESTIMATE}: the provider's tokenizer counts
+ * differently, so the next request reconciles the expectation instead of trusting it.
+ */
+export interface CutEnvelope {
+	/** Estimated provider tokens of the system prompt and the active tools' declarations. */
+	readonly fixedTokens: number;
+	/** The room pi keeps for the answer: it compacts on its own above `contextWindow - reserveTokens`. */
+	readonly reserveTokens: number;
+	readonly contextWindow: number | undefined;
+}
+
+/** Where pi's own compaction starts: what a cut must leave the prompt below to free any headroom. */
+export function nativeLimit(envelope: CutEnvelope): number {
+	const window = envelope.contextWindow;
+	return window !== undefined && window > 0 ? window - envelope.reserveTokens : Number.POSITIVE_INFINITY;
+}
+
+/** The estimated log part of a cut's result: its block and the history it keeps. */
+export interface CutRemainder {
+	/** The prompt before the cut as the provider counted it; undefined when no count is known. */
+	readonly contextTokens: number | undefined;
+	readonly visibleTokens: number;
+	readonly archivedTokens: number;
+	readonly blockTokens: number;
+	/** Estimated tokens of the history the cut keeps verbatim: the legal suffix that cannot be cut. */
+	readonly keptTokens: number;
+}
+
+/**
+ * The prompt a cut is expected to leave, an estimate. With a provider count it is {@link projectedTokens}, which was
+ * measured unbiased; it is never taken below the floor of what the next request certainly carries again: the system
+ * prompt and tools plus the block and the kept history at one provider token per estimated token. Without a count the
+ * estimate is scaled by {@link PROVIDER_TOKENS_PER_ESTIMATE}. A large system prompt inflates the projection's ratio,
+ * which the floor catches.
+ */
+export function expectedTokens(remainder: CutRemainder, envelope: CutEnvelope): number {
+	const carried = remainder.blockTokens + remainder.keptTokens;
+	const floor = envelope.fixedTokens + carried;
+	if (remainder.contextTokens === undefined) return envelope.fixedTokens + carried * PROVIDER_TOKENS_PER_ESTIMATE;
+	return Math.max(floor, projectedTokens({ ...remainder, contextTokens: remainder.contextTokens }));
+}
+
+/**
+ * Whether cuts can work below `watermark` in this envelope: what a cut carries plus the system prompt and tools must
+ * stay below it, otherwise every watermark cut is refused or followed by another.
+ */
+export function envelopeHolds(config: ContextConfig, envelope: CutEnvelope, watermark: number): boolean {
+	return envelope.fixedTokens + carriedTokens(config) < Math.min(watermark, nativeLimit(envelope));
 }
 
 /**
@@ -158,14 +221,19 @@ export function cacheTtlMs(config: ContextConfig, model: CacheModel | undefined,
 /** How long before its cache expires a waiting session gets its keep-warm ping: one timer tick and a slow request fit in it. */
 export const KEEP_WARM_LEAD_MS = 60_000;
 
-export interface KeepWarmObservation {
-	readonly now: number;
-	/** Last moment the provider cache was written or read. */
-	readonly lastCacheTouch: number | undefined;
+/** What decides a keep-warm ping: the cache, the expected prompt and the prices. */
+export interface KeepWarmState {
+	/**
+	 * Request start, epoch ms, of the last request that wrote or read the cache: the provider counts the cache's
+	 * lifetime from there, not from the answer's end. Undefined without a request to count from.
+	 */
+	readonly cacheStart: number | undefined;
 	readonly ttlMs: number;
 	/** Until when the session expects another prompt, from its keep-warm signal; undefined without one. */
 	readonly until: number | undefined;
 	readonly contextTokens: number | undefined;
+	/** From here the next prompt cuts first and a warm cache would be thrown away, as in {@link promptCut}. */
+	readonly softTokens: number;
 	/** Above this a cold resume cuts first and writes only `carriedTokens`, as in {@link promptCut}. */
 	readonly minTokens: number;
 	readonly carriedTokens: number;
@@ -175,20 +243,27 @@ export interface KeepWarmObservation {
 }
 
 /**
- * Ping a session now to keep its cache warm when its next prompt is expected after the cache would expire, the cache
- * is still warm and expires within {@link KEEP_WARM_LEAD_MS}, and the pings until that prompt, plus the prompt reading the cache,
- * cost less than letting it go cold and writing the cut context again.
+ * Whether a ping is in the plan for this cache window at `now`, early or late: the cache is still warm and expires
+ * before the session's next prompt, the next prompt would not cut anyway, and the pings until that prompt, plus the
+ * prompt reading the cache, cost less than letting it go cold and writing the cut context again. While this holds the
+ * ping owns the window and pi's own warmer stands down; {@link keepWarmDue} says when the ping leaves.
  */
-export function keepWarmDue(observation: KeepWarmObservation): boolean {
-	const { now, lastCacheTouch, ttlMs, until, contextTokens } = observation;
-	if (lastCacheTouch === undefined || until === undefined || contextTokens === undefined) return false;
-	const expires = lastCacheTouch + ttlMs;
-	if (now >= expires || until <= expires || now < expires - KEEP_WARM_LEAD_MS) return false;
+export function keepWarmPlanned(state: KeepWarmState, now: number): boolean {
+	const { cacheStart, ttlMs, until, contextTokens } = state;
+	if (cacheStart === undefined || until === undefined || contextTokens === undefined) return false;
+	if (contextTokens >= state.softTokens) return false;
+	const expires = cacheStart + ttlMs;
+	if (now >= expires || until <= expires) return false;
 	const beyond = until - now - ttlMs;
 	const pings = beyond <= 0 ? 1 : 1 + Math.ceil(beyond / Math.max(ttlMs - KEEP_WARM_LEAD_MS, KEEP_WARM_LEAD_MS));
-	const warm = (pings + 1) * observation.cacheReadCost * contextTokens;
-	const resumed = contextTokens >= observation.minTokens ? observation.carriedTokens : contextTokens;
-	return warm < observation.cacheWriteCost * resumed;
+	const warm = (pings + 1) * state.cacheReadCost * contextTokens;
+	const resumed = contextTokens >= state.minTokens ? state.carriedTokens : contextTokens;
+	return warm < state.cacheWriteCost * resumed;
+}
+
+/** Ping a session at `now`: planned (see {@link keepWarmPlanned}) and the cache expires within {@link KEEP_WARM_LEAD_MS}. */
+export function keepWarmDue(state: KeepWarmState, now: number): boolean {
+	return state.cacheStart !== undefined && now >= state.cacheStart + state.ttlMs - KEEP_WARM_LEAD_MS && keepWarmPlanned(state, now);
 }
 
 export interface PromptObservation {

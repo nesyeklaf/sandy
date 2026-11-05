@@ -9,7 +9,6 @@ import { resolveConfig } from "../src/core/config.ts";
 import { CUT_REQUEST_CHANNEL } from "../src/core/kinds.ts";
 import { cacheTtlMs } from "../src/core/policy.ts";
 import type { ContextExtensionOptions } from "../src/pi/extension.ts";
-import { KEEP_WARM_PING } from "../src/pi/keep-warm.ts";
 import { capturedTools } from "./support/captured.ts";
 import { type FauxContext, type FauxRegistration, piAi, piSdk, typebox } from "./support/pi.ts";
 import { condenserAnswer, historianAnswer, probeText, textOf } from "./support/pi-scenario.ts";
@@ -37,15 +36,15 @@ interface AgentRequest {
 type Session = Awaited<ReturnType<typeof piSdk.createAgentSession>>["session"];
 type Entry = ReturnType<Session["sessionManager"]["getEntries"]>[number];
 
-function sandyCompactions(entries: readonly Entry[]) {
+function ownCompactions(entries: readonly Entry[]) {
 	return entries.flatMap((entry) =>
-		entry.type === "compaction" && (entry.details as { sandyContext?: unknown } | undefined)?.sandyContext !== undefined
-			? [entry as Entry & { type: "compaction"; summary: string; details: { sandyContext: { reason: string } } }]
+		entry.type === "compaction" && (entry.details as { context?: unknown } | undefined)?.context !== undefined
+			? [entry as Entry & { type: "compaction"; summary: string; details: { context: { reason: string } } }]
 			: [],
 	);
 }
 
-describe("sandy-context in the pi runtime", () => {
+describe("the context engine in the pi runtime", () => {
 	let tempDir = "";
 	let faux: FauxRegistration | undefined;
 	let session: Session | undefined;
@@ -58,8 +57,8 @@ describe("sandy-context in the pi runtime", () => {
 	let remindersAnswered = 0;
 	let coldPromptTokens: number | undefined;
 	let switchPromptTokens: number | undefined;
-	let pings = 0;
-	let pingRequest = -1;
+	let waitingRequests = -1;
+	let afterWaiting = -1;
 	let resumed = -1;
 	let signalFile = "";
 	let bus: ExtensionAPI["events"] | undefined;
@@ -84,16 +83,9 @@ describe("sandy-context in the pi runtime", () => {
 		}
 		requests.push({
 			items: context.messages.map((message) => JSON.stringify(message)),
-			compactions: sandyCompactions(entries()).length,
+			compactions: ownCompactions(entries()).length,
 			tokens: Math.ceil(serialized.length / 4),
 		});
-		// The keep-warm ping: answer it, and end the wait the signal announced, as a continuing workflow would.
-		if (textOf(context.messages.at(-1)?.content).includes(KEEP_WARM_PING)) {
-			pings++;
-			pingRequest = requests.length - 1;
-			rmSync(signalFile, { force: true });
-			return piAi.fauxAssistantMessage("ok");
-		}
 		// A diligent agent: answer the notebook reminder by writing the notebook, then carry on.
 		// It writes from inside a program, the way an agent calls tools.notebook from a codemode script.
 		if (textOf(context.messages.at(-1)?.content).includes("A context cut is coming")) {
@@ -132,7 +124,7 @@ describe("sandy-context in the pi runtime", () => {
 	const tool = (name: string, args: Record<string, unknown>) => run({ kind: "tool", name, args }, `TASK ${name}`);
 
 	before(async () => {
-		tempDir = mkdtempSync(join(tmpdir(), "sandy-context-"));
+		tempDir = mkdtempSync(join(tmpdir(), "context-"));
 		ledgerFile = join(tempDir, "ledger.jsonl");
 		signalFile = join(tempDir, "keep-warm", "thread.json");
 		const registration = piAi.registerFauxProvider({
@@ -162,7 +154,7 @@ describe("sandy-context in the pi runtime", () => {
 				historian: { chunkMinTokens: 3_000, chunkMaxTokens: 8_000, maxOutputTokens: 1_000 },
 			},
 		};
-		(globalThis as { __sandyContextTest?: ContextExtensionOptions }).__sandyContextTest = options;
+		(globalThis as { __contextTest?: ContextExtensionOptions }).__contextTest = options;
 
 		const probes = (pi: ExtensionAPI) => {
 			bus = pi.events;
@@ -270,15 +262,16 @@ describe("sandy-context in the pi runtime", () => {
 		await work("switched", 1);
 
 		// A workflow parks the session and announces its next prompt half a cache lifetime after the cache expires.
-		assert.equal(pings, 0, "no ping without a signal");
+		// The faux model is not one the side request replays, so the wait must not start any turn.
+		waitingRequests = requests.length;
 		const ttl = cacheTtlMs(resolveConfig(options.config), session.model, retention());
 		// The faux answers carry the real time, so the clock now runs to 30 seconds before the cache expires.
 		offset = ttl - 30_000;
 		mkdirSync(dirname(signalFile), { recursive: true });
 		writeFileSync(signalFile, JSON.stringify({ until: Date.now() + offset + 0.5 * ttl }));
-		for (let waited = 0; pings === 0 && waited < 3_000; waited += 20)
-			await new Promise((resolve) => setTimeout(resolve, 20));
-		await new Promise((resolve) => setTimeout(resolve, 200));
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		afterWaiting = requests.length;
+		rmSync(signalFile, { force: true });
 		resumed = requests.length;
 		await work("resumed", 1);
 
@@ -299,12 +292,12 @@ describe("sandy-context in the pi runtime", () => {
 	after(() => {
 		session?.dispose();
 		faux?.unregister();
-		delete (globalThis as { __sandyContextTest?: unknown }).__sandyContextTest;
+		delete (globalThis as { __contextTest?: unknown }).__contextTest;
 		if (tempDir) rmSync(tempDir, { recursive: true, force: true });
 	});
 
 	it("cuts at the watermark and keeps every request below it plus one turn", () => {
-		const reasons = sandyCompactions(entries()).map((entry) => entry.details.sandyContext.reason);
+		const reasons = ownCompactions(entries()).map((entry) => entry.details.context.reason);
 		assert.ok(reasons.filter((reason) => reason === "watermark").length >= 2, `watermark cuts: ${reasons.join(", ")}`);
 		const largest = Math.max(...requests.map((request) => request.tokens));
 		// An interactive cut waits for the next prompt. A run crosses the watermark by up to one request (~1.2k) and may
@@ -317,8 +310,7 @@ describe("sandy-context in the pi runtime", () => {
 		const unplanned: number[] = [];
 		const missed: number[] = [];
 		for (let index = 1; index < requests.length; index++) {
-			// After a ping, the cache holds the prompt the ping read; the ping itself leaves the context.
-			const previous = requests[index - 1 === pingRequest ? index - 2 : index - 1];
+			const previous = requests[index - 1];
 			const current = requests[index];
 			if (!previous || !current) continue;
 			const continued = previous.items.every((item, position) => current.items[position] === item);
@@ -329,19 +321,19 @@ describe("sandy-context in the pi runtime", () => {
 		}
 		assert.deepEqual(unplanned, [], "requests that broke the cache without a cut");
 		assert.deepEqual(missed, [], "cuts that did not reach the model");
-		assert.equal(breaks, sandyCompactions(entries()).length);
+		assert.equal(breaks, ownCompactions(entries()).length);
 		assert.ok(requests.length > 50, `${requests.length} agent requests`);
 	});
 
 	it("uses an expired cache for a cut before the next prompt", () => {
 		assert.ok((coldPromptTokens ?? 0) >= 9_000, `prompt before the idle gap: ${coldPromptTokens} tokens`);
-		const reasons = sandyCompactions(entries()).map((entry) => entry.details.sandyContext.reason);
+		const reasons = ownCompactions(entries()).map((entry) => entry.details.context.reason);
 		assert.ok(reasons.includes("cold"), `cut reasons: ${reasons.join(", ")}`);
 	});
 
 	it("uses a model switch for a cut before the next prompt", () => {
 		assert.ok((switchPromptTokens ?? 0) >= 9_000, `prompt before the switch: ${switchPromptTokens} tokens`);
-		const reasons = sandyCompactions(entries()).map((entry) => entry.details.sandyContext.reason);
+		const reasons = ownCompactions(entries()).map((entry) => entry.details.context.reason);
 		assert.ok(reasons.includes("model"), `cut reasons: ${reasons.join(", ")}`);
 	});
 
@@ -349,7 +341,7 @@ describe("sandy-context in the pi runtime", () => {
 		assert.ok((idleTaskTokens ?? 0) >= 9_000, `prompt before the idle task cut: ${idleTaskTokens} tokens`);
 		assert.ok((runTaskTokens ?? 0) >= 9_000, `prompt before the run task cut: ${runTaskTokens} tokens`);
 		const all = entries();
-		const tasks = sandyCompactions(all).filter((entry) => entry.details.sandyContext.reason === "task");
+		const tasks = ownCompactions(all).filter((entry) => entry.details.context.reason === "task");
 		assert.equal(tasks.length, 2, "one cut per request");
 		const position = (text: string) =>
 			all.findLastIndex(
@@ -362,50 +354,20 @@ describe("sandy-context in the pi runtime", () => {
 		assert.ok(run < position("Finished handover."), "run cut lands inside the run");
 	});
 
-	it("pings a waiting session once, on its cache, when that is cheaper than going cold", () => {
-		assert.equal(pings, 1, "pings");
-		const ping = requests[pingRequest];
-		const previous = requests[pingRequest - 1];
-		assert.ok(ping && previous);
-		assert.ok(
-			previous.items.every((item, position) => ping.items[position] === item),
-			"the ping continues the cached prompt",
-		);
-		const next = requests[resumed]?.items ?? [];
-		assert.ok(
-			previous.items.every((item, position) => next[position] === item) &&
-				!next.some((i) => i.includes(KEEP_WARM_PING)),
-			"the next prompt continues the prompt the ping read, without the ping",
-		);
+	it("runs no turn for a waiting session, whose cache the side request keeps warm instead", () => {
+		assert.ok(waitingRequests > 0);
+		assert.equal(afterWaiting, waitingRequests, "waiting starts no agent turn");
 		const records = readFileSync(ledgerFile, "utf8")
 			.trim()
 			.split("\n")
 			.map((line) => JSON.parse(line) as { class: string });
-		assert.equal(records.filter((record) => record.class === "keep-warm").length, 1);
-	});
-
-	it("summarizes in the background and carries summary, notebook and pins into the cut", () => {
-		assert.ok(historianCalls > 0);
-
-		const summaries = entries().filter(
-			(entry) => entry.type === "custom" && entry.customType === "sandy-context.summary",
-		);
-		assert.ok(summaries.length > 0);
-		const last = sandyCompactions(entries()).at(-1);
-		assert.ok(last);
-		assert.match(last.summary, /## Summary of older work \(through #\w+\)/);
-		assert.match(last.summary, /fact-p\d+-\d is value-p\d+-\d \(#\w+\)/);
-		assert.ok(last.summary.includes(NOTE), "notebook carried verbatim");
-		assert.match(last.summary, /## Earlier user messages, verbatim\n[\s\S]*TASK work p/);
-		assert.ok("systemMessage" in last, "pi stored a system checkpoint with the cut");
-		// Older chapters may be condensed ahead of it in a long session.
-		assert.match(last.summary, /### Chapters\n(?:- .*\n)*- Untitled stretch \(#\w+ … #\w+\)/);
+		assert.equal(records.filter((record) => record.class === "keep-warm").length, 0);
 	});
 
 	it("condenses the oldest records instead of dropping them when the summary outgrows its budget", () => {
 		assert.ok(condenserCalls > 0);
 		const stored = entries().flatMap((entry) =>
-			entry.type === "custom" && entry.customType === "sandy-context.summary"
+			entry.type === "custom" && entry.customType === "context.summary"
 				? [entry.data as { sections: Record<string, string[]>; condenseUsage?: unknown }]
 				: [],
 		);
@@ -434,7 +396,7 @@ describe("sandy-context in the pi runtime", () => {
 		assert.ok(first);
 		const system = first.items.filter((item) => item.includes("This session can run indefinitely"));
 		assert.equal(system.length, 1, "guidance appears once in the request");
-		assert.match(system[0] ?? "", /sandy-context/);
+		assert.match(system[0] ?? "", /<context>/);
 		assert.ok(
 			requests.every((request) => request.items.some((item) => item.includes("This session can run indefinitely"))),
 		);
@@ -445,7 +407,7 @@ describe("sandy-context in the pi runtime", () => {
 		let perCut = 0;
 		for (const entry of entries()) {
 			if (entry.type === "compaction") perCut = 0;
-			if (entry.type === "custom_message" && entry.customType === "sandy-context.notebook-reminder") {
+			if (entry.type === "custom_message" && entry.customType === "context.notebook-reminder") {
 				reminders++;
 				perCut++;
 				assert.ok(perCut <= 1, "two reminders between cuts");
@@ -462,7 +424,7 @@ describe("sandy-context in the pi runtime", () => {
 					? (entry.message as { role?: string; toolName?: string; isError?: boolean })
 					: undefined;
 			if (message?.role === "toolResult" && message.toolName === "program" && message.isError !== true) written++;
-			const cut = sandyCompactions([entry])[0];
+			const cut = ownCompactions([entry])[0];
 			if (cut && written > 0) {
 				assert.ok(
 					cut.summary.includes(`Reminders answered: ${written}`),

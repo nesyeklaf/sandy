@@ -154,7 +154,7 @@ describe("answers", () => {
 
 describe("conversation ledger", () => {
 	const system = { role: "system", content: "prompt" };
-	const cut = (reason: string) => ({ role: "user", content: `<summary>\n<sandy-context reason="${reason}">\nkept` });
+	const cut = (reason: string) => ({ role: "user", content: `<summary>\n<context reason="${reason}">\nkept` });
 	const user = (text: string) => ({ role: "user", content: text });
 	const accepted = { stopReason: "stop", usage: { input: 1 } };
 	const refused = { stopReason: "error", usage: { input: 0 } };
@@ -165,6 +165,11 @@ describe("conversation ledger", () => {
 		assert.equal(cutHead([system, user("a"), cut("watermark")]), undefined);
 		assert.equal(cutHead([system, user("a")]), undefined);
 		assert.notEqual(cutHead([cut("cold")])?.hash, cutHead([cut("model")])?.hash);
+	});
+
+	it("finds no cut in a foreign summary that quotes a cut tag", () => {
+		const quoting = { role: "user", content: '<summary>\nForeign quotes <context reason="task">quoted</context>' };
+		assert.equal(cutHead([system, quoting, user("a")]), undefined);
 	});
 
 	it("plans a break for a cut the last accepted request did not carry, until a request carrying it is accepted", () => {

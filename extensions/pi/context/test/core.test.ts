@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { DEFAULT_CONFIG, resolveConfig } from "../src/core/config.ts";
+import { DEFAULT_CONFIG, isConfigErrors, parseConfig, parseModelRef, resolveConfig } from "../src/core/config.ts";
 import { CONTEXT_GUIDANCE, guidanceFor, notebookReminder, withSection } from "../src/core/guidance.ts";
 import {
 	boundaryCut,
@@ -37,6 +37,93 @@ describe("config", () => {
 		assert.equal(config.historian.model, "anthropic/claude-haiku");
 		assert.equal(config.historian.enabled, false);
 		assert.equal(config.historian.chunkMaxTokens, DEFAULT_CONFIG.historian.chunkMaxTokens);
+	});
+});
+
+describe("parseConfig", () => {
+	const errorsOf = (input: unknown, overrides?: unknown): readonly string[] => {
+		const result = parseConfig(input, overrides);
+		assert.ok(isConfigErrors(result), "expected the config to be refused");
+		return result.configErrors;
+	};
+
+	it("reads a partial file over the defaults", () => {
+		const result = parseConfig({ watermarkTokens: 100_000, historian: { model: "openai-codex/gpt-6-luna" } });
+		assert.ok(!isConfigErrors(result));
+		assert.equal(result.watermarkTokens, 100_000);
+		assert.equal(result.historian.model, "openai-codex/gpt-6-luna");
+		assert.equal(result.historian.chunkMaxTokens, DEFAULT_CONFIG.historian.chunkMaxTokens);
+		assert.equal(result.cacheTtlSeconds.anthropic?.short, 300);
+	});
+
+	it("applies the embedder's overrides after the file", () => {
+		const result = parseConfig({ watermarkTokens: 100_000 }, { watermarkTokens: 90_000 });
+		assert.ok(!isConfigErrors(result));
+		assert.equal(result.watermarkTokens, 90_000);
+	});
+
+	it("refuses an unknown field, also nested, instead of dropping it", () => {
+		const errors = errorsOf({ watermarkToken: 100_000, historian: { modle: "a/b" }, cacheTtlSeconds: { x: { medium: 1 } } });
+		assert.equal(errors.length, 3, errors.join("\n"));
+		const text = errors.join("\n");
+		assert.match(text, /unknown field watermarkToken /);
+		assert.match(text, /unknown field historian\.modle /);
+		assert.match(text, /unknown field cacheTtlSeconds\.x\.medium /);
+	});
+
+	it("refuses a wrong type for every kind of setting", () => {
+		const errors = errorsOf({
+			watermarkTokens: "120000",
+			notebookReminderAt: null,
+			historian: { enabled: "yes", startTokens: "60000" },
+			cacheTtlSeconds: { anthropic: { short: "300" }, openai: 5 },
+		});
+		const text = errors.join("\n");
+		for (const field of [
+			"watermarkTokens must be a number",
+			"notebookReminderAt must be a number",
+			"historian.enabled must be true or false",
+			"historian.startTokens must be a number",
+			"cacheTtlSeconds.anthropic.short must be a number",
+			"cacheTtlSeconds.openai must be an object",
+		]) {
+			assert.ok(text.includes(field), `missing "${field}" in:\n${text}`);
+		}
+	});
+
+	it("refuses input that is not an object", () => {
+		for (const input of [null, [], "text", 7]) assert.match(errorsOf(input)[0] ?? "", /must be a JSON object/);
+	});
+
+	it("refuses a malformed model reference instead of falling back to the session model", () => {
+		for (const model of ["claude-haiku", "/claude-haiku", "anthropic/", "anthropic/claude haiku", "", 7]) {
+			const errors = errorsOf({ historian: { model } });
+			assert.match(errors[0] ?? "", /historian\.model must be a provider\/model reference/, String(model));
+		}
+		assert.match(errorsOf({ historian: { fallbackModel: "nope" } })[0] ?? "", /historian\.fallbackModel must be/);
+	});
+
+	it("refuses contradictory budgets and chunk sizes", () => {
+		assert.match(errorsOf({ watermarkTokens: 30_000 })[0] ?? "", /must stay below watermarkTokens/);
+		assert.match(
+			errorsOf({ historian: { chunkMinTokens: 50_000, chunkMaxTokens: 40_000 } })[0] ?? "",
+			/chunkMinTokens must not exceed/,
+		);
+	});
+
+	it("reports every problem at once", () => {
+		const errors = errorsOf({ watermarkTokens: 30_000, extra: 1, maskedTokens: "x", historian: { model: "bad" } });
+		assert.equal(errors.length, 4, errors.join("\n"));
+	});
+
+	it("labels what the embedder passed", () => {
+		assert.match(errorsOf({}, { watermarkTokens: "x" })[0] ?? "", /^options\.config: watermarkTokens must be a number/);
+	});
+
+	it("parses a provider/model reference", () => {
+		assert.deepEqual(parseModelRef("openai-codex/gpt-6-luna"), { provider: "openai-codex", id: "gpt-6-luna" });
+		assert.deepEqual(parseModelRef("openrouter/anthropic/claude"), { provider: "openrouter", id: "anthropic/claude" });
+		assert.equal(parseModelRef("gpt"), undefined);
 	});
 });
 
@@ -161,8 +248,8 @@ describe("policy", () => {
 	it("neither pings nor cuts a session whose cache never expires", () => {
 		const ttlMs = cacheTtlMs(DEFAULT_CONFIG, { provider: "openai-codex", id: "gpt-6-astra" }, "short");
 		const day = 86_400_000;
-		const waiting = { now: day, lastCacheTouch: 0, ttlMs, until: 2 * day, contextTokens: 80_000, minTokens: 60_000, carriedTokens: 26_000, cacheReadCost: 0.1, cacheWriteCost: 1.25 };
-		assert.equal(keepWarmDue(waiting), false);
+		const waiting = { cacheStart: 0, ttlMs, until: 2 * day, contextTokens: 80_000, softTokens: 200_000, minTokens: 60_000, carriedTokens: 26_000, cacheReadCost: 0.1, cacheWriteCost: 1.25 };
+		assert.equal(keepWarmDue(waiting, day), false);
 		const prompt = { contextTokens: 150_000, now: 7 * day, lastCacheTouch: 0, ttlMs, modelKey: "a", lastModelKey: "a", minTokens: 60_000, soft: 200_000 };
 		assert.equal(promptCut(prompt), undefined, "no cold cut after a week");
 		assert.equal(promptCut({ ...prompt, modelKey: "b" }), "model", "a model change still cuts");
@@ -171,26 +258,44 @@ describe("policy", () => {
 	it("pings a waiting session only while that is cheaper than going cold", () => {
 		const ttl = 1_800_000;
 		const base = {
-			now: ttl - 30_000,
-			lastCacheTouch: 0,
+			cacheStart: 0,
 			ttlMs: ttl,
 			until: 2 * ttl,
 			contextTokens: 80_000,
+			softTokens: 200_000,
 			minTokens: 60_000,
 			carriedTokens: 26_000,
 			cacheReadCost: 0.1,
 			cacheWriteCost: 1.25,
 		};
 		// Two pings and the prompt read 24k token-units; going cold writes 26k carried tokens at 1.25.
-		assert.equal(keepWarmDue(base), true);
-		assert.equal(keepWarmDue({ ...base, now: ttl - 61_000 }), false, "more than a minute before expiry");
-		assert.equal(keepWarmDue({ ...base, now: ttl - 60_000 }), true, "one minute before expiry");
-		assert.equal(keepWarmDue({ ...base, now: ttl }), false, "already cold");
-		assert.equal(keepWarmDue({ ...base, until: 0.9 * ttl }), false, "the prompt comes while warm");
-		assert.equal(keepWarmDue({ ...base, until: undefined }), false, "no signal");
-		assert.equal(keepWarmDue({ ...base, until: 10 * ttl }), false, "eleven pings cost more than a cut");
-		assert.equal(keepWarmDue({ ...base, contextTokens: 20_000, until: 3 * ttl }), true, "a small prompt is not cut");
-		assert.equal(keepWarmDue({ ...base, contextTokens: undefined }), false);
+		assert.equal(keepWarmDue(base, ttl - 30_000), true);
+		assert.equal(keepWarmDue(base, ttl - 61_000), false, "more than a minute before expiry");
+		assert.equal(keepWarmDue(base, ttl - 60_000), true, "one minute before expiry");
+		assert.equal(keepWarmDue(base, ttl), false, "already cold");
+		assert.equal(keepWarmDue({ ...base, until: 0.9 * ttl }, ttl - 30_000), false, "the prompt comes while warm");
+		assert.equal(keepWarmDue({ ...base, until: undefined }, ttl - 30_000), false, "no signal");
+		assert.equal(keepWarmDue({ ...base, until: 10 * ttl }, ttl - 30_000), false, "eleven pings cost more than a cut");
+		assert.equal(keepWarmDue({ ...base, contextTokens: 20_000, until: 3 * ttl }, ttl - 30_000), true, "a small prompt is not cut");
+		assert.equal(keepWarmDue({ ...base, contextTokens: undefined }, ttl - 30_000), false);
+		assert.equal(keepWarmDue({ ...base, cacheStart: undefined }, ttl - 30_000), false, "no request to count from");
+	});
+
+	it("counts the cache from the request start, so a slow answer does not hide an expired cache", () => {
+		// The review's fixture: a 90 s answer on a 5 minute cache. Counted from the answer's end the cache would expire at
+		// 6:30 and 5:35 would ping; counted from the request start it expired at 5:00.
+		const ttl = 300_000;
+		const state = { cacheStart: 0, ttlMs: ttl, until: 3 * ttl, contextTokens: 80_000, softTokens: 200_000, minTokens: 60_000, carriedTokens: 26_000, cacheReadCost: 0.1, cacheWriteCost: 1.25 };
+		const answerEnd = 90_000;
+		assert.equal(keepWarmDue(state, answerEnd + 245_000), false, "4:05 after the answer is 5:35 after the start");
+		assert.equal(keepWarmDue(state, answerEnd + 160_000), true, "4:10 after the start");
+	});
+
+	it("stops pinging when the next prompt would be cut anyway", () => {
+		const ttl = 300_000;
+		const state = { cacheStart: 0, ttlMs: ttl, until: 2 * ttl, contextTokens: 100_000, softTokens: 110_000, minTokens: 60_000, carriedTokens: 26_000, cacheReadCost: 0.1, cacheWriteCost: 1.25 };
+		assert.equal(keepWarmDue(state, 250_000), true, "below the watermark");
+		assert.equal(keepWarmDue({ ...state, contextTokens: 110_000 }, 250_000), false, "at the watermark the prompt cuts and the warm cache is thrown away");
 	});
 
 	it("reminds once per cut, shortly before it, about a notebook not written since the last cut", () => {
@@ -222,9 +327,9 @@ describe("guidance", () => {
 	});
 
 	it("appends the section to a forced prompt exactly once", () => {
-		const once = withSection("forced", "sandy-context", "text");
-		assert.equal(once, "forced\n\n<sandy-context>\ntext\n</sandy-context>");
-		assert.equal(withSection(once, "sandy-context", "text"), once);
+		const once = withSection("forced", "context", "text");
+		assert.equal(once, "forced\n\n<context>\ntext\n</context>");
+		assert.equal(withSection(once, "context", "text"), once);
 	});
 
 	it("words the reminder for an empty and for a stale notebook", () => {

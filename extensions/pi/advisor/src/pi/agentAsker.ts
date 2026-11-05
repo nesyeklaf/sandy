@@ -62,16 +62,15 @@ export class AgentAsker implements Asker {
 	}
 
 	private tools(kit: ContextKit) {
-		const entries = () => kit.readBranch(this.d.primary()).entries;
+		const archive = () => kit.archiveOf(this.d.primary());
 		return [
 			defineTool({
 				name: "session_search",
 				label: "Session search",
 				description: "Search the primary session's full log (user messages, assistant text, tool calls and results). Use it to check whether something was really done or said earlier.",
 				parameters: kit.historySearchParameters as never,
-				async execute(_id, p: { query: string; limit?: number; cursor?: string }) {
-					const e = entries();
-					const r = await kit.answerSearch(() => kit.newestFirstPages(e, kit.SCAN_PAGE, p.cursor), (id: string) => kit.newestFirstPagesFrom(e, id), { ...p, includeVisible: true }, undefined);
+				async execute(_id, p: { query: string; limit?: number; cursor?: string }, signal?: AbortSignal) {
+					const r = await archive().search({ ...p, includeVisible: true }, signal);
 					return text(r.text);
 				},
 			}),
@@ -80,8 +79,8 @@ export class AgentAsker implements Asker {
 				label: "Session read",
 				description: "Read one entry of the primary session's log in full by its #id, optionally with neighbours.",
 				parameters: kit.historyReadParameters as never,
-				async execute(_id, p: { id: string; around?: number; offset?: number; maxChars?: number }) {
-					return text(kit.readHistory(entries(), p).text);
+				async execute(_id, p: { id: string; around?: number; offset?: number; maxChars?: number }, signal?: AbortSignal) {
+					return text((await archive().read(p, signal)).text);
 				},
 			}),
 		];

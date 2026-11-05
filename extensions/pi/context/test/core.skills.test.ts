@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { resolveConfig } from "../src/core/config.ts";
-import { CutFold, type CutInput, planCut } from "../src/core/cut.ts";
+import { CutFold, type CutInput, foldCut } from "../src/core/cut.ts";
 import { renderMasked } from "../src/core/serialize.ts";
 import { estimateTokens } from "../src/core/tokens.ts";
 import {
@@ -72,7 +72,7 @@ describe("skills in use", () => {
 	});
 
 	it("lists every skill whose load was archived, newest first, with the entry to read it back", () => {
-		const plan = planCut(input(skillLog()));
+		const plan = foldCut(input(skillLog()));
 		assert.ok(plan);
 		const section = /## Skills in use\n[^\n]+\n((?:- [^\n]+\n?)+)/.exec(plan.text);
 		assert.ok(section, plan.text);
@@ -93,14 +93,14 @@ describe("skills in use", () => {
 			}),
 			entry("x2", "tool", "Review rules", { toolName: "read" }),
 		);
-		const plan = planCut(input(log));
+		const plan = foldCut(input(log));
 		assert.ok(plan);
 		assert.match(plan.text, /- audit: /);
 		assert.doesNotMatch(plan.text, /- review: /);
 	});
 
 	it("adds no section when no skill was loaded", () => {
-		const plan = planCut(input(session(12)));
+		const plan = foldCut(input(session(12)));
 		assert.ok(plan);
 		assert.doesNotMatch(plan.text, /Skills in use/);
 	});
@@ -113,7 +113,7 @@ describe("skills in use", () => {
 				entry(`kt${i}`, "tool", "rules", { toolName: "read" }),
 			);
 		}
-		const plan = planCut(input([...log, ...session(12)]));
+		const plan = foldCut(input([...log, ...session(12)]));
 		assert.ok(plan);
 		assert.equal(plan.text.match(/^- s\d+: /gm)?.length, SKILLS_LISTED);
 		assert.match(plan.text, new RegExp(`- s${SKILLS_LISTED + 4}: `));
@@ -124,7 +124,7 @@ describe("skills in use", () => {
 		const log = skillLog();
 		const cuts: CutInput[] = [input(log), { ...input(log), keptFromId: "s3" }, { ...input(log), keptFromId: "u2" }];
 		for (const cut of cuts) {
-			const whole = planCut(cut);
+			const whole = foldCut(cut);
 			for (const size of [1, 3, 64]) {
 				const fold = new CutFold({ ...cut, visibleFromId: cut.entries[cut.visibleFromIndex]?.id });
 				const reversed = [...cut.entries].reverse();
@@ -133,13 +133,13 @@ describe("skills in use", () => {
 			}
 		}
 		// Kept from s3: only what lies before it is archived.
-		const fromS3 = planCut(cuts[1] as CutInput)?.text ?? "";
+		const fromS3 = foldCut(cuts[1] as CutInput)?.text ?? "";
 		assert.match(fromS3, /- review: [^\n]+\(loaded #s1\)\n- teach: /);
 		assert.doesNotMatch(fromS3, /- audit: /);
 	});
 
 	it("pins a /skill: prompt as the request without the skill's body", () => {
-		const plan = planCut(input(skillLog()));
+		const plan = foldCut(input(skillLog()));
 		assert.ok(plan);
 		const pinned = plan.text.split("\n").find((line) => line.startsWith("- [#s0 "));
 		assert.ok(pinned, plan.text);
@@ -181,7 +181,7 @@ describe("skills in use", () => {
 
 	it("skips an oversized tag and keeps the section within its token budget", () => {
 		const huge = `<skill name="teach" location="/${"x".repeat(100_000)}/teach/SKILL.md">\nbody\n</skill>\n\nGo.`;
-		const skipped = planCut(input([entry("h", "user", huge), ...session(12)]));
+		const skipped = foldCut(input([entry("h", "user", huge), ...session(12)]));
 		assert.ok(skipped);
 		assert.doesNotMatch(skipped.text, /Skills in use/);
 		const log: LogEntry[] = [];
@@ -189,7 +189,7 @@ describe("skills in use", () => {
 			const path = `/${"d".repeat(MAX_PATH_CHARS - 20)}/s${i}/SKILL.md`;
 			log.push(entry(`k${i}`, "assistant", "", { toolCalls: [{ id: `k${i}`, name: "read", args: { path } }] }));
 		}
-		const plan = planCut(input([...log, ...session(12)]));
+		const plan = foldCut(input([...log, ...session(12)]));
 		const section = /## Skills in use\n[\s\S]*?(?=\n\n##)/.exec(plan?.text ?? "")?.[0];
 		assert.ok(section);
 		assert.ok(estimateTokens(section) <= SKILLS_SECTION_TOKENS, `${estimateTokens(section)} tokens`);

@@ -42,7 +42,7 @@ const thinking = (args.find((arg) => arg.startsWith("--thinking="))?.split("=")[
 	| "low"
 	| "medium";
 
-const root = mkdtempSync(join(tmpdir(), "sandy-live-"));
+const root = mkdtempSync(join(tmpdir(), "context-live-"));
 const workspace = join(root, "workspace");
 const agentDir = join(root, "agent");
 mkdirSync(workspace, { recursive: true });
@@ -129,7 +129,7 @@ const options: ContextExtensionOptions = {
 		},
 	},
 };
-(globalThis as { __sandyContextTest?: ContextExtensionOptions }).__sandyContextTest = options;
+(globalThis as { __contextTest?: ContextExtensionOptions }).__contextTest = options;
 
 interface RequestLog {
 	prompt: string;
@@ -247,18 +247,18 @@ try {
 } finally {
 	const entries = session.sessionManager.getEntries();
 	const cuts = entries.flatMap((entry) =>
-		entry.type === "compaction" && (entry.details as { sandyContext?: unknown } | undefined)?.sandyContext
+		entry.type === "compaction" && (entry.details as { context?: unknown } | undefined)?.context
 			? [
 					{
 						reason: (
-							entry.details as { sandyContext: { reason: string; blockTokens: number; archivedEntries: number } }
-						).sandyContext,
+							entry.details as { context: { reason: string; blockTokens: number; archivedEntries: number } }
+						).context,
 					},
 				]
 			: [],
 	);
 	const summaryData = entries.flatMap((entry) =>
-		entry.type === "custom" && entry.customType === "sandy-context.summary"
+		entry.type === "custom" && entry.customType === "context.summary"
 			? [entry.data as { condenseUsage?: unknown }]
 			: [],
 	);

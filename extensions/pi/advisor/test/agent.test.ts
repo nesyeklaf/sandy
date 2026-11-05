@@ -64,7 +64,8 @@ describe("contextKit", () => {
 	it("loads the sibling pi/context unit in the monorepo", async () => {
 		const kit = await loadContext();
 		if (!kit) return; // checkout without the sibling unit
-		expect(typeof kit.readHistory).toBe("function");
+		expect(kit.archiveOf([]).entries).toEqual([]);
+		expect(typeof kit.archiveOf([]).search).toBe("function");
 		expect(typeof kit.createContextExtension).toBe("function");
 	});
 });

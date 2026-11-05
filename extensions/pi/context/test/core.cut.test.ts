@@ -1,91 +1,43 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { resolveConfig } from "../src/core/config.ts";
-import { CutFold, type CutInput, type CutPlan, FilesFold, filesTouched, planCut } from "../src/core/cut.ts";
-import { ChunkFold, historianDelta, historianPrompt, selectChunk } from "../src/core/historian.ts";
+import {
+	CutFold,
+	type CutFrame,
+	type CutInput,
+	type CutPlan,
+	cutKey,
+	FilesFold,
+	filesTouched,
+	foldCut,
+	planCut,
+} from "../src/core/cut.ts";
+import { type CutEnvelope, nativeLimit } from "../src/core/policy.ts";
 import { mergeSummary } from "../src/core/summary.ts";
-import { estimateBudget } from "../src/core/tokens.ts";
-import { newestFirstPages } from "../src/core/tools.ts";
+import { estimateBudget, estimateTokens } from "../src/core/tokens.ts";
 import type { LogEntry } from "../src/core/types.ts";
 import { entry, session } from "./helpers.ts";
 import { small } from "./support/core.ts";
-
-describe("historian chunk selection", () => {
-	it("waits until enough archivable history has accumulated", () => {
-		assert.equal(selectChunk(session(4), undefined, small), undefined);
-	});
-
-	it("leaves the tail that the next cut keeps and never splits a call from its result", () => {
-		const entries = session(12);
-		const chunk = selectChunk(entries, undefined, small);
-		assert.ok(chunk);
-		assert.equal(chunk.entries[0]?.id, "u0");
-		assert.ok(chunk.tokens >= small.historian.chunkMinTokens);
-		const stop = entries.findIndex((e) => e.id === chunk.throughId) + 1;
-		assert.notEqual(entries[stop]?.kind, "tool");
-		const tail = entries.slice(stop).reduce((sum, e) => sum + e.tokens, 0);
-		assert.ok(tail >= small.keepRecentTokens + small.maskedTokens);
-		assert.match(historianPrompt(chunk, undefined), /<existing-summary>\n\(none yet\)[\s\S]*\[#t0 read\]/);
-	});
-
-	it("turns the topic into a chapter with the stretch's entry range", () => {
-		const chunk = selectChunk(session(12), undefined, small);
-		assert.ok(chunk);
-		const range = `(#u0 … #${chunk.throughId})`;
-		assert.deepEqual(historianDelta("## Topic\n- Reading the modules (#u0)\n## Facts\n- x (#t0)", chunk).chapters, [
-			`Reading the modules ${range}`,
-		]);
-		assert.deepEqual(historianDelta("## Facts\n- x (#t0)", chunk).chapters, [`Untitled stretch ${range}`]);
-	});
-
-	it("continues after the summary and respects the floor", () => {
-		const entries = session(20);
-		const summary = mergeSummary(undefined, { goal: ["g"] }, "r2");
-		assert.equal(selectChunk(entries, summary, small)?.entries[0]?.id, "u3");
-		assert.equal(selectChunk(entries, undefined, small, 8)?.entries[0]?.id, "u2");
-	});
-
-	it("chooses the same stretch from pages read newest first and stops at the summary's anchor", () => {
-		const entries = session(40, 400);
-		const summary = mergeSummary(undefined, { goal: ["g"] }, "r9");
-		const whole = selectChunk(entries, summary, small);
-		assert.ok(whole);
-		for (const size of [1, 3, 7, 64]) {
-			const fold = new ChunkFold({ config: small, afterId: "r9" });
-			let read = 0;
-			for (const page of newestFirstPages(entries, size)) {
-				read += page.length;
-				if (fold.add(page)) break;
-			}
-			assert.deepEqual(fold.finish(), whole, `pages of ${size}`);
-			// It reads up to the anchor and no older entry, a page at most past it.
-			assert.ok(read <= entries.length - entries.findIndex((e) => e.id === "r9") + size - 1, `pages of ${size}`);
-		}
-		const floor = new ChunkFold({ config: small, fromId: "u20" });
-		assert.equal(floor.add([...entries].reverse()), true);
-		assert.equal(floor.finish()?.entries[0]?.id, "u20");
-	});
-});
 
 describe("cut planning", () => {
 	const entries = session(12);
 	const input = { entries, minKeptIndex: 0, visibleFromIndex: 0, config: small, reason: "watermark" };
 
 	it("keeps recent history from the user message that opened the turn and is deterministic", () => {
-		const plan = planCut(input);
+		const plan = foldCut(input);
 		assert.ok(plan);
 		const kept = entries.findIndex((e) => e.id === plan.firstKeptEntryId);
 		assert.equal(entries[kept]?.kind, "user");
 		const tail = entries.slice(kept).reduce((sum, e) => sum + e.tokens, 0);
 		// keepRecentTokens is in provider tokens; the kept history is counted in estimated ones.
 		assert.ok(tail >= estimateBudget(small.keepRecentTokens));
-		assert.deepEqual(planCut(input), plan);
+		assert.deepEqual(foldCut(input), plan);
 	});
 
 	it("renders notebook, pins, summary, files, gap and masked tier", () => {
 		const tight = resolveConfig(small, { maskedTokens: 200, pinnedUserTokens: 40 });
 		const summary = mergeSummary(undefined, { goal: ["Learn all facts (#u0)"] }, "r1");
-		const plan = planCut({ ...input, config: tight, summary, notebook: "Plan: read every module." });
+		const plan = foldCut({ ...input, config: tight, summary, notebook: "Plan: read every module." });
 		assert.ok(plan);
 		const { text, details } = plan;
 		assert.match(text, /## Your notebook\nPlan: read every module\./);
@@ -105,16 +57,35 @@ describe("cut planning", () => {
 		assert.ok(text.length / 4 < small.watermarkTokens / 2);
 	});
 
+	it("carries a foreign checkpoint verbatim before the summary and says when it is stale", () => {
+		const tight = resolveConfig(small, { maskedTokens: 200, pinnedUserTokens: 40 });
+		const summary = mergeSummary(undefined, { goal: ["Learn all facts (#u0)"] }, "r1");
+		const text = "FOREIGN-SUMMARY of another compaction\n## Goal\n- keep this line exactly";
+		const checkpoint = { id: "c0", owner: "foreign", text, status: "current" } as const;
+		const plan = foldCut({ ...input, config: tight, summary, checkpoint });
+		assert.ok(plan);
+		const section = `## Earlier summary from another compaction, verbatim (#c0)\n${text}\n\n`;
+		assert.ok(plan.text.includes(section), plan.text);
+		assert.ok(plan.text.indexOf(section) < plan.text.indexOf("## Summary of older work"));
+		assert.ok(!plan.text.includes("Stale:"));
+		assert.equal(plan.details.blockTokens, estimateTokens(plan.text), "counted like every other section");
+
+		const stale = foldCut({ ...input, config: tight, summary, checkpoint: { ...checkpoint, status: "stale" } });
+		assert.ok(stale);
+		assert.match(stale.text, /verbatim \(#c0\)\nStale: [^\n]+\nFOREIGN-SUMMARY of another compaction\n## Goal\n- keep this line exactly\n/);
+		assert.equal(stale.text.match(/Stale:/g)?.length, 1, "one warning line");
+	});
+
 	it("archives nothing twice and never keeps across the latest compaction", () => {
-		const plan = planCut(input);
+		const plan = foldCut(input);
 		assert.ok(plan);
 		const kept = entries.findIndex((e) => e.id === plan.firstKeptEntryId);
-		assert.equal(planCut({ ...input, minKeptIndex: kept, visibleFromIndex: kept }), undefined);
-		const later = planCut({ ...input, minKeptIndex: entries.length - 2, visibleFromIndex: 4 });
+		assert.equal(foldCut({ ...input, minKeptIndex: kept, visibleFromIndex: kept }), undefined);
+		const later = foldCut({ ...input, minKeptIndex: entries.length - 2, visibleFromIndex: 4 });
 		assert.equal(later?.firstKeptEntryId, entries[entries.length - 1]?.id);
-		const toolFirst = planCut({ ...input, minKeptIndex: entries.length - 2, visibleFromIndex: 4 });
+		const toolFirst = foldCut({ ...input, minKeptIndex: entries.length - 2, visibleFromIndex: 4 });
 		assert.notEqual(entries.find((e) => e.id === toolFirst?.firstKeptEntryId)?.kind, "tool");
-		assert.equal(planCut({ ...input, entries: session(1) }), undefined);
+		assert.equal(foldCut({ ...input, entries: session(1) }), undefined);
 	});
 
 	it("lists modified files before reads and newest first", () => {
@@ -130,26 +101,26 @@ describe("cut planning", () => {
 	});
 
 	it("writes the reason in the opening tag and names no ID format", () => {
-		const plan = planCut({ ...input, reason: "cold" });
+		const plan = foldCut({ ...input, reason: "cold" });
 		assert.ok(plan);
-		assert.ok(plan.text.startsWith('<sandy-context reason="cold">\n'), plan.text.slice(0, 40));
+		assert.ok(plan.text.startsWith('<context reason="cold">\n'), plan.text.slice(0, 40));
 		assert.equal(plan.details.reason, "cold");
 		assert.doesNotMatch(plan.text, /ids look like/i);
-		assert.throws(() => planCut({ ...input, reason: 'cold"><x' }), /cut reason/);
+		assert.throws(() => foldCut({ ...input, reason: 'cold"><x' }), /cut reason/);
 	});
 
 	it("keeps from the entry the caller chose and archives nothing it archived before", () => {
 		const chosen = entries[20];
 		assert.ok(chosen);
-		const plan = planCut({ ...input, keptFromId: chosen.id });
+		const plan = foldCut({ ...input, keptFromId: chosen.id });
 		assert.equal(plan?.firstKeptEntryId, chosen.id);
 		assert.equal(plan?.details.archivedEntries, 20);
-		assert.match(plan?.text ?? "", /\[#r4 assistant\] fact-4 is value-4\.\n\n<\/sandy-context>/);
-		assert.equal(planCut({ ...input, keptFromId: "missing" }), undefined);
-		assert.equal(planCut({ ...input, keptFromId: entries[0]?.id }), undefined, "nothing older to archive");
-		assert.equal(planCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 20 }), undefined, "visible already");
-		assert.equal(planCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 24 }), undefined, "older than visible");
-		assert.equal(planCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 16 })?.firstKeptEntryId, chosen.id);
+		assert.match(plan?.text ?? "", /\[#r4 assistant\] fact-4 is value-4\.\n\n<\/context>/);
+		assert.equal(foldCut({ ...input, keptFromId: "missing" }), undefined);
+		assert.equal(foldCut({ ...input, keptFromId: entries[0]?.id }), undefined, "nothing older to archive");
+		assert.equal(foldCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 20 }), undefined, "visible already");
+		assert.equal(foldCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 24 }), undefined, "older than visible");
+		assert.equal(foldCut({ ...input, keptFromId: chosen.id, visibleFromIndex: 16 })?.firstKeptEntryId, chosen.id);
 	});
 
 	/** The fold fed the log newest first in pages of `size`, with the latest compaction between the pages it falls in. */
@@ -229,14 +200,14 @@ describe("cut planning", () => {
 			{ ...input, entries: long, keptFromId: "u2000", visibleFromIndex: 7_000 },
 		];
 		for (const cut of [...ported, ...generated]) {
-			const whole = planCut(cut);
+			const whole = foldCut(cut);
 			for (const size of [1, 7, 256]) assert.deepEqual(inPages(cut, size), whole, `page size ${size}`);
 		}
-		assert.ok(generated.slice(0, 2).every((cut) => planCut(cut)?.details.unsummarized !== undefined));
-		const anchoredInKept = planCut(generated[2] as CutInput)?.details;
+		assert.ok(generated.slice(0, 2).every((cut) => foldCut(cut)?.details.unsummarized !== undefined));
+		const anchoredInKept = foldCut(generated[2] as CutInput)?.details;
 		assert.equal(anchoredInKept?.summaryThroughId, long[9_995]?.id, "a summary anchored in the kept range");
 		assert.equal(anchoredInKept?.maskedFromId, undefined, "masks nothing the summary covers");
-		assert.equal(planCut(generated[3] as CutInput), undefined);
+		assert.equal(foldCut(generated[3] as CutInput), undefined);
 	});
 
 	it("lists files from a bounded fold", () => {
@@ -274,5 +245,67 @@ describe("cut planning", () => {
 			}
 			assert.deepEqual(fold.result(), { modified, read });
 		}
+	});
+});
+
+describe("cut decisions in the envelope", () => {
+	const entries = session(12);
+	const visibleTokens = entries.reduce((sum, e) => sum + e.tokens, 0);
+	const frame = {
+		entries,
+		minKeptIndex: 0,
+		visibleFromIndex: 0,
+		config: small,
+		reason: "watermark",
+		contextTokens: Math.round(visibleTokens * 1.25),
+		visibleTokens,
+		limit: small.watermarkTokens,
+		hard: 2 * small.watermarkTokens,
+	} satisfies CutFrame;
+	const roomy = { fixedTokens: 2_000, reserveTokens: 16_384, contextWindow: 200_000 } satisfies CutEnvelope;
+
+	it("is ready when the cut leaves the prompt below its limit with system prompt and tools counted", () => {
+		const decision = planCut(frame, roomy);
+		assert.equal(decision.kind, "ready");
+		assert.ok(decision.kind === "ready");
+		assert.deepEqual(decision.plan, foldCut(frame));
+		assert.ok(decision.expected >= roomy.fixedTokens + decision.plan.details.blockTokens);
+		assert.ok(decision.expected < frame.limit);
+		assert.equal(decision.key, cutKey(decision.plan));
+	});
+
+	it("defers a cut that would not reach its limit because the system prompt and tools fill it", () => {
+		const decision = planCut(frame, { ...roomy, fixedTokens: small.watermarkTokens });
+		assert.equal(decision.kind, "defer");
+		assert.ok(decision.kind === "defer" && decision.why === "short");
+		assert.ok(decision.expected >= small.watermarkTokens);
+	});
+
+	it("disables the cut when what it keeps does not fit below pi's own compaction", () => {
+		const tight = { fixedTokens: 26_000, reserveTokens: 4_000, contextWindow: 30_000 } satisfies CutEnvelope;
+		const decision = planCut({ ...frame, limit: undefined }, tight);
+		assert.equal(decision.kind, "disabled");
+		assert.ok(decision.kind === "disabled" && decision.why === "no-room");
+		assert.ok((decision.expected ?? 0) >= nativeLimit(tight));
+	});
+
+	it("does not repeat the cut the next request refuted, and makes the next different one", () => {
+		const first = planCut(frame, roomy);
+		assert.ok(first.kind === "ready");
+		const again = planCut({ ...frame, failedKey: first.key }, roomy);
+		assert.equal(again.kind, "defer");
+		assert.ok(again.kind === "defer" && again.why === "repeat");
+		const grown = session(14);
+		const later = planCut({ ...frame, entries: grown, failedKey: first.key }, roomy);
+		assert.equal(later.kind, "ready", "more history makes a different cut");
+	});
+
+	it("has nothing to decide when nothing can be archived", () => {
+		assert.deepEqual(planCut({ ...frame, entries: session(1) }, roomy), { kind: "disabled", why: "empty" });
+	});
+
+	it("judges a cut without a provider count by its scaled estimate alone", () => {
+		const decision = planCut({ ...frame, contextTokens: undefined }, roomy);
+		assert.equal(decision.kind, "ready");
 	});
 });

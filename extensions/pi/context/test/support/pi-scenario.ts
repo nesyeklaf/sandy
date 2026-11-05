@@ -1,3 +1,4 @@
+import { promptEntries } from "./historian.ts";
 /** The faux model's side of the pi scenario: probe output and the historian's and condenser's answers. */
 
 export function probeText(label: string): string {
@@ -14,10 +15,18 @@ export function textOf(content: unknown): string {
 }
 
 export function historianAnswer(prompt: string): string {
-	const facts = [...prompt.matchAll(/\[#(\w+) probe[^\]]*\] FACT (fact-[\w-]+) = (value-[\w-]+)/g)].map(
-		([, id, fact, value]) => `- ${fact} is ${value} (#${id})`,
+	const facts = promptEntries(prompt).flatMap((one) =>
+		[...one.text.matchAll(/FACT (fact-[\w-]+) = (value-[\w-]+)/g)].map(([, fact, value]) => "- " + fact + " is " + value + " (#" + one.id + ")"),
 	);
-	return ["## Current state", "- Probing modules one by one", "## Facts and findings", ...facts].join("\n");
+	const last = promptEntries(prompt).at(-1)?.id ?? "none";
+	return [
+		"## Topic",
+		"- Probing modules one by one",
+		"## Current state",
+		"- Done: probed up to (#" + last + "). Next: probe the next module (#" + last + ")",
+		"## Facts and findings",
+		...facts,
+	].join("\n");
 }
 
 /** Condense mechanically: one bullet per section that keeps the range of entry ids. */
