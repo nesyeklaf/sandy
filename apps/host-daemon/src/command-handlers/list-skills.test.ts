@@ -872,6 +872,7 @@ describe("writeHostSkill", () => {
     const written = await writeHostSkill(
       {
         type: "host.write_skill",
+        relativePath: "SKILL.md",
         scope: "sandy-user",
         name: "review",
         cwd: null,
@@ -892,6 +893,7 @@ describe("writeHostSkill", () => {
     const stale = await writeHostSkill(
       {
         type: "host.write_skill",
+        relativePath: "SKILL.md",
         scope: "sandy-user",
         name: "review",
         cwd: null,
@@ -922,6 +924,7 @@ describe("writeHostSkill", () => {
     await symlink(sourceDir, path.join(sharedRoot, "quick-send"));
     const command = {
       type: "host.write_skill",
+      relativePath: "SKILL.md",
       scope: "shared-user",
       name: "quick-send",
       cwd: null,
@@ -959,6 +962,67 @@ describe("writeHostSkill", () => {
     expect(await readFile(sourceFile, "utf8")).toBe("# Edited");
   });
 
+  it("writes and creates supporting files of a symlinked skill and refuses paths that leave its folder", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const sourceDir = path.join(tempRoot, "forge-skills", "skills", "notes");
+    await mkdir(path.join(sourceDir, "references"), { recursive: true });
+    await writeFile(path.join(sourceDir, "SKILL.md"), "# Notes", "utf8");
+    await writeFile(path.join(sourceDir, "references", "a.md"), "old", "utf8");
+    const outsideDir = path.join(tempRoot, "outside");
+    await mkdir(outsideDir, { recursive: true });
+    await writeFile(path.join(outsideDir, "secret.md"), "secret", "utf8");
+    await symlink(outsideDir, path.join(sourceDir, "escape"));
+    const sharedRoot = path.join(fixture.homeDir, ".agents", "skills");
+    await mkdir(sharedRoot, { recursive: true });
+    await symlink(sourceDir, path.join(sharedRoot, "notes"));
+    const sha = (text: string) =>
+      createHash("sha256").update(text).digest("hex");
+    const write = (relativePath: string, expectedSha256: string | null) =>
+      writeHostSkill(
+        {
+          type: "host.write_skill",
+          scope: "shared-user",
+          name: "notes",
+          cwd: null,
+          rootPath: sharedRoot,
+          relativePath,
+          content: "new",
+          expectedSha256,
+        },
+        { dataDir: fixture.dataDir },
+      );
+
+    expect(await write("references/a.md", sha("old"))).toMatchObject({
+      outcome: "written",
+      sha256: sha("new"),
+    });
+    expect(
+      await readFile(path.join(sourceDir, "references", "a.md"), "utf8"),
+    ).toBe("new");
+    expect(await write("references/a.md", sha("old"))).toEqual({
+      outcome: "conflict",
+      currentSha256: sha("new"),
+    });
+    expect(await write("scripts/deep/run.sh", null)).toMatchObject({
+      outcome: "written",
+    });
+    expect(
+      await readFile(path.join(sourceDir, "scripts", "deep", "run.sh"), "utf8"),
+    ).toBe("new");
+    expect(await write("scripts/deep/run.sh", null)).toMatchObject({
+      outcome: "conflict",
+    });
+    await expect(write("escape/secret.md", sha("secret"))).rejects.toThrow(
+      /escapes write root/u,
+    );
+    await expect(write("../quick-send/SKILL.md", null)).rejects.toThrow(
+      /inside the skill folder/u,
+    );
+    expect(await readFile(path.join(outsideDir, "secret.md"), "utf8")).toBe(
+      "secret",
+    );
+  });
+
   it("refuses a provider skill that resolves into sandy's managed skill store", async () => {
     const fixture = await makeWorkspaceFixture();
     const managedDir = path.join(
@@ -978,6 +1042,7 @@ describe("writeHostSkill", () => {
       writeHostSkill(
         {
           type: "host.write_skill",
+          relativePath: "SKILL.md",
           scope: "provider-user",
           name: "sandy-cli",
           cwd: null,
@@ -1007,6 +1072,7 @@ describe("writeHostSkill", () => {
       writeHostSkill(
         {
           type: "host.write_skill",
+          relativePath: "SKILL.md",
           scope: "shared-user",
           name: "test",
           cwd: null,
@@ -1040,6 +1106,7 @@ describe("writeHostSkill", () => {
       writeHostSkill(
         {
           type: "host.write_skill",
+          relativePath: "SKILL.md",
           scope: "shared-user",
           name: "builtin",
           cwd: null,
@@ -1061,6 +1128,7 @@ describe("writeHostSkill", () => {
       writeHostSkill(
         {
           type: "host.write_skill",
+          relativePath: "SKILL.md",
           scope: "shared-user",
           name: "../escape",
           cwd: null,

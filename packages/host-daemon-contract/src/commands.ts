@@ -810,11 +810,32 @@ const hostWriteSkillCommandSchema = z
     name: z.string().min(1),
     cwd: z.string().min(1).nullable(),
     rootPath: z.string().min(1).nullable(),
-    content: z.string().min(1).max(1_000_000),
-    expectedSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+    relativePath: z.string().min(1).max(1024),
+    content: z.string().max(1_000_000),
+    expectedSha256: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/u)
+      .nullable(),
   })
   .strict()
   .superRefine((command, context) => {
+    if (command.relativePath === "SKILL.md" && command.content.length === 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["content"],
+        message: "SKILL.md must not be empty",
+      });
+    }
+    if (
+      command.relativePath === "SKILL.md" &&
+      command.expectedSha256 === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["expectedSha256"],
+        message: "SKILL.md already exists; pass its revision to replace it",
+      });
+    }
     if (command.scope === "sandy-project" && command.cwd === null) {
       context.addIssue({
         code: "custom",
@@ -1942,7 +1963,9 @@ type HostDaemonRetryableOnlineRpcCommandSchema =
 type HostDaemonResultSchemaMapForTransport<
   Transport extends HostDaemonCommandTransport,
 > = {
-  [Descriptor in HostDaemonCommandDescriptorForTransport<Transport> as Descriptor["type"]]: Descriptor["resultSchema"];
+  [
+    Descriptor in HostDaemonCommandDescriptorForTransport<Transport> as Descriptor["type"]
+  ]: Descriptor["resultSchema"];
 };
 
 type HostDaemonCommandResultSchemaMap =

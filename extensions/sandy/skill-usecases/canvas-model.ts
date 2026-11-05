@@ -80,7 +80,7 @@ export function makeNode(item: PaletteItem, id: string, x: number, y: number): F
     case "gate":
       return { ...at, kind: "gate", question: "Approve or reject?", owner: "owner", options: ["approve", "reject"], material: [], ends: [], answer: "Answer" };
     case "input":
-      return { ...at, kind: "input", name: "Input", fields: [{ name: "value", type: "text", options: [], prompt: "What should this value be?" }] };
+      return { ...at, kind: "input", name: "Input", fields: [{ name: "value", type: "text", options: [], prompt: "What should this value be?", path: "", optional: false }] };
     case "output":
       return { ...at, kind: "output", label: "Output", source: null, deliverable: true };
     case "fork":

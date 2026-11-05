@@ -195,7 +195,7 @@ test("two blocks writing the same file are an error only when one runs after the
   const parallel: Flow = {
     ...uxFlow(),
     nodes: [
-      { id: "input", kind: "input", name: "Start", x: 0, y: 0, fields: [{ name: "mode", type: "choice", options: ["a", "b"], prompt: "" }] },
+      { id: "input", kind: "input", name: "Start", x: 0, y: 0, fields: [{ name: "mode", type: "choice", options: ["a", "b"], prompt: "", path: "", optional: false }] },
       { id: "fork", kind: "fork", name: "By mode", x: 0, y: 0, choice: { nodeId: "input", port: "mode" }, paths: [{ label: "a", note: "" }, { label: "b", note: "" }], otherwise: null },
       skillNode("one", "prototype"),
       skillNode("two", "prototype"),

@@ -46,13 +46,15 @@ export const skillNodeSchema = z.object({
 });
 export type SkillNode = z.infer<typeof skillNodeSchema>;
 
-export const INPUT_FIELD_TYPES = ["text", "url", "choice"] as const;
+export const INPUT_FIELD_TYPES = ["text", "url", "file", "choice"] as const;
 
 const inputFieldSchema = z.object({
   name: label,
   type: z.enum(INPUT_FIELD_TYPES),
   options: z.array(z.string().trim().min(1).max(80)).max(MAX_CHOICES),
   prompt: z.string().max(400),
+  path: z.string().max(200).default(""),
+  optional: z.boolean().default(false),
 });
 export type InputField = z.infer<typeof inputFieldSchema>;
 

@@ -64,6 +64,7 @@ export interface SourcePort {
 
 export function inputFieldType(field: InputField): IoType {
   if (field.type === "choice") return { kind: "choice", values: [...field.options] };
+  if (field.type === "file") return { kind: "file", path: field.path === "" ? null : field.path };
   return { kind: field.type };
 }
 

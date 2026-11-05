@@ -379,13 +379,18 @@ export async function writeHostSkill(
       `Skill "${command.name}" not found`,
     );
   }
+  const segments = skillRelativeSegments(command.relativePath);
+  const isSkillFile = segments.length === 1 && segments[0] === SKILL_FILE_NAME;
+  const targetPath = isSkillFile
+    ? skillFilePath
+    : path.join(skillDirPath, ...segments);
   const result = await writeHostFile({
     type: "host.write_file",
-    path: skillFilePath,
+    path: targetPath,
     rootPath: skillDirPath,
     content: command.content,
     contentEncoding: "utf8",
-    createParents: false,
+    createParents: !isSkillFile && command.expectedSha256 === null,
     expectedSha256: command.expectedSha256,
   });
   if (result.outcome === "conflict") {
@@ -393,9 +398,31 @@ export async function writeHostSkill(
   }
   return {
     outcome: "written",
-    filePath: skillFilePath,
+    filePath: targetPath,
     sha256: result.sha256,
   };
+}
+
+function skillRelativeSegments(relativePath: string): string[] {
+  const segments = relativePath.split("/");
+  if (
+    relativePath.includes("\0") ||
+    relativePath.includes("\\") ||
+    path.posix.isAbsolute(relativePath) ||
+    segments.some(
+      (segment) =>
+        segment.length === 0 ||
+        segment === "." ||
+        segment === ".." ||
+        segment.startsWith("."),
+    )
+  ) {
+    throw new CommandDispatchError(
+      "invalid_path",
+      "relativePath must be a plain path inside the skill folder",
+    );
+  }
+  return segments;
 }
 
 function createSkillRoot(command: CommandOf<"host.create_skill">): string {

@@ -368,6 +368,7 @@ export default async function plugin(sandy: SandyPluginApi) {
         await sandy.storage.kv.set(POSITIONS_KEY, positions);
         await sandy.storage.kv.set(ASSIGNMENTS_KEY, assignments);
       }
+      if (Object.keys(revisions).length > 0) invalidateListed();
       changed();
       return { ok: conflicts.length === 0, revisions, conflicts };
     },

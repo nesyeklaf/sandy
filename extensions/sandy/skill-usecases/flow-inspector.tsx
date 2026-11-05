@@ -313,13 +313,20 @@ function InputPanel({ flow, node, onChange }: { flow: Flow; node: InputNode; onC
                 }}
               />
             ) : null}
+            {field.type === "file" ? (
+              <TextField label="File name" value={field.path} required={false} placeholder="report.md" onCommit={(path) => save(setFields(node.fields.map((item, at) => (at === index ? { ...item, path } : item))), "Updated the file of " + field.name)} />
+            ) : null}
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={field.optional} onChange={(event) => save(setFields(node.fields.map((item, at) => (at === index ? { ...item, optional: event.target.checked } : item))), field.name + (event.target.checked ? " is optional" : " is required"))} />
+              Optional
+            </label>
             <TextField label="Prompt" value={field.prompt} required={false} placeholder="What the run asks you" onCommit={(prompt) => save(setFields(node.fields.map((item, at) => (at === index ? { ...item, prompt } : item))), "Updated the prompt")} />
             <button type="button" className={SMALL} onClick={() => save(setFields(node.fields.filter((_, at) => at !== index)), "Removed field " + field.name)}>
               Remove field
             </button>
           </div>
         ))}
-        <button type="button" className={SMALL} disabled={node.fields.length >= 20} onClick={() => save(setFields([...node.fields, { name: fresh(), type: "text", options: [], prompt: "" }]), "Added a field")}>
+        <button type="button" className={SMALL} disabled={node.fields.length >= 20} onClick={() => save(setFields([...node.fields, { name: fresh(), type: "text", options: [], prompt: "", path: "", optional: false }]), "Added a field")}>
           + Add field
         </button>
       </Section>

@@ -788,32 +788,29 @@ export async function writeProjectSkill(
     );
   }
   const segments = validateServerSkillRelativePath(args.path);
-  if (segments.join("/") !== SKILL_FILE_NAME) {
-    return writeSkillSupportFile(deps, { ...args, skill, segments });
-  }
-  if (args.revision === null) {
+  const relativePath = segments.join("/");
+  const isSkillFile = relativePath === SKILL_FILE_NAME;
+  if (isSkillFile && args.revision === null) {
     throw new ApiError(
       400,
       "invalid_request",
       "SKILL.md already exists; pass its revision to replace it",
     );
   }
-  const revision = args.revision;
   if (writableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
-    const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
-    const result = await replaceFile({
+    const filePath =
+      args.revision === null
+        ? await resolveNewServerSkillFile(skill, segments)
+        : await resolveServerSkillFile(skill, relativePath);
+    const result = await replaceServerSkillFile({
       contents: Buffer.from(args.content, "utf8"),
-      expectedSha256: revision,
-      path: skillFilePath,
+      expectedSha256: args.revision,
+      path: filePath,
     });
     if (result.outcome === "conflict") {
       return { outcome: "conflict", currentRevision: result.currentSha256 };
     }
-    return {
-      outcome: "written",
-      filePath: skillFilePath,
-      revision: result.sha256,
-    };
+    return { outcome: "written", filePath, revision: result.sha256 };
   }
   const sandyScope =
     writableScope.data === "sandy-user" ||
@@ -828,8 +825,9 @@ export async function writeProjectSkill(
       name: sandyScope ? skill.name : hostPathBasename(skillDirPath),
       cwd: args.workspace.cwd,
       rootPath: sandyScope ? null : hostPathDirname(skillDirPath),
+      relativePath,
       content: args.content,
-      expectedSha256: revision,
+      expectedSha256: args.revision,
     },
   });
   if (result.outcome === "conflict") {
@@ -842,51 +840,21 @@ export async function writeProjectSkill(
   };
 }
 
-async function writeSkillSupportFile(
-  deps: AppDeps,
-  args: {
-    skill: IndexedSkillRegistration;
-    segments: string[];
-    content: string;
-    revision: string | null;
-    workspace: CommandWorkspace;
-  },
-): Promise<ProjectSkillWriteResult> {
-  const contents = Buffer.from(args.content, "utf8");
-  if (isServerOwnedSkill(deps, args.skill)) {
-    const filePath =
-      args.revision === null
-        ? await resolveNewServerSkillFile(args.skill, args.segments)
-        : await resolveServerSkillFile(args.skill, args.segments.join("/"));
-    const result = await replaceFile({
-      contents,
-      expectedSha256: args.revision,
-      path: filePath,
-    });
-    if (result.outcome === "conflict") {
-      return { outcome: "conflict", currentRevision: result.currentSha256 };
+const serverSkillWriteTails = new Map<string, Promise<unknown>>();
+
+function replaceServerSkillFile(
+  args: Parameters<typeof replaceFile>[0],
+): ReturnType<typeof replaceFile> {
+  const previous = serverSkillWriteTails.get(args.path) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(() => replaceFile(args));
+  const tail = next.catch(() => undefined);
+  serverSkillWriteTails.set(args.path, tail);
+  void tail.then(() => {
+    if (serverSkillWriteTails.get(args.path) === tail) {
+      serverSkillWriteTails.delete(args.path);
     }
-    return { outcome: "written", filePath, revision: result.sha256 };
-  }
-  const rootPath = hostPathDirname(args.skill.filePath);
-  const filePath = hostPathJoin(rootPath, args.segments);
-  const result = await callHostOnlineRpcForWork(deps, {
-    hostId: args.workspace.hostId,
-    timeoutMs: COMMAND_TIMEOUT_MS,
-    command: {
-      type: "host.write_file",
-      path: filePath,
-      rootPath,
-      content: args.content,
-      contentEncoding: "utf8",
-      createParents: args.revision === null,
-      expectedSha256: args.revision,
-    },
   });
-  if (result.outcome === "conflict") {
-    return { outcome: "conflict", currentRevision: result.currentSha256 };
-  }
-  return { outcome: "written", filePath, revision: result.sha256 };
+  return next;
 }
 
 export type CreatableSkillScope = "sandy-project" | "shared-user";

@@ -46,8 +46,8 @@ export function uxFlow(): Flow {
       x: 0,
       y: 0,
       fields: [
-        { name: "feature", type: "text", options: [], prompt: "What feature should the flow design?" },
-        { name: "depth", type: "choice", options: ["quick", "medium", "deep"], prompt: "How deep should the design go?" },
+        { name: "feature", type: "text", options: [], prompt: "What feature should the flow design?", path: "", optional: false },
+        { name: "depth", type: "choice", options: ["quick", "medium", "deep"], prompt: "How deep should the design go?", path: "", optional: false },
       ],
     },
     skillNode("frame", "frame-the-problem", { feature: ["input", "feature"] }),

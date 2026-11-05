@@ -141,7 +141,7 @@ function registerSkillRpc(
               }
             : {
                 outcome: "written" as const,
-                filePath: `${request.command.rootPath ?? "/data/skills"}/${request.command.name}/SKILL.md`,
+                filePath: `${request.command.rootPath ?? "/data/skills"}/${request.command.name}/${request.command.relativePath}`,
                 sha256: "1".repeat(64),
               },
         };
@@ -320,6 +320,7 @@ describe("public project skills route", () => {
         expect(stub.requests.map((request) => request.command)).toContainEqual(
           expect.objectContaining({
             type: "host.write_skill",
+            relativePath: "SKILL.md",
             scope: "provider-user",
             rootPath: "/home/.claude/skills",
             name: "review",
@@ -410,7 +411,9 @@ describe("public project skills route", () => {
           manageable: false,
           writable: true,
           metadata: { outputs: "Review: file(review.md)" },
-          revision: pathRevision("/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md"),
+          revision: pathRevision(
+            "/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md",
+          ),
           providers: [],
           duplicates: [],
         });
@@ -1034,6 +1037,7 @@ describe("public project skills route", () => {
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.write_skill",
+        relativePath: "SKILL.md",
         scope: "provider-user",
         name: "moss-notes",
         cwd: "/tmp/claude-skill-edit-project",
@@ -1087,12 +1091,13 @@ describe("public project skills route", () => {
         revision: "1".repeat(64),
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
-        type: "host.write_file",
-        path: "/home/.claude/skills/moss-notes/references/layout.md",
-        rootPath: "/home/.claude/skills/moss-notes",
+        type: "host.write_skill",
+        scope: "provider-user",
+        name: "moss-notes",
+        cwd: expect.any(String),
+        rootPath: "/home/.claude/skills",
+        relativePath: "references/layout.md",
         content: "# Layout",
-        contentEncoding: "utf8",
-        createParents: false,
         expectedSha256: "0".repeat(64),
       });
 
@@ -1104,18 +1109,19 @@ describe("public project skills route", () => {
       }
       expect(
         stub.requests.filter(
-          (request) => request.command.type === "host.write_file",
+          (request) => request.command.type === "host.write_skill",
         ),
       ).toHaveLength(1);
 
       expect((await patch("scripts/new/check.sh", null)).status).toBe(200);
       expect(stub.requests.at(-1)?.command).toEqual({
-        type: "host.write_file",
-        path: "/home/.claude/skills/moss-notes/scripts/new/check.sh",
-        rootPath: "/home/.claude/skills/moss-notes",
+        type: "host.write_skill",
+        scope: "provider-user",
+        name: "moss-notes",
+        cwd: expect.any(String),
+        rootPath: "/home/.claude/skills",
+        relativePath: "scripts/new/check.sh",
         content: "# Layout",
-        contentEncoding: "utf8",
-        createParents: true,
         expectedSha256: null,
       });
       expect((await patch("SKILL.md", null)).status).toBe(400);
@@ -1168,7 +1174,8 @@ describe("public project skills route", () => {
         } else {
           expect(response.status).toBe(200);
           expect(await readJson(response)).toEqual({
-            filePath: "/tmp/create-skill-project/.sandy/skills/review-flow/SKILL.md",
+            filePath:
+              "/tmp/create-skill-project/.sandy/skills/review-flow/SKILL.md",
             revision: "1".repeat(64),
           });
         }
@@ -1178,7 +1185,9 @@ describe("public project skills route", () => {
 
   it("rejects a skill name that is not a folder-safe slug", async () => {
     await withTestHarness(async (harness) => {
-      const { host } = seedHostSession(harness.deps, { id: "host-bad-skill-name" });
+      const { host } = seedHostSession(harness.deps, {
+        id: "host-bad-skill-name",
+      });
       seedPrimaryHost(harness.deps, host.id);
       const { project } = seedProjectWithSource(harness.deps, {
         hostId: host.id,
@@ -1248,6 +1257,7 @@ describe("public project skills route", () => {
 
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.write_skill",
+        relativePath: "SKILL.md",
         scope: "sandy-user",
         name: "review",
         cwd: "/tmp/stale-skill-edit-project",
@@ -1257,6 +1267,7 @@ describe("public project skills route", () => {
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.write_skill",
+        relativePath: "SKILL.md",
         scope: "provider-user",
         name: "review",
         cwd: "/tmp/stale-skill-edit-project",
@@ -1357,6 +1368,7 @@ describe("public project skills route", () => {
         expect(written.status).toBe(200);
         expect(stub.requests.map((request) => request.command)).toContainEqual({
           type: "host.write_skill",
+          relativePath: "SKILL.md",
           scope: "shared-user",
           name: "quick-send",
           cwd: "/tmp/shared-skill-edit-project",

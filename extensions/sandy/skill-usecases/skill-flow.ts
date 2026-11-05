@@ -211,8 +211,8 @@ function forkStage(flow: Flow, p: Plan, node: ForkNode, id: string): string {
 }
 
 function inputTag(field: InputField, name: string): string {
-  const type = field.type === "choice" ? "choice(" + field.options.join(", ") + ")" : field.type === "url" ? "url" : undefined;
-  return tag("input", [["name", name], ["type", type], ["description", field.prompt === "" ? undefined : field.prompt]], true);
+  const type = field.type === "choice" ? "choice(" + field.options.join(", ") + ")" : field.type === "url" ? "url" : field.type === "file" ? (field.path === "" ? "file" : "file(" + field.path + ")") : undefined;
+  return tag("input", [["name", name], ["type", type], ["description", field.prompt === "" ? undefined : field.prompt], ["optional", field.optional ? true : undefined]], true);
 }
 
 function frontmatter(flow: Flow, name: string): string {
@@ -405,8 +405,11 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
   const wires: Wire[] = [];
   const inputFields: InputField[] = (machine.inputs ?? []).map((input) => {
     const type = parseIoType(input.type ?? "text");
-    if (typeof type !== "string" && type.kind === "choice") return { name: input.name, type: "choice", options: [...type.values], prompt: input.description ?? "" };
-    return { name: input.name, type: typeof type !== "string" && type.kind === "url" ? "url" : "text", options: [], prompt: input.description ?? "" };
+    const base = { name: input.name, options: [], prompt: input.description ?? "", path: "", optional: input.optional === true };
+    if (typeof type === "string") return { ...base, type: "text" };
+    if (type.kind === "choice") return { ...base, type: "choice", options: [...type.values] };
+    if (type.kind === "file") return { ...base, type: "file", path: type.path ?? "" };
+    return { ...base, type: type.kind };
   });
   const startId = machine.start ?? stages[0]?.id;
   if (inputFields.length > 0) nodes.push({ id: INPUT_NODE_ID, kind: "input", name: "Inputs", x: 0, y: 0, fields: inputFields } satisfies InputNode);

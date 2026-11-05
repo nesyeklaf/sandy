@@ -2506,6 +2506,7 @@ describe("host-daemon command schemas", () => {
   it("derives sandy skill roots in the daemon and requires rootPath for provider and shared skills", () => {
     const base = {
       type: "host.write_skill",
+      relativePath: "SKILL.md",
       name: "review",
       cwd: null,
       content: "# Review",
@@ -2538,11 +2539,21 @@ describe("host-daemon command schemas", () => {
         content: "# Review",
         ...command,
       }).success;
-    expect(parses({ scope: "sandy-project", cwd: "/work/repo", userRoot: null })).toBe(true);
-    expect(parses({ scope: "sandy-project", cwd: null, userRoot: null })).toBe(false);
-    expect(parses({ scope: "shared-user", cwd: null, userRoot: ".agents/skills" })).toBe(true);
-    expect(parses({ scope: "shared-user", cwd: null, userRoot: null })).toBe(false);
-    expect(parses({ scope: "sandy-user", cwd: null, userRoot: null })).toBe(false);
+    expect(
+      parses({ scope: "sandy-project", cwd: "/work/repo", userRoot: null }),
+    ).toBe(true);
+    expect(parses({ scope: "sandy-project", cwd: null, userRoot: null })).toBe(
+      false,
+    );
+    expect(
+      parses({ scope: "shared-user", cwd: null, userRoot: ".agents/skills" }),
+    ).toBe(true);
+    expect(parses({ scope: "shared-user", cwd: null, userRoot: null })).toBe(
+      false,
+    );
+    expect(parses({ scope: "sandy-user", cwd: null, userRoot: null })).toBe(
+      false,
+    );
   });
 
   it("requires file list commands to state their entry filters", () => {

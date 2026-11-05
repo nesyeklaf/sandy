@@ -189,3 +189,15 @@ test("a skill wired to two blocks at once is a Check error, so it never becomes 
   const problems = check({ ...flow, nodes: [...flow.nodes, extra], wires: [...flow.wires, wire("w12", "frame", "extra"), wire("w13", "extra", "users")] }, UX_SKILLS);
   assert.match(problems.filter((problem) => problem.severity === "error").map((problem) => problem.message).join("\n"), /frame-the-problem leads to several blocks at once/u);
 });
+
+test("optional and file inputs keep their declaration through a flow round trip", () => {
+  const source = '---\nname: roundtrip\ndescription: Example\nmetadata:\n  dialect: "1"\n---\n# Roundtrip\n\n{% input name="Document" type="file(report.md)" optional=true /%}\n{% input name="Link" type="url" /%}\n\n{% stage id="work" %}\nRead the document.\n{% next to="done" /%}\n{% /stage %}\n';
+  const inputsOf = (text: string) => {
+    const parsed = parseSkill(text, "SKILL.md");
+    assert.ok(parsed.ok);
+    return parsed.machine.inputs;
+  };
+  const flow = skillToFlow(source, [], { useCaseId: "other" });
+  assert.ok(flow.ok);
+  assert.deepEqual(inputsOf(flowToSkill(flow.flow)), inputsOf(source));
+});
