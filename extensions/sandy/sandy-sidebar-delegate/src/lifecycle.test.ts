@@ -164,6 +164,23 @@ describe("date formatters", () => {
   });
 });
 
+describe("local time zone formatter cache", () => {
+  it("follows a device zone change whose offset equals the old zone's at the cached instant", () => {
+    const winter = Date.UTC(2031, 0, 1, 12);
+    const summer = Date.UTC(2031, 5, 1, 12);
+    try {
+      vi.stubEnv("TZ", "America/New_York");
+      expect(formatSnoozeWakeTime(winter, "en-US")).toBe("Jan 1, 2031, 7:00 AM");
+      vi.stubEnv("TZ", "America/Lima");
+      expect(formatSnoozeWakeTime(summer, "en-US")).toBe("Jun 1, 2031, 7:00 AM");
+      vi.stubEnv("TZ", "America/New_York");
+      expect(formatSnoozeWakeTime(summer, "en-US")).toBe("Jun 1, 2031, 8:00 AM");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 describe("picked snooze", () => {
   it("starts tomorrow at 9:00, across a month boundary", () => {
     const { date, time } = defaultPickedSnooze(new Date(2026, 0, 31, 22));

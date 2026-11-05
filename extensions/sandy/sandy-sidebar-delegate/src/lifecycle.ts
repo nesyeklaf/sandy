@@ -230,6 +230,11 @@ export function snoozeWakeLabel(snoozedUntil: number, now: number): string {
   return `${Math.ceil(remaining / DAY_MS)}d`;
 }
 
+function localZoneSignature(at: Date): string {
+  const year = at.getFullYear();
+  return `${at.getTimezoneOffset()}/${new Date(year, 0, 1).getTimezoneOffset()}/${new Date(year, 6, 1).getTimezoneOffset()}`;
+}
+
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 
 function cachedDateTimeFormat(
@@ -239,7 +244,7 @@ function cachedDateTimeFormat(
   at: Date,
   options: Intl.DateTimeFormatOptions,
 ): Intl.DateTimeFormat {
-  const key = `${kind}|${locale ?? ""}|${timeZone ?? `local${at.getTimezoneOffset()}`}`;
+  const key = `${kind}|${locale ?? ""}|${timeZone ?? `local${localZoneSignature(at)}`}`;
   let formatter = dateTimeFormatters.get(key);
   if (!formatter) {
     formatter = new Intl.DateTimeFormat(locale, { ...options, ...(timeZone ? { timeZone } : {}) });
