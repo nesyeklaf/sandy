@@ -4,6 +4,7 @@ import type { SkillFile } from "./contract.ts";
 import {
   canSave,
   editedDraft,
+  editedSource,
   isDirty,
   readDone,
   readFailed,
@@ -21,7 +22,7 @@ function file(filePath: string, content = ORIGINAL): SkillFile {
 }
 
 function description(state: EditorState): string | null {
-  return state.loaded !== null && "draft" in state.loaded ? state.loaded.draft.description : null;
+  return state.loaded?.draft?.description ?? null;
 }
 
 function opened(projectId: string): EditorState {
@@ -72,7 +73,31 @@ test("switching projects drops the old draft, ignores stale reads and saves noth
   assert.equal(description(fresh), "original");
   assert.equal(isDirty(fresh), false);
   const save = saveStarted(editedDraft(fresh, { description: "new project edit" }), "a".repeat(64));
-  assert.deepEqual(save.send, { projectId: "new", skillId: "same-id", revision: "a".repeat(64), content: "---\nname: x\ndescription: new project edit\n---\nbody\n" });
+  assert.deepEqual(save.send, { projectId: "new", skillId: "same-id", path: "SKILL.md", revision: "a".repeat(64), content: "---\nname: x\ndescription: new project edit\n---\nbody\n" });
+});
+
+test("a source edit commits the pending draft first, then later saves send the edited source", () => {
+  const typed = editedDraft(opened("p"), { description: "typed" });
+  const edited = editedSource(typed, (source) => source.replace("body\n", "new body\n"));
+  assert.equal(edited.loaded?.working, "---\nname: x\ndescription: typed\n---\nnew body\n");
+  assert.equal(description(edited), "typed");
+  assert.equal(isDirty(edited), true);
+  const save = saveStarted(edited, "a".repeat(64));
+  assert.equal(save.send?.content, "---\nname: x\ndescription: typed\n---\nnew body\n");
+  assert.ok(save.ticket);
+  const acked = saveDone(save.state, save.ticket, { outcome: "written", revision: "b".repeat(64), filePath: "/p/x/SKILL.md" });
+  assert.equal(isDirty(acked), false);
+});
+
+test("a source edit that breaks the frontmatter keeps the text but blocks saving", () => {
+  const broken = editedSource(opened("p"), () => "no frontmatter\n");
+  assert.equal(broken.loaded?.working, "no frontmatter\n");
+  assert.equal(broken.loaded?.draft, null);
+  assert.equal(isDirty(broken), true);
+  assert.equal(canSave(broken), false);
+  const fixed = editedSource(broken, () => ORIGINAL.replace("original", "fixed"));
+  assert.equal(description(fixed), "fixed");
+  assert.equal(canSave(fixed), true);
 });
 
 test("a newer read of the same skill wins over an older one that resolves later", () => {

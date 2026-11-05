@@ -4,9 +4,6 @@ import { applyFix, autoBind, bindOptions, deleteNode, forkValues, removeGateOpti
 import { GATE_OWNERS, INPUT_FIELD_TYPES, MAX_CHOICES, exitLabels, nodeTitle, orderedNodes, type Binding, type Flow, type FlowNode, type ForkNode, type GateNode, type InputNode, type OutputNode, type SkillNode, type Wire } from "./graph";
 import { formatType } from "./io";
 import type { Selection } from "./flow-canvas";
-import { useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import { PANEL_PATH } from "./shared";
-import { skillSubPath } from "./skill-route";
 
 const FIELD = "h-8 w-full rounded-md border border-border bg-background px-2 text-sm";
 const SMALL = "rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50";
@@ -188,7 +185,7 @@ export function Outline({ flow, problems, selection, onSelect }: { flow: Flow; p
   );
 }
 
-function SkillPanel({ flow, node, skills, onChange }: { flow: Flow; node: SkillNode; skills: readonly SkillInfo[]; onChange: Commit }) {
+function SkillStepPanel({ flow, node, skills, onChange, onOpenSkill }: { flow: Flow; node: SkillNode; skills: readonly SkillInfo[]; onChange: Commit; onOpenSkill: () => void }) {
   const save = (next: SkillNode, message: string) => onChange({ flow: withNode(flow, next), nodeId: node.id, message });
   const pickSkill = (name: string) => {
     const info = skills.find((skill) => skill.name === name);
@@ -201,10 +198,9 @@ function SkillPanel({ flow, node, skills, onChange }: { flow: Flow; node: SkillN
     onChange({ flow: bound.flow, nodeId: node.id, message: "Now uses " + info.name + (bound.notes.length === 0 ? "" : " · bound " + bound.notes.join(", ")) });
   };
   const installed = node.skill === null || skills.some((skill) => skill.name === node.skill);
-  const navigate = useSandyNavigate();
   const editSkill =
     node.skill !== null && installed ? (
-      <button type="button" className={SMALL} onClick={() => navigate.toPluginPanel(PANEL_PATH, { subPath: skillSubPath(node.skill) })}>
+      <button type="button" className={SMALL} onClick={onOpenSkill}>
         Edit skill
       </button>
     ) : null;
@@ -529,12 +525,14 @@ export function Inspector({
   skills,
   problems,
   onChange,
+  onOpenSkill,
 }: {
   flow: Flow;
   selection: Selection;
   skills: readonly SkillInfo[];
   problems: readonly Problem[];
   onChange: Commit;
+  onOpenSkill: () => void;
 }) {
   if (selection?.kind === "wire") {
     const wire = flow.wires.find((item) => item.id === selection.id);
@@ -559,7 +557,7 @@ export function Inspector({
           ))}
         </ul>
       )}
-      {node.kind === "skill" ? <SkillPanel flow={flow} node={node} skills={skills} onChange={onChange} /> : null}
+      {node.kind === "skill" ? <SkillStepPanel flow={flow} node={node} skills={skills} onChange={onChange} onOpenSkill={onOpenSkill} /> : null}
       {node.kind === "input" ? <InputPanel flow={flow} node={node} onChange={onChange} /> : null}
       {node.kind === "gate" ? <GatePanel flow={flow} node={node} onChange={onChange} /> : null}
       {node.kind === "fork" ? <ForkPanel flow={flow} node={node} onChange={onChange} /> : null}

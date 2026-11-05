@@ -342,7 +342,11 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
       skills: {
         list: async () => ({ skills }),
         experimental_read: async ({ skillId }: { skillId: string }) => ({ ...disk, filePath: "/real/" + skillId + "/SKILL.md", writable: true }),
-        experimental_write: async (input: { content: string; revision: string }) => {
+        getContent: async ({ skillId, path }: { skillId: string; path: string }) =>
+          path === "SKILL.md" ? { ...disk, filePath: "/real/" + skillId + "/SKILL.md", writable: true } : { content: "# Ref", revision: "c".repeat(64), filePath: "/real/" + skillId + "/" + path, writable: true },
+        listFiles: async () => ({ files: ["SKILL.md", "references/ref.md"], truncated: false }),
+        experimental_write: async (input: { path: string; content: string; revision: string }) => {
+          if (input.path !== "SKILL.md") return { outcome: "written", filePath: "/real/skill_a/" + input.path, revision: "d".repeat(64) };
           writes.push(input);
           if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };
           disk.content = input.content;
@@ -355,17 +359,23 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
   await plugin(sandy);
   const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.deepEqual(state.skills.map((row: any) => [row.id, row.writable]), [["skill_a", true], ["skill_b", true], ["skill_c", true]]);
-  const read = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a" })) as any;
+  const read = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md" })) as any;
   assert.deepEqual(read, { content: disk.content, revision: "a".repeat(64), filePath: "/real/skill_a/SKILL.md", writable: true });
   const before = harness.realtimeSignals.length;
-  const written = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "new", revision: read.revision });
+  const written = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md", content: "new", revision: read.revision });
   assert.deepEqual(written, { outcome: "written", filePath: "/real/skill_a/SKILL.md", revision: "b".repeat(64) });
   assert.equal(harness.realtimeSignals.length, before + 1);
-  const stale = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "mine", revision: read.revision });
+  const stale = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md", content: "mine", revision: read.revision });
   assert.deepEqual(stale, { outcome: "conflict", currentRevision: "b".repeat(64) });
   assert.equal(harness.realtimeSignals.length, before + 1);
   assert.equal(disk.content, "new");
-  assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", content: "mine", revision: "a".repeat(64) });
+  assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", path: "SKILL.md", content: "mine", revision: "a".repeat(64) });
+  assert.deepEqual(await harness.behavior.callRpc("listSkillFiles", { projectId: "proj_1", skillId: "skill_a" }), { files: ["SKILL.md", "references/ref.md"], truncated: false });
+  const ref = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a", path: "references/ref.md" })) as any;
+  assert.equal(ref.content, "# Ref");
+  const refWrite = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "references/ref.md", content: "# Ref 2", revision: ref.revision });
+  assert.deepEqual(refWrite, { outcome: "written", filePath: "/real/skill_a/references/ref.md", revision: "d".repeat(64) });
+  assert.equal(disk.content, "new");
 });
 
 async function bootSkillFlow() {

@@ -90,6 +90,7 @@ describe("sandy skill commands", () => {
         json: {
           skillId: `skill_${"a".repeat(64)}`,
           environmentId: null,
+          path: "SKILL.md",
           content: "---\nname: review\n---\nEdited\n",
           revision: "b".repeat(64),
         },

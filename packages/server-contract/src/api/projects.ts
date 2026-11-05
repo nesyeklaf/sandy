@@ -442,6 +442,7 @@ export const updateSkillRequestSchema = z
   .object({
     skillId: installedSkillIdSchema,
     environmentId: z.string().min(1).nullable(),
+    path: z.string().min(1).max(4096).default("SKILL.md"),
     content: z.string().min(1).max(1_000_000),
     revision: skillRevisionSchema,
   })

@@ -1,11 +1,16 @@
 import type { SkillFile, SkillWrite } from "./contract.ts";
-import { applyDraft, ioRowProblems, isDraftChanged, parseSkillFile, type SkillDraft } from "./skill-file.ts";
+import { applyDraft, ioRowProblems, isDraftChanged, parseSkillFile, type DraftApplication, type SkillDraft } from "./skill-file.ts";
 
 export type EditorTarget = { projectId: string; skillId: string };
 
-export type Loaded =
-  | { file: SkillFile; draft: SkillDraft; warnings: string[]; metadataLock: string | null }
-  | { file: SkillFile; error: string };
+export type Loaded = {
+  file: SkillFile;
+  working: string;
+  draft: SkillDraft | null;
+  error: string | null;
+  warnings: string[];
+  metadataLock: string | null;
+};
 
 export type Conflict = { currentRevision: string | null };
 
@@ -22,17 +27,19 @@ export interface EditorState {
 
 export type ReadTicket = { request: number };
 
-export type SaveTicket = { request: number; submitted: SkillDraft; content: string };
+export type SaveTicket = { request: number; submitted: SkillDraft | null; working: string; content: string };
 
-export type SkillWriteRequest = EditorTarget & { content: string; revision: string };
+export type SkillWriteRequest = EditorTarget & { path: string; content: string; revision: string };
 
 export function startEditor(): EditorState {
   return { request: 0, target: null, loaded: null, loadError: null, saving: false, saveError: null, conflict: null, notice: null };
 }
 
-export function loadedFrom(file: SkillFile): Loaded {
-  const parsed = parseSkillFile(file.content);
-  return parsed.ok ? { file, draft: parsed.draft, warnings: parsed.warnings, metadataLock: parsed.metadataLock } : { file, error: parsed.error };
+export function loadedFrom(file: SkillFile, working = file.content): Loaded {
+  const parsed = parseSkillFile(working);
+  return parsed.ok
+    ? { file, working, draft: parsed.draft, error: null, warnings: parsed.warnings, metadataLock: parsed.metadataLock }
+    : { file, working, draft: null, error: parsed.error, warnings: [], metadataLock: null };
 }
 
 export function draftProblems(base: string, draft: SkillDraft): string[] {
@@ -44,6 +51,11 @@ export function draftProblems(base: string, draft: SkillDraft): string[] {
   const applied = applyDraft(base, draft);
   if (!applied.ok) problems.push(applied.error);
   return problems;
+}
+
+export function loadedContent(loaded: Loaded): DraftApplication {
+  if (loaded.draft === null || !isDraftChanged(loaded.working, loaded.draft)) return { ok: true, content: loaded.working };
+  return applyDraft(loaded.working, loaded.draft);
 }
 
 export function readStarted(state: EditorState, target: EditorTarget | null): { state: EditorState; ticket: ReadTicket } {
@@ -63,8 +75,16 @@ export function readFailed(state: EditorState, ticket: ReadTicket, error: string
 
 export function editedDraft(state: EditorState, patch: Partial<SkillDraft>): EditorState {
   const loaded = state.loaded;
-  if (loaded === null || !("draft" in loaded)) return state;
+  if (loaded === null || loaded.draft === null) return state;
   return { ...state, notice: null, loaded: { ...loaded, draft: { ...loaded.draft, ...patch } } };
+}
+
+export function editedSource(state: EditorState, edit: (source: string) => string): EditorState {
+  const loaded = state.loaded;
+  if (loaded === null) return state;
+  const current = loadedContent(loaded);
+  if (!current.ok) return { ...state, saveError: current.error };
+  return { ...state, notice: null, saveError: null, loaded: loadedFrom(loaded.file, edit(current.content)) };
 }
 
 export function reverted(state: EditorState): EditorState {
@@ -74,34 +94,36 @@ export function reverted(state: EditorState): EditorState {
 
 export function isDirty(state: EditorState): boolean {
   const loaded = state.loaded;
-  return loaded !== null && "draft" in loaded && isDraftChanged(loaded.file.content, loaded.draft);
+  if (loaded === null) return false;
+  return loaded.working !== loaded.file.content || (loaded.draft !== null && isDraftChanged(loaded.working, loaded.draft));
 }
 
 export function canSave(state: EditorState): boolean {
   const loaded = state.loaded;
-  if (state.target === null || loaded === null || !("draft" in loaded) || state.saving || !loaded.file.writable) return false;
-  return isDirty(state) && draftProblems(loaded.file.content, loaded.draft).length === 0;
+  if (state.target === null || loaded === null || loaded.draft === null || state.saving || !loaded.file.writable) return false;
+  return isDirty(state) && draftProblems(loaded.working, loaded.draft).length === 0;
 }
 
 export function saveStarted(state: EditorState, revision: string): { state: EditorState; send: SkillWriteRequest | null; ticket: SaveTicket | null } {
   const loaded = state.loaded;
   const target = state.target;
-  if (target === null || loaded === null || !("draft" in loaded) || state.saving || !loaded.file.writable) return { state, send: null, ticket: null };
-  const applied = applyDraft(loaded.file.content, loaded.draft);
+  if (target === null || loaded === null || loaded.draft === null || state.saving || !loaded.file.writable) return { state, send: null, ticket: null };
+  const applied = loadedContent(loaded);
   if (!applied.ok) return { state: { ...state, saveError: applied.error }, send: null, ticket: null };
   return {
     state: { ...state, saving: true, saveError: null },
-    send: { ...target, content: applied.content, revision },
-    ticket: { request: state.request, submitted: loaded.draft, content: applied.content },
+    send: { ...target, path: "SKILL.md", content: applied.content, revision },
+    ticket: { request: state.request, submitted: loaded.draft, working: loaded.working, content: applied.content },
   };
 }
 
 export function saveDone(state: EditorState, ticket: SaveTicket, result: SkillWrite): EditorState {
   if (ticket.request !== state.request || state.loaded === null) return state;
   if (result.outcome === "conflict") return { ...state, saving: false, conflict: { currentRevision: result.currentRevision } };
-  const saved = loadedFrom({ ...state.loaded.file, content: ticket.content, revision: result.revision, filePath: result.filePath });
+  const file = { ...state.loaded.file, content: ticket.content, revision: result.revision, filePath: result.filePath };
   const current = state.loaded;
-  const loaded = "draft" in saved && "draft" in current && current.draft !== ticket.submitted ? { ...saved, draft: current.draft } : saved;
+  const untouched = current.draft === ticket.submitted && current.working === ticket.working;
+  const loaded = untouched ? loadedFrom(file) : { ...current, file };
   return { ...state, saving: false, loaded, conflict: null, notice: "Saved to " + result.filePath };
 }
 

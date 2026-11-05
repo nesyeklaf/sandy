@@ -689,7 +689,7 @@ export async function readProjectSkill(
   },
 ): Promise<ProjectSkillContent> {
   const skill = await resolveProjectSkill(deps, args);
-  const writable = args.path === SKILL_FILE_NAME && skill.writable;
+  const writable = skill.writable;
   if (isServerOwnedSkill(deps, skill)) {
     const filePath =
       args.path === SKILL_FILE_NAME
@@ -755,6 +755,7 @@ export async function writeProjectSkill(
   deps: AppDeps,
   args: {
     skillId: string;
+    path: string;
     content: string;
     revision: string;
     workspace: CommandWorkspace;
@@ -771,6 +772,10 @@ export async function writeProjectSkill(
       "invalid_request",
       "No workspace resolved for this project's skills",
     );
+  }
+  const segments = validateServerSkillRelativePath(args.path);
+  if (segments.join("/") !== SKILL_FILE_NAME) {
+    return writeSkillSupportFile(deps, { ...args, skill, segments });
   }
   if (writableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
@@ -813,6 +818,53 @@ export async function writeProjectSkill(
     filePath: result.filePath,
     revision: result.sha256,
   };
+}
+
+async function writeSkillSupportFile(
+  deps: AppDeps,
+  args: {
+    skill: IndexedSkillRegistration;
+    segments: string[];
+    content: string;
+    revision: string;
+    workspace: CommandWorkspace;
+  },
+): Promise<ProjectSkillWriteResult> {
+  const contents = Buffer.from(args.content, "utf8");
+  if (isServerOwnedSkill(deps, args.skill)) {
+    const filePath = await resolveServerSkillFile(
+      args.skill,
+      args.segments.join("/"),
+    );
+    const result = await replaceFile({
+      contents,
+      expectedSha256: args.revision,
+      path: filePath,
+    });
+    if (result.outcome === "conflict") {
+      return { outcome: "conflict", currentRevision: result.currentSha256 };
+    }
+    return { outcome: "written", filePath, revision: result.sha256 };
+  }
+  const rootPath = hostPathDirname(args.skill.filePath);
+  const filePath = hostPathJoin(rootPath, args.segments);
+  const result = await callHostOnlineRpcForWork(deps, {
+    hostId: args.workspace.hostId,
+    timeoutMs: COMMAND_TIMEOUT_MS,
+    command: {
+      type: "host.write_file",
+      path: filePath,
+      rootPath,
+      content: args.content,
+      contentEncoding: "utf8",
+      createParents: false,
+      expectedSha256: args.revision,
+    },
+  });
+  if (result.outcome === "conflict") {
+    return { outcome: "conflict", currentRevision: result.currentSha256 };
+  }
+  return { outcome: "written", filePath, revision: result.sha256 };
 }
 
 export type CreatableSkillScope = "sandy-project" | "shared-user";

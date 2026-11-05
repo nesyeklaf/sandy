@@ -146,13 +146,18 @@ export const rpcContract = defineRpcContract({
     output: okSchema,
   },
   readSkill: {
-    input: z.object({ projectId: z.string().min(1), skillId: z.string().min(1) }),
+    input: z.object({ projectId: z.string().min(1), skillId: z.string().min(1), path: z.string().min(1) }),
     output: skillFileSchema,
+  },
+  listSkillFiles: {
+    input: z.object({ projectId: z.string().min(1), skillId: z.string().min(1) }),
+    output: z.object({ files: z.array(z.string()), truncated: z.boolean() }),
   },
   writeSkill: {
     input: z.object({
       projectId: z.string().min(1),
       skillId: z.string().min(1),
+      path: z.string().min(1),
       content: z.string(),
       revision: z.string().min(1),
     }),

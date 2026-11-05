@@ -1071,7 +1071,7 @@ on `sidebarMultiSelect`.
 SKILL.md through `GET /projects/:id/skills/content` and returns
 `{ content, revision, filePath, writable }`; `filePath` is the real path
 behind a symlinked skill directory and `revision` its SHA-256.
-`experimental_write({ projectId, environmentId, skillId, content, revision })`
+`experimental_write({ projectId, environmentId, skillId, path?, content, revision })`
 sends `PATCH /projects/:id/skills/content` and returns
 `{ outcome: "written", filePath, revision }` or, when the file changed since
 `revision`, `{ outcome: "conflict", currentRevision }` instead of throwing.
@@ -1080,18 +1080,22 @@ skills, which are never writable). Sandy skills keep their confined
 `host.write_skill` roots; agent and shared skills go through
 `host.write_skill` with the skill's root, and the daemon writes the resolved
 real path of SKILL.md, refusing targets outside that root's real directory and
-inside sandy's data dir. Skill listings carry `writable` next to
+inside sandy's data dir. With a `path` other than `SKILL.md` (the server
+default) it replaces an existing file in the skill folder through
+`host.write_file` confined to that folder, with the same revision check; it
+never creates files. Skill listings carry `writable` next to
 `manageable`: symlinked shared and agent skills are writable but not
 manageable (not deletable).
 
-Callers: the CLI's `sandy skill update` (conflict message with the current
-revision) and the Skill use cases plugin's Skills editor. `skills.update`
+Callers: the CLI's `sandy skill update` (`--path` for supporting files,
+conflict message with the current revision) and the Skill use cases plugin's
+Skills editor and flow editor skill panel (Files tab). `skills.update`
 shares the same request and keeps throwing on 409.
 
 **Audit before stabilizing.**
 
-1. **Supporting files.** Only SKILL.md is writable; decide whether editors need
-   to write bundled reference files through the same path.
+1. **Supporting files.** Existing files are writable, new ones are not; decide
+   whether editors need to add or delete bundled reference files.
 2. **Conflict shape.** `currentRevision` is null when the daemon cannot read
    the current file; decide whether callers also need the current content to
    merge without a second read.

@@ -907,7 +907,7 @@ describe("public project skills route", () => {
         content: "# Layout reference",
         revision: "0".repeat(64),
         filePath: "/home/.codex/skills/documents/references/layout.md",
-        writable: false,
+        writable: true,
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.read_file",
@@ -1041,6 +1041,72 @@ describe("public project skills route", () => {
         content: "# Updated Moss notes",
         expectedSha256: "0".repeat(64),
       });
+    });
+  });
+
+  it("replaces a supporting file inside the skill folder with a revision check and refuses paths outside it", async () => {
+    await withTestHarness(async (harness) => {
+      const { host, session } = seedHostSession(harness.deps, {
+        id: "host-skill-support-edit",
+      });
+      seedPrimaryHost(harness.deps, host.id);
+      const { project } = seedProjectWithSource(harness.deps, {
+        hostId: host.id,
+        path: "/tmp/skill-support-edit-project",
+      });
+      const stub = registerSkillRpc(harness, {
+        hostId: host.id,
+        sessionId: session.id,
+        skillsByProvider: {
+          "claude-code": [
+            discovered(
+              "moss-notes",
+              "provider-user",
+              "/home/.claude/skills/moss-notes/SKILL.md",
+            ),
+          ],
+        },
+      });
+      const patch = (path: string) =>
+        harness.app.request(`/api/v1/projects/${project.id}/skills/content`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            skillId: skillId("/home/.claude/skills/moss-notes/SKILL.md"),
+            environmentId: null,
+            path,
+            content: "# Layout",
+            revision: "0".repeat(64),
+          }),
+        });
+
+      const response = await patch("references/layout.md");
+      expect(response.status).toBe(200);
+      expect(await readJson(response)).toEqual({
+        filePath: "/home/.claude/skills/moss-notes/references/layout.md",
+        revision: "1".repeat(64),
+      });
+      expect(stub.requests.map((request) => request.command)).toContainEqual({
+        type: "host.write_file",
+        path: "/home/.claude/skills/moss-notes/references/layout.md",
+        rootPath: "/home/.claude/skills/moss-notes",
+        content: "# Layout",
+        contentEncoding: "utf8",
+        createParents: false,
+        expectedSha256: "0".repeat(64),
+      });
+
+      for (const [outside, status] of [
+        ["../other/SKILL.md", 404],
+        ["/etc/passwd", 400],
+      ] as const) {
+        expect((await patch(outside)).status).toBe(status);
+      }
+      expect(
+        stub.requests.filter(
+          (request) => request.command.type === "host.write_file",
+        ),
+      ).toHaveLength(1);
     });
   });
 

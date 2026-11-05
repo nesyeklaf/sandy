@@ -872,6 +872,7 @@ export function registerProjectRoutes(app: Hono, deps: AppDeps): void {
     );
     const result = await writeProjectSkill(deps, {
       skillId: payload.skillId,
+      path: payload.path,
       content: payload.content,
       revision: payload.revision,
       workspace,

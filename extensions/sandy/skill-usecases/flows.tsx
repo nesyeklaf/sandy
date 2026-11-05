@@ -7,6 +7,7 @@ import { FlowCanvas, type Selection } from "./flow-canvas";
 import { reconcileEditor } from "./flow-sync";
 import { confirmLeaveSkill, parseSkillPath, skillSubPath } from "./skill-route";
 import { CheckList, Inspector, Outline } from "./flow-inspector";
+import { SkillPanel } from "./skill-panel";
 import { flowRunText, flowSkillNames, linearSteps, migrateLinear, nodeTitle, withLinearSteps, type Flow } from "./graph";
 import {
   GHOST,
@@ -257,7 +258,7 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
   );
 }
 
-type Tab = "inspect" | "check" | "outline";
+type Tab = "inspect" | "check" | "outline" | "skill";
 
 function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
@@ -359,6 +360,12 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
       );
   };
   const errors = problems.filter((problem) => problem.severity === "error").length;
+  const skillOf = (next: Selection) => {
+    const node = next?.kind === "node" ? current.nodes.find((item) => item.id === next.id) : undefined;
+    return node?.kind === "skill" && node.skill !== null ? state.skills.find((skill) => skill.name === node.skill) : undefined;
+  };
+  const nodeSkill = skillOf(selection);
+  const skillTarget = nodeSkill !== undefined ? { skillId: nodeSkill.id, name: nodeSkill.name } : current.origin !== undefined ? { skillId: current.origin.skillId, name: current.id } : null;
   const blocked = current.nodes.length === 0 ? "Add a block first" : hasErrors(problems) ? "Fix the errors in Check first" : null;
   const tabButton = (id: Tab, label: string) => (
     <button type="button" role="tab" aria-selected={tab === id} className={"h-8 flex-1 border-b-2 text-sm " + (tab === id ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")} onClick={() => setTab(id)}>
@@ -509,18 +516,19 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           message={message}
           onSelect={(next) => {
             setSelection(next);
-            if (next !== null) setTab("inspect");
+            if (next !== null) setTab(skillOf(next) === undefined ? "inspect" : "skill");
           }}
           onChange={commit}
         />
-        <aside aria-label="Flow details" className="flex w-80 shrink-0 flex-col border-l border-border">
+        <aside aria-label="Flow details" className={"flex shrink-0 flex-col border-l border-border " + (tab === "skill" ? "w-[34rem]" : "w-80")}>
           <div role="tablist" className="flex border-b border-border px-2">
             {tabButton("inspect", "Inspector")}
             {tabButton("check", errors > 0 ? "Check · " + String(errors) : problems.length > 0 ? "Check · " + String(problems.length) : "Check ✓")}
             {tabButton("outline", "Outline")}
+            {skillTarget === null ? null : tabButton("skill", "Skill")}
           </div>
           <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
-            {tab === "inspect" ? <Inspector flow={current} selection={selection} skills={skills} problems={problems} onChange={commit} /> : null}
+            {tab === "inspect" ? <Inspector flow={current} selection={selection} skills={skills} problems={problems} onChange={commit} onOpenSkill={() => setTab("skill")} /> : null}
             {tab === "check" ? (
               <CheckList
                 flow={current}
@@ -534,6 +542,10 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
               />
             ) : null}
             {tab === "outline" ? <Outline flow={current} problems={problems} selection={selection} onSelect={setSelection} /> : null}
+            {tab === "skill" && skillTarget !== null && state.projectId !== null ? (
+              <SkillPanel key={state.projectId + "\0" + skillTarget.skillId} api={api} projectId={state.projectId} skillId={skillTarget.skillId} name={skillTarget.name} />
+            ) : null}
+            {tab === "skill" && skillTarget === null ? <p className="p-4 text-sm text-muted-foreground">Select a skill block to open its skill.</p> : null}
           </div>
         </aside>
       </div>

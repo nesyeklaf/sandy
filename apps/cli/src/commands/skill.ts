@@ -33,6 +33,7 @@ interface SkillDeleteOptions extends SkillWorkspaceOptions {
 
 interface SkillUpdateOptions extends SkillWorkspaceOptions {
   file: string;
+  path: string;
   revision: string;
 }
 
@@ -195,9 +196,10 @@ export function registerSkillCommands(
 
   addWorkspaceOptions(skill.command("update <skill-id>"))
     .description(
-      "Replace a writable skill's SKILL.md from a local file; symlinked skills are written at their real path",
+      "Replace a writable skill's SKILL.md, or with --path another existing file in its folder, from a local file; symlinked skills are written at their real path",
     )
-    .requiredOption("--file <path>", "Local SKILL.md to upload")
+    .requiredOption("--file <path>", "Local file to upload")
+    .option("--path <path>", "Skill-relative file path", "SKILL.md")
     .requiredOption(
       "--revision <sha256>",
       "Revision returned by sandy skill show --json",
@@ -210,12 +212,13 @@ export function registerSkillCommands(
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
+          path: options.path,
           content: await readFile(options.file, "utf8"),
           revision: options.revision,
         });
         if (written.outcome === "conflict") {
           throw new Error(
-            `Skill changed since revision ${options.revision}${written.currentRevision === null ? "" : ` (now ${written.currentRevision})`}. Run sandy skill show ${skillId} --json, merge, and retry.`,
+            `Skill changed since revision ${options.revision}${written.currentRevision === null ? "" : ` (now ${written.currentRevision})`}. Run sandy skill show ${skillId} --path ${options.path} --json, merge, and retry.`,
           );
         }
         const result = { filePath: written.filePath, revision: written.revision };

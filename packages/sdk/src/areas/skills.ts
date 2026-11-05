@@ -29,6 +29,7 @@ export interface SkillContentArgs extends SkillIdentityArgs {
 
 export interface SkillUpdateArgs extends SkillWorkspaceArgs {
   skillId: string;
+  path?: string;
   content: string;
   revision: string;
 }
@@ -108,6 +109,7 @@ export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
         json: {
           skillId: input.skillId,
           environmentId: input.environmentId,
+          path: input.path ?? "SKILL.md",
           content: input.content,
           revision: input.revision,
         },

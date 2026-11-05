@@ -337,12 +337,16 @@ export default async function plugin(sandy: SandyPluginApi) {
       changed();
       return { ok: true };
     },
-    async readSkill({ projectId, skillId }) {
-      const file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId });
+    async readSkill({ projectId, skillId, path }) {
+      const file = await sandy.sdk.skills.getContent({ projectId, environmentId: null, skillId, path });
       return { content: file.content, revision: file.revision, filePath: file.filePath, writable: file.writable };
     },
-    async writeSkill({ projectId, skillId, content, revision }) {
-      const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, content, revision });
+    async listSkillFiles({ projectId, skillId }) {
+      const listed = await sandy.sdk.skills.listFiles({ projectId, environmentId: null, skillId });
+      return { files: listed.files, truncated: listed.truncated };
+    },
+    async writeSkill({ projectId, skillId, path, content, revision }) {
+      const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, path, content, revision });
       if (result.outcome === "written") changed();
       return result;
     },
