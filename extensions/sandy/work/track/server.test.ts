@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import plugin from "./server.ts";
+import { flowToSkill } from "../../skill-usecases/skill-flow.ts";
+import { uxFlow } from "../../skill-usecases/ux-flow.fixture.ts";
 
 // Stage a is the agent's, stage b is driven by the autopilot track-probe.
 const template = {
@@ -440,6 +442,21 @@ test("a SKILL.md with metadata.dialect is the template: inputs are required by n
   await fake.tools.stage_submit!.execute({ outputs: { x: "warm" }, ticket }, { threadId: "t1" });
   const finished = textOf(await fake.tools.stage_advance!.execute({ ticket }, { threadId: "t1" }));
   assert.equal(finished, "Track finished.\nResult:\n  - Answer: warm");
+  await stop();
+});
+
+test("a flow the skill editor saved as SKILL.md loads as the template and starts at its first stage", async () => {
+  const fake = fakeSandy();
+  withSkillFile(fake, flowToSkill({ ...uxFlow(), id: "probe" }));
+  await plugin(fake.sandy);
+  const stop = fake.startService();
+  await settle();
+  const missing = await fake.tools.stage_start!.execute({ skill: "probe" }, { threadId: "t1" });
+  assert.match(textOf(missing), /Missing inputs: feature, depth/);
+  const started = textOf(await fake.tools.stage_start!.execute({ skill: "probe", inputs: { feature: "checkout", depth: "quick" } }, { threadId: "t1" }));
+  assert.match(started, TICKET_LINE);
+  assert.match(started, /frame/);
+  assert.equal(fake.policies.t1?.stage, "frame");
   await stop();
 });
 

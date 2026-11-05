@@ -58,7 +58,7 @@ test("an ad hoc skill block needs no installed skill", () => {
 });
 
 test("a skill whose IO changed since the snapshot asks for a rebind", () => {
-  const flow = edit(uxFlow(), "proto", (node) => (node.kind === "skill" ? { ...node, outputs: [{ name: "mock", optional: false, type: { kind: "file", path: null }, path: null }] } : node));
+  const flow = edit(uxFlow(), "proto", (node) => (node.kind === "skill" ? { ...node, outputs: [{ name: "mock", optional: false, type: { kind: "file", path: null }, path: null, description: "", byOwner: false }] } : node));
   const problem = find(run(flow), /prototype now outputs prototypes: file, not mock: file/u);
   assert.equal(problem.fixes[0]?.action.kind, "sync-skill");
   assert.equal(problem.severity, "error");

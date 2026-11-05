@@ -174,6 +174,7 @@ import {
   type SkillContentResponse,
   type SkillFilesResponse,
   type UpdateSkillRequest,
+  type CreateSkillRequest,
   type ProjectWithThreadsResponse,
   type PromptHistoryQuery,
   type PromptHistoryResponse,
@@ -343,6 +344,7 @@ import {
   projectSkillContentQuerySchema,
   projectSkillFilesQuerySchema,
   updateSkillRequestSchema,
+  createSkillRequestSchema,
   promptHistoryQuerySchema,
   promptHistoryListQuerySchema,
   reorderPinnedThreadRequestSchema,
@@ -597,6 +599,14 @@ export const publicApiRoutes = {
         projectSkillsQuerySchema,
       ),
       response: jsonResponse<SkillListResponse>(),
+    }),
+    createSkill: defineRoute({
+      path: "/projects/:id/skills",
+      method: "post",
+      request: jsonRequest<PathProjectId, CreateSkillRequest>(
+        createSkillRequestSchema,
+      ),
+      response: jsonResponse<{ filePath: string; revision: string }>(),
     }),
     deleteSkill: defineRoute({
       path: "/projects/:id/skills",

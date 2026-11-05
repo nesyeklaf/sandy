@@ -2279,4 +2279,57 @@ describe("@sandy/sdk", () => {
       `http://sandy.test/api/v1/projects/proj_123/skills/content?skillId=${skillId}&path=SKILL.md&environmentId=`,
     );
   });
+
+  it("creates a skill and returns a typed conflict when the name is taken", async () => {
+    const queue = createFetchQueue([
+      {
+        body: {
+          filePath: "/repo/.sandy/skills/review/SKILL.md",
+          revision: "c".repeat(64),
+        },
+      },
+      {
+        status: 409,
+        body: {
+          code: "conflict",
+          message: "A skill with this name already exists",
+          details: { currentRevision: null },
+        },
+      },
+    ]);
+    const sdk = createSandySdk({
+      transport: createHttpTransport({
+        baseUrl: "http://sandy.test",
+        fetch: queue.fetch,
+        runtime: "node",
+      }),
+    });
+    const input = {
+      projectId: "proj_123",
+      environmentId: null,
+      scope: "sandy-project" as const,
+      name: "review",
+      content: "# Review",
+    };
+
+    await expect(sdk.skills.experimental_create(input)).resolves.toEqual({
+      outcome: "written",
+      filePath: "/repo/.sandy/skills/review/SKILL.md",
+      revision: "c".repeat(64),
+    });
+    await expect(sdk.skills.experimental_create(input)).resolves.toEqual({
+      outcome: "conflict",
+      currentRevision: null,
+    });
+    expect(queue.requests[0]).toMatchObject({
+      method: "POST",
+      url: "http://sandy.test/api/v1/projects/proj_123/skills",
+      bodyText: JSON.stringify({
+        environmentId: null,
+        scope: "sandy-project",
+        name: "review",
+        content: "# Review",
+      }),
+    });
+  });
 });

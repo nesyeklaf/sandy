@@ -27,7 +27,9 @@ export function skillNode(id: string, skill: string, binds: Record<string, [stri
       const bind = binds[input.name];
       return { ...input, bind: bind === undefined ? null : { nodeId: bind[0], port: bind[1] } };
     }),
-    outputs: info.outputs.map((output) => ({ ...output, path: null })),
+    outputs: info.outputs.map((output) => ({ ...output, path: null, description: "", byOwner: false })),
+    ownerApproves: false,
+    requireOutputs: true,
   };
 }
 
@@ -77,6 +79,7 @@ export function uxFlow(): Flow {
       options: ["keep", "fix"],
       material: [{ nodeId: "walk", port: "walkthrough_report.md" }],
       ends: [],
+      answer: "Answer",
     },
     { id: "out", kind: "output", label: "ux_brief.md", x: 0, y: 0, source: { nodeId: "journeys", port: "journeys.md" }, deliverable: true },
   ];

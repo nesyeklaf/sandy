@@ -72,7 +72,10 @@ Skills (.sandy/skills/):
   whether the skill is `writable`. Update saves sandy, agent and shared skills
   you own, writing the file a symlinked skill resolves to; built-in sandy skills
   and plugin skills are read-only. A stale revision fails with the current
-  revision instead of overwriting. `sandy skill delete <skill-id>` is
+  revision instead of overwriting. `sandy skill create <name> --file SKILL.md`
+  creates a new skill folder in the workspace's `.sandy/skills`, or with
+  `--shared` in the shared user root (`~/.agents/skills`); it refuses a name
+  that already exists there. `sandy skill delete <skill-id>` is
   restricted to editable, user-owned skills that are not symlinks. These workspace-scoped
   commands default to `SANDY_PROJECT_ID`, then the personal project; pass
   `--project` or `--environment` when a different workspace is required.

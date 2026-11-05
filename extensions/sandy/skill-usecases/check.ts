@@ -470,6 +470,8 @@ export function check(flow: Flow, skills: readonly SkillInfo[]): Problem[] {
   const shape = shapeOf(flow);
   for (const node of flow.nodes) {
     if (node.kind === "skill") checkSkill(shape, node, skills, problems);
+    if (node.kind === "skill" && flow.wires.filter((wire) => wire.from === node.id).length > 1)
+      problems.push({ severity: "error", nodeId: node.id, message: node.name + " leads to several blocks at once. A track runs one step at a time, so chain them or put a Fork in between.", fixes: [] });
     if (node.kind === "gate") checkGate(shape, node, problems);
     if (node.kind === "fork") checkFork(shape, node, problems);
     if (node.kind === "output") {

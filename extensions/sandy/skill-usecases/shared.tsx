@@ -48,6 +48,7 @@ export function useSkillUseCases() {
   const [state, setState] = useState<SkillUseCaseState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sync = useRef(startSync());
+  const revisions = useRef(new Map<string, string>());
   const refetch = useCallback(() => {
     const started = fetchStarted(sync.current);
     sync.current = started.sync;
@@ -57,6 +58,7 @@ export function useSkillUseCases() {
         sync.current = result.sync;
         const flows = result.flows;
         if (flows === null) return;
+        if (flows === next.flows) revisions.current = new Map(flows.flatMap((flow) => (flow.origin === undefined ? [] : [[flow.origin.skillId, flow.origin.revision] as const])));
         setState({ ...next, flows });
         setError(null);
       },
@@ -108,9 +110,14 @@ export function useSkillUseCases() {
         if (step.send === null) refetch();
         else send(step.send);
       };
-      rpc.call("saveFlows", { flows }).then(
+      const current = flows.map((flow) =>
+        flow.origin === undefined ? flow : { ...flow, origin: { ...flow.origin, revision: revisions.current.get(flow.origin.skillId) ?? flow.origin.revision } },
+      );
+      rpc.call("saveFlows", { projectId, flows: current }).then(
         (result) => {
-          if (!result.ok) setError("That change was rejected.");
+          for (const [skillId, revision] of Object.entries(result.revisions)) revisions.current.set(skillId, revision);
+          if (result.conflicts.length > 0) setError("The skill file of " + result.conflicts.join(", ") + " changed outside the editor. The editor now shows the file as it is.");
+          else if (!result.ok) setError("That change was rejected.");
           settle();
         },
         (cause: unknown) => {
@@ -119,7 +126,7 @@ export function useSkillUseCases() {
         },
       );
     },
-    [rpc, refetch],
+    [rpc, refetch, projectId],
   );
   const saveFlows = useCallback(
     (flows: Flow[]) => {

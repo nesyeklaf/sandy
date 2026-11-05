@@ -85,6 +85,8 @@ function formatMap(entries: MapEntry[]): string {
 function checkTyped(type: ValueType, raw: string, scope: Scope): Checked {
   switch (type.kind) {
     case "text":
+    case "url":
+    case "file":
       return { ok: true, value: raw };
     case "choice": {
       const value = raw.trim();

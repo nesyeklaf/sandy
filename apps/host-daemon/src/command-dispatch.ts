@@ -38,6 +38,7 @@ import {
 } from "./command-handlers/install-global-skills.js";
 import { listHostCommands } from "./command-handlers/list-commands.js";
 import {
+  createHostSkill,
   deleteHostSkill,
   listHostSkills,
   writeHostSkill,
@@ -405,6 +406,7 @@ const onlineRpcHandlers: OnlineRpcHandlerMap = {
   "host.read_workspace_agent_context": readWorkspaceAgentContext,
   "host.delete_skill": deleteHostSkill,
   "host.write_skill": writeHostSkill,
+  "host.create_skill": createHostSkill,
   "host.install_global_skills": installGlobalSkills,
   "host.global_skills_status": async (command) =>
     readGlobalSkillsStatus(command, {}),

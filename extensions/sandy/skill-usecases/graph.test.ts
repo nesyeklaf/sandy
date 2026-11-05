@@ -34,7 +34,7 @@ test("withLinearSteps keeps the IO snapshot of skills that stay and reorders the
   const first = flow.nodes[0];
   assert.equal(first?.kind, "skill");
   if (first?.kind !== "skill") return;
-  first.outputs = [{ name: "Plan", optional: false, type: { kind: "file", path: "plan.md" }, path: null }];
+  first.outputs = [{ name: "Plan", optional: false, type: { kind: "file", path: "plan.md" }, path: null, description: "", byOwner: false }];
   const next = withLinearSteps(flow, [{ skill: "quick-send", note: "" }, { skill: "quick-plan", note: "again" }]);
   assert.deepEqual(linearSteps(next), [{ skill: "quick-send", note: "" }, { skill: "quick-plan", note: "again" }]);
   const kept = next.nodes.find((node) => node.id === "s1");

@@ -36,6 +36,11 @@ interface SkillUpdateOptions extends SkillWorkspaceOptions {
   revision: string;
 }
 
+interface SkillCreateOptions extends SkillWorkspaceOptions {
+  file: string;
+  shared?: boolean;
+}
+
 interface SkillInstallCliSkillsOptions extends JsonOutputOptions {
   machine: string[];
 }
@@ -216,6 +221,34 @@ export function registerSkillCommands(
         const result = { filePath: written.filePath, revision: written.revision };
         if (outputJson(options, result)) return;
         console.log(`Updated ${result.filePath}`);
+      }),
+    );
+
+  addWorkspaceOptions(skill.command("create <name>"))
+    .description(
+      "Create a new skill folder with a SKILL.md from a local file, in the workspace's .sandy/skills or with --shared in the shared user root (~/.agents/skills)",
+    )
+    .requiredOption("--file <path>", "Local SKILL.md to upload")
+    .option("--shared", "Create the skill in the shared user skill root")
+    .action(
+      action(async (name: string, options: SkillCreateOptions) => {
+        const written = await createCliSandySdk(
+          getUrl(),
+        ).skills.experimental_create({
+          projectId: projectId(options, getContext()),
+          environmentId: environmentId(options),
+          scope: options.shared === true ? "shared-user" : "sandy-project",
+          name,
+          content: await readFile(options.file, "utf8"),
+        });
+        if (written.outcome === "conflict") {
+          throw new Error(
+            `A skill named ${name} already exists there. Pick another name or edit it with sandy skill update.`,
+          );
+        }
+        const result = { filePath: written.filePath, revision: written.revision };
+        if (outputJson(options, result)) return;
+        console.log(`Created ${result.filePath}`);
       }),
     );
 

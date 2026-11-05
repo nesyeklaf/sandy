@@ -1160,14 +1160,14 @@ function check(
         inputLines.get(input.name) ?? 1,
         "input",
         parsed.error,
-        "use type=text or a choice(...)",
+        "use type=text, url, file, file(path) or a choice(...)",
       );
-    else if (parsed.type.kind !== "text" && parsed.type.kind !== "choice")
+    else if (parsed.type.kind === "list" || parsed.type.kind === "map")
       c.problem(
         inputLines.get(input.name) ?? 1,
         "input",
-        "a run input is text or a choice",
-        "use type=text or a choice(...)",
+        "a run input is text, a URL, a file or a choice",
+        "use type=text, url, file, file(path) or a choice(...)",
       );
     else
       symbols.set(`${INPUT_SCOPE}.${input.name}`, {
@@ -1400,6 +1400,8 @@ function checkCond(
       const type = symbol.type;
       if (
         type.kind === "text" ||
+        type.kind === "url" ||
+        type.kind === "file" ||
         (type.kind === "list" && type.of.kind === "text")
       ) {
         c.problem(

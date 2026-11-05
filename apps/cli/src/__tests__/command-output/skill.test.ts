@@ -102,6 +102,57 @@ describe("sandy skill commands", () => {
     }
   });
 
+  it("creates a shared skill from a local file and refuses a taken name", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "sandy-cli-skill-"));
+    try {
+      const file = join(dir, "SKILL.md");
+      await writeFile(file, "---\nname: review\n---\nNew\n");
+      const post = vi
+        .fn()
+        .mockResolvedValueOnce({
+          filePath: "/home/me/.agents/skills/review/SKILL.md",
+          revision: "c".repeat(64),
+        })
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              code: "conflict",
+              message: "A skill with this name already exists",
+              details: { currentRevision: null },
+            }),
+            { status: 409, headers: { "content-type": "application/json" } },
+          ),
+        );
+      stubServerApi({ "v1.projects.:id.skills.$post": post });
+
+      await runCommand(
+        ["skill", "create", "review", "--file", file, "--shared"],
+        register,
+      );
+      expect(post).toHaveBeenCalledWith({
+        param: { id: "project-context" },
+        json: {
+          environmentId: null,
+          scope: "shared-user",
+          name: "review",
+          content: "---\nname: review\n---\nNew\n",
+        },
+      });
+      expect(collectLogLines(vi.mocked(console.log)).join("\n")).toContain(
+        "Created /home/me/.agents/skills/review/SKILL.md",
+      );
+
+      await expect(
+        runCommand(["skill", "create", "review", "--file", file], register),
+      ).rejects.toThrow("process.exit:1");
+      expect(collectLogLines(vi.mocked(console.error)).join("\n")).toContain(
+        "already exists",
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it("turns one sandy skill source off and keeps the other settings", async () => {
     const put = vi.fn(async ({ json }) => json);
     stubServerApi({

@@ -28,6 +28,7 @@ const skillRow = z.object({
   inputs: z.array(ioFieldSchema),
   outputs: z.array(ioFieldSchema),
   ioErrors: z.array(z.string()),
+  dialect: z.boolean(),
 });
 export type SkillRow = z.infer<typeof skillRow>;
 
@@ -37,6 +38,12 @@ export function skillInfo(row: SkillRow): SkillInfo {
 
 const projectSchema = z.object({ id: z.string(), name: z.string() });
 
+const skillFlowErrorSchema = z.object({ skillId: z.string(), name: z.string(), problems: z.array(z.string()) });
+export type SkillFlowError = z.infer<typeof skillFlowErrorSchema>;
+
+export const creatableScopeSchema = z.enum(["sandy-project", "shared-user"]);
+export type CreatableScope = z.infer<typeof creatableScopeSchema>;
+
 const stateSchema = z.object({
   projects: z.array(projectSchema),
   projectId: z.string().nullable(),
@@ -45,6 +52,7 @@ const stateSchema = z.object({
   fallbackLabel: z.string(),
   skills: z.array(skillRow),
   flows: z.array(flowSchema),
+  skillFlowErrors: z.array(skillFlowErrorSchema),
 });
 export type SkillUseCaseState = z.infer<typeof stateSchema>;
 
@@ -88,6 +96,19 @@ const skillWriteSchema = z.discriminatedUnion("outcome", [
 ]);
 export type SkillWrite = z.infer<typeof skillWriteSchema>;
 
+const saveFlowsSchema = z.object({
+  ok: z.boolean(),
+  revisions: z.record(z.string(), z.string()),
+  conflicts: z.array(z.string()),
+});
+export type SaveFlowsResult = z.infer<typeof saveFlowsSchema>;
+
+const createFlowSkillSchema = z.discriminatedUnion("outcome", [
+  z.object({ outcome: z.literal("written"), flowId: z.string(), filePath: z.string() }),
+  z.object({ outcome: z.literal("conflict"), flowId: z.string() }),
+]);
+export type CreateFlowSkillResult = z.infer<typeof createFlowSkillSchema>;
+
 export const CHANGED_EVENT = "changed";
 export const FLOW_PROVIDER_ID = "flows";
 
@@ -97,7 +118,7 @@ export const rpcContract = defineRpcContract({
     output: stateSchema,
   },
   overview: {
-    input: z.object({}),
+    input: z.object({ projectId: z.string().nullable() }),
     output: overviewSchema,
   },
   assign: {
@@ -113,7 +134,15 @@ export const rpcContract = defineRpcContract({
     output: okSchema,
   },
   saveFlows: {
-    input: z.object({ flows: z.array(flowSchema).max(MAX_FLOWS) }),
+    input: z.object({ projectId: z.string().nullable(), flows: z.array(flowSchema).max(MAX_FLOWS) }),
+    output: saveFlowsSchema,
+  },
+  createFlowSkill: {
+    input: z.object({ projectId: z.string().nullable(), flow: flowSchema, scope: creatableScopeSchema, legacyId: z.string().nullable() }),
+    output: createFlowSkillSchema,
+  },
+  deleteFlowSkill: {
+    input: z.object({ projectId: z.string().nullable(), skillId: z.string().min(1) }),
     output: okSchema,
   },
   readSkill: {

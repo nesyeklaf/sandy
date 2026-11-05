@@ -41,7 +41,11 @@ import {
 import type { ProjectCommandWorkspace as CommandWorkspace } from "../projects/project-workspace.js";
 import { resolveServerOwnedSkillCatalogEntries } from "./injected-skills.js";
 import { resolveSkillCatalog } from "./skill-catalog.js";
-import { hostPathDirname, resolveSharedSkills } from "./shared-skills.js";
+import {
+  hostPathDirname,
+  resolveSharedSkills,
+  sharedSkillNativeRoots,
+} from "./shared-skills.js";
 import {
   DEFAULT_PATH_LIST_EXCLUDE_NAMES,
   SKILL_PATH_LIST_INCLUDE_HIDDEN,
@@ -798,6 +802,57 @@ export async function writeProjectSkill(
       rootPath: sandyScope ? null : hostPathDirname(skillDirPath),
       content: args.content,
       expectedSha256: args.revision,
+    },
+  });
+  if (result.outcome === "conflict") {
+    return { outcome: "conflict", currentRevision: result.currentSha256 };
+  }
+  return {
+    outcome: "written",
+    filePath: result.filePath,
+    revision: result.sha256,
+  };
+}
+
+export type CreatableSkillScope = "sandy-project" | "shared-user";
+
+export async function createProjectSkill(
+  deps: AppDeps,
+  args: {
+    scope: CreatableSkillScope;
+    name: string;
+    content: string;
+    workspace: CommandWorkspace;
+  },
+): Promise<ProjectSkillWriteResult> {
+  if (args.scope === "sandy-project" && args.workspace.cwd === null) {
+    throw new ApiError(
+      409,
+      "invalid_request",
+      "No workspace resolved for this project's skills",
+    );
+  }
+  const userRoot =
+    args.scope === "shared-user"
+      ? (sharedSkillNativeRoots(deps).user[0]?.path ?? null)
+      : null;
+  if (args.scope === "shared-user" && userRoot === null) {
+    throw new ApiError(
+      409,
+      "invalid_request",
+      "No shared user skill root is configured",
+    );
+  }
+  const result = await callHostOnlineRpcForWork(deps, {
+    hostId: args.workspace.hostId,
+    timeoutMs: COMMAND_TIMEOUT_MS,
+    command: {
+      type: "host.create_skill",
+      scope: args.scope,
+      name: args.name,
+      cwd: args.scope === "sandy-project" ? args.workspace.cwd : null,
+      userRoot,
+      content: args.content,
     },
   });
   if (result.outcome === "conflict") {

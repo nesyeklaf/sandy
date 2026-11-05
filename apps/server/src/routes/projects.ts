@@ -65,6 +65,7 @@ import {
   projectSourceHostConflict,
 } from "../services/projects/project-source-setup.js";
 import {
+  createProjectSkill,
   deleteProjectSkill,
   listProjectSkillFiles,
   listProjectSkills,
@@ -799,6 +800,31 @@ export function registerProjectRoutes(app: Hono, deps: AppDeps): void {
     );
     const skills = await listProjectSkills(deps, { workspace });
     return context.json({ skills });
+  });
+
+  post(routes.createSkill, async (context, payload) => {
+    const workspace = requireProjectSkillWorkspace(
+      context.req.param("id"),
+      payload.environmentId,
+    );
+    const result = await createProjectSkill(deps, {
+      scope: payload.scope,
+      name: payload.name,
+      content: payload.content,
+      workspace,
+    });
+    if (result.outcome === "conflict") {
+      const details: SkillWriteConflictDetails = {
+        currentRevision: result.currentRevision,
+      };
+      throw new ApiError(409, "conflict", "A skill with this name already exists", {
+        details,
+      });
+    }
+    return context.json({
+      filePath: result.filePath,
+      revision: result.revision,
+    });
   });
 
   del(routes.deleteSkill, async (context, payload) => {

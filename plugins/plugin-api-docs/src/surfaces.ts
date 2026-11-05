@@ -1532,6 +1532,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "PluginSandySdk.threads.experimental_listCascade",
           "PluginSandySdk.threads.experimental_regenerateTitle",
           "PluginSandySdk.threads.experimental_updateEnvironmentDirectory",
+          "PluginSandySdk.skills.experimental_create",
           "PluginSandySdk.skills.experimental_read",
           "PluginSandySdk.skills.experimental_write",
         ],

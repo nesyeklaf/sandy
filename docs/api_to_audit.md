@@ -1098,6 +1098,32 @@ shares the same request and keeps throwing on 409.
 3. **Ownership.** Writable is derived from root kind, not file permissions;
    decide whether to probe write access so read-only checkouts show as read-only.
 
+## `sandy.sdk.skills.experimental_create`
+
+`experimental_create({ projectId, environmentId, scope, name, content })` sends
+`POST /projects/:id/skills` and creates a new skill folder with its SKILL.md.
+`scope` is `"sandy-project"` (the workspace's `.sandy/skills`) or
+`"shared-user"` (the first configured shared user root, `~/.agents/skills` by
+default); `name` is the folder name, a lowercase slug of at most 64
+characters. The daemon runs `host.create_skill`: it derives the root itself,
+creates the folder exclusively and writes SKILL.md atomically. It returns
+`{ outcome: "written", filePath, revision }` or, when a skill folder with that
+name already exists, `{ outcome: "conflict", currentRevision: null }` instead
+of throwing. Other failures throw `SandyHttpError` (409 `invalid_request` when
+the project has no workspace or no shared root is configured).
+
+Callers: the CLI's `sandy skill create` and the Skill use cases plugin's flow
+editor ("Save as skill" for flows kept in plugin storage, and "New skill").
+
+**Audit before stabilizing.**
+
+1. **Scopes.** Only project and shared user roots are creatable; decide whether
+   sandy's data-dir and provider roots belong here too.
+2. **Root choice.** The shared root is the first configured user root; decide
+   whether callers should pick among several roots.
+3. **Identity.** The result carries the file path, not the skill id; decide
+   whether to return the listing entry so callers skip a second list call.
+
 ## `sandy.sdk.threads.experimental_listAncestors`
 
 `POST /threads/ancestors` with `{ threadIds }` (1–200 ids) returns

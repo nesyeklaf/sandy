@@ -267,6 +267,11 @@ const ONLINE_RPC_RESPONSE_RESULT_FIXTURES: OnlineRpcResponseResultFixtures = {
     filePath: "/home/user/.sandy/skills/review/SKILL.md",
     sha256: "b".repeat(64),
   },
+  "host.create_skill": {
+    outcome: "written",
+    filePath: "/work/repo/.sandy/skills/review/SKILL.md",
+    sha256: "c".repeat(64),
+  },
   "host.global_skills_status": {
     entries: [
       {
@@ -1029,7 +1034,7 @@ describe("host-daemon command schemas", () => {
   });
 
   it("uses the current host-daemon protocol version", () => {
-    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(263);
+    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(264);
     expect(HOST_ARTIFACT_MAX_BYTES).toBe(256 * 1024 * 1024);
   });
 
@@ -1052,7 +1057,8 @@ describe("host-daemon command schemas", () => {
     expect(contract.isCompatibleHostDaemonProtocolVersion(260)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(261)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(262)).toBe(false);
-    expect(contract.isCompatibleHostDaemonProtocolVersion(263)).toBe(true);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(263)).toBe(false);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(264)).toBe(true);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(247)).toBe(false);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(248)).toBe(true);
   });
@@ -2522,6 +2528,21 @@ describe("host-daemon command schemas", () => {
     expect(parses({ scope: "plugin", rootPath: "/home/user/plugin" })).toBe(
       false,
     );
+  });
+
+  it("requires the root that host.create_skill derives a new skill folder from", () => {
+    const parses = (command: Record<string, unknown>) =>
+      hostDaemonOnlineRpcCommandSchema.safeParse({
+        type: "host.create_skill",
+        name: "review",
+        content: "# Review",
+        ...command,
+      }).success;
+    expect(parses({ scope: "sandy-project", cwd: "/work/repo", userRoot: null })).toBe(true);
+    expect(parses({ scope: "sandy-project", cwd: null, userRoot: null })).toBe(false);
+    expect(parses({ scope: "shared-user", cwd: null, userRoot: ".agents/skills" })).toBe(true);
+    expect(parses({ scope: "shared-user", cwd: null, userRoot: null })).toBe(false);
+    expect(parses({ scope: "sandy-user", cwd: null, userRoot: null })).toBe(false);
   });
 
   it("requires file list commands to state their entry filters", () => {

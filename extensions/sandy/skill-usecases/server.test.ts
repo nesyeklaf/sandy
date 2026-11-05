@@ -5,6 +5,8 @@ import plugin from "./server.ts";
 import { machineSchema } from "../work/track/machine.ts";
 import { migrateLinear, type FlowStep } from "./graph.ts";
 import { formatIo } from "./io.ts";
+import { parseSkill } from "@sandy/skill-dialect";
+import { flowToSkill } from "./skill-flow.ts";
 import { UX_SKILLS, uxFlow } from "./ux-flow.fixture.ts";
 import { classify, DEFAULT_USE_CASES, FALLBACK_ID, resolveUseCase, sourceOf } from "./usecases.ts";
 
@@ -84,7 +86,7 @@ test("assign persists, publishes and can be cleared", async () => {
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: "learn" });
   let state = (await harness.behavior.callRpc("state", { projectId: "proj_2" })) as any;
   assert.equal(state.projectId, "proj_2");
-  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { id: "skill_c", name: "zebra", writable: true, description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [] });
+  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { id: "skill_c", name: "zebra", writable: true, description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [], dialect: false });
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: null });
   state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.equal(state.skills.find((s: any) => s.name === "zebra").manual, false);
@@ -128,10 +130,10 @@ const flow = (id: string, useCaseId: string, name = id, steps: FlowStep[] = [{ s
 
 test("deleting an area moves its flows to the fallback; unknown areas are rejected", async () => {
   const harness = await boot();
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [flow("a", "learn"), flow("b", "plan")] }), { ok: true });
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [flow("c", "nope")] }), { ok: false });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("a", "learn"), flow("b", "plan")] }), { ok: true, revisions: {}, conflicts: [] });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("c", "nope")] }), { ok: false, revisions: {}, conflicts: [] });
   await harness.behavior.callRpc("saveUseCases", { useCases: DEFAULT_USE_CASES.filter((u) => u.id !== "learn") });
-  const overview = (await harness.behavior.callRpc("overview", {})) as any;
+  const overview = (await harness.behavior.callRpc("overview", { projectId: null })) as any;
   assert.deepEqual(overview.flows.map((f: any) => [f.id, f.useCaseId]), [["a", "other"], ["b", "plan"]]);
 });
 
@@ -172,7 +174,7 @@ test("assignment proposals skip unchanged skills; applying creates a new area on
 
 test("agent tools list skills by area and flows in order", async () => {
   const harness = await boot();
-  await harness.behavior.callRpc("saveFlows", { flows: [flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }])] });
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }])] });
   const areas = (await harness.behavior.callAgentTool("skill_areas", { area: "debug" })) as string;
   assert.match(areas, /^Debug and test \(debug\)\n- debug:/u);
   assert.doesNotMatch(areas, /zebra/u);
@@ -184,6 +186,7 @@ test("agent tools list skills by area and flows in order", async () => {
 test("the ~ mention provider finds flows by name and resolves one into run instructions", async () => {
   const harness = await boot();
   await harness.behavior.callRpc("saveFlows", {
+    projectId: null,
     flows: [
       flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }]),
       flow("f2", "plan", "Plan it", []),
@@ -205,7 +208,7 @@ test("stored linear flows are read as graphs and written back once as graphs", a
   const harness = await boot();
   const linear = { id: "old", useCaseId: "debug", name: "Old", description: "d", steps: [{ skill: "debug", note: "find" }, { skill: "write-docs", note: "" }] };
   await harness.kv.set("flows", [linear]);
-  const overview = (await harness.behavior.callRpc("overview", {})) as any;
+  const overview = (await harness.behavior.callRpc("overview", { projectId: null })) as any;
   assert.deepEqual(overview.flows, [migrateLinear(linear)]);
   assert.deepEqual(await harness.kv.get("flows"), [migrateLinear(linear)]);
   const flows = (await harness.behavior.callAgentTool("skill_flows", { flow: "old" })) as string;
@@ -225,7 +228,7 @@ test("a branching flow saves and resolves into run text with its branches", asyn
       { id: "w2", from: "q", port: 1, to: "s1" },
     ],
   };
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [branching] }), { ok: true });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [branching] }), { ok: true, revisions: {}, conflicts: [] });
   const resolved = (await harness.registrations.mentionProviders[0]!.resolve("g1")) as { context: string };
   assert.match(resolved.context, /1\. \/debug\n2\. Ask me: Good enough\? \(yes -> finish, no -> step 1\)/u);
 });
@@ -261,11 +264,13 @@ test("a skill listed by an older host without metadata still yields a row with n
 
 test("flow_track compiles the UX flow into a machine the track accepts", async () => {
   const harness = await boot("{}", uxSkills);
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true, revisions: {}, conflicts: [] });
   const text = (await harness.behavior.callAgentTool("flow_track", { flow: "UX design" })) as string;
   const parsed = machineSchema.safeParse(JSON.parse(text));
   assert.equal(parsed.success, true, parsed.success ? "" : JSON.stringify(parsed.error.issues));
-  assert.equal(JSON.parse(text).start, "frame-the-problem");
+  const machine = JSON.parse(text);
+  assert.equal(machine.start ?? machine.stages[0].id, "frame");
+  assert.equal(machine.stages.some((item: { id: string }) => item.id === "done"), false);
   assert.equal(await harness.behavior.callAgentTool("flow_track", { flow: "ux" }), text);
 });
 
@@ -273,7 +278,7 @@ test("flow_track refuses a broken flow with its Check problems and an unknown fl
   const harness = await boot("{}", uxSkills);
   const flow = uxFlow();
   const broken = { ...flow, useCaseId: "plan", wires: flow.wires.filter((item) => item.id !== "w10") };
-  await harness.behavior.callRpc("saveFlows", { flows: [broken] });
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [broken] });
   const refused = (await harness.behavior.callAgentTool("flow_track", { flow: "ux" })) as any;
   assert.equal(refused.isError, true);
   assert.match(refused.content[0].text, /cannot run as a track yet/u);
@@ -317,4 +322,89 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
   assert.equal(harness.realtimeSignals.length, before + 1);
   assert.equal(disk.content, "new");
   assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", content: "mine", revision: "a".repeat(64) });
+});
+
+async function bootSkillFlow() {
+  const source = flowToSkill({ ...uxFlow(), id: "ux-design", useCaseId: "plan" });
+  const disk = { content: source, revision: "a".repeat(64) };
+  const writes: { content: string; revision: string }[] = [];
+  const creates: { scope: string; name: string; content: string }[] = [];
+  const removed: string[] = [];
+  const flowSkill = skillEntry("skill_ux", "ux-design", "UX design", { dialect: "1" }, { scope: "sandy-project", filePath: "/p/.sandy/skills/ux-design/SKILL.md" });
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => ({ skills: [...uxSkills, flowSkill] }),
+        experimental_read: async () => ({ ...disk, filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true }),
+        experimental_write: async (input: { content: string; revision: string }) => {
+          writes.push(input);
+          if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };
+          disk.content = input.content;
+          disk.revision = String(writes.length).repeat(64);
+          return { outcome: "written", filePath: "/p/.sandy/skills/ux-design/SKILL.md", revision: disk.revision };
+        },
+        experimental_create: async (input: { scope: string; name: string; content: string }) => {
+          creates.push(input);
+          return { outcome: "written", filePath: "/p/.sandy/skills/" + input.name + "/SKILL.md", revision: "c".repeat(64) };
+        },
+        remove: async ({ skillId }: { skillId: string }) => {
+          removed.push(skillId);
+          return {};
+        },
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  return { harness, kv: sandy.storage.kv, disk, writes, creates, removed };
+}
+
+test("a dialect skill opens as a flow and flow_track starts it by skill name", async () => {
+  const { harness } = await bootSkillFlow();
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const flow = state.flows.find((item: any) => item.id === "ux-design");
+  assert.deepEqual(flow.origin, { skillId: "skill_ux", revision: "a".repeat(64), filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true });
+  assert.deepEqual(state.skillFlowErrors, []);
+  const text = (await harness.behavior.callAgentTool("flow_track", { flow: "ux-design" })) as string;
+  assert.match(text, /stage_start\(\{skill: "ux-design"/u);
+});
+
+test("moving blocks only stores positions; an edit writes the skill with its revision and a stale revision is a conflict", async () => {
+  const { harness, kv, disk, writes } = await bootSkillFlow();
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const flow = state.flows.find((item: any) => item.id === "ux-design");
+  const moved = { ...flow, nodes: flow.nodes.map((node: any) => (node.id === "frame" ? { ...node, x: 999, y: 7 } : node)) };
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [moved] }), { ok: true, revisions: {}, conflicts: [] });
+  assert.equal(writes.length, 0);
+  assert.deepEqual(((await kv.get("positions")) as any)["ux-design"].frame, { x: 999, y: 7 });
+  const reread = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(reread.flows.find((item: any) => item.id === "ux-design").nodes.find((node: any) => node.id === "frame").x, 999);
+  const renamed = { ...moved, description: "Design the UX in stages" };
+  const saved = (await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [renamed] })) as any;
+  assert.deepEqual(saved, { ok: true, revisions: { skill_ux: "1".repeat(64) }, conflicts: [] });
+  assert.equal(writes[0]?.revision, "a".repeat(64));
+  assert.match(disk.content, /description: "Design the UX in stages"/u);
+  assert.equal(parseSkill(disk.content, "SKILL.md").ok, true);
+  const stale = (await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...renamed, description: "Mine" }] })) as any;
+  assert.deepEqual(stale, { ok: false, revisions: {}, conflicts: ["ux-design"] });
+});
+
+test("Save as skill writes a legacy flow as a dialect SKILL.md and drops it from the stored flows", async () => {
+  const { harness, kv, creates } = await bootSkillFlow();
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...uxFlow(), id: "f_old", name: "Old UX", useCaseId: "plan" }] });
+  const result = await harness.behavior.callRpc("createFlowSkill", { projectId: null, flow: { ...uxFlow(), id: "f_old", name: "Old UX", useCaseId: "plan" }, scope: "sandy-project", legacyId: "f_old" });
+  assert.deepEqual(result, { outcome: "written", flowId: "old-ux", filePath: "/p/.sandy/skills/old-ux/SKILL.md" });
+  assert.deepEqual(creates.map((item) => [item.scope, item.name]), [["sandy-project", "old-ux"]]);
+  const parsed = parseSkill(creates[0]?.content ?? "", "SKILL.md");
+  assert.equal(parsed.ok, true, parsed.ok ? "" : JSON.stringify(parsed.problems));
+  if (parsed.ok) assert.equal(parsed.machine.stages.some((item) => item.id === "done"), false);
+  assert.deepEqual(await kv.get("flows"), []);
+  assert.equal(((await kv.get("assignments")) as any)["old-ux"], "plan");
+});
+
+test("deleting a skill flow removes the skill", async () => {
+  const { harness, removed } = await bootSkillFlow();
+  assert.deepEqual(await harness.behavior.callRpc("deleteFlowSkill", { projectId: null, skillId: "skill_ux" }), { ok: true });
+  assert.deepEqual(removed, ["skill_ux"]);
 });

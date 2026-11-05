@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   checkValue,
   deriveValues,
+  formatType,
+  lineFormat,
+  parseType,
   evaluate,
   formatProblem,
   parseSkill,
@@ -211,6 +214,45 @@ describe("broken skills", () => {
     ).toBe(
       'by="owner" output "Decision" needs a choice(...) type in a stage with gate="user"',
     );
+  });
+});
+
+describe("url and file types", () => {
+  it("parses, formats and describes url, file and file(path)", () => {
+    for (const text of ["url", "file", "file(user_model.md)"]) {
+      const parsed = parseType(text);
+      if (!parsed.ok) throw new Error(parsed.error);
+      expect(formatType(parsed.type)).toBe(text);
+    }
+    expect(parseType("file(user_model.md)")).toEqual({
+      ok: true,
+      type: { kind: "file", path: "user_model.md" },
+    });
+    expect(lineFormat({ kind: "url" })).toBe("a URL");
+    expect(lineFormat({ kind: "file", path: "a.md" })).toBe(
+      "a file path (default a.md)",
+    );
+    expect(parseType("file()")).toMatchObject({ ok: false });
+    expect(parseType("list(url)")).toMatchObject({ ok: false });
+  });
+
+  it("checks url and file values as text and branches on them only with present", () => {
+    expect(checkValue("file(a.md)", "out/a.md", {})).toEqual({
+      ok: true,
+      value: "out/a.md",
+    });
+    const source = thinkItThrough
+      .replace('{% input name="Task" type="text" /%}', '{% input name="Task" type="url" /%}')
+      .replace('{% output name="Frame" type="text" /%}', '{% output name="Frame" type="file(frame.md)" /%}');
+    const machine = compiled(source);
+    expect(stage(machine, "frame").outputs[0]).toMatchObject({ name: "Frame", type: "file(frame.md)" });
+    expect(machine.inputs?.[0]).toMatchObject({ name: "Task", type: "url" });
+    const refused = parseSkill(
+      source.replace('when=equals($frame.Clear, "no")', 'when=equals($frame.Frame, "no")'),
+      "broken.md",
+    );
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.problems[0]?.message).toContain("free text");
   });
 });
 
