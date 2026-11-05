@@ -15,7 +15,8 @@ function unquote(value: string): string {
     } catch {}
     return text.slice(1, -1);
   }
-  if (text.startsWith("'") && text.endsWith("'") && text.length >= 2) return text.slice(1, -1).replace(/''/g, "'");
+  if (text.startsWith("'") && text.endsWith("'") && text.length >= 2)
+    return text.slice(1, -1).replace(/''/g, "'");
   return text;
 }
 
@@ -24,7 +25,9 @@ export function readFrontmatter(source: string): Frontmatter | undefined {
   const offset = source.length - text.length;
   const open = /^---[ \t]*\r?\n/.exec(text);
   if (open === null) return undefined;
-  const close = /\r?\n---[ \t]*(?:\r?\n|$)/.exec(text.slice(open[0].length - 1));
+  const close = /\r?\n---[ \t]*(?:\r?\n|$)/.exec(
+    text.slice(open[0].length - 1),
+  );
   if (close === null) return undefined;
   const rawEnd = open[0].length - 1 + close.index;
   const raw = text.slice(open[0].length, rawEnd);
@@ -41,7 +44,8 @@ export function readFrontmatter(source: string): Frontmatter | undefined {
       continue;
     }
     const nested = /^\s+([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-    if (nested !== null && section === "metadata") metadata[nested[1]!] = unquote(nested[2]!);
+    if (nested !== null && section === "metadata")
+      metadata[nested[1]!] = unquote(nested[2]!);
   }
   const bodyLine = source.slice(0, bodyStart).split("\n").length - 1;
   return { fields, metadata, raw, bodyStart, bodyLine };

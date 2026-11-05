@@ -1,0 +1,329 @@
+{
+  "id": "full-send",
+  "title": "full-send: build an approved plan",
+  "description": "Routes entry → build → verify → owner → ship → learn. Starts only from the go full-control recorded; without a go, finish this track and start full-control instead.",
+  "allow": {
+    "subagents": [
+      {
+        "agent": "scout"
+      },
+      {
+        "agent": "oracle"
+      },
+      {
+        "agent": "reviewer"
+      },
+      {
+        "agent": "writer"
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "entry",
+      "title": "Entry gate",
+      "description": "Read the MR with the workflow resume playbook. Continue only with a recorded go or in the fast lane of workflow section 5. Choose the shape.",
+      "inputs": [
+        "the draft MR/PR with the owner's go"
+      ],
+      "outputs": [
+        {
+          "name": "mr_url",
+          "description": "the draft MR/PR"
+        },
+        {
+          "name": "go",
+          "description": "link to the recorded go, or the fast-lane reason"
+        },
+        {
+          "name": "shape",
+          "description": "serial slices, parallel lanes or orchestrate, and why"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-send",
+          "workflow",
+          "full-control",
+          "implement-spec"
+        ],
+        "edits": false,
+        "subagents": [
+          {
+            "agent": "scout"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "build"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build slices",
+      "description": "Each slice in the implement-spec loop. Delegates per the routing table in AGENTS.md; a slice is done when its Accept ran green on the real artifact.",
+      "inputs": [
+        "entry.mr_url",
+        "entry.shape"
+      ],
+      "outputs": [
+        {
+          "name": "slices",
+          "description": "per slice: commit, Accept command and its result"
+        },
+        {
+          "name": "decisions",
+          "optional": true,
+          "description": "build decisions, each marked owner intent or builder default"
+        }
+      ],
+      "allow": {
+        "edits": true,
+        "subagents": [
+          {
+            "agent": "implementer-low"
+          },
+          {
+            "agent": "implementer-medium"
+          },
+          {
+            "agent": "implementer-high"
+          },
+          {
+            "agent": "scout"
+          },
+          {
+            "agent": "oracle"
+          },
+          {
+            "agent": "reviewer"
+          },
+          {
+            "agent": "writer"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "evidence",
+          "name": "accept",
+          "description": "every slice's Accept command run in this visit, with its exit code"
+        }
+      ],
+      "next": [
+        {
+          "to": "verify"
+        }
+      ]
+    },
+    {
+      "id": "verify",
+      "title": "Verify the whole",
+      "description": "The workflow verification playbook, review over the whole MR, then one independent review on a different model family. Fixes go back to build.",
+      "inputs": [
+        "build.slices"
+      ],
+      "outputs": [
+        {
+          "name": "tests",
+          "description": "the full test command and its result"
+        },
+        {
+          "name": "review",
+          "description": "findings and how each was resolved"
+        }
+      ],
+      "allow": {
+        "edits": false,
+        "subagents": [
+          {
+            "agent": "reviewer"
+          },
+          {
+            "agent": "oracle"
+          },
+          {
+            "agent": "scout"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "evidence",
+          "name": "tests",
+          "description": "the full test command run in this visit and its exit code 0"
+        },
+        {
+          "type": "evidence",
+          "name": "reviewer",
+          "description": "which agent and model reviewed, and the delegation id"
+        }
+      ],
+      "next": [
+        {
+          "to": "owner",
+          "when": "tests are green and the review is clean"
+        },
+        {
+          "to": "build",
+          "when": "a check or the review found real issues"
+        }
+      ]
+    },
+    {
+      "id": "owner",
+      "title": "Owner gate",
+      "description": "The human Goldfish round of full-control/references/goldfish.md in build mode, the owner's prediction (limit-cognitive-debt step 5), and the build decisions in two columns: owner intent and builder default.",
+      "inputs": [
+        "build.decisions",
+        "verify.review"
+      ],
+      "outputs": [
+        {
+          "name": "restatements",
+          "description": "owner and Goldfish restatements, and how each divergence was sorted"
+        },
+        {
+          "name": "prediction",
+          "description": "the owner's prediction and what the real run showed"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-send",
+          "full-control",
+          "limit-cognitive-debt",
+          "workflow"
+        ],
+        "edits": false,
+        "subagents": [
+          {
+            "agent": "oracle"
+          },
+          {
+            "agent": "scout"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "goal",
+          "optional": true,
+          "label": "when a goal is linked: its auditor approved it"
+        },
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "user",
+          "prompt": "Does the build match your intent, and may it ship?"
+        }
+      ],
+      "next": [
+        {
+          "to": "ship"
+        },
+        {
+          "to": "build",
+          "when": "a divergence needs a code change"
+        }
+      ]
+    },
+    {
+      "id": "ship",
+      "title": "Ship",
+      "description": "The workflow ship playbook. Mark the MR ready; merge only on the owner's word. Publishing, deleting and force pushes stay with the owner.",
+      "inputs": [
+        "entry.mr_url"
+      ],
+      "outputs": [
+        {
+          "name": "mr_state",
+          "description": "ready or merged, with the link"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-send",
+          "workflow",
+          "write-docs"
+        ],
+        "edits": false,
+        "subagents": []
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        }
+      ],
+      "next": [
+        {
+          "to": "learn"
+        }
+      ]
+    },
+    {
+      "id": "learn",
+      "title": "Learn and pick the next",
+      "description": "What the merged MR taught. Reread the backlog issues: close what is moot, reword what changed, add what was learned. The owner picks the next issue or stops; the next MR is planned with full-control.",
+      "inputs": [
+        "ship.mr_state"
+      ],
+      "outputs": [
+        {
+          "name": "learned",
+          "description": "what the build or the owner's run showed that the plan did not know"
+        },
+        {
+          "name": "backlog",
+          "description": "issues closed, reworded or added, with links"
+        },
+        {
+          "name": "next",
+          "description": "the issue the owner picked, or stop"
+        }
+      ],
+      "allow": {
+        "skills": [
+          "full-send",
+          "full-control",
+          "write-spec",
+          "coffeetime",
+          "limit-cognitive-debt"
+        ],
+        "edits": false,
+        "subagents": [
+          {
+            "agent": "writer"
+          },
+          {
+            "agent": "scout"
+          }
+        ]
+      },
+      "gate": [
+        {
+          "type": "outputs"
+        },
+        {
+          "type": "user",
+          "prompt": "Is this what we learned, and which issue is next (or stop)?"
+        }
+      ],
+      "next": []
+    }
+  ]
+}
