@@ -395,6 +395,37 @@ describe("TimelineWindowedItems", () => {
     expect(harness.extent()).toBe(harness.totalHeight(itemKeys));
   });
 
+  it("measures a row it has no height for while mounting it", () => {
+    const harness = setup({ attached: true });
+    render(harness.view(keys(300)), { container: harness.list });
+
+    const mounted = harness.mounted();
+    expect(mounted.length).toBeGreaterThan(3);
+    for (const key of mounted) {
+      expect(harness.measurements.get(key)).toBe(harness.heightOf(key));
+    }
+  });
+
+  it("trusts a retained height on mount and lets the resize observer correct it before the reader sees the row move", () => {
+    const harness = setup({ attached: true });
+    const itemKeys = keys(300);
+    for (const key of itemKeys)
+      harness.measurements.set(key, harness.heightOf(key));
+    const last = itemKeys.at(-1) ?? "";
+    const staleHeight = harness.heightOf(last) + 25;
+    harness.measurements.set(last, staleHeight);
+
+    render(harness.view(itemKeys), { container: harness.list });
+
+    expect(harness.measurements.get(last)).toBe(staleHeight);
+
+    act(() => harness.layout.flushResizeObservers());
+
+    expect(harness.measurements.get(last)).toBe(harness.heightOf(last));
+    expect(harness.mounted()).toContain(last);
+    expect(harness.topOf(last) + harness.heightOf(last)).toBe(VIEWPORT_HEIGHT);
+  });
+
   it("keeps forced and interacted rows mounted outside the window", () => {
     const harness = setup({ attached: true });
     const itemKeys = keys(300);

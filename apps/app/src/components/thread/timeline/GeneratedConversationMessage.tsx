@@ -41,7 +41,7 @@ import type {
 import { turnRequestLabel } from "@sandy/client-core";
 import { TurnRequestLabel } from "./TurnRequestLabel.js";
 import { formatShortMessageTime, MessageTime } from "./message-time.js";
-import { useOverflowMeasurement } from "./conversation-message-overflow.js";
+import { useIsOverflowing } from "./conversation-message-overflow.js";
 import { PromptMentionPill } from "./ConversationMessageMentions.js";
 import { useThreadTitleDisplayText } from "@/components/thread/ThreadTitleMentions.js";
 import {
@@ -603,7 +603,7 @@ export const GeneratedConversationMessage = memo(
       },
       [],
     );
-    const collapsedPreviewOverflowMeasurement = useOverflowMeasurement({
+    const collapsedPreviewOverflowing = useIsOverflowing({
       axis: "horizontal",
       elementRef: collapsedPreviewTextRef,
       enabled: !titleOnly && messageText.length > 0,
@@ -614,9 +614,8 @@ export const GeneratedConversationMessage = memo(
       (hasExpandedOnlyContent ||
         collapsedPreviewSource.hasAdditionalBodyLines ||
         collapsedPreviewSource.wasCapped ||
-        collapsedPreviewOverflowMeasurement === "overflowing");
-    const hideManualContinuation =
-      collapsedPreviewOverflowMeasurement === "overflowing";
+        collapsedPreviewOverflowing);
+    const hideManualContinuation = collapsedPreviewOverflowing;
     const collapsedPreviewBody = clipMentionTextToVisibleRange({
       mentions: messageMentions,
       rangeStart: 0,

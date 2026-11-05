@@ -980,12 +980,31 @@ export function suppressPromptEditorAnchorActivation(event: Event): boolean {
   return true;
 }
 
-function focusEditorAtEnd(editor: Editor): void {
-  const transaction = editor.state.tr
-    .setSelection(TextSelection.atEnd(editor.state.doc))
-    .scrollIntoView();
-  editor.view.dispatch(transaction);
+const EMPTY_PROMPT_DOC_SIZE = 2;
+
+export function isPromptEditorEmpty(editor: Editor): boolean {
+  return editor.state.doc.content.size <= EMPTY_PROMPT_DOC_SIZE;
+}
+
+export function focusEditorAtEnd(editor: Editor): void {
+  const transaction = editor.state.tr.setSelection(
+    TextSelection.atEnd(editor.state.doc),
+  );
+  editor.view.dispatch(
+    isPromptEditorEmpty(editor) ? transaction : transaction.scrollIntoView(),
+  );
   editor.view.focus();
+}
+
+export function runAfterNextPaint(callback: () => void): () => void {
+  let innerFrame: number | null = null;
+  const outerFrame = window.requestAnimationFrame(() => {
+    innerFrame = window.requestAnimationFrame(callback);
+  });
+  return () => {
+    window.cancelAnimationFrame(outerFrame);
+    if (innerFrame !== null) window.cancelAnimationFrame(innerFrame);
+  };
 }
 
 const SAFARI_POST_COMPOSITION_KEYDOWN_WINDOW_MS = 500;
@@ -2116,8 +2135,9 @@ export function PromptBoxInternal({
       if (editor.isDestroyed) return;
       if (document.activeElement?.closest("[data-sidebar-rename-editor]"))
         return;
+      const wasEmpty = isPromptEditorEmpty(editor);
       focusEditorAtEnd(editor);
-      scheduleRevealEditorSelection();
+      if (!wasEmpty) scheduleRevealEditorSelection();
     };
 
     if (typeof window.requestAnimationFrame !== "function") {
@@ -2125,8 +2145,7 @@ export function PromptBoxInternal({
       return;
     }
 
-    const handle = window.requestAnimationFrame(focusEditor);
-    return () => window.cancelAnimationFrame(handle);
+    return runAfterNextPaint(focusEditor);
   }, [
     autoFocus,
     editor,

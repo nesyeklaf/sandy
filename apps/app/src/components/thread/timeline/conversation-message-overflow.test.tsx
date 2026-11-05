@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/bottom-anchored-scroll-body";
 import {
   ConversationMessageOverflowToggle,
-  useOverflowMeasurement,
+  useIsOverflowing,
 } from "./conversation-message-overflow";
 import { createInertScrollPositionKeeper } from "@/test/scroll-position-keeper";
 
@@ -25,18 +25,64 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function OverflowProbe({ name }: { name: string }) {
+function OverflowProbe({
+  name,
+  onRender,
+}: {
+  name: string;
+  onRender?: (name: string) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const measurement = useOverflowMeasurement({
+  const overflowing = useIsOverflowing({
     axis: "vertical",
     elementRef: ref,
     enabled: true,
     measurementKey: name,
   });
-  return <div ref={ref} data-testid={name} data-measurement={measurement} />;
+  onRender?.(name);
+  return <div ref={ref} data-testid={name} data-overflowing={overflowing} />;
 }
 
-describe("useOverflowMeasurement", () => {
+function stubOverflowGeometry(overflowingTestId: string) {
+  vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(
+    function (this: HTMLElement) {
+      return this.dataset.testid === overflowingTestId ? 80 : 20;
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(20);
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(20);
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(20);
+}
+
+describe("useIsOverflowing", () => {
+  it("renders a row that fits once on mount and an overflowing row twice, so fitting rows cost no second commit", () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = vi.fn();
+        unobserve = vi.fn();
+        disconnect = vi.fn();
+      },
+    );
+    stubOverflowGeometry("overflowing");
+    const renders: string[] = [];
+
+    render(
+      <>
+        <OverflowProbe name="fits" onRender={(name) => renders.push(name)} />
+        <OverflowProbe
+          name="overflowing"
+          onRender={(name) => renders.push(name)}
+        />
+      </>,
+    );
+
+    expect(screen.getByTestId("fits").dataset.overflowing).toBe("false");
+    expect(screen.getByTestId("overflowing").dataset.overflowing).toBe("true");
+    expect(renders.filter((name) => name === "fits")).toHaveLength(1);
+    expect(renders.filter((name) => name === "overflowing")).toHaveLength(2);
+  });
+
   it("measures every row before its first paint and shares one observer for later changes", () => {
     let observerCallback: ResizeObserverCallback | null = null;
     const observe = vi.fn();
@@ -79,8 +125,8 @@ describe("useOverflowMeasurement", () => {
 
     const first = screen.getByTestId("first");
     const second = screen.getByTestId("second");
-    expect(first.dataset.measurement).toBe("overflowing");
-    expect(second.dataset.measurement).toBe("fits");
+    expect(first.dataset.overflowing).toBe("true");
+    expect(second.dataset.overflowing).toBe("false");
     expect(constructorSpy).toHaveBeenCalledOnce();
     expect(observe).toHaveBeenCalledTimes(2);
 
@@ -95,8 +141,8 @@ describe("useOverflowMeasurement", () => {
       );
     });
 
-    expect(first.dataset.measurement).toBe("fits");
-    expect(second.dataset.measurement).toBe("fits");
+    expect(first.dataset.overflowing).toBe("false");
+    expect(second.dataset.overflowing).toBe("false");
     expect(clientHeight).toHaveBeenCalled();
     expect(scrollWidth).toHaveBeenCalled();
     expect(clientWidth).toHaveBeenCalled();
