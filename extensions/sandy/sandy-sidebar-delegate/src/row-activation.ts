@@ -2,6 +2,8 @@ import { useRef, type MouseEvent, type PointerEvent } from "react";
 
 const REPEAT_PRESS_MS = 400;
 
+const lastPressActivation: { owner: object | null; at: number } = { owner: null, at: Number.NEGATIVE_INFINITY };
+
 function activatesOnPress(event: PointerEvent): boolean {
   return (
     (event.pointerType === "mouse" || event.pointerType === "pen") &&
@@ -23,14 +25,17 @@ export function useRowActivation({
   ignoreRepeatClicks?: boolean;
 }) {
   const pressHandled = useRef(false);
-  const lastActivatedAt = useRef(Number.NEGATIVE_INFINITY);
+  const owner = useRef({});
   return {
     onPointerDown(event: PointerEvent) {
       pressHandled.current = false;
       if (disabled || !activatesOnPress(event)) return;
       pressHandled.current = true;
-      if (event.timeStamp - lastActivatedAt.current < REPEAT_PRESS_MS) return;
-      lastActivatedAt.current = event.timeStamp;
+      const repeatsLastActivation =
+        lastPressActivation.owner === owner.current && event.timeStamp - lastPressActivation.at < REPEAT_PRESS_MS;
+      if (repeatsLastActivation) return;
+      lastPressActivation.owner = owner.current;
+      lastPressActivation.at = event.timeStamp;
       onActivate();
     },
     onClick(event: MouseEvent) {

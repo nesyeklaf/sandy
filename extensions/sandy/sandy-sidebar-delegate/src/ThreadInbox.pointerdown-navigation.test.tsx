@@ -122,6 +122,18 @@ describe("ThreadInbox pointerdown navigation", () => {
     expect(opened()).toHaveLength(1);
   });
 
+  it("opens the last row of a quick A, B, A sequence of presses", () => {
+    const { opened } = renderRows([thread({ id: "a", title: "Row A" }), thread({ id: "b", title: "Row B" })]);
+
+    for (const name of ["Row A", "Row B", "Row A"]) {
+      const row = screen.getByRole("link", { name });
+      fireEvent.pointerDown(row, mouse);
+      fireEvent.pointerUp(row, mouse);
+      fireEvent.click(row, { detail: 1 });
+    }
+    expect(opened().map((call) => call.threadId)).toEqual(["a", "b", "a"]);
+  });
+
   it("opens a child row on the press", () => {
     const { opened } = renderRows([
       thread({ id: "parent", title: "Parent" }),
