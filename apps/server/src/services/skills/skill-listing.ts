@@ -584,6 +584,20 @@ async function resolveServerSkillFile(
   return realCandidatePath;
 }
 
+async function resolveNewServerSkillFile(
+  skill: SkillRegistration,
+  segments: string[],
+): Promise<string> {
+  const realRootPath = await fs.realpath(path.dirname(skill.filePath));
+  const parentPath = path.join(realRootPath, ...segments.slice(0, -1));
+  await fs.mkdir(parentPath, { recursive: true });
+  const realParentPath = await fs.realpath(parentPath);
+  if (!isPathWithinRoot(realParentPath, realRootPath)) {
+    throw new ApiError(400, "invalid_path", "Path escapes the skill folder");
+  }
+  return path.join(realParentPath, segments[segments.length - 1]!);
+}
+
 async function listServerSkillFiles(
   skill: SkillRegistration,
 ): Promise<{ files: string[]; truncated: boolean }> {
@@ -757,7 +771,7 @@ export async function writeProjectSkill(
     skillId: string;
     path: string;
     content: string;
-    revision: string;
+    revision: string | null;
     workspace: CommandWorkspace;
   },
 ): Promise<ProjectSkillWriteResult> {
@@ -777,11 +791,19 @@ export async function writeProjectSkill(
   if (segments.join("/") !== SKILL_FILE_NAME) {
     return writeSkillSupportFile(deps, { ...args, skill, segments });
   }
+  if (args.revision === null) {
+    throw new ApiError(
+      400,
+      "invalid_request",
+      "SKILL.md already exists; pass its revision to replace it",
+    );
+  }
+  const revision = args.revision;
   if (writableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
     const result = await replaceFile({
       contents: Buffer.from(args.content, "utf8"),
-      expectedSha256: args.revision,
+      expectedSha256: revision,
       path: skillFilePath,
     });
     if (result.outcome === "conflict") {
@@ -807,7 +829,7 @@ export async function writeProjectSkill(
       cwd: args.workspace.cwd,
       rootPath: sandyScope ? null : hostPathDirname(skillDirPath),
       content: args.content,
-      expectedSha256: args.revision,
+      expectedSha256: revision,
     },
   });
   if (result.outcome === "conflict") {
@@ -826,16 +848,16 @@ async function writeSkillSupportFile(
     skill: IndexedSkillRegistration;
     segments: string[];
     content: string;
-    revision: string;
+    revision: string | null;
     workspace: CommandWorkspace;
   },
 ): Promise<ProjectSkillWriteResult> {
   const contents = Buffer.from(args.content, "utf8");
   if (isServerOwnedSkill(deps, args.skill)) {
-    const filePath = await resolveServerSkillFile(
-      args.skill,
-      args.segments.join("/"),
-    );
+    const filePath =
+      args.revision === null
+        ? await resolveNewServerSkillFile(args.skill, args.segments)
+        : await resolveServerSkillFile(args.skill, args.segments.join("/"));
     const result = await replaceFile({
       contents,
       expectedSha256: args.revision,
@@ -857,7 +879,7 @@ async function writeSkillSupportFile(
       rootPath,
       content: args.content,
       contentEncoding: "utf8",
-      createParents: false,
+      createParents: args.revision === null,
       expectedSha256: args.revision,
     },
   });

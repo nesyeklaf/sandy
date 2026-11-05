@@ -1,8 +1,23 @@
-import { type Document, isCollection, isMap, isScalar, parseDocument, Scalar, visit, YAMLMap } from "yaml";
+import { Document, isCollection, isMap, isScalar, parseDocument, Scalar, visit, YAMLMap } from "yaml";
 import { parseIo, type IoField } from "./io.ts";
 import { readIo, writeIoTags } from "./skill-io.ts";
 
 export const DESCRIPTION_MAX = 200;
+
+export function newFileProblem(path: string, existing: readonly string[]): string | null {
+  const trimmed = path.trim();
+  if (trimmed === "") return null;
+  const segments = trimmed.split("/");
+  if (trimmed.startsWith("/") || trimmed.includes("\\") || segments.some((segment) => segment === "" || segment.startsWith("."))) return "Use a path inside the skill folder, like references/notes.md.";
+  if (trimmed === "SKILL.md") return "SKILL.md is edited in the Source tab.";
+  if (existing.includes(trimmed)) return trimmed + " already exists; open it from the list.";
+  return null;
+}
+
+export function newSkillSource(name: string, description: string): string {
+  const title = name.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+  return "---\n" + new Document({ name, description }).toString() + "---\n\n# " + title + "\n\n" + description + "\n";
+}
 export const IO_KINDS = ["text", "url", "file", "choice"] as const;
 export type IoKind = (typeof IO_KINDS)[number];
 export const IO_KEYS = ["inputs", "outputs"] as const;

@@ -8,11 +8,12 @@ import {
   flowReplySchema,
 } from "./ai.ts";
 import { readIo } from "./skill-io.ts";
+import { newSkillSource } from "./skill-file.ts";
 import { formatProblem, parseSkill } from "@sandy/skill-dialect";
 import { check, hasErrors, type Problem } from "./check.ts";
 import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, skillInfo, useCaseSchema, type SkillFlowError, type SkillRow } from "./contract.ts";
 import { flowToSkill, skillName, skillToFlow, type Positions } from "./skill-flow.ts";
-import { flowRunText, flowSkillNames, flowStepLines, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
+import { flowRunText, flowSkillNames, flowStepLines, slug as skillSlug, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
 import {
   DEFAULT_USE_CASES,
   FALLBACK_ID,
@@ -328,6 +329,20 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (legacyId !== null) await sandy.storage.kv.set(FLOWS_KEY, (await readFlows()).filter((item) => item.id !== legacyId));
       changed();
       return { outcome: "written" as const, flowId: name, filePath: result.filePath };
+    },
+    async createSkill({ projectId, scope, name, description, useCaseId }) {
+      const selected = await resolveProjectId(projectId);
+      if (selected === null) throw new Error("No project available.");
+      const folder = skillSlug(name, "skill");
+      const result = await sandy.sdk.skills.experimental_create({ projectId: selected, environmentId: null, scope, name: folder, content: newSkillSource(folder, description.trim()) });
+      if (result.outcome === "conflict") return { outcome: "conflict" as const, name: folder };
+      if (useCaseId !== null) {
+        const assignments = await readAssignments();
+        assignments[folder] = useCaseId;
+        await sandy.storage.kv.set(ASSIGNMENTS_KEY, assignments);
+      }
+      changed();
+      return { outcome: "written" as const, name: folder, filePath: result.filePath };
     },
     async deleteFlowSkill({ projectId, skillId }) {
       const selected = await resolveProjectId(projectId);

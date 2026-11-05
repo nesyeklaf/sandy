@@ -1,7 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { formatIo, parseIo } from "./io.ts";
-import { applyDraft, emptyIoRow, formatIoRows, ioRowProblems, isDraftChanged, parseSkillFile, type SkillDraft } from "./skill-file.ts";
+import { applyDraft, emptyIoRow, formatIoRows, ioRowProblems, isDraftChanged, newFileProblem, parseSkillFile, type SkillDraft } from "./skill-file.ts";
+
+test("a new skill file path must stay inside the folder and must not exist yet", () => {
+  const existing = ["SKILL.md", "references/layout.md"];
+  assert.equal(newFileProblem("references/notes.md", existing), null);
+  assert.equal(newFileProblem("  ", existing), null);
+  for (const outside of ["/etc/passwd", "../other/SKILL.md", "references//x.md", ".env", "a\\b.md"]) {
+    assert.equal(newFileProblem(outside, existing), "Use a path inside the skill folder, like references/notes.md.", outside);
+  }
+  assert.equal(newFileProblem("SKILL.md", existing), "SKILL.md is edited in the Source tab.");
+  assert.equal(newFileProblem("references/layout.md", existing), "references/layout.md already exists; open it from the list.");
+});
 
 const SKILL = [
   "---",

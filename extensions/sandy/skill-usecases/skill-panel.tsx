@@ -420,7 +420,7 @@ export function SkillPanel({ api, projectId, skillId, name }: { api: SkillUseCas
           )
         ) : null}
         {tab === "stages" ? <Stages source={source} writable={writable} onSource={editSource} /> : null}
-        {tab === "files" ? <SkillFiles api={api} projectId={projectId} skillId={skillId} /> : null}
+        {tab === "files" ? <SkillFiles api={api} projectId={projectId} skillId={skillId} writable={writable} /> : null}
         {tab === "source" ? <Source source={source} writable={writable} onSource={editSource} /> : null}
       </div>
     </div>

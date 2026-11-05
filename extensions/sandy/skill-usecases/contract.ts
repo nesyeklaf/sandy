@@ -109,6 +109,12 @@ const createFlowSkillSchema = z.discriminatedUnion("outcome", [
 ]);
 export type CreateFlowSkillResult = z.infer<typeof createFlowSkillSchema>;
 
+const createSkillSchema = z.discriminatedUnion("outcome", [
+  z.object({ outcome: z.literal("written"), name: z.string(), filePath: z.string() }),
+  z.object({ outcome: z.literal("conflict"), name: z.string() }),
+]);
+export type CreateSkillResult = z.infer<typeof createSkillSchema>;
+
 export const CHANGED_EVENT = "changed";
 export const FLOW_PROVIDER_ID = "flows";
 
@@ -141,6 +147,16 @@ export const rpcContract = defineRpcContract({
     input: z.object({ projectId: z.string().nullable(), flow: flowSchema, scope: creatableScopeSchema, legacyId: z.string().nullable() }),
     output: createFlowSkillSchema,
   },
+  createSkill: {
+    input: z.object({
+      projectId: z.string().nullable(),
+      scope: creatableScopeSchema,
+      name: z.string().min(1).max(64),
+      description: z.string().min(1).max(200),
+      useCaseId: z.string().nullable(),
+    }),
+    output: createSkillSchema,
+  },
   deleteFlowSkill: {
     input: z.object({ projectId: z.string().nullable(), skillId: z.string().min(1) }),
     output: okSchema,
@@ -159,7 +175,7 @@ export const rpcContract = defineRpcContract({
       skillId: z.string().min(1),
       path: z.string().min(1),
       content: z.string(),
-      revision: z.string().min(1),
+      revision: z.string().min(1).nullable(),
     }),
     output: skillWriteSchema,
   },

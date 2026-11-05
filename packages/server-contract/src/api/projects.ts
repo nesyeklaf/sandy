@@ -444,7 +444,7 @@ export const updateSkillRequestSchema = z
     environmentId: z.string().min(1).nullable(),
     path: z.string().min(1).max(4096).default("SKILL.md"),
     content: z.string().min(1).max(1_000_000),
-    revision: skillRevisionSchema,
+    revision: skillRevisionSchema.nullable(),
   })
   .strict();
 export type UpdateSkillRequest = z.infer<typeof updateSkillRequestSchema>;

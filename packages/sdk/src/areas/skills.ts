@@ -31,7 +31,7 @@ export interface SkillUpdateArgs extends SkillWorkspaceArgs {
   skillId: string;
   path?: string;
   content: string;
-  revision: string;
+  revision: string | null;
 }
 
 export interface SkillCreateArgs extends SkillWorkspaceArgs {

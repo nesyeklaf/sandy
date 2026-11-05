@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRealtime, useRpc, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import { skillInfo, type CreatableScope, type CreateFlowSkillResult, type FlowProposal, type SkillOverview, type rpcContract } from "./contract";
+import { skillInfo, type CreatableScope, type CreateFlowSkillResult, type CreateSkillResult, type FlowProposal, type SkillOverview, type rpcContract } from "./contract";
 import { check, hasErrors } from "./check";
-import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History } from "./canvas-model";
+import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History, type PaletteItem } from "./canvas-model";
+import { DESCRIPTION_MAX } from "./skill-file";
 import { FlowCanvas, type Selection } from "./flow-canvas";
 import { reconcileEditor } from "./flow-sync";
 import { confirmLeaveSkill, parseSkillPath, skillSubPath } from "./skill-route";
@@ -158,6 +159,69 @@ function ScopeSelect({ value, onChange }: { value: CreatableScope; onChange: (sc
 
 function createdText(result: CreateFlowSkillResult): string | null {
   return result.outcome === "written" ? null : 'A skill named "' + result.flowId + '" already exists there. Pick another name.';
+}
+
+function NewSkill({ api, useCaseId, onCreated }: { api: SkillUseCasesApi; useCaseId: string; onCreated: (result: Extract<CreateSkillResult, { outcome: "written" }>, description: string) => void }) {
+  const { state, rpc } = api;
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [scope, setScope] = useState<CreatableScope>("sandy-project");
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  if (state === null) return null;
+  if (!open)
+    return (
+      <button type="button" className={SECONDARY + " w-full"} onClick={() => setOpen(true)}>
+        New skill
+      </button>
+    );
+  const text = description.trim();
+  const ready = name.trim() !== "" && text !== "" && text.length <= DESCRIPTION_MAX && !busy;
+  const create = () => {
+    setBusy(true);
+    setProblem(null);
+    rpc.call("createSkill", { projectId: state.projectId, scope, name: name.trim(), description: text, useCaseId }).then(
+      (result) => {
+        setBusy(false);
+        if (result.outcome === "conflict") {
+          setProblem('A skill named "' + result.name + '" already exists there. Pick another name.');
+          return;
+        }
+        setOpen(false);
+        setName("");
+        setDescription("");
+        onCreated(result, text);
+      },
+      (cause: unknown) => {
+        setBusy(false);
+        setProblem(errorText(cause));
+      },
+    );
+  };
+  return (
+    <form
+      aria-label="New skill"
+      className="space-y-2 rounded-lg border border-border p-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (ready) create();
+      }}
+    >
+      <input aria-label="Skill name" placeholder="Name, e.g. review-notes" className={INPUT + " w-full"} value={name} onChange={(event) => setName(event.target.value)} />
+      <textarea aria-label="What the skill does" placeholder="What the skill does" rows={2} className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm" value={description} onChange={(event) => setDescription(event.target.value)} />
+      <ScopeSelect value={scope} onChange={setScope} />
+      {problem === null ? null : <p role="alert" className="text-xs text-destructive">{problem}</p>}
+      <div className="flex gap-2">
+        <button type="submit" className={PRIMARY} disabled={!ready}>
+          {busy ? "Creating…" : "Create and add"}
+        </button>
+        <button type="button" className={GHOST} disabled={busy} onClick={() => setOpen(false)}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
 }
 
 function FlowCreator({ api, onCreated }: { api: SkillUseCasesApi; onCreated: (id: string) => void }) {
@@ -519,6 +583,16 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
             if (next !== null) setTab(skillOf(next) === undefined ? "inspect" : "skill");
           }}
           onChange={commit}
+          paletteHeader={(add: (item: PaletteItem) => void) => (
+            <NewSkill
+              api={api}
+              useCaseId={current.useCaseId}
+              onCreated={(result, description) => {
+                add({ kind: "skill", skill: { name: result.name, purpose: description, inputs: [], outputs: [] } });
+                setMessage("Created " + result.filePath);
+              }}
+            />
+          )}
         />
         <aside aria-label="Flow details" className={"flex shrink-0 flex-col border-l border-border " + (tab === "skill" ? "w-[34rem]" : "w-80")}>
           <div role="tablist" className="flex border-b border-border px-2">

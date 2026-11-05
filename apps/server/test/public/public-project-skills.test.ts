@@ -1067,7 +1067,7 @@ describe("public project skills route", () => {
           ],
         },
       });
-      const patch = (path: string) =>
+      const patch = (path: string, revision: string | null = "0".repeat(64)) =>
         harness.app.request(`/api/v1/projects/${project.id}/skills/content`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -1076,7 +1076,7 @@ describe("public project skills route", () => {
             environmentId: null,
             path,
             content: "# Layout",
-            revision: "0".repeat(64),
+            revision,
           }),
         });
 
@@ -1107,6 +1107,18 @@ describe("public project skills route", () => {
           (request) => request.command.type === "host.write_file",
         ),
       ).toHaveLength(1);
+
+      expect((await patch("scripts/new/check.sh", null)).status).toBe(200);
+      expect(stub.requests.at(-1)?.command).toEqual({
+        type: "host.write_file",
+        path: "/home/.claude/skills/moss-notes/scripts/new/check.sh",
+        rootPath: "/home/.claude/skills/moss-notes",
+        content: "# Layout",
+        contentEncoding: "utf8",
+        createParents: true,
+        expectedSha256: null,
+      });
+      expect((await patch("SKILL.md", null)).status).toBe(400);
     });
   });
 

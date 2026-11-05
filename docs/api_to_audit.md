@@ -1082,8 +1082,11 @@ skills, which are never writable). Sandy skills keep their confined
 real path of SKILL.md, refusing targets outside that root's real directory and
 inside sandy's data dir. With a `path` other than `SKILL.md` (the server
 default) it replaces an existing file in the skill folder through
-`host.write_file` confined to that folder, with the same revision check; it
-never creates files. Skill listings carry `writable` next to
+`host.write_file` confined to that folder, with the same revision check. A
+`revision` of `null` creates that file and its missing parent folders and
+fails with a conflict when it already exists; SKILL.md always needs its
+revision (400 otherwise). Every write goes to a temporary file that is renamed
+into place. Skill listings carry `writable` next to
 `manageable`: symlinked shared and agent skills are writable but not
 manageable (not deletable).
 

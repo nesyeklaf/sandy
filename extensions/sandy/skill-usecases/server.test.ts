@@ -460,6 +460,17 @@ test("Save as skill writes a legacy flow as a dialect SKILL.md and drops it from
   assert.equal(((await kv.get("assignments")) as any)["old-ux"], "plan");
 });
 
+test("creating a skill from the canvas writes a plain SKILL.md under a slug and assigns its area", async () => {
+  const { harness, kv, creates } = await bootSkillFlow();
+  const result = await harness.behavior.callRpc("createSkill", { projectId: null, scope: "shared-user", name: "Review Notes!", description: "Review the notes: keep it short", useCaseId: "plan" });
+  assert.deepEqual(result, { outcome: "written", name: "review-notes", filePath: "/p/.sandy/skills/review-notes/SKILL.md" });
+  assert.deepEqual(creates.map((item) => [item.scope, item.name]), [["shared-user", "review-notes"]]);
+  const content = creates[0]?.content ?? "";
+  assert.equal(content, '---\nname: review-notes\ndescription: "Review the notes: keep it short"\n---\n\n# Review Notes\n\nReview the notes: keep it short\n');
+  assert.equal(((await kv.get("assignments")) as any)["review-notes"], "plan");
+  assert.deepEqual(await harness.behavior.callRpc("createSkill", { projectId: null, scope: "sandy-project", name: "!!!", description: "x", useCaseId: null }), { outcome: "written", name: "skill", filePath: "/p/.sandy/skills/skill/SKILL.md" });
+});
+
 test("deleting a skill flow removes the skill", async () => {
   const { harness, removed } = await bootSkillFlow();
   assert.deepEqual(await harness.behavior.callRpc("deleteFlowSkill", { projectId: null, skillId: "skill_ux" }), { ok: true });

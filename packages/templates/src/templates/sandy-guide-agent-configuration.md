@@ -74,7 +74,8 @@ Skills (.sandy/skills/):
   and plugin skills are read-only. A stale revision fails with the current
   revision instead of overwriting. `--path <file>` on update replaces another
   existing file in the skill folder, with the revision from `sandy skill show
-  <skill-id> --path <file> --json`. `sandy skill create <name> --file SKILL.md`
+  <skill-id> --path <file> --json`; `--new` instead of `--revision` creates a
+  file that does not exist yet, such as `references/notes.md`. `sandy skill create <name> --file SKILL.md`
   creates a new skill folder in the workspace's `.sandy/skills`, or with
   `--shared` in the shared user root (`~/.agents/skills`); it refuses a name
   that already exists there. `sandy skill delete <skill-id>` is
