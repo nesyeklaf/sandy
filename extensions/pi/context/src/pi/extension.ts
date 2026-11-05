@@ -463,7 +463,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				...(judged.continuity.kind === "broken" ? { at: judged.continuity.at } : {}),
 				items: judged.items,
 				head: requestHead,
-				...(resume ? { resume } : {}),
+				...(resume ? { resume: { ...resume, ...(reason !== undefined ? { pendingCut: reason } : {}) } } : {}),
 				model: judged.model,
 				prompt,
 				usage,
