@@ -28,6 +28,7 @@ import { LastMessagesProvider } from "./useLastMessages";
 import type { ActiveSortMode } from "./inbox-layout";
 import type { useRenamingShelfLocks } from "./useRenamingShelfLocks";
 import type { UpdateSidebarSettings } from "./useSidebarSettings";
+import { useLatestCallback } from "./lib/stable-identity";
 import { ActiveThreadContext, useActiveThreadWithin, type ActiveThreadStore } from "./useActiveThread";
 
 interface InboxContextInputs {
@@ -108,10 +109,16 @@ export function useInboxContextValues({
       rowFields,
     ],
   );
+  const stableOnNavigate = useLatestCallback(onNavigate);
+  const acknowledgeWake = useLatestCallback((threadId: string) => void lifecycle.acknowledgeWake(threadId));
+  const openThread = useLatestCallback((threadId: string) => {
+    navigate.toThread(threadId, { split: false });
+    onNavigate();
+  });
   const actions = useMemo(
     () => ({
       navigate,
-      onNavigate,
+      onNavigate: stableOnNavigate,
       parkThread,
       settleThread,
       snoozeThread,
@@ -124,15 +131,14 @@ export function useInboxContextValues({
       setRowFields,
       toggleProjectCollapse,
       updateSidebarSettings,
-      acknowledgeWake: (threadId: string) => void lifecycle.acknowledgeWake(threadId),
-      openThread: (threadId: string) => {
-        navigate.toThread(threadId, { split: false });
-        onNavigate();
-      },
+      acknowledgeWake,
+      openThread,
     }),
     [
       navigate,
-      onNavigate,
+      stableOnNavigate,
+      acknowledgeWake,
+      openThread,
       parkThread,
       settleThread,
       snoozeThread,
@@ -145,7 +151,6 @@ export function useInboxContextValues({
       setRowFields,
       toggleProjectCollapse,
       updateSidebarSettings,
-      lifecycle,
     ],
   );
   const activity = useMemo(() => ({ now }), [now]);

@@ -1,6 +1,7 @@
-import { useCallback, type RefObject } from "react";
+import type { RefObject } from "react";
 import type { PluginSidebarThread, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
 import type { LifecycleApi } from "./useLifecycle";
+import { useLatestCallback } from "./lib/stable-identity";
 
 export function useParkActions({
   lifecycle,
@@ -15,36 +16,29 @@ export function useParkActions({
   activeThreadIdRef: RefObject<string | null | undefined>;
   nextThreadCandidatesRef: RefObject<readonly PluginSidebarThread[]>;
 }) {
-  const parkActiveThread = useCallback(
-    async (thread: PluginSidebarThread, mutation: () => Promise<boolean>) => {
-      const parked = await mutation();
-      if (!parked || activeThreadIdRef.current !== thread.id) return;
-      const nextThread = nextThreadCandidatesRef.current.find((candidate) => candidate.id !== thread.id);
-      if (nextThread) {
-        navigate.toThread(nextThread.id);
-      } else {
-        navigate.toCompose({
-          projectId: thread.projectId,
-          focusPrompt: true,
-        });
-      }
-      onNavigate();
-    },
-    [activeThreadIdRef, navigate, nextThreadCandidatesRef, onNavigate],
-  );
-
-  const parkThread = useCallback(
+  const parkActiveThread = async (thread: PluginSidebarThread, mutation: () => Promise<boolean>) => {
+    const parked = await mutation();
+    if (!parked || activeThreadIdRef.current !== thread.id) return;
+    const nextThread = nextThreadCandidatesRef.current.find((candidate) => candidate.id !== thread.id);
+    if (nextThread) {
+      navigate.toThread(nextThread.id);
+    } else {
+      navigate.toCompose({
+        projectId: thread.projectId,
+        focusPrompt: true,
+      });
+    }
+    onNavigate();
+  };
+  const parkThread = useLatestCallback(
     (thread: PluginSidebarThread) => void parkActiveThread(thread, () => lifecycle.park(thread.id)),
-    [parkActiveThread, lifecycle],
   );
-  const settleThread = useCallback(
+  const settleThread = useLatestCallback(
     (thread: PluginSidebarThread) => void parkActiveThread(thread, () => lifecycle.settle(thread.id)),
-    [parkActiveThread, lifecycle],
   );
-  const snoozeThread = useCallback(
+  const snoozeThread = useLatestCallback(
     (thread: PluginSidebarThread, until: number, deferredInteractionId?: string) =>
       void parkActiveThread(thread, () => lifecycle.snooze(thread.id, until, deferredInteractionId)),
-    [parkActiveThread, lifecycle],
   );
   return { parkThread, settleThread, snoozeThread };
 }

@@ -21,32 +21,54 @@ vi.mock("./SnoozeSelect", async (importOriginal) => {
 
 await loadInboxApp();
 
+const THREAD_IDS = Array.from({ length: 40 }, (_, index) => `thr_${index}`);
+
+function manyThreads() {
+  return [
+    ...THREAD_IDS.map((id, index) => thread({ id, title: `Thread ${id}`, createdAt: 1000 - index })),
+    ...[0, 1, 2].map((index) =>
+      thread({
+        id: `thr_hidden_${index}`,
+        title: `Finished worker ${index}`,
+        parentThreadId: `thr_${index}`,
+        originPluginId: "work",
+        isHidden: true,
+      }),
+    ),
+  ];
+}
+
 describe("ThreadInbox", () => {
   // Opening another thread is the most frequent sidebar change. Rows the
   // switch does not touch must not render again, or every switch pays for
   // the whole list.
   it("re-renders only the rows whose active state changes when another thread opens", () => {
-    const props = { ...listProps, activeThreadId: "thr_a" };
+    const props = { ...listProps, activeThreadId: "thr_0" };
     const rendered = renderSlot(inbox, props, {
       sidebarThreads: {
         status: "ready",
-        threads: ["a", "b", "c", "d", "e"].map((id, index) =>
-          thread({ id: `thr_${id}`, title: `Thread ${id}`, createdAt: 100 - index }),
-        ),
+        threads: manyThreads(),
         projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
       },
       providers: { status: "ready", providers: defaultProviders },
       rpc: { listLifecycle: () => ({ rows: [] }) },
     });
-    expect(screen.getByRole("link", { name: "Thread a" }).getAttribute("aria-current")).toBe("page");
-    expect(rowRenders.count).toBeGreaterThanOrEqual(5);
+    expect(screen.getByRole("link", { name: "Thread thr_0" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.queryByText("Finished worker 0")).toBeNull();
+    expect(rowRenders.count).toBeGreaterThanOrEqual(THREAD_IDS.length);
 
-    rowRenders.count = 0;
     const InboxComponent = inbox.component;
-    rendered.rerender(<InboxComponent {...props} activeThreadId="thr_b" />);
+    for (const [from, to] of [
+      ["thr_0", "thr_7"],
+      ["thr_7", "thr_21"],
+      ["thr_21", "thr_0"],
+    ] as const) {
+      rowRenders.count = 0;
+      rendered.rerender(<InboxComponent {...props} activeThreadId={to} />);
 
-    expect(screen.getByRole("link", { name: "Thread b" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: "Thread a" }).getAttribute("aria-current")).toBeNull();
-    expect(rowRenders.count).toBeLessThanOrEqual(2);
+      expect(screen.getByRole("link", { name: `Thread ${to}` }).getAttribute("aria-current")).toBe("page");
+      expect(screen.getByRole("link", { name: `Thread ${from}` }).getAttribute("aria-current")).toBeNull();
+      expect(rowRenders.count).toBeLessThanOrEqual(2);
+    }
   });
 });

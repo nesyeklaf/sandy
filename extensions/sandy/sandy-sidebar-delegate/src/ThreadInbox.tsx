@@ -1,6 +1,7 @@
 import { useSidebarThreads, useProviders, useThreadPullRequestsByEnvironment } from "./sandy-sdk";
 import { STORAGE_KEYS } from "./lib/storage-keys";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { shareArray, shareArrayMap, useSharedValue } from "./lib/stable-identity";
 import { useSandyNavigate, type PluginSidebarThread, type PluginThreadListProps } from "@sandy-sdk/plugin-sdk/app";
 import { useInboxShelfThreads } from "./useInboxShelfThreads";
 import { createDragReorderHandler } from "./drag-reorder";
@@ -82,11 +83,12 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const hideFinishedSubagents =
     sidebarSettings?.hideFinishedSubagents ?? DEFAULT_SIDEBAR_SETTINGS.hideFinishedSubagents;
   const taggedThreads = useTagFilteredThreads(allThreads);
-  const threads = useMemo(
+  const visibleThreads = useMemo(
     () =>
       hideFinishedSubagents ? withoutFinishedDelegateChildren(taggedThreads, activeThreadId ?? null) : taggedThreads,
     [taggedThreads, hideFinishedSubagents, activeThreadId],
   );
+  const threads = useSharedValue(visibleThreads, shareArray);
   const workingSince = useWorkingSince(threads);
   const { providers } = useProviders();
   const navigate = useSandyNavigate();
@@ -118,10 +120,11 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const pullRequests = useThreadPullRequestsByEnvironment(threads);
   const providerById = useMemo(() => new Map(providers.map((provider) => [provider.id, provider])), [providers]);
   const childDisplay = useChildThreadDisplayValue(sidebarSettings, providerById);
-  const childrenByParentId = useMemo(
+  const builtChildrenByParentId = useMemo(
     () => childThreadsByParent(threads, childDisplay.sort),
     [threads, childDisplay.sort],
   );
+  const childrenByParentId = useSharedValue(builtChildrenByParentId, shareArrayMap);
   useEffect(() => {
     // A parent whose only children are hidden delegate children has none until
     // the server's list arrives; pruning before then would forget its expansion.
