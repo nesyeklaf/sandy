@@ -23,6 +23,13 @@ The file is re-read on each call (cached by mtime/size/inode).
 Always allowed: `*stage_(start|status|submit|advance|propose_force)` tools, `*autopilot_submit` (pi/autopilot's step
 answer) and `sandy work track ...` bash commands.
 
+## Track skills on read
+
+A `read` of a `SKILL.md` whose frontmatter sets `metadata.dialect` returns, while a `stage_start` tool is available,
+only the frontmatter, the prose before the first stage with the run inputs as plain lines, and the
+`stage_start({skill, inputs})` call (`renderTrackSkillRead` in `packages/skill-dialect`, imported by relative path). The
+stages reach the agent through `stage_status`. Without `stage_start` (outside Sandy) the file stays raw.
+
 ## Lease ticket
 
 The guard also carries the agent's lease ticket (sandy/work/track/docs/design-v2.md §8): it takes it from the policy file when
