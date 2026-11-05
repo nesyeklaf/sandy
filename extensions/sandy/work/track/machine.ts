@@ -1,8 +1,36 @@
 // The stage machine: its definition (a skill's stages.json or an ad-hoc track) and the pure rule helpers.
 // The per-thread run state and its transitions live in run.ts. No sandy API here, so it is testable with node --test.
+import { condRefs, DONE_STAGE, INPUT_SCOPE, parseType, RESERVED_STAGE_IDS, type Cond, type Segment } from "@sandy/skill-dialect/runtime";
 import { z } from "zod";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9_-]{0,47}$/, "lowercase id: a-z 0-9 _ -");
+const fieldName = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$/, "name: A-Z a-z 0-9 _ -, at most 48 characters");
+const valueType = z.string().refine((type) => parseType(type).ok, { message: "unknown value type" });
+
+export const condSchema: z.ZodType<Cond> = z.lazy(() =>
+  z.union([
+    z.object({ fn: z.literal("present"), ref: z.string().min(1) }).strict(),
+    z.object({ fn: z.enum(["equals", "any", "all"]), ref: z.string().min(1), value: z.string() }).strict(),
+    z.object({ fn: z.literal("not"), arg: condSchema }).strict(),
+    z.object({ fn: z.enum(["and", "or"]), args: z.array(condSchema).min(2) }).strict(),
+  ]),
+);
+
+const segmentSchema: z.ZodType<Segment> = z.lazy(() =>
+  z.union([
+    z.object({ type: z.literal("text"), text: z.string() }).strict(),
+    z.object({ type: z.literal("ref"), ref: z.string().min(1), list: z.string().min(1).optional() }).strict(),
+    z.object({ type: z.literal("if"), cond: condSchema, then: z.array(segmentSchema), else: z.array(segmentSchema) }).strict(),
+  ]),
+);
+
+const deriveSchema = z
+  .object({
+    name: fieldName,
+    type: valueType,
+    cases: z.array(z.object({ value: z.string().min(1), when: condSchema.optional() }).strict()).min(1),
+  })
+  .strict();
 
 export const allowSchema = z
   .object({
@@ -42,7 +70,7 @@ export const ruleSchema = z.discriminatedUnion("type", [
 export type Rule = z.infer<typeof ruleSchema>;
 
 const fieldSchema = z
-  .object({ name: id, description: z.string().optional(), optional: z.boolean().optional() })
+  .object({ name: fieldName, description: z.string().optional(), optional: z.boolean().optional(), type: valueType.optional() })
   .strict();
 
 export const stageSchema = z
@@ -68,13 +96,19 @@ export const stageSchema = z
             when: z.string().optional(),
             /** Extra rules for this branch only, checked after the stage gate. */
             gate: z.array(ruleSchema).optional(),
+            cond: condSchema.optional(),
+            max: z.number().int().min(1).optional(),
+            exceeded: z.literal("owner").optional(),
           })
           .strict(),
       )
       .default([]),
+    template: z.array(segmentSchema).optional(),
+    derive: z.array(deriveSchema).optional(),
   })
   .strict();
 export type Stage = z.infer<typeof stageSchema>;
+export type Edge = Stage["next"][number];
 
 export const machineSchema = z
   .object({
@@ -84,6 +118,8 @@ export const machineSchema = z
     start: id.optional(),
     /** Applied to every stage that does not set its own allow. */
     allow: allowSchema.optional(),
+    inputs: z.array(fieldSchema).optional(),
+    result: z.array(z.object({ name: fieldName, from: z.string().min(1) }).strict()).optional(),
     stages: z.array(stageSchema).min(1).max(40),
   })
   .strict()
@@ -91,21 +127,32 @@ export const machineSchema = z
     const ids = new Set<string>();
     for (const stage of machine.stages) {
       if (ids.has(stage.id)) ctx.addIssue({ code: "custom", message: `duplicate stage id "${stage.id}"` });
+      if (RESERVED_STAGE_IDS.includes(stage.id)) ctx.addIssue({ code: "custom", message: `"${stage.id}" is reserved and cannot be a stage id` });
       ids.add(stage.id);
     }
     if (machine.start !== undefined && !ids.has(machine.start))
       ctx.addIssue({ code: "custom", message: `start "${machine.start}" is not a stage` });
+    const produces = (ref: string): boolean => {
+      const [from, name] = ref.split(".");
+      if (from === INPUT_SCOPE) return (machine.inputs ?? []).some((i) => i.name === name);
+      const source = machine.stages.find((s) => s.id === from);
+      return source !== undefined && (source.outputs.some((o) => o.name === name) || (source.derive ?? []).some((d) => d.name === name));
+    };
     for (const stage of machine.stages) {
-      for (const edge of stage.next)
-        if (!ids.has(edge.to)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" is not a stage` });
-      for (const input of stage.inputs) {
-        const [from, name] = input.split(".");
-        if (name === undefined) continue;
-        const source = machine.stages.find((s) => s.id === from);
-        if (source === undefined || !source.outputs.some((o) => o.name === name))
-          ctx.addIssue({ code: "custom", message: `stage "${stage.id}": input "${input}" names no output` });
+      for (const edge of stage.next) {
+        if (edge.to !== DONE_STAGE && !ids.has(edge.to)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" is not a stage` });
+        if (edge.exceeded !== undefined && edge.max === undefined)
+          ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" sets exceeded without max` });
       }
+      for (const input of stage.inputs) {
+        if (input.split(".")[1] === undefined) continue;
+        if (!produces(input)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": input "${input}" names no output` });
+      }
+      for (const ref of stage.next.flatMap((e) => (e.cond === undefined ? [] : condRefs(e.cond))))
+        if (!produces(ref)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": condition reads "${ref}", which names no output` });
     }
+    for (const field of machine.result ?? [])
+      if (!produces(field.from)) ctx.addIssue({ code: "custom", message: `result "${field.name}" reads "${field.from}", which names no output` });
   });
 export type Machine = z.infer<typeof machineSchema>;
 
