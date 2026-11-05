@@ -5,6 +5,7 @@ import type { ExtensionAPI, ExecResult } from '@earendil-works/pi-coding-agent';
 import { LEASE_MARKER, LEASE_METERED, latestMarker, unreportedTickets, usageForTicket, type SessionEntryLike } from '../../autopilot/usage.ts';
 import { decide, parsePolicy, stateDir, type Env, type Policy, type PolicyError } from './policy.ts';
 import { workCliArgs } from '../../sandy-cli.ts';
+import { trackSkillRead } from './skill-read.ts';
 
 type Cached = { key: string; policy: Policy | PolicyError };
 
@@ -132,6 +133,8 @@ export default function stageGuardExtension(
   });
 
   pi.on('tool_result', (event, ctx) => {
+    const skillView = trackSkillRead(event, ctx.cwd, () => pi.getAllTools());
+    if (skillView !== undefined) return { content: [{ type: 'text', text: skillView }] };
     if (event.isError || !TICKET_RESULT.test(event.toolName)) return undefined;
     const text = event.content.map(c => (c.type === 'text' ? c.text : '')).join('\n');
     const found = TICKET_LINE.exec('\n' + text)?.[1];
