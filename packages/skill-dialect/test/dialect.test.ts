@@ -9,6 +9,7 @@ import {
   evaluate,
   formatProblem,
   parseSkill,
+  readSkillIo,
   renderPreamble,
   renderStage,
   renderTrackSkillRead,
@@ -133,6 +134,95 @@ describe("think-it-through", () => {
     expect(
       renderTrackSkillRead("---\nname: plain\n---\n# Plain\n"),
     ).toBeUndefined();
+  });
+});
+
+describe("top-level IO", () => {
+  const plain = [
+    "---",
+    "name: summarize",
+    "description: Summarize a page",
+    "---",
+    "# Summarize",
+    "",
+    '{% input name="Page" type="url" description="Page to read" /%}',
+    '{% input name="Notes" type="file" optional=true /%}',
+    '{% output name="Summary" type="file(docs/summary.md)" description="The summary" /%}',
+    '{% output name="Tone" type="choice(dry, warm)" /%}',
+    "",
+    "Read the page and write the summary.",
+    "",
+  ].join("\n");
+
+  it("reads inputs and outputs of a skill without stages", () => {
+    expect(readSkillIo(plain)).toEqual({
+      inputs: [
+        { name: "Page", type: "url", description: "Page to read" },
+        { name: "Notes", type: "file", optional: true },
+      ],
+      outputs: [
+        {
+          name: "Summary",
+          type: "file(docs/summary.md)",
+          description: "The summary",
+        },
+        { name: "Tone", type: "choice(dry, warm)" },
+      ],
+      problems: [],
+    });
+  });
+
+  it("types the results of a staged skill from the stage outputs they name", () => {
+    const io = readSkillIo(thinkItThrough, "think-it-through.md");
+    expect(io.problems).toEqual([]);
+    expect(io.inputs.map((i) => i.name)).toEqual(["Task", "Choice"]);
+    expect(io.outputs.map((o) => o.name)).toEqual(["Pick", "Premortem"]);
+    const pick = stage(compiled(thinkItThrough), "weigh").outputs.find((o) => o.name === "Pick");
+    expect(io.outputs[0]?.type).toBe(pick?.type);
+  });
+
+  it("names each broken IO tag with its line and ignores every other tag", () => {
+    const source = [
+      "---",
+      "name: broken-io",
+      "---",
+      '{% input name="bad name" /%}',
+      '{% output name="Out" type="choice(a)" /%}',
+      '{% output name="Pick" type="choice(a, b)" by="owner" /%}',
+      '{% output name="Twice" /%}',
+      '{% output name="Twice" /%}',
+      '{% widget size=3 /%}',
+      "{% if $x %}",
+    ].join("\n");
+    const io = readSkillIo(source, "broken-io.md");
+    expect(io.inputs).toEqual([]);
+    expect(io.outputs).toEqual([{ name: "Twice" }]);
+    expect(io.problems.map((p) => [p.line, p.tag, p.message])).toEqual([
+      [4, "input", 'input name "bad name" is not valid'],
+      [5, "output", "a choice needs at least two values"],
+      [6, "output", 'a top-level output "Pick" cannot be picked by the owner'],
+      [8, "output", "output Twice is declared twice"],
+    ]);
+  });
+
+  it("lets a staged skill declare top-level outputs without changing its machine", () => {
+    const withOutput = thinkItThrough.replace(
+      '{% input name="Choice" type="text" /%}',
+      '{% input name="Choice" type="text" /%}\n{% output name="Decision" description="What was decided" /%}',
+    );
+    expect(compiled(withOutput)).toEqual(compiled(thinkItThrough));
+    expect(renderPreamble(withOutput)).toContain(
+      "- Output Decision (text): What was decided",
+    );
+    const owner = parseSkill(
+      withOutput.replace('name="Decision"', 'name="Decision" by="owner"'),
+      "owner.md",
+    );
+    expect(owner.ok).toBe(false);
+    if (!owner.ok)
+      expect(owner.problems.map((p) => p.message)).toEqual([
+        'a top-level output "Decision" cannot be picked by the owner',
+      ]);
   });
 });
 

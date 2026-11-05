@@ -1,5 +1,6 @@
 import { type Document, isCollection, isMap, isScalar, parseDocument, Scalar, visit, YAMLMap } from "yaml";
 import { parseIo, type IoField } from "./io.ts";
+import { readIo, writeIoTags } from "./skill-io.ts";
 
 export const DESCRIPTION_MAX = 200;
 export const IO_KINDS = ["text", "url", "file", "choice"] as const;
@@ -36,7 +37,8 @@ export type SkillFileParse =
 
 export type DraftApplication = { ok: true; content: string } | { ok: false; error: string };
 
-const METADATA_LOCK = "metadata is not a key: value map, so inputs, outputs and other metadata can only be edited in the file itself.";
+const METADATA_LOCK = "metadata is not a key: value map, so its entries can only be edited in the file itself.";
+const METADATA_IO = "Inputs and outputs come from metadata.inputs and metadata.outputs. Editing them writes {% input %} and {% output %} tags instead.";
 
 const FRONTMATTER = /^---\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/u;
 const IO_NAME = /^[A-Z][A-Za-z0-9]*$/u;
@@ -112,9 +114,9 @@ export function parseSkillFile(content: string): SkillFileParse {
   const warnings: string[] = [];
   const name = scalarText(file.doc.get("name")) ?? "";
   const description = scalarText(file.doc.get("description")) ?? "";
-  const rows: Record<IoKey, IoRow[]> = { inputs: [], outputs: [] };
   const metadata: MetadataEntry[] = [];
   const keptMetadataKeys: string[] = [];
+  const ioMetadata: Partial<Record<IoKey, string>> = {};
   const map = readMetadata(file.doc);
   const metadataLock = file.doc.has("metadata") && map === null ? METADATA_LOCK : null;
   for (const pair of map?.items ?? []) {
@@ -122,18 +124,19 @@ export function parseSkillFile(content: string): SkillFileParse {
     if (key === null) continue;
     const value = isScalar(pair.value) ? scalarText(pair.value.value) : null;
     if (key === "inputs" || key === "outputs") {
-      const parsed = parseIo(value ?? "");
-      rows[key] = parsed.fields.map(ioRow);
       if (value === null) warnings.push("metadata." + key + " is not a string; editing its rows replaces it.");
-      for (const error of parsed.errors) warnings.push("metadata." + key + ": " + error + "; editing its rows replaces it.");
+      else ioMetadata[key] = value;
       continue;
     }
     if (value === null) keptMetadataKeys.push(key);
     else metadata.push({ key, value });
   }
+  const io = readIo(content, ioMetadata);
+  if (io.source === "metadata") warnings.push(METADATA_IO);
+  for (const error of io.errors) warnings.push(error + "; editing its rows replaces it.");
   return {
     ok: true,
-    draft: { name, description, inputs: rows.inputs, outputs: rows.outputs, metadata, keptMetadataKeys, body: file.body },
+    draft: { name, description, inputs: io.inputs.map(ioRow), outputs: io.outputs.map(ioRow), metadata, keptMetadataKeys, body: file.body },
     warnings,
     metadataLock,
   };
@@ -184,7 +187,7 @@ function removalProblem(doc: Document, path: readonly string[]): string | null {
 
 function metadataEdited(before: SkillDraft, draft: SkillDraft): boolean {
   const entries = (metadata: readonly MetadataEntry[]) => JSON.stringify(metadata.filter((entry) => entry.key.trim() !== "").map((entry) => [entry.key.trim(), entry.value]));
-  return IO_KEYS.some((key) => !sameRows(draft[key], before[key])) || entries(draft.metadata) !== entries(before.metadata);
+  return entries(draft.metadata) !== entries(before.metadata);
 }
 
 export function applyDraft(base: string, draft: SkillDraft): DraftApplication {
@@ -196,21 +199,20 @@ export function applyDraft(base: string, draft: SkillDraft): DraftApplication {
   if (parsed.metadataLock !== null && metadataEdited(before, draft)) return { ok: false, error: parsed.metadataLock };
   const doc = file.doc;
   let touched = false;
+  const ioChanges: Partial<Record<IoKey, IoField[]>> = {};
   if (draft.description !== before.description) {
     setString(doc, ["description"], draft.description);
     touched = true;
   }
+  const ioChanged = IO_KEYS.some((key) => !sameRows(draft[key], before[key]));
   for (const key of IO_KEYS) {
-    if (sameRows(draft[key], before[key])) continue;
+    if (!ioChanged) continue;
+    ioChanges[key] = ioFields(draft[key]);
+    if (readMetadata(doc)?.has(key) !== true) continue;
     touched = true;
-    if (draft[key].length === 0) {
-      const problem = removalProblem(doc, ["metadata", key]);
-      if (problem !== null) return { ok: false, error: problem };
-      doc.deleteIn(["metadata", key]);
-    } else {
-      ensureMetadata(doc);
-      setString(doc, ["metadata", key], formatIoRows(draft[key]));
-    }
+    const problem = removalProblem(doc, ["metadata", key]);
+    if (problem !== null) return { ok: false, error: problem };
+    doc.deleteIn(["metadata", key]);
   }
   const next = new Map(draft.metadata.filter((entry) => entry.key.trim() !== "").map((entry) => [entry.key.trim(), entry.value] as const));
   for (const entry of before.metadata) {
@@ -233,14 +235,21 @@ export function applyDraft(base: string, draft: SkillDraft): DraftApplication {
     if (problem !== null) return { ok: false, error: problem };
     doc.delete("metadata");
   }
-  if (!touched) return { ok: true, content: file.header + draft.body };
-  let frontmatter: string;
-  try {
-    frontmatter = doc.contents === null || (isMap(doc.contents) && doc.contents.items.length === 0) ? "" : doc.toString(TO_STRING);
-  } catch (cause) {
-    return { ok: false, error: "The frontmatter cannot be written back: " + (cause instanceof Error ? cause.message : String(cause)) };
+  let content = file.header + draft.body;
+  if (touched) {
+    try {
+      const frontmatter = doc.contents === null || (isMap(doc.contents) && doc.contents.items.length === 0) ? "" : doc.toString(TO_STRING);
+      content = "---\n" + frontmatter + "---\n" + draft.body;
+    } catch (cause) {
+      return { ok: false, error: "The frontmatter cannot be written back: " + (cause instanceof Error ? cause.message : String(cause)) };
+    }
   }
-  return { ok: true, content: "---\n" + frontmatter + "---\n" + draft.body };
+  if (Object.keys(ioChanges).length === 0) return { ok: true, content };
+  try {
+    return { ok: true, content: writeIoTags(content, ioChanges) };
+  } catch (cause) {
+    return { ok: false, error: "The inputs and outputs cannot be written: " + (cause instanceof Error ? cause.message : String(cause)) };
+  }
 }
 
 export function isDraftChanged(base: string, draft: SkillDraft): boolean {

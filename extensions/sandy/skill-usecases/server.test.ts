@@ -81,6 +81,50 @@ test("state groups skills, dedupes by name, picks the first project", async () =
   ]);
 });
 
+test("skill IO comes from input and output tags, frontmatter metadata is the fallback, and reads follow the revision", async () => {
+  const files: Record<string, { content: string; revision: string }> = {
+    skill_tags: {
+      content: '---\nname: summarize\nmetadata:\n  inputs: "Ignored: text"\n---\n# Summarize\n\n{% input name="Page" type="url" /%}\n{% output name="Summary" type="file(summary.md)" /%}\n{% output name="Bad" type="choice(a)" /%}\n',
+      revision: "1".repeat(64),
+    },
+    skill_meta: { content: "---\nname: old\nmetadata:\n  inputs: \"Topic: text\"\n---\n# Old\n", revision: "2".repeat(64) },
+  };
+  const reads: string[] = [];
+  const listed = () => [
+    skillEntry("skill_tags", "summarize", "Summarize a page", { inputs: "Ignored: text" }, { revision: files.skill_tags!.revision }),
+    skillEntry("skill_meta", "old", "Old skill", { inputs: "Topic: text" }, { revision: files.skill_meta!.revision }),
+  ];
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => ({ skills: listed() }),
+        experimental_read: async ({ skillId }: { skillId: string }) => {
+          reads.push(skillId);
+          const file = files[skillId]!;
+          return { ...file, filePath: "/" + skillId + "/SKILL.md", writable: true };
+        },
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  const row = (state: any, name: string) => state.skills.find((s: any) => s.name === name);
+  let state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(row(state, "summarize").inputs, [{ name: "Page", optional: false, type: { kind: "url" } }]);
+  assert.deepEqual(row(state, "summarize").outputs, [{ name: "Summary", optional: false, type: { kind: "file", path: "summary.md" } }]);
+  assert.deepEqual(row(state, "summarize").ioErrors, ["line 10: a choice needs at least two values"]);
+  assert.deepEqual(row(state, "old").inputs, [{ name: "Topic", optional: false, type: { kind: "text" } }]);
+  assert.deepEqual(reads.sort(), ["skill_meta", "skill_tags"]);
+  reads.length = 0;
+  await harness.behavior.callRpc("state", { projectId: null });
+  assert.deepEqual(reads, []);
+  files.skill_tags = { content: files.skill_tags!.content.replace('{% output name="Bad" type="choice(a)" /%}\n', ""), revision: "3".repeat(64) };
+  state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(reads, ["skill_tags"]);
+  assert.deepEqual(row(state, "summarize").ioErrors, []);
+});
+
 test("assign persists, publishes and can be cleared", async () => {
   const harness = await boot();
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: "learn" });
@@ -337,7 +381,10 @@ async function bootSkillFlow() {
       projects: { list: async () => [{ id: "proj_1", name: "One" }] },
       skills: {
         list: async () => ({ skills: [...uxSkills, flowSkill] }),
-        experimental_read: async () => ({ ...disk, filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true }),
+        experimental_read: async ({ skillId }: { skillId: string }) =>
+          skillId === "skill_ux"
+            ? { ...disk, filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true }
+            : { content: "---\nname: " + skillId + "\n---\n# Plain\n", revision: "b".repeat(64), filePath: "/p/" + skillId + "/SKILL.md", writable: false },
         experimental_write: async (input: { content: string; revision: string }) => {
           writes.push(input);
           if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };

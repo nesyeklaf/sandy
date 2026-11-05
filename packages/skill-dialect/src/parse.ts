@@ -1447,6 +1447,165 @@ function checkCond(
   }
 }
 
+const TOP_LEVEL_TAGS: readonly string[] = [
+  "input",
+  "output",
+  "allow",
+  "result",
+  "stage",
+];
+
+function topLevelField(
+  c: Compiler,
+  node: TagNode,
+  attrs: Record<string, unknown>,
+  lines: Map<string, number>,
+): CompiledField | undefined {
+  const name = attrs.name as string;
+  if (!FIELD_NAME.test(name)) {
+    c.problem(
+      node.line,
+      node.name,
+      `${node.name} name "${name}" is not valid`,
+      "use [A-Za-z][A-Za-z0-9_]*, at most 48 characters",
+    );
+    return undefined;
+  }
+  if (lines.has(name)) {
+    c.problem(
+      node.line,
+      node.name,
+      `${node.name} ${name} is declared twice`,
+      "remove one of them",
+    );
+    return undefined;
+  }
+  lines.set(name, node.line);
+  const field: CompiledField = { name };
+  if (typeof attrs.description === "string")
+    field.description = attrs.description;
+  if (attrs.optional === true) field.optional = true;
+  const type = typeof attrs.type === "string" ? attrs.type.trim() : "text";
+  if (type !== "text") field.type = type;
+  return field;
+}
+
+function checkTopLevelOutput(
+  c: Compiler,
+  node: TagNode,
+  attrs: Record<string, unknown>,
+  field: CompiledField,
+): void {
+  const parsed = parseType(field.type ?? "text");
+  if (!parsed.ok) c.problem(node.line, "output", parsed.error, "fix type=");
+  if (attrs.by !== undefined)
+    c.problem(
+      node.line,
+      "output",
+      `a top-level output "${field.name}" cannot be picked by the owner`,
+      'remove by=, or move the output into a stage with gate="user"',
+    );
+}
+
+export type SkillIo = {
+  inputs: CompiledField[];
+  outputs: CompiledField[];
+  problems: Problem[];
+};
+
+const IO_TAGS: readonly string[] = ["input", "output", "result"];
+
+function stageOutputs(node: TagNode, into: Map<string, CompiledField>): void {
+  for (const child of node.children) {
+    if (child.kind !== "tag") continue;
+    if (child.name !== "output") {
+      stageOutputs(child, into);
+      continue;
+    }
+    const name = child.attrs.find((a) => a.name === "name")?.value;
+    if (typeof name !== "string") continue;
+    const field: CompiledField = { name };
+    for (const attr of child.attrs) {
+      if (
+        attr.name === "type" &&
+        typeof attr.value === "string" &&
+        attr.value.trim() !== "text"
+      )
+        field.type = attr.value.trim();
+      if (attr.name === "description" && typeof attr.value === "string")
+        field.description = attr.value;
+    }
+    into.set(name, field);
+  }
+}
+
+export function readSkillIo(source: string, file = "SKILL.md"): SkillIo {
+  const split = splitSource(source, file);
+  const c = new Compiler(file, split.body, split.bodyLine);
+  const nodes = c.tree(pieces(split.body, split.bodyLine));
+  const inputs: CompiledField[] = [];
+  const outputs: CompiledField[] = [];
+  const inputLines = new Map<string, number>();
+  const outputLines = new Map<string, number>();
+  const stageFields = new Map<string, Map<string, CompiledField>>();
+  const results: { name: string; from: string; line: number }[] = [];
+  for (const node of nodes) {
+    if (node.kind !== "tag") continue;
+    if (node.name === "stage") {
+      const id = node.attrs.find((a) => a.name === "id")?.value;
+      if (typeof id !== "string") continue;
+      const fields = new Map<string, CompiledField>();
+      stageOutputs(node, fields);
+      stageFields.set(id, fields);
+      continue;
+    }
+    if (!IO_TAGS.includes(node.name)) continue;
+    const attrs = c.attrs(node);
+    if (attrs === undefined) continue;
+    if (node.name === "input") {
+      const field = topLevelField(c, node, attrs, inputLines);
+      if (field === undefined) continue;
+      const parsed = parseType(field.type ?? "text");
+      if (!parsed.ok) c.problem(node.line, "input", parsed.error, "fix type=");
+      else inputs.push(field);
+    } else if (node.name === "output") {
+      const field = topLevelField(c, node, attrs, outputLines);
+      if (field === undefined) continue;
+      const before = c.problems.length;
+      checkTopLevelOutput(c, node, attrs, field);
+      if (c.problems.length === before) outputs.push(field);
+    } else {
+      const from = c.ref(
+        (attrs.from as MarkdocVariable).path,
+        node.line,
+        "result",
+      );
+      if (from !== undefined)
+        results.push({ name: attrs.name as string, from, line: node.line });
+    }
+  }
+  for (const result of results) {
+    if (outputLines.has(result.name)) {
+      c.problem(
+        result.line,
+        "result",
+        `result ${result.name} is also a top-level output`,
+        "keep one of them",
+      );
+      continue;
+    }
+    outputLines.set(result.name, result.line);
+    const [stage = "", name = ""] = result.from.split(".");
+    const field = stageFields.get(stage)?.get(name);
+    outputs.push({ ...field, name: result.name });
+  }
+  return {
+    inputs,
+    outputs,
+    problems: c.problems.filter((p) => IO_TAGS.includes(p.tag)),
+  };
+}
+
 function splitSource(
   source: string,
   file: string,
@@ -1509,6 +1668,7 @@ export function parseSkill(
   const drafts: StageDraft[] = [];
   const machineInputs: CompiledField[] = [];
   const inputLines = new Map<string, number>();
+  const outputLines = new Map<string, number>();
   const results: { line: number; from: string; name: string }[] = [];
   let machineAllow: CompiledAllow | undefined;
   let preamble = "";
@@ -1537,7 +1697,7 @@ export function parseSkill(
       c.attrs(node);
       continue;
     }
-    if (!["input", "allow", "result", "stage"].includes(node.name)) {
+    if (!TOP_LEVEL_TAGS.includes(node.name)) {
       c.problem(
         node.line,
         node.name,
@@ -1550,29 +1710,11 @@ export function parseSkill(
     if (attrs === undefined) continue;
     if (node.name === "stage") drafts.push(compileStage(c, node, attrs));
     else if (node.name === "input") {
-      const inputName = attrs.name as string;
-      if (!FIELD_NAME.test(inputName))
-        c.problem(
-          node.line,
-          "input",
-          `input name "${inputName}" is not valid`,
-          "use [A-Za-z][A-Za-z0-9_]*, at most 48 characters",
-        );
-      if (inputLines.has(inputName))
-        c.problem(
-          node.line,
-          "input",
-          `input ${inputName} is declared twice`,
-          "remove one of them",
-        );
-      inputLines.set(inputName, node.line);
-      const field: CompiledField = { name: inputName };
-      if (typeof attrs.description === "string")
-        field.description = attrs.description;
-      if (attrs.optional === true) field.optional = true;
-      const type = typeof attrs.type === "string" ? attrs.type.trim() : "text";
-      if (type !== "text") field.type = type;
-      machineInputs.push(field);
+      const field = topLevelField(c, node, attrs, inputLines);
+      if (field !== undefined) machineInputs.push(field);
+    } else if (node.name === "output") {
+      const field = topLevelField(c, node, attrs, outputLines);
+      if (field !== undefined) checkTopLevelOutput(c, node, attrs, field);
     } else if (node.name === "allow") {
       if (machineAllow !== undefined)
         c.problem(
@@ -1645,17 +1787,20 @@ export function formatProblem(problem: Problem): string {
   return `${problem.file}:${problem.line} ${problem.tag}: ${problem.message} — ${problem.fix}`;
 }
 
-function inputLine(attrs: {
-  name: string;
-  type?: string;
-  description?: string;
-  optional?: boolean;
-}): string {
+function ioLine(
+  label: "Input" | "Output",
+  attrs: {
+    name: string;
+    type?: string;
+    description?: string;
+    optional?: boolean;
+  },
+): string {
   const kind = [
     attrs.type ?? "text",
     ...(attrs.optional === true ? ["optional"] : []),
   ].join(", ");
-  return `- Input ${attrs.name} (${kind})${attrs.description === undefined ? "" : `: ${attrs.description}`}`;
+  return `- ${label} ${attrs.name} (${kind})${attrs.description === undefined ? "" : `: ${attrs.description}`}`;
 }
 
 export function renderPreamble(source: string): string {
@@ -1668,11 +1813,13 @@ export function renderPreamble(source: string): string {
     }
     const token = piece.token;
     if (token.type === "tag_open" && token.meta?.tag === "stage") break;
-    if (token.type !== "tag" || token.meta?.tag !== "input") continue;
+    const tag = token.meta?.tag;
+    if (token.type !== "tag" || (tag !== "input" && tag !== "output"))
+      continue;
     const attrs: Record<string, unknown> = {};
-    for (const a of token.meta.attributes ?? []) attrs[a.name] = a.value;
+    for (const a of token.meta?.attributes ?? []) attrs[a.name] = a.value;
     if (typeof attrs.name !== "string") continue;
-    out += `\n${inputLine({
+    out += `\n${ioLine(tag === "input" ? "Input" : "Output", {
       name: attrs.name,
       ...(typeof attrs.type === "string" ? { type: attrs.type } : {}),
       ...(typeof attrs.description === "string"

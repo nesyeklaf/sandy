@@ -46,6 +46,7 @@ function makeSkill(overrides: Partial<SkillSummary> = {}): SkillSummary {
     manageable: true,
     writable: true,
     metadata: {},
+    revision: null,
     providers: provider === null ? [] : [provider],
     duplicates: [],
     ...overrides,

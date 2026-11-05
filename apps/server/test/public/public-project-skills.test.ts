@@ -165,6 +165,10 @@ function registerSkillRpc(
   return stub;
 }
 
+function pathRevision(filePath: string): string {
+  return createHash("sha256").update(filePath).digest("hex");
+}
+
 function discovered(
   name: string,
   rootKind: DiscoveredSkill["rootKind"],
@@ -177,7 +181,7 @@ function discovered(
     rootKind,
     filePath,
     realPath: filePath,
-    contentSha256: createHash("sha256").update(filePath).digest("hex"),
+    contentSha256: pathRevision(filePath),
     linked: false,
     metadata: {},
   };
@@ -406,6 +410,7 @@ describe("public project skills route", () => {
           manageable: false,
           writable: true,
           metadata: { outputs: "Review: file(review.md)" },
+          revision: pathRevision("/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md"),
           providers: [],
           duplicates: [],
         });
@@ -516,6 +521,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/data/skills/sandy-helper/SKILL.md"),
           providers: [],
           duplicates: [],
         },
@@ -530,6 +536,7 @@ describe("public project skills route", () => {
           manageable: false,
           writable: true,
           metadata: {},
+          revision: pathRevision("/cwd/.cursor/skills/impeccable/SKILL.md"),
           providers: ["acp-cursor"],
           duplicates: [],
         },
@@ -544,6 +551,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/cwd/.claude/skills/cp/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -558,6 +566,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/home/.claude/skills/cu/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -575,6 +584,7 @@ describe("public project skills route", () => {
             inputs: "Feature: text",
             outputs: "Plan: file(plan.md)",
           },
+          revision: pathRevision("/home/.codex/skills/cx/SKILL.md"),
           providers: ["codex"],
           duplicates: [],
         },

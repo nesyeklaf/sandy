@@ -370,6 +370,7 @@ describe("Plugin detail recipe", () => {
             manageable: false,
             writable: false,
             metadata: {},
+            revision: null,
             providers: [],
             duplicates: [],
           },

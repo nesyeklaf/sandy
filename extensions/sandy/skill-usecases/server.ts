@@ -7,7 +7,7 @@ import {
   flowPrompt,
   flowReplySchema,
 } from "./ai.ts";
-import { parseIo } from "./io.ts";
+import { readIo } from "./skill-io.ts";
 import { formatProblem, parseSkill } from "@sandy/skill-dialect";
 import { check, hasErrors, type Problem } from "./check.ts";
 import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, skillInfo, useCaseSchema, type SkillFlowError, type SkillRow } from "./contract.ts";
@@ -56,6 +56,10 @@ function freeName(base: string, taken: ReadonlySet<string>): string {
 }
 
 type CachedSkill = { revision: string; generated: string; useCaseId: string };
+type SkillFile = { revision: string; content: string; filePath: string; writable: boolean };
+type ListedSkill = Awaited<ReturnType<SandyPluginApi["sdk"]["skills"]["list"]>>["skills"][number];
+
+const READ_BATCH = 8;
 
 function slug(label: string, taken: ReadonlySet<string>): string {
   const base = label.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "").slice(0, 30) || "area";
@@ -84,24 +88,46 @@ export default async function plugin(sandy: SandyPluginApi) {
   }
 
   const skillCache = new Map<string, CachedSkill>();
+  const fileCache = new Map<string, SkillFile>();
+
+  async function skillFile(projectId: string, skill: Pick<ListedSkill, "id" | "revision">): Promise<SkillFile> {
+    const cached = fileCache.get(skill.id);
+    if (cached !== undefined && skill.revision !== null && cached.revision === skill.revision) return cached;
+    const file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId: skill.id });
+    const read = { revision: file.revision, content: file.content, filePath: file.filePath, writable: file.writable };
+    fileCache.set(skill.id, read);
+    return read;
+  }
+
+  async function skillFiles(projectId: string, skills: readonly ListedSkill[]): Promise<Map<string, SkillFile | Error>> {
+    const out = new Map<string, SkillFile | Error>();
+    for (let index = 0; index < skills.length; index += READ_BATCH) {
+      const batch = skills.slice(index, index + READ_BATCH);
+      const results = await Promise.allSettled(batch.map((skill) => skillFile(projectId, skill)));
+      batch.forEach((skill, at) => {
+        const result = results[at];
+        if (result === undefined) return;
+        out.set(skill.id, result.status === "fulfilled" ? result.value : result.reason instanceof Error ? result.reason : new Error(String(result.reason)));
+      });
+    }
+    return out;
+  }
 
   async function readPositions(): Promise<Record<string, Positions>> {
     const parsed = storedPositions.safeParse(await sandy.storage.kv.get(POSITIONS_KEY));
     return parsed.success ? parsed.data : {};
   }
 
-  async function skillFlows(projectId: string, rows: SkillRow[]): Promise<{ flows: Flow[]; errors: SkillFlowError[] }> {
+  async function skillFlows(projectId: string, rows: SkillRow[], files: ReadonlyMap<string, SkillFile | Error>): Promise<{ flows: Flow[]; errors: SkillFlowError[] }> {
     const positions = await readPositions();
     const infos = rows.map(skillInfo);
     const flows: Flow[] = [];
     const errors: SkillFlowError[] = [];
     for (const row of rows) {
       if (!row.dialect) continue;
-      let file;
-      try {
-        file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId: row.id });
-      } catch (cause) {
-        errors.push({ skillId: row.id, name: row.name, problems: [cause instanceof Error ? cause.message : String(cause)] });
+      const file = files.get(row.id) ?? (await skillFile(projectId, { id: row.id, revision: null }).catch((cause: unknown) => (cause instanceof Error ? cause : new Error(String(cause)))));
+      if (file instanceof Error) {
+        errors.push({ skillId: row.id, name: row.name, problems: [file.message] });
         continue;
       }
       const result = skillToFlow(file.content, infos, { useCaseId: row.useCaseId, positions: positions[row.name] });
@@ -124,8 +150,8 @@ export default async function plugin(sandy: SandyPluginApi) {
     const legacy = await readFlows();
     const selected = await resolveProjectId(projectId);
     if (selected === null) return { flows: legacy, errors: [], rows: [] };
-    const rows = await skillRows(selected, await readUseCases(), await readAssignments());
-    const fromSkills = await skillFlows(selected, rows);
+    const { rows, files } = await skillRows(selected, await readUseCases(), await readAssignments());
+    const fromSkills = await skillFlows(selected, rows, files);
     const names = new Set(fromSkills.flows.map((flow) => flow.id));
     return { flows: [...fromSkills.flows, ...legacy.filter((flow) => !names.has(flow.id))], errors: fromSkills.errors, rows };
   }
@@ -139,8 +165,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     return (projects.find((project) => project.id === projectId) ?? projects[0])?.id ?? null;
   }
 
-  async function skillRows(projectId: string, useCases: UseCase[], assignments: Record<string, string>): Promise<SkillRow[]> {
+  async function skillRows(projectId: string, useCases: UseCase[], assignments: Record<string, string>): Promise<{ rows: SkillRow[]; files: Map<string, SkillFile | Error> }> {
     const listed = await sandy.sdk.skills.list({ projectId, environmentId: null });
+    const unique = listed.skills.filter((skill, index) => listed.skills.findIndex((other) => other.name === skill.name) === index);
+    const files = await skillFiles(projectId, unique);
     const sourcesByName = new Map<string, Set<string>>();
     for (const skill of listed.skills) {
       const sources = sourcesByName.get(skill.name) ?? new Set<string>();
@@ -155,8 +183,8 @@ export default async function plugin(sandy: SandyPluginApi) {
       seen.add(skill.name);
       const { useCaseId, manual } = resolveUseCase(skill, useCases, assignments);
       const metadata = skillMetadata.parse(skill.metadata);
-      const inputs = parseIo(metadata.inputs);
-      const outputs = parseIo(metadata.outputs);
+      const file = files.get(skill.id);
+      const io = readIo(file === undefined || file instanceof Error ? "" : file.content, metadata);
       rows.push({
         id: skill.id,
         name: skill.name,
@@ -167,13 +195,13 @@ export default async function plugin(sandy: SandyPluginApi) {
         useCaseId,
         manual,
         sources: [...(sourcesByName.get(skill.name) ?? [])].sort(),
-        inputs: inputs.fields,
-        outputs: outputs.fields,
-        ioErrors: [...inputs.errors.map((error) => "inputs: " + error), ...outputs.errors.map((error) => "outputs: " + error)],
+        inputs: io.inputs,
+        outputs: io.outputs,
+        ioErrors: io.errors,
         dialect: metadata.dialect !== undefined,
       });
     }
-    return rows.sort((a, b) => a.name.localeCompare(b.name));
+    return { rows: rows.sort((a, b) => a.name.localeCompare(b.name)), files };
   }
 
   function changed() {
@@ -322,7 +350,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       const selected = await resolveProjectId(projectId);
       if (selected === null) throw new Error("No project available.");
       const useCases = await readUseCases();
-      const rows = (await skillRows(selected, useCases, await readAssignments())).filter((row) => !row.manual);
+      const rows = (await skillRows(selected, useCases, await readAssignments())).rows.filter((row) => !row.manual);
       if (rows.length === 0) return { proposals: [] };
       const reply = await askJson(
         sandy,
@@ -393,7 +421,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (selected === null) throw new Error("No project available.");
       const useCases = await readUseCases();
       const labels = areaLabels(useCases);
-      const rows = await skillRows(selected, useCases, await readAssignments());
+      const { rows } = await skillRows(selected, useCases, await readAssignments());
       const reply = await askJson(
         sandy,
         selected,
@@ -433,7 +461,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       const { area } = skillAreasInput.parse(params);
       const useCases = await readUseCases();
       const labels = areaLabels(useCases);
-      const rows = await skillRows(ctx.projectId, useCases, await readAssignments());
+      const { rows } = await skillRows(ctx.projectId, useCases, await readAssignments());
       const wanted = area?.trim().toLowerCase();
       const sections: string[] = [];
       for (const [id, label] of labels) {

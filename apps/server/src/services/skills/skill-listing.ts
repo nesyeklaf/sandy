@@ -466,6 +466,7 @@ export function summarizeSkillRegistrations(
       .flatMap((candidate) => groups.get(candidate) ?? []);
     summaries.push({
       ...toSkillRegistration(entry),
+      revision: entry.contentSha256,
       providers: [
         ...new Set(
           group.flatMap((skill) =>

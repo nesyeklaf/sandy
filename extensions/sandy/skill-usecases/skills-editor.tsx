@@ -237,7 +237,7 @@ function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow })
           </p>
         )}
         {(["inputs", "outputs"] as const).map((key: IoKey) => (
-          <IoRows key={key} title={key === "inputs" ? "Inputs" : "Outputs"} rows={draft[key]} disabled={!writable || metadataLock !== null} onChange={(rows) => edit({ [key]: rows })} />
+          <IoRows key={key} title={key === "inputs" ? "Inputs" : "Outputs"} rows={draft[key]} disabled={!writable} onChange={(rows) => edit({ [key]: rows })} />
         ))}
         <MetadataRows entries={draft.metadata} kept={draft.keptMetadataKeys} disabled={!writable || metadataLock !== null} onChange={(metadata) => edit({ metadata })} />
         <div className="space-y-1">

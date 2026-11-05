@@ -370,6 +370,7 @@ export const skillDuplicateSchema = skillRegistrationSchema
 export type SkillDuplicate = z.infer<typeof skillDuplicateSchema>;
 
 export const skillSummarySchema = skillRegistrationSchema.extend({
+  revision: skillRevisionSchema.nullable(),
   providers: z.array(skillProviderSchema),
   duplicates: z.array(skillDuplicateSchema),
 });
