@@ -33,7 +33,7 @@
     "@sandy/tsconfig": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/node": "^22.0.0",
-    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
+    "tsrs": "catalog:",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.1"
   }

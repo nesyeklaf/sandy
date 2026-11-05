@@ -42,6 +42,14 @@ function alpha(color: string): number {
   return Number(match[1]);
 }
 
+const SAND_FAMILY = new Set<string>(["sand", "sandy"]);
+
+function rgbOf(hex: string): string {
+  return [1, 3, 5]
+    .map((start) => parseInt(hex.slice(start, start + 2), 16))
+    .join(", ");
+}
+
 function contrastFromCanvas(
   tokens: NativeThemeTokens,
   key: keyof NativeThemeTokens,
@@ -134,11 +142,18 @@ describe("generate-native-theme", () => {
           expect(tokens.background).toBe(tokens.canvas);
         });
 
-        it("orders the ink ramp: sidebar < fills < border <= input", () => {
+        const sidebarBelowFills = !(SAND_FAMILY.has(id) && mode === "dark");
+        const orderTitle = sidebarBelowFills
+          ? "orders the ink ramp: sidebar < fills < border <= input"
+          : "orders the ink ramp: fills < border <= input, the sand and sandy dark sidebar sits above the fills";
+
+        it(orderTitle, () => {
           const sidebar = contrastFromCanvas(tokens, "sidebar");
           const border = contrastFromCanvas(tokens, "border");
           for (const fill of ["secondary", "accent", "muted"] as const) {
-            expect(sidebar).toBeLessThan(contrastFromCanvas(tokens, fill));
+            if (sidebarBelowFills) {
+              expect(sidebar).toBeLessThan(contrastFromCanvas(tokens, fill));
+            }
             expect(contrastFromCanvas(tokens, fill)).toBeLessThan(border);
           }
           expect(border).toBeLessThanOrEqual(
@@ -146,16 +161,18 @@ describe("generate-native-theme", () => {
           );
         });
 
-        it("makes the pressed fill stronger than hover, both translucent ink", () => {
+        const stateTitle = SAND_FAMILY.has(id)
+          ? "makes the pressed fill stronger than hover, both translucent timeline accent for sand and sandy"
+          : "makes the pressed fill stronger than hover, both translucent ink";
+
+        it(stateTitle, () => {
           expect(alpha(tokens.stateActive)).toBeGreaterThan(
             alpha(tokens.stateHover),
           );
-          const inkRgb = tokens.ink
-            .match(/[0-9a-f]{2}/g)
-            ?.map((part) => parseInt(part, 16));
-          expect(
-            tokens.stateHover.startsWith(`rgba(${inkRgb?.join(", ")}, `),
-          ).toBe(true);
+          const base = SAND_FAMILY.has(id)
+            ? rgbOf(tokens.timelineAccent)
+            : rgbOf(tokens.ink);
+          expect(tokens.stateHover.startsWith(`rgba(${base}, `)).toBe(true);
         });
 
         it("keeps one grouped surface flush with the canvas and lifts the other toward the ink", () => {

@@ -68,10 +68,8 @@ function shouldRebuildNativeModule(errorMessage) {
   );
 }
 
-function getRepairedNativeModuleError(name, pkgJsonPath) {
+function getFreshProcessNativeModuleError(name, pkgJsonPath) {
   try {
-    // A failed dlopen remains cached for the life of the process. Verify a
-    // replacement binary in a fresh process so the old handle cannot poison it.
     execFileSync(
       process.execPath,
       [
@@ -111,7 +109,9 @@ function detachHardlinkedBinary(binaryPath) {
   // pnpm can hardlink this file across worktrees. An installer writes the new
   // ABI into the existing inode, so every linked checkout changes with it.
   // Replace this checkout's link with a private copy before the repair starts.
-  const tempDir = mkdtempSync(join(dirname(binaryPath), ".sandy-native-detach-"));
+  const tempDir = mkdtempSync(
+    join(dirname(binaryPath), ".sandy-native-detach-"),
+  );
   const detachedPath = join(tempDir, basename(binaryPath));
   let originalWasUnlinked = false;
   try {
@@ -137,8 +137,8 @@ export function ensureNativeModules({
   modules = nativeModules,
   createRequire: createRequireImpl = createRequire,
   execFileSync: execFileSyncImpl = execFileSync,
-  verifyRepairedNativeModule:
-    verifyRepairedNativeModuleImpl = getRepairedNativeModuleError,
+  verifyNativeModuleInFreshProcess:
+    verifyInFreshProcess = getFreshProcessNativeModuleError,
   log = console.log,
 } = {}) {
   for (const { name, resolveFrom, binaryPath } of modules) {
@@ -154,17 +154,18 @@ export function ensureNativeModules({
         `[ensure-native-modules] Detached hardlinked ${name} binary before verification`,
       );
     }
-    try {
-      verifyNativeModule(name, requireModule);
-    } catch (err) {
-      const message = formatThrownValue(err);
-      if (checkOnly) {
+    if (checkOnly) {
+      try {
+        verifyNativeModule(name, requireModule);
+      } catch (err) {
         throw new Error(
-          `[ensure-native-modules] ${name} failed validation: ${message}. Run pnpm start --dryrun to repair it before launch.`,
+          `[ensure-native-modules] ${name} failed validation: ${formatThrownValue(err)}. Run pnpm start --dryrun to repair it before launch.`,
         );
       }
-      if (!shouldRebuildNativeModule(message)) throw err;
-
+      continue;
+    }
+    const initialError = verifyInFreshProcess(name, pkgJsonPath);
+    if (initialError !== null) {
       const pkgRequire = createRequireImpl(pkgJsonPath);
       log(
         `[ensure-native-modules] Installing prebuilt ${name} for Node ${process.versions.node} (ABI ${process.versions.modules})`,
@@ -189,10 +190,7 @@ export function ensureNativeModules({
         );
       }
 
-      const prebuildVerifyError = verifyRepairedNativeModuleImpl(
-        name,
-        pkgJsonPath,
-      );
+      const prebuildVerifyError = verifyInFreshProcess(name, pkgJsonPath);
       if (prebuildVerifyError === null) {
         if (!prebuildInstalled) {
           log(
@@ -228,10 +226,7 @@ export function ensureNativeModules({
         },
       );
 
-      const rebuildVerifyError = verifyRepairedNativeModuleImpl(
-        name,
-        pkgJsonPath,
-      );
+      const rebuildVerifyError = verifyInFreshProcess(name, pkgJsonPath);
       if (rebuildVerifyError !== null) {
         throw new Error(
           `[ensure-native-modules] ${name} still failed to load after rebuild: ${rebuildVerifyError}`,

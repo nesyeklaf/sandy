@@ -3,6 +3,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
+    execArgv:
+      Number(process.versions.node.split(".")[0]) >= 25
+        ? ["--no-webstorage"]
+        : [],
     silent: "passed-only",
     name: "sandy-plugin-scheduled-send",
     include: ["**/*.test.{ts,tsx}"],

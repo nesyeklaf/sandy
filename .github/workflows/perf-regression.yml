@@ -34,7 +34,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PRIMARY_NODE_VERSION: "22.x"
   PNPM_VERSION: "9.15.0"
 
 jobs:
@@ -48,7 +47,6 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
       - name: Restore Turbo cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9

@@ -4884,7 +4884,9 @@ describe("ComposerBox mention triggers", () => {
     });
 
     await focusPromptEnd(promptBoxRef);
-    const workspaceLabel = await screen.findByText("Workspace");
+    const workspaceLabel = await screen.findByText("Workspace", {
+      selector: "span",
+    });
     const menu = workspaceLabel.closest(".overflow-hidden");
     if (!(menu instanceof HTMLElement)) {
       throw new Error("Expected mention menu");
@@ -5732,13 +5734,17 @@ describe("ComposerBox prompt actions", () => {
 
     await selectPromptAction("Plugin");
     await waitFor(() =>
-      expect(latestValue(changes)).toBe("Create a new sandy plugin that wraps CI"),
+      expect(latestValue(changes)).toBe(
+        "Create a new sandy plugin that wraps CI",
+      ),
     );
     expect(latestChange(changes)?.mentions).toEqual([]);
 
     await selectPromptAction("Plugin");
 
-    expect(latestValue(changes)).toBe("Create a new sandy plugin that wraps CI");
+    expect(latestValue(changes)).toBe(
+      "Create a new sandy plugin that wraps CI",
+    );
   });
 
   it("pastes prompt action command tokens as plan and goal pills", async () => {
@@ -6019,7 +6025,9 @@ describe("ComposerBox command typeahead navigation", () => {
     });
 
     await focusPromptEnd(promptBoxRef);
-    const sectionLabel = await screen.findByText("Commands");
+    const sectionLabel = await screen.findByText("Commands", {
+      selector: "span",
+    });
     const menu = sectionLabel.closest(".overflow-hidden");
     if (!(menu instanceof HTMLElement)) {
       throw new Error("Expected command menu");
@@ -6099,7 +6107,9 @@ describe("ComposerBox command typeahead navigation", () => {
     });
 
     await focusPromptEnd(promptBoxRef);
-    const sectionLabel = await screen.findByText("User commands");
+    const sectionLabel = await screen.findByText("User commands", {
+      selector: "span",
+    });
     const menu = sectionLabel.closest(".overflow-hidden");
     if (!(menu instanceof HTMLElement)) {
       throw new Error("Expected command menu");
@@ -6111,7 +6121,7 @@ describe("ComposerBox command typeahead navigation", () => {
     ).toEqual(["plan", "plan-b", "plugin:plan", "planner", "planning-doc"]);
     expect(
       within(menu)
-        .getAllByText(/^(User commands|Skills)$/)
+        .getAllByText(/^(User commands|Skills)$/, { selector: "span" })
         .map((label) => label.textContent),
     ).toEqual(["User commands", "Skills"]);
 

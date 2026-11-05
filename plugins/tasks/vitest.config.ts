@@ -8,6 +8,10 @@ export default defineConfig({
     },
   },
   test: {
+    execArgv:
+      Number(process.versions.node.split(".")[0]) >= 25
+        ? ["--no-webstorage"]
+        : [],
     silent: "passed-only",
     name: "sandy-plugin-tasks",
     include: ["**/*.test.{ts,tsx}"],

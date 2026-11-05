@@ -34,7 +34,7 @@
     "@types/node": "^22.0.0",
     "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.0",
-    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
+    "tsrs": "catalog:",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.1"
   },

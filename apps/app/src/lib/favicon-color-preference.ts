@@ -106,9 +106,6 @@ export function getFaviconGlyphHref(): string {
   return import.meta.env.DEV ? "/favicon-32x32-dev.png" : "/favicon-32x32.png";
 }
 
-// The default favicon is the colour mark and reads on light and dark tabs.
-// A chosen colour fills the one-colour glyph (`-mono`), not the colour mark,
-// whose dune layers would flatten into a plain disc.
 function getFaviconVariantSuffix(
   colorPreference: FaviconColorPreference,
 ): string {

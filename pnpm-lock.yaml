@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    tsrs:
+      specifier: 0.22.0-ts7.1.0-beta
+      version: 0.22.0-ts7.1.0-beta
+
 overrides:
   zod: 4.6.5
   '@expo/metro-config>lightningcss': 1.30.1
@@ -72,8 +78,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.3
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -89,6 +95,63 @@ importers:
 
   apps/app:
     dependencies:
+      '@dnd-kit/core':
+        specifier: ^6.3.1
+        version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@dnd-kit/sortable':
+        specifier: ^10.0.0
+        version: 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.2
+        version: 3.2.2(react@19.3.0)
+      '@fontsource-variable/inter':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@pierre/diffs':
+        specifier: ^1.2.9
+        version: 1.2.9(patch_hash=wdjikkl65wfpocm6wrflymrtdq)(@shikijs/themes@3.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-alert-dialog':
+        specifier: ^1.1.19
+        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-checkbox':
+        specifier: ^1.3.7
+        version: 1.3.7(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-compose-refs':
+        specifier: ^1.1.3
+        version: 1.1.3(@types/react@19.3.0)(react@19.3.0)
+      '@radix-ui/react-context-menu':
+        specifier: ^2.3.3
+        version: 2.3.3(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-dialog':
+        specifier: ^1.1.19
+        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-dropdown-menu':
+        specifier: ^2.1.20
+        version: 2.1.20(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-hover-card':
+        specifier: ^1.1.19
+        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-menubar':
+        specifier: ^1.1.20
+        version: 1.1.20(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-navigation-menu':
+        specifier: ^1.2.18
+        version: 1.2.18(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-popover':
+        specifier: ^1.1.19
+        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-select':
+        specifier: ^2.3.3
+        version: 2.3.3(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.3.0
+        version: 1.3.0(@types/react@19.3.0)(react@19.3.0)
+      '@radix-ui/react-tooltip':
+        specifier: ^1.2.12
+        version: 1.2.12(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
@@ -134,63 +197,6 @@ importers:
       '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
-      '@dnd-kit/core':
-        specifier: ^6.3.1
-        version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@dnd-kit/sortable':
-        specifier: ^10.0.0
-        version: 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.2
-        version: 3.2.2(react@19.3.0)
-      '@fontsource-variable/inter':
-        specifier: ^5.2.8
-        version: 5.2.8
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
-      '@pierre/diffs':
-        specifier: ^1.2.9
-        version: 1.2.9(patch_hash=wdjikkl65wfpocm6wrflymrtdq)(@shikijs/themes@3.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-alert-dialog':
-        specifier: ^1.1.19
-        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-checkbox':
-        specifier: ^1.3.7
-        version: 1.3.7(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.1.3
-        version: 1.1.3(@types/react@19.3.0)(react@19.3.0)
-      '@radix-ui/react-context-menu':
-        specifier: ^2.3.3
-        version: 2.3.3(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-dialog':
-        specifier: ^1.1.19
-        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-dropdown-menu':
-        specifier: ^2.1.20
-        version: 2.1.20(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-hover-card':
-        specifier: ^1.1.19
-        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-menubar':
-        specifier: ^1.1.20
-        version: 1.1.20(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-navigation-menu':
-        specifier: ^1.2.18
-        version: 1.2.18(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-popover':
-        specifier: ^1.1.19
-        version: 1.1.19(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-select':
-        specifier: ^2.3.3
-        version: 2.3.3(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.3.0
-        version: 1.3.0(@types/react@19.3.0)(react@19.3.0)
-      '@radix-ui/react-tooltip':
-        specifier: ^1.2.12
-        version: 1.2.12(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.90.20(react@19.3.0)
@@ -351,6 +357,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@ladle/react':
+        specifier: ^5.0.3
+        version: 5.1.1(@types/node@22.19.10)(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1)
+      '@rolldown/plugin-babel':
+        specifier: ^0.2.3
+        version: 0.2.3(@babel/core@7.29.0)(@babel/plugin-transform-runtime@7.29.7(@babel/core@7.29.0))(@babel/runtime@7.29.10)(rolldown@1.0.0)(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
       '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
@@ -363,12 +375,6 @@ importers:
       '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
-      '@ladle/react':
-        specifier: ^5.0.3
-        version: 5.1.1(@types/node@22.19.10)(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1)
-      '@rolldown/plugin-babel':
-        specifier: ^0.2.3
-        version: 0.2.3(@babel/core@7.29.0)(@babel/plugin-transform-runtime@7.29.7(@babel/core@7.29.0))(@babel/runtime@7.29.10)(rolldown@1.0.0)(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
       '@tailwindcss/vite':
         specifier: ^4.3.0
         version: 4.3.0(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
@@ -399,36 +405,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
-      sandy-plugin-ask-user-question:
-        specifier: workspace:*
-        version: link:../../plugins/ask-user-question
-      sandy-plugin-automations:
-        specifier: workspace:*
-        version: link:../../plugins/automations
-      sandy-plugin-sandy--composer:
-        specifier: workspace:*
-        version: link:../../plugins/composer
-      sandy-plugin-sandy--git:
-        specifier: workspace:*
-        version: link:../../plugins/git
-      sandy-plugin-sandy--github-pr-status:
-        specifier: workspace:*
-        version: link:../../plugins/github-pr-status
-      sandy-plugin-sandy-guide:
-        specifier: workspace:*
-        version: link:../../plugins/sandy-guide
-      sandy-plugin-navigation:
-        specifier: workspace:*
-        version: link:../../plugins/navigation
-      sandy-plugin-provider-pi:
-        specifier: workspace:*
-        version: link:../../plugins/provider-pi
-      sandy-plugin-secrets:
-        specifier: workspace:*
-        version: link:../../plugins/secrets
-      sandy-plugin-thread-list:
-        specifier: workspace:*
-        version: link:../../plugins/thread-list
       cacache:
         specifier: ^20.0.4
         version: 20.0.4
@@ -450,6 +426,36 @@ importers:
       remark-parse:
         specifier: ^11.0.0
         version: 11.0.0
+      sandy-plugin-ask-user-question:
+        specifier: workspace:*
+        version: link:../../plugins/ask-user-question
+      sandy-plugin-automations:
+        specifier: workspace:*
+        version: link:../../plugins/automations
+      sandy-plugin-navigation:
+        specifier: workspace:*
+        version: link:../../plugins/navigation
+      sandy-plugin-provider-pi:
+        specifier: workspace:*
+        version: link:../../plugins/provider-pi
+      sandy-plugin-sandy--composer:
+        specifier: workspace:*
+        version: link:../../plugins/composer
+      sandy-plugin-sandy--git:
+        specifier: workspace:*
+        version: link:../../plugins/git
+      sandy-plugin-sandy--github-pr-status:
+        specifier: workspace:*
+        version: link:../../plugins/github-pr-status
+      sandy-plugin-sandy-guide:
+        specifier: workspace:*
+        version: link:../../plugins/sandy-guide
+      sandy-plugin-secrets:
+        specifier: workspace:*
+        version: link:../../plugins/secrets
+      sandy-plugin-thread-list:
+        specifier: workspace:*
+        version: link:../../plugins/thread-list
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -457,8 +463,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -510,12 +516,6 @@ importers:
       '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
-      sandy-plugin-sandy--git:
-        specifier: workspace:*
-        version: link:../../plugins/git
-      sandy-plugin-sandy--github-pr-status:
-        specifier: workspace:*
-        version: link:../../plugins/github-pr-status
       cli-table3:
         specifier: ^0.6.5
         version: 0.6.5
@@ -525,6 +525,12 @@ importers:
       mime-types:
         specifier: ^3.0.2
         version: 3.0.2
+      sandy-plugin-sandy--git:
+        specifier: workspace:*
+        version: link:../../plugins/git
+      sandy-plugin-sandy--github-pr-status:
+        specifier: workspace:*
+        version: link:../../plugins/github-pr-status
       undici:
         specifier: ^7.28.0
         version: 7.28.0
@@ -557,8 +563,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -633,8 +639,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.3
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -650,6 +656,12 @@ importers:
 
   apps/host-daemon:
     dependencies:
+      '@hono/node-server':
+        specifier: ^1.19.11
+        version: 1.19.14(hono@4.11.9)
+      '@parcel/watcher':
+        specifier: 2.5.6
+        version: 2.5.6
       '@sandy/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime
@@ -704,15 +716,6 @@ importers:
       '@sandy/text-utils':
         specifier: workspace:*
         version: link:../../packages/text-utils
-      '@hono/node-server':
-        specifier: ^1.19.11
-        version: 1.19.14(hono@4.11.9)
-      '@parcel/watcher':
-        specifier: 2.5.6
-        version: 2.5.6
-      sandy-environment-provider-host:
-        specifier: workspace:*
-        version: link:../../packages/environment-provider-host
       mime-types:
         specifier: ^3.0.2
         version: 3.0.2
@@ -740,6 +743,9 @@ importers:
       proper-lockfile:
         specifier: ^4.1.2
         version: 4.1.2
+      sandy-environment-provider-host:
+        specifier: workspace:*
+        version: link:../../packages/environment-provider-host
       semver:
         specifier: ^7.7.4
         version: 7.7.4
@@ -750,6 +756,9 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
       '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../../packages/plugin-build
@@ -762,9 +771,6 @@ importers:
       '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
-      '@opentelemetry/api':
-        specifier: 1.9.1
-        version: 1.9.1
       '@types/mime-types':
         specifier: ^3.0.1
         version: 3.0.1
@@ -781,8 +787,8 @@ importers:
         specifier: ^4.7.0
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -792,6 +798,21 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@expo/ui':
+        specifier: 58.0.23
+        version: 58.0.23(@babel/core@7.29.0)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      '@gorhom/bottom-sheet':
+        specifier: ^5.2.14
+        version: 5.2.14(@types/react@19.3.0)(react-native-gesture-handler@3.3.0(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-reanimated@4.7.1(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      '@hugeicons/core-free-icons':
+        specifier: ^4.3.4
+        version: 4.3.4
+      '@hugeicons/react-native':
+        specifier: ^1.0.15
+        version: 1.0.15(patch_hash=jgndgzeuneyijh7hqrjlaypsmi)(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      '@react-native-cookies/cookies':
+        specifier: ^6.2.1
+        version: 6.2.1(patch_hash=ujy2rsr7cvytwrazuebhhzq3zu)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       '@sandy/client-core':
         specifier: workspace:*
         version: link:../../packages/client-core
@@ -810,21 +831,6 @@ importers:
       '@sandy/server-contract':
         specifier: workspace:*
         version: link:../../packages/server-contract
-      '@expo/ui':
-        specifier: 58.0.23
-        version: 58.0.23(@babel/core@7.29.0)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
-      '@gorhom/bottom-sheet':
-        specifier: ^5.2.14
-        version: 5.2.14(@types/react@19.3.0)(react-native-gesture-handler@3.3.0(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-reanimated@4.7.1(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
-      '@hugeicons/core-free-icons':
-        specifier: ^4.3.4
-        version: 4.3.4
-      '@hugeicons/react-native':
-        specifier: ^1.0.15
-        version: 1.0.15(patch_hash=jgndgzeuneyijh7hqrjlaypsmi)(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
-      '@react-native-cookies/cookies':
-        specifier: ^6.2.1
-        version: 6.2.1(patch_hash=ujy2rsr7cvytwrazuebhhzq3zu)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.90.20(react@19.3.0)
@@ -836,7 +842,7 @@ importers:
         version: 2.1.1
       expo:
         specifier: ~58.0.19
-        version: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+        version: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-application:
         specifier: ~58.1.2
         version: 58.1.2(expo@58.0.19)
@@ -920,7 +926,7 @@ importers:
         version: 4.30.0(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-native-webview:
         specifier: 14.0.1
-        version: 14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+        version: 14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-native-worklets:
         specifier: 0.13.0
         version: 0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
@@ -971,8 +977,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -982,6 +988,27 @@ importers:
 
   apps/server:
     dependencies:
+      '@better-auth/api-key':
+        specifier: ^1.6.23
+        version: 1.6.23(patch_hash=fwm2vsuow4pmqz44y7y7iqixwu)(du6zcahxuavae4k5bog4xy4ydy)
+      '@better-auth/drizzle-adapter':
+        specifier: ^1.6.23
+        version: 1.6.23(@better-auth/core@1.6.23(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.6.5))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.2.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/react@19.3.0)(better-sqlite3@12.10.0)(kysely@0.29.3)(react@19.3.0))
+      '@hono/node-server':
+        specifier: ^1.19.11
+        version: 1.19.14(hono@4.11.9)
+      '@hono/node-ws':
+        specifier: ^1.3.0
+        version: 1.3.0(@hono/node-server@1.19.14(hono@4.11.9))(hono@4.11.9)
+      '@hono/otel':
+        specifier: 1.3.0
+        version: 1.3.0(hono@4.11.9)
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       '@sandy/async-cache':
         specifier: workspace:*
         version: link:../../packages/async-cache
@@ -1039,30 +1066,6 @@ importers:
       '@sandy/thread-view':
         specifier: workspace:*
         version: link:../../packages/thread-view
-      '@better-auth/api-key':
-        specifier: ^1.6.23
-        version: 1.6.23(patch_hash=fwm2vsuow4pmqz44y7y7iqixwu)(du6zcahxuavae4k5bog4xy4ydy)
-      '@better-auth/drizzle-adapter':
-        specifier: ^1.6.23
-        version: 1.6.23(@better-auth/core@1.6.23(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(better-call@1.3.7(zod@4.6.5))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.2.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/react@19.3.0)(better-sqlite3@12.10.0)(kysely@0.29.3)(react@19.3.0))
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
-      '@hono/node-server':
-        specifier: ^1.19.11
-        version: 1.19.14(hono@4.11.9)
-      '@hono/node-ws':
-        specifier: ^1.3.0
-        version: 1.3.0(@hono/node-server@1.19.14(hono@4.11.9))(hono@4.11.9)
-      '@hono/otel':
-        specifier: 1.3.0
-        version: 1.3.0(hono@4.11.9)
-      '@opentelemetry/api':
-        specifier: 1.9.1
-        version: 1.9.1
-      sandy-plugin-sandy--git:
-        specifier: workspace:*
-        version: link:../../plugins/git
       better-auth:
         specifier: ^1.6.23
         version: 1.6.23(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@tanstack/react-start@1.168.25(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1)))(better-sqlite3@12.10.0)(drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/react@19.3.0)(better-sqlite3@12.10.0)(kysely@0.29.3)(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1)))(vue@3.5.39(@typescript/typescript6@6.0.2))
@@ -1099,6 +1102,9 @@ importers:
       pino-roll:
         specifier: ^4.0.0
         version: 4.0.0
+      sandy-plugin-sandy--git:
+        specifier: workspace:*
+        version: link:../../plugins/git
       semver:
         specifier: ^7.7.0
         version: 7.7.4
@@ -1143,8 +1149,8 @@ importers:
         specifier: 8.20.0
         version: 8.20.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -1173,20 +1179,20 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
 
   examples/plugins/content-script:
     devDependencies:
-      '@sandy/tsconfig':
-        specifier: workspace:*
-        version: link:../../../packages/tsconfig
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../../packages/plugin-sdk
+      '@sandy/tsconfig':
+        specifier: workspace:*
+        version: link:../../../packages/tsconfig
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1204,8 +1210,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1225,8 +1231,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1243,8 +1249,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1276,8 +1282,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -1297,6 +1303,9 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
       '@sandy/plugin-build':
         specifier: workspace:*
         version: link:../plugin-build
@@ -1306,9 +1315,6 @@ importers:
       '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../plugin-sdk
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.10
@@ -1316,8 +1322,8 @@ importers:
         specifier: workspace:*
         version: link:../../tests/scripted-echo-provider
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -1340,93 +1346,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
-      typescript:
-        specifier: npm:@typescript/typescript6@^6.0.2
-        version: '@typescript/typescript6@6.0.2'
-      vitest:
-        specifier: ^4.1.1
-        version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
-
-  packages/sandy-app:
-    dependencies:
-      '@parcel/watcher':
-        specifier: 2.5.6
-        version: 2.5.6
-      better-sqlite3:
-        specifier: 13.0.3
-        version: 13.0.3
-      fs-native-extensions:
-        specifier: 1.5.0
-        version: 1.5.0
-      hono:
-        specifier: ^4.7.0
-        version: 4.11.9
-      node-pty:
-        specifier: 1.2.0-beta.15
-        version: 1.2.0-beta.15
-      npm:
-        specifier: 11.16.0
-        version: 11.16.0
-      picocolors:
-        specifier: ^1.1.1
-        version: 1.1.1
-      pino:
-        specifier: ^10.4.0
-        version: 10.4.0
-      pino-opentelemetry-transport:
-        specifier: 4.0.2
-        version: 4.0.2(pino@10.4.0)
-      pino-pretty:
-        specifier: ^13.0.0
-        version: 13.1.3
-      pino-roll:
-        specifier: ^4.0.0
-        version: 4.0.0
-      zod:
-        specifier: 4.6.5
-        version: 4.6.5
-    devDependencies:
-      '@sandy/config':
-        specifier: workspace:*
-        version: link:../config
-      '@sandy/host-daemon-contract':
-        specifier: workspace:*
-        version: link:../host-daemon-contract
-      '@sandy/process-utils':
-        specifier: workspace:*
-        version: link:../process-utils
-      '@sandy/sdk':
-        specifier: workspace:*
-        version: link:../sdk
-      '@sandy/server-archive':
-        specifier: workspace:*
-        version: link:../server-archive
-      '@sandy/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.19.10
-      '@types/semver':
-        specifier: ^7.7.1
-        version: 7.7.1
-      rimraf:
-        specifier: ^6.1.0
-        version: 6.1.3
-      rollup:
-        specifier: ^4.62.2
-        version: 4.62.2
-      rollup-plugin-dts:
-        specifier: ^6.4.1
-        version: 6.4.1(@typescript/typescript6@6.0.2)(rollup@4.62.2)
-      semver:
-        specifier: ^7.7.0
-        version: 7.8.5
-      tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1448,33 +1369,6 @@ importers:
       sandy-plugin-automations:
         specifier: workspace:*
         version: link:../../plugins/automations
-      sandy-plugin-sandy--composer:
-        specifier: workspace:*
-        version: link:../../plugins/composer
-      sandy-plugin-sandy--connection-overview:
-        specifier: workspace:*
-        version: link:../../plugins/connection-overview
-      sandy-plugin-sandy--git:
-        specifier: workspace:*
-        version: link:../../plugins/git
-      sandy-plugin-sandy--github-pr-status:
-        specifier: workspace:*
-        version: link:../../plugins/github-pr-status
-      sandy-plugin-sandy--mcp:
-        specifier: workspace:*
-        version: link:../../plugins/mcp
-      sandy-plugin-sandy--prompt-library:
-        specifier: workspace:*
-        version: link:../../plugins/prompt-library
-      sandy-plugin-sandy--provider-usage:
-        specifier: workspace:*
-        version: link:../../plugins/provider-usage
-      sandy-plugin-sandy--storage-retention:
-        specifier: workspace:*
-        version: link:../../plugins/storage-retention
-      sandy-plugin-sandy-guide:
-        specifier: workspace:*
-        version: link:../../plugins/sandy-guide
       sandy-plugin-browser-automation:
         specifier: workspace:*
         version: link:../../plugins/browser-automation
@@ -1541,6 +1435,33 @@ importers:
       sandy-plugin-push-notifications:
         specifier: workspace:*
         version: link:../../plugins/push-notifications
+      sandy-plugin-sandy--composer:
+        specifier: workspace:*
+        version: link:../../plugins/composer
+      sandy-plugin-sandy--connection-overview:
+        specifier: workspace:*
+        version: link:../../plugins/connection-overview
+      sandy-plugin-sandy--git:
+        specifier: workspace:*
+        version: link:../../plugins/git
+      sandy-plugin-sandy--github-pr-status:
+        specifier: workspace:*
+        version: link:../../plugins/github-pr-status
+      sandy-plugin-sandy--mcp:
+        specifier: workspace:*
+        version: link:../../plugins/mcp
+      sandy-plugin-sandy--prompt-library:
+        specifier: workspace:*
+        version: link:../../plugins/prompt-library
+      sandy-plugin-sandy--provider-usage:
+        specifier: workspace:*
+        version: link:../../plugins/provider-usage
+      sandy-plugin-sandy--storage-retention:
+        specifier: workspace:*
+        version: link:../../plugins/storage-retention
+      sandy-plugin-sandy-guide:
+        specifier: workspace:*
+        version: link:../../plugins/sandy-guide
       sandy-plugin-scheduled-send:
         specifier: workspace:*
         version: link:../../plugins/scheduled-send
@@ -1603,8 +1524,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1631,8 +1552,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1650,8 +1571,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1690,8 +1611,8 @@ importers:
         specifier: ^0.30.0
         version: 0.30.6
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1715,8 +1636,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1734,8 +1655,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1759,8 +1680,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1780,8 +1701,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1799,8 +1720,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1821,8 +1742,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1855,23 +1776,23 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
 
   packages/host-watcher:
     dependencies:
+      '@parcel/watcher':
+        specifier: 2.5.6
+        version: 2.5.6
       '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
       '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@parcel/watcher':
-        specifier: 2.5.6
-        version: 2.5.6
     devDependencies:
       '@sandy/test-helpers':
         specifier: workspace:*
@@ -1883,8 +1804,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1911,8 +1832,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1936,8 +1857,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1947,12 +1868,12 @@ importers:
 
   packages/logger:
     dependencies:
-      '@sandy/config':
-        specifier: workspace:*
-        version: link:../config
       '@opentelemetry/api':
         specifier: 1.9.1
         version: 1.9.1
+      '@sandy/config':
+        specifier: workspace:*
+        version: link:../config
       pino:
         specifier: ^10.4.0
         version: 10.4.0
@@ -1976,8 +1897,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -1992,8 +1913,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2003,15 +1924,15 @@ importers:
 
   packages/plugin-build:
     dependencies:
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
       '@sandy/domain':
         specifier: workspace:*
         version: link:../domain
       '@sandy/process-utils':
         specifier: workspace:*
         version: link:../process-utils
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../plugin-sdk
       es-module-lexer:
         specifier: ^2.0.0
         version: 2.0.0
@@ -2041,8 +1962,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2052,12 +1973,6 @@ importers:
 
   packages/plugin-registry:
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../plugin-build
-      '@sandy/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -2067,9 +1982,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../plugin-sdk
       '@radix-ui/react-accordion':
         specifier: ^1.2.16
         version: 1.2.16(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -2145,6 +2057,15 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../plugin-build
+      '@sandy/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.10
@@ -2182,8 +2103,8 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2273,8 +2194,8 @@ importers:
         specifier: ^6.4.1
         version: 6.4.1(@typescript/typescript6@6.0.2)(rollup@4.62.2)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2307,8 +2228,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2334,21 +2255,21 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.6.5)
       '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../test-helpers
       '@sandy/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.29.0
-        version: 1.29.0(zod@4.6.5)
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2384,8 +2305,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2409,8 +2330,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2439,14 +2360,99 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: ^4.1.1
         version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@24.12.4)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@24.12.4)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@24.12.4)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
+
+  packages/sandy-app:
+    dependencies:
+      '@parcel/watcher':
+        specifier: 2.5.6
+        version: 2.5.6
+      better-sqlite3:
+        specifier: 13.0.3
+        version: 13.0.3
+      fs-native-extensions:
+        specifier: 1.5.0
+        version: 1.5.0
+      hono:
+        specifier: ^4.7.0
+        version: 4.11.9
+      node-pty:
+        specifier: 1.2.0-beta.15
+        version: 1.2.0-beta.15
+      npm:
+        specifier: 11.16.0
+        version: 11.16.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      pino:
+        specifier: ^10.4.0
+        version: 10.4.0
+      pino-opentelemetry-transport:
+        specifier: 4.0.2
+        version: 4.0.2(pino@10.4.0)
+      pino-pretty:
+        specifier: ^13.0.0
+        version: 13.1.3
+      pino-roll:
+        specifier: ^4.0.0
+        version: 4.0.0
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@sandy/config':
+        specifier: workspace:*
+        version: link:../config
+      '@sandy/host-daemon-contract':
+        specifier: workspace:*
+        version: link:../host-daemon-contract
+      '@sandy/process-utils':
+        specifier: workspace:*
+        version: link:../process-utils
+      '@sandy/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+      '@sandy/server-archive':
+        specifier: workspace:*
+        version: link:../server-archive
+      '@sandy/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.10
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
+      rimraf:
+        specifier: ^6.1.0
+        version: 6.1.3
+      rollup:
+        specifier: ^4.62.2
+        version: 4.62.2
+      rollup-plugin-dts:
+        specifier: ^6.4.1
+        version: 6.4.1(@typescript/typescript6@6.0.2)(rollup@4.62.2)
+      semver:
+        specifier: ^7.7.0
+        version: 7.8.5
+      tsrs:
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
+      typescript:
+        specifier: npm:@typescript/typescript6@^6.0.2
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: ^4.1.1
+        version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
 
   packages/scripts:
     dependencies:
@@ -2479,8 +2485,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2528,8 +2534,8 @@ importers:
         specifier: ^8.18.1
         version: 8.18.1
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2549,8 +2555,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2583,8 +2589,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2623,26 +2629,14 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
 
   packages/shared-ui:
     dependencies:
-      '@sandy/domain':
-        specifier: workspace:*
-        version: link:../domain
-      '@sandy/fuzzy-match':
-        specifier: workspace:*
-        version: link:../fuzzy-match
-      '@sandy/thread-view':
-        specifier: workspace:*
-        version: link:../thread-view
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../plugin-sdk
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
@@ -2652,6 +2646,18 @@ importers:
       '@pierre/diffs':
         specifier: ^1.2.9
         version: 1.2.9(patch_hash=wdjikkl65wfpocm6wrflymrtdq)(@shikijs/themes@3.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      '@sandy/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@sandy/fuzzy-match':
+        specifier: workspace:*
+        version: link:../fuzzy-match
+      '@sandy/thread-view':
+        specifier: workspace:*
+        version: link:../thread-view
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2665,12 +2671,6 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(react@19.3.0)
     devDependencies:
-      '@sandy/test-helpers':
-        specifier: workspace:*
-        version: link:../test-helpers
-      '@sandy/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -2755,6 +2755,12 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@sandy/test-helpers':
+        specifier: workspace:*
+        version: link:../test-helpers
+      '@sandy/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -2801,8 +2807,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2848,8 +2854,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2859,9 +2865,6 @@ importers:
 
   packages/telemetry:
     dependencies:
-      '@sandy/config':
-        specifier: workspace:*
-        version: link:../config
       '@opentelemetry/api':
         specifier: 1.9.1
         version: 1.9.1
@@ -2880,6 +2883,9 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: 2.12.0
         version: 2.12.0(@opentelemetry/api@1.9.1)
+      '@sandy/config':
+        specifier: workspace:*
+        version: link:../config
     devDependencies:
       '@sandy/tsconfig':
         specifier: workspace:*
@@ -2888,8 +2894,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2922,8 +2928,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2947,8 +2953,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2962,8 +2968,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -2993,8 +2999,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3003,9 +3009,6 @@ importers:
 
   plugins/account-pool:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -3015,6 +3018,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       undici:
         specifier: ^7.28.0
         version: 7.28.0
@@ -3022,12 +3028,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3065,8 +3071,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -3086,12 +3092,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3129,8 +3135,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3147,12 +3153,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3190,8 +3196,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3217,12 +3223,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3260,41 +3266,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
-      typescript:
-        specifier: npm:@typescript/typescript6@^6.0.2
-        version: '@typescript/typescript6@6.0.2'
-      vitest:
-        specifier: ^4.1.1
-        version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
-
-  plugins/sandy-guide:
-    devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
-      '@types/better-sqlite3':
-        specifier: ^7.6.12
-        version: 7.6.13
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.19.10
-      better-sqlite3:
-        specifier: 12.10.0
-        version: 12.10.0
-      cron-parser:
-        specifier: ^5.5.0
-        version: 5.10.1
-      hono:
-        specifier: 4.11.9
-        version: 4.11.9
-      tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3311,12 +3284,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3354,8 +3327,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.21.0
         version: 4.23.1
@@ -3417,12 +3390,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3454,8 +3427,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3472,12 +3445,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3515,8 +3488,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3530,12 +3503,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3567,8 +3540,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3582,12 +3555,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
@@ -3604,8 +3577,8 @@ importers:
         specifier: 4.11.9
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3615,9 +3588,6 @@ importers:
 
   plugins/docs:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
@@ -3627,6 +3597,9 @@ importers:
       '@radix-ui/react-context-menu':
         specifier: ^2.3.3
         version: 2.3.3(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       '@tiptap/core':
         specifier: ^2.27.2
         version: 2.27.2(@tiptap/pm@2.27.2)
@@ -3676,12 +3649,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3722,8 +3695,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3733,12 +3706,12 @@ importers:
 
   plugins/drafts:
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -3779,8 +3752,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3800,12 +3773,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -3825,8 +3798,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3840,12 +3813,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
@@ -3862,8 +3835,8 @@ importers:
         specifier: 4.11.9
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3883,12 +3856,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -3908,8 +3881,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -3934,15 +3907,15 @@ importers:
       '@tanstack/react-virtual':
         specifier: 3.14.20
         version: 3.14.20(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      sandy-environment-provider-host:
-        specifier: workspace:*
-        version: link:../../packages/environment-provider-host
       mime-types:
         specifier: ^3.0.2
         version: 3.0.2
       picomatch:
         specifier: ^4.0.5
         version: 4.0.5
+      sandy-environment-provider-host:
+        specifier: workspace:*
+        version: link:../../packages/environment-provider-host
       usehooks-ts:
         specifier: ^3.1.1
         version: 3.1.1(react@19.3.0)
@@ -3950,6 +3923,9 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       '@sandy/host-daemon-contract':
         specifier: workspace:*
         version: link:../../packages/host-daemon-contract
@@ -3959,9 +3935,6 @@ importers:
       '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -3993,8 +3966,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4011,12 +3984,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4057,8 +4030,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4078,12 +4051,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4112,8 +4085,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4130,12 +4103,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4173,8 +4146,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4191,12 +4164,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4234,8 +4207,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4258,15 +4231,15 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
       '@modelcontextprotocol/client':
         specifier: ^2.3.1
         version: 2.3.1
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
@@ -4283,8 +4256,8 @@ importers:
         specifier: 4.11.9
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4301,12 +4274,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4344,8 +4317,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4365,12 +4338,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4414,8 +4387,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4429,12 +4402,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared-ui
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4463,8 +4436,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4474,12 +4447,12 @@ importers:
 
   plugins/pdf-preview:
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4505,8 +4478,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4516,22 +4489,22 @@ importers:
 
   plugins/plugin-api-docs:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
       '@hugeicons/react':
         specifier: ^1.1.6
         version: 1.1.6(react@19.3.0)
-    devDependencies:
-      '@sandy/plugin-build':
+      '@sandy/shared-ui':
         specifier: workspace:*
-        version: link:../../packages/plugin-build
+        version: link:../../packages/shared-ui
+    devDependencies:
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4557,8 +4530,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4568,12 +4541,12 @@ importers:
 
   plugins/plugin-api-tester:
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4599,8 +4572,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4617,12 +4590,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4660,8 +4633,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4671,12 +4644,12 @@ importers:
 
   plugins/provider-acp:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       smol-toml:
         specifier: ^1.7.1
         version: 1.7.1
@@ -4727,8 +4700,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4741,12 +4714,12 @@ importers:
       '@anthropic-ai/claude-agent-sdk':
         specifier: ^0.3.245
         version: 0.3.245(@anthropic-ai/sdk@0.93.0(zod@4.6.5))(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(zod@4.6.5)
-      '@sandy-sdk/plugin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/plugin-sdk
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.6.5)
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
       zod:
         specifier: 4.6.5
         version: 4.6.5
@@ -4773,8 +4746,8 @@ importers:
         specifier: 4.11.9
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4784,12 +4757,12 @@ importers:
 
   plugins/provider-codex:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
@@ -4834,8 +4807,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4845,25 +4818,25 @@ importers:
 
   plugins/provider-pi:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@earendil-works/pi-ai':
         specifier: 0.84.0
         version: 0.84.0(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(ws@8.21.0)(zod@4.6.5)
       '@earendil-works/pi-coding-agent':
         specifier: 0.84.0
         version: 0.84.0(@modelcontextprotocol/sdk@1.29.0(zod@4.6.5))(ws@8.21.0)(zod@4.6.5)
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -4901,8 +4874,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typebox:
         specifier: 1.3.7
         version: 1.3.7
@@ -4919,12 +4892,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
@@ -4941,8 +4914,8 @@ importers:
         specifier: 4.11.9
         version: 4.11.9
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -4959,12 +4932,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5002,8 +4975,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5017,12 +4990,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5063,8 +5036,41 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
+      typescript:
+        specifier: npm:@typescript/typescript6@^6.0.2
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: ^4.1.1
+        version: 4.1.1(@opentelemetry/api@1.9.1)(@types/node@22.19.10)(jsdom@29.0.1(@noble/hashes@2.4.0))(msw@2.12.14(@types/node@22.19.10)(@typescript/typescript6@6.0.2))(vite@8.0.12(@types/node@22.19.10)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.1)(yaml@2.9.1))
+
+  plugins/sandy-guide:
+    devDependencies:
+      '@sandy-sdk/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
+      '@types/better-sqlite3':
+        specifier: ^7.6.12
+        version: 7.6.13
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.10
+      better-sqlite3:
+        specifier: 12.10.0
+        version: 12.10.0
+      cron-parser:
+        specifier: ^5.5.0
+        version: 5.10.1
+      hono:
+        specifier: 4.11.9
+        version: 4.11.9
+      tsrs:
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5078,12 +5084,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared-ui
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5112,8 +5118,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5123,25 +5129,25 @@ importers:
 
   plugins/secrets:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
       '@hugeicons/react':
         specifier: ^1.1.6
         version: 1.1.6(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@types/better-sqlite3':
         specifier: ^7.6.12
         version: 7.6.13
@@ -5167,8 +5173,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5185,12 +5191,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5231,8 +5237,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5252,12 +5258,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -5283,8 +5289,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5294,15 +5300,15 @@ importers:
 
   plugins/tasks:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
       '@hugeicons/react':
         specifier: ^1.1.6
         version: 1.1.6(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       '@tiptap/core':
         specifier: ^2.27.2
         version: 2.27.2(@tiptap/pm@2.27.2)
@@ -5352,12 +5358,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5395,8 +5401,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5406,25 +5412,25 @@ importers:
 
   plugins/theme-preview:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@hugeicons/core-free-icons':
         specifier: ^4.3.4
         version: 4.3.4
       '@hugeicons/react':
         specifier: ^1.1.6
         version: 1.1.6(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5465,8 +5471,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5476,9 +5482,6 @@ importers:
 
   plugins/thread-list:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -5494,6 +5497,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.3.0
         version: 1.3.0(@types/react@19.3.0)(react@19.3.0)
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       jotai:
         specifier: ^2.19.0
         version: 2.19.0(@babel/core@7.29.0)(@babel/template@7.29.7)(@types/react@19.3.0)(react@19.3.0)
@@ -5501,12 +5507,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5550,8 +5556,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(patch_hash=ywi4zh4oqnjpviiknloue4elvi)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5561,12 +5567,12 @@ importers:
 
   plugins/workflows:
     dependencies:
-      '@sandy/shared-ui':
-        specifier: workspace:*
-        version: link:../../packages/shared-ui
       '@jitl/quickjs-singlefile-cjs-release-sync':
         specifier: ^0.32.0
         version: 0.32.0
+      '@sandy/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
       acorn:
         specifier: 8.16.0
         version: 8.16.0
@@ -5583,12 +5589,12 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@sandy/plugin-build':
-        specifier: workspace:*
-        version: link:../../packages/plugin-build
       '@sandy-sdk/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
+      '@sandy/plugin-build':
+        specifier: workspace:*
+        version: link:../../packages/plugin-build
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -5626,8 +5632,8 @@ importers:
         specifier: ^19.0.0
         version: 19.3.0(react@19.3.0)
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5637,6 +5643,9 @@ importers:
 
   tests/integration:
     dependencies:
+      '@hono/node-server':
+        specifier: ^1.19.11
+        version: 1.19.14(hono@4.12.28)
       '@sandy/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -5664,15 +5673,12 @@ importers:
       '@sandy/test-helpers':
         specifier: workspace:*
         version: link:../../packages/test-helpers
-      '@hono/node-server':
-        specifier: ^1.19.11
-        version: 1.19.14(hono@4.12.28)
-      sandy-plugin-sandy--git:
-        specifier: workspace:*
-        version: link:../../plugins/git
       drizzle-orm:
         specifier: ^0.38.4
         version: 0.38.4(@cloudflare/workers-types@4.20260702.1)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/react@19.3.0)(better-sqlite3@12.10.0)(kysely@0.29.3)(react@19.3.0)
+      sandy-plugin-sandy--git:
+        specifier: workspace:*
+        version: link:../../plugins/git
       zod:
         specifier: 4.6.5
         version: 4.6.5
@@ -5687,8 +5693,8 @@ importers:
         specifier: 12.10.0
         version: 12.10.0
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -5724,8 +5730,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.3
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -5749,8 +5755,8 @@ importers:
         specifier: ^22.0.0
         version: 22.19.10
       tsrs:
-        specifier: 0.18.0-ts7.1.0-dev.20260929
-        version: 0.18.0-ts7.1.0-dev.20260929
+        specifier: 'catalog:'
+        version: 0.22.0-ts7.1.0-beta
       typescript:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
@@ -10536,35 +10542,47 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@tsrs/darwin-arm64@0.18.0-ts7.1.0-dev.20260929':
-    resolution: {integrity: sha512-sAirMpaGA9uRQm2W+t4zC7PjnijNuFa4PCSIfLKKo0JyAUCRfnMeev0UGBQ9F3g+9Nz187tvikUs5Irh5+eajA==}
+  '@tsrs/darwin-arm64@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-mY0dMEtFxig4h5At3nByjZe8E4DTDPqqz73kkxQ6gqW5K9ym+u/VHQhtnpTF6ZOTkYyjP3bTaj5T8HcyoGVddA==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@tsrs/linux-arm64-gnu@0.18.0-ts7.1.0-dev.20260929':
-    resolution: {integrity: sha512-zm9/z9yylig68JiZF4Aq0Cm26n09KEU8YoQRlG7tdDWTBNAIViYw8knxnWYsjMWVZ2XiU4mYq1xdrOKuOgABHg==}
+  '@tsrs/darwin-x64@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-dvsSnyU8rpI3OqTIH2xxjt9ThvZC52BsL6/LS69eWg7Ieq2oni1PnLels5gGTFqvHFoRbezi5Y0KY7PQ1OmK5w==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tsrs/linux-arm64-gnu@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-igg42LxSN/DHFqafvDqZW2JNBMH8WIwc1JE/IY4QUDOXNhZnUfDgEu9xo1QYwbgryeo5llmhRwM4CI/BQUWF1Q==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@tsrs/linux-arm64-musl@0.18.0-ts7.1.0-dev.20260929':
-    resolution: {integrity: sha512-Lw7VVU/YQ9JcarODICEiwzMLdFqZprqh5RGTgbS5Uc6I95P635/g5xA1pOC8RVs4efBvAR30J54iDG3l5JEYiw==}
+  '@tsrs/linux-arm64-musl@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-f0zCqMkxPof7QVwjdgA8Fb0n6BtX5MOdILH/xfS+He6gRLCoECky0ejbsgLWCpB06GMlsL1gCbDr0/tmc91APg==}
     engines: {node: '>=16.20.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@tsrs/linux-x64-gnu@0.18.0-ts7.1.0-dev.20260929':
-    resolution: {integrity: sha512-EdBwBgNICGu1r1h23ixdcKwsMo6E9ll7ZsY3mNERNYqE1Pwdtcat99d5E7zB1J+oy/Xk6YqiizaB6nolIjpDTw==}
+  '@tsrs/linux-x64-gnu@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-/e511w7xXmxBf14paz8eMLUbmlIc33Sy1E00y1FqmnUK04FTotWl+80mNvIVX5NrlOOJgrh+B125t1CHWu/8vQ==}
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [linux]
 
-  '@tsrs/linux-x64-musl@0.18.0-ts7.1.0-dev.20260929':
-    resolution: {integrity: sha512-LHk+AOAtXuTlhJhOJ2+elriEIX17ycXljojeNxrrzckOipTG1LksoVWuCSas2nu00EnWAzrdKpt9oqPylUKZfQ==}
+  '@tsrs/linux-x64-musl@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-B3aDOdS5+h77HcFep+KtOI+XmLm2G+FQPQC3KPSDjS/IG0tY9GPSc14mYnLwgO++dXluukO/oufk3J4Lo0CFjg==}
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [linux]
+
+  '@tsrs/win32-x64@0.22.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-cZ69w+wOECbU6YF5UWi15TK73eX1pgoMEHKSmUF4K8PbS7DPIh/nWMsdb3rM8Ee1SUZ9ONCx+S6myh64SRi3Bg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [win32]
 
   '@turbo/darwin-64@2.10.12':
     resolution: {integrity: sha512-9nKgKoF6ZOUsM+or0OtNf+TTJSfGvDNP7ZFv/ZGWVwOSCkumyctQiTeHwB4UNljHTnC41AqylgbunLDHoccNrA==}
@@ -16524,8 +16542,8 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  tsrs@0.18.0-ts7.1.0-dev.20260929:
-    resolution: {integrity: sha512-9T0b4Uam/yMFIK16GUx0fUrJqYZnJ/gvSmV9JB8NTyDePvwCI45WFWxyEV/UMV3KfdNRJG/PBsm3fSIB9WmWsA==}
+  tsrs@0.22.0-ts7.1.0-beta:
+    resolution: {integrity: sha512-DEnEqQZRM3sHCV7MnQKVeTh61U2SX+0WksVlWp4eVayy0NffQ2oiCOjgH/Eye3sMPYkGwpM3tht3HtVI9NdURg==}
     engines: {node: '>=16.20.0'}
     hasBin: true
 
@@ -18789,7 +18807,7 @@ snapshots:
       compression: 1.8.2
       connect: 3.7.0
       dnssd-advertise: 1.1.6
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-server: 58.0.6
       fetch-nodeshim: 0.4.10
       getenv: 2.0.0
@@ -18965,13 +18983,13 @@ snapshots:
     dependencies:
       chalk: 4.1.2
     optionalDependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   '@expo/dom-webview@58.0.2(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)':
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
@@ -19122,7 +19140,7 @@ snapshots:
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
       stacktrace-parser: 0.1.11
     optionalDependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   '@expo/logger@22.0.0':
     dependencies:
@@ -19160,7 +19178,7 @@ snapshots:
       postcss: 8.5.31
       resolve-from: 5.0.0
     optionalDependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -19183,7 +19201,7 @@ snapshots:
     dependencies:
       '@expo/log-box': 58.0.13(@expo/dom-webview@58.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       anser: 1.4.10
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       pretty-format: 29.7.0
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
@@ -19362,7 +19380,7 @@ snapshots:
   '@expo/router-server@58.0.17(@expo/metro-runtime@58.0.15)(expo-constants@58.0.13)(expo-font@58.0.10(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.26)(expo-server@58.0.6)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-constants: 58.0.13(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       expo-font: 58.0.10(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-server: 58.0.6
@@ -19425,7 +19443,7 @@ snapshots:
 
   '@expo/ui@58.0.23(@babel/core@7.29.0)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)':
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
       sf-symbols-typescript: 2.2.0
@@ -21364,9 +21382,7 @@ snapshots:
       metro-runtime: 0.87.1
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.79.6': {}
 
@@ -22394,19 +22410,25 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@tsrs/darwin-arm64@0.18.0-ts7.1.0-dev.20260929':
+  '@tsrs/darwin-arm64@0.22.0-ts7.1.0-beta':
     optional: true
 
-  '@tsrs/linux-arm64-gnu@0.18.0-ts7.1.0-dev.20260929':
+  '@tsrs/darwin-x64@0.22.0-ts7.1.0-beta':
     optional: true
 
-  '@tsrs/linux-arm64-musl@0.18.0-ts7.1.0-dev.20260929':
+  '@tsrs/linux-arm64-gnu@0.22.0-ts7.1.0-beta':
     optional: true
 
-  '@tsrs/linux-x64-gnu@0.18.0-ts7.1.0-dev.20260929':
+  '@tsrs/linux-arm64-musl@0.22.0-ts7.1.0-beta':
     optional: true
 
-  '@tsrs/linux-x64-musl@0.18.0-ts7.1.0-dev.20260929':
+  '@tsrs/linux-x64-gnu@0.22.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/linux-x64-musl@0.22.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/win32-x64@0.22.0-ts7.1.0-beta':
     optional: true
 
   '@turbo/darwin-64@2.10.12':
@@ -23277,7 +23299,7 @@ snapshots:
       react-refresh: 0.14.2
     optionalDependencies:
       '@babel/runtime': 7.29.10
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -24778,12 +24800,12 @@ snapshots:
 
   expo-application@58.1.2(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   expo-asset@58.0.18(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
       '@expo/image-utils': 0.12.5(@typescript/typescript6@6.0.2)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-constants: 58.0.13(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
@@ -24794,14 +24816,14 @@ snapshots:
   expo-build-properties@58.0.11(expo@58.0.19):
     dependencies:
       '@expo/schema-utils': 58.0.2
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       resolve-from: 5.0.0
       semver: 7.8.5
 
   expo-camera@58.0.12(@types/emscripten@1.41.6)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
       barcode-detector: 3.2.3(@types/emscripten@1.41.6)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
     transitivePeerDependencies:
@@ -24811,7 +24833,7 @@ snapshots:
     dependencies:
       '@expo/env': 2.5.3
       '@expo/require-utils': 58.0.4(@typescript/typescript6@6.0.2)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
     transitivePeerDependencies:
       - supports-color
@@ -24819,11 +24841,11 @@ snapshots:
 
   expo-crypto@58.0.7(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   expo-dev-client@58.0.15(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-dev-launcher: 58.0.15(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       expo-dev-menu: 58.0.11(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       expo-dev-menu-interface: 58.0.1(expo@58.0.19)
@@ -24835,45 +24857,45 @@ snapshots:
   expo-dev-launcher@58.0.15(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)):
     dependencies:
       '@expo/schema-utils': 58.0.2
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-dev-menu: 58.0.11(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       expo-manifests: 58.0.1(expo@58.0.19)
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   expo-dev-menu-interface@58.0.1(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   expo-dev-menu@58.0.11(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-dev-menu-interface: 58.0.1(expo@58.0.19)
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   expo-file-system@58.0.11(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   expo-font@58.0.10(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   expo-glass-effect@58.0.5(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
   expo-haptics@58.0.7(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   expo-image@58.0.17(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
       sf-symbols-typescript: 2.2.0
@@ -24882,12 +24904,12 @@ snapshots:
 
   expo-keep-awake@58.0.3(expo@58.0.19)(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
 
   expo-linking@58.0.14(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-constants: 58.0.13(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       invariant: 2.2.4
       react: 19.3.0
@@ -24898,7 +24920,7 @@ snapshots:
 
   expo-manifests@58.0.1(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-json-utils: 58.0.1
 
   expo-modules-autolinking@58.0.15(@typescript/typescript6@6.0.2):
@@ -24941,7 +24963,7 @@ snapshots:
   expo-quick-actions@6.0.2(@typescript/typescript6@6.0.2)(expo@58.0.19):
     dependencies:
       '@expo/image-utils': 0.8.17(@typescript/typescript6@6.0.2)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       schema-utils: 4.8.1
       sf-symbols-typescript: 2.2.0
     transitivePeerDependencies:
@@ -24959,7 +24981,7 @@ snapshots:
       '@react-native-masked-view/masked-view': 0.3.2(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       '@react-native/normalize-colors': 0.88.0
       client-only: 0.0.1
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-constants: 58.0.13(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))
       expo-glass-effect: 58.0.5(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       expo-linking: 58.0.14(@typescript/typescript6@6.0.2)(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
@@ -24988,7 +25010,7 @@ snapshots:
 
   expo-secure-store@58.0.2(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
   expo-server@58.0.6: {}
 
@@ -24996,7 +25018,7 @@ snapshots:
     dependencies:
       '@expo/config-plugins': 58.0.10(@typescript/typescript6@6.0.2)
       '@expo/image-utils': 0.12.5(@typescript/typescript6@6.0.2)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       xml2js: 0.6.0
     transitivePeerDependencies:
       - supports-color
@@ -25004,7 +25026,7 @@ snapshots:
 
   expo-status-bar@58.0.4(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
@@ -25012,16 +25034,16 @@ snapshots:
     dependencies:
       '@react-native/normalize-colors': 0.88.0
       debug: 4.4.3(supports-color@8.1.1)
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
     transitivePeerDependencies:
       - supports-color
 
   expo-updates-interface@58.0.1(expo@58.0.19):
     dependencies:
-      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      expo: 58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
 
-  expo@58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
+  expo@58.0.19(@babel/core@7.29.0)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
       '@babel/runtime': 7.29.10
       '@expo/cli': 58.1.15(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.15)(@typescript/typescript6@6.0.2)(expo-constants@58.0.13)(expo-font@58.0.10(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.26)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
@@ -25053,7 +25075,7 @@ snapshots:
       '@expo/dom-webview': 58.0.2(expo@58.0.19)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       '@expo/metro-runtime': 58.0.15(@expo/log-box@58.0.13)(expo@58.0.19)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       react-dom: 19.3.0(react@19.3.0)
-      react-native-webview: 14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      react-native-webview: 14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
     transitivePeerDependencies:
       - '@babel/core'
       - bufferutil
@@ -28249,7 +28271,7 @@ snapshots:
       react: 19.3.0
       react-native: 0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0)
 
-  react-native-webview@14.0.1(patch_hash=pa42giipqjf4cfw4ds4qiivfwm)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
+  react-native-webview@14.0.1(patch_hash=durqllps32z3c23be3hystzj5e)(react-native@0.88.0(@babel/core@7.29.0)(@react-native/metro-config@0.88.0(@babel/core@7.29.0))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0):
     dependencies:
       escape-string-regexp: 4.0.0
       invariant: 2.2.4
@@ -29450,13 +29472,15 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsrs@0.18.0-ts7.1.0-dev.20260929:
+  tsrs@0.22.0-ts7.1.0-beta:
     optionalDependencies:
-      '@tsrs/darwin-arm64': 0.18.0-ts7.1.0-dev.20260929
-      '@tsrs/linux-arm64-gnu': 0.18.0-ts7.1.0-dev.20260929
-      '@tsrs/linux-arm64-musl': 0.18.0-ts7.1.0-dev.20260929
-      '@tsrs/linux-x64-gnu': 0.18.0-ts7.1.0-dev.20260929
-      '@tsrs/linux-x64-musl': 0.18.0-ts7.1.0-dev.20260929
+      '@tsrs/darwin-arm64': 0.22.0-ts7.1.0-beta
+      '@tsrs/darwin-x64': 0.22.0-ts7.1.0-beta
+      '@tsrs/linux-arm64-gnu': 0.22.0-ts7.1.0-beta
+      '@tsrs/linux-arm64-musl': 0.22.0-ts7.1.0-beta
+      '@tsrs/linux-x64-gnu': 0.22.0-ts7.1.0-beta
+      '@tsrs/linux-x64-musl': 0.22.0-ts7.1.0-beta
+      '@tsrs/win32-x64': 0.22.0-ts7.1.0-beta
 
   tsscmp@1.0.6: {}
 

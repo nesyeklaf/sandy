@@ -80,7 +80,7 @@ function createEnsureOptions(fakeRequire, execFileSync) {
     ],
     createRequire: () => fakeRequire,
     execFileSync,
-    verifyRepairedNativeModule(name) {
+    verifyNativeModuleInFreshProcess(name) {
       try {
         verifyNativeModule(name, fakeRequire);
         return null;
@@ -134,6 +134,41 @@ describe("ensure-native-modules", () => {
     );
     expect(execFileSync).toHaveBeenCalledTimes(1);
     expect(fake.state.constructorCalls).toBe(2);
+  });
+
+  it("never loads the native module into the process that repairs it", () => {
+    const inProcessLoads = [];
+    function requireModule(request) {
+      inProcessLoads.push(request);
+      throw new Error("loaded in the repairing process");
+    }
+    requireModule.resolve =
+      createBetterSqliteRequire(null).requireModule.resolve;
+    const freshProcessResults = [
+      "The module was compiled against a different NODE_MODULE_VERSION",
+      null,
+    ];
+    const verifyNativeModuleInFreshProcess = vi.fn(() =>
+      freshProcessResults.shift(),
+    );
+    const execFileSync = vi.fn();
+
+    expect(() =>
+      ensureNativeModules({
+        repoRoot: "/repo",
+        modules: [
+          { name: "better-sqlite3", resolveFrom: "packages/db/package.json" },
+        ],
+        createRequire: () => requireModule,
+        execFileSync,
+        verifyNativeModuleInFreshProcess,
+        log: vi.fn(),
+      }),
+    ).not.toThrow();
+
+    expect(inProcessLoads).toEqual([]);
+    expect(verifyNativeModuleInFreshProcess).toHaveBeenCalledTimes(2);
+    expect(execFileSync).toHaveBeenCalledTimes(1);
   });
 
   it("detaches a hardlinked native binary before verification", () => {
@@ -415,7 +450,7 @@ describe("ensure-native-modules", () => {
             modules: [{ name: "better-sqlite3", resolveFrom: "packages/db/package.json" }],
             createRequire,
             execFileSync() {},
-            verifyRepairedNativeModule() {
+            verifyNativeModuleInFreshProcess() {
               return "Wrong native binary NODE_MODULE_VERSION";
             },
             log() {},

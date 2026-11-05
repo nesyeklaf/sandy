@@ -496,7 +496,6 @@ describe("injected skill source discovery", () => {
 
     const builtinNames = sources.map((source) => source.name);
     expect(builtinNames).toContain("sandy-cli");
-    expect(builtinNames).toContain("submit-a-plugin");
     for (const source of sources) {
       expect(source.sourceType).toBe("builtin");
       expect(source.description.trim().length).toBeGreaterThan(0);

@@ -321,6 +321,9 @@ function globRoot(glob: string): string {
   return literal.length > 0 ? literal.join("/") : ".";
 }
 
+export const WEB_STORAGE_EXEC_ARGV =
+  Number(process.versions.node.split(".")[0]) >= 25 ? ["--no-webstorage"] : [];
+
 export function defineWorkspaceTestConfig(
   config: ViteUserConfig,
 ): ViteUserConfig {
@@ -336,6 +339,7 @@ export function defineWorkspaceTestConfig(
         ...(process.env.SANDY_CI_TEST_SHARD
           ? { shard: process.env.SANDY_CI_TEST_SHARD }
           : {}),
+        execArgv: WEB_STORAGE_EXEC_ARGV,
         sequence: { sequencer: SharedWorkerSequencer },
         coverage: {
           provider: "v8",

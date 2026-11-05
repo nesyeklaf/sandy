@@ -2,7 +2,7 @@
 
 The main CI workflow keeps build, lint/typecheck, two server test shards, eight app test
 shards, integration tests, three package test groups, two plugin test groups, three fork
-check shards, and package smokes independent. Node 24/26 compatibility smokes run on
+check shards, and package smokes independent. Node 22.19/24 compatibility smokes run on
 main and manual runs. Windows runs the nine host packages, an app smoke, a desktop
 smoke, and thirteen test shards that cover the remaining suites; see
 [windows-ci.md](windows-ci.md).

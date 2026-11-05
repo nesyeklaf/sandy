@@ -88,7 +88,9 @@ describe("migrate-from-bb", () => {
       JSON.stringify(db.prepare(`select * from ${table}`).all());
     expect(rows("plugins")).toContain('"id":"sandy-recap"');
     expect(rows("plugins")).toContain(
-      `${home}/.sandy-machines/host.example/plugins/sandy-recap`,
+      JSON.stringify(
+        `${home}/.sandy-machines/host.example/plugins/sandy-recap`,
+      ).slice(1, -1),
     );
     expect(rows("plugins")).toContain(
       '"catalog_marketplace_name":"sandy-official"',

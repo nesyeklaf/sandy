@@ -47,7 +47,7 @@
 ## Build And Test
 
 - Use Turbo for builds, typechecks, and tests so upstream dependencies run first: `pnpm exec turbo run <task> --filter=@sandy/<pkg>`. Use the package's actual name for other scopes. Bypass orchestration only for deliberate investigation; do not invoke package scripts or raw `tsc` routinely.
-- Run builds and tests on the Node version in `.nvmrc`, the one CI uses. On Node 25 and later the built-in Web Storage shadows jsdom's `localStorage`, so many DOM tests fail locally while CI passes; check `node --version` before you call a red test a regression.
+- Run builds and tests on the Node version in `.nvmrc` (26.13.0), the one CI uses; check `node --version` before you call a red test a regression. Node 25 and later ships its own Web Storage that shadows jsdom's `localStorage`: a Vitest config for DOM tests must pass `WEB_STORAGE_EXEC_ARGV` from `vitest.shared.ts` as `test.execArgv` unless it uses `defineWorkspaceTestConfig`, which already does. Forkable plugins (`scripts/forkable-plugins.json`) cannot import it and inline the same version check.
 - Generated modules are gitignored: `packages/templates/src/generated/`, `packages/plugin-build/src/generated/`, and `packages/plugin-sdk/bundled-types/`. Never commit them or add a `--check` mode. New generated modules need Turbo tasks with explicit inputs, outputs, and consumer dependencies.
 - If a plugin cannot resolve `@sandy-sdk/plugin-sdk`, run `pnpm exec turbo run build:types --filter=@sandy-sdk/plugin-sdk`.
 - Test plausible failure modes; avoid trivial getters/setters and framework wiring. Pipe slow test output to a file and inspect it.

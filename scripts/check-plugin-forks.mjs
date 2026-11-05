@@ -19,6 +19,7 @@ import { affectedPluginForks } from "./lib/ci-plugin-forks.mjs";
 import {
   forkPluginPackageJson,
   forkPluginTsconfig,
+  isCatalogSpecifier,
   registryAliasImports,
   registryItemsForImports,
   registryPackages,
@@ -170,6 +171,28 @@ async function workspaceBinsFor(pluginDir, manifest) {
   return bins;
 }
 
+async function catalogVersionsFor(pluginDir, manifest) {
+  const versions = new Map();
+  for (const field of [
+    "dependencies",
+    "devDependencies",
+    "optionalDependencies",
+    "peerDependencies",
+  ]) {
+    for (const [name, specifier] of Object.entries(manifest[field] ?? {})) {
+      if (!isCatalogSpecifier(specifier)) continue;
+      const dependencyManifest = JSON.parse(
+        await readFile(
+          join(repoRoot, pluginDir, "node_modules", name, "package.json"),
+          "utf8",
+        ),
+      );
+      versions.set(name, dependencyManifest.version);
+    }
+  }
+  return versions;
+}
+
 async function readRegistryItems() {
   const registryDir = join(repoRoot, "packages", "plugin-registry", "r");
   const names = (await readdir(registryDir)).filter(
@@ -257,6 +280,7 @@ async function checkPlugin(pluginDir, workDir, sdkTarball, log) {
     sdkSpecifier: `file:../${basename(sdkTarball)}`,
     workspaceBinsByPackage: await workspaceBinsFor(pluginDir, manifest),
     registryDependencies: registry.packages,
+    catalogVersions: await catalogVersionsFor(pluginDir, manifest),
   });
   await writeFile(
     join(target, "package.json"),

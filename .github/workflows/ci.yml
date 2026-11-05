@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 env:
-  PRIMARY_NODE_VERSION: "22.x"
   PNPM_VERSION: "9.15.0"
 
 concurrency:
@@ -94,7 +93,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
       - name: Validate frozen dependency installation
         timeout-minutes: 5
@@ -112,7 +110,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          node-version-file: .nvmrc
           package-manager-cache: false
       - name: Setup pnpm
         run: npm install --global pnpm@${{ env.PNPM_VERSION }} --ignore-scripts
@@ -142,7 +140,7 @@ jobs:
   windows-foundation:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).foundation }}
-    name: Windows host packages (Node 22.x)
+    name: Windows host packages
     runs-on: windows-2025
     timeout-minutes: 15
     permissions:
@@ -155,7 +153,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Setup pnpm
@@ -172,7 +170,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: windows-foundation
           turbo-cache: "true"
           turbo-cache-max-size-mb: "256"
@@ -198,7 +195,7 @@ jobs:
   windows-app-smoke:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).packaging }}
-    name: Windows app smoke (Node 22.x)
+    name: Windows app smoke
     runs-on: windows-2025
     timeout-minutes: 40
     permissions:
@@ -211,7 +208,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Setup pnpm
@@ -233,7 +230,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: windows-app-smoke
           turbo-cache: "true"
           turbo-cache-max-size-mb: "256"
@@ -283,7 +279,7 @@ jobs:
   windows-desktop-smoke:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).packaging }}
-    name: Windows desktop smoke (Node 22.x)
+    name: Windows desktop smoke
     runs-on: windows-2025
     timeout-minutes: 40
     permissions:
@@ -296,7 +292,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Setup pnpm
@@ -318,7 +314,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: windows-desktop-smoke
           turbo-cache: "true"
           turbo-cache-max-size-mb: "256"
@@ -352,7 +347,7 @@ jobs:
         run: node scripts/prune-turbo-cache.mjs --dir .turbo/cache --max-size-mb 256
 
   windows-tests:
-    name: Windows tests (${{ matrix.shard }}, Node 22.x)
+    name: Windows tests (${{ matrix.shard }})
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection)['windows-tests'].include[0] != null }}
     runs-on: windows-2025
@@ -371,7 +366,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Setup pnpm
@@ -394,7 +389,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: windows-test-${{ matrix.shard }}
           turbo-cache: "true"
           turbo-cache-max-size-mb: "256"
@@ -477,7 +471,7 @@ jobs:
         run: node scripts/prune-turbo-cache.mjs --dir .turbo/cache --max-size-mb 256 --keep-run-summaries .turbo/runs
 
   static-checks:
-    name: Lint and typecheck (ubuntu-latest, Node 22.x)
+    name: Lint and typecheck (ubuntu-latest)
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).staticNeeded }}
     runs-on: ubuntu-24.04
@@ -492,7 +486,6 @@ jobs:
       - name: Setup workspace tools
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore workspace caches
@@ -501,7 +494,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: static-checks
           turbo-cache: "true"
 
@@ -528,7 +520,7 @@ jobs:
   checks:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).buildNeeded }}
-    name: Checks (ubuntu-latest, Node 22.x)
+    name: Checks (ubuntu-latest)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -546,7 +538,6 @@ jobs:
       - name: Setup workspace tools
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore React Compiler cache
@@ -560,7 +551,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: checks
           turbo-cache: "true"
 
@@ -630,7 +620,7 @@ jobs:
   # suites are CPU-bound and previously fought each other (and the builds) for
   # the same 4 vCPUs, which made tests the critical path of every run.
   tests:
-    name: Tests (${{ matrix.shard }}, ubuntu-latest, Node 22.x)
+    name: Tests (${{ matrix.shard }}, ubuntu-latest)
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection)['tests'].include[0] != null }}
     runs-on: ubuntu-24.04
@@ -647,7 +637,6 @@ jobs:
       - name: Setup workspace tools
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore React Compiler cache
@@ -662,7 +651,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: test-${{ matrix.shard }}
           turbo-cache: "true"
 
@@ -737,7 +725,7 @@ jobs:
   plugin-forks:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).forks }}
-    name: Plugin Fork Check (${{ matrix.shard }}, ubuntu-latest, Node 22.x)
+    name: Plugin Fork Check (${{ matrix.shard }}, ubuntu-latest)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -768,7 +756,6 @@ jobs:
         if: steps.selection.outputs.count != '0'
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore workspace caches
@@ -778,7 +765,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: plugin-forks-${{ matrix.shard }}
           turbo-cache: "true"
 
@@ -843,7 +829,6 @@ jobs:
       - name: Setup workspace tools
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore workspace caches
@@ -852,7 +837,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache-prefix: test-provider-model-listing
           turbo-cache: "true"
 
@@ -903,7 +887,7 @@ jobs:
   package-smoke:
     needs: plan
     if: ${{ fromJSON(needs.plan.outputs.selection).packaging }}
-    name: Package Smoke (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    name: Package Smoke (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
 
@@ -912,9 +896,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            node-version: "22.x"
           - os: macos-15
-            node-version: "22.x"
 
     steps:
       - name: Checkout repository
@@ -923,7 +905,6 @@ jobs:
       - name: Setup workspace tools
         uses: ./.github/actions/setup-workspace-tools
         with:
-          node-version: ${{ matrix.node-version }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Restore React Compiler cache
@@ -937,7 +918,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ matrix.node-version }}
           cache-prefix: package-smoke
           turbo-cache-max-size-mb: ${{ runner.os == 'macOS' && '256' || '1024' }}
 
@@ -987,13 +967,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            node-version: "24.x"
+            node-version: "22.19.0"
           - os: ubuntu-24.04
-            node-version: "26.x"
-          - os: macos-15
             node-version: "24.x"
           - os: macos-15
-            node-version: "26.x"
+            node-version: "22.19.0"
+          - os: macos-15
+            node-version: "24.x"
 
     steps:
       - name: Checkout repository
@@ -1016,7 +996,6 @@ jobs:
         continue-on-error: true
         uses: ./.github/actions/cache-workspace
         with:
-          node-version: ${{ matrix.node-version }}
           cache-prefix: compat-smoke
           turbo-cache-max-size-mb: ${{ runner.os == 'macOS' && '256' || '1024' }}
 
