@@ -4,6 +4,7 @@ import { InlineThreadTitle } from "./InlineThreadTitle";
 import { ProjectFavicon, ProjectStripe } from "./ProjectFavicon";
 import { ThreadDetailsTooltip } from "./ThreadDetailsTooltip";
 import { cn } from "./lib/utils";
+import { useRowActivation } from "./row-activation";
 
 /** Shared one-line layout; callers own navigation, menus, and trailing actions. */
 export function CompactRow({
@@ -51,6 +52,7 @@ export function CompactRow({
   trailing: ReactNode;
 }) {
   const muted = tone === "muted";
+  const activation = useRowActivation({ onActivate: onOpen, disabled: isRenaming, ignoreRepeatClicks: true });
   return (
     <div
       {...rowProps}
@@ -77,10 +79,13 @@ export function CompactRow({
           aria-label={label}
           aria-current={isActive ? "page" : undefined}
           {...linkProps}
+          onPointerDown={(event) => {
+            linkProps?.onPointerDown?.(event);
+            activation.onPointerDown(event);
+          }}
           onClick={(event) => {
             event.preventDefault();
-            if (isRenaming || event.detail > 1) return;
-            onOpen();
+            activation.onClick(event);
           }}
           onDoubleClick={(event) => {
             event.preventDefault();
