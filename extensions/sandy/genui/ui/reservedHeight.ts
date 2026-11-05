@@ -152,7 +152,6 @@ export function useReservedHeight(key: string, loading: boolean, provisional = f
       size.current = { width, height };
       if (first) {
         first = false;
-        // Laid out at another width (a narrower pane, a phone), the stored height doesn't apply.
         if (reserved.current !== null && heights().get(key, width) === null) flushSync(() => setReserve(null));
       }
       settle(width, height);

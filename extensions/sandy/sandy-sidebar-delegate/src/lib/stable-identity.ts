@@ -6,7 +6,6 @@ export function shareArray<T>(previous: readonly T[], next: readonly T[]): reado
   return previous.every((item, index) => item === next[index]) ? previous : next;
 }
 
-/** The previous map when every key holds an equal array, else a map that still reuses each equal array. */
 export function shareArrayMap<K, T>(
   previous: ReadonlyMap<K, readonly T[]>,
   next: ReadonlyMap<K, readonly T[]>,
@@ -23,7 +22,6 @@ export function shareArrayMap<K, T>(
   return sameEntries ? previous : shared;
 }
 
-/** Keeps the identity of the last value that share() judged equal to the current one. */
 export function useSharedValue<T>(next: T, share: (previous: T, next: T) => T): T {
   const ref = useRef(next);
   const shared = share(ref.current, next);
@@ -31,7 +29,6 @@ export function useSharedValue<T>(next: T, share: (previous: T, next: T) => T): 
   return shared;
 }
 
-/** A function whose identity never changes and which always calls the latest callback. */
 export function useLatestCallback<Args extends unknown[], Result>(
   callback: (...args: Args) => Result,
 ): (...args: Args) => Result {

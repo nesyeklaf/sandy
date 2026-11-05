@@ -52,7 +52,6 @@ let container: HTMLDivElement;
 let root: Root;
 const observers = new Set<{ report(): void }>();
 
-/** The browser reporting every observed element's size, as it does after layout. */
 function reportSizes(): void {
   act(() => {
     for (const observer of [...observers]) observer.report();
