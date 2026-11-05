@@ -1,15 +1,20 @@
 export function countDateTimeFormats(): { count: () => number; restore: () => void } {
+  const { count, restore } = recordDateTimeFormats();
+  return { count: () => count().length, restore };
+}
+
+export function recordDateTimeFormats(): { count: () => (string | undefined)[]; restore: () => void } {
   const Original = Intl.DateTimeFormat;
-  let constructed = 0;
-  class Counting extends Original {
+  const timeZones: (string | undefined)[] = [];
+  class Recording extends Original {
     constructor(...args: ConstructorParameters<typeof Original>) {
       super(...args);
-      constructed += 1;
+      timeZones.push(args[1]?.timeZone);
     }
   }
-  Intl.DateTimeFormat = Counting as typeof Intl.DateTimeFormat;
+  Intl.DateTimeFormat = Recording as typeof Intl.DateTimeFormat;
   return {
-    count: () => constructed,
+    count: () => timeZones,
     restore: () => {
       Intl.DateTimeFormat = Original;
     },

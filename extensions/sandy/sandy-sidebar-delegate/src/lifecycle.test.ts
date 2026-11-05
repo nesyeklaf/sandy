@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { countDateTimeFormats } from "./test-date-format-counter";
+import { countDateTimeFormats, recordDateTimeFormats } from "./test-date-format-counter";
 import {
   configuredSnoozePresetError,
   canPark,
@@ -176,6 +176,31 @@ describe("local time zone formatter cache", () => {
       vi.stubEnv("TZ", "America/New_York");
       expect(formatSnoozeWakeTime(summer, "en-US")).toBe("Jun 1, 2031, 8:00 AM");
     } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
+describe("device zone identity", () => {
+  it("does not serve Jerusalem from a formatter built for Cairo, whose offsets match on the formatted dates", () => {
+    try {
+      vi.stubEnv("TZ", "Africa/Cairo");
+      formatSnoozeWakeTime(Date.UTC(2031, 6, 1, 12), "en-US");
+      vi.stubEnv("TZ", "Asia/Jerusalem");
+      expect(formatSnoozeWakeTime(Date.UTC(2031, 3, 1, 12), "en-US")).toBe("Apr 1, 2031, 3:00 PM");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("builds the default-zone formatter with the explicit device zone", () => {
+    const recorder = recordDateTimeFormats();
+    try {
+      vi.stubEnv("TZ", "Asia/Tokyo");
+      formatSnoozeWakeTime(Date.UTC(2031, 5, 1, 12), "fr-FR");
+      expect(recorder.count().at(-1)).toBe("Asia/Tokyo");
+    } finally {
+      recorder.restore();
       vi.unstubAllEnvs();
     }
   });

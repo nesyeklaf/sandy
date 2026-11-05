@@ -230,10 +230,46 @@ export function snoozeWakeLabel(snoozedUntil: number, now: number): string {
   return `${Math.ceil(remaining / DAY_MS)}d`;
 }
 
-function localZoneSignature(at: Date): string {
-  const year = at.getFullYear();
-  return `${at.getTimezoneOffset()}/${new Date(year, 0, 1).getTimezoneOffset()}/${new Date(year, 6, 1).getTimezoneOffset()}`;
+const DEVICE_ZONE_MAX_AGE_MS = 60_000;
+
+interface ResolvedDeviceZone {
+  id: string;
+  resolvedAt: number;
+  offsetPattern: string;
 }
+
+let resolvedDeviceZone: ResolvedDeviceZone | null = null;
+
+function monthlyOffsetPattern(now: number): string {
+  const year = new Date(now).getFullYear();
+  const offsets: number[] = [];
+  for (let month = 0; month < 12; month += 1) offsets.push(new Date(year, month, 1).getTimezoneOffset());
+  return offsets.join("/");
+}
+
+function deviceTimeZone(): string {
+  const now = Date.now();
+  const offsetPattern = monthlyOffsetPattern(now);
+  if (
+    resolvedDeviceZone === null ||
+    now - resolvedDeviceZone.resolvedAt >= DEVICE_ZONE_MAX_AGE_MS ||
+    resolvedDeviceZone.offsetPattern !== offsetPattern
+  ) {
+    resolvedDeviceZone = {
+      id: new Intl.DateTimeFormat().resolvedOptions().timeZone,
+      resolvedAt: now,
+      offsetPattern,
+    };
+  }
+  return resolvedDeviceZone.id;
+}
+
+function forgetDeviceTimeZone(): void {
+  resolvedDeviceZone = null;
+}
+
+if (typeof window !== "undefined") window.addEventListener("focus", forgetDeviceTimeZone);
+if (typeof document !== "undefined") document.addEventListener("visibilitychange", forgetDeviceTimeZone);
 
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 
@@ -241,20 +277,20 @@ function cachedDateTimeFormat(
   kind: string,
   locale: string | undefined,
   timeZone: string | undefined,
-  at: Date,
   options: Intl.DateTimeFormatOptions,
 ): Intl.DateTimeFormat {
-  const key = `${kind}|${locale ?? ""}|${timeZone ?? `local${localZoneSignature(at)}`}`;
+  const zone = timeZone ?? deviceTimeZone();
+  const key = `${kind}|${locale ?? ""}|${zone}`;
   let formatter = dateTimeFormatters.get(key);
   if (!formatter) {
-    formatter = new Intl.DateTimeFormat(locale, { ...options, ...(timeZone ? { timeZone } : {}) });
+    formatter = new Intl.DateTimeFormat(locale, { ...options, timeZone: zone });
     dateTimeFormatters.set(key, formatter);
   }
   return formatter;
 }
 
 export function formatSnoozeWakeTime(snoozedUntil: number, locale?: string, timeZone?: string): string {
-  return cachedDateTimeFormat("wake", locale, timeZone, new Date(snoozedUntil), {
+  return cachedDateTimeFormat("wake", locale, timeZone, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(snoozedUntil));
@@ -303,7 +339,7 @@ export function combineSnoozeDateTime(date: Date, time: string): number | null {
 export function formatPickedSnooze(snoozedUntil: number, now = new Date(), locale?: string, timeZone?: string): string {
   const wake = new Date(snoozedUntil);
   const withYear = wake.getFullYear() !== now.getFullYear();
-  return cachedDateTimeFormat(withYear ? "picked-year" : "picked", locale, timeZone, wake, {
+  return cachedDateTimeFormat(withYear ? "picked-year" : "picked", locale, timeZone, {
     weekday: "short",
     month: "short",
     day: "numeric",
