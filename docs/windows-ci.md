@@ -8,7 +8,7 @@ selected Windows job is blocking, not advisory.
 
 ## Host packages
 
-The `Windows host packages (Node 22.x)` job runs lint, typecheck, and the full
+The `Windows host packages` job runs lint, typecheck, and the full
 test suite for nine packages:
 
 - `@sandy/process-utils`, `@sandy/host-workspace`, and `@sandy/host-watcher`
@@ -35,7 +35,7 @@ product; Turbo runs the required generators and native-module preparation.
 
 ## Full test suite
 
-The `Windows tests (<shard>, Node 22.x)` jobs run the test suite of every
+The `Windows tests (<shard>)` jobs run the test suite of every
 package outside the nine above, on the same runner image. A failure fails the
 job. The thirteen shards cover each
 suite exactly once:
@@ -140,7 +140,7 @@ for timings, verification, cache keys, and fallback behavior.
 
 ## App boot smoke
 
-The `Windows app smoke (Node 22.x)` job builds `sandy-app` from the checkout and
+The `Windows app smoke` job builds `sandy-app` from the checkout and
 runs `packages/sandy-app/scripts/smoke-boot.mjs`: it starts the built launcher on
 free ports with a temporary data directory, waits for `/health`, runs
 `sandy status` through the bundled CLI, waits for the built-in plugins to report
@@ -156,7 +156,7 @@ pnpm exec turbo run smoke:boot --filter=sandy-app --output-logs=new-only
 pnpm exec turbo run smoke:tarball --filter=sandy-app --output-logs=new-only
 ```
 
-The `Windows desktop smoke (Node 22.x)` job packages the desktop app from the
+The `Windows desktop smoke` job packages the desktop app from the
 same checkout and runs the packaged-app smoke against the result. Both
 packaging smoke jobs install the workspace without `@sandy/mobile`, which is not
 in the desktop or launcher dependency chain:

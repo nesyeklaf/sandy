@@ -36,7 +36,6 @@ jobs:
       - name: Setup workspace
         uses: ./.github/actions/setup-workspace
         with:
-          node-version: 22.x
           pnpm-version: 9.15.0
           cache-prefix: mobile-android-e2e
 

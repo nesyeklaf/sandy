@@ -197,15 +197,16 @@ rebuild the native dependency, for example `npm rebuild better-sqlite3`.
 
 - GitHub Actions uses Ubuntu as the required support gate for build,
   typecheck, lint, test, and Linux smoke coverage.
-- Full build, typecheck, lint, and test checks run on Ubuntu with Node.js 22
-  only.
-- Pull requests run the `sandy-app` tarball smoke on Ubuntu and macOS with Node.js
-  22, validating the packed npm artifact through `npx --package`.
+- Full build, typecheck, lint, and test checks run on Ubuntu with the Node.js version
+  in `.nvmrc` (26.13.0) only.
+- Pull requests run the `sandy-app` tarball smoke on Ubuntu and macOS with the
+  `.nvmrc` Node.js version, validating the packed npm artifact through
+  `npx --package`.
 - Pushes to `main` and manually dispatched CI runs also run the `sandy-app` tarball
-  smoke on Ubuntu and macOS with Node.js 24 and 26.
-- Branch protection should require `Checks (ubuntu-latest, Node 22.x)`,
-  `Package Smoke (ubuntu-latest, Node 22.x)`, and
-  `Package Smoke (macos-latest, Node 22.x)`. The Node.js 24 and 26 compatibility
+  smoke on Ubuntu and macOS with Node.js 22.19 and 24.
+- Branch protection should require `Checks (ubuntu-latest)`,
+  `Package Smoke (ubuntu-24.04)`, and
+  `Package Smoke (macos-15)`. The Node.js 22.19 and 24 compatibility
   smoke jobs do not run on pull requests and should not be configured as
   required PR checks.
 - Native Windows CI runs on every pull request, described in

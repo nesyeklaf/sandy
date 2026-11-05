@@ -435,8 +435,8 @@ the checkout-specific URLs, data directory, and logs directory. Stop it with
 Ctrl-C. For desktop-only changes, start
 `pnpm exec turbo run dev --filter=@sandy/desktop` in a second terminal.
 
-Use the Node version in `.nvmrc` (22.19.0). Desktop development requires
-Node 22.19 or newer in the Node 22 release line.
+Use the Node version in `.nvmrc` (26.13.0). Desktop development requires
+Node 22.19 or newer in the Node 22 release line, or Node 24 or 26.
 
 A sandy connect shared-port URL is a different browser origin from localhost. If
 QA through that URL needs the browser-local host daemon, restart the dev app

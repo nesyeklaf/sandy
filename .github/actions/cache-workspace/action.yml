@@ -1,9 +1,6 @@
 name: Cache workspace
 description: Restore optional Turbo outputs and save them after successful jobs.
 inputs:
-  node-version:
-    required: true
-    description: Node version used in Turbo cache keys
   cache-prefix:
     required: true
     description: Job-specific Turbo cache prefix
@@ -16,6 +13,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Resolve Node version
+      id: node
+      if: inputs.turbo-cache == 'true'
+      shell: bash
+      run: echo "version=$(node --version)" >> "$GITHUB_OUTPUT"
     - name: Cache Turbo task outputs
       if: inputs.turbo-cache == 'true'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -23,11 +25,11 @@ runs:
         SEGMENT_DOWNLOAD_TIMEOUT_MINS: "1"
       with:
         path: .turbo/cache
-        key: ${{ runner.os }}-node-${{ inputs.node-version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ inputs.cache-prefix }}-${{ github.sha }}
+        key: ${{ runner.os }}-node-${{ steps.node.outputs.version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ inputs.cache-prefix }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-node-${{ inputs.node-version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ inputs.cache-prefix }}-
-          ${{ runner.os }}-node-${{ inputs.node-version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
-          ${{ runner.os }}-node-${{ inputs.node-version }}-turbo-
+          ${{ runner.os }}-node-${{ steps.node.outputs.version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-${{ inputs.cache-prefix }}-
+          ${{ runner.os }}-node-${{ steps.node.outputs.version }}-turbo-${{ hashFiles('pnpm-lock.yaml') }}-
+          ${{ runner.os }}-node-${{ steps.node.outputs.version }}-turbo-
     - name: Prune restored Turbo cache
       if: inputs.turbo-cache == 'true'
       shell: bash

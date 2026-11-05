@@ -2196,7 +2196,9 @@ describe("managed process networking", () => {
     "%s uses the environment proxy and keeps loopback direct",
     async (kind) => {
       if (!process.allowedNodeEnvironmentFlags.has("--use-env-proxy")) return;
-      const proxy = createServer();
+      const proxy = createServer((_request, response) =>
+        response.end("proxied"),
+      );
       proxy.on("connect", (_request, socket) => {
         socket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
         socket.once("data", () => {
