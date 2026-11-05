@@ -566,7 +566,7 @@ function pass(run: Active, edgeTo: string | null, now: number, how: string, fina
     return { run: mint(closed, null, { kind: "agent" }, "advance", now, ""), reply: { kind: "finished" } };
   }
   const stage = stageOf(run.machine, lease.stage);
-  const next = mint(closed, to, driverFor(run.machine, run.plan, to), "advance", now, `advanced from ${stage.title} (${stage.id}): ${how}`);
+  const next = mint(closed, to, driverFor(run.machine, run.plan, to), "advance", now, `advanced from ${stage.title} (${stage.id}): ${how}${because ? `; ${because}` : ""}`);
   return { run: next, reply: { kind: "entered", station: stationOf(next)! } };
 }
 

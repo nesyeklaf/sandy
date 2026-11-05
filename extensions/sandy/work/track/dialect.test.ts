@@ -162,6 +162,7 @@ test("fix, owner (decide), fix count two weigh traversals; the third fix routes 
   run = advance(run).run;
   assert.equal(stageNow(run), "decide");
   assert.match(endText(run.log.at(-1)!.end), /round limit reached: "weigh" was taken 2 of at most 2 times/);
+  assert.match(statusText(run), /Why: advanced from .*; round limit reached: "weigh" was taken 2 of at most 2 times/);
   run = advance(run).run;
   run = answer(run, true, { Decision: "pass" }).run;
   assert.equal(run.state.kind, "done");
