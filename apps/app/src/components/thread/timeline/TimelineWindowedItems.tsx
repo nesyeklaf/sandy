@@ -451,14 +451,16 @@ export function TimelineWindowedItems({
     (node: HTMLDivElement | null) => {
       if (node === null) return undefined;
       const key = node.getAttribute(WINDOW_KEY_ATTRIBUTE);
-      if (key !== null) record(key, node.getBoundingClientRect().height);
+      if (key !== null && !measurements.has(key)) {
+        record(key, node.getBoundingClientRect().height);
+      }
       const observer = getObserver();
       observer?.observe(node);
       return () => {
         observer?.unobserve(node);
       };
     },
-    [getObserver, record],
+    [getObserver, measurements, record],
   );
 
   const frameUpdatesRef = useRef({ count: 0, frame: null as number | null });
