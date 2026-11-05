@@ -3,9 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   checkValue,
   deriveValues,
+  formatType,
+  lineFormat,
+  parseType,
   evaluate,
   formatProblem,
   parseSkill,
+  readSkillIo,
   renderPreamble,
   renderStage,
   renderTrackSkillRead,
@@ -133,6 +137,95 @@ describe("think-it-through", () => {
   });
 });
 
+describe("top-level IO", () => {
+  const plain = [
+    "---",
+    "name: summarize",
+    "description: Summarize a page",
+    "---",
+    "# Summarize",
+    "",
+    '{% input name="Page" type="url" description="Page to read" /%}',
+    '{% input name="Notes" type="file" optional=true /%}',
+    '{% output name="Summary" type="file(docs/summary.md)" description="The summary" /%}',
+    '{% output name="Tone" type="choice(dry, warm)" /%}',
+    "",
+    "Read the page and write the summary.",
+    "",
+  ].join("\n");
+
+  it("reads inputs and outputs of a skill without stages", () => {
+    expect(readSkillIo(plain)).toEqual({
+      inputs: [
+        { name: "Page", type: "url", description: "Page to read" },
+        { name: "Notes", type: "file", optional: true },
+      ],
+      outputs: [
+        {
+          name: "Summary",
+          type: "file(docs/summary.md)",
+          description: "The summary",
+        },
+        { name: "Tone", type: "choice(dry, warm)" },
+      ],
+      problems: [],
+    });
+  });
+
+  it("types the results of a staged skill from the stage outputs they name", () => {
+    const io = readSkillIo(thinkItThrough, "think-it-through.md");
+    expect(io.problems).toEqual([]);
+    expect(io.inputs.map((i) => i.name)).toEqual(["Task", "Choice"]);
+    expect(io.outputs.map((o) => o.name)).toEqual(["Pick", "Premortem"]);
+    const pick = stage(compiled(thinkItThrough), "weigh").outputs.find((o) => o.name === "Pick");
+    expect(io.outputs[0]?.type).toBe(pick?.type);
+  });
+
+  it("names each broken IO tag with its line and ignores every other tag", () => {
+    const source = [
+      "---",
+      "name: broken-io",
+      "---",
+      '{% input name="bad name" /%}',
+      '{% output name="Out" type="choice(a)" /%}',
+      '{% output name="Pick" type="choice(a, b)" by="owner" /%}',
+      '{% output name="Twice" /%}',
+      '{% output name="Twice" /%}',
+      '{% widget size=3 /%}',
+      "{% if $x %}",
+    ].join("\n");
+    const io = readSkillIo(source, "broken-io.md");
+    expect(io.inputs).toEqual([]);
+    expect(io.outputs).toEqual([{ name: "Twice" }]);
+    expect(io.problems.map((p) => [p.line, p.tag, p.message])).toEqual([
+      [4, "input", 'input name "bad name" is not valid'],
+      [5, "output", "a choice needs at least two values"],
+      [6, "output", 'a top-level output "Pick" cannot be picked by the owner'],
+      [8, "output", "output Twice is declared twice"],
+    ]);
+  });
+
+  it("lets a staged skill declare top-level outputs without changing its machine", () => {
+    const withOutput = thinkItThrough.replace(
+      '{% input name="Choice" type="text" /%}',
+      '{% input name="Choice" type="text" /%}\n{% output name="Decision" description="What was decided" /%}',
+    );
+    expect(compiled(withOutput)).toEqual(compiled(thinkItThrough));
+    expect(renderPreamble(withOutput)).toContain(
+      "- Output Decision (text): What was decided",
+    );
+    const owner = parseSkill(
+      withOutput.replace('name="Decision"', 'name="Decision" by="owner"'),
+      "owner.md",
+    );
+    expect(owner.ok).toBe(false);
+    if (!owner.ok)
+      expect(owner.problems.map((p) => p.message)).toEqual([
+        'a top-level output "Decision" cannot be picked by the owner',
+      ]);
+  });
+});
+
 describe("broken skills", () => {
   const broken = (from: string, to: string) => {
     expect(thinkItThrough).toContain(from);
@@ -211,6 +304,45 @@ describe("broken skills", () => {
     ).toBe(
       'by="owner" output "Decision" needs a choice(...) type in a stage with gate="user"',
     );
+  });
+});
+
+describe("url and file types", () => {
+  it("parses, formats and describes url, file and file(path)", () => {
+    for (const text of ["url", "file", "file(user_model.md)"]) {
+      const parsed = parseType(text);
+      if (!parsed.ok) throw new Error(parsed.error);
+      expect(formatType(parsed.type)).toBe(text);
+    }
+    expect(parseType("file(user_model.md)")).toEqual({
+      ok: true,
+      type: { kind: "file", path: "user_model.md" },
+    });
+    expect(lineFormat({ kind: "url" })).toBe("a URL");
+    expect(lineFormat({ kind: "file", path: "a.md" })).toBe(
+      "a file path (default a.md)",
+    );
+    expect(parseType("file()")).toMatchObject({ ok: false });
+    expect(parseType("list(url)")).toMatchObject({ ok: false });
+  });
+
+  it("checks url and file values as text and branches on them only with present", () => {
+    expect(checkValue("file(a.md)", "out/a.md", {})).toEqual({
+      ok: true,
+      value: "out/a.md",
+    });
+    const source = thinkItThrough
+      .replace('{% input name="Task" type="text" /%}', '{% input name="Task" type="url" /%}')
+      .replace('{% output name="Frame" type="text" /%}', '{% output name="Frame" type="file(frame.md)" /%}');
+    const machine = compiled(source);
+    expect(stage(machine, "frame").outputs[0]).toMatchObject({ name: "Frame", type: "file(frame.md)" });
+    expect(machine.inputs?.[0]).toMatchObject({ name: "Task", type: "url" });
+    const refused = parseSkill(
+      source.replace('when=equals($frame.Clear, "no")', 'when=equals($frame.Frame, "no")'),
+      "broken.md",
+    );
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.problems[0]?.message).toContain("free text");
   });
 });
 

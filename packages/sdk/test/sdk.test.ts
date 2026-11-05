@@ -2203,6 +2203,7 @@ describe("@sandy/sdk", () => {
         bodyText: JSON.stringify({
           skillId,
           environmentId: null,
+          path: "SKILL.md",
           content: "# Updated",
           revision,
         }),
@@ -2270,7 +2271,7 @@ describe("@sandy/sdk", () => {
       revision: "c".repeat(64),
     });
     await expect(
-      sdk.skills.experimental_write({ ...target, content: "# B", revision }),
+      sdk.skills.experimental_write({ ...target, path: "references/b.md", content: "# B", revision }),
     ).resolves.toEqual({ outcome: "conflict", currentRevision });
     await expect(
       sdk.skills.experimental_write({ ...target, content: "# C", revision }),
@@ -2278,5 +2279,60 @@ describe("@sandy/sdk", () => {
     expect(queue.requests[0]?.url).toBe(
       `http://sandy.test/api/v1/projects/proj_123/skills/content?skillId=${skillId}&path=SKILL.md&environmentId=`,
     );
+    expect(JSON.parse(queue.requests[1]?.bodyText ?? "{}")).toMatchObject({ path: "SKILL.md" });
+    expect(JSON.parse(queue.requests[2]?.bodyText ?? "{}")).toMatchObject({ path: "references/b.md" });
+  });
+
+  it("creates a skill and returns a typed conflict when the name is taken", async () => {
+    const queue = createFetchQueue([
+      {
+        body: {
+          filePath: "/repo/.sandy/skills/review/SKILL.md",
+          revision: "c".repeat(64),
+        },
+      },
+      {
+        status: 409,
+        body: {
+          code: "conflict",
+          message: "A skill with this name already exists",
+          details: { currentRevision: null },
+        },
+      },
+    ]);
+    const sdk = createSandySdk({
+      transport: createHttpTransport({
+        baseUrl: "http://sandy.test",
+        fetch: queue.fetch,
+        runtime: "node",
+      }),
+    });
+    const input = {
+      projectId: "proj_123",
+      environmentId: null,
+      scope: "sandy-project" as const,
+      name: "review",
+      content: "# Review",
+    };
+
+    await expect(sdk.skills.experimental_create(input)).resolves.toEqual({
+      outcome: "written",
+      filePath: "/repo/.sandy/skills/review/SKILL.md",
+      revision: "c".repeat(64),
+    });
+    await expect(sdk.skills.experimental_create(input)).resolves.toEqual({
+      outcome: "conflict",
+      currentRevision: null,
+    });
+    expect(queue.requests[0]).toMatchObject({
+      method: "POST",
+      url: "http://sandy.test/api/v1/projects/proj_123/skills",
+      bodyText: JSON.stringify({
+        environmentId: null,
+        scope: "sandy-project",
+        name: "review",
+        content: "# Review",
+      }),
+    });
   });
 });

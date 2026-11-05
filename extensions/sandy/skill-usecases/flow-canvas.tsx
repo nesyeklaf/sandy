@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import type { Problem, SkillInfo } from "./check";
 import { GAP_Y, NODE_H, connect, entryPoint, exitPoint, insertNode, layout, nodeWidth, type Edit, type PaletteItem, type Placement } from "./canvas-model";
 import { backWires, exitLabels, nodeTitle, wireAt, type Flow, type FlowNode, type Wire } from "./graph";
@@ -73,6 +73,7 @@ export function FlowCanvas({
   message,
   onSelect,
   onChange,
+  paletteHeader,
 }: {
   flow: Flow;
   skills: readonly SkillInfo[];
@@ -82,6 +83,7 @@ export function FlowCanvas({
   message: string;
   onSelect: (selection: Selection) => void;
   onChange: (edit: Edit) => void;
+  paletteHeader: (add: (item: PaletteItem) => void) => ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<View>({ x: 40, y: 40, k: 1 });
@@ -246,7 +248,7 @@ export function FlowCanvas({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
-      <Palette skills={skills} onAdd={(item) => addFree(item, center())} />
+      <Palette skills={skills} onAdd={(item) => addFree(item, center())} header={paletteHeader((item) => addFree(item, center()))} />
       <div
         ref={box}
         className="relative min-h-0 min-w-0 flex-1 touch-none select-none overflow-hidden bg-background"

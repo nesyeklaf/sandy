@@ -33,7 +33,14 @@ interface SkillDeleteOptions extends SkillWorkspaceOptions {
 
 interface SkillUpdateOptions extends SkillWorkspaceOptions {
   file: string;
-  revision: string;
+  path: string;
+  revision?: string;
+  new?: boolean;
+}
+
+interface SkillCreateOptions extends SkillWorkspaceOptions {
+  file: string;
+  shared?: boolean;
 }
 
 interface SkillInstallCliSkillsOptions extends JsonOutputOptions {
@@ -190,32 +197,75 @@ export function registerSkillCommands(
 
   addWorkspaceOptions(skill.command("update <skill-id>"))
     .description(
-      "Replace a writable skill's SKILL.md from a local file; symlinked skills are written at their real path",
+      "Replace a writable skill's SKILL.md, or with --path another file in its folder, from a local file; with --new create that file instead; symlinked skills are written at their real path",
     )
-    .requiredOption("--file <path>", "Local SKILL.md to upload")
-    .requiredOption(
+    .requiredOption("--file <path>", "Local file to upload")
+    .option("--path <path>", "Skill-relative file path", "SKILL.md")
+    .option(
       "--revision <sha256>",
       "Revision returned by sandy skill show --json",
     )
+    .option(
+      "--new",
+      "Create the file at --path; fails if it already exists",
+    )
     .action(
       action(async (skillId: string, options: SkillUpdateOptions) => {
+        if ((options.revision === undefined) === (options.new !== true)) {
+          throw new Error("Pass either --revision <sha256> or --new.");
+        }
+        const revision = options.revision ?? null;
         const written = await createCliSandySdk(
           getUrl(),
         ).skills.experimental_write({
           projectId: projectId(options, getContext()),
           environmentId: environmentId(options),
           skillId,
+          path: options.path,
           content: await readFile(options.file, "utf8"),
-          revision: options.revision,
+          revision,
         });
+        if (written.outcome === "conflict" && revision === null) {
+          throw new Error(
+            `${options.path} already exists. Run sandy skill show ${skillId} --path ${options.path} --json and update it with --revision.`,
+          );
+        }
         if (written.outcome === "conflict") {
           throw new Error(
-            `Skill changed since revision ${options.revision}${written.currentRevision === null ? "" : ` (now ${written.currentRevision})`}. Run sandy skill show ${skillId} --json, merge, and retry.`,
+            `Skill changed since revision ${revision}${written.currentRevision === null ? "" : ` (now ${written.currentRevision})`}. Run sandy skill show ${skillId} --path ${options.path} --json, merge, and retry.`,
           );
         }
         const result = { filePath: written.filePath, revision: written.revision };
         if (outputJson(options, result)) return;
         console.log(`Updated ${result.filePath}`);
+      }),
+    );
+
+  addWorkspaceOptions(skill.command("create <name>"))
+    .description(
+      "Create a new skill folder with a SKILL.md from a local file, in the workspace's .sandy/skills or with --shared in the shared user root (~/.agents/skills)",
+    )
+    .requiredOption("--file <path>", "Local SKILL.md to upload")
+    .option("--shared", "Create the skill in the shared user skill root")
+    .action(
+      action(async (name: string, options: SkillCreateOptions) => {
+        const written = await createCliSandySdk(
+          getUrl(),
+        ).skills.experimental_create({
+          projectId: projectId(options, getContext()),
+          environmentId: environmentId(options),
+          scope: options.shared === true ? "shared-user" : "sandy-project",
+          name,
+          content: await readFile(options.file, "utf8"),
+        });
+        if (written.outcome === "conflict") {
+          throw new Error(
+            `A skill named ${name} already exists there. Pick another name or edit it with sandy skill update.`,
+          );
+        }
+        const result = { filePath: written.filePath, revision: written.revision };
+        if (outputJson(options, result)) return;
+        console.log(`Created ${result.filePath}`);
       }),
     );
 

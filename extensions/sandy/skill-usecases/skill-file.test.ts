@@ -1,7 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { formatIo, parseIo } from "./io.ts";
-import { applyDraft, emptyIoRow, formatIoRows, ioRowProblems, isDraftChanged, parseSkillFile, type SkillDraft } from "./skill-file.ts";
+import { applyDraft, emptyIoRow, formatIoRows, ioRowProblems, isDraftChanged, newFileProblem, parseSkillFile, type SkillDraft } from "./skill-file.ts";
+
+test("a new skill file path must stay inside the folder and must not exist yet", () => {
+  const existing = ["SKILL.md", "references/layout.md"];
+  assert.equal(newFileProblem("references/notes.md", existing), null);
+  assert.equal(newFileProblem("  ", existing), null);
+  for (const outside of ["/etc/passwd", "../other/SKILL.md", "references//x.md", ".env", "a\\b.md"]) {
+    assert.equal(newFileProblem(outside, existing), "Use a path inside the skill folder, like references/notes.md.", outside);
+  }
+  assert.equal(newFileProblem("SKILL.md", existing), "SKILL.md is edited in the Source tab.");
+  assert.equal(newFileProblem("references/layout.md", existing), "references/layout.md already exists; open it from the list.");
+});
 
 const SKILL = [
   "---",
@@ -77,7 +88,7 @@ test("editing the description changes only its line and keeps order, comments an
   assert.equal(draftOf(next).description, "Ship it: with a colon # and a hash");
 });
 
-test("new outputs and metadata keys are written as quoted strings under metadata", () => {
+test("editing IO rows moves metadata IO into input and output tags; other keys stay quoted strings under metadata", () => {
   const draft = draftOf(SKILL);
   const next = written(SKILL, {
     ...draft,
@@ -85,13 +96,18 @@ test("new outputs and metadata keys are written as quoted strings under metadata
     metadata: [{ key: "author", value: "owner" }, { key: "version", value: "2" }],
   });
   assert.match(next, /\n {2}author: "owner"\n/u);
-  assert.match(next, /\n {2}outputs: "Report: file\(report\.md\)"\n/u);
+  assert.doesNotMatch(next, /inputs:|outputs:/u);
+  assert.match(next, /\n# Quick send\n\n\{% input name="Issue" type="url" \/%\}\n\{% input name="Mode" type="choice\(fast, careful\)" optional=true \/%\}\n\{% input name="Plan" type="file\(plan\.md\)" optional=true \/%\}\n\{% output name="Report" type="file\(report\.md\)" \/%\}\n\nBody text\.\n/u);
   assert.match(next, /\n {2}version: "2"\n/u);
   assert.match(next, /\n {2}tags:\n {4}- quick\n/u);
   assert.ok(next.indexOf("license: MIT") < next.indexOf("metadata:"));
   assert.ok(next.indexOf("metadata:") < next.indexOf("allowed-tools"));
   const reread = draftOf(next);
   assert.deepEqual(reread.outputs, [{ name: "Report", optional: false, kind: "file", path: "report.md", values: "" }]);
+  assert.deepEqual(reread.inputs, draft.inputs);
+  const reparsed = parseSkillFile(next);
+  assert.ok(reparsed.ok);
+  assert.deepEqual(reparsed.warnings, []);
   assert.deepEqual(reread.metadata, [{ key: "author", value: "owner" }, { key: "version", value: "2" }]);
 });
 
@@ -101,17 +117,27 @@ test("removing every metadata entry drops the empty metadata block", () => {
   assert.equal(next, "---\nname: tiny\ndescription: Small\n---\nBody\n");
 });
 
-test("adding inputs to a skill without metadata creates the block", () => {
+test("adding inputs to a skill without metadata writes an input tag and leaves the frontmatter alone", () => {
   const plain = "---\nname: tiny\ndescription: Small\n---\nBody\n";
   const next = written(plain, { ...draftOf(plain), inputs: [{ name: "Goal", optional: true, kind: "text", path: "", values: "" }] });
-  assert.equal(next, '---\nname: tiny\ndescription: Small\nmetadata:\n  inputs: "Goal?: text"\n---\nBody\n');
+  assert.equal(next, '---\nname: tiny\ndescription: Small\n---\n{% input name="Goal" optional=true /%}\n\nBody\n');
+});
+
+test("tags win over metadata IO and edits keep untouched tags byte for byte", () => {
+  const tagged = '---\nname: x\ndescription: d\nmetadata:\n  inputs: "Old: text"\n---\n# X\n\n{%  input   name="Goal" description="What to do" /%}\n{% output name="Notes" type="file(notes.md)" /%}\n\nBody\n';
+  const parsed = parseSkillFile(tagged);
+  assert.ok(parsed.ok);
+  assert.deepEqual(parsed.draft.inputs.map((row) => row.name), ["Goal"]);
+  assert.deepEqual(parsed.warnings, []);
+  const next = written(tagged, { ...parsed.draft, outputs: [...parsed.draft.outputs, { name: "Extra", optional: true, kind: "url", path: "", values: "" }] });
+  assert.equal(next, '---\nname: x\ndescription: d\n---\n# X\n\n{%  input   name="Goal" description="What to do" /%}\n{% output name="Notes" type="file(notes.md)" /%}\n{% output name="Extra" type="url" optional=true /%}\n\nBody\n');
 });
 
 test("unreadable IO entries stay as written until their rows are edited", () => {
   const broken = '---\nname: x\ndescription: d\nmetadata:\n  inputs: "Goal: text; oops"\n---\n';
   const parsed = parseSkillFile(broken);
   assert.ok(parsed.ok);
-  assert.equal(parsed.warnings.length, 1);
+  assert.deepEqual(parsed.warnings.slice(1), ['inputs: entry 2 "oops" has no type, write "Name: type"; editing its rows replaces it.']);
   assert.equal(written(broken, { ...parsed.draft, body: "new\n" }), broken + "new\n");
 });
 
@@ -135,9 +161,9 @@ test("metadata that is not a key: value map locks structured editing and is neve
   assert.match(parsed.metadataLock ?? "", /metadata is not a key: value map/u);
   const draft = parsed.draft;
   const goal = { name: "Goal", optional: false, kind: "text", path: "", values: "" } as const;
-  assert.deepEqual(applyDraft(listed, { ...draft, inputs: [goal] }), { ok: false, error: parsed.metadataLock });
+  assert.deepEqual(applyDraft(listed, { ...draft, inputs: [goal] }), { ok: true, content: '---\nname: x\ndescription: d\nmetadata: [one, two]\n---\n{% input name="Goal" /%}\n\nBody\n' });
   assert.deepEqual(applyDraft(listed, { ...draft, metadata: [{ key: "author", value: "me" }] }), { ok: false, error: parsed.metadataLock });
-  assert.equal(isDraftChanged(listed, { ...draft, inputs: [goal] }), true);
+  assert.equal(isDraftChanged(listed, { ...draft, metadata: [{ key: "author", value: "me" }] }), true);
   const described = written(listed, { ...draft, description: "new" });
   assert.match(described, /\nmetadata: \[ one, two \]\n|\nmetadata: \[one, two\]\n/u);
   assert.equal(draftOf(described).description, "new");

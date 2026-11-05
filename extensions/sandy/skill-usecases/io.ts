@@ -18,7 +18,7 @@ export interface IoParseResult {
 const ENTRY = /^([^:]*?)(\?)?\s*:\s*(.*)$/su;
 const CALL = /^(\w+)\s*\((.*)\)$/su;
 
-function parseType(raw: string): IoType | string {
+export function parseIoType(raw: string): IoType | string {
   const text = raw.trim();
   if (text === "text") return { kind: "text" };
   if (text === "url") return { kind: "url" };
@@ -66,7 +66,7 @@ export function parseIo(value: string | undefined): IoParseResult {
       errors.push(where + ': "' + name + '" is declared twice');
       continue;
     }
-    const type = parseType(rawType);
+    const type = parseIoType(rawType);
     if (typeof type === "string") {
       errors.push(where + ' "' + name + '": ' + type);
       continue;

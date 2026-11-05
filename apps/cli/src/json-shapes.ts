@@ -34,7 +34,7 @@ export const JSON_SHAPE_BY_COMMAND_PATH: Readonly<Record<string, string>> = {
   "plugin list":
     "{plugins: [{id, version, enabled, status, source, rootDir}]}    (wrapped in .plugins)",
   "skill list":
-    "{skills: [{id, name, description, scope, provider, providers, pluginId, filePath, manageable, writable, metadata, duplicates: [{id, scope, provider, pluginId, filePath, relation}]}]}    (wrapped in .skills; writable means sandy skill update can save it, including symlinked shared skills that manageable excludes; metadata is the SKILL.md frontmatter metadata map with string values only, {} when absent; relation is same-file, same-content or same-name)",
+    "{skills: [{id, name, description, scope, provider, providers, pluginId, filePath, manageable, writable, metadata, revision, duplicates: [{id, scope, provider, pluginId, filePath, relation}]}]}    (wrapped in .skills; writable means sandy skill update can save it, including symlinked shared skills that manageable excludes; metadata is the SKILL.md frontmatter metadata map with string values only, {} when absent; revision is the SHA-256 of SKILL.md, the value sandy skill update --revision expects, null when unknown; relation is same-file, same-content or same-name)",
 };
 
 export function jsonShapeHelp(commandPath: string): string | null {

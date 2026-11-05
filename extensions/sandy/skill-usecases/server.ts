@@ -7,11 +7,13 @@ import {
   flowPrompt,
   flowReplySchema,
 } from "./ai.ts";
-import { parseIo } from "./io.ts";
-import type { Problem } from "./check.ts";
-import { compile } from "./compile.ts";
-import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, skillInfo, useCaseSchema, type SkillRow } from "./contract.ts";
-import { flowRunText, flowSkillNames, flowStepLines, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
+import { readIo } from "./skill-io.ts";
+import { newSkillSource } from "./skill-file.ts";
+import { formatProblem, parseSkill } from "@sandy/skill-dialect";
+import { check, hasErrors, type Problem } from "./check.ts";
+import { CHANGED_EVENT, FLOW_PROVIDER_ID, MAX_USE_CASES, rpcContract, skillInfo, useCaseSchema, type SkillFlowError, type SkillRow } from "./contract.ts";
+import { flowToSkill, skillName, skillToFlow, type Positions } from "./skill-flow.ts";
+import { flowRunText, flowSkillNames, flowStepLines, slug as skillSlug, storedFlowSchema, upgradeFlow, type Flow, type FlowStep } from "./graph.ts";
 import {
   DEFAULT_USE_CASES,
   FALLBACK_ID,
@@ -27,11 +29,15 @@ const USE_CASES_KEY = "usecases";
 const ASSIGNMENTS_KEY = "assignments";
 const FLOWS_KEY = "flows";
 const SKILLS_FRESH_MS = 5000;
+const POSITIONS_KEY = "positions";
 
 const storedUseCases = z.array(useCaseSchema);
 const storedAssignments = z.record(z.string(), z.string());
 const storedFlows = z.array(storedFlowSchema);
-const skillMetadata = z.object({ inputs: z.string().optional().catch(undefined), outputs: z.string().optional().catch(undefined) }).catch({});
+const storedPositions = z.record(z.string(), z.record(z.string(), z.object({ x: z.number(), y: z.number() })));
+const skillMetadata = z
+  .object({ inputs: z.string().optional().catch(undefined), outputs: z.string().optional().catch(undefined), dialect: z.string().optional().catch(undefined) })
+  .catch({});
 const skillAreasInput = z.object({ area: z.string().optional() });
 const skillFlowsInput = z.object({ flow: z.string().optional(), area: z.string().optional() });
 const flowTrackInput = z.object({ flow: z.string().min(1) });
@@ -40,6 +46,22 @@ function problemText(problem: Problem): string {
   const fixes = problem.fixes.length === 0 ? "" : " (fix in the editor: " + problem.fixes.map((fix) => fix.label).join(", ") + ")";
   return "- " + problem.message + fixes;
 }
+
+function positionsOf(flow: Flow): Positions {
+  return Object.fromEntries(flow.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+}
+
+function freeName(base: string, taken: ReadonlySet<string>): string {
+  let name = base;
+  for (let n = 2; taken.has(name); n += 1) name = base.slice(0, 60) + "-" + String(n);
+  return name;
+}
+
+type CachedSkill = { revision: string; generated: string; useCaseId: string };
+type SkillFile = { revision: string; content: string; filePath: string; writable: boolean };
+type ListedSkill = Awaited<ReturnType<SandyPluginApi["sdk"]["skills"]["list"]>>["skills"][number];
+
+const READ_BATCH = 8;
 
 function slug(label: string, taken: ReadonlySet<string>): string {
   const base = label.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "").slice(0, 30) || "area";
@@ -119,6 +141,75 @@ export default async function plugin(sandy: SandyPluginApi) {
     return flows;
   }
 
+  const skillCache = new Map<string, CachedSkill>();
+  const fileCache = new Map<string, SkillFile>();
+
+  async function skillFile(projectId: string, skill: Pick<ListedSkill, "id" | "revision">): Promise<SkillFile> {
+    const cached = fileCache.get(skill.id);
+    if (cached !== undefined && skill.revision !== null && cached.revision === skill.revision) return cached;
+    const file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId: skill.id });
+    const read = { revision: file.revision, content: file.content, filePath: file.filePath, writable: file.writable };
+    fileCache.set(skill.id, read);
+    return read;
+  }
+
+  async function skillFiles(projectId: string, skills: readonly ListedSkill[]): Promise<Map<string, SkillFile | Error>> {
+    const out = new Map<string, SkillFile | Error>();
+    for (let index = 0; index < skills.length; index += READ_BATCH) {
+      const batch = skills.slice(index, index + READ_BATCH);
+      const results = await Promise.allSettled(batch.map((skill) => skillFile(projectId, skill)));
+      batch.forEach((skill, at) => {
+        const result = results[at];
+        if (result === undefined) return;
+        out.set(skill.id, result.status === "fulfilled" ? result.value : result.reason instanceof Error ? result.reason : new Error(String(result.reason)));
+      });
+    }
+    return out;
+  }
+
+  async function readPositions(): Promise<Record<string, Positions>> {
+    const parsed = storedPositions.safeParse(await sandy.storage.kv.get(POSITIONS_KEY));
+    return parsed.success ? parsed.data : {};
+  }
+
+  async function skillFlows(projectId: string, rows: SkillRow[], files: ReadonlyMap<string, SkillFile | Error>): Promise<{ flows: Flow[]; errors: SkillFlowError[] }> {
+    const positions = await readPositions();
+    const infos = rows.map(skillInfo);
+    const flows: Flow[] = [];
+    const errors: SkillFlowError[] = [];
+    for (const row of rows) {
+      if (!row.dialect) continue;
+      const file = files.get(row.id) ?? (await skillFile(projectId, { id: row.id, revision: null }).catch((cause: unknown) => (cause instanceof Error ? cause : new Error(String(cause)))));
+      if (file instanceof Error) {
+        errors.push({ skillId: row.id, name: row.name, problems: [file.message] });
+        continue;
+      }
+      const result = skillToFlow(file.content, infos, { useCaseId: row.useCaseId, positions: positions[row.name] });
+      if (!result.ok) {
+        errors.push({ skillId: row.id, name: row.name, problems: result.problems.map(formatProblem) });
+        continue;
+      }
+      const flow: Flow = {
+        ...result.flow,
+        id: row.name,
+        origin: { skillId: row.id, revision: file.revision, filePath: file.filePath, writable: file.writable && row.writable },
+      };
+      skillCache.set(row.id, { revision: file.revision, generated: flowToSkill(flow), useCaseId: row.useCaseId });
+      flows.push(flow);
+    }
+    return { flows, errors };
+  }
+
+  async function allFlows(projectId: string | null, staleOk = false): Promise<{ flows: Flow[]; errors: SkillFlowError[]; rows: SkillRow[] }> {
+    const legacy = await readFlows();
+    const selected = await resolveProjectId(projectId);
+    if (selected === null) return { flows: legacy, errors: [], rows: [] };
+    const { rows, files } = await skillRows(selected, await readUseCases(), await readAssignments(), staleOk);
+    const fromSkills = await skillFlows(selected, rows, files);
+    const names = new Set(fromSkills.flows.map((flow) => flow.id));
+    return { flows: [...fromSkills.flows, ...legacy.filter((flow) => !names.has(flow.id))], errors: fromSkills.errors, rows };
+  }
+
   async function listProjects() {
     return (await sandy.sdk.projects.list()).map((project) => ({ id: project.id, name: project.name }));
   }
@@ -133,8 +224,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     useCases: UseCase[],
     assignments: Record<string, string>,
     staleOk = false,
-  ): Promise<SkillRow[]> {
+  ): Promise<{ rows: SkillRow[]; files: Map<string, SkillFile | Error> }> {
     const listed = await listedSkills(projectId, staleOk);
+    const unique = listed.skills.filter((skill, index) => listed.skills.findIndex((other) => other.name === skill.name) === index);
+    const files = await skillFiles(projectId, unique);
     const sourcesByName = new Map<string, Set<string>>();
     for (const skill of listed.skills) {
       const sources = sourcesByName.get(skill.name) ?? new Set<string>();
@@ -149,8 +242,8 @@ export default async function plugin(sandy: SandyPluginApi) {
       seen.add(skill.name);
       const { useCaseId, manual } = resolveUseCase(skill, useCases, assignments);
       const metadata = skillMetadata.parse(skill.metadata);
-      const inputs = parseIo(metadata.inputs);
-      const outputs = parseIo(metadata.outputs);
+      const file = files.get(skill.id);
+      const io = readIo(file === undefined || file instanceof Error ? "" : file.content, metadata);
       rows.push({
         id: skill.id,
         name: skill.name,
@@ -161,12 +254,13 @@ export default async function plugin(sandy: SandyPluginApi) {
         useCaseId,
         manual,
         sources: [...(sourcesByName.get(skill.name) ?? [])].sort(),
-        inputs: inputs.fields,
-        outputs: outputs.fields,
-        ioErrors: [...inputs.errors.map((error) => "inputs: " + error), ...outputs.errors.map((error) => "outputs: " + error)],
+        inputs: io.inputs,
+        outputs: io.outputs,
+        ioErrors: io.errors,
+        dialect: metadata.dialect !== undefined,
       });
     }
-    return rows.sort((a, b) => a.name.localeCompare(b.name));
+    return { rows: rows.sort((a, b) => a.name.localeCompare(b.name)), files };
   }
 
   function changed() {
@@ -179,26 +273,27 @@ export default async function plugin(sandy: SandyPluginApi) {
 
   sandy.rpc.register(rpcContract, {
     async state({ projectId }) {
-      const [projects, useCases, assignments, flows] = await Promise.all([
-        listProjects(),
-        readUseCases(),
-        readAssignments(),
-        readFlows(),
-      ]);
+      const projects = await listProjects();
       const selected = (projects.find((project) => project.id === projectId) ?? projects[0])?.id ?? null;
+      const all = await allFlows(selected, true);
       return {
         projects,
         projectId: selected,
-        useCases,
+        useCases: await readUseCases(),
         fallbackId: FALLBACK_ID,
         fallbackLabel: FALLBACK_LABEL,
-        skills: selected === null ? [] : await skillRows(selected, useCases, assignments, true),
-        flows,
+        skills: all.rows,
+        flows: all.flows,
+        skillFlowErrors: all.errors,
       };
     },
-    async overview() {
-      const [useCases, flows] = await Promise.all([readUseCases(), readFlows()]);
-      return { useCases, fallbackId: FALLBACK_ID, fallbackLabel: FALLBACK_LABEL, flows };
+    async overview({ projectId }) {
+      return {
+        useCases: await readUseCases(),
+        fallbackId: FALLBACK_ID,
+        fallbackLabel: FALLBACK_LABEL,
+        flows: (await allFlows(projectId, true)).flows,
+      };
     },
     async assign({ skillName, useCaseId }) {
       const assignments = await readAssignments();
@@ -236,21 +331,99 @@ export default async function plugin(sandy: SandyPluginApi) {
       changed();
       return { ok: true };
     },
-    async saveFlows({ flows }) {
+    async saveFlows({ projectId, flows }) {
       const useCases = await readUseCases();
       const known = new Set([FALLBACK_ID, ...useCases.map((useCase) => useCase.id)]);
       const ids = new Set(flows.map((flow) => flow.id));
-      if (ids.size !== flows.length || flows.some((flow) => !known.has(flow.useCaseId))) return { ok: false };
-      await sandy.storage.kv.set(FLOWS_KEY, flows);
+      if (ids.size !== flows.length || flows.some((flow) => !known.has(flow.useCaseId))) return { ok: false, revisions: {}, conflicts: [] };
+      await sandy.storage.kv.set(
+        FLOWS_KEY,
+        flows.filter((flow) => flow.origin === undefined),
+      );
+      const revisions: Record<string, string> = {};
+      const conflicts: string[] = [];
+      if (flows.some((flow) => flow.origin !== undefined)) {
+        const selected = await resolveProjectId(projectId);
+        const positions = await readPositions();
+        const assignments = await readAssignments();
+        for (const flow of flows) {
+          const origin = flow.origin;
+          if (origin === undefined) continue;
+          positions[flow.id] = positionsOf(flow);
+          const cached = skillCache.get(origin.skillId);
+          if (cached !== undefined && cached.useCaseId !== flow.useCaseId) {
+            assignments[flow.id] = flow.useCaseId;
+            skillCache.set(origin.skillId, { ...cached, useCaseId: flow.useCaseId });
+          }
+          const content = flowToSkill(flow);
+          if (selected === null || !origin.writable || (cached !== undefined && cached.revision === origin.revision && cached.generated === content)) continue;
+          const result = await sandy.sdk.skills.experimental_write({ projectId: selected, environmentId: null, skillId: origin.skillId, content, revision: origin.revision });
+          if (result.outcome === "conflict") {
+            conflicts.push(flow.id);
+            continue;
+          }
+          revisions[origin.skillId] = result.revision;
+          skillCache.set(origin.skillId, { revision: result.revision, generated: content, useCaseId: flow.useCaseId });
+        }
+        await sandy.storage.kv.set(POSITIONS_KEY, positions);
+        await sandy.storage.kv.set(ASSIGNMENTS_KEY, assignments);
+      }
+      changed();
+      return { ok: conflicts.length === 0, revisions, conflicts };
+    },
+    async createFlowSkill({ projectId, flow, scope, legacyId }) {
+      const selected = await resolveProjectId(projectId);
+      if (selected === null) throw new Error("No project available.");
+      const listed = await sandy.sdk.skills.list({ projectId: selected, environmentId: null });
+      const name = freeName(skillName({ id: "", name: flow.name }), new Set(listed.skills.map((skill) => skill.name)));
+      const named: Flow = { ...flow, id: name, origin: undefined, frontmatter: undefined };
+      const result = await sandy.sdk.skills.experimental_create({ projectId: selected, environmentId: null, scope, name, content: flowToSkill(named) });
+      if (result.outcome === "conflict") return { outcome: "conflict" as const, flowId: name };
+      invalidateListed();
+      const positions = await readPositions();
+      positions[name] = positionsOf(flow);
+      await sandy.storage.kv.set(POSITIONS_KEY, positions);
+      const assignments = await readAssignments();
+      assignments[name] = flow.useCaseId;
+      await sandy.storage.kv.set(ASSIGNMENTS_KEY, assignments);
+      if (legacyId !== null) await sandy.storage.kv.set(FLOWS_KEY, (await readFlows()).filter((item) => item.id !== legacyId));
+      changed();
+      return { outcome: "written" as const, flowId: name, filePath: result.filePath };
+    },
+    async createSkill({ projectId, scope, name, description, useCaseId }) {
+      const selected = await resolveProjectId(projectId);
+      if (selected === null) throw new Error("No project available.");
+      const folder = skillSlug(name, "skill");
+      const result = await sandy.sdk.skills.experimental_create({ projectId: selected, environmentId: null, scope, name: folder, content: newSkillSource(folder, description.trim()) });
+      if (result.outcome === "conflict") return { outcome: "conflict" as const, name: folder };
+      invalidateListed();
+      if (useCaseId !== null) {
+        const assignments = await readAssignments();
+        assignments[folder] = useCaseId;
+        await sandy.storage.kv.set(ASSIGNMENTS_KEY, assignments);
+      }
+      changed();
+      return { outcome: "written" as const, name: folder, filePath: result.filePath };
+    },
+    async deleteFlowSkill({ projectId, skillId }) {
+      const selected = await resolveProjectId(projectId);
+      if (selected === null) return { ok: false };
+      await sandy.sdk.skills.remove({ projectId: selected, environmentId: null, skillId });
+      skillCache.delete(skillId);
+      invalidateListed();
       changed();
       return { ok: true };
     },
-    async readSkill({ projectId, skillId }) {
-      const file = await sandy.sdk.skills.experimental_read({ projectId, environmentId: null, skillId });
+    async readSkill({ projectId, skillId, path }) {
+      const file = await sandy.sdk.skills.getContent({ projectId, environmentId: null, skillId, path });
       return { content: file.content, revision: file.revision, filePath: file.filePath, writable: file.writable };
     },
-    async writeSkill({ projectId, skillId, content, revision }) {
-      const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, content, revision });
+    async listSkillFiles({ projectId, skillId }) {
+      const listed = await sandy.sdk.skills.listFiles({ projectId, environmentId: null, skillId });
+      return { files: listed.files, truncated: listed.truncated };
+    },
+    async writeSkill({ projectId, skillId, path, content, revision }) {
+      const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, path, content, revision });
       if (result.outcome === "written") {
         invalidateListed();
         changed();
@@ -261,7 +434,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       const selected = await resolveProjectId(projectId);
       if (selected === null) throw new Error("No project available.");
       const useCases = await readUseCases();
-      const rows = (await skillRows(selected, useCases, await readAssignments())).filter((row) => !row.manual);
+      const rows = (await skillRows(selected, useCases, await readAssignments())).rows.filter((row) => !row.manual);
       if (rows.length === 0) return { proposals: [] };
       const reply = await askJson(
         sandy,
@@ -332,7 +505,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (selected === null) throw new Error("No project available.");
       const useCases = await readUseCases();
       const labels = areaLabels(useCases);
-      const rows = await skillRows(selected, useCases, await readAssignments());
+      const { rows } = await skillRows(selected, useCases, await readAssignments());
       const reply = await askJson(
         sandy,
         selected,
@@ -372,7 +545,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       const { area } = skillAreasInput.parse(params);
       const useCases = await readUseCases();
       const labels = areaLabels(useCases);
-      const rows = await skillRows(ctx.projectId, useCases, await readAssignments());
+      const { rows } = await skillRows(ctx.projectId, useCases, await readAssignments());
       const wanted = area?.trim().toLowerCase();
       const sections: string[] = [];
       for (const [id, label] of labels) {
@@ -395,12 +568,12 @@ export default async function plugin(sandy: SandyPluginApi) {
       properties: { flow: { type: "string" }, area: { type: "string" } },
       additionalProperties: false,
     },
-    async execute(params) {
+    async execute(params, ctx) {
       const { flow, area } = skillFlowsInput.parse(params);
       const labels = areaLabels(await readUseCases());
       const wantedFlow = flow?.trim().toLowerCase();
       const wantedArea = area?.trim().toLowerCase();
-      const flows = (await readFlows()).filter((item) => {
+      const flows = (await allFlows(ctx.projectId)).flows.filter((item) => {
         if (wantedFlow !== undefined && wantedFlow !== "" && item.id.toLowerCase() !== wantedFlow && item.name.toLowerCase() !== wantedFlow) return false;
         const label = (labels.get(item.useCaseId) ?? "").toLowerCase();
         return wantedArea === undefined || wantedArea === "" || item.useCaseId.toLowerCase() === wantedArea || label === wantedArea;
@@ -419,21 +592,28 @@ export default async function plugin(sandy: SandyPluginApi) {
   sandy.agents.registerTool({
     name: "flow_track",
     description:
-      "Compile one of the user's saved skill flows (name or id) into a track machine. Returns the machine as JSON to pass to stage_start({machine, note}), or the Check problems that block the run.",
+      "Find how to run one of the user's saved skill flows (name or id) as a track. A flow saved as a skill returns the stage_start({skill, note}) call to make. A flow not yet saved as a skill returns its track machine as JSON for stage_start({machine, note}). Returns the problems that block the run as an error.",
     presentation: { label: { pending: "Compiling flow", completed: "Compiled flow" } },
     parameters: { type: "object", properties: { flow: { type: "string" } }, required: ["flow"], additionalProperties: false },
     async execute(params, ctx) {
       const wanted = flowTrackInput.parse(params).flow.trim().toLowerCase();
-      const flow = (await readFlows()).find((item) => item.id.toLowerCase() === wanted || item.name.toLowerCase() === wanted);
+      const all = await allFlows(ctx.projectId);
+      const broken = all.errors.find((item) => item.name.toLowerCase() === wanted);
+      if (broken !== undefined)
+        return { content: [{ type: "text", text: 'The skill "' + broken.name + '" does not parse as a flow:\n' + broken.problems.map((line) => "- " + line).join("\n") }], isError: true };
+      const flow = all.flows.find((item) => item.id.toLowerCase() === wanted || item.name.toLowerCase() === wanted);
       if (flow === undefined) return { content: [{ type: "text", text: "No flow named " + JSON.stringify(wanted) + ". Call skill_flows to list the saved flows." }], isError: true };
-      const rows = await skillRows(ctx.projectId, await readUseCases(), await readAssignments());
-      const result = compile(flow, rows.map(skillInfo));
-      if (!result.ok)
-        return {
-          content: [{ type: "text", text: 'The flow "' + flow.name + '" cannot run as a track yet. Fix these problems in the flow editor first:\n' + result.problems.map(problemText).join("\n") }],
-          isError: true,
-        };
-      return JSON.stringify(result.machine, null, 2);
+      const refuse = (lines: string[]) => ({
+        content: [{ type: "text" as const, text: 'The flow "' + flow.name + '" cannot run as a track yet. Fix these problems in the flow editor first:\n' + lines.join("\n") }],
+        isError: true,
+      });
+      const problems = check(flow, all.rows.map(skillInfo));
+      if (hasErrors(problems)) return refuse(problems.filter((problem) => problem.severity === "error").map(problemText));
+      if (flow.origin !== undefined)
+        return "The flow " + JSON.stringify(flow.name) + " is the skill " + JSON.stringify(flow.id) + ". Call stage_start({skill: " + JSON.stringify(flow.id) + ', note: "Flow ' + flow.name + '"}) to run it.';
+      const parsed = parseSkill(flowToSkill(flow), "SKILL.md");
+      if (!parsed.ok) return refuse(parsed.problems.map((problem) => "- " + formatProblem(problem)));
+      return JSON.stringify(parsed.machine, null, 2);
     },
   });
 
@@ -443,7 +623,7 @@ export default async function plugin(sandy: SandyPluginApi) {
     triggers: ["~"],
     async search(ctx) {
       const wanted = ctx.query.trim().toLowerCase();
-      return (await readFlows())
+      return (await allFlows(ctx.projectId)).flows
         .filter((flow) => wanted === "" || flow.name.toLowerCase().includes(wanted) || flow.id.toLowerCase().includes(wanted))
         .map((flow) => ({
           id: flow.id,
@@ -453,7 +633,7 @@ export default async function plugin(sandy: SandyPluginApi) {
         }));
     },
     async resolve(itemId) {
-      const flow = (await readFlows()).find((item) => item.id === itemId);
+      const flow = (await allFlows(null)).flows.find((item) => item.id === itemId);
       if (flow === undefined) throw new Error("The flow no longer exists: " + itemId);
       return { context: flowRunText(flow) };
     },
@@ -463,6 +643,6 @@ export default async function plugin(sandy: SandyPluginApi) {
     tools: ["skill_areas", "skill_flows", "flow_track"],
     skills: [],
     instructions:
-      "The user sorts skills into use-case areas and flows. Call skill_areas to find the right skill for a task and skill_flows when the user names a flow or asks for a workflow. To run a flow, call flow_track for it and start the returned machine with stage_start.",
+      "The user sorts skills into use-case areas and flows. Call skill_areas to find the right skill for a task and skill_flows when the user names a flow or asks for a workflow. To run a flow, call flow_track for it and follow what it returns: stage_start with the flow's skill, or with the returned machine for a flow not yet saved as a skill.",
   }));
 }

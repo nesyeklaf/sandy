@@ -370,6 +370,7 @@ export const skillDuplicateSchema = skillRegistrationSchema
 export type SkillDuplicate = z.infer<typeof skillDuplicateSchema>;
 
 export const skillSummarySchema = skillRegistrationSchema.extend({
+  revision: skillRevisionSchema.nullable(),
   providers: z.array(skillProviderSchema),
   duplicates: z.array(skillDuplicateSchema),
 });
@@ -441,11 +442,31 @@ export const updateSkillRequestSchema = z
   .object({
     skillId: installedSkillIdSchema,
     environmentId: z.string().min(1).nullable(),
+    path: z.string().min(1).max(4096).default("SKILL.md"),
     content: z.string().min(1).max(1_000_000),
-    revision: skillRevisionSchema,
+    revision: skillRevisionSchema.nullable(),
   })
   .strict();
 export type UpdateSkillRequest = z.infer<typeof updateSkillRequestSchema>;
+
+export const creatableSkillScopeSchema = z.enum([
+  "sandy-project",
+  "shared-user",
+]);
+export type CreatableSkillScope = z.infer<typeof creatableSkillScopeSchema>;
+
+export const createSkillRequestSchema = z
+  .object({
+    environmentId: z.string().min(1).nullable(),
+    scope: creatableSkillScopeSchema,
+    name: z
+      .string()
+      .max(64)
+      .regex(/^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u),
+    content: z.string().min(1).max(1_000_000),
+  })
+  .strict();
+export type CreateSkillRequest = z.infer<typeof createSkillRequestSchema>;
 
 export const skillWriteConflictDetailsSchema = z.object({
   currentRevision: skillRevisionSchema.nullable(),

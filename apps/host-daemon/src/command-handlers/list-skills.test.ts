@@ -21,6 +21,7 @@ import type { DiscoveredSkill } from "@sandy/host-daemon-contract";
 import { discoverSkills, type SkillScanRoot } from "../command-discovery.js";
 import { CommandDispatchError } from "../command-dispatch-support.js";
 import {
+  createHostSkill,
   deleteHostSkill,
   resolveSkillScanRoots,
   writeHostSkill,
@@ -781,6 +782,81 @@ describe("deleteHostSkill", () => {
       ),
     ).rejects.toMatchObject({ code: "not_a_skill" });
     expect(await stat(notSkill).catch(() => null)).not.toBeNull();
+  });
+});
+
+describe("createHostSkill", () => {
+  it("creates a project skill folder with its SKILL.md and refuses an existing name", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const content = "---\nname: review\ndescription: Review\n---\n";
+
+    const created = await createHostSkill({
+      type: "host.create_skill",
+      scope: "sandy-project",
+      name: "review",
+      cwd: fixture.cwd,
+      userRoot: null,
+      content,
+    });
+
+    const filePath = path.join(
+      await realpath(fixture.cwd),
+      ".sandy",
+      "skills",
+      "review",
+      "SKILL.md",
+    );
+    expect(created).toEqual({
+      outcome: "written",
+      filePath,
+      sha256: createHash("sha256").update(content).digest("hex"),
+    });
+    expect(await readFile(filePath, "utf8")).toBe(content);
+
+    expect(
+      await createHostSkill({
+        type: "host.create_skill",
+        scope: "sandy-project",
+        name: "review",
+        cwd: fixture.cwd,
+        userRoot: null,
+        content: "# Overwrite",
+      }),
+    ).toEqual({ outcome: "conflict", currentSha256: null });
+    expect(await readFile(filePath, "utf8")).toBe(content);
+  });
+
+  it("creates a shared skill under the configured user root", async () => {
+    const fixture = await makeWorkspaceFixture();
+    const userRoot = path.join(fixture.homeDir, ".agents", "skills");
+
+    const created = await createHostSkill({
+      type: "host.create_skill",
+      scope: "shared-user",
+      name: "plan",
+      cwd: null,
+      userRoot,
+      content: "# Plan",
+    });
+
+    expect(created).toMatchObject({ outcome: "written" });
+    expect(
+      await readFile(path.join(userRoot, "plan", "SKILL.md"), "utf8"),
+    ).toBe("# Plan");
+  });
+
+  it("rejects a name that is not a single path segment", async () => {
+    const fixture = await makeWorkspaceFixture();
+    await expect(
+      createHostSkill({
+        type: "host.create_skill",
+        scope: "sandy-project",
+        name: "../escape",
+        cwd: fixture.cwd,
+        userRoot: null,
+        content: "# Escape",
+      }),
+    ).rejects.toThrow(CommandDispatchError);
   });
 });
 

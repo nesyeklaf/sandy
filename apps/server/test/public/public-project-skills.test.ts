@@ -146,11 +146,27 @@ function registerSkillRpc(
               },
         };
       }
+      if (request.command.type === "host.create_skill") {
+        return {
+          ok: true,
+          result: args.writeConflicts
+            ? { outcome: "conflict" as const, currentSha256: null }
+            : {
+                outcome: "written" as const,
+                filePath: `${request.command.cwd ?? "/home/.agents/skills"}/.sandy/skills/${request.command.name}/SKILL.md`,
+                sha256: "1".repeat(64),
+              },
+        };
+      }
       throw new Error(`Unexpected RPC command ${request.command.type}`);
     },
   });
   stub.requests = responder.requests;
   return stub;
+}
+
+function pathRevision(filePath: string): string {
+  return createHash("sha256").update(filePath).digest("hex");
 }
 
 function discovered(
@@ -165,7 +181,7 @@ function discovered(
     rootKind,
     filePath,
     realPath: filePath,
-    contentSha256: createHash("sha256").update(filePath).digest("hex"),
+    contentSha256: pathRevision(filePath),
     linked: false,
     metadata: {},
   };
@@ -394,6 +410,7 @@ describe("public project skills route", () => {
           manageable: false,
           writable: true,
           metadata: { outputs: "Review: file(review.md)" },
+          revision: pathRevision("/tmp/shared-skill-list/.agents/skills/portable-review/SKILL.md"),
           providers: [],
           duplicates: [],
         });
@@ -504,6 +521,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/data/skills/sandy-helper/SKILL.md"),
           providers: [],
           duplicates: [],
         },
@@ -518,6 +536,7 @@ describe("public project skills route", () => {
           manageable: false,
           writable: true,
           metadata: {},
+          revision: pathRevision("/cwd/.cursor/skills/impeccable/SKILL.md"),
           providers: ["acp-cursor"],
           duplicates: [],
         },
@@ -532,6 +551,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/cwd/.claude/skills/cp/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -546,6 +566,7 @@ describe("public project skills route", () => {
           manageable: true,
           writable: true,
           metadata: {},
+          revision: pathRevision("/home/.claude/skills/cu/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
         },
@@ -563,6 +584,7 @@ describe("public project skills route", () => {
             inputs: "Feature: text",
             outputs: "Plan: file(plan.md)",
           },
+          revision: pathRevision("/home/.codex/skills/cx/SKILL.md"),
           providers: ["codex"],
           duplicates: [],
         },
@@ -885,7 +907,7 @@ describe("public project skills route", () => {
         content: "# Layout reference",
         revision: "0".repeat(64),
         filePath: "/home/.codex/skills/documents/references/layout.md",
-        writable: false,
+        writable: true,
       });
       expect(stub.requests.map((request) => request.command)).toContainEqual({
         type: "host.read_file",
@@ -1019,6 +1041,163 @@ describe("public project skills route", () => {
         content: "# Updated Moss notes",
         expectedSha256: "0".repeat(64),
       });
+    });
+  });
+
+  it("replaces a supporting file inside the skill folder with a revision check and refuses paths outside it", async () => {
+    await withTestHarness(async (harness) => {
+      const { host, session } = seedHostSession(harness.deps, {
+        id: "host-skill-support-edit",
+      });
+      seedPrimaryHost(harness.deps, host.id);
+      const { project } = seedProjectWithSource(harness.deps, {
+        hostId: host.id,
+        path: "/tmp/skill-support-edit-project",
+      });
+      const stub = registerSkillRpc(harness, {
+        hostId: host.id,
+        sessionId: session.id,
+        skillsByProvider: {
+          "claude-code": [
+            discovered(
+              "moss-notes",
+              "provider-user",
+              "/home/.claude/skills/moss-notes/SKILL.md",
+            ),
+          ],
+        },
+      });
+      const patch = (path: string, revision: string | null = "0".repeat(64)) =>
+        harness.app.request(`/api/v1/projects/${project.id}/skills/content`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            skillId: skillId("/home/.claude/skills/moss-notes/SKILL.md"),
+            environmentId: null,
+            path,
+            content: "# Layout",
+            revision,
+          }),
+        });
+
+      const response = await patch("references/layout.md");
+      expect(response.status).toBe(200);
+      expect(await readJson(response)).toEqual({
+        filePath: "/home/.claude/skills/moss-notes/references/layout.md",
+        revision: "1".repeat(64),
+      });
+      expect(stub.requests.map((request) => request.command)).toContainEqual({
+        type: "host.write_file",
+        path: "/home/.claude/skills/moss-notes/references/layout.md",
+        rootPath: "/home/.claude/skills/moss-notes",
+        content: "# Layout",
+        contentEncoding: "utf8",
+        createParents: false,
+        expectedSha256: "0".repeat(64),
+      });
+
+      for (const [outside, status] of [
+        ["../other/SKILL.md", 404],
+        ["/etc/passwd", 400],
+      ] as const) {
+        expect((await patch(outside)).status).toBe(status);
+      }
+      expect(
+        stub.requests.filter(
+          (request) => request.command.type === "host.write_file",
+        ),
+      ).toHaveLength(1);
+
+      expect((await patch("scripts/new/check.sh", null)).status).toBe(200);
+      expect(stub.requests.at(-1)?.command).toEqual({
+        type: "host.write_file",
+        path: "/home/.claude/skills/moss-notes/scripts/new/check.sh",
+        rootPath: "/home/.claude/skills/moss-notes",
+        content: "# Layout",
+        contentEncoding: "utf8",
+        createParents: true,
+        expectedSha256: null,
+      });
+      expect((await patch("SKILL.md", null)).status).toBe(400);
+    });
+  });
+
+  it("creates a project skill on the workspace host and returns 409 when the name is taken", async () => {
+    for (const writeConflicts of [false, true]) {
+      await withTestHarness(async (harness) => {
+        const { host, session } = seedHostSession(harness.deps, {
+          id: "host-create-skill",
+        });
+        seedPrimaryHost(harness.deps, host.id);
+        const { project } = seedProjectWithSource(harness.deps, {
+          hostId: host.id,
+          path: "/tmp/create-skill-project",
+        });
+        const stub = registerSkillRpc(harness, {
+          hostId: host.id,
+          sessionId: session.id,
+          skillsByProvider: {},
+          writeConflicts,
+        });
+
+        const response = await harness.app.request(
+          `/api/v1/projects/${project.id}/skills`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              environmentId: null,
+              scope: "sandy-project",
+              name: "review-flow",
+              content: "# Review flow",
+            }),
+          },
+        );
+
+        expect(stub.requests.map((request) => request.command)).toContainEqual({
+          type: "host.create_skill",
+          scope: "sandy-project",
+          name: "review-flow",
+          cwd: "/tmp/create-skill-project",
+          userRoot: null,
+          content: "# Review flow",
+        });
+        if (writeConflicts) {
+          expect(response.status).toBe(409);
+          expect(await readJson(response)).toMatchObject({ code: "conflict" });
+        } else {
+          expect(response.status).toBe(200);
+          expect(await readJson(response)).toEqual({
+            filePath: "/tmp/create-skill-project/.sandy/skills/review-flow/SKILL.md",
+            revision: "1".repeat(64),
+          });
+        }
+      });
+    }
+  });
+
+  it("rejects a skill name that is not a folder-safe slug", async () => {
+    await withTestHarness(async (harness) => {
+      const { host } = seedHostSession(harness.deps, { id: "host-bad-skill-name" });
+      seedPrimaryHost(harness.deps, host.id);
+      const { project } = seedProjectWithSource(harness.deps, {
+        hostId: host.id,
+        path: "/tmp/bad-skill-name-project",
+      });
+      const response = await harness.app.request(
+        `/api/v1/projects/${project.id}/skills`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            environmentId: null,
+            scope: "sandy-project",
+            name: "../escape",
+            content: "# Escape",
+          }),
+        },
+      );
+      expect(response.status).toBe(400);
     });
   });
 

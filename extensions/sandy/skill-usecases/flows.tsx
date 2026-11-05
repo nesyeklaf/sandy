@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRealtime, useRpc, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import { skillInfo, type FlowProposal, type SkillOverview, type rpcContract } from "./contract";
+import { skillInfo, type CreatableScope, type CreateFlowSkillResult, type CreateSkillResult, type FlowProposal, type SkillOverview, type rpcContract } from "./contract";
 import { check, hasErrors } from "./check";
-import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History } from "./canvas-model";
+import { deleteNode, layout, needsLayout, record, redo, removeWire, startHistory, undo, type Edit, type History, type PaletteItem } from "./canvas-model";
+import { DESCRIPTION_MAX } from "./skill-file";
 import { FlowCanvas, type Selection } from "./flow-canvas";
 import { reconcileEditor } from "./flow-sync";
 import { confirmLeaveSkill, parseSkillPath, skillSubPath } from "./skill-route";
 import { CheckList, Inspector, Outline } from "./flow-inspector";
+import { SkillPanel } from "./skill-panel";
 import { flowRunText, flowSkillNames, linearSteps, migrateLinear, nodeTitle, withLinearSteps, type Flow } from "./graph";
 import {
   GHOST,
@@ -18,6 +20,7 @@ import {
   colorOf,
   copyText,
   errorText,
+  readStoredProject,
   useSkillUseCases,
   type SkillUseCasesApi,
 } from "./shared";
@@ -53,7 +56,7 @@ export function FlowsSidebar({ subPath }: { subPath: string }) {
   const nav = useFlowNavigation();
   const [overview, setOverview] = useState<SkillOverview | null>(null);
   const refetch = useCallback(() => {
-    rpc.call("overview", {}).then(setOverview, () => undefined);
+    rpc.call("overview", { projectId: readStoredProject() }).then(setOverview, () => undefined);
   }, [rpc]);
   useEffect(refetch, [refetch]);
   useRealtime("changed", refetch);
@@ -137,9 +140,94 @@ function SuggestionCard({
   );
 }
 
+const SCOPES: { id: CreatableScope; label: string }[] = [
+  { id: "sandy-project", label: "This project (.sandy/skills)" },
+  { id: "shared-user", label: "My skills (~/.agents/skills)" },
+];
+
+function ScopeSelect({ value, onChange }: { value: CreatableScope; onChange: (scope: CreatableScope) => void }) {
+  return (
+    <select aria-label="Save the skill in" className={INPUT} value={value} onChange={(event) => onChange(SCOPES.find((scope) => scope.id === event.target.value)?.id ?? "sandy-project")}>
+      {SCOPES.map((scope) => (
+        <option key={scope.id} value={scope.id}>
+          {scope.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function createdText(result: CreateFlowSkillResult): string | null {
+  return result.outcome === "written" ? null : 'A skill named "' + result.flowId + '" already exists there. Pick another name.';
+}
+
+function NewSkill({ api, useCaseId, onCreated }: { api: SkillUseCasesApi; useCaseId: string; onCreated: (result: Extract<CreateSkillResult, { outcome: "written" }>, description: string) => void }) {
+  const { state, rpc } = api;
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [scope, setScope] = useState<CreatableScope>("sandy-project");
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  if (state === null) return null;
+  if (!open)
+    return (
+      <button type="button" className={SECONDARY + " w-full"} onClick={() => setOpen(true)}>
+        New skill
+      </button>
+    );
+  const text = description.trim();
+  const ready = name.trim() !== "" && text !== "" && text.length <= DESCRIPTION_MAX && !busy;
+  const create = () => {
+    setBusy(true);
+    setProblem(null);
+    rpc.call("createSkill", { projectId: state.projectId, scope, name: name.trim(), description: text, useCaseId }).then(
+      (result) => {
+        setBusy(false);
+        if (result.outcome === "conflict") {
+          setProblem('A skill named "' + result.name + '" already exists there. Pick another name.');
+          return;
+        }
+        setOpen(false);
+        setName("");
+        setDescription("");
+        onCreated(result, text);
+      },
+      (cause: unknown) => {
+        setBusy(false);
+        setProblem(errorText(cause));
+      },
+    );
+  };
+  return (
+    <form
+      aria-label="New skill"
+      className="space-y-2 rounded-lg border border-border p-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (ready) create();
+      }}
+    >
+      <input aria-label="Skill name" placeholder="Name, e.g. review-notes" className={INPUT + " w-full"} value={name} onChange={(event) => setName(event.target.value)} />
+      <textarea aria-label="What the skill does" placeholder="What the skill does" rows={2} className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm" value={description} onChange={(event) => setDescription(event.target.value)} />
+      <ScopeSelect value={scope} onChange={setScope} />
+      {problem === null ? null : <p role="alert" className="text-xs text-destructive">{problem}</p>}
+      <div className="flex gap-2">
+        <button type="submit" className={PRIMARY} disabled={!ready}>
+          {busy ? "Creating…" : "Create and add"}
+        </button>
+        <button type="button" className={GHOST} disabled={busy} onClick={() => setOpen(false)}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function FlowCreator({ api, onCreated }: { api: SkillUseCasesApi; onCreated: (id: string) => void }) {
-  const { state, rpc, saveFlows, setError } = api;
+  const { state, rpc, setError } = api;
   const [useCaseId, setUseCaseId] = useState<string | null>(null);
+  const [scope, setScope] = useState<CreatableScope>("sandy-project");
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [asking, setAsking] = useState(false);
@@ -147,8 +235,14 @@ function FlowCreator({ api, onCreated }: { api: SkillUseCasesApi; onCreated: (id
   const areaId = useCaseId ?? state.useCases[0]?.id ?? state.fallbackId;
   const areas = [...state.useCases.map((useCase) => ({ id: useCase.id, label: useCase.label })), { id: state.fallbackId, label: state.fallbackLabel }];
   const create = (flow: Flow) => {
-    saveFlows([...state.flows, flow]);
-    onCreated(flow.id);
+    rpc.call("createFlowSkill", { projectId: state.projectId, flow, scope, legacyId: null }).then(
+      (result) => {
+        const failed = createdText(result);
+        if (failed === null) onCreated(result.flowId);
+        else setError(failed);
+      },
+      (cause: unknown) => setError(errorText(cause)),
+    );
   };
   const createEmpty = () =>
     create(migrateLinear({ id: newFlowId(), useCaseId: areaId, name: name.trim() === "" ? "New flow" : name.trim(), description: goal.trim(), steps: [] }));
@@ -185,6 +279,7 @@ function FlowCreator({ api, onCreated }: { api: SkillUseCasesApi; onCreated: (id
           ))}
         </select>
         <input aria-label="Flow name" placeholder="Name (optional with AI)" className={INPUT + " min-w-48 flex-1"} value={name} onChange={(event) => setName(event.target.value)} />
+        <ScopeSelect value={scope} onChange={setScope} />
       </div>
       <textarea
         aria-label="Goal"
@@ -218,6 +313,7 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
               <span className="block truncate text-sm font-medium">{flow.name}</span>
               <span className="block truncate text-xs text-muted-foreground">{flowSkillNames(flow).join(" → ") || "No steps yet"}</span>
             </span>
+            {flow.origin === undefined ? <span className="rounded border border-border px-1.5 text-xs leading-5 text-muted-foreground">Not a skill yet</span> : null}
             <span className="rounded bg-muted px-1.5 text-xs leading-5 text-muted-foreground">{labels.get(flow.useCaseId) ?? flow.useCaseId}</span>
           </button>
         </li>
@@ -226,7 +322,7 @@ function FlowList({ api, onOpen }: { api: SkillUseCasesApi; onOpen: (id: string)
   );
 }
 
-type Tab = "inspect" | "check" | "outline";
+type Tab = "inspect" | "check" | "outline" | "skill";
 
 function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
@@ -243,6 +339,7 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
   const [asking, setAsking] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [scope, setScope] = useState<CreatableScope>("sandy-project");
   useEffect(() => {
     setHistory(startHistory(needsLayout(flow) ? layout(flow) : flow));
     setSelection(null);
@@ -327,6 +424,12 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
       );
   };
   const errors = problems.filter((problem) => problem.severity === "error").length;
+  const skillOf = (next: Selection) => {
+    const node = next?.kind === "node" ? current.nodes.find((item) => item.id === next.id) : undefined;
+    return node?.kind === "skill" && node.skill !== null ? state.skills.find((skill) => skill.name === node.skill) : undefined;
+  };
+  const nodeSkill = skillOf(selection);
+  const skillTarget = nodeSkill !== undefined ? { skillId: nodeSkill.id, name: nodeSkill.name } : current.origin !== undefined ? { skillId: current.origin.skillId, name: current.id } : null;
   const blocked = current.nodes.length === 0 ? "Add a block first" : hasErrors(problems) ? "Fix the errors in Check first" : null;
   const tabButton = (id: Tab, label: string) => (
     <button type="button" role="tab" aria-selected={tab === id} className={"h-8 flex-1 border-b-2 text-sm " + (tab === id ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")} onClick={() => setTab(id)}>
@@ -382,8 +485,15 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
                 type="button"
                 className={GHOST + " !text-destructive"}
                 onClick={() => {
-                  saveFlows(state.flows.filter((item) => item.id !== current.id));
-                  onDeleted();
+                  if (current.origin === undefined) {
+                    saveFlows(state.flows.filter((item) => item.id !== current.id));
+                    onDeleted();
+                    return;
+                  }
+                  rpc.call("deleteFlowSkill", { projectId: state.projectId, skillId: current.origin.skillId }).then(
+                    (result) => (result.ok ? onDeleted() : setError("The skill could not be deleted.")),
+                    (cause: unknown) => setError(errorText(cause)),
+                  );
                 }}
               >
                 Delete?
@@ -398,6 +508,32 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
             </button>
           )}
         </div>
+        {current.origin === undefined ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+            <span className="flex-1 text-muted-foreground">This flow is not a skill yet. Save it as a SKILL.md to run it with stage_start and edit it as a file.</span>
+            <ScopeSelect value={scope} onChange={setScope} />
+            <button
+              type="button"
+              className={SECONDARY}
+              onClick={() =>
+                rpc.call("createFlowSkill", { projectId: state.projectId, flow: current, scope, legacyId: current.id }).then(
+                  (result) => {
+                    const failed = createdText(result);
+                    if (failed === null) nav.toFlow(result.flowId);
+                    else setError(failed);
+                  },
+                  (cause: unknown) => setError(errorText(cause)),
+                )
+              }
+            >
+              Save as skill
+            </button>
+          </div>
+        ) : (
+          <p className="truncate text-xs text-muted-foreground" title={current.origin.filePath}>
+            {current.origin.writable ? current.origin.filePath : "Read only: " + current.origin.filePath}
+          </p>
+        )}
         <input
           key={current.id + "-description-" + current.description}
           aria-label="Description"
@@ -444,18 +580,29 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
           message={message}
           onSelect={(next) => {
             setSelection(next);
-            if (next !== null) setTab("inspect");
+            if (next !== null) setTab(skillOf(next) === undefined ? "inspect" : "skill");
           }}
           onChange={commit}
+          paletteHeader={(add: (item: PaletteItem) => void) => (
+            <NewSkill
+              api={api}
+              useCaseId={current.useCaseId}
+              onCreated={(result, description) => {
+                add({ kind: "skill", skill: { name: result.name, purpose: description, inputs: [], outputs: [] } });
+                setMessage("Created " + result.filePath);
+              }}
+            />
+          )}
         />
-        <aside aria-label="Flow details" className="flex w-80 shrink-0 flex-col border-l border-border">
+        <aside aria-label="Flow details" className={"flex shrink-0 flex-col border-l border-border " + (tab === "skill" ? "w-[34rem]" : "w-80")}>
           <div role="tablist" className="flex border-b border-border px-2">
             {tabButton("inspect", "Inspector")}
             {tabButton("check", errors > 0 ? "Check · " + String(errors) : problems.length > 0 ? "Check · " + String(problems.length) : "Check ✓")}
             {tabButton("outline", "Outline")}
+            {skillTarget === null ? null : tabButton("skill", "Skill")}
           </div>
           <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
-            {tab === "inspect" ? <Inspector flow={current} selection={selection} skills={skills} problems={problems} onChange={commit} /> : null}
+            {tab === "inspect" ? <Inspector flow={current} selection={selection} skills={skills} problems={problems} onChange={commit} onOpenSkill={() => setTab("skill")} /> : null}
             {tab === "check" ? (
               <CheckList
                 flow={current}
@@ -469,6 +616,10 @@ function FlowEditor({ api, flow, onDeleted }: { api: SkillUseCasesApi; flow: Flo
               />
             ) : null}
             {tab === "outline" ? <Outline flow={current} problems={problems} selection={selection} onSelect={setSelection} /> : null}
+            {tab === "skill" && skillTarget !== null && state.projectId !== null ? (
+              <SkillPanel key={state.projectId + "\0" + skillTarget.skillId} api={api} projectId={state.projectId} skillId={skillTarget.skillId} name={skillTarget.name} />
+            ) : null}
+            {tab === "skill" && skillTarget === null ? <p className="p-4 text-sm text-muted-foreground">Select a skill block to open its skill.</p> : null}
           </div>
         </aside>
       </div>
@@ -510,6 +661,21 @@ export function FlowsPage({ flowId }: { flowId: string | null }) {
         {error === null ? null : <p role="alert" className="text-sm text-destructive">{error}</p>}
         <FlowCreator api={api} onCreated={nav.toFlow} />
         <FlowList api={api} onOpen={nav.toFlow} />
+        {state.skillFlowErrors.length === 0 ? null : (
+          <section aria-label="Skills that do not open as flows" className="space-y-2">
+            <h2 className="text-sm font-semibold">Skills that do not open as flows</h2>
+            {state.skillFlowErrors.map((item) => (
+              <div key={item.skillId} className="rounded-lg border px-3 py-2 text-sm">
+                <p className="font-medium">{item.name}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  {item.problems.map((problem) => (
+                    <li key={problem}>{problem}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        )}
       </div>
     </div>
   );

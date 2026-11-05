@@ -840,6 +840,33 @@ const hostWriteSkillCommandSchema = z
     }
   });
 
+const hostCreateSkillCommandSchema = z
+  .object({
+    type: z.literal("host.create_skill"),
+    scope: z.enum(["sandy-project", "shared-user"]),
+    name: z.string().min(1).max(64),
+    cwd: z.string().min(1).nullable(),
+    userRoot: z.string().min(1).nullable(),
+    content: z.string().min(1).max(1_000_000),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    if (command.scope === "sandy-project" && command.cwd === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["cwd"],
+        message: "cwd is required to create a sandy-project skill",
+      });
+    }
+    if (command.scope === "shared-user" && command.userRoot === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["userRoot"],
+        message: "userRoot is required to create a shared-user skill",
+      });
+    }
+  });
+
 const hostInstallGlobalSkillSchema = z
   .object({
     name: z.string().max(64).regex(INJECTED_SKILL_NAME_PATTERN),
@@ -1705,6 +1732,15 @@ export const hostDaemonCommandRegistry = {
   "host.write_skill": defineHostDaemonCommandDescriptor({
     type: "host.write_skill",
     schema: hostWriteSkillCommandSchema,
+    resultSchema: writeSkillResultSchema,
+    transport: "onlineRpc",
+    retryable: false,
+    flushEventsBeforeResult: false,
+    envLane: null,
+  }),
+  "host.create_skill": defineHostDaemonCommandDescriptor({
+    type: "host.create_skill",
+    schema: hostCreateSkillCommandSchema,
     resultSchema: writeSkillResultSchema,
     transport: "onlineRpc",
     retryable: false,

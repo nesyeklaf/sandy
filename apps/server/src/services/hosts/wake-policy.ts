@@ -56,6 +56,7 @@ const hostCommandWakePolicy = {
   "host.read_workspace_agent_context": "work",
   "host.delete_skill": "work",
   "host.write_skill": "work",
+  "host.create_skill": "work",
   "host.install_global_skills": "work",
   "host.global_skills_status": "work",
   "host.inspect_git_source": "work",

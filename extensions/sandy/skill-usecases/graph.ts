@@ -22,7 +22,14 @@ export const ioTypeSchema: z.ZodType<IoType> = z.discriminatedUnion("kind", [
 const skillInputSchema = z.object({ name: label, optional: z.boolean(), type: ioTypeSchema, bind: bindingSchema.nullable() });
 export type SkillInput = z.infer<typeof skillInputSchema>;
 
-const skillOutputSchema = z.object({ name: label, optional: z.boolean(), type: ioTypeSchema, path: z.string().trim().min(1).max(300).nullable() });
+const skillOutputSchema = z.object({
+  name: label,
+  optional: z.boolean(),
+  type: ioTypeSchema,
+  path: z.string().trim().min(1).max(300).nullable(),
+  description: z.string().max(400).default(""),
+  byOwner: z.boolean().default(false),
+});
 export type SkillOutput = z.infer<typeof skillOutputSchema>;
 
 export const skillNodeSchema = z.object({
@@ -31,9 +38,11 @@ export const skillNodeSchema = z.object({
   name: label,
   ...position,
   skill: z.string().min(1).max(200).nullable(),
-  instruction: z.string().max(2000),
+  instruction: z.string().max(20000),
   inputs: z.array(skillInputSchema).max(40),
   outputs: z.array(skillOutputSchema).max(40),
+  ownerApproves: z.boolean().default(false),
+  requireOutputs: z.boolean().default(true),
 });
 export type SkillNode = z.infer<typeof skillNodeSchema>;
 
@@ -67,6 +76,7 @@ export const gateNodeSchema = z.object({
   options: z.array(z.string().trim().min(1).max(80)).min(1).max(12),
   material: z.array(bindingSchema).max(20),
   ends: z.array(z.number().int().min(0)).max(12),
+  answer: z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,47}$/u).default("Answer"),
 });
 export type GateNode = z.infer<typeof gateNodeSchema>;
 
@@ -97,18 +107,38 @@ export type OutputNode = z.infer<typeof outputNodeSchema>;
 export const flowNodeSchema = z.discriminatedUnion("kind", [skillNodeSchema, inputNodeSchema, gateNodeSchema, forkNodeSchema, outputNodeSchema]);
 export type FlowNode = z.infer<typeof flowNodeSchema>;
 
-export const wireSchema = z.object({ id: z.string().min(1).max(60), from: nodeId, port: z.number().int().min(0), to: nodeId });
+export const wireSchema = z.object({
+  id: z.string().min(1).max(60),
+  from: nodeId,
+  port: z.number().int().min(0),
+  to: nodeId,
+  label: z.string().max(400).optional(),
+  when: z.string().max(1000).optional(),
+  max: z.number().int().min(1).optional(),
+  exceeded: z.string().min(1).max(60).optional(),
+});
 export type Wire = z.infer<typeof wireSchema>;
+
+export const flowOriginSchema = z.object({
+  skillId: z.string().min(1),
+  revision: z.string().min(1),
+  filePath: z.string(),
+  writable: z.boolean(),
+});
+export type FlowOrigin = z.infer<typeof flowOriginSchema>;
 
 export const flowSchema = z
   .object({
     version: z.literal(2),
-    id: z.string().min(1).max(60),
+    id: z.string().min(1).max(64),
     useCaseId: z.string().min(1).max(40),
     name: z.string().trim().min(1).max(80),
-    description: z.string().max(400),
+    description: z.string().max(1024),
     nodes: z.array(flowNodeSchema).max(MAX_NODES),
     wires: z.array(wireSchema).max(MAX_WIRES),
+    preamble: z.string().max(20000).optional(),
+    frontmatter: z.string().max(20000).optional(),
+    origin: flowOriginSchema.optional(),
   })
   .superRefine((flow, ctx) => {
     const ids = new Set<string>();
@@ -140,6 +170,24 @@ export const flowV1Schema = z.object({
 });
 export type FlowV1 = z.infer<typeof flowV1Schema>;
 
+export function slug(text: string, fallback: string): string {
+  const base = text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "")
+    .slice(0, 40)
+    .replace(/-+$/u, "");
+  return base === "" ? fallback : base;
+}
+
+export function uniqueId(base: string, taken: Set<string>): string {
+  let candidate = base;
+  for (let index = 2; taken.has(candidate); index += 1) candidate = base + "-" + String(index);
+  taken.add(candidate);
+  return candidate;
+}
+
 const STEP_SPACING = 160;
 
 function chainNodes(steps: readonly FlowStep[], reuse: readonly SkillNode[]): { nodes: SkillNode[]; wires: Wire[] } {
@@ -161,6 +209,8 @@ function chainNodes(steps: readonly FlowStep[], reuse: readonly SkillNode[]): { 
       instruction: step.note,
       inputs: base?.inputs ?? [],
       outputs: base?.outputs ?? [],
+      ownerApproves: base?.ownerApproves ?? false,
+      requireOutputs: base?.requireOutputs ?? true,
     };
   });
   const wires = nodes.slice(1).map((node, index): Wire => ({ id: "w" + String(index + 1), from: nodes[index]!.id, port: 0, to: node.id }));
@@ -326,6 +376,16 @@ export function flowRunText(flow: Flow): string {
     linearSteps(flow) !== null
       ? "If stage_start is not available, use each skill in this order instead and tell me when a step is done:"
       : "If stage_start is not available, follow the numbered steps instead, take the branch that each answer or value names, and tell me when a step is done:";
+  if (flow.origin !== undefined)
+    return [
+      'Run the flow "' + flow.name + '" as a track.',
+      "1. Call stage_start with skill " + JSON.stringify(flow.id) + ' and the note "Flow ' + flow.name + '", then work stage by stage with stage_status, stage_submit and stage_advance.',
+      "If stage_start reports problems in the skill, tell me what to fix and stop.",
+      fallback,
+      ...flowStepLines(flow, "/"),
+      "If a skill is not installed, follow its note instead.",
+      "",
+    ].join("\n");
   return [
     'Run the flow "' + flow.name + '" as a track.',
     "1. Call flow_track with flow " + JSON.stringify(flow.id) + ". It returns the flow compiled into a track machine, or the problems that keep it from running.",

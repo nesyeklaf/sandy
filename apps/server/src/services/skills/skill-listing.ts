@@ -41,7 +41,11 @@ import {
 import type { ProjectCommandWorkspace as CommandWorkspace } from "../projects/project-workspace.js";
 import { resolveServerOwnedSkillCatalogEntries } from "./injected-skills.js";
 import { resolveSkillCatalog } from "./skill-catalog.js";
-import { hostPathDirname, resolveSharedSkills } from "./shared-skills.js";
+import {
+  hostPathDirname,
+  resolveSharedSkills,
+  sharedSkillNativeRoots,
+} from "./shared-skills.js";
 import {
   DEFAULT_PATH_LIST_EXCLUDE_NAMES,
   SKILL_PATH_LIST_INCLUDE_HIDDEN,
@@ -462,6 +466,7 @@ export function summarizeSkillRegistrations(
       .flatMap((candidate) => groups.get(candidate) ?? []);
     summaries.push({
       ...toSkillRegistration(entry),
+      revision: entry.contentSha256,
       providers: [
         ...new Set(
           group.flatMap((skill) =>
@@ -579,6 +584,20 @@ async function resolveServerSkillFile(
   return realCandidatePath;
 }
 
+async function resolveNewServerSkillFile(
+  skill: SkillRegistration,
+  segments: string[],
+): Promise<string> {
+  const realRootPath = await fs.realpath(path.dirname(skill.filePath));
+  const parentPath = path.join(realRootPath, ...segments.slice(0, -1));
+  await fs.mkdir(parentPath, { recursive: true });
+  const realParentPath = await fs.realpath(parentPath);
+  if (!isPathWithinRoot(realParentPath, realRootPath)) {
+    throw new ApiError(400, "invalid_path", "Path escapes the skill folder");
+  }
+  return path.join(realParentPath, segments[segments.length - 1]!);
+}
+
 async function listServerSkillFiles(
   skill: SkillRegistration,
 ): Promise<{ files: string[]; truncated: boolean }> {
@@ -684,7 +703,7 @@ export async function readProjectSkill(
   },
 ): Promise<ProjectSkillContent> {
   const skill = await resolveProjectSkill(deps, args);
-  const writable = args.path === SKILL_FILE_NAME && skill.writable;
+  const writable = skill.writable;
   if (isServerOwnedSkill(deps, skill)) {
     const filePath =
       args.path === SKILL_FILE_NAME
@@ -750,8 +769,9 @@ export async function writeProjectSkill(
   deps: AppDeps,
   args: {
     skillId: string;
+    path: string;
     content: string;
-    revision: string;
+    revision: string | null;
     workspace: CommandWorkspace;
   },
 ): Promise<ProjectSkillWriteResult> {
@@ -767,11 +787,23 @@ export async function writeProjectSkill(
       "No workspace resolved for this project's skills",
     );
   }
+  const segments = validateServerSkillRelativePath(args.path);
+  if (segments.join("/") !== SKILL_FILE_NAME) {
+    return writeSkillSupportFile(deps, { ...args, skill, segments });
+  }
+  if (args.revision === null) {
+    throw new ApiError(
+      400,
+      "invalid_request",
+      "SKILL.md already exists; pass its revision to replace it",
+    );
+  }
+  const revision = args.revision;
   if (writableScope.data === "sandy-user" && isServerOwnedSkill(deps, skill)) {
     const skillFilePath = await resolveServerSkillFile(skill, SKILL_FILE_NAME);
     const result = await replaceFile({
       contents: Buffer.from(args.content, "utf8"),
-      expectedSha256: args.revision,
+      expectedSha256: revision,
       path: skillFilePath,
     });
     if (result.outcome === "conflict") {
@@ -797,7 +829,105 @@ export async function writeProjectSkill(
       cwd: args.workspace.cwd,
       rootPath: sandyScope ? null : hostPathDirname(skillDirPath),
       content: args.content,
+      expectedSha256: revision,
+    },
+  });
+  if (result.outcome === "conflict") {
+    return { outcome: "conflict", currentRevision: result.currentSha256 };
+  }
+  return {
+    outcome: "written",
+    filePath: result.filePath,
+    revision: result.sha256,
+  };
+}
+
+async function writeSkillSupportFile(
+  deps: AppDeps,
+  args: {
+    skill: IndexedSkillRegistration;
+    segments: string[];
+    content: string;
+    revision: string | null;
+    workspace: CommandWorkspace;
+  },
+): Promise<ProjectSkillWriteResult> {
+  const contents = Buffer.from(args.content, "utf8");
+  if (isServerOwnedSkill(deps, args.skill)) {
+    const filePath =
+      args.revision === null
+        ? await resolveNewServerSkillFile(args.skill, args.segments)
+        : await resolveServerSkillFile(args.skill, args.segments.join("/"));
+    const result = await replaceFile({
+      contents,
       expectedSha256: args.revision,
+      path: filePath,
+    });
+    if (result.outcome === "conflict") {
+      return { outcome: "conflict", currentRevision: result.currentSha256 };
+    }
+    return { outcome: "written", filePath, revision: result.sha256 };
+  }
+  const rootPath = hostPathDirname(args.skill.filePath);
+  const filePath = hostPathJoin(rootPath, args.segments);
+  const result = await callHostOnlineRpcForWork(deps, {
+    hostId: args.workspace.hostId,
+    timeoutMs: COMMAND_TIMEOUT_MS,
+    command: {
+      type: "host.write_file",
+      path: filePath,
+      rootPath,
+      content: args.content,
+      contentEncoding: "utf8",
+      createParents: args.revision === null,
+      expectedSha256: args.revision,
+    },
+  });
+  if (result.outcome === "conflict") {
+    return { outcome: "conflict", currentRevision: result.currentSha256 };
+  }
+  return { outcome: "written", filePath, revision: result.sha256 };
+}
+
+export type CreatableSkillScope = "sandy-project" | "shared-user";
+
+export async function createProjectSkill(
+  deps: AppDeps,
+  args: {
+    scope: CreatableSkillScope;
+    name: string;
+    content: string;
+    workspace: CommandWorkspace;
+  },
+): Promise<ProjectSkillWriteResult> {
+  if (args.scope === "sandy-project" && args.workspace.cwd === null) {
+    throw new ApiError(
+      409,
+      "invalid_request",
+      "No workspace resolved for this project's skills",
+    );
+  }
+  const userRoot =
+    args.scope === "shared-user"
+      ? (sharedSkillNativeRoots(deps).user[0]?.path ?? null)
+      : null;
+  if (args.scope === "shared-user" && userRoot === null) {
+    throw new ApiError(
+      409,
+      "invalid_request",
+      "No shared user skill root is configured",
+    );
+  }
+  const result = await callHostOnlineRpcForWork(deps, {
+    hostId: args.workspace.hostId,
+    timeoutMs: COMMAND_TIMEOUT_MS,
+    command: {
+      type: "host.create_skill",
+      scope: args.scope,
+      name: args.name,
+      cwd: args.scope === "sandy-project" ? args.workspace.cwd : null,
+      userRoot,
+      content: args.content,
     },
   });
   if (result.outcome === "conflict") {

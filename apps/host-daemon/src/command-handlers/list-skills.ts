@@ -397,3 +397,63 @@ export async function writeHostSkill(
     sha256: result.sha256,
   };
 }
+
+function createSkillRoot(command: CommandOf<"host.create_skill">): string {
+  if (command.scope === "sandy-project") {
+    if (command.cwd === null || !path.isAbsolute(command.cwd)) {
+      throw new CommandDispatchError("invalid_path", "cwd must be absolute");
+    }
+    return path.join(command.cwd, ".sandy", "skills");
+  }
+  if (command.userRoot === null) {
+    throw new CommandDispatchError(
+      "invalid_path",
+      "userRoot is required for a shared-user skill",
+    );
+  }
+  return path.resolve(os.homedir(), command.userRoot);
+}
+
+export async function createHostSkill(
+  command: CommandOf<"host.create_skill">,
+): Promise<HostDaemonOnlineRpcResult<"host.create_skill">> {
+  if (!isSafeSkillName(command.name)) {
+    throw new CommandDispatchError(
+      "invalid_skill_name",
+      "Skill name must be a single path segment",
+    );
+  }
+  const root = createSkillRoot(command);
+  await fs.mkdir(root, { recursive: true });
+  const realRoot = await fs.realpath(root);
+  const skillDirPath = path.join(realRoot, command.name);
+  try {
+    await fs.mkdir(skillDirPath);
+  } catch (error) {
+    if (isNodeErrorCode(error, "EEXIST")) {
+      return { outcome: "conflict", currentSha256: null };
+    }
+    throw error;
+  }
+  const skillFilePath = path.join(skillDirPath, SKILL_FILE_NAME);
+  const result = await writeHostFile({
+    type: "host.write_file",
+    path: skillFilePath,
+    rootPath: skillDirPath,
+    content: command.content,
+    contentEncoding: "utf8",
+    createParents: false,
+    expectedSha256: null,
+  }).catch(async (error: unknown) => {
+    await fs.rm(skillDirPath, { recursive: true, force: true });
+    throw error;
+  });
+  if (result.outcome === "conflict") {
+    return result;
+  }
+  return { outcome: "written", filePath: skillFilePath, sha256: result.sha256 };
+}
+
+function isNodeErrorCode(error: unknown, code: string): boolean {
+  return error instanceof Error && "code" in error && error.code === code;
+}

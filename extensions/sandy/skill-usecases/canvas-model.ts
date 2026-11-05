@@ -66,7 +66,7 @@ function wireIds(flow: Flow): (count: number) => string[] {
 export function skillIo(info: SkillInfo): Pick<SkillNode, "inputs" | "outputs"> {
   return {
     inputs: info.inputs.map((input) => ({ ...input, bind: null })),
-    outputs: info.outputs.map((output) => ({ ...output, path: null })),
+    outputs: info.outputs.map((output) => ({ ...output, path: null, description: "", byOwner: false })),
   };
 }
 
@@ -75,10 +75,10 @@ export function makeNode(item: PaletteItem, id: string, x: number, y: number): F
   switch (item.kind) {
     case "skill":
       return item.skill === null
-        ? { ...at, kind: "skill", name: "New skill", skill: null, instruction: "", inputs: [], outputs: [{ name: "result", optional: false, type: { kind: "text" }, path: null }] }
-        : { ...at, kind: "skill", name: item.skill.name, skill: item.skill.name, instruction: "", ...skillIo(item.skill) };
+        ? { ...at, kind: "skill", name: "New skill", skill: null, instruction: "", inputs: [], outputs: [{ name: "result", optional: false, type: { kind: "text" }, path: null, description: "", byOwner: false }], ownerApproves: false, requireOutputs: true }
+        : { ...at, kind: "skill", name: item.skill.name, skill: item.skill.name, instruction: "", ...skillIo(item.skill), ownerApproves: false, requireOutputs: true };
     case "gate":
-      return { ...at, kind: "gate", question: "Approve or reject?", owner: "owner", options: ["approve", "reject"], material: [], ends: [] };
+      return { ...at, kind: "gate", question: "Approve or reject?", owner: "owner", options: ["approve", "reject"], material: [], ends: [], answer: "Answer" };
     case "input":
       return { ...at, kind: "input", name: "Input", fields: [{ name: "value", type: "text", options: [], prompt: "What should this value be?" }] };
     case "output":
@@ -365,7 +365,10 @@ export function syncSkill(node: SkillNode, info: SkillInfo): SkillNode {
     const before = node.inputs.find((item) => item.name === input.name);
     return { ...input, bind: before?.bind ?? null };
   });
-  const outputs = info.outputs.map((output) => ({ ...output, path: node.outputs.find((item) => item.name === output.name)?.path ?? null }));
+  const outputs = info.outputs.map((output) => {
+    const before = node.outputs.find((item) => item.name === output.name);
+    return { ...output, path: before?.path ?? null, description: before?.description ?? "", byOwner: before?.byOwner ?? false };
+  });
   return { ...node, inputs, outputs };
 }
 

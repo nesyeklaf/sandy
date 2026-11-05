@@ -1,39 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Markdown, useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
-import type { SkillRow } from "./contract";
-import {
-  DESCRIPTION_MAX,
-  IO_KINDS,
-  applyDraft,
-  emptyIoRow,
-  ioRowProblems,
-  type IoKey,
-  type IoKind,
-  type IoRow,
-  type MetadataEntry,
-  type SkillDraft,
-} from "./skill-file";
-import {
-  canSave,
-  editedDraft,
-  isDirty,
-  readDone,
-  readFailed,
-  readStarted,
-  reverted,
-  saveDone,
-  saveFailed,
-  saveStarted,
-  startEditor,
-  type EditorState,
-} from "./skill-editor-state";
-import { confirmLeaveSkill, setUnsavedSkill, skillSubPath } from "./skill-route";
-import { GHOST, INPUT, PANEL_PATH, PRIMARY, ProjectSelect, SECONDARY, errorText, useSkillUseCases, type SkillUseCasesApi } from "./shared";
+import { useCallback, useMemo, useState } from "react";
+import { useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
+import { SkillPanel } from "./skill-panel";
+import { confirmLeaveSkill, skillSubPath } from "./skill-route";
+import { INPUT, PANEL_PATH, ProjectSelect, useSkillUseCases } from "./shared";
 
 const FIELD = INPUT + " w-full";
-const AREA = "w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm";
-const LABEL = "block text-xs text-muted-foreground";
-
 
 function useSkillNavigation() {
   const navigate = useSandyNavigate();
@@ -43,220 +14,6 @@ function useSkillNavigation() {
       navigate.toPluginPanel(PANEL_PATH, { subPath: skillSubPath(name) });
     },
     [navigate],
-  );
-}
-
-function IoRows({ title, rows, disabled, onChange }: { title: string; rows: IoRow[]; disabled: boolean; onChange: (rows: IoRow[]) => void }) {
-  const problems = ioRowProblems(rows);
-  const update = (index: number, patch: Partial<IoRow>) => onChange(rows.map((row, at) => (at === index ? { ...row, ...patch } : row)));
-  return (
-    <fieldset className="space-y-2" disabled={disabled}>
-      <legend className="text-sm font-medium">{title}</legend>
-      {rows.length === 0 ? <p className="text-xs text-muted-foreground">None declared.</p> : null}
-      {rows.map((row, index) => (
-        <div key={index} className="flex flex-wrap items-center gap-2">
-          <input aria-label={title + " name"} placeholder="Name" className={INPUT + " w-40"} value={row.name} onChange={(event) => update(index, { name: event.target.value })} />
-          <label className="flex items-center gap-1 text-xs text-muted-foreground">
-            <input type="checkbox" checked={row.optional} onChange={(event) => update(index, { optional: event.target.checked })} />
-            optional
-          </label>
-          <select aria-label={title + " type"} className={INPUT} value={row.kind} onChange={(event) => update(index, { kind: event.target.value as IoKind })}>
-            {IO_KINDS.map((kind) => (
-              <option key={kind} value={kind}>
-                {kind}
-              </option>
-            ))}
-          </select>
-          {row.kind === "file" ? (
-            <input aria-label={title + " file path"} placeholder="path, e.g. plan.md (optional)" className={INPUT + " min-w-40 flex-1"} value={row.path} onChange={(event) => update(index, { path: event.target.value })} />
-          ) : null}
-          {row.kind === "choice" ? (
-            <input aria-label={title + " choice values"} placeholder="a, b" className={INPUT + " min-w-40 flex-1"} value={row.values} onChange={(event) => update(index, { values: event.target.value })} />
-          ) : null}
-          <button type="button" className={GHOST} onClick={() => onChange(rows.filter((_, at) => at !== index))}>
-            Remove
-          </button>
-        </div>
-      ))}
-      <button type="button" className={GHOST} onClick={() => onChange([...rows, emptyIoRow()])}>
-        + Add {title.toLowerCase().replace(/s$/u, "")}
-      </button>
-      {problems.length === 0 ? null : (
-        <ul className="space-y-0.5 text-xs text-destructive">
-          {problems.map((problem) => (
-            <li key={problem}>{problem}</li>
-          ))}
-        </ul>
-      )}
-    </fieldset>
-  );
-}
-
-function MetadataRows({ entries, kept, disabled, onChange }: { entries: MetadataEntry[]; kept: string[]; disabled: boolean; onChange: (entries: MetadataEntry[]) => void }) {
-  const update = (index: number, patch: Partial<MetadataEntry>) => onChange(entries.map((entry, at) => (at === index ? { ...entry, ...patch } : entry)));
-  const keys = entries.map((entry) => entry.key.trim()).filter((key) => key !== "");
-  const reserved = keys.filter((key) => key === "inputs" || key === "outputs" || kept.includes(key));
-  const repeated = keys.filter((key, index) => keys.indexOf(key) !== index);
-  return (
-    <fieldset className="space-y-2" disabled={disabled}>
-      <legend className="text-sm font-medium">Other metadata</legend>
-      {entries.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <input aria-label="Metadata key" placeholder="key" className={INPUT + " w-40"} value={entry.key} onChange={(event) => update(index, { key: event.target.value })} />
-          <input aria-label="Metadata value" placeholder="value" className={INPUT + " min-w-0 flex-1"} value={entry.value} onChange={(event) => update(index, { value: event.target.value })} />
-          <button type="button" className={GHOST} onClick={() => onChange(entries.filter((_, at) => at !== index))}>
-            Remove
-          </button>
-        </div>
-      ))}
-      <button type="button" className={GHOST} onClick={() => onChange([...entries, { key: "", value: "" }])}>
-        + Add key
-      </button>
-      {kept.length === 0 ? null : <p className="text-xs text-muted-foreground">Kept as written: {kept.join(", ")}</p>}
-      {reserved.length === 0 ? null : <p className="text-xs text-destructive">These keys are edited elsewhere and are ignored here: {[...new Set(reserved)].join(", ")}</p>}
-      {repeated.length === 0 ? null : <p className="text-xs text-destructive">Repeated keys, the last one wins: {[...new Set(repeated)].join(", ")}</p>}
-    </fieldset>
-  );
-}
-
-function SkillEditor({ api, skill }: { api: SkillUseCasesApi; skill: SkillRow }) {
-  const projectId = api.state?.projectId ?? null;
-  const [state, setState] = useState<EditorState>(startEditor);
-  const current = useRef(state);
-  current.current = state;
-  const [preview, setPreview] = useState(false);
-
-  const load = useCallback(() => {
-    const read = readStarted(current.current, projectId === null ? null : { projectId, skillId: skill.id });
-    current.current = read.state;
-    setState(read.state);
-    if (projectId === null) return;
-    api.rpc.call("readSkill", { projectId, skillId: skill.id }).then(
-      (file) => setState((latest) => readDone(latest, read.ticket, file)),
-      (cause: unknown) => setState((latest) => readFailed(latest, read.ticket, errorText(cause))),
-    );
-  }, [api.rpc, projectId, skill.id]);
-  useEffect(load, [load]);
-
-  const { loaded, loadError, saveError, conflict, saving, notice } = state;
-  const draft = loaded !== null && "draft" in loaded ? loaded.draft : null;
-  const dirty = useMemo(() => isDirty(state), [state]);
-  useEffect(() => {
-    setUnsavedSkill(dirty ? skill.name : null);
-  }, [dirty, skill.name]);
-  useEffect(() => () => setUnsavedSkill(null), []);
-  useEffect(() => {
-    if (!dirty) return;
-    const guard = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener("beforeunload", guard);
-    return () => window.removeEventListener("beforeunload", guard);
-  }, [dirty]);
-
-  if (loadError !== null) return <p role="alert" className="p-4 text-sm text-destructive">{loadError}</p>;
-  if (loaded === null || projectId === null) return <p className="p-4 text-sm text-muted-foreground">Loading {skill.name}…</p>;
-  if (!("draft" in loaded) || draft === null)
-    return (
-      <div className="space-y-2 p-4 text-sm">
-        <p role="alert" className="text-destructive">{"error" in loaded ? loaded.error : "The skill file cannot be read."}</p>
-        <p className="text-xs text-muted-foreground">{loaded.file.filePath}</p>
-      </div>
-    );
-
-  const writable = loaded.file.writable;
-  const metadataLock = loaded.metadataLock;
-  const applied = applyDraft(loaded.file.content, draft);
-  const edit = (patch: Partial<SkillDraft>) => setState((latest) => editedDraft(latest, patch));
-  const save = (revision: string) => {
-    const step = saveStarted(current.current, revision);
-    current.current = step.state;
-    setState(step.state);
-    const { send, ticket } = step;
-    if (send === null || ticket === null) return;
-    api.rpc.call("writeSkill", send).then(
-      (result) => setState((latest) => saveDone(latest, ticket, result)),
-      (cause: unknown) => setState((latest) => saveFailed(latest, ticket, errorText(cause))),
-    );
-  };
-  const revert = () => setState((latest) => reverted(latest));
-  const length = draft.description.length;
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base font-semibold">{draft.name || skill.name}</h2>
-          <p className="truncate text-xs text-muted-foreground" title={loaded.file.filePath}>
-            {loaded.file.filePath}
-          </p>
-        </div>
-        {writable ? null : <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">Read-only</span>}
-        <button type="button" className={SECONDARY} disabled={!dirty || saving} onClick={revert}>
-          Revert
-        </button>
-        <button type="button" className={PRIMARY} disabled={!canSave(state)} onClick={() => save(loaded.file.revision)}>
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
-        {writable ? null : <p className="text-sm text-muted-foreground">This skill ships with sandy or a plugin, so it cannot be edited here.</p>}
-        {conflict === null ? null : (
-          <div role="alert" className="space-y-2 rounded-md border border-destructive p-3 text-sm">
-            <p>{conflict.currentRevision === null ? "The file was removed after you opened it." : "The file changed on disk after you opened it."}</p>
-            <div className="flex gap-2">
-              <button type="button" className={SECONDARY} onClick={load}>
-                Reload and discard my changes
-              </button>
-              {conflict.currentRevision === null ? null : (
-                <button type="button" className={PRIMARY} disabled={saving} onClick={() => conflict.currentRevision !== null && save(conflict.currentRevision)}>
-                  Overwrite with my version
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        {applied.ok ? null : <p role="alert" className="text-sm text-destructive">{applied.error}</p>}
-        {saveError === null ? null : <p role="alert" className="text-sm text-destructive">{saveError}</p>}
-        {notice === null ? null : <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
-        {loaded.warnings.length === 0 ? null : (
-          <ul className="space-y-0.5 text-xs text-muted-foreground">
-            {loaded.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        )}
-        <label className="block space-y-1">
-          <span className={LABEL}>Description</span>
-          <textarea className={AREA} rows={3} disabled={!writable} value={draft.description} onChange={(event) => edit({ description: event.target.value })} />
-          <span className={"block text-right text-xs tabular-nums " + (length > DESCRIPTION_MAX || length === 0 ? "text-destructive" : "text-muted-foreground")}>
-            {length} / {DESCRIPTION_MAX}
-          </span>
-        </label>
-        {metadataLock === null ? null : (
-          <p role="note" className="text-sm text-muted-foreground">
-            {metadataLock}
-          </p>
-        )}
-        {(["inputs", "outputs"] as const).map((key: IoKey) => (
-          <IoRows key={key} title={key === "inputs" ? "Inputs" : "Outputs"} rows={draft[key]} disabled={!writable || metadataLock !== null} onChange={(rows) => edit({ [key]: rows })} />
-        ))}
-        <MetadataRows entries={draft.metadata} kept={draft.keptMetadataKeys} disabled={!writable || metadataLock !== null} onChange={(metadata) => edit({ metadata })} />
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="flex-1 text-sm font-medium">Body</span>
-            <button type="button" className={GHOST} aria-pressed={preview} onClick={() => setPreview(!preview)}>
-              {preview ? "Edit" : "Preview"}
-            </button>
-          </div>
-          {preview ? (
-            <div className="rounded-md border border-border p-3">
-              <Markdown content={draft.body} />
-            </div>
-          ) : (
-            <textarea aria-label="Body" className={AREA + " font-mono"} rows={24} disabled={!writable} value={draft.body} onChange={(event) => edit({ body: event.target.value })} />
-          )}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -306,9 +63,9 @@ export function SkillsPage({ skillName }: { skillName: string | null }) {
       <section className="min-w-0 flex-1">
         {error === null ? null : <p role="alert" className="px-4 pt-3 text-sm text-destructive">{error}</p>}
         {selected === undefined ? (
-          <p className="p-4 text-sm text-muted-foreground">{skillName === null ? "Pick a skill to edit its description, inputs, outputs and body." : "No skill named " + skillName + " in this project."}</p>
+          <p className="p-4 text-sm text-muted-foreground">{skillName === null ? "Pick a skill to edit its overview, stages, files and source." : "No skill named " + skillName + " in this project."}</p>
         ) : (
-          <SkillEditor key={(state.projectId ?? "") + "\0" + selected.id} api={api} skill={selected} />
+          state.projectId === null ? null : <SkillPanel key={state.projectId + "\0" + selected.id} api={api} projectId={state.projectId} skillId={selected.id} name={selected.name} />
         )}
       </section>
     </div>

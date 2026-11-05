@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { SkillInfo } from "./check";
 import { AD_HOC_SKILL, BLOCKS, blockedReason, type PaletteItem, type Placement } from "./canvas-model";
 import type { Flow } from "./graph";
@@ -44,7 +44,7 @@ function matches(entry: PickerEntry, needle: string): boolean {
   return needle === "" || (entry.title + " " + entry.purpose + " " + entry.group).toLowerCase().includes(needle);
 }
 
-export function Palette({ skills, onAdd }: { skills: readonly SkillInfo[]; onAdd: (item: PaletteItem) => void }) {
+export function Palette({ skills, onAdd, header }: { skills: readonly SkillInfo[]; onAdd: (item: PaletteItem) => void; header: ReactNode }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(true);
   const entries = useMemo(() => paletteEntries(skills), [skills]);
@@ -66,6 +66,7 @@ export function Palette({ skills, onAdd }: { skills: readonly SkillInfo[]; onAdd
           ◂
         </button>
       </div>
+      <div className="px-3 pb-2">{header}</div>
       <div className="px-3 pb-2">
         <input type="search" aria-label="Search blocks and skills" placeholder="Search blocks and skills" className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm" value={query} onChange={(event) => setQuery(event.target.value)} />
       </div>

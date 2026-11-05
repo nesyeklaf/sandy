@@ -25,6 +25,8 @@ export type Scope = Readonly<Record<string, string>>;
 
 export type ValueType =
   | { kind: "text" }
+  | { kind: "url" }
+  | { kind: "file"; path?: string }
   | { kind: "choice"; options: string[] }
   | {
       kind: "list";
@@ -64,6 +66,17 @@ export function parseType(
 ): { ok: true; type: ValueType } | { ok: false; error: string } {
   const text = source.trim();
   if (text === "text") return { ok: true, type: { kind: "text" } };
+  if (text === "url") return { ok: true, type: { kind: "url" } };
+  if (text === "file") return { ok: true, type: { kind: "file" } };
+  const file = /^file\((.*)\)$/.exec(text);
+  if (file !== null) {
+    const path = file[1]!.trim();
+    if (path === "")
+      return { ok: false, error: "file() needs a path, or write file without parentheses" };
+    if (/[()"\n]/.test(path))
+      return { ok: false, error: `file path "${path}" may not hold ( ) or quotes` };
+    return { ok: true, type: { kind: "file", path } };
+  }
   const choice = /^choice\((.*)\)$/.exec(text);
   if (choice !== null) {
     const parsed = parseChoice(choice[1]!);
@@ -100,7 +113,7 @@ export function parseType(
   }
   return {
     ok: false,
-    error: `unknown type "${text}": use text, choice(a, b), list(text), list(choice(a, b)) or map($stage.List, choice(a, b))`,
+    error: `unknown type "${text}": use text, url, file, file(path), choice(a, b), list(text), list(choice(a, b)) or map($stage.List, choice(a, b))`,
   };
 }
 
@@ -108,6 +121,10 @@ export function formatType(type: ValueType): string {
   switch (type.kind) {
     case "text":
       return "text";
+    case "url":
+      return "url";
+    case "file":
+      return type.path === undefined ? "file" : `file(${type.path})`;
     case "choice":
       return `choice(${type.options.join(", ")})`;
     case "list":
@@ -121,6 +138,10 @@ export function lineFormat(type: ValueType): string | undefined {
   switch (type.kind) {
     case "text":
       return undefined;
+    case "url":
+      return "a URL";
+    case "file":
+      return type.path === undefined ? "a file path" : `a file path (default ${type.path})`;
     case "choice":
       return `exactly one of: ${type.options.join(", ")}`;
     case "list":

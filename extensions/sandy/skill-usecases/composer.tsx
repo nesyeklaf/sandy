@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useComposer, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import { FLOW_PROVIDER_ID, type rpcContract } from "./contract";
 import { flowSkillNames, type Flow } from "./graph";
-import { INPUT, errorText } from "./shared";
+import { INPUT, errorText, readStoredProject } from "./shared";
 
 export const FLOW_POPUP_ID = "flows";
 
@@ -14,7 +14,7 @@ export function FlowsPopup() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    rpc.call("overview", {}).then(
+    rpc.call("overview", { projectId: readStoredProject() }).then(
       (overview) => setFlows(overview.flows),
       (cause: unknown) => setError(errorText(cause)),
     );

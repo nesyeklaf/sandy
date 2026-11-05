@@ -1,5 +1,6 @@
 import {
   skillWriteConflictDetailsSchema,
+  type CreatableSkillScope,
   type DeleteSkillRequest,
   type SkillContentResponse,
   type SkillFilesResponse,
@@ -28,8 +29,15 @@ export interface SkillContentArgs extends SkillIdentityArgs {
 
 export interface SkillUpdateArgs extends SkillWorkspaceArgs {
   skillId: string;
+  path?: string;
   content: string;
-  revision: string;
+  revision: string | null;
+}
+
+export interface SkillCreateArgs extends SkillWorkspaceArgs {
+  scope: CreatableSkillScope;
+  name: string;
+  content: string;
 }
 
 export interface SkillDeleteArgs extends SkillWorkspaceArgs {
@@ -56,6 +64,9 @@ function readSkillWriteConflict(
 }
 
 export interface SkillsArea {
+  experimental_create(
+    args: SkillCreateArgs,
+  ): Promise<ExperimentalSkillWriteResult>;
   experimental_read(args: SkillIdentityArgs): Promise<SkillContentResponse>;
   experimental_write(
     args: SkillUpdateArgs,
@@ -98,6 +109,7 @@ export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
         json: {
           skillId: input.skillId,
           environmentId: input.environmentId,
+          path: input.path ?? "SKILL.md",
           content: input.content,
           revision: input.revision,
         },
@@ -117,7 +129,31 @@ export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
     }
   };
 
+  const create = async (
+    input: SkillCreateArgs,
+  ): Promise<ExperimentalSkillWriteResult> => {
+    try {
+      const written = await transport.readJson(
+        transport.api.v1.projects[":id"].skills.$post({
+          param: { id: input.projectId },
+          json: {
+            environmentId: input.environmentId,
+            scope: input.scope,
+            name: input.name,
+            content: input.content,
+          },
+        }),
+      );
+      return { outcome: "written", ...written };
+    } catch (error) {
+      const conflict = readSkillWriteConflict(error);
+      if (conflict === null) throw error;
+      return { outcome: "conflict", ...conflict };
+    }
+  };
+
   return {
+    experimental_create: create,
     async experimental_read(input) {
       return getContent({ ...input, path: "SKILL.md" });
     },

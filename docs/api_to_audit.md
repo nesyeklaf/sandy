@@ -1071,7 +1071,7 @@ on `sidebarMultiSelect`.
 SKILL.md through `GET /projects/:id/skills/content` and returns
 `{ content, revision, filePath, writable }`; `filePath` is the real path
 behind a symlinked skill directory and `revision` its SHA-256.
-`experimental_write({ projectId, environmentId, skillId, content, revision })`
+`experimental_write({ projectId, environmentId, skillId, path?, content, revision })`
 sends `PATCH /projects/:id/skills/content` and returns
 `{ outcome: "written", filePath, revision }` or, when the file changed since
 `revision`, `{ outcome: "conflict", currentRevision }` instead of throwing.
@@ -1080,23 +1080,56 @@ skills, which are never writable). Sandy skills keep their confined
 `host.write_skill` roots; agent and shared skills go through
 `host.write_skill` with the skill's root, and the daemon writes the resolved
 real path of SKILL.md, refusing targets outside that root's real directory and
-inside sandy's data dir. Skill listings carry `writable` next to
+inside sandy's data dir. With a `path` other than `SKILL.md` (the server
+default) it replaces an existing file in the skill folder through
+`host.write_file` confined to that folder, with the same revision check. A
+`revision` of `null` creates that file and its missing parent folders and
+fails with a conflict when it already exists; SKILL.md always needs its
+revision (400 otherwise). Every write goes to a temporary file that is renamed
+into place. Skill listings carry `writable` next to
 `manageable`: symlinked shared and agent skills are writable but not
 manageable (not deletable).
 
-Callers: the CLI's `sandy skill update` (conflict message with the current
-revision) and the Skill use cases plugin's Skills editor. `skills.update`
+Callers: the CLI's `sandy skill update` (`--path` for supporting files,
+conflict message with the current revision) and the Skill use cases plugin's
+Skills editor and flow editor skill panel (Files tab). `skills.update`
 shares the same request and keeps throwing on 409.
 
 **Audit before stabilizing.**
 
-1. **Supporting files.** Only SKILL.md is writable; decide whether editors need
-   to write bundled reference files through the same path.
+1. **Supporting files.** Existing files are writable, new ones are not; decide
+   whether editors need to add or delete bundled reference files.
 2. **Conflict shape.** `currentRevision` is null when the daemon cannot read
    the current file; decide whether callers also need the current content to
    merge without a second read.
 3. **Ownership.** Writable is derived from root kind, not file permissions;
    decide whether to probe write access so read-only checkouts show as read-only.
+
+## `sandy.sdk.skills.experimental_create`
+
+`experimental_create({ projectId, environmentId, scope, name, content })` sends
+`POST /projects/:id/skills` and creates a new skill folder with its SKILL.md.
+`scope` is `"sandy-project"` (the workspace's `.sandy/skills`) or
+`"shared-user"` (the first configured shared user root, `~/.agents/skills` by
+default); `name` is the folder name, a lowercase slug of at most 64
+characters. The daemon runs `host.create_skill`: it derives the root itself,
+creates the folder exclusively and writes SKILL.md atomically. It returns
+`{ outcome: "written", filePath, revision }` or, when a skill folder with that
+name already exists, `{ outcome: "conflict", currentRevision: null }` instead
+of throwing. Other failures throw `SandyHttpError` (409 `invalid_request` when
+the project has no workspace or no shared root is configured).
+
+Callers: the CLI's `sandy skill create` and the Skill use cases plugin's flow
+editor ("Save as skill" for flows kept in plugin storage, and "New skill").
+
+**Audit before stabilizing.**
+
+1. **Scopes.** Only project and shared user roots are creatable; decide whether
+   sandy's data-dir and provider roots belong here too.
+2. **Root choice.** The shared root is the first configured user root; decide
+   whether callers should pick among several roots.
+3. **Identity.** The result carries the file path, not the skill id; decide
+   whether to return the listing entry so callers skip a second list call.
 
 ## `sandy.sdk.threads.experimental_listAncestors`
 

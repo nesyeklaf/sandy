@@ -5,6 +5,8 @@ import plugin from "./server.ts";
 import { machineSchema } from "../work/track/machine.ts";
 import { migrateLinear, type FlowStep } from "./graph.ts";
 import { formatIo } from "./io.ts";
+import { parseSkill } from "@sandy/skill-dialect";
+import { flowToSkill } from "./skill-flow.ts";
 import { UX_SKILLS, uxFlow } from "./ux-flow.fixture.ts";
 import { classify, DEFAULT_USE_CASES, FALLBACK_ID, resolveUseCase, sourceOf } from "./usecases.ts";
 
@@ -79,12 +81,61 @@ test("state groups skills, dedupes by name, picks the first project", async () =
   ]);
 });
 
+test("skill IO comes from input and output tags, frontmatter metadata is the fallback, and reads follow the revision", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 1000 });
+  const files: Record<string, { content: string; revision: string }> = {
+    skill_tags: {
+      content: '---\nname: summarize\nmetadata:\n  inputs: "Ignored: text"\n---\n# Summarize\n\n{% input name="Page" type="url" /%}\n{% output name="Summary" type="file(summary.md)" /%}\n{% output name="Bad" type="choice(a)" /%}\n',
+      revision: "1".repeat(64),
+    },
+    skill_meta: { content: "---\nname: old\nmetadata:\n  inputs: \"Topic: text\"\n---\n# Old\n", revision: "2".repeat(64) },
+  };
+  const reads: string[] = [];
+  const listed = () => [
+    skillEntry("skill_tags", "summarize", "Summarize a page", { inputs: "Ignored: text" }, { revision: files.skill_tags!.revision }),
+    skillEntry("skill_meta", "old", "Old skill", { inputs: "Topic: text" }, { revision: files.skill_meta!.revision }),
+  ];
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => ({ skills: listed() }),
+        experimental_read: async ({ skillId }: { skillId: string }) => {
+          reads.push(skillId);
+          const file = files[skillId]!;
+          return { ...file, filePath: "/" + skillId + "/SKILL.md", writable: true };
+        },
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  const row = (state: any, name: string) => state.skills.find((s: any) => s.name === name);
+  let state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(row(state, "summarize").inputs, [{ name: "Page", optional: false, type: { kind: "url" } }]);
+  assert.deepEqual(row(state, "summarize").outputs, [{ name: "Summary", optional: false, type: { kind: "file", path: "summary.md" } }]);
+  assert.deepEqual(row(state, "summarize").ioErrors, ["line 10: a choice needs at least two values"]);
+  assert.deepEqual(row(state, "old").inputs, [{ name: "Topic", optional: false, type: { kind: "text" } }]);
+  assert.deepEqual(reads.sort(), ["skill_meta", "skill_tags"]);
+  reads.length = 0;
+  await harness.behavior.callRpc("state", { projectId: null });
+  assert.deepEqual(reads, []);
+  files.skill_tags = { content: files.skill_tags!.content.replace('{% output name="Bad" type="choice(a)" /%}\n', ""), revision: "3".repeat(64) };
+  t.mock.timers.tick(6000);
+  await harness.behavior.callRpc("state", { projectId: null });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(reads, []);
+  state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(reads, ["skill_tags"]);
+  assert.deepEqual(row(state, "summarize").ioErrors, []);
+});
+
 test("assign persists, publishes and can be cleared", async () => {
   const harness = await boot();
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: "learn" });
   let state = (await harness.behavior.callRpc("state", { projectId: "proj_2" })) as any;
   assert.equal(state.projectId, "proj_2");
-  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { id: "skill_c", name: "zebra", writable: true, description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [] });
+  assert.deepEqual(state.skills.find((s: any) => s.name === "zebra"), { id: "skill_c", name: "zebra", writable: true, description: "Something unrelated", scope: "user", provider: null, useCaseId: "learn", manual: true, sources: ["other"], inputs: [], outputs: [], ioErrors: [], dialect: false });
   await harness.behavior.callRpc("assign", { skillName: "zebra", useCaseId: null });
   state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.equal(state.skills.find((s: any) => s.name === "zebra").manual, false);
@@ -128,10 +179,10 @@ const flow = (id: string, useCaseId: string, name = id, steps: FlowStep[] = [{ s
 
 test("deleting an area moves its flows to the fallback; unknown areas are rejected", async () => {
   const harness = await boot();
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [flow("a", "learn"), flow("b", "plan")] }), { ok: true });
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [flow("c", "nope")] }), { ok: false });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("a", "learn"), flow("b", "plan")] }), { ok: true, revisions: {}, conflicts: [] });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("c", "nope")] }), { ok: false, revisions: {}, conflicts: [] });
   await harness.behavior.callRpc("saveUseCases", { useCases: DEFAULT_USE_CASES.filter((u) => u.id !== "learn") });
-  const overview = (await harness.behavior.callRpc("overview", {})) as any;
+  const overview = (await harness.behavior.callRpc("overview", { projectId: null })) as any;
   assert.deepEqual(overview.flows.map((f: any) => [f.id, f.useCaseId]), [["a", "other"], ["b", "plan"]]);
 });
 
@@ -172,7 +223,7 @@ test("assignment proposals skip unchanged skills; applying creates a new area on
 
 test("agent tools list skills by area and flows in order", async () => {
   const harness = await boot();
-  await harness.behavior.callRpc("saveFlows", { flows: [flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }])] });
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }])] });
   const areas = (await harness.behavior.callAgentTool("skill_areas", { area: "debug" })) as string;
   assert.match(areas, /^Debug and test \(debug\)\n- debug:/u);
   assert.doesNotMatch(areas, /zebra/u);
@@ -184,6 +235,7 @@ test("agent tools list skills by area and flows in order", async () => {
 test("the ~ mention provider finds flows by name and resolves one into run instructions", async () => {
   const harness = await boot();
   await harness.behavior.callRpc("saveFlows", {
+    projectId: null,
     flows: [
       flow("f1", "debug", "Fix it", [{ skill: "debug", note: "find cause" }, { skill: "write-docs", note: "" }]),
       flow("f2", "plan", "Plan it", []),
@@ -205,7 +257,7 @@ test("stored linear flows are read as graphs and written back once as graphs", a
   const harness = await boot();
   const linear = { id: "old", useCaseId: "debug", name: "Old", description: "d", steps: [{ skill: "debug", note: "find" }, { skill: "write-docs", note: "" }] };
   await harness.kv.set("flows", [linear]);
-  const overview = (await harness.behavior.callRpc("overview", {})) as any;
+  const overview = (await harness.behavior.callRpc("overview", { projectId: null })) as any;
   assert.deepEqual(overview.flows, [migrateLinear(linear)]);
   assert.deepEqual(await harness.kv.get("flows"), [migrateLinear(linear)]);
   const flows = (await harness.behavior.callAgentTool("skill_flows", { flow: "old" })) as string;
@@ -225,7 +277,7 @@ test("a branching flow saves and resolves into run text with its branches", asyn
       { id: "w2", from: "q", port: 1, to: "s1" },
     ],
   };
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [branching] }), { ok: true });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [branching] }), { ok: true, revisions: {}, conflicts: [] });
   const resolved = (await harness.registrations.mentionProviders[0]!.resolve("g1")) as { context: string };
   assert.match(resolved.context, /1\. \/debug\n2\. Ask me: Good enough\? \(yes -> finish, no -> step 1\)/u);
 });
@@ -261,11 +313,13 @@ test("a skill listed by an older host without metadata still yields a row with n
 
 test("flow_track compiles the UX flow into a machine the track accepts", async () => {
   const harness = await boot("{}", uxSkills);
-  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true });
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...uxFlow(), useCaseId: "plan" }] }), { ok: true, revisions: {}, conflicts: [] });
   const text = (await harness.behavior.callAgentTool("flow_track", { flow: "UX design" })) as string;
   const parsed = machineSchema.safeParse(JSON.parse(text));
   assert.equal(parsed.success, true, parsed.success ? "" : JSON.stringify(parsed.error.issues));
-  assert.equal(JSON.parse(text).start, "frame-the-problem");
+  const machine = JSON.parse(text);
+  assert.equal(machine.start ?? machine.stages[0].id, "frame");
+  assert.equal(machine.stages.some((item: { id: string }) => item.id === "done"), false);
   assert.equal(await harness.behavior.callAgentTool("flow_track", { flow: "ux" }), text);
 });
 
@@ -273,7 +327,7 @@ test("flow_track refuses a broken flow with its Check problems and an unknown fl
   const harness = await boot("{}", uxSkills);
   const flow = uxFlow();
   const broken = { ...flow, useCaseId: "plan", wires: flow.wires.filter((item) => item.id !== "w10") };
-  await harness.behavior.callRpc("saveFlows", { flows: [broken] });
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [broken] });
   const refused = (await harness.behavior.callAgentTool("flow_track", { flow: "ux" })) as any;
   assert.equal(refused.isError, true);
   assert.match(refused.content[0].text, /cannot run as a track yet/u);
@@ -293,7 +347,11 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
       skills: {
         list: async () => ({ skills }),
         experimental_read: async ({ skillId }: { skillId: string }) => ({ ...disk, filePath: "/real/" + skillId + "/SKILL.md", writable: true }),
-        experimental_write: async (input: { content: string; revision: string }) => {
+        getContent: async ({ skillId, path }: { skillId: string; path: string }) =>
+          path === "SKILL.md" ? { ...disk, filePath: "/real/" + skillId + "/SKILL.md", writable: true } : { content: "# Ref", revision: "c".repeat(64), filePath: "/real/" + skillId + "/" + path, writable: true },
+        listFiles: async () => ({ files: ["SKILL.md", "references/ref.md"], truncated: false }),
+        experimental_write: async (input: { path: string; content: string; revision: string }) => {
+          if (input.path !== "SKILL.md") return { outcome: "written", filePath: "/real/skill_a/" + input.path, revision: "d".repeat(64) };
           writes.push(input);
           if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };
           disk.content = input.content;
@@ -306,17 +364,122 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
   await plugin(sandy);
   const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.deepEqual(state.skills.map((row: any) => [row.id, row.writable]), [["skill_a", true], ["skill_b", true], ["skill_c", true]]);
-  const read = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a" })) as any;
+  const read = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md" })) as any;
   assert.deepEqual(read, { content: disk.content, revision: "a".repeat(64), filePath: "/real/skill_a/SKILL.md", writable: true });
   const before = harness.realtimeSignals.length;
-  const written = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "new", revision: read.revision });
+  const written = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md", content: "new", revision: read.revision });
   assert.deepEqual(written, { outcome: "written", filePath: "/real/skill_a/SKILL.md", revision: "b".repeat(64) });
   assert.equal(harness.realtimeSignals.length, before + 1);
-  const stale = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "mine", revision: read.revision });
+  const stale = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md", content: "mine", revision: read.revision });
   assert.deepEqual(stale, { outcome: "conflict", currentRevision: "b".repeat(64) });
   assert.equal(harness.realtimeSignals.length, before + 1);
   assert.equal(disk.content, "new");
-  assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", content: "mine", revision: "a".repeat(64) });
+  assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", path: "SKILL.md", content: "mine", revision: "a".repeat(64) });
+  assert.deepEqual(await harness.behavior.callRpc("listSkillFiles", { projectId: "proj_1", skillId: "skill_a" }), { files: ["SKILL.md", "references/ref.md"], truncated: false });
+  const ref = (await harness.behavior.callRpc("readSkill", { projectId: "proj_1", skillId: "skill_a", path: "references/ref.md" })) as any;
+  assert.equal(ref.content, "# Ref");
+  const refWrite = await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "references/ref.md", content: "# Ref 2", revision: ref.revision });
+  assert.deepEqual(refWrite, { outcome: "written", filePath: "/real/skill_a/references/ref.md", revision: "d".repeat(64) });
+  assert.equal(disk.content, "new");
+});
+
+async function bootSkillFlow() {
+  const source = flowToSkill({ ...uxFlow(), id: "ux-design", useCaseId: "plan" });
+  const disk = { content: source, revision: "a".repeat(64) };
+  const writes: { content: string; revision: string }[] = [];
+  const creates: { scope: string; name: string; content: string }[] = [];
+  const removed: string[] = [];
+  const flowSkill = skillEntry("skill_ux", "ux-design", "UX design", { dialect: "1" }, { scope: "sandy-project", filePath: "/p/.sandy/skills/ux-design/SKILL.md" });
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => ({ skills: [...uxSkills, flowSkill] }),
+        experimental_read: async ({ skillId }: { skillId: string }) =>
+          skillId === "skill_ux"
+            ? { ...disk, filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true }
+            : { content: "---\nname: " + skillId + "\n---\n# Plain\n", revision: "b".repeat(64), filePath: "/p/" + skillId + "/SKILL.md", writable: false },
+        experimental_write: async (input: { content: string; revision: string }) => {
+          writes.push(input);
+          if (input.revision !== disk.revision) return { outcome: "conflict", currentRevision: disk.revision };
+          disk.content = input.content;
+          disk.revision = String(writes.length).repeat(64);
+          return { outcome: "written", filePath: "/p/.sandy/skills/ux-design/SKILL.md", revision: disk.revision };
+        },
+        experimental_create: async (input: { scope: string; name: string; content: string }) => {
+          creates.push(input);
+          return { outcome: "written", filePath: "/p/.sandy/skills/" + input.name + "/SKILL.md", revision: "c".repeat(64) };
+        },
+        remove: async ({ skillId }: { skillId: string }) => {
+          removed.push(skillId);
+          return {};
+        },
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  return { harness, kv: sandy.storage.kv, disk, writes, creates, removed };
+}
+
+test("a dialect skill opens as a flow and flow_track starts it by skill name", async () => {
+  const { harness } = await bootSkillFlow();
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const flow = state.flows.find((item: any) => item.id === "ux-design");
+  assert.deepEqual(flow.origin, { skillId: "skill_ux", revision: "a".repeat(64), filePath: "/p/.sandy/skills/ux-design/SKILL.md", writable: true });
+  assert.deepEqual(state.skillFlowErrors, []);
+  const text = (await harness.behavior.callAgentTool("flow_track", { flow: "ux-design" })) as string;
+  assert.match(text, /stage_start\(\{skill: "ux-design"/u);
+});
+
+test("moving blocks only stores positions; an edit writes the skill with its revision and a stale revision is a conflict", async () => {
+  const { harness, kv, disk, writes } = await bootSkillFlow();
+  const state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  const flow = state.flows.find((item: any) => item.id === "ux-design");
+  const moved = { ...flow, nodes: flow.nodes.map((node: any) => (node.id === "frame" ? { ...node, x: 999, y: 7 } : node)) };
+  assert.deepEqual(await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [moved] }), { ok: true, revisions: {}, conflicts: [] });
+  assert.equal(writes.length, 0);
+  assert.deepEqual(((await kv.get("positions")) as any)["ux-design"].frame, { x: 999, y: 7 });
+  const reread = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.deepEqual(reread.flows.find((item: any) => item.id === "ux-design").nodes.find((node: any) => node.id === "frame").x, 999);
+  const renamed = { ...moved, description: "Design the UX in stages" };
+  const saved = (await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [renamed] })) as any;
+  assert.deepEqual(saved, { ok: true, revisions: { skill_ux: "1".repeat(64) }, conflicts: [] });
+  assert.equal(writes[0]?.revision, "a".repeat(64));
+  assert.match(disk.content, /description: "Design the UX in stages"/u);
+  assert.equal(parseSkill(disk.content, "SKILL.md").ok, true);
+  const stale = (await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...renamed, description: "Mine" }] })) as any;
+  assert.deepEqual(stale, { ok: false, revisions: {}, conflicts: ["ux-design"] });
+});
+
+test("Save as skill writes a legacy flow as a dialect SKILL.md and drops it from the stored flows", async () => {
+  const { harness, kv, creates } = await bootSkillFlow();
+  await harness.behavior.callRpc("saveFlows", { projectId: null, flows: [{ ...uxFlow(), id: "f_old", name: "Old UX", useCaseId: "plan" }] });
+  const result = await harness.behavior.callRpc("createFlowSkill", { projectId: null, flow: { ...uxFlow(), id: "f_old", name: "Old UX", useCaseId: "plan" }, scope: "sandy-project", legacyId: "f_old" });
+  assert.deepEqual(result, { outcome: "written", flowId: "old-ux", filePath: "/p/.sandy/skills/old-ux/SKILL.md" });
+  assert.deepEqual(creates.map((item) => [item.scope, item.name]), [["sandy-project", "old-ux"]]);
+  const parsed = parseSkill(creates[0]?.content ?? "", "SKILL.md");
+  assert.equal(parsed.ok, true, parsed.ok ? "" : JSON.stringify(parsed.problems));
+  if (parsed.ok) assert.equal(parsed.machine.stages.some((item) => item.id === "done"), false);
+  assert.deepEqual(await kv.get("flows"), []);
+  assert.equal(((await kv.get("assignments")) as any)["old-ux"], "plan");
+});
+
+test("creating a skill from the canvas writes a plain SKILL.md under a slug and assigns its area", async () => {
+  const { harness, kv, creates } = await bootSkillFlow();
+  const result = await harness.behavior.callRpc("createSkill", { projectId: null, scope: "shared-user", name: "Review Notes!", description: "Review the notes: keep it short", useCaseId: "plan" });
+  assert.deepEqual(result, { outcome: "written", name: "review-notes", filePath: "/p/.sandy/skills/review-notes/SKILL.md" });
+  assert.deepEqual(creates.map((item) => [item.scope, item.name]), [["shared-user", "review-notes"]]);
+  const content = creates[0]?.content ?? "";
+  assert.equal(content, '---\nname: review-notes\ndescription: "Review the notes: keep it short"\n---\n\n# Review Notes\n\nReview the notes: keep it short\n');
+  assert.equal(((await kv.get("assignments")) as any)["review-notes"], "plan");
+  assert.deepEqual(await harness.behavior.callRpc("createSkill", { projectId: null, scope: "sandy-project", name: "!!!", description: "x", useCaseId: null }), { outcome: "written", name: "skill", filePath: "/p/.sandy/skills/skill/SKILL.md" });
+});
+
+test("deleting a skill flow removes the skill", async () => {
+  const { harness, removed } = await bootSkillFlow();
+  assert.deepEqual(await harness.behavior.callRpc("deleteFlowSkill", { projectId: null, skillId: "skill_ux" }), { ok: true });
+  assert.deepEqual(removed, ["skill_ux"]);
 });
 
 async function bootCounting(listed: () => readonly unknown[], delayMs = 0) {
@@ -344,7 +507,7 @@ test("state reuses one skills listing across calls and shares a listing already 
   await Promise.all([1, 2, 3].map(() => harness.behavior.callRpc("state", { projectId: null })));
   assert.equal(calls.list, 1);
   await harness.behavior.callRpc("state", { projectId: null });
-  await harness.behavior.callRpc("overview", {});
+  await harness.behavior.callRpc("overview", { projectId: null });
   assert.equal(calls.list, 1);
 });
 
@@ -387,7 +550,7 @@ test("agent tools never read a listing older than the fresh window, and a skill 
   t.mock.timers.tick(6000);
   assert.match((await harness.behavior.callAgentTool("skill_areas", {})) as string, /fresh-skill/u);
   assert.equal(calls.list, 2);
-  await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "x", revision: "r1" });
+  await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", path: "SKILL.md", content: "x", revision: "r1" });
   const after = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.equal(after.skills.length, 4);
   assert.equal(calls.list, 3);

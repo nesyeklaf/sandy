@@ -468,6 +468,7 @@ describe("summarizeSkillRegistrations", () => {
         manageable: false,
         writable: false,
         metadata: {},
+        revision: only.contentSha256,
         providers: ["codex"],
         duplicates: [],
       },
