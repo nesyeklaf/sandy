@@ -16,7 +16,7 @@ Tested npm package runtimes:
 
 - Node.js 22.19 or newer in the Node.js 22 release line
 - Node.js 24 LTS
-- Node.js 26 Current
+- Node.js 26 LTS, the version Sandy itself runs on (`.nvmrc`)
 
 Newer release lines are not blocked. `install-machine.sh` gates on the 22.19
 floor only, so a release line we have not tested yet still installs rather than
