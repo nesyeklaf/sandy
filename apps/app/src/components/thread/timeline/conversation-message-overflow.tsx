@@ -14,8 +14,6 @@ interface UseOverflowMeasurementArgs {
   measurementKey: string;
 }
 
-type OverflowMeasurement = "unmeasured" | "fits" | "overflowing";
-
 interface OverflowAxes {
   horizontal: boolean;
   vertical: boolean;
@@ -99,30 +97,29 @@ interface ConversationMessageInlineOverflowToggleProps {
   onToggle: () => void;
 }
 
-export function useOverflowMeasurement({
+export function useIsOverflowing({
   elementRef,
   enabled,
   axis,
   measurementKey,
-}: UseOverflowMeasurementArgs): OverflowMeasurement {
-  const [measurement, setMeasurement] =
-    useState<OverflowMeasurement>("unmeasured");
+}: UseOverflowMeasurementArgs): boolean {
+  const [overflowing, setOverflowing] = useState(false);
 
   useLayoutEffect(() => {
     if (!enabled) {
-      setMeasurement("fits");
+      setOverflowing(false);
       return;
     }
 
     const element = elementRef.current;
     if (!element) {
-      setMeasurement("unmeasured");
+      setOverflowing(false);
       return;
     }
 
     const applyMeasurement: OverflowMeasurementListener = (nextMeasurement) => {
       if (!element.isConnected) return;
-      setMeasurement(nextMeasurement[axis] ? "overflowing" : "fits");
+      setOverflowing(nextMeasurement[axis]);
     };
     applyMeasurement(readOverflowMeasurement(element));
     if (typeof ResizeObserver === "undefined") return;
@@ -130,11 +127,7 @@ export function useOverflowMeasurement({
     return observeOverflow(element, applyMeasurement);
   }, [elementRef, enabled, axis, measurementKey]);
 
-  return measurement;
-}
-
-export function useIsOverflowing(args: UseOverflowMeasurementArgs): boolean {
-  return useOverflowMeasurement(args) === "overflowing";
+  return overflowing;
 }
 
 function useContentHoldingToggle(
