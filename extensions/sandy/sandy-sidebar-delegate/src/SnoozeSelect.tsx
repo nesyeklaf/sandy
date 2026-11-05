@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger } from "./components/Select";
 import { Icon } from "./components/Icon";
 import { Tooltip } from "./components/Tooltip";
@@ -23,6 +23,7 @@ export function SnoozeSelect({
   onPark?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpenedAt, setMenuOpenedAt] = useState<number | null>(null);
   const [picking, setPicking] = useState(false);
   // The row keeps its actions revealed until the picker closes too.
   const open = menuOpen || picking;
@@ -34,7 +35,10 @@ export function SnoozeSelect({
       <Select
         value=""
         disabled={disabled || (snoozePresets.length === 0 && !onPark)}
-        onOpenChange={setMenuOpen}
+        onOpenChange={(next) => {
+          setMenuOpen(next);
+          if (next) setMenuOpenedAt(Date.now());
+        }}
         onValueChange={(presetId) => {
           if (presetId === "pick") {
             setPicking(true);
@@ -57,45 +61,64 @@ export function SnoozeSelect({
           </SelectTrigger>
         </Tooltip>
         <SelectContent align="end">
-          {snoozePresets.map((preset) => {
-            const wake = resolveConfiguredSnoozePreset(preset);
-            return (
-              <SelectItem
-                key={preset.id}
-                value={preset.id}
-                className="text-xs"
-                disabled={wake === null}
-                title={wake === null ? "Today's time has passed" : formatSnoozeWakeTime(wake)}
-              >
-                {preset.label}
-              </SelectItem>
-            );
-          })}
-          {snoozePresets.length > 0 ? (
-            <>
-              <SelectSeparator className="my-1 h-px bg-border" />
-              <SelectItem value="pick" className="text-xs">
-                <span className="flex items-center gap-2">
-                  <Icon name="Calendar" className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  Pick date & time…
-                </span>
-              </SelectItem>
-            </>
-          ) : null}
-          {onPark ? (
-            <>
-              {snoozePresets.length > 0 ? <SelectSeparator className="my-1 h-px bg-border" /> : null}
-              <SelectItem value="park" className="text-xs">
-                <span className="flex items-center gap-2">
-                  <Icon name="Car" className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  Park thread
-                </span>
-              </SelectItem>
-            </>
-          ) : null}
+          {menuOpenedAt === null ? null : (
+            <SnoozeMenuItems snoozePresets={snoozePresets} hasPark={!!onPark} openedAt={menuOpenedAt} />
+          )}
         </SelectContent>
       </Select>
       <SnoozePickerDialog open={picking} onOpenChange={setPicking} onSnooze={onSnooze} />
     </>
   );
 }
+
+const SnoozeMenuItems = memo(function SnoozeMenuItems({
+  snoozePresets,
+  hasPark,
+  openedAt,
+}: {
+  snoozePresets: readonly ConfiguredSnoozePreset[];
+  hasPark: boolean;
+  openedAt: number;
+}) {
+  const now = new Date(openedAt);
+  return (
+    <>
+      {snoozePresets.map((preset) => {
+        const wake = resolveConfiguredSnoozePreset(preset, now);
+        return (
+          <SelectItem
+            key={preset.id}
+            value={preset.id}
+            className="text-xs"
+            disabled={wake === null}
+            title={wake === null ? "Today's time has passed" : formatSnoozeWakeTime(wake)}
+          >
+            {preset.label}
+          </SelectItem>
+        );
+      })}
+      {snoozePresets.length > 0 ? (
+        <>
+          <SelectSeparator className="my-1 h-px bg-border" />
+          <SelectItem value="pick" className="text-xs">
+            <span className="flex items-center gap-2">
+              <Icon name="Calendar" className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              Pick date & time…
+            </span>
+          </SelectItem>
+        </>
+      ) : null}
+      {hasPark ? (
+        <>
+          {snoozePresets.length > 0 ? <SelectSeparator className="my-1 h-px bg-border" /> : null}
+          <SelectItem value="park" className="text-xs">
+            <span className="flex items-center gap-2">
+              <Icon name="Car" className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              Park thread
+            </span>
+          </SelectItem>
+        </>
+      ) : null}
+    </>
+  );
+});

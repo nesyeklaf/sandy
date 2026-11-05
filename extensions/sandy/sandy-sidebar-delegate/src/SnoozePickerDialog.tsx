@@ -18,6 +18,16 @@ export function SnoozePickerDialog({
   onOpenChange: (open: boolean) => void;
   onSnooze: (snoozedUntil: number) => void;
 }) {
+  return open ? <OpenSnoozePickerDialog onOpenChange={onOpenChange} onSnooze={onSnooze} /> : null;
+}
+
+function OpenSnoozePickerDialog({
+  onOpenChange,
+  onSnooze,
+}: {
+  onOpenChange: (open: boolean) => void;
+  onSnooze: (snoozedUntil: number) => void;
+}) {
   const portalScope = usePortalScopeProps();
   const contentRef = useRef<HTMLDivElement>(null);
   const [date, setDate] = useState(() => defaultPickedSnooze().date);
@@ -27,14 +37,9 @@ export function SnoozePickerDialog({
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    if (!open) return;
-    const initial = defaultPickedSnooze();
-    setDate(initial.date);
-    setTime(initial.time);
-    setNow(new Date());
     const timer = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(timer);
-  }, [open]);
+  }, []);
 
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
@@ -58,7 +63,7 @@ export function SnoozePickerDialog({
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay {...portalScope} className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content

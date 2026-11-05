@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { countDateTimeFormats } from "./test-date-format-counter";
 import {
   configuredSnoozePresetError,
   canPark,
@@ -132,6 +133,22 @@ describe("formatSnoozeWakeTime", () => {
   it("includes the exact date and local time", () => {
     const wakeAt = Date.UTC(2026, 7, 23, 1, 30);
     expect(formatSnoozeWakeTime(wakeAt, "en-US", "UTC")).toBe("Aug 23, 2026, 1:30 AM");
+  });
+});
+
+describe("date formatters", () => {
+  it("build one Intl.DateTimeFormat per locale, zone and style, not one per call", () => {
+    const construct = countDateTimeFormats();
+    try {
+      formatSnoozeWakeTime(Date.UTC(2031, 1, 1), "en-GB", "Asia/Tokyo");
+      formatSnoozeWakeTime(Date.UTC(2031, 1, 2), "en-GB", "Asia/Tokyo");
+      const now = new Date(Date.UTC(2031, 1, 1));
+      formatPickedSnooze(Date.UTC(2031, 1, 3), now, "en-GB", "Asia/Tokyo");
+      formatPickedSnooze(Date.UTC(2031, 1, 4), now, "en-GB", "Asia/Tokyo");
+      expect(construct.count()).toBe(2);
+    } finally {
+      construct.restore();
+    }
   });
 });
 

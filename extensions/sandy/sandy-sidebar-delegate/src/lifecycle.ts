@@ -230,12 +230,27 @@ export function snoozeWakeLabel(snoozedUntil: number, now: number): string {
   return `${Math.ceil(remaining / DAY_MS)}d`;
 }
 
+const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function cachedDateTimeFormat(
+  kind: string,
+  locale: string | undefined,
+  timeZone: string | undefined,
+  options: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat {
+  const key = `${kind}|${locale ?? ""}|${timeZone ?? ""}`;
+  let formatter = dateTimeFormatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, { ...options, ...(timeZone ? { timeZone } : {}) });
+    dateTimeFormatters.set(key, formatter);
+  }
+  return formatter;
+}
+
 export function formatSnoozeWakeTime(snoozedUntil: number, locale?: string, timeZone?: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    ...(timeZone ? { timeZone } : {}),
-  }).format(new Date(snoozedUntil));
+  return cachedDateTimeFormat("wake", locale, timeZone, { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(snoozedUntil),
+  );
 }
 
 export function resolveConfiguredSnoozePreset(preset: ConfiguredSnoozePreset, now = new Date()): number | null {
@@ -280,13 +295,13 @@ export function combineSnoozeDateTime(date: Date, time: string): number | null {
 
 export function formatPickedSnooze(snoozedUntil: number, now = new Date(), locale?: string, timeZone?: string): string {
   const wake = new Date(snoozedUntil);
-  return new Intl.DateTimeFormat(locale, {
+  const withYear = wake.getFullYear() !== now.getFullYear();
+  return cachedDateTimeFormat(withYear ? "picked-year" : "picked", locale, timeZone, {
     weekday: "short",
     month: "short",
     day: "numeric",
-    ...(wake.getFullYear() !== now.getFullYear() ? { year: "numeric" } : {}),
+    ...(withYear ? { year: "numeric" } : {}),
     hour: "numeric",
     minute: "2-digit",
-    ...(timeZone ? { timeZone } : {}),
   }).format(wake);
 }
