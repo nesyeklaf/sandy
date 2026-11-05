@@ -221,11 +221,11 @@ export function useSmoothHeight<O extends HTMLElement, I extends HTMLElement>():
     const box = outer.current;
     const content = inner.current;
     if (!SMOOTH_HEIGHT || box === null || content === null) return;
-    let last = content.offsetHeight;
+    let last: number | null = null;
     let animation: Animation | null = null;
     const observer = new ResizeObserver(() => {
       const next = content.offsetHeight;
-      const delta = next - last;
+      const delta = last === null ? 0 : next - last;
       last = next;
       if (delta === 0 || reducedMotion() || performance.now() - lastInput > INPUT_WINDOW_MS) {
         animation?.cancel();
