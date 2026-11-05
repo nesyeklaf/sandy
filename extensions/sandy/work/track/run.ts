@@ -1,7 +1,8 @@
 // Track drivers v2: the run state machine (design: docs/design-v2.md). Pure: no sandy API, no I/O, no clock reads.
 // machine.ts keeps the stages.json schemas and rule helpers; this module owns the Run, its leases, every transition
 // (step), and what should be happening for a run (desired).
-import { clip, describeRule, effectiveAllow, parseMachine, pickEdge, rulesFor, stageOf, type Allow, type Machine, type Rule, type RuleResult, type Stage } from "./machine.ts";
+import { checkValue, deriveValues, describeCond, DONE_STAGE, evaluate, explainCond, INPUT_SCOPE, lineFormat, parseType, renderStage, type Scope } from "@sandy/skill-dialect/runtime";
+import { clip, describeRule, effectiveAllow, parseMachine, pickEdge, rulesFor, stageOf, type Allow, type Edge, type Machine, type Rule, type RuleResult, type Stage } from "./machine.ts";
 
 export type AutopilotRef = { name: string; args?: string };
 export type Driver = { kind: "agent" } | ({ kind: "autopilot" } & AutopilotRef);
@@ -43,7 +44,7 @@ export type Claim = { invocation: string; claimedAt: number; expiresAt: number }
  * check or command; a job started by another boot is interrupted at recovery, never run again.
  */
 export type Work =
-  | { kind: "gate"; id: number; to: string | null; note?: string; phase: "checking" | "asking"; results: Record<string, RuleResult>; startedIn: string | null }
+  | { kind: "gate"; id: number; to: string | null; note?: string; because?: string; phase: "checking" | "asking"; results: Record<string, RuleResult>; startedIn: string | null }
   | { kind: "run"; id: number; label: string; command: string; timeoutSec: number; startedIn: string | null }
   | { kind: "force-proposal"; id: number; to: string; reason: string };
 
@@ -66,7 +67,7 @@ export type Submissions = { outputs: Record<string, string>; evidence: Evidence[
 export type LeaseUsage = { input: number; output: number; cacheRead: number; cacheWrite: number; total: number; messages: number };
 
 export type LeaseEnd =
-  | { kind: "advanced"; to: string | null }
+  | { kind: "advanced"; to: string | null; because?: string }
   /** by owner: the owner's force (note: theirs); by proposal: an approved force proposal (note: its reason). */
   | { kind: "forced"; to: string; by: "owner" | "proposal"; note?: string }
   | { kind: "switched"; to: Driver }
@@ -129,6 +130,8 @@ export type Run = {
   /** Ran evidence of the visit that advanced out of the stage. */
   evidence: Record<string, Evidence[]>;
   lastVisit: Record<string, PreviousVisit>;
+  inputs?: Record<string, string>;
+  edgeCounts?: Record<string, number>;
   /**
    * INVARIANT T1: an agent call that changed the run is owed a message until its tool result was a success (the
    * policy of its rev was written in the same commit: published replied) or a wake of the run reached the agent.
@@ -158,14 +161,14 @@ export type StartSource = { kind: "skill"; skill: string; machine: Machine } | {
 export type GoalVerdict = { goalId: string; verdict: string; at: string | null };
 
 export type AgentCommand =
-  | { by: "agent"; op: "start"; source: StartSource; note?: string; goalId?: string }
+  | { by: "agent"; op: "start"; source: StartSource; note?: string; goalId?: string; inputs?: Record<string, string> }
   | { by: "agent"; op: "status" }
   | { by: "agent"; op: "submit"; ticket: string; outputs?: Record<string, string>; evidence?: Record<string, string>; usage?: LeaseUsage }
   | { by: "agent"; op: "advance"; ticket: string; to?: string; note?: string; usage?: LeaseUsage; goal?: GoalVerdict }
   | { by: "agent"; op: "proposeForce"; ticket: string; to: string; reason: string };
 
 export type DriverCommand =
-  | { by: "driver"; op: "start"; source: StartSource; autopilot?: AutopilotRef; note?: string; goalId?: string }
+  | { by: "driver"; op: "start"; source: StartSource; autopilot?: AutopilotRef; note?: string; goalId?: string; inputs?: Record<string, string> }
   | { by: "driver"; op: "status"; lease?: string }
   | { by: "driver"; op: "claim"; ticket: string; invocation: string }
   | { by: "driver"; op: "submit"; grant: string; outputs?: Record<string, string>; evidence?: Record<string, string>; usage?: LeaseUsage }
@@ -268,6 +271,8 @@ const COMMAND_CHARS = 4000;
 export const PREVIOUS_VALUE_CHARS = 2000;
 const PREVIOUS_EVIDENCE = 20;
 const NAME = /^[A-Za-z0-9_-]{1,64}$/;
+const INPUT_CHARS = 8000;
+const BECAUSE_CHARS = 300;
 const AUTOPILOT_NAME = /^[a-z][a-z0-9-]{0,47}$/;
 
 type Ids = { newRunId(): RunId };
@@ -338,7 +343,7 @@ function meterStep(run: Run | null, c: MeterCommand): Step {
 // ---- agent and driver ---------------------------------------------------------------------------------------------
 
 function agentStep(run: Run | null, c: AgentCommand, now: number, ids: Ids): Step {
-  if (c.op === "start") return startRun(run, c.source, c.note, undefined, now, ids, c.goalId);
+  if (c.op === "start") return startRun(run, c.source, c.note, undefined, now, ids, c.goalId, c.inputs);
   if (c.op === "status") return { run, reply: currentReply(run) };
   const held = holder(run, c.ticket, "agent", "ticket");
   if ("reply" in held) return { run, reply: held.reply };
@@ -355,7 +360,7 @@ function agentStep(run: Run | null, c: AgentCommand, now: number, ids: Ids): Ste
 }
 
 function driverStep(run: Run | null, c: DriverCommand, now: number, ids: Ids): Step {
-  if (c.op === "start") return startRun(run, c.source, c.note, c.autopilot, now, ids, c.goalId);
+  if (c.op === "start") return startRun(run, c.source, c.note, c.autopilot, now, ids, c.goalId, c.inputs);
   if (c.op === "status") {
     if (c.lease === undefined) return { run, reply: currentReply(run) };
     const held = holder(run, c.lease, "driver", "any");
@@ -419,7 +424,7 @@ function grantCommand(run: Active, c: Exclude<DriverCommand, { op: "start" | "st
   }
 }
 
-function startRun(run: Run | null, source: StartSource, note: string | undefined, autopilot: AutopilotRef | undefined, now: number, ids: Ids, goalId?: string): Step {
+function startRun(run: Run | null, source: StartSource, note: string | undefined, autopilot: AutopilotRef | undefined, now: number, ids: Ids, goalId?: string, given?: Record<string, string>): Step {
   if (run !== null && (run.state.kind === "active" || run.state.kind === "proposed"))
     return { run, reply: refusedReply(`A track is already running (${run.machine.id}). Finish it, or ask the owner to abort it in the Stages tab.`) };
   let machine: Machine;
@@ -431,6 +436,8 @@ function startRun(run: Run | null, source: StartSource, note: string | undefined
   }
   const badAutopilot = autopilot === undefined ? null : autopilotRefusal(autopilot);
   if (badAutopilot) return { run, reply: refusedReply(badAutopilot) };
+  const inputs = runInputs(machine, given ?? {});
+  if (!inputs.ok) return { run, reply: { kind: "refused", reasons: inputs.reasons } };
   const plan: DriverPlan = autopilot ? { track: { kind: "autopilot", ...autopilot }, stages: {} } : { stages: {} };
   const fresh: Run = {
     version: 2,
@@ -440,6 +447,7 @@ function startRun(run: Run | null, source: StartSource, note: string | undefined
     outputs: {},
     evidence: {},
     lastVisit: {},
+    ...(Object.keys(inputs.values).length ? { inputs: inputs.values } : {}),
     pendingTell: null,
     plan,
     goalId: goalId ?? null,
@@ -468,10 +476,13 @@ function submit(run: Active, input: { outputs?: Record<string, string>; evidence
   const ranOnly = new Set(rules.flatMap((r) => (r.type === "evidence" && r.ran ? [r.name] : [])));
   const outputs = input.outputs ?? {};
   const evidence = input.evidence ?? {};
-  const unknownOut = Object.keys(outputs).filter((n) => !outputNames.has(n));
+  const derivedNames = new Set((stage.derive ?? []).map((d) => d.name));
+  const derivedOut = Object.keys(outputs).filter((n) => derivedNames.has(n));
+  const unknownOut = Object.keys(outputs).filter((n) => !outputNames.has(n) && !derivedNames.has(n));
   const unknownEv = Object.keys(evidence).filter((n) => !evidenceNames.has(n));
   const typedRan = Object.keys(evidence).filter((n) => ranOnly.has(n));
   const reasons = [
+    derivedOut.length ? `${derivedOut.join(", ")} ${derivedOut.length === 1 ? "is" : "are"} decided by the track from the other outputs; submit only: ${[...outputNames].join(", ") || "none"}` : "",
     unknownOut.length ? `Unknown outputs for stage "${stage.id}": ${unknownOut.join(", ")} (expected: ${[...outputNames].join(", ") || "none"})` : "",
     unknownEv.length ? `Unknown evidence: ${unknownEv.join(", ")} (expected: ${[...evidenceNames].join(", ") || "none"})` : "",
     typedRan.length ? `Evidence ${typedRan.join(", ")} is recorded only by a plugin-run command (sandy work track drive run --label <name>)` : "",
@@ -479,9 +490,12 @@ function submit(run: Active, input: { outputs?: Record<string, string>; evidence
   if (reasons.length) return { run, reply: { kind: "refused", reasons } };
   if (!Object.keys(outputs).length && !Object.keys(evidence).length && input.usage === undefined)
     return { run, reply: refusedReply("Nothing to submit: pass outputs and/or evidence.") };
+  const merged = { ...lease.submissions.outputs, ...outputs };
+  const typed = typedOutputs(run, stage, merged, Object.keys(outputs));
+  if (!typed.ok) return { run, reply: { kind: "refused", reasons: typed.reasons } };
   const texts: TextEvidence[] = Object.entries(evidence).map(([name, text]) => ({ kind: "text", name, text: clip(text, TEXT_EVIDENCE_CHARS), seq: lease.seq, at: now }));
   const submissions: Submissions = {
-    outputs: { ...lease.submissions.outputs, ...outputs },
+    outputs: { ...merged, ...typed.values },
     evidence: [...lease.submissions.evidence.filter((e) => !(e.kind === "text" && e.name in evidence)), ...texts],
   };
   const next = withLease(run, { ...lease, submissions, usage: input.usage ?? lease.usage });
@@ -492,8 +506,9 @@ function advance(run: Active, to: string | undefined, note: string | undefined, 
   const lease = run.state.lease;
   if (lease.work !== null) return { run, reply: { kind: "busy", work: lease.work } };
   const stage = stageOf(run.machine, lease.stage);
-  const edge = pickEdge(stage, to);
+  const edge: { ok: true; to: string | null; because?: string } | { ok: false; error: string } = decides(stage) ? decidedEdge(run, stage, to) : pickEdge(stage, to);
   if (!edge.ok) return { run, reply: refusedReply(edge.error) };
+  const because = edge.because;
   const rules = rulesFor(stage, edge.to);
   const results: Record<string, RuleResult> = {};
   const reasons: string[] = [];
@@ -507,16 +522,22 @@ function advance(run: Active, to: string | undefined, note: string | undefined, 
   const measured = usage ? withLease(run, { ...lease, usage }) : run;
   const checking = rules.some((r) => r.rule.type === "check");
   if (checking || rules.some((r) => r.rule.type === "user")) {
-    const work: Work = { kind: "gate", id: run.nextSeq, to: edge.to, ...(note ? { note: clip(note, 2000) } : {}), phase: checking ? "checking" : "asking", results, startedIn: null };
+    const work: Work = { kind: "gate", id: run.nextSeq, to: edge.to, ...(note ? { note: clip(note, 2000) } : {}), ...(because ? { because } : {}), phase: checking ? "checking" : "asking", results, startedIn: null };
     return { run: { ...withLease(measured, { ...measured.state.lease, work }), nextSeq: run.nextSeq + 1 }, reply: { kind: "pending", workId: work.id } };
   }
-  return pass(measured, edge.to, now, "its gate passed", usage);
+  return pass(measured, edge.to, now, "its gate passed", usage, because);
 }
 
 function proposeForce(run: Active, to: string, reason: string): Step {
   const lease = run.state.lease;
   if (lease.work !== null) return { run, reply: { kind: "busy", work: lease.work } };
   if (!run.machine.stages.some((s) => s.id === to)) return { run, reply: refusedReply(`"${to}" is not a stage of this track`) };
+  const stage = stageOf(run.machine, lease.stage);
+  if (decides(stage)) {
+    const decided = decidedEdge(run, stage, undefined);
+    if (decided.ok || !decided.limited)
+      return { run, reply: refusedReply("The track decides the branch of this stage; stage_propose_force is allowed only after stage_advance answers \"round limit reached: ask the owner\".") };
+  }
   const why = clip(reason.trim(), REASON_CHARS);
   if (!why) return { run, reply: refusedReply("A force proposal needs a reason: what blocks the gate and cannot be unblocked.") };
   const work: Work = { kind: "force-proposal", id: run.nextSeq, to, reason: why };
@@ -524,20 +545,116 @@ function proposeForce(run: Active, to: string, reason: string): Step {
 }
 
 /** The gate passed towards to: the visit's submissions become the stage's accepted outputs and evidence. */
-function pass(run: Active, to: string | null, now: number, how: string, finalUsage?: LeaseUsage): Step {
+function pass(run: Active, edgeTo: string | null, now: number, how: string, finalUsage?: LeaseUsage, because?: string): Step {
   const lease = run.state.lease;
+  const to = edgeTo === DONE_STAGE ? null : edgeTo;
+  const from = stageOf(run.machine, lease.stage);
+  const derived = derivedOutputs(run, from, lease.submissions.outputs);
+  const edgeKey = `${lease.stage}>${to ?? DONE_STAGE}`;
   const accepted: Run = {
     ...run,
-    outputs: { ...run.outputs, [lease.stage]: lease.submissions.outputs },
+    outputs: { ...run.outputs, [lease.stage]: { ...lease.submissions.outputs, ...derived } },
     evidence: { ...run.evidence, [lease.stage]: lease.submissions.evidence },
+    edgeCounts: { ...run.edgeCounts, [edgeKey]: (run.edgeCounts?.[edgeKey] ?? 0) + 1 },
   };
-  const closed = closeLease(accepted, { kind: "advanced", to }, now, finalUsage);
+  const closed = closeLease(accepted, { kind: "advanced", to, ...(because ? { because } : {}) }, now, finalUsage);
   if (to === null) {
     return { run: mint(closed, null, { kind: "agent" }, "advance", now, ""), reply: { kind: "finished" } };
   }
   const stage = stageOf(run.machine, lease.stage);
   const next = mint(closed, to, driverFor(run.machine, run.plan, to), "advance", now, `advanced from ${stage.title} (${stage.id}): ${how}`);
   return { run: next, reply: { kind: "entered", station: stationOf(next)! } };
+}
+
+
+function decides(stage: Stage): boolean {
+  return stage.next.some((e) => e.cond !== undefined);
+}
+
+function scopeOf(run: Run, current?: { stage: string; outputs: Record<string, string> }): Record<string, string> {
+  const scope: Record<string, string> = {};
+  for (const [name, value] of Object.entries(run.inputs ?? {})) scope[`${INPUT_SCOPE}.${name}`] = value;
+  for (const [stage, outputs] of Object.entries(run.outputs)) {
+    if (stage === current?.stage) continue;
+    for (const [name, value] of Object.entries(outputs)) scope[`${stage}.${name}`] = value;
+  }
+  if (current) for (const [name, value] of Object.entries(current.outputs)) scope[`${current.stage}.${name}`] = value;
+  return scope;
+}
+
+function valueOf(run: Run, ref: string): string | undefined {
+  const [from, name] = ref.split(".");
+  if (name === undefined) return undefined;
+  return from === INPUT_SCOPE ? run.inputs?.[name] : run.outputs[from!]?.[name];
+}
+
+function derivedOutputs(run: Run, stage: Stage, outputs: Record<string, string>): Record<string, string> {
+  if (!stage.derive?.length) return {};
+  const derived = deriveValues(stage, scopeOf(run, { stage: stage.id, outputs }));
+  return Object.fromEntries(Object.entries(derived).map(([key, value]) => [key.slice(stage.id.length + 1), value]));
+}
+
+function runInputs(machine: Machine, given: Record<string, string>): { ok: true; values: Record<string, string> } | { ok: false; reasons: string[] } {
+  const fields = machine.inputs ?? [];
+  const names = fields.map((f) => f.name);
+  const reasons: string[] = [];
+  const unknown = Object.keys(given).filter((n) => !names.includes(n));
+  if (unknown.length) reasons.push(`Unknown inputs: ${unknown.join(", ")} (expected: ${names.join(", ") || "none"})`);
+  const missing = fields.filter((f) => !f.optional && !(given[f.name] ?? "").trim()).map((f) => f.name);
+  if (missing.length) reasons.push(`Missing inputs: ${missing.join(", ")} (pass them as stage_start inputs)`);
+  const values: Record<string, string> = {};
+  for (const field of fields) {
+    const raw = given[field.name];
+    if (raw === undefined || !raw.trim()) continue;
+    if (raw.length > INPUT_CHARS) {
+      reasons.push(`Input ${field.name} is longer than ${INPUT_CHARS} characters`);
+      continue;
+    }
+    const checked = field.type === undefined ? { ok: true as const, value: raw } : checkValue(field.type, raw, {});
+    if (checked.ok) values[field.name] = checked.value;
+    else reasons.push(`Input ${field.name}: ${checked.error}`);
+  }
+  return reasons.length ? { ok: false, reasons } : { ok: true, values };
+}
+
+function typedOutputs(run: Run, stage: Stage, outputs: Record<string, string>, names: string[]): { ok: true; values: Record<string, string> } | { ok: false; reasons: string[] } {
+  const scope = scopeOf(run, { stage: stage.id, outputs });
+  const values: Record<string, string> = {};
+  const reasons: string[] = [];
+  for (const name of names) {
+    const type = stage.outputs.find((o) => o.name === name)?.type;
+    const raw = outputs[name];
+    if (type === undefined || raw === undefined || !raw.trim()) continue;
+    const checked = checkValue(type, raw, scope);
+    if (checked.ok) values[name] = checked.value;
+    else reasons.push(`Output ${name}: ${checked.error}`);
+  }
+  return reasons.length ? { ok: false, reasons } : { ok: true, values };
+}
+
+type Decided = { ok: true; to: string; because: string } | { ok: false; error: string; limited: boolean };
+
+function decidedEdge(run: Active, stage: Stage, to: string | undefined): Decided {
+  const outputs = run.state.lease.submissions.outputs;
+  const typed = typedOutputs(run, stage, outputs, Object.keys(outputs));
+  if (!typed.ok) return { ok: false, error: typed.reasons.join("; "), limited: false };
+  const base = scopeOf(run, { stage: stage.id, outputs });
+  const scope: Scope = { ...base, ...deriveValues(stage, base) };
+  const conditional = stage.next.filter((e): e is Edge & { cond: NonNullable<Edge["cond"]> } => e.cond !== undefined);
+  const edge = conditional.find((e) => evaluate(e.cond, scope)) ?? stage.next.find((e) => e.cond === undefined);
+  const explained = conditional.map((e) => explainCond(e.cond, scope, BECAUSE_CHARS)).join("; ");
+  if (edge === undefined) return { ok: false, error: `No branch of stage "${stage.id}" applies: ${clip(explained, 1000)}. Check the submitted outputs.`, limited: false };
+  const because = edge.cond === undefined ? clip(`no condition held: ${explained}`, BECAUSE_CHARS) : explainCond(edge.cond, scope, BECAUSE_CHARS);
+  if (to !== undefined && to !== edge.to)
+    return { ok: false, error: `The track decides this branch: "${edge.to}"${edge.when ? ` (${edge.when})` : ""}, because ${because}. Call stage_advance without to.`, limited: false };
+  const taken = run.edgeCounts?.[`${stage.id}>${edge.to}`] ?? 0;
+  if (edge.max !== undefined && taken >= edge.max)
+    return {
+      ok: false,
+      error: `round limit reached: ask the owner. The track picked "${edge.to}" because ${because}; that branch was taken ${taken} of at most ${edge.max} times. stage_propose_force asks the owner for another stage.`,
+      limited: true,
+    };
+  return { ok: true, to: edge.to, because };
 }
 
 // ---- owner --------------------------------------------------------------------------------------------------------
@@ -663,7 +780,7 @@ function systemStep(run: Run | null, c: SystemCommand, now: number): Step {
       if (failed.length) return { run: withLease(run, { ...lease, work: null, outcome: { kind: "refused", workId: work.id, reasons: failed, delivered: false } }), reply: { kind: "ok" } };
       if (rules.some((r) => r.rule.type === "user"))
         return { run: withLease(run, { ...lease, work: { ...work, phase: "asking", results: { ...work.results, ...c.results } } }), reply: { kind: "ok" } };
-      return { run: pass(run, work.to, now, "its gate passed").run, reply: { kind: "ok" } };
+      return { run: pass(run, work.to, now, "its gate passed", undefined, work.because).run, reply: { kind: "ok" } };
     }
     case "ran": {
       if (work?.kind !== "run" || work.id !== c.workId) return ignored("no such command");
@@ -681,7 +798,7 @@ function systemStep(run: Run | null, c: SystemCommand, now: number): Step {
       if (work === null || work.id !== c.formId || work.kind === "run" || (work.kind === "gate" && work.phase !== "asking")) return ignored("no such open form");
       const ownerNote = c.note?.trim() ? clip(c.note.trim(), REASON_CHARS) : undefined;
       if (work.kind === "gate") {
-        if (c.approved) return { run: pass(run, work.to, now, `the owner approved its gate${ownerNote ? `: ${ownerNote}` : ""}`).run, reply: { kind: "ok" } };
+        if (c.approved) return { run: pass(run, work.to, now, `the owner approved its gate${ownerNote ? `: ${ownerNote}` : ""}`, undefined, work.because).run, reply: { kind: "ok" } };
         const reasons = ["the owner did not approve the gate", ...(ownerNote ? [`owner's note: ${ownerNote}`] : [])];
         return { run: withLease(run, { ...lease, work: null, outcome: { kind: "refused", workId: work.id, reasons, delivered: false } }), reply: { kind: "ok" } };
       }
@@ -939,7 +1056,7 @@ export function driverLabel(driver: Driver): string {
 export function endText(end: LeaseEnd): string {
   switch (end.kind) {
     case "advanced":
-      return end.to === null ? "the track finished" : `advanced to ${end.to}`;
+      return `${end.to === null ? "the track finished" : `advanced to ${end.to}`}${end.because ? `, because ${end.because}` : ""}`;
     case "forced":
       return end.by === "owner" ? `forced by the owner${end.note ? `: ${end.note}` : ""}` : `forced by an approved proposal: ${end.note ?? ""}`;
     case "switched":
@@ -971,6 +1088,15 @@ export function previousText(previous: PreviousVisit): string {
   return `Last visit (ended: ${endText(previous.end)}) submitted: ${submissionsText(previous.submissions)}. It does not count for this visit's gate.`;
 }
 
+export function resultLines(run: Run): string[] {
+  const fields = run.machine.result ?? [];
+  if (!fields.length) return [];
+  return ["Result:", ...fields.map((f) => {
+    const value = valueOf(run, f.from);
+    return `  - ${f.name}: ${value === undefined ? "(not produced)" : clip(value, PREVIOUS_VALUE_CHARS)}`;
+  })];
+}
+
 /** An agent lease's start message: the whole stage brief, so the agent needs no stage_status call before it works. */
 function tellText(run: Run, lease: Lease): string {
   const stage = stageOf(run.machine, lease.stage);
@@ -1000,7 +1126,7 @@ export function statusText(run: Run | null): string {
   const state = run.state;
   const head = `Track "${run.machine.title}" (${run.machine.id}), ${state.kind}${run.paused ? ", guard paused by the owner" : ""}`;
   if (state.kind === "proposed") return `${head}: waiting for the owner to approve it.`;
-  if (state.kind === "done") return `${head}: finished.`;
+  if (state.kind === "done") return [`${head}: finished.`, ...resultLines(run)].join("\n");
   if (state.kind === "aborted") return `${head}: ${state.reason}.`;
   const lease = state.lease;
   const stage = stageOf(run.machine, lease.stage);
@@ -1014,12 +1140,12 @@ function briefLines(run: Run, lease: Lease): string[] {
   const autopilot = lease.driver.kind === "autopilot";
   const lines = [`Why: ${lease.causeText}.`];
   if (autopilot) lines.push("Do not call stage_submit or stage_advance; end your turn and let the autopilot drive.");
-  if (stage.description) lines.push(stage.description);
+  const instructions = stage.template === undefined ? stage.description : renderStage(stage, scopeOf(run));
+  if (instructions) lines.push(instructions);
   if (stage.inputs.length) {
     lines.push("Inputs:");
     for (const input of stage.inputs) {
-      const [from, name] = input.split(".");
-      const value = name === undefined ? undefined : run.outputs[from!]?.[name];
+      const value = valueOf(run, input);
       lines.push(`  - ${input}${value === undefined ? " (not produced)" : `: ${clip(value, 400)}`}`);
     }
   }
@@ -1027,9 +1153,12 @@ function briefLines(run: Run, lease: Lease): string[] {
     lines.push(autopilot ? "Outputs:" : "Outputs (submit with stage_submit):");
     for (const o of stage.outputs) {
       const value = lease.submissions.outputs[o.name];
-      lines.push(`  - [${value?.trim() ? "x" : " "}] ${o.name}${o.optional ? " (optional)" : ""}${o.description ? `: ${o.description}` : ""}${value?.trim() ? ` = ${clip(value.replace(/\s+/g, " "), SHOWN_VALUE_CHARS)}` : ""}`);
+      const parsed = o.type === undefined ? undefined : parseType(o.type);
+      const format = parsed?.ok ? lineFormat(parsed.type) : undefined;
+      lines.push(`  - [${value?.trim() ? "x" : " "}] ${o.name}${o.type ? ` (${o.type})` : ""}${o.optional ? " (optional)" : ""}${o.description ? `: ${o.description}` : ""}${format ? ` — format: ${format}` : ""}${value?.trim() ? ` = ${clip(value.replace(/\s+/g, " "), SHOWN_VALUE_CHARS)}` : ""}`);
     }
   }
+  if (stage.derive?.length) lines.push(`Decided by the track (do not submit): ${stage.derive.map((d) => `${d.name} (${d.type})`).join(", ")}`);
   if (lease.submissions.evidence.length) lines.push(`Evidence: ${lease.submissions.evidence.map((e) => `${e.name}: ${clip(evidenceValue(e).replace(/\s+/g, " "), SHOWN_VALUE_CHARS)}`).join("; ")}`);
   const allow = effectiveAllow(run.machine, stage);
   const allowed = [
@@ -1048,7 +1177,13 @@ function briefLines(run: Run, lease: Lease): string[] {
   }
   if (stage.next.length) {
     lines.push("Next:");
-    for (const e of stage.next) lines.push(`  - ${e.to}${e.when ? ` — when ${e.when}` : ""}${e.gate?.length ? ` (extra gate: ${e.gate.map(describeRule).join("; ")})` : ""}`);
+    const decided = decides(stage);
+    for (const e of stage.next) {
+      const decision = !decided ? "" : ` (the track decides: ${e.cond === undefined ? "when no other branch applies" : describeCond(e.cond)})`;
+      const limit = e.max === undefined ? "" : ` (at most ${e.max} times, taken ${run.edgeCounts?.[`${stage.id}>${e.to}`] ?? 0})`;
+      lines.push(`  - ${e.to === DONE_STAGE ? "done (finishes the track)" : e.to}${e.when ? ` — when ${e.when}` : ""}${decision}${limit}${e.gate?.length ? ` (extra gate: ${e.gate.map(describeRule).join("; ")})` : ""}`);
+    }
+    if (decided) lines.push("The track picks the branch from the outputs: call stage_advance without to.");
   } else lines.push("Final stage: stage_advance without to finishes the track.");
   const work = lease.work;
   if (work?.kind === "gate") lines.push(work.phase === "checking" ? "The gate checks are running." : "Waiting for the owner's gate approval in the composer.");
@@ -1134,8 +1269,7 @@ export function stationOf(run: Run): StationView | null {
   const stage = stageOf(run.machine, lease.stage);
   const inputs: Record<string, string> = {};
   for (const input of stage.inputs) {
-    const [from, name] = input.split(".");
-    const value = name === undefined ? undefined : run.outputs[from!]?.[name];
+    const value = valueOf(run, input);
     if (value !== undefined) inputs[input] = value;
   }
   let outcome: Outcome | null = null;
