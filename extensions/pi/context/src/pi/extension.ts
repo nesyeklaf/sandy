@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
 import { type ContextConfig, type ContextConfigInput, carriedTokens, resolveConfig } from "../core/config.ts";
-import { headParts, requestShape } from "../core/continuity.ts";
+import { diffSnapshots, headParts, requestShape, type ShapeSnapshot, hash53, snapshotOf } from "../core/continuity.ts";
 import { type CutPlan, planCut } from "../core/cut.ts";
 import {
 	CUT_REQUEST_CHANNEL,
@@ -127,6 +127,8 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		let sessionId = "";
 		let sessionFile: string | undefined;
 		let requestHead: Record<string, number> = {};
+		let requestSnapshot: ShapeSnapshot | undefined;
+		let resumeFrom: ShapeSnapshot | undefined;
 		let requests = new RequestTracker();
 		/** Reason for the cache break the next request will show. */
 		let pendingCut: string | undefined;
@@ -250,6 +252,32 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			}
 		}
 
+		function snapshotFile(): string | undefined {
+			if (!ledgerFile || !sessionFile) return undefined;
+			return join(dirname(ledgerFile), "shapes", `${hash53(sessionFile)}.json`);
+		}
+
+		function readSnapshot(): ShapeSnapshot | undefined {
+			const file = snapshotFile();
+			if (!file || !existsSync(file)) return undefined;
+			try {
+				const value: unknown = JSON.parse(readFileSync(file, "utf8"));
+				if (typeof value !== "object" || value === null || !("items" in value) || !Array.isArray(value.items)) return undefined;
+				return value as ShapeSnapshot;
+			} catch {
+				return undefined;
+			}
+		}
+
+		function writeSnapshot(snapshot: ShapeSnapshot): void {
+			const file = snapshotFile();
+			if (!file) return;
+			try {
+				mkdirSync(dirname(file), { recursive: true });
+				writeFileSync(file, JSON.stringify(snapshot));
+			} catch {}
+		}
+
 		/** The session's branch for the background historian, which summarizes what the next cut will archive. */
 		function historianBranch(ctx: ExtensionContext): HistorianBranch {
 			return {
@@ -339,6 +367,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				options.ledgerFile === false
 					? undefined
 					: (options.ledgerFile ?? join(getAgentDir(), "sandy-context", "ledger.jsonl"));
+			resumeFrom = readSnapshot();
 			scheduleHistorian(ctx);
 			idleContext = ctx;
 			startKeepWarm();
@@ -418,6 +447,13 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				);
 			}
 			ledger.record(judged.requestClass, reason);
+			const accepted = judged.requestClass !== "rejected" ? requestSnapshot : undefined;
+			const resume =
+				judged.continuity.kind === "first" && resumeFrom && accepted ? diffSnapshots(resumeFrom, accepted) : undefined;
+			if (accepted) {
+				resumeFrom = undefined;
+				writeSnapshot(accepted);
+			}
 			writeLedger({
 				t: new Date(now()).toISOString(),
 				session: sessionId,
@@ -427,6 +463,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				...(judged.continuity.kind === "broken" ? { at: judged.continuity.at } : {}),
 				items: judged.items,
 				head: requestHead,
+				...(resume ? { resume } : {}),
 				model: judged.model,
 				prompt,
 				usage,
@@ -472,6 +509,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			const shape = requestShape(event.payload);
 			if (!shape) return undefined;
 			requestHead = headParts(event.payload);
+			requestSnapshot = snapshotOf(event.payload);
 			requests.begin(shape, ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined);
 			return undefined;
 		});

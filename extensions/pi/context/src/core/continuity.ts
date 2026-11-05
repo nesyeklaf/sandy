@@ -99,3 +99,50 @@ export function compareShapes(previous: RequestShape | undefined, next: RequestS
 	if (next.items.length < previous.items.length) return { kind: "broken", at: next.items.length };
 	return { kind: "continued" };
 }
+
+export interface ItemPrint {
+	readonly hash: number;
+	readonly length: number;
+	readonly start: string;
+	readonly end: string;
+}
+
+export interface ShapeSnapshot {
+	readonly head: Record<string, number>;
+	readonly items: readonly ItemPrint[];
+}
+
+export interface ResumeDiff {
+	readonly at: "continued" | "head" | number;
+	readonly headKeys: readonly string[];
+	readonly previousItems: number;
+	readonly before?: ItemPrint;
+	readonly after?: ItemPrint;
+}
+
+function printOf(value: unknown): ItemPrint {
+	const text = stableStringify(value);
+	return { hash: hash53(text), length: text.length, start: text.slice(0, 240), end: text.slice(-160) };
+}
+
+export function snapshotOf(payload: unknown): ShapeSnapshot | undefined {
+	if (!isRecord(payload)) return undefined;
+	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
+	if (!key) return undefined;
+	return { head: headParts(payload), items: (payload[key] as unknown[]).map(printOf) };
+}
+
+export function diffSnapshots(previous: ShapeSnapshot, next: ShapeSnapshot): ResumeDiff {
+	const names = [...new Set([...Object.keys(previous.head), ...Object.keys(next.head)])].sort();
+	const headKeys = names.filter((name) => previous.head[name] !== next.head[name]);
+	const base = { headKeys, previousItems: previous.items.length };
+	if (headKeys.length > 0) return { at: "head", ...base };
+	const shared = Math.min(previous.items.length, next.items.length);
+	for (let index = 0; index < shared; index++) {
+		if (previous.items[index]?.hash !== next.items[index]?.hash) {
+			return { at: index, ...base, before: previous.items[index], after: next.items[index] };
+		}
+	}
+	if (next.items.length < previous.items.length) return { at: next.items.length, ...base, before: previous.items[next.items.length] };
+	return { at: "continued", ...base };
+}
