@@ -24,12 +24,13 @@ instead of the agent, through `sandy work track drive`; an autopilot may also st
   and the composer forms for gate approval, track approval and force proposals.
 - `POLICY.md` — the policy file contract between this plugin and the guard.
 - `docs/decisions.md` — why it is built this way; `skills/track/SKILL.md` tells agents how to use the tools;
-  `templates/` holds example `stages.json` files.
+  `templates/` holds example `stages.json` files. The `SKILL.md` stage tags are compiled by `packages/skill-dialect`.
 - Tests: `node --test --test-timeout=20000 --experimental-strip-types *.test.ts`, `npx tsc --noEmit -p .`.
 
 ## Where tracks come from
 
-- A skill ships `stages.json` next to its `SKILL.md`; the agent calls `stage_start({skill})`.
+- A skill declares its stages in its `SKILL.md` (frontmatter `metadata.dialect`), or ships `stages.json` next to it; the
+  agent calls `stage_start({skill, inputs})`.
 - The agent proposes an ad-hoc track with `stage_start({machine})`; it starts only after the owner approves it.
 - An autopilot starts one with `sandy work track drive start`.
 

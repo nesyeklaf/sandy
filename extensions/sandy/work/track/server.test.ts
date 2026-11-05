@@ -396,3 +396,74 @@ test("a retried v1 clear never overwrites the policy of a v2 run started in that
   assert.equal(fake.policies.t1?.stage, "a");
   assert.equal(fake.policies.t1?.active, true);
 });
+
+const dialectSkill = (body: string) => `---
+name: probe
+description: A probe.
+metadata:
+  dialect: "1"
+---
+# Probe
+
+Prose for a reader.
+
+{% input name="Task" description="what to probe" /%}
+
+${body}
+{% result name="Answer" from=$a.x /%}
+`;
+
+const oneStage = dialectSkill(`{% stage id="a" title="A" %}
+Probe {% $input.Task %}.
+{% output name="x" /%}
+{% gate type="outputs" /%}
+{% next to="done" label="answered" /%}
+{% /stage %}`);
+
+function withSkillFile(fake: ReturnType<typeof fakeSandy>, skillMd: string) {
+  const skills = (fake.sandy as unknown as { sdk: { skills: Record<string, unknown> } }).sdk.skills;
+  skills.listFiles = async () => ({ files: ["SKILL.md"] });
+  skills.getContent = async ({ path }: { path: string }) => ({ content: path === "SKILL.md" ? skillMd : "" });
+}
+
+test("a SKILL.md with metadata.dialect is the template: inputs are required by name, the brief is rendered, the finished reply shows the result", async () => {
+  const fake = fakeSandy();
+  withSkillFile(fake, oneStage);
+  await plugin(fake.sandy);
+  const stop = fake.startService();
+  await settle();
+  const missing = await fake.tools.stage_start!.execute({ skill: "probe" }, { threadId: "t1" });
+  assert.match(textOf(missing), /Missing inputs: Task/);
+  const started = textOf(await fake.tools.stage_start!.execute({ skill: "probe", inputs: { Task: "the cache" } }, { threadId: "t1" }));
+  assert.match(started, /Probe the cache\./);
+  const ticket = TICKET_LINE.exec(started)![1]!;
+  await fake.tools.stage_submit!.execute({ outputs: { x: "warm" }, ticket }, { threadId: "t1" });
+  const finished = textOf(await fake.tools.stage_advance!.execute({ ticket }, { threadId: "t1" }));
+  assert.equal(finished, "Track finished.\nResult:\n  - Answer: warm");
+  await stop();
+});
+
+test("a SKILL.md whose stages do not compile fails stage_start and validate with file, line, tag and fix", async () => {
+  const broken = dialectSkill(`{% stage id="a" title="A" %}
+{% next to="nowhere" /%}
+{% /stage %}`);
+  const fake = fakeSandy();
+  withSkillFile(fake, broken);
+  await plugin(fake.sandy);
+  const failed = await fake.tools.stage_start!.execute({ skill: "probe" }, { threadId: "t1" });
+  assert.equal(typeof failed === "object" && failed.isError, true);
+  assert.match(textOf(failed), /^\/s\/probe\/SKILL\.md:\d+ next: .+ — .+/);
+  const { mkdtempSync, writeFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "track-validate-"));
+  writeFileSync(join(dir, "broken.md"), broken);
+  writeFileSync(join(dir, "ok.md"), oneStage);
+  writeFileSync(join(dir, "plain.md"), "---\nname: plain\n---\n# Plain\n");
+  const bad = await fake.cli(["validate", join(dir, "broken.md")]);
+  assert.equal(bad.exitCode, 1);
+  assert.match(bad.stderr!, /broken\.md:\d+ next: .+ — /);
+  assert.deepEqual(await fake.cli(["validate", join(dir, "ok.md")]), { exitCode: 0, stdout: 'OK: "Probe", 1 stages' });
+  assert.match((await fake.cli(["validate", join(dir, "plain.md")])).stderr!, /has no metadata\.dialect/);
+});
+
