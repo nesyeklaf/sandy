@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { compareShapes, hash53, headParts, requestShape, type RequestShape } from "../src/core/continuity.ts";
+import {
+	compareShapes,
+	diffSnapshots,
+	hash53,
+	headParts,
+	requestShape,
+	type RequestShape,
+	snapshotOf,
+} from "../src/core/continuity.ts";
 import {
 	answerUsage,
 	classifyRequest,
@@ -217,5 +225,36 @@ describe("head parts", () => {
 		assert.equal(before.model, after.model);
 		assert.equal(before.tools, after.tools);
 		assert.notEqual(before.system, after.system);
+	});
+});
+
+describe("resume snapshots", () => {
+	const turn = [
+		{ role: "user", content: "a" },
+		{ role: "assistant", content: "b" },
+	];
+
+	it("judges a resumed request that extends the saved one as continued", () => {
+		const saved = snapshotOf(payload(turn));
+		const next = snapshotOf(payload([...turn, { role: "user", content: "c" }]));
+		assert.ok(saved && next);
+		assert.equal(diffSnapshots(JSON.parse(JSON.stringify(saved)), next).at, "continued");
+	});
+
+	it("names the changed head field after a restart", () => {
+		const saved = snapshotOf(payload(turn));
+		const next = snapshotOf(payload(turn, "sys 2"));
+		assert.ok(saved && next);
+		assert.deepEqual(diffSnapshots(saved, next), { at: "head", headKeys: ["system"], previousItems: 2 });
+	});
+
+	it("points at the first rewritten item and shows both versions", () => {
+		const saved = snapshotOf(payload(turn));
+		const next = snapshotOf(payload([turn[0], { role: "assistant", content: "b2" }, { role: "user", content: "c" }]));
+		assert.ok(saved && next);
+		const diff = diffSnapshots(saved, next);
+		assert.equal(diff.at, 1);
+		assert.match(diff.before?.start ?? "", /"text":"b"/);
+		assert.match(diff.after?.start ?? "", /"text":"b2"/);
 	});
 });
