@@ -1,10 +1,43 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { getSchema } from "@tiptap/core";
+import { Node } from "@tiptap/pm/model";
+import { EditorState } from "@tiptap/pm/state";
+import type { Editor } from "@tiptap/react";
 import type { ComposerMention } from "@sandy-sdk/plugin-sdk/app";
 import {
   arePromptEditorValuesEqual,
+  focusEditorAtEnd,
+  runAfterNextPaint,
   suppressPromptEditorAnchorActivation,
 } from "./PromptBoxInternal";
+import { promptEditorExtensions } from "./editor/prompt-editor-extensions";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+const promptSchema = getSchema(
+  promptEditorExtensions({ getPlaceholder: () => "" }),
+);
+
+function fakeEditorWithText(text: string) {
+  const doc = Node.fromJSON(promptSchema, {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: text === "" ? [] : [{ type: "text", text }],
+      },
+    ],
+  });
+  const state = EditorState.create({ schema: promptSchema, doc });
+  const dispatch = vi.fn();
+  const focus = vi.fn();
+  const editor = { state, view: { dispatch, focus } } as unknown as Editor;
+  return { dispatch, editor, focus };
+}
 
 function dispatchThroughEditorTarget({
   eventName,
@@ -133,5 +166,76 @@ describe("arePromptEditorValuesEqual", () => {
         { text: "Alice", mentions: [reordered] },
       ),
     ).toBe(true);
+  });
+});
+
+describe("focusEditorAtEnd", () => {
+  it("moves the caret to the end of a draft and scrolls it into view", () => {
+    const { dispatch, editor, focus } = fakeEditorWithText("draft text");
+
+    focusEditorAtEnd(editor);
+
+    const transaction = dispatch.mock.calls[0]?.[0];
+    expect(transaction.scrolledIntoView).toBe(true);
+    expect(transaction.selection.from).toBe(11);
+    expect(focus).toHaveBeenCalledOnce();
+  });
+
+  it("focuses an empty draft without a scroll-into-view layout read", () => {
+    const { dispatch, editor, focus } = fakeEditorWithText("");
+
+    focusEditorAtEnd(editor);
+
+    const transaction = dispatch.mock.calls[0]?.[0];
+    expect(transaction.scrolledIntoView).toBe(false);
+    expect(transaction.selection.from).toBe(1);
+    expect(focus).toHaveBeenCalledOnce();
+  });
+});
+
+describe("runAfterNextPaint", () => {
+  function stubAnimationFrames() {
+    const frames = new Map<number, FrameRequestCallback>();
+    let nextId = 1;
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const id = nextId;
+      nextId += 1;
+      frames.set(id, callback);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id));
+    const runFrame = () => {
+      const pending = [...frames.entries()];
+      frames.clear();
+      for (const [, callback] of pending) callback(0);
+    };
+    return { runFrame };
+  }
+
+  it("runs the callback only after the frame that follows the request has painted", () => {
+    const { runFrame } = stubAnimationFrames();
+    const callback = vi.fn();
+
+    runAfterNextPaint(callback);
+    runFrame();
+    expect(callback).not.toHaveBeenCalled();
+    runFrame();
+    expect(callback).toHaveBeenCalledOnce();
+  });
+
+  it("cancels the callback from either frame", () => {
+    const { runFrame } = stubAnimationFrames();
+    const callback = vi.fn();
+
+    const cancelBeforePaint = runAfterNextPaint(callback);
+    cancelBeforePaint();
+    runFrame();
+    runFrame();
+
+    const cancelAfterPaint = runAfterNextPaint(callback);
+    runFrame();
+    cancelAfterPaint();
+    runFrame();
+    expect(callback).not.toHaveBeenCalled();
   });
 });
