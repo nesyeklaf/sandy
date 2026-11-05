@@ -236,9 +236,10 @@ function cachedDateTimeFormat(
   kind: string,
   locale: string | undefined,
   timeZone: string | undefined,
+  at: Date,
   options: Intl.DateTimeFormatOptions,
 ): Intl.DateTimeFormat {
-  const key = `${kind}|${locale ?? ""}|${timeZone ?? ""}`;
+  const key = `${kind}|${locale ?? ""}|${timeZone ?? `local${at.getTimezoneOffset()}`}`;
   let formatter = dateTimeFormatters.get(key);
   if (!formatter) {
     formatter = new Intl.DateTimeFormat(locale, { ...options, ...(timeZone ? { timeZone } : {}) });
@@ -248,9 +249,10 @@ function cachedDateTimeFormat(
 }
 
 export function formatSnoozeWakeTime(snoozedUntil: number, locale?: string, timeZone?: string): string {
-  return cachedDateTimeFormat("wake", locale, timeZone, { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(snoozedUntil),
-  );
+  return cachedDateTimeFormat("wake", locale, timeZone, new Date(snoozedUntil), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(snoozedUntil));
 }
 
 export function resolveConfiguredSnoozePreset(preset: ConfiguredSnoozePreset, now = new Date()): number | null {
@@ -296,7 +298,7 @@ export function combineSnoozeDateTime(date: Date, time: string): number | null {
 export function formatPickedSnooze(snoozedUntil: number, now = new Date(), locale?: string, timeZone?: string): string {
   const wake = new Date(snoozedUntil);
   const withYear = wake.getFullYear() !== now.getFullYear();
-  return cachedDateTimeFormat(withYear ? "picked-year" : "picked", locale, timeZone, {
+  return cachedDateTimeFormat(withYear ? "picked-year" : "picked", locale, timeZone, wake, {
     weekday: "short",
     month: "short",
     day: "numeric",

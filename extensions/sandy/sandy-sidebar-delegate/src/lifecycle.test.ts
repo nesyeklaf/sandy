@@ -150,6 +150,18 @@ describe("date formatters", () => {
       construct.restore();
     }
   });
+
+  it("formats in the new local time zone after the device time zone changes", () => {
+    const wakeAt = Date.UTC(2031, 5, 1, 12, 0);
+    try {
+      vi.stubEnv("TZ", "Asia/Tokyo");
+      expect(formatSnoozeWakeTime(wakeAt, "en-US")).toBe("Jun 1, 2031, 9:00 PM");
+      vi.stubEnv("TZ", "America/New_York");
+      expect(formatSnoozeWakeTime(wakeAt, "en-US")).toBe("Jun 1, 2031, 8:00 AM");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 });
 
 describe("picked snooze", () => {
