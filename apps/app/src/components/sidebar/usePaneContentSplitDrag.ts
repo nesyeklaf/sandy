@@ -173,7 +173,7 @@ export function beginSidebarPaneContentSplitDrag({
             sidebarRightEdge,
           }),
     decide: (_paneId, zone) => {
-      const layout = store.get(splitLayoutAtom);
+      const layout = startLayout;
       if (layout === null || mentionsOnly) return null;
       return decideThreadDrop({
         zone,
@@ -182,7 +182,7 @@ export function beginSidebarPaneContentSplitDrag({
       });
     },
     onDrop: (target) => {
-      const layout = store.get(splitLayoutAtom);
+      const layout = startLayout;
       if (layout === null) return;
       const existing = findPaneByContent(layout.root, content);
       const next =
@@ -191,7 +191,7 @@ export function beginSidebarPaneContentSplitDrag({
           : target.zone === "center"
             ? replacePaneContent(layout, target.paneId, content)
             : splitPane(layout, target.paneId, target.zone, content);
-      if (next !== layout) store.set(splitLayoutAtom, next);
+      if (next !== store.get(splitLayoutAtom)) store.set(splitLayoutAtom, next);
       onNavigate?.();
       void navigate(
         paneContentRoute(content),
