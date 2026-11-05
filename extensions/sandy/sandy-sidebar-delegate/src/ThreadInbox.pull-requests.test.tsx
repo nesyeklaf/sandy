@@ -127,6 +127,7 @@ describe("pull request badge", () => {
     closed.unmount();
 
     withPr("merged", "merged");
+    fireEvent.click(await screen.findByRole("button", { name: /^Merged/, expanded: false }));
     expect((await screen.findByRole("link", { name: "#412" })).className).toContain(
       "text-[color:var(--sandy-sidebar-pr-merged)]",
     );

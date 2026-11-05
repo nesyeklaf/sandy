@@ -11,6 +11,8 @@ import type { MergeResult } from "./host-git.ts";
 // The panel methods take the thread the panel is open on (threadId) and act only on that thread's own
 // delegations, or on the viewed child itself (server/panel.ts authorizePanel); a refusal is a thrown error
 // with its message. Outputs are built by the server; their types live in panel-types.ts.
+export const delegatesTag = (threadId: string): string => `delegates:${threadId}`;
+
 const panelTarget = { threadId: z.string().min(1), delegationId: z.string().min(1) };
 
 const sendOutcome = z.object({ status: z.enum(["delivered", "queued", "answered"]), delegationId: z.string(), detail: z.string() }).strict();
@@ -21,7 +23,7 @@ export const rpcContract = defineRpcContract({
     input: z.object({ delegationId: z.string().min(1), questionId: z.string().min(1), answer: z.string().min(1).max(20_000) }).strict(),
     output: z.object({ questionId: z.string(), delivery: z.enum(["delivered", "queued", "retrying"]) }).strict(),
   },
-  listDelegates: { input: z.object({ threadId: z.string().min(1) }).strict(), output: z.custom<PanelList>() },
+  listDelegates: { input: z.object({ threadId: z.string().min(1) }).strict(), output: z.custom<PanelList>(), tags: (input) => [delegatesTag(input.threadId)] },
   promptAudit: { input: z.object(panelTarget).strict(), output: z.custom<PromptAudit>() },
   sendToDelegate: {
     input: z.object({ ...panelTarget, message: z.string().min(1).max(20_000), mode: z.enum(["steer", "queue"]) }).strict(),

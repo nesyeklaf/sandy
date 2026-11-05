@@ -4,8 +4,12 @@ import { toast } from "./lib/toast";
 import { cn } from "./lib/utils";
 import { threadDisplayTitle, threadStoredTitle, threadTitleHasMentions } from "./inbox";
 import { ThreadTitle } from "./ThreadTitle";
+import { statusToneClass } from "./StatusSlot";
+import { threadFailed } from "./thread-status";
+import { Icon } from "./components/Icon";
+import { useIsIdea } from "./useIdeas";
+import { useIsOrchestrator } from "./useOrchestrators";
 
-/** Inline title editing shared by full cards and parked rows. */
 export function InlineThreadTitle({
   thread,
   editing,
@@ -18,7 +22,8 @@ export function InlineThreadTitle({
   className?: string;
 }) {
   const sdk = useSdk();
-  // Edit the stored title so saving never flattens mention tokens into names.
+  const isIdea = useIsIdea(thread.id);
+  const isOrchestrator = useIsOrchestrator(thread.id);
   const title = threadStoredTitle(thread);
   const [draft, setDraft] = useState(title);
   const finished = useRef(false);
@@ -45,12 +50,42 @@ export function InlineThreadTitle({
 
   if (!editing) {
     return (
-      <ThreadTitle
-        threadId={thread.id}
-        title={threadDisplayTitle(thread)}
-        mentions={threadTitleHasMentions(thread)}
-        className={className}
-      />
+      <>
+        {thread.isUnread ? (
+          <span
+            aria-hidden="true"
+            data-unread-dot=""
+            className={cn(
+              "mr-1.5 inline-block size-[5px] shrink-0 rounded-full bg-current align-middle",
+              statusToneClass(threadFailed(thread) ? "unread-error" : "unread-success"),
+            )}
+          />
+        ) : null}
+        {isOrchestrator ? (
+          <span
+            aria-hidden="true"
+            data-orchestrator-mark=""
+            className="mr-1 inline-flex shrink-0 align-[-0.125em] text-[color:var(--sandy-sidebar-tone-pending)]"
+          >
+            <Icon name="Orchestrator" className="size-3" aria-hidden />
+          </span>
+        ) : null}
+        {isIdea ? (
+          <span
+            aria-hidden="true"
+            data-idea-mark=""
+            className="mr-1 inline-flex shrink-0 align-[-0.125em] text-[color:var(--sandy-sidebar-tone-draft)]"
+          >
+            <Icon name="Bulb" className="size-3" aria-hidden />
+          </span>
+        ) : null}
+        <ThreadTitle
+          threadId={thread.id}
+          title={threadDisplayTitle(thread)}
+          mentions={threadTitleHasMentions(thread)}
+          className={className}
+        />
+      </>
     );
   }
 
@@ -93,7 +128,6 @@ export function InlineThreadTitle({
 
 function saveTitle(sdk: ReturnType<typeof useSdk>, threadId: string, title: string) {
   void sdk.threads.update({ threadId, title }).catch((error) => {
-    // The SDK rolls back; preserve the former sidebar rename's error feedback.
     toast.error("Failed to update thread", {
       description: error instanceof Error ? error.message.replace(/^HTTP \d+: /, "") : undefined,
     });

@@ -104,6 +104,7 @@ function delegateChildToSidebarThread(record: DelegateChildRecord, parentThreadI
     titleFallback: record.titleFallback,
     displayTitle: title?.trim() ? title.trim() : "Untitled thread",
     parentThreadId,
+    parentNotifications: "auto",
     lifecycleOwnerThreadId: record.lifecycleOwnerThreadId,
     sourceThreadId: record.sourceThreadId,
     sectionId: null,

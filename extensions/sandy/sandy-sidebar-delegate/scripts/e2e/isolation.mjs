@@ -54,7 +54,7 @@ export function protectedFiles(output, roots) {
   return files;
 }
 
-export function createIsolationGuard(rootPid, scratch, env, logPath, realHome) {
+export function createIsolationGuard(rootPid, scratch, env, logPath, realHome, allowedFiles = []) {
   const realRoot = realpathSync(realHome);
   const roots = [".codex", ".claude", ".cursor", ".config", ".sandy"].flatMap((name) => {
     const paths = [join(realRoot, name), resolve(realHome, name)];
@@ -110,13 +110,13 @@ export function createIsolationGuard(rootPid, scratch, env, logPath, realHome) {
     if (!processes.some(({ pid }) => pid === rootPid)) throw new Error("Scratch server disappeared during inspection");
     const tcp = await inspect(
       "lsof",
-      ["-nP", "-a", "-p", [...ids].join(","), "-iTCP", "-sTCP:ESTABLISHED", "-Fpn"],
+      ["-nPw", "-a", "-p", [...ids].join(","), "-iTCP", "-sTCP:ESTABLISHED", "-Fpn"],
       env,
       true,
     );
     const outside = outsideConnections(tcp);
-    const openFiles = await inspect("lsof", ["-nP", "-a", "-p", [...ids].join(","), "-Fpn"], env, true);
-    const forbiddenFiles = protectedFiles(openFiles, roots);
+    const openFiles = await inspect("lsof", ["-nPw", "-a", "-p", [...ids].join(","), "-Fpn"], env, true);
+    const forbiddenFiles = protectedFiles(openFiles, roots).filter(({ path }) => !allowedFiles.includes(path));
     appendFileSync(
       logPath,
       `${JSON.stringify({ stage, at: new Date().toISOString(), processes, tcp, outside, forbiddenFiles })}\n`,

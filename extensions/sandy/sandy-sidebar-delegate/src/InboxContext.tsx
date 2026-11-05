@@ -17,11 +17,17 @@ import type { ShelfExpansionState } from "./ThreadInboxView";
 import { ListAnimationContext, type ListAnimationController } from "./useListMotion";
 import { ProjectColorsProvider } from "./ProjectColors";
 import { WorkingSinceContext } from "./useWorkingSince";
+import { CleanSettledHost } from "./CleanSettledHost";
+import { AnswerHoldHost } from "./AnswerHoldHost";
+import { SelectionHost } from "./SelectionHost";
+import type { RowFields } from "./row-fields";
 import type { WorkingSince } from "./working-since";
 import { ChildThreadDisplayContext, type ChildThreadDisplay } from "./ChildThreadDisplay";
 import { OpenPortsProvider } from "./OpenPorts";
+import { LastMessagesProvider } from "./useLastMessages";
 import type { ActiveSortMode } from "./inbox-layout";
 import type { useRenamingShelfLocks } from "./useRenamingShelfLocks";
+import type { UpdateSidebarSettings } from "./useSidebarSettings";
 import { ActiveThreadContext, useActiveThreadWithin, type ActiveThreadStore } from "./useActiveThread";
 
 interface InboxContextInputs {
@@ -33,19 +39,22 @@ interface InboxContextInputs {
   snoozePresets: readonly ConfiguredSnoozePreset[];
   lifecycle: LifecycleApi;
   childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>;
+  rowFields: RowFields;
   now: number;
   navigate: ReturnType<typeof useSandyNavigate>;
   onNavigate: () => void;
   parkThread: (thread: PluginSidebarThread) => void;
   settleThread: (thread: PluginSidebarThread) => void;
-  snoozeThread: (thread: PluginSidebarThread, until: number) => void;
+  snoozeThread: (thread: PluginSidebarThread, until: number, deferredInteractionId?: string) => void;
   toggleChildExpansion: (threadId: string) => void;
   setRenamingShelfLocks: ReturnType<typeof useRenamingShelfLocks>[1];
   setScope: Dispatch<SetStateAction<string[]>>;
   setExpandedShelves: Dispatch<SetStateAction<ShelfExpansionState>>;
   setActiveSortMode: Dispatch<SetStateAction<ActiveSortMode>>;
   setSettledLimit: Dispatch<SetStateAction<number>>;
+  setRowFields: Dispatch<SetStateAction<RowFields>>;
   toggleProjectCollapse: (projectId: string) => void;
+  updateSidebarSettings: UpdateSidebarSettings;
 }
 
 /** Shared inbox values have separate identities for data, handlers, and activity. */
@@ -58,6 +67,7 @@ export function useInboxContextValues({
   snoozePresets,
   lifecycle,
   childrenByParentId,
+  rowFields,
   now,
   navigate,
   onNavigate,
@@ -70,7 +80,9 @@ export function useInboxContextValues({
   setExpandedShelves,
   setActiveSortMode,
   setSettledLimit,
+  setRowFields,
   toggleProjectCollapse,
+  updateSidebarSettings,
 }: InboxContextInputs) {
   const environment = useMemo(
     () => ({
@@ -82,6 +94,7 @@ export function useInboxContextValues({
       snoozePresets,
       lifecycle,
       childrenByParentId,
+      rowFields,
     }),
     [
       providerById,
@@ -92,6 +105,7 @@ export function useInboxContextValues({
       snoozePresets,
       lifecycle,
       childrenByParentId,
+      rowFields,
     ],
   );
   const actions = useMemo(
@@ -107,7 +121,9 @@ export function useInboxContextValues({
       setExpandedShelves,
       setActiveSortMode,
       setSettledLimit,
+      setRowFields,
       toggleProjectCollapse,
+      updateSidebarSettings,
       acknowledgeWake: (threadId: string) => void lifecycle.acknowledgeWake(threadId),
       openThread: (threadId: string) => {
         navigate.toThread(threadId, { split: false });
@@ -126,7 +142,9 @@ export function useInboxContextValues({
       setExpandedShelves,
       setActiveSortMode,
       setSettledLimit,
+      setRowFields,
       toggleProjectCollapse,
+      updateSidebarSettings,
       lifecycle,
     ],
   );
@@ -166,13 +184,21 @@ export function InboxProvider({
         <WorkingSinceContext.Provider value={workingSince}>
           <ChildThreadDisplayContext.Provider value={childDisplay}>
             <OpenPortsProvider>
-              <InboxEnvironmentContext.Provider value={value.environment}>
-                <InboxActionsContext.Provider value={value.actions}>
-                  <InboxActivityContext.Provider value={value.activity}>
-                    <ActiveThreadContext.Provider value={activeThread}>{children}</ActiveThreadContext.Provider>
-                  </InboxActivityContext.Provider>
-                </InboxActionsContext.Provider>
-              </InboxEnvironmentContext.Provider>
+              <LastMessagesProvider enabled={value.environment.rowFields.lastMessage}>
+                <InboxEnvironmentContext.Provider value={value.environment}>
+                  <InboxActionsContext.Provider value={value.actions}>
+                    <InboxActivityContext.Provider value={value.activity}>
+                      <ActiveThreadContext.Provider value={activeThread}>
+                        <CleanSettledHost onNavigate={value.actions.onNavigate}>
+                          <AnswerHoldHost>
+                            <SelectionHost>{children}</SelectionHost>
+                          </AnswerHoldHost>
+                        </CleanSettledHost>
+                      </ActiveThreadContext.Provider>
+                    </InboxActivityContext.Provider>
+                  </InboxActionsContext.Provider>
+                </InboxEnvironmentContext.Provider>
+              </LastMessagesProvider>
             </OpenPortsProvider>
           </ChildThreadDisplayContext.Provider>
         </WorkingSinceContext.Provider>

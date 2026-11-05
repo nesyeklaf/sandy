@@ -1,8 +1,13 @@
 # Sidebar browser tests
 
-Install dependencies with `npm ci`, the fixture provider CLI, and Chromium:
+Install dependencies with `npm ci`, the fixture provider CLI, `lsof` (the credential guard and the
+plugin's port scan call it; `apt install lsof` on Linux), and Chromium. The `sandy-app` dev dependency is a
+link to `packages/sandy-app` of this repository, which has no `dist` until it is built; the launcher stops
+with the command when it is missing. Build the SDK types and sandy-app once from the repository root:
 
 ```sh
+pnpm exec turbo run build:types --filter=@sandy-sdk/plugin-sdk
+pnpm exec turbo run build --filter=sandy-app
 npm install --global @openai/codex@0.162.1
 npx --no-install playwright install chromium
 # On Linux, install the browser's OS dependencies too:
@@ -13,14 +18,14 @@ env -i PATH="$PATH" HOME="$HOME" npm run e2e:smoke
 # Run a focused flow through the same scratch launcher:
 env -i PATH="$PATH" HOME="$HOME" npm run e2e -- --grep 'settle moves'
 # Exercise motion with 60 loaded settled rows, with timing attached to the report:
-env -i PATH="$PATH" HOME="$HOME" npm run e2e -- --grep 'large settled shelves'
+env -i PATH="$PATH" HOME="$HOME" npm run e2e -- --grep 'large archived shelves'
 # Toggle every shelf pair and a seeded walk, docked and not; fails on any jump:
 env -i PATH="$PATH" HOME="$HOME" npm run e2e -- --grep 'toggle sequence'
 ```
 
 `@playwright/test` supplies role locators, retrying assertions, PNG comparisons,
 and failure screenshots/traces. Both commands use `scripts/e2e/server.mjs` and
-sandy-app 0.47.0. Neither runs as part of `npm run check`. Run e2e separately from
+the pinned sandy-app. Neither runs as part of `npm run check`. Run e2e separately from
 Vitest; the scratch server and Chromium compete with the unit suite for CPU.
 Before releases on macOS: `npm run e2e`; CI: `gh workflow run "Browser e2e"`.
 
@@ -71,6 +76,15 @@ endpoint overrides did not eliminate all traffic. Established TCP destinations
 are recorded with `lsof`; outbound connections do not fail the credential guard.
 The scratch homes contain no developer credentials or copied provider state.
 
+Shelves are the B4 status shelves: Pinned, Needs you, Failed, Working, In review,
+Waiting, Merged and Snoozed (parked threads show there, labelled Parked). Archived
+appears only after View options > Show archived (`showArchived()` in `helpers.mjs`).
+Clean sits in the Archived row's ⋯ menu. Density is Auto, Comfortable, Compact or Dense
+in View options. The seeded idle, read threads land in Waiting. `open()` adjusts the
+persisted sidebar width when the host's navigation rail reserve differs from 49 px.
+Threads waiting for the user (the in-row answer buttons) cannot be seeded: the fixtures
+only produce idle threads, so that flow is covered by Vitest.
+
 The suite seeds four fixed-title threads using CLI `thread spawn --prompt ''`
 with Codex and the scratch checkout, immediately followed by `thread stop`.
 Each must reach `idle`, have an environment, have no queued messages, and have
@@ -80,7 +94,8 @@ this is a create-and-cancel fixture, not a guarantee that no turn ever starts.
 It supplies idle rows without completed agent output. The quick smoke keeps
 the original seven-day scheduled fixture.
 
-The launcher checks `codex --version` before starting the scratch server. CI
+The launcher checks `codex --version` and `lsof -v` before starting the scratch server. The guard allows the
+one `codex` executable it resolves on PATH, which standalone installs keep under `~/.codex`. CI
 installs the pinned CLI above; no login or credentials are needed. Without the
 executable, provider startup can fail before cancellation reaches the thread,
 leaving it in `error`. On suite failure, the runner saves server output and
@@ -94,7 +109,7 @@ Working/attention/woke states stay outside this suite. Those stay in the wired t
 There is no direct database mutation or mocked browser RPC response.
 
 The shelf-motion flow creates 60 additional idle threads and settles them through
-the plugin RPC. It loads all pages and repeatedly expands and collapses Settled
+the plugin RPC. It loads all pages and repeatedly expands and collapses Archived
 with normal motion enabled, in docked and undocked layouts. It checks that bulk
 toggles use no row or height animations and that the selected thread remains
 visible when collapsed. Frame gaps and long tasks are attached to the report;
@@ -102,13 +117,13 @@ they are measurements, not a hardware-dependent FPS assertion. Extra threads
 are deleted during teardown.
 
 Each behavior test resets pin/read/lifecycle/order state through the scratch
-CLI and plugin RPC, then gets a new browser context. The fourteen flows assert
+CLI and plugin RPC, then gets a new browser context. The behavior flows assert
 selection/rendering, pin persistence, Alt+ArrowUp manual order persistence,
 snooze/wake, settle/Undo, the complete right-click menu, and a sidebar settings
 change that updates visible snooze options and persists after reload. They also
 cover park/resume across reload, project filtering, custom project name/stripe
 colors through computed styles across reload, child-chip expansion/collapse,
-and the Settled Clean preview. Server assertions check core pin/idle/parent
+the archived row's Clean preview, and select mode (bulk Pin, Archive with Undo). Server assertions check core pin/idle/parent
 state and plugin lifecycle/order/settings/color state. No production test IDs
 were added. The visual capture uses the existing `data-sandy-sidebar-root` marker
 because the whole plugin container has no accessible role.
@@ -123,8 +138,8 @@ The family is deleted at teardown; its background turns cannot affect later test
 The color flow clears its override and settings in a `finally` block. These
 seeds and overrides are gone before the four original snapshot captures.
 
-The Clean flow settles all four original seeds, which share a checkout, so an
-Active fixture cannot protect the workspace and hide resources. These seeds
+The Clean flow settles all four original seeds, which share a checkout, so a
+Waiting fixture cannot protect the workspace and hide resources. These seeds
 have no terminals or owned listening ports. The empty dialog offers Cancel,
 with no Clean resources button. The test calls the real cleanup RPC with the
 UI preview's token and verifies zero closed resources and unchanged thread,
@@ -133,11 +148,11 @@ terminal, and lifecycle state. It does not exercise closing a real terminal.
 ## Visual baselines
 
 Three populated captures cover light, dark, and a 280 px wide plugin sidebar.
-A fourth capture shows empty Active after all threads have been settled.
+A fourth capture shows the empty sidebar after all threads have been settled.
 The wide captures are 320 px. The host's persisted width includes a 49 px
 navigation rail/border on sandy 0.47, so the browser fixture adds that amount and
 asserts the actual plugin width. Update the offset in `open()` when a host
-release changes it. The populated images contain Pinned, Active, Snoozed, and Settled.
+release changes it. The populated images contain Pinned, Waiting, Snoozed, and Archived.
 Titles, project name, branch, order, locale, and timezone are fixed. A capture
 stylesheet hides relative update/wake labels while retaining layout, reduced
 motion disables animation, and the mouse moves off the sidebar.
@@ -154,7 +169,7 @@ env -i PATH="$PATH" HOME="$HOME" npm run e2e -- --update-snapshots
 ```
 
 Only macOS has reviewed baselines, so Linux skips the four visual comparisons
-and runs all fourteen behavior tests. This avoids treating font/rendering
+and runs all behavior tests. This avoids treating font/rendering
 differences as product regressions. The manual Ubuntu workflow installs
 Chromium's Linux dependencies, the pinned Codex CLI, `lsof`, and `procps`.
 It uploads screenshots, traces, reports, thread/server diagnostics, and isolation

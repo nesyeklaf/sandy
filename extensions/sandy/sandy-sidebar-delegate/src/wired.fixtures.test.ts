@@ -9,6 +9,7 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import { createWired } from "./test-wired";
 import { deferred, loadInboxApp, thread } from "./test-inbox";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings-values";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import hashes from "./fixtures/sha256.json";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
@@ -20,8 +21,6 @@ const fixturePath = (name: string) => join(process.cwd(), "src/fixtures", name);
 const hash = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
 const releaseSettings = {
   snoozePresets: "1h, 4h, 2d",
-  inactiveThreadsEnabled: false,
-  inactiveAfterHours: 12,
   showRunningChildrenWhenCollapsed: false,
   autoSettleInactive: false,
   autoSettleAfterDays: 7,
@@ -33,8 +32,8 @@ const releaseSettings = {
   workingShelf: true,
   dockShelves: true,
 };
-// Releases before Thread display saved only the switch, which now decides it.
-const migratedThreadDisplay = { threadDisplay: "compact-working" } as const;
+const releaseCache = { ...releaseSettings, inactiveThreadsEnabled: false, inactiveAfterHours: 12 };
+const migratedThreadDisplay = { threadDensity: "auto" } as const;
 const snapshots = [
   {
     version: "v0.2.34",
@@ -146,7 +145,7 @@ it("v0.2.34 contains only its released settings schema and cache shape", () => {
     db.close();
   }
   const storage = JSON.parse(readFileSync(fixturePath("local-storage-v0.2.34.json"), "utf8"));
-  expect(JSON.parse(storage["sandy-sidebar:settings-cache:v1"])).toEqual(releaseSettings);
+  expect(JSON.parse(storage["sandy-sidebar:settings-cache:v1"])).toEqual(releaseCache);
 });
 
 it.each(databaseSnapshots)(
@@ -154,7 +153,6 @@ it.each(databaseSnapshots)(
   async ({ version }) => {
     const wired = await createWired([], { fixture: fixturePath(`sidebar-${version}.sqlite`) });
     const disabled = {
-      inactiveThreadsEnabled: false,
       showRunningChildrenWhenCollapsed: false,
       autoSettleInactive: false,
       autoSettleOnMerge: false,
@@ -175,7 +173,7 @@ it.each(databaseSnapshots)(
         const columns = db.prepare("PRAGMA table_info(sidebar_settings)").all() as Array<{ name: string }>;
         if (columns.some(({ name }) => name === "settings_json")) {
           db.prepare(`UPDATE sidebar_settings SET settings_json = json_set(settings_json,
-            '$.inactiveThreadsEnabled', json('true'), '$.showRunningChildrenWhenCollapsed', json('true'),
+            '$.showRunningChildrenWhenCollapsed', json('true'),
             '$.autoSettleInactive', json('true'), '$.autoSettleOnMerge', json('true')) WHERE id = 1`).run();
         }
       } finally {
@@ -186,7 +184,6 @@ it.each(databaseSnapshots)(
       rmSync(directory, { recursive: true, force: true });
     }
     expect(await enabled.call("getSidebarSettings")).toMatchObject({
-      inactiveThreadsEnabled: true,
       showRunningChildrenWhenCollapsed: true,
       autoSettleInactive: true,
       autoSettleOnMerge: true,
@@ -197,8 +194,6 @@ it.each(databaseSnapshots)(
 function assertSettingsControls(container: HTMLElement, settings: (typeof snapshots)[number]["settings"]) {
   const ui = within(container);
   for (const [label, field] of [
-    ["Working shelf", "workingShelf"],
-    ["Inactive shelf", "inactiveThreadsEnabled"],
     ["Dock shelves to the bottom", "dockShelves"],
     ["Repo colors", "projectColorsEnabled"],
     ["Settle inactive threads", "autoSettleInactive"],
@@ -209,7 +204,7 @@ function assertSettingsControls(container: HTMLElement, settings: (typeof snapsh
   }
   expect(ui.getByRole("textbox", { name: "Snooze shortcuts" })).toHaveProperty("value", settings.snoozePresets);
   for (const [label, field] of [
-    ["Thread display", "threadDisplay"],
+    ["Density", "threadDensity"],
     ["Child threads sort field", "childSortField"],
     ["Child threads sort direction", "childSortDirection"],
     ["Child thread icon", "childIconStyle"],
@@ -219,7 +214,6 @@ function assertSettingsControls(container: HTMLElement, settings: (typeof snapsh
   // These controls are conditional. Reveal each while RPC and save timers stay gated,
   // check its cached value, then restore the original switch state.
   for (const [toggle, label, field] of [
-    ["Inactive shelf", "Hours before inactive", "inactiveAfterHours"],
     ["Settle inactive threads", "Days before auto-settle", "autoSettleAfterDays"],
   ] as const) {
     const control = ui.getByRole("switch", { name: toggle });
@@ -274,6 +268,7 @@ it.each(snapshots)(
     vi.setSystemTime(1_800_000_000_000);
     const fixture: Record<string, string> = JSON.parse(readFileSync(storage, "utf8"));
     for (const [key, value] of Object.entries(fixture)) localStorage.setItem(key, value);
+    localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
     const gate = deferred<void>();
     const threads = [
       "first",
@@ -294,23 +289,23 @@ it.each(snapshots)(
         ...(id === "busy" ? { indicator: "runtime" as const, runtimeStatus: "active" as const } : {}),
       }),
     );
-    const wired = await createWired(threads, { rpcGate: gate.promise });
+    const wired = await createWired(threads, { rpcGate: () => gate.promise });
     const inboxSlot = wired.mount();
     const settingsSlot = wired.mount("settings");
+    const archivedShelf = screen.getByRole("region", { name: "Archived" });
+    fireEvent.click(within(archivedShelf).getByRole("button", { name: /^Archived/, expanded: false }));
     for (const [name, id] of [
-      ["Parked", "parked"],
+      ["Snoozed", "parked"],
       ["Snoozed", "snoozed"],
-      ["Settled", "settled"],
+      ["Archived", "settled"],
       ["Working", "busy"],
     ]) {
       expect(within(screen.getByRole("region", { name })).getByText(`Golden ${id}`)).toBeDefined();
     }
     expect(screen.getByText("Golden expanded-child")).toBeDefined();
-    // Both stored expansions now show: the Active override's, and the Settled
-    // parent's, which releases before shelf children kept but never drew.
     expect(screen.getAllByRole("list", { name: "Child threads" })).toHaveLength(2);
-    expect(within(screen.getByRole("region", { name: "Settled" })).getByText("Golden child")).toBeDefined();
-    const active = screen.getByRole("region", { name: "Needs you" });
+    expect(within(screen.getByRole("region", { name: "Archived" })).getByText("Golden child")).toBeDefined();
+    const active = screen.getByRole("region", { name: "Waiting" });
     expect(
       within(active)
         .getAllByRole("listitem")
@@ -363,8 +358,9 @@ it.each(snapshots)("reads $version legacy grouping when active-sort is absent", 
   // active-grouping is a legacy fallback; active-sort takes priority in the full dump.
   localStorage.setItem("sandy-sidebar:active-grouping:v1", fixture["sandy-sidebar:active-grouping:v1"]!);
   expect(localStorage.getItem("sandy-sidebar:active-sort:v1")).toBeNull();
+  const gate = deferred<void>();
   const wired = await createWired([thread({ id: "first" }), thread({ id: "second" })], {
-    rpcGate: deferred<void>().promise,
+    rpcGate: () => gate.promise,
   });
   wired.mount();
   expect(screen.getByRole("button", { name: "Sort active threads: Repo" })).toBeDefined();

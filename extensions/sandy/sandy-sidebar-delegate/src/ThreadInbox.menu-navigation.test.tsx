@@ -59,11 +59,14 @@ describe("row context menu", () => {
       "Rename",
       "Regenerate title",
       "Mark unread",
+      "Tags & Themen…",
+      "Als Idee markieren",
+      "Als Orchestrator markieren",
       "Copy",
       "Archive",
       "Delete",
     ]);
-    expect(within(menu).getAllByRole("separator")).toHaveLength(4);
+    expect(within(menu).getAllByRole("separator")).toHaveLength(5);
   });
 
   it("reminds the user what settling released and what it left running", async () => {

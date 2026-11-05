@@ -6,8 +6,6 @@ import { decodeSettingsCache } from "./settings-cache-codec";
 
 const oldSettings = {
   snoozePresets: "1h",
-  inactiveThreadsEnabled: false,
-  inactiveAfterHours: 12,
   showRunningChildrenWhenCollapsed: false,
   autoSettleInactive: false,
   autoSettleAfterDays: 7,
@@ -41,10 +39,9 @@ describe("settings cache codec", () => {
   });
   it("retains permissive numeric checks and optional-setting fallbacks", () => {
     // The old reader accepted numbers without range or finite checks.
-    expect(decodeSettingsCache({ ...oldSettings, inactiveAfterHours: -1, autoSettleAfterDays: Infinity })).toEqual({
+    expect(decodeSettingsCache({ ...oldSettings, autoSettleAfterDays: Infinity })).toEqual({
       ...DEFAULT_SIDEBAR_SETTINGS,
       ...oldSettings,
-      inactiveAfterHours: -1,
       autoSettleAfterDays: Infinity,
     });
     expect(
@@ -68,16 +65,43 @@ describe("settings cache codec", () => {
   });
 });
 
-describe("settings cache thread display", () => {
-  it("derives thread display from a cache saved before it existed", () => {
+describe("settings cache thread density", () => {
+  it("derives density from a cache saved before it existed", () => {
     expect(decodeSettingsCache({ ...oldSettings, compactWorkingThreads: true })).toMatchObject({
-      threadDisplay: "compact-working",
+      threadDensity: "auto",
       compactWorkingThreads: true,
     });
     expect(decodeSettingsCache({ ...oldSettings, threadDisplay: "full", compactWorkingThreads: true })).toMatchObject({
-      threadDisplay: "full",
+      threadDensity: "comfortable",
       compactWorkingThreads: false,
     });
+  });
+  it.each([
+    ["full", "comfortable"],
+    ["compact-working", "auto"],
+    ["compact-all", "dense"],
+  ])("maps the old thread display %s to %s", (threadDisplay, threadDensity) => {
+    const decoded = decodeSettingsCache({ ...oldSettings, threadDisplay });
+    expect(decoded).toMatchObject({ threadDensity });
+    expect(decoded).not.toHaveProperty("threadDisplay");
+  });
+  it("keeps a valid shelf override and drops an unknown one", () => {
+    expect(
+      decodeSettingsCache({ ...oldSettings, shelfDensities: { working: "dense", review: "huge" } })?.shelfDensities,
+    ).toEqual({
+      pinned: "default",
+      needs: "default",
+      failed: "default",
+      working: "dense",
+      review: "default",
+      waiting: "default",
+      orchestrators: "default",
+      ideas: "default",
+      merged: "default",
+    });
+    expect(
+      decodeSettingsCache({ ...oldSettings, shelfDensities: { active: "compact", inactive: "dense" } })?.shelfDensities,
+    ).toMatchObject({ needs: "compact", waiting: "dense" });
   });
 });
 

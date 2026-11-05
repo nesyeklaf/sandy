@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 const projects = [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }];
 const card = (title: string) => screen.getByRole("link", { name: title }).closest("[data-parent-card]") as HTMLElement;
@@ -23,8 +25,7 @@ function renderCompactAll(
     rpc: {
       getSidebarSettings: () => ({
         ...defaultSidebarSettings,
-        inactiveThreadsEnabled: false,
-        threadDisplay: "compact-all",
+        threadDensity: "dense",
         compactWorkingThreads: true,
         ...settings,
       }),
@@ -37,7 +38,7 @@ function renderCompactAll(
   });
 }
 
-describe("Compact all threads", () => {
+describe("Dense density", () => {
   it("keeps every Active and Pinned thread on one line with its signals", async () => {
     renderCompactAll([
       thread({ id: "idle", title: "Idle work" }),
@@ -114,8 +115,7 @@ describe("Compact all threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
-          threadDisplay: "compact-all",
+          threadDensity: "dense",
         }),
         listLifecycle: () => ({
           rows: [{ threadId: "settled", settledAt: Date.now(), snoozedUntil: null, snoozedAt: null }],
@@ -126,7 +126,7 @@ describe("Compact all threads", () => {
     expect(screen.getByRole("link", { name: "Compact work" }).getAttribute("aria-keyshortcuts")).toBe(
       "Meta+1 Alt+ArrowUp Alt+ArrowDown",
     );
-    const settled = await screen.findByRole("region", { name: "Settled" });
+    const settled = await screen.findByRole("region", { name: "Archived" });
     const toggle = within(settled).queryByRole("button", { expanded: false });
     if (toggle) fireEvent.click(toggle);
     const row = await within(settled).findByRole("link", { name: /Settled work/ });

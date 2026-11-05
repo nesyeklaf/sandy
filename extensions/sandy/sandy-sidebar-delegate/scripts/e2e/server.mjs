@@ -1,16 +1,48 @@
 import { spawn } from "node:child_process";
-import { constants, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  accessSync,
+  constants,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { createServer } from "node:net";
 import { createServer as createHttpServer } from "node:http";
-import { join, resolve } from "node:path";
+import { delimiter, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createIsolationGuard } from "./isolation.mjs";
 import { createScratchKeychain } from "./keychain.mjs";
 
+function executableOnPath(name, pathVariable = "") {
+  for (const directory of pathVariable.split(delimiter)) {
+    const candidate = join(directory, name);
+    try {
+      accessSync(candidate, constants.X_OK);
+      return realpathSync(candidate);
+    } catch {
+      continue;
+    }
+  }
+  throw new Error(`${name} is not on PATH`);
+}
+
 export async function startScratchServer() {
   const args = process.argv.slice(2);
   const appIndex = args.indexOf("--app-dir");
-  const sourceAppDir = resolve(appIndex < 0 ? "node_modules/sandy-app" : args[appIndex + 1]);
+  const sourceAppDir = realpathSync(resolve(appIndex < 0 ? "node_modules/sandy-app" : args[appIndex + 1]));
+  for (const artifact of ["dist/sandy-app.js", "host-daemon/dist/sandy"]) {
+    if (!existsSync(join(sourceAppDir, artifact))) {
+      throw new Error(
+        `sandy-app at ${sourceAppDir} has no ${artifact}. In a source checkout build it from the repository root: pnpm exec turbo run build --filter=sandy-app`,
+      );
+    }
+  }
   const inheritedUrl = process.env.SANDY_SERVER_URL;
   if (inheritedUrl && Number(new URL(inheritedUrl).port || 80) === 38886) {
     throw new Error("Refusing SANDY_SERVER_URL on the developer's port 38886. Strip inherited SANDY_* variables.");
@@ -41,6 +73,7 @@ export async function startScratchServer() {
   mkdirSync(resolve("e2e-artifacts"), { recursive: true });
   writeFileSync(logPath, "");
   let checkIsolation;
+  let codexExecutable;
   let monitoring;
   let stopMonitoring = false;
   let isolationFailure;
@@ -110,7 +143,7 @@ export async function startScratchServer() {
       for (const child of children) signal(child, "SIGKILL");
       marketplace?.closeAllConnections();
       if (marketplace) await new Promise((accept) => marketplace.close(accept));
-      rmSync(scratch, { recursive: true, force: true });
+      rmSync(scratch, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 });
       console.log("CLEANUP: process groups stopped; scratch data removed (including scratch TMPDIR)");
       if (isolationFailure) throw isolationFailure;
     })();
@@ -127,10 +160,19 @@ export async function startScratchServer() {
     try {
       const codex = await run("codex", ["--version"], { timeoutMs: 10_000 });
       console.log(`FIXTURE PROVIDER: ${codex.stdout.trim()}`);
+      codexExecutable = executableOnPath("codex", toolEnv.PATH);
     } catch (cause) {
       throw new Error("Browser fixtures require Codex on PATH. Install @openai/codex@0.162.1 before running e2e.", {
         cause,
       });
+    }
+    try {
+      await run("lsof", ["-v"], { timeoutMs: 10_000 });
+    } catch (cause) {
+      throw new Error(
+        "Browser fixtures require lsof on PATH: the credential guard and the plugin's port scan call it. Install it (apt install lsof).",
+        { cause },
+      );
     }
     await createScratchKeychain({ ...env, SANDY_DATA_DIR: scratch });
     const runtimeModules = join(scratch, "runtime/node_modules");
@@ -139,13 +181,15 @@ export async function startScratchServer() {
       verbatimSymlinks: true,
       mode: constants.COPYFILE_FICLONE,
     });
-    const appDir =
-      sourceAppDir === resolve("node_modules/sandy-app")
-        ? join(runtimeModules, "sandy-app")
-        : join(scratch, "runtime/sandy-app");
-    if (appDir !== join(runtimeModules, "sandy-app")) {
-      cpSync(sourceAppDir, appDir, { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE });
-    }
+    const appDir = join(scratch, "runtime/sandy-app");
+    const sourceAppModules = join(sourceAppDir, "node_modules");
+    cpSync(sourceAppDir, appDir, {
+      recursive: true,
+      verbatimSymlinks: true,
+      mode: constants.COPYFILE_FICLONE,
+      filter: (path) => path !== sourceAppModules,
+    });
+    if (existsSync(sourceAppModules)) symlinkSync(realpathSync(sourceAppModules), join(appDir, "node_modules"));
     const port = await freePort();
     let hostPort = await freePort();
     while (hostPort === port) hostPort = await freePort();
@@ -193,7 +237,6 @@ trace_exporter = "none"
       process.execPath,
       [
         join(appDir, "dist/sandy-app.js"),
-        "--bundled",
         "--data-dir",
         scratch,
         "--server-port",
@@ -217,7 +260,7 @@ trace_exporter = "none"
     if (!ready) throw new Error(`Server never became ready: ${JSON.stringify(app.output())}`);
     const sandy = join(appDir, "host-daemon/dist/sandy");
     console.log("READY: GET / returned 200");
-    checkIsolation = createIsolationGuard(app.child.pid, scratch, env, logPath, toolEnv.HOME);
+    checkIsolation = createIsolationGuard(app.child.pid, scratch, env, logPath, toolEnv.HOME, [codexExecutable]);
     await checkIsolation("ready");
     monitoring = (async () => {
       while (!stopMonitoring) {
@@ -249,7 +292,7 @@ trace_exporter = "none"
     });
     symlinkSync(runtimeModules, join(pluginDir, "node_modules"));
     await run(sandy, ["plugin", "install", `path:${pluginDir}`, "--yes"]);
-    await run(sandy, ["settings", "ui", "set", "sidebar.threadListProvider", "sandy-sidebar/inbox"]);
+    await run(sandy, ["settings", "ui", "set", "sidebar.threadListProvider", "sandy-sidebar-delegate/inbox"]);
     await run(sandy, ["settings", "general", "onboardingCompletedAt", new Date().toISOString()]);
     const repo = join(scratch, "repo");
     await run("git", ["init", "--initial-branch=main", repo]);

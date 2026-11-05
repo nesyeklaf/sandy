@@ -2,17 +2,25 @@ import { useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRpc } from "@sandy-sdk/plugin-sdk/app";
-import { Icon } from "./components/Icon";
 import { usePortalScopeProps } from "./lib/portal-scope";
 import type { sandySidebarRpcContract, SettledCleanupPreview, SettledCleanupResult } from "./contract";
 import { useSidebarThreads } from "./sandy-sdk";
 import { resolveThreadTitlesIn, threadDisplayTitle } from "./inbox";
 
-export function CleanSettledDialog({ threadIds, onNavigate }: { threadIds: string[]; onNavigate: () => void }) {
+export function CleanSettledDialog({
+  threadIds,
+  onNavigate,
+  open,
+  onOpenChange: setOpen,
+}: {
+  threadIds: string[];
+  onNavigate: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
   const navigate = useSandyNavigate();
   const portalScope = usePortalScopeProps();
-  const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<SettledCleanupPreview | null>(null);
   const [result, setResult] = useState<SettledCleanupResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -93,18 +101,6 @@ export function CleanSettledDialog({ threadIds, onNavigate }: { threadIds: strin
         setOpen(next);
       }}
     >
-      <button
-        type="button"
-        aria-label="Close terminals and ports of settled threads"
-        title="Close terminals and ports of settled threads (threads stay in Settled)"
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen(true);
-        }}
-        className="absolute bottom-1 right-[1.875rem] z-10 flex size-4 items-center justify-center rounded text-muted-foreground/40 hover:bg-sidebar-accent hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-      >
-        <Icon name="Clean" className="size-3" aria-hidden />
-      </button>
       <Dialog.Portal>
         <Dialog.Overlay {...portalScope} className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
@@ -114,7 +110,7 @@ export function CleanSettledDialog({ threadIds, onNavigate }: { threadIds: strin
           <Dialog.Title className="text-sm font-semibold leading-5">Clean settled resources?</Dialog.Title>
           <Dialog.Description className="mt-2 text-xs leading-5 text-muted-foreground">
             {result
-              ? "Cleanup finished. Threads stayed in Settled."
+              ? "Cleanup finished. Threads stayed archived."
               : "Review the live resources found on settled threads before closing them."}
           </Dialog.Description>
           {busy && !preview ? <p className="mt-4 text-xs">Checking settled threads...</p> : null}

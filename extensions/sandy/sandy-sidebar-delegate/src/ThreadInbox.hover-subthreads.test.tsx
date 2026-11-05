@@ -147,7 +147,6 @@ it("orders hover card subthreads by the saved child sort", async () => {
     rpc: {
       getSidebarSettings: () => ({
         ...defaultSidebarSettings,
-        inactiveThreadsEnabled: false,
         childSortDirection: "descending",
       }),
       listLifecycle: () => ({ rows: [] }),

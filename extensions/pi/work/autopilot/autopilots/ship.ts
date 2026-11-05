@@ -9,8 +9,11 @@
  *
  * As a SANDY workflow worker: agent("/autopilot --report ship review origin/main", { raw: true, report: true }).
  *
- * Review: code collects the diff and its files; the model reads with read-only tools (skills understand and
- * refactor-clean) and submits findings; code keeps only findings on files the diff touches.
+ * Review: code collects the diff and its files; the model reads and runs commands (tests, probes) with bash (skills
+ * understand and refactor-clean) and submits findings; code keeps only findings on files the diff touches. A finding
+ * counts as verified only with the evidence of a run (the command and what it printed); one without it is marked
+ * unverified and carries the check that would decide it. The review must not change tracked files: code compares the
+ * checkout before and after the step and fails the review when it changed.
  * Release: code collects the commit log; the model gets no tools and writes the notes from that log.
  *
  * Model and thinking level are the worker session's: choose them when launching the worker (review wants thinking
@@ -26,7 +29,19 @@ import type { LeaseTrack } from "../track.ts";
 
 const STAGES = ["review", "release"] as const;
 type Stage = (typeof STAGES)[number];
-type Finding = { severity: "high" | "medium" | "low"; title: string; file?: string; line?: number; detail?: string };
+type Finding = {
+	severity: "high" | "medium" | "low";
+	title: string;
+	file?: string;
+	line?: number;
+	detail?: string;
+	/** The command the model ran and the output that shows the finding. */
+	evidence?: string;
+	/** The command that would decide the finding, when the model did not run one. */
+	check?: string;
+	/** Set by code: true when the finding carries evidence. */
+	verified?: boolean;
+};
 
 const MAX_DIFF_CHARS = 120_000;
 
@@ -48,6 +63,8 @@ const findingsSchema = {
 					file: { type: "string" },
 					line: { type: "integer" },
 					detail: { type: "string" },
+					evidence: { type: "string" },
+					check: { type: "string" },
 				},
 			},
 		},
@@ -75,6 +92,19 @@ export function onChangedFiles(findings: Finding[], changed: string[]): { kept: 
 	return { kept, dropped };
 }
 
+/** Marks each finding verified when it carries evidence of a run. */
+export function withVerification(findings: Finding[]): Finding[] {
+	return findings.map((finding) => ({ ...finding, verified: Boolean(finding.evidence?.trim()) }));
+}
+
+/** The tracked state of the checkout: HEAD, the status of tracked files and their diff against HEAD. */
+async function trackedState(session: Session): Promise<string> {
+	const head = await git(session, ["rev-parse", "HEAD"]);
+	const status = await git(session, ["status", "--porcelain=v1", "-z", "--untracked-files=no"]);
+	const diff = await git(session, ["diff", "HEAD"]);
+	return `${head}\0${status}\0${diff}`;
+}
+
 async function git(session: Session, args: string[]): Promise<string> {
 	const result = await session.exec("git", args, { timeout: 60_000 });
 	if (result.code !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr.trim()}`);
@@ -92,16 +122,23 @@ async function review(session: Session, base?: string) {
 	if (files.length === 0) return { stage: "review", base: base ?? "uncommitted", files, findings: [], dropped: [], note: "no changes" };
 	const diff = await git(session, ["diff", ...range]);
 	const shown = diff.length > MAX_DIFF_CHARS ? `${diff.slice(0, MAX_DIFF_CHARS)}\n[diff cut at ${MAX_DIFF_CHARS} characters; read the files for the rest]` : diff;
+	const before = await trackedState(session);
 	const result = await session.step({
 		say:
 			`Review these changes (git diff ${range.join(" ")}). Read the touched files where the diff is not enough. ` +
 			`Report real defects only: wrong behavior, broken contracts, missing failure handling. No style remarks. ` +
+			`Prove a defect with a run where you can: a test, a probe script under /tmp, a command. Put the command and what it ` +
+			`printed into evidence. A defect you could not run goes in without evidence, with check set to the command that would ` +
+			`decide it. Never change tracked files: no edits, formatters in write mode, git checkout, stash or commit. ` +
 			`Give every finding the file path as in the diff.\n\nFiles: ${files.join(", ")}\n\n\`\`\`diff\n${shown}\n\`\`\``,
-		tools: ["read", "grep", "find", "ls"],
+		tools: ["read", "grep", "find", "ls", "bash"],
 		skills: ["understand", "refactor-clean"],
 		schema: findingsSchema,
 	});
-	const { kept, dropped } = onChangedFiles((result.value as { findings: Finding[] }).findings, files);
+	if ((await trackedState(session)) !== before) {
+		throw new Error("the review changed tracked files; inspect git status and git diff, the review result was discarded");
+	}
+	const { kept, dropped } = onChangedFiles(withVerification((result.value as { findings: Finding[] }).findings), files);
 	return { stage: "review", base: base ?? "uncommitted", files, findings: kept, dropped };
 }
 
@@ -122,11 +159,16 @@ async function release(session: Session, from?: string) {
 
 const RETRIES = 2;
 
-/** One line per kept finding, "No findings." when none, plus a line counting the findings dropped for being off the diff. */
+/**
+ * One line per kept finding, "No findings." when none, plus a line counting the findings dropped for being off the diff.
+ * A finding without evidence is marked unverified and names its check; one with evidence quotes it on an indented line.
+ */
 export function findingsMarkdown(kept: Finding[], dropped: Finding[]): string {
 	const lines = kept.map((finding) => {
 		const where = finding.file ? ` (${finding.file}${finding.line === undefined ? "" : `:${finding.line}`})` : "";
-		return `- [${finding.severity}] ${finding.title}${where}${finding.detail ? `: ${finding.detail}` : ""}`;
+		const head = `- [${finding.severity}]${finding.verified === false ? " [unverified]" : ""} ${finding.title}${where}${finding.detail ? `: ${finding.detail}` : ""}`;
+		if (finding.evidence?.trim()) return `${head}\n  evidence: ${finding.evidence.trim().replace(/\n/g, "\n  ")}`;
+		return finding.check?.trim() ? `${head}\n  check: ${finding.check.trim()}` : head;
 	});
 	if (lines.length === 0) lines.push("No findings.");
 	if (dropped.length > 0) lines.push(`Dropped ${dropped.length} finding(s) on files the diff does not touch.`);

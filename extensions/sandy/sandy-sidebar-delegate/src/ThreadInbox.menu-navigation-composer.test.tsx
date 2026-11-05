@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings-values";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, SETTLED_NOTHING, thread, listProps, parkingActions, parkFromCard, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("row context menu", () => {
   describe.each(parkingActions)("%s navigation", (action) => {
@@ -16,7 +18,6 @@ describe("row context menu", () => {
       async (isPinned) => {
         const storedSettings = {
           ...DEFAULT_SIDEBAR_SETTINGS,
-          ...{ inactiveThreadsEnabled: true, inactiveAfterHours: 6 },
         };
         localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
 
@@ -29,7 +30,6 @@ describe("row context menu", () => {
               status: "ready",
               threads: [
                 thread({ id: "only", title: "Only thread", updatedAt: now, isPinned }),
-                thread({ id: "inactive", title: "Inactive thread" }),
                 thread({ id: "parked", title: "Parked thread" }),
                 thread({ id: "snoozed", title: "Snoozed thread" }),
                 thread({ id: "settled", title: "Settled thread" }),
@@ -50,7 +50,7 @@ describe("row context menu", () => {
           },
         );
 
-        await screen.findByRole("region", { name: "Settled" });
+        await screen.findByRole("region", { name: "Archived" });
         const current = screen.getByText("Only thread").closest("li")!;
         await parkFromCard(current, action);
         await waitFor(() =>

@@ -5,6 +5,7 @@ const appTests = [
   "src/ThreadInbox.*.test.tsx",
   "src/ParentChip.test.tsx",
   "src/SubagentsChip.test.tsx",
+  "src/TagFilterBar.test.tsx",
   "src/ProjectFavicon.test.tsx",
   "src/app-worker-state.*.test.tsx",
 ];
@@ -19,6 +20,7 @@ const common = {
 
 export default defineConfig({
   resolve: {
+    dedupe: ["react", "react-dom", "@testing-library/react"],
     // Load the real SVG data through leaf exports instead of the full barrel.
     alias: [
       {

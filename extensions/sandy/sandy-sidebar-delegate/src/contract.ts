@@ -6,7 +6,8 @@ import {
   CHILD_THREAD_SORT_DIRECTIONS,
   CHILD_THREAD_ICON_STYLES,
   PROJECT_COLOR_DISPLAYS,
-  THREAD_DISPLAYS,
+  SHELF_DENSITIES,
+  THREAD_DENSITIES,
 } from "./sidebar-settings-values";
 import { configuredSnoozePresetError } from "./lifecycle";
 export {
@@ -17,8 +18,13 @@ export {
   PROJECT_ICONS_CHANNEL,
   DELEGATE_CHILDREN_CHANNEL,
 } from "./realtime-channels";
+import { searchRpcShape } from "./search-contract";
+import { lastMessageRpcShape } from "./last-message-contract";
+import { ideasRpcShape } from "./ideas-contract";
+import { orchestratorsRpcShape } from "./orchestrators-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
+import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
 
 export const openPortSchema = z.object({
   port: z.number().int().min(1).max(65535),
@@ -82,18 +88,6 @@ const reclaimSchema = z.object({
   keptTerminals: z.number().int().nonnegative(),
   stoppedRuntime: z.boolean(),
 });
-const orderedThreadIdsSchema = z
-  .array(z.string().trim().min(1))
-  .max(10_000)
-  .superRefine((threadIds, context) => {
-    if (new Set(threadIds).size !== threadIds.length) {
-      context.addIssue({
-        code: "custom",
-        message: "Thread ids must be unique",
-      });
-    }
-  });
-const threadIdsSchema = orderedThreadIdsSchema.min(1);
 export const cleanupIssueSchema = z.object({
   threadId: z.string(),
   resource: z.enum(["thread", "terminal", "port"]),
@@ -129,6 +123,17 @@ const projectIconPathSchema = z
   .refine((path) => normalizeProjectIconPath(path) !== null, {
     message: "Choose a relative SVG, PNG, ICO, JPEG, GIF, AVIF, or WebP path",
   });
+const shelfDensitiesShape = {
+  pinned: z.enum(SHELF_DENSITIES),
+  needs: z.enum(SHELF_DENSITIES),
+  failed: z.enum(SHELF_DENSITIES),
+  working: z.enum(SHELF_DENSITIES),
+  review: z.enum(SHELF_DENSITIES),
+  waiting: z.enum(SHELF_DENSITIES),
+  orchestrators: z.enum(SHELF_DENSITIES),
+  ideas: z.enum(SHELF_DENSITIES),
+  merged: z.enum(SHELF_DENSITIES),
+};
 export const sidebarSettingsSchema = z
   .object({
     snoozePresets: z
@@ -139,8 +144,6 @@ export const sidebarSettingsSchema = z
       .refine((value) => configuredSnoozePresetError(value) === null, {
         message: "Use one to eight valid snooze shortcuts",
       }),
-    inactiveThreadsEnabled: z.boolean(),
-    inactiveAfterHours: z.number().int().min(1).max(720),
     showRunningChildrenWhenCollapsed: z.boolean(),
     hideFinishedSubagents: z.boolean(),
     autoSettleInactive: z.boolean(),
@@ -149,7 +152,8 @@ export const sidebarSettingsSchema = z
     childSortField: z.enum(CHILD_THREAD_SORT_FIELDS),
     childSortDirection: z.enum(CHILD_THREAD_SORT_DIRECTIONS),
     childIconStyle: z.enum(CHILD_THREAD_ICON_STYLES),
-    threadDisplay: z.enum(THREAD_DISPLAYS),
+    threadDensity: z.enum(THREAD_DENSITIES),
+    shelfDensities: z.object(shelfDensitiesShape).strict(),
     compactProjectIconOnly: z.boolean(),
     keepPinnedThreadsFull: z.boolean(),
     keepWokeThreadsFull: z.boolean(),
@@ -226,7 +230,12 @@ const delegateChildSchema = z.object({
 
 export const sandySidebarRpcContract = defineRpcContract({
   ...topicsRpcShape,
+  ...searchRpcShape,
   ...anchorsRpcShape,
+  ...bulkRpcShape,
+  ...lastMessageRpcShape,
+  ...ideasRpcShape,
+  ...orchestratorsRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),
@@ -306,7 +315,16 @@ export const sandySidebarRpcContract = defineRpcContract({
   },
   updateSidebarSettings: {
     // Save only edited fields. Full payloads from older clients remain valid.
-    input: sidebarSettingsSchema.partial(),
+    input: sidebarSettingsSchema.partial().extend({
+      shelfDensities: z
+        .object({
+          ...shelfDensitiesShape,
+          orchestrators: shelfDensitiesShape.orchestrators.optional(),
+          ideas: shelfDensitiesShape.ideas.optional(),
+        })
+        .strict()
+        .optional(),
+    }),
     output: sidebarSettingsSchema,
   },
   listLifecycle: {
@@ -320,6 +338,7 @@ export const sandySidebarRpcContract = defineRpcContract({
           settledOverride: z.enum(["active", "settled"]).nullable().optional(),
           snoozedUntil: z.number().nullable(),
           snoozedAt: z.number().nullable(),
+          deferredInteractionId: z.string().nullable().optional(),
         }),
       ),
     }),
@@ -343,6 +362,7 @@ export const sandySidebarRpcContract = defineRpcContract({
       threadId: z.string().trim().min(1),
       // Absolute wake time, so a snooze means the same thing on every device.
       snoozedUntil: z.number().int().positive(),
+      deferredInteractionId: z.string().min(1).optional(),
     }),
     output: z.object({ ok: z.boolean(), reclaim: reclaimSchema }),
   },

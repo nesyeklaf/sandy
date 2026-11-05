@@ -23,7 +23,7 @@ function renderWithChildren(
 ) {
   return render(hostThreads, undefined, {
     listDelegateChildren: () => ({ children }),
-    getSidebarSettings: () => ({ ...DEFAULT_SIDEBAR_SETTINGS, inactiveThreadsEnabled: false, hideFinishedSubagents }),
+    getSidebarSettings: () => ({ ...DEFAULT_SIDEBAR_SETTINGS, hideFinishedSubagents }),
   });
 }
 

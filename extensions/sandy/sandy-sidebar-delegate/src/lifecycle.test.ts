@@ -22,6 +22,7 @@ const quiet: ThreadActivitySignals = {
   hasPendingInteraction: false,
   hasQueuedWork: false,
   isWorking: false,
+  hasUnblockedWork: false,
   isUnread: false,
   latestAttentionAt: 0,
 };
@@ -39,8 +40,6 @@ describe("canPark", () => {
     expect(canPark({ ...quiet, hasPendingInteraction: true })).toBe(false);
   });
 
-  // The trap this whole feature has to avoid: sandy has more kinds of live work
-  // than a session status, and parking any of them hides running work.
   it("refuses while any work is running", () => {
     expect(canPark({ ...quiet, isWorking: true })).toBe(false);
   });
@@ -83,8 +82,6 @@ describe("resolveShelf", () => {
     expect(resolveShelf(row({ snoozedUntil: 900, snoozedAt: 500 }), quiet, 1_000)).toBe("active");
   });
 
-  // "Something happened" wakes it early — otherwise snooze hides the exact
-  // thing the user needed to see.
   it("wakes a snoozed thread early when it raises its hand", () => {
     expect(
       resolveShelf(row({ snoozedUntil: 5_000, snoozedAt: 500 }), { ...quiet, hasPendingInteraction: true }, 1_000),
@@ -276,8 +273,6 @@ describe("nextWakeDelayMs", () => {
     expect(nextWakeDelayMs([], 1_000)).toBeNull();
   });
 
-  // A far-future wake overflows setTimeout's signed 32-bit delay and fires
-  // immediately, turning one snooze into a tight re-arm loop.
   it("clamps a far-future wake to the maximum timeout", () => {
     expect(nextWakeDelayMs([Number.MAX_SAFE_INTEGER], 0)).toBe(MAX_TIMEOUT_MS);
   });
@@ -293,4 +288,21 @@ describe("parked shelf", () => {
       expect(resolveShelf(row({ parkedAt: 100 }), { ...quiet, ...signals }, 200)).toBe("active");
     },
   );
+});
+
+describe("a deferred question on a running turn", () => {
+  const deferredRow = row({ snoozedUntil: 5_000, snoozedAt: 500, deferredInteractionId: "int_1" });
+  const waiting = { ...quiet, hasPendingInteraction: true, isWorking: true };
+
+  it("snoozes the turn that waits on it", () => {
+    expect(resolveShelf(deferredRow, waiting, 1_000)).toBe("snoozed");
+  });
+
+  it("stays active while work that does not wait on a question runs", () => {
+    expect(resolveShelf(deferredRow, { ...waiting, hasUnblockedWork: true }, 1_000)).toBe("active");
+  });
+
+  it("returns once the question is answered and the turn continues", () => {
+    expect(resolveShelf(deferredRow, { ...waiting, hasPendingInteraction: false }, 1_000)).toBe("active");
+  });
 });

@@ -6,8 +6,13 @@ import type { createServerProjectColors } from "./server-project-colors";
 import type { createServerProjectManagement } from "./server-project-management";
 import type { createServerSettleActions } from "./server-settle-actions";
 import type { createServerDelegateChildren } from "./server-delegate-children";
+import type { createServerSessionSearch } from "./server-session-search";
+import type { createServerLastMessages } from "./server-last-messages";
+import type { createServerIdeas } from "./server-ideas";
+import type { createServerOrchestrators } from "./server-orchestrators";
 import type { createServerTopics } from "./server-topics";
 import type { createServerAnchors } from "./server-anchors";
+import type { createServerBulkActions } from "./server-bulk-actions";
 import type { createServerSettings } from "./server-settings";
 import type { createServerPolicy } from "./server-policy";
 import type { createServerSettleCleanup } from "./server-settle-cleanup";
@@ -36,17 +41,29 @@ export function createServerHandlers(
     settle: ReturnType<typeof createServerSettleActions>;
     delegateChildren: ReturnType<typeof createServerDelegateChildren>;
     topics: ReturnType<typeof createServerTopics>;
+    sessionSearch: ReturnType<typeof createServerSessionSearch>;
+    lastMessages: ReturnType<typeof createServerLastMessages>;
+    ideas: ReturnType<typeof createServerIdeas>;
+    orchestrators: ReturnType<typeof createServerOrchestrators>;
     anchors: ReturnType<typeof createServerAnchors>;
+    bulk: ReturnType<typeof createServerBulkActions>;
   },
 ) {
   const { readSidebarSettings, writeSidebarSettings } = settings;
   const { evaluatePolicies } = policy;
   const { reclaimThreadResources } = cleanup;
-  const { readOne, readAll, withPinParentChange, write, clear, readInboxOrder, replaceInboxOrder, wakeAncestors } =
-    lifecycle;
+  const {
+    readOne,
+    readAll,
+    serializeThreads,
+    withPinParentChange,
+    write,
+    clear,
+    readInboxOrder,
+    replaceInboxOrder,
+    wakeAncestors,
+  } = lifecycle;
 
-  // Hover cards resolve model names on every open. Share one catalog request
-  // per environment and provider for a few minutes instead of refetching.
   const catalogs = new Map<string, { expiresAt: number; catalog: ReturnType<typeof ctx.sandy.sdk.providers.models> }>();
   const providerCatalog = (environmentId: string, providerId: string) => {
     const now = Date.now();
@@ -56,7 +73,6 @@ export function createServerHandlers(
     if (cached) return cached.catalog;
     const catalog = ctx.sandy.sdk.providers.models({ environmentId, providerId });
     catalogs.set(key, { expiresAt: now + CATALOG_TTL_MS, catalog });
-    // A failed lookup is retried on the next hover rather than cached.
     catalog.catch(() => {
       if (catalogs.get(key)?.catalog === catalog) catalogs.delete(key);
     });
@@ -96,7 +112,6 @@ export function createServerHandlers(
         const model =
           models.find((entry) => entry.id === options.model) ?? models.find((entry) => entry.model === options.model);
         const modelDisplayName = model?.displayName.trim();
-        // Effort labels arrived in SDK 0.6.49; older hosts leave them out.
         const reasoningLabel = model?.supportedReasoningEfforts
           ?.find((effort) => effort.reasoningEffort === options.reasoningLevel)
           ?.label?.trim();
@@ -106,7 +121,6 @@ export function createServerHandlers(
           ...(reasoningLabel ? { reasoningLabel } : {}),
         };
       } catch {
-        // Offline hosts and unavailable provider catalogs must still show execution details.
         return details;
       }
     },
@@ -114,11 +128,7 @@ export function createServerHandlers(
       return withPinParentChange(threadId, async () => {
         const thread = await ctx.sandy.sdk.threads.get({ threadId });
         if (parentThreadId === thread.parentThreadId) return { ok: true };
-        // Validate the parent before unpinning: a rejected update must keep the pin.
         await ctx.sandy.sdk.threads.update({ threadId, parentThreadId });
-        // A shelved tree keeps a row for every thread in it, so the new parent's
-        // row tells whether this move puts unsettled work inside one. If so,
-        // return the new ancestors to Active, as new child work does.
         const parentRow = parentThreadId == null ? null : readOne(parentThreadId);
         if (
           parentThreadId != null &&
@@ -140,9 +150,6 @@ export function createServerHandlers(
       });
     },
     async deleteThread({ threadId, childThreadsConfirmed }) {
-      // The sidebar shows its own confirmation naming the thread and project,
-      // so sandy's generic one is skipped. Deletion is recursive; sandy refuses it
-      // unless the caller confirmed the children too.
       await ctx.sandy.sdk.threads.delete({ threadId, childThreadsConfirmed });
       return { ok: true };
     },
@@ -152,11 +159,10 @@ export function createServerHandlers(
     },
     async updateSidebarSettings(values) {
       const stored = readSidebarSettings();
-      const next = { ...stored, ...values };
-      // Keep the legacy switch in step with thread display, both ways.
-      if (values.threadDisplay !== undefined) next.compactWorkingThreads = values.threadDisplay !== "full";
+      const next = { ...stored, ...values, shelfDensities: { ...stored.shelfDensities, ...values.shelfDensities } };
+      if (values.threadDensity !== undefined) next.compactWorkingThreads = values.threadDensity !== "comfortable";
       else if (values.compactWorkingThreads !== undefined)
-        next.threadDisplay = values.compactWorkingThreads ? "compact-working" : "full";
+        next.threadDensity = values.compactWorkingThreads ? "auto" : "comfortable";
       writeSidebarSettings(next);
       ctx.sandy.realtime.publish(SIDEBAR_SETTINGS_CHANNEL, {});
       if (
@@ -177,67 +183,39 @@ export function createServerHandlers(
       return { rows: readAll() };
     },
     async pin({ threadId }) {
-      return withPinParentChange(threadId, async () => {
-        const thread = await ctx.sandy.sdk.threads.get({ threadId });
-        if (thread.parentThreadId != null) {
-          throw new Error("Child threads cannot be pinned");
-        }
-        // Preserve the previous shelf if the native pin fails.
-        await ctx.sandy.sdk.threads.pin({ threadId });
+      await modules.bulk.pinThread(threadId);
+      return { ok: true };
+    },
+    async park({ threadId }) {
+      await serializeThreads([threadId], async () => {
+        await ctx.sandy.sdk.threads.unpin({ threadId });
         write({
           threadId,
-          parkedAt: null,
+          parkedAt: Date.now(),
           settledAt: null,
-          settledOverride: "active",
+          settledOverride: null,
           snoozedUntil: null,
           snoozedAt: null,
         });
-        return { ok: true };
-      });
-    },
-    async park({ threadId }) {
-      await ctx.sandy.sdk.threads.unpin({ threadId });
-      write({
-        threadId,
-        parkedAt: Date.now(),
-        settledAt: null,
-        settledOverride: null,
-        snoozedUntil: null,
-        snoozedAt: null,
       });
       return { ok: true, reclaim: await reclaimThreadResources(threadId) };
     },
     async resume({ threadId }) {
-      write({
-        threadId,
-        settledAt: null,
-        settledOverride: "active",
-        snoozedUntil: null,
-        snoozedAt: null,
-      });
+      await serializeThreads([threadId], async () =>
+        write({
+          threadId,
+          settledAt: null,
+          settledOverride: "active",
+          snoozedUntil: null,
+          snoozedAt: null,
+        }),
+      );
       return { ok: true };
     },
-    async snooze({ threadId, snoozedUntil }) {
-      await ctx.sandy.sdk.threads.unpin({ threadId });
-      const now = Date.now();
-      write({
-        threadId,
-        settledAt: null,
-        settledOverride: null,
-        snoozedUntil,
-        snoozedAt: now,
-      });
-      // A snooze is a parked thread with a return date, and the shortest
-      // preset is half an hour. Nobody snoozes a conversation they are in the
-      // middle of, so the wake time is not worth keeping a runtime warm for.
-      return { ok: true, reclaim: await reclaimThreadResources(threadId) };
+    async snooze({ threadId, snoozedUntil, deferredInteractionId }) {
+      return { ok: true, reclaim: await modules.bulk.snoozeThread(threadId, snoozedUntil, deferredInteractionId) };
     },
     async releaseRuntimes({ threadIds }) {
-      // sandy's archive force-closes a thread's terminals but only stops its
-      // runtime when a turn is in flight, so an idle thread archived from this
-      // sidebar keeps its agent session loaded. Stopping an idle thread takes
-      // sandy's release path instead. Archived threads still accept a stop, so
-      // this can race the archive, and a failure only misses a reclaim.
       await runThreadTasks(
         threadIds,
         async (threadId) => {
@@ -248,13 +226,11 @@ export function createServerHandlers(
       return { ok: true };
     },
     async unsnooze({ threadId }) {
-      clear(threadId);
+      await serializeThreads([threadId], async () => clear(threadId));
       return { ok: true };
     },
     async acknowledgeWake({ threadId }) {
-      // A woken snooze row is retained only to make the marker durable. Once
-      // the user opens or dismisses it, the thread is ordinary active work.
-      clear(threadId);
+      await serializeThreads([threadId], async () => clear(threadId));
       return { ok: true };
     },
     async reorderPinned({ threadId, previousThreadId, nextThreadId }) {
@@ -313,7 +289,12 @@ export function createServerHandlers(
     ...modules.projects.handlers,
     ...modules.delegateChildren.handlers,
     ...modules.topics.handlers,
+    ...modules.sessionSearch.handlers,
+    ...modules.lastMessages.handlers,
+    ...modules.ideas.handlers,
+    ...modules.orchestrators.handlers,
     ...modules.anchors.handlers,
+    ...modules.bulk.handlers,
     ...handlers,
   } satisfies ServerHandlers;
 }

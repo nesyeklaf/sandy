@@ -4,8 +4,10 @@ import { sameOrder, type ReorderScope } from "./inbox-layout";
 import type { createDragPreview } from "./drag-preview";
 import type { ListAnimationController } from "./useListMotion";
 
+export type ReorderShelf = "pinned" | "needs" | "inbox";
+
 export interface InboxDragOrder {
-  shelf: "pinned" | "inbox";
+  shelf: ReorderShelf;
   mode: "thread" | "unit";
   movingId: string;
   parentKey?: string | null;
@@ -14,18 +16,18 @@ export interface InboxDragOrder {
 
 export interface DragReorderOptions {
   key: string;
-  shelf: "pinned" | "inbox";
+  shelf: ReorderShelf;
   target: { isReordering: boolean };
   activeReorderCancelRef: RefObject<(() => void) | null>;
   dragOrderRef: RefObject<InboxDragOrder | null>;
   dragPreviewRef: RefObject<ReturnType<typeof createDragPreview> | null>;
   listAnimationController: ListAnimationController;
   suppressDragClick: (key: string) => void;
-  reorderScopeRef: RefObject<(key: string, shelf: "pinned" | "inbox") => ReorderScope>;
+  reorderScopeRef: RefObject<(key: string, shelf: ReorderShelf) => ReorderScope>;
   storedOrderUnitsRef: RefObject<OrderUnit[]>;
   setDragOrder: Dispatch<SetStateAction<InboxDragOrder | null>>;
   commitReorder: (
-    shelf: "pinned" | "inbox",
+    shelf: ReorderShelf,
     mode: "thread" | "unit",
     ids: readonly string[],
     key: string,

@@ -250,7 +250,6 @@ describe("row context menu", () => {
   it("uses custom snooze times from server settings", async () => {
     const storedSettings = {
       ...DEFAULT_SIDEBAR_SETTINGS,
-      inactiveThreadsEnabled: false,
       ...{ snoozePresets: "15m, Lunch break=3h" },
     };
     localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));

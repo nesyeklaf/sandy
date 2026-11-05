@@ -1,5 +1,6 @@
 import { useProviders, useSidebarThreads } from "./sandy-sdk";
-import { useSandyNavigate, type PluginThreadHeaderActionProps } from "@sandy-sdk/plugin-sdk/app";
+import { useSandyNavigate } from "@sandy-sdk/plugin-sdk/app";
+import type { ThreadHeaderActionProps } from "./thread-header-action";
 import { Icon } from "./components/Icon";
 import { Tooltip } from "./components/Tooltip";
 import { cn } from "./lib/utils";
@@ -16,7 +17,7 @@ import { parentOf, threadDisplayTitle } from "./inbox";
  * child from the parent's header chip leaves the user with no route back. This
  * chip names the parent and opens it. Its icon follows the child icon setting.
  */
-export function ParentChip({ threadId, isCompactViewport }: PluginThreadHeaderActionProps) {
+export function ParentChip({ threadId, isCompactViewport }: ThreadHeaderActionProps) {
   const { threads } = useSidebarThreads();
   const { providers } = useProviders();
   const settings = useSidebarSettings();

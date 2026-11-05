@@ -40,7 +40,7 @@ describe("a child waiting on the user", () => {
         ],
       },
       rpc: {
-        getSidebarSettings: () => ({ ...defaultSidebarSettings, workingShelf: true, inactiveThreadsEnabled: false }),
+        getSidebarSettings: () => ({ ...defaultSidebarSettings, workingShelf: true }),
         listLifecycle: () => ({ rows: [] }),
       },
     });
@@ -56,7 +56,7 @@ describe("a child waiting on the user", () => {
     expect(capsule.getAttribute("data-child-status")).toBe("needs-you");
   });
 
-  it("keeps an idle parent in Active instead of Inactive", async () => {
+  it("keeps an idle parent in Needs you while its child asks", async () => {
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -73,11 +73,10 @@ describe("a child waiting on the user", () => {
       },
     });
 
-    const inactive = await screen.findByRole("region", { name: "Inactive" });
-    expect(within(inactive).getByText(/Inactive \(1\)/)).toBeDefined();
-    const active = screen.getByRole("region", { name: "Needs you" });
-    expect(within(active).getByText("Old tree")).toBeDefined();
-    expect(within(active).queryByText("Old quiet")).toBeNull();
+    const needs = await screen.findByRole("region", { name: "Needs you" });
+    expect(within(needs).getByText("Old tree")).toBeDefined();
+    expect(within(needs).queryByText("Old quiet")).toBeNull();
+    expect(within(screen.getByRole("region", { name: "Waiting" })).getByText("Old quiet")).toBeDefined();
   });
 
   it("brings a shelved parent back, and a snoozed one wakes", async () => {
@@ -97,7 +96,7 @@ describe("a child waiting on the user", () => {
         ],
       },
       rpc: {
-        getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: false }),
+        getSidebarSettings: () => ({ ...defaultSidebarSettings }),
         listLifecycle: () => ({
           rows: [
             { threadId: "snoozed", snoozedAt: now - 1_000, snoozedUntil: now + 3_600_000, settledAt: null },

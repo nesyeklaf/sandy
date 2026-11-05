@@ -247,7 +247,6 @@ describe("ThreadInbox", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           childSortDirection: "descending",
         }),
         listLifecycle: () => ({ rows: [] }),
@@ -287,7 +286,6 @@ describe("ThreadInbox", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           childIconStyle: "provider",
         }),
         listLifecycle: () => ({ rows: [] }),

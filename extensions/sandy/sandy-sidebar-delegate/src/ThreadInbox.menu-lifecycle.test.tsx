@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { formatSnoozeWakeTime } from "./lifecycle";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   SETTLED_NOTHING,
@@ -19,6 +20,7 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("row context menu", () => {
   it("appends the reclaim reminder after the snooze wake time", async () => {
@@ -328,7 +330,7 @@ describe("row context menu", () => {
     await waitFor(() =>
       expect(rendered.inspection.rpcCalls.some((call) => call.method === "listLifecycle")).toBe(true),
     );
-    const settledShelf = await screen.findByRole("region", { name: "Settled" });
+    const settledShelf = await screen.findByRole("region", { name: "Archived" });
     const snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
     fireEvent.click(within(settledShelf).getByRole("button", { expanded: false }));
     fireEvent.click(within(snoozedShelf).getByRole("button"));

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import type { LifecycleApi } from "./useLifecycle";
+import type { LockableShelf } from "./thread-status";
 
 export function threadNeedsAttention(thread: PluginSidebarThread): boolean {
   return (
@@ -12,9 +13,7 @@ export function threadNeedsAttention(thread: PluginSidebarThread): boolean {
 }
 
 export function useRenamingShelfLocks(threads: readonly PluginSidebarThread[], lifecycle: LifecycleApi) {
-  const [renamingShelfLocks, setRenamingShelfLocks] = useState<
-    Map<string, "active" | "working" | "review" | "inactive">
-  >(() => new Map());
+  const [renamingShelfLocks, setRenamingShelfLocks] = useState<Map<string, LockableShelf>>(() => new Map());
   useEffect(() => {
     const activeIds = new Set(
       threads

@@ -18,6 +18,7 @@ function thread(overrides: Partial<PluginSidebarThread> = {}): PluginSidebarThre
     title: "A thread",
     titleFallback: null,
     parentThreadId: null,
+    parentNotifications: "auto",
     sectionId: null,
     originKind: null,
     originPluginId: null,
@@ -85,8 +86,6 @@ function deferred<T>() {
 
 const defaultSidebarSettings = {
   snoozePresets: "30m, 2h, 1d, 1w",
-  inactiveThreadsEnabled: true,
-  inactiveAfterHours: 6,
   showRunningChildrenWhenCollapsed: true,
   autoSettleInactive: true,
   autoSettleAfterDays: 3,

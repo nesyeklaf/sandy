@@ -4,14 +4,26 @@
 
 - Topics: new Topics tab per session. Drag over turns to mark a range, or let the AI suggest topics and tags (accept singly or all). Each topic has a color, a title, tags, user/agent counts and lines/words/tokens. Step between topics, open them in the chat. Session tags too. Stored in the plugin's server database. All UI text is English.
 - Sidebar: tag chips and a topic/tag search narrow the session list.
+- Topics (Themen) on a whole session, next to its tags. **Tags & Themen…** in a row's ⋯ menu edits both, as a bottom sheet on phone widths. The tag and topic pickers split into **Session** and **In Bereichen** sections with counts, and a pick in one section matches only on that level.
+- **Als Idee markieren** / **Keine Idee mehr** in a row's ⋯ menu and in the select-mode bar, with Undo. Idle ideas sit on a new **Ideen** shelf after Waiting, with its own density override, and idea rows show a lightbulb at every density.
+- Select mode adds **Thema** (add a topic to the picked sessions) and the idea toggle, each with Undo.
+- RPC methods for topics and ideas (`setThreadTopics`, `addThreadTopic`, `removeThreadTopic`, `listIdeas`, `setIdea`; `listAllTags` and `listTopics` return `threadTopics`), callable with `sandy plugin rpc call`; see README → CLI.
 
 ### Added
 
+- View → Show on rows has a **Last message** field, off by default. It shows the thread's latest assistant text as one truncated line on Comfortable and Compact rows and never on Dense rows. The plugin keeps the text per thread in its own database when the thread goes idle and the app reads all of them in one request, so a thread shows a line once its next turn ends. Needs no newer sandy: the `thread.idle` event is in sandy 0.47.0.
 - **Tree** layout next to **Flow**: sessions grouped by sandy section (shown as "Projekt"), then repo, then session. Sessions without a section sit under "Ohne Projekt"; sessions without a repo sit directly under their section. Collapsed headers show the worst status of their sessions. The choice is remembered.
 - **In Projekt…** in a session's context menu moves it into a sandy section or back out.
 
 ### Changed
 
+- Thread display is now **Density**, set from the new View button beside the layout switch or in Sidebar layout: Auto, Comfortable, Compact, or Dense. Comfortable is the three-line card, Compact a new two-line row, Dense the one-line row. Auto draws Needs you and Failed as full cards, Working on two lines and the rest on one. Each shelf's ⋯ menu overrides the density for that shelf. Your choice carries over: Full cards becomes Comfortable, Compact working threads becomes Auto, Compact all threads becomes Dense.
+- Shelves follow the thread's status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed. Waiting holds idle threads, so the Inactive shelf and its hour threshold are gone. Parked threads sit in Snoozed with the label "Parked". Settled threads leave the shelves and show, with archived threads, under View → Show archived; Clean moved into a settled row's ⋯ menu. The Merged shelf header archives all its threads at once, with Undo.
+- A row that asks you something shows the question in the row, also when a folded child asks. A single-choice question offers its answers as buttons: a tap answers after five seconds, and Undo in the toast takes it back. Later snoozes the thread for an hour. Approvals, free-text and multi-part questions show Open instead. Dense rows stay on one line.
+- View → Show on rows turns row fields on or off: diff +/−, PR number with its check state, host, provider, subagents, and age. All start on. The diff is the branch's lines changed since its merge base plus uncommitted edits, from sandy's Git plugin.
+- View → Select threads puts checkboxes on the rows. The bar at the bottom snoozes, archives, pins, or tags the picked threads together, with Undo for each.
+- The bell beside the View button lists the last 24 hours: threads that asked, failed, or finished, and threads archived in that time with Restore. Its badge counts the questions waiting in Needs you.
+- On phone widths the search sits at the bottom of the sidebar, with its scope and tag/topic pickers.
 - What the plugin called "project" in its UI is now called "repo", because it is the repository. Settings keys and stored data are unchanged.
 
 ## [0.3.7] - 2026-10-23
