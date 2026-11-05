@@ -50,6 +50,14 @@ vi.mock("@sandy-sdk/plugin-sdk/app", async (importOriginal) => ({
 
 let container: HTMLDivElement;
 let root: Root;
+const observers = new Set<{ report(): void }>();
+
+/** The browser reporting every observed element's size, as it does after layout. */
+function reportSizes(): void {
+  act(() => {
+    for (const observer of [...observers]) observer.report();
+  });
+}
 
 /** Replies `replies` of thread `threadId`, each showing one ```ui block of `code`. */
 function renderBlock(threadId: string, code: string, replies: readonly number[] = [1]): void {
@@ -100,9 +108,24 @@ beforeEach(() => {
   vi.stubGlobal(
     "ResizeObserver",
     class {
-      observe() {}
+      private readonly targets = new Set<Element>();
+      constructor(private readonly callback: ResizeObserverCallback) {
+        observers.add(this);
+      }
+      observe(target: Element) {
+        this.targets.add(target);
+      }
       unobserve() {}
-      disconnect() {}
+      disconnect() {
+        observers.delete(this);
+      }
+      report() {
+        const entries = [...this.targets].map((target) => {
+          const rect = target.getBoundingClientRect();
+          return { target, contentRect: rect, borderBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }] } as unknown as ResizeObserverEntry;
+        });
+        if (entries.length > 0) this.callback(entries, this as unknown as ResizeObserver);
+      }
     },
   );
   // The column SANDY lays replies out in.
@@ -187,15 +210,18 @@ describe("a block SANDY mounts again", () => {
     // Laid out as the placeholder, until the picture decodes.
     const box = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 720, 192));
     renderBlock("page", 'Image("slow.png", "Slow")', [5]);
+    reportSizes();
     await act(async () => pictures.get("slow.png")?.({ ok: true, dataUrl: "data:image/png;base64,U0xPVw==" }));
     act(() => root.render(null));
     // Mounted again, it is shorter for a moment; a remembered height would be held.
     box.mockReturnValue(new DOMRect(0, 0, 720, 0));
     renderBlock("page", 'Image("slow.png", "Slow")', [5]);
+    reportSizes();
     expect(container.querySelector<HTMLElement>("[data-genui-fence] .group\\/genui > div")?.style.minHeight).toBe("");
 
     box.mockReturnValue(new DOMRect(0, 0, 720, 405));
     decode(container.querySelector("img")!, 720, 405);
+    reportSizes();
     act(() => root.render(null));
     box.mockReturnValue(new DOMRect(0, 0, 720, 0));
     renderBlock("page", 'Image("slow.png", "Slow")', [5]);

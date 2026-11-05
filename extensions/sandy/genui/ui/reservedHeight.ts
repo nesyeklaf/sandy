@@ -5,6 +5,7 @@
 // at once instead of growing under the reader. Within a page, useLoadedData's
 // cache already renders remounted blocks complete.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 const STORAGE_KEY = "sandy.genui.heights";
 /** Blocks remembered, most recently settled kept. */
@@ -128,6 +129,7 @@ export function useReservedHeight(key: string, loading: boolean, provisional = f
   const unsettled = useRef(loading || provisional);
   unsettled.current = loading || provisional;
   const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const size = useRef<{ readonly width: number; readonly height: number } | null>(null);
   const content = useCallback((element: HTMLDivElement | null) => setNode(element), []);
   const settle = useCallback(
     (width: number, height: number) => {
@@ -142,22 +144,31 @@ export function useReservedHeight(key: string, loading: boolean, provisional = f
   useLayoutEffect(() => {
     if (node === null) return;
 
-    // Laid out at another width (a narrower pane, a phone), the stored height doesn't apply.
-    const width = node.getBoundingClientRect().width;
-    if (reserved.current !== null && heights().get(key, width) === null) setReserve(null);
+    let first = true;
     const observer = new ResizeObserver(([entry]) => {
       const box = entry.borderBoxSize?.[0];
-      settle(box?.inlineSize ?? entry.contentRect.width, box?.blockSize ?? entry.contentRect.height);
+      const width = box?.inlineSize ?? entry.contentRect.width;
+      const height = box?.blockSize ?? entry.contentRect.height;
+      size.current = { width, height };
+      if (first) {
+        first = false;
+        // Laid out at another width (a narrower pane, a phone), the stored height doesn't apply.
+        if (reserved.current !== null && heights().get(key, width) === null) flushSync(() => setReserve(null));
+      }
+      settle(width, height);
     });
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      size.current = null;
+    };
   }, [node, key, settle]);
 
   // Once nothing is left arriving, what shows is the block's own height, whether or not that resized it.
   const settled = !loading && !provisional;
   useEffect(() => {
-    if (!settled || node === null) return;
-    const box = node.getBoundingClientRect();
+    const box = size.current;
+    if (!settled || node === null || box === null) return;
     settle(box.width, box.height);
   }, [settled, node, settle]);
 

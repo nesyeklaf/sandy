@@ -452,17 +452,25 @@ export function TextArea({ props }: { props: Props }) {
   const binding = props.value;
   const bound = isBinding(binding);
   const value = bound ? text(binding.value) : "";
+  const mounted = useRef(false);
   useLayoutEffect(() => {
-    if (area.current !== null) fitHeight(area.current);
+    if (mounted.current && area.current !== null) fitHeight(area.current);
+    mounted.current = true;
   }, [value]);
   // A narrower pane wraps more lines.
   useEffect(() => {
     const element = area.current;
     if (element === null) return;
-    let width = element.clientWidth;
-    const observer = new ResizeObserver(() => {
-      if (element.clientWidth === width) return;
-      width = element.clientWidth;
+    let width: number | null = null;
+    const observer = new ResizeObserver(([entry]) => {
+      const next = entry.contentRect.width;
+      if (width === null) {
+        width = next;
+        if (element.scrollHeight > element.clientHeight) fitHeight(element);
+        return;
+      }
+      if (next === width) return;
+      width = next;
       fitHeight(element);
     });
     observer.observe(element);
