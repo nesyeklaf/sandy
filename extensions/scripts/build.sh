@@ -17,6 +17,6 @@ for u in "${units[@]}"; do
    case "$u" in
      sandy/*) sandy_on_path && sandy plugin build . ;;
      pi/work) node -e 'require.resolve("@markdoc/markdoc", { paths: [process.argv[1]] })' "$root/../packages/skill-dialect" 2>/dev/null ||
-       (cd "$root/.." && pnpm install --frozen-lockfile --filter @sandy/skill-dialect) ;;
+       (cd "$root/.." && pnpm install --frozen-lockfile --ignore-scripts --filter @sandy/skill-dialect) ;;
    esac)
 done
