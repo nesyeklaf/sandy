@@ -16,6 +16,7 @@ class FakeVisualViewport extends EventTarget implements VisualViewport {
   offsetTop = 20;
   onresize = null;
   onscroll = null;
+  onscrollend = null;
   pageLeft = 0;
   pageTop = 0;
   scale = 1;

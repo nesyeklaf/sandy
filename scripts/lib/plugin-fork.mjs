@@ -14,6 +14,10 @@ function isWorkspaceSpecifier(specifier) {
   return typeof specifier === "string" && specifier.startsWith("workspace:");
 }
 
+export function isCatalogSpecifier(specifier) {
+  return typeof specifier === "string" && specifier.startsWith("catalog:");
+}
+
 function withoutExtension(path) {
   return path.replace(/\.(?:tsx?|jsx?)$/u, "");
 }
@@ -86,7 +90,12 @@ export function registryPackages(items, { shimmedPackages, versions }) {
 
 export function forkPluginPackageJson(
   manifest,
-  { sdkSpecifier, workspaceBinsByPackage, registryDependencies },
+  {
+    sdkSpecifier,
+    workspaceBinsByPackage,
+    registryDependencies,
+    catalogVersions,
+  },
 ) {
   const forked = structuredClone(manifest);
   const droppedDevDependencies = [];
@@ -94,6 +103,16 @@ export function forkPluginPackageJson(
     const dependencies = forked[field];
     if (dependencies === undefined) continue;
     for (const [name, specifier] of Object.entries(dependencies)) {
+      if (isCatalogSpecifier(specifier)) {
+        const version = catalogVersions.get(name);
+        if (version === undefined) {
+          throw new Error(
+            `${field}.${name} uses the pnpm catalog, but no installed version was found for it`,
+          );
+        }
+        dependencies[name] = version;
+        continue;
+      }
       if (!isWorkspaceSpecifier(specifier)) continue;
       if (name === PLUGIN_SDK_PACKAGE) {
         dependencies[name] = sdkSpecifier;

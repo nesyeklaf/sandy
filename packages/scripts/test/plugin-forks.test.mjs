@@ -209,6 +209,26 @@ describe("forkPluginPackageJson", () => {
       ),
     ).toThrow("dependencies.@sandy/client-core is a workspace package");
   });
+
+  it("pins pnpm catalog dependencies to the version the workspace installed", () => {
+    const options = {
+      sdkSpecifier: "0.5.16",
+      workspaceBinsByPackage,
+      registryDependencies: noRegistryPackages,
+      catalogVersions: new Map([["tsrs", "0.22.0-ts7.1.0-beta"]]),
+    };
+
+    expect(
+      forkPluginPackageJson({ devDependencies: { tsrs: "catalog:" } }, options)
+        .manifest.devDependencies,
+    ).toEqual({ tsrs: "0.22.0-ts7.1.0-beta" });
+    expect(() =>
+      forkPluginPackageJson(
+        { devDependencies: { vitest: "catalog:" } },
+        options,
+      ),
+    ).toThrow("devDependencies.vitest uses the pnpm catalog");
+  });
 });
 
 describe("sandy/forkable-plugin-imports", () => {
@@ -223,7 +243,9 @@ describe("sandy/forkable-plugin-imports", () => {
 
   it("rejects sandy workspace packages in every module position", () => {
     const reports = lint(pluginFile, (visitors) => {
-      visitors.ImportDeclaration({ source: literal("@sandy/shared-ui/button") });
+      visitors.ImportDeclaration({
+        source: literal("@sandy/shared-ui/button"),
+      });
       visitors.ExportAllDeclaration({ source: literal("@sandy/client-core") });
       visitors.ImportExpression({ source: literal("@sandy/shared-ui/icon") });
       visitors.TSImportType({ source: literal("@sandy/domain") });
@@ -259,7 +281,9 @@ describe("sandy/forkable-plugin-imports", () => {
       expect.stringContaining(
         "sandy-environment-provider-host/git is a sandy workspace package",
       ),
-      expect.stringContaining("sandy-plugin-tasks is a sandy workspace package"),
+      expect.stringContaining(
+        "sandy-plugin-tasks is a sandy workspace package",
+      ),
     ]);
   });
 
@@ -303,7 +327,9 @@ describe("sandy/forkable-plugin-imports", () => {
         source: literal("../../../../packages/domain/src/index.js"),
       });
       visitors.ImportDeclaration({ source: literal("../model/fixtures.js") });
-      visitors.ImportDeclaration({ source: literal("@sandy-sdk/plugin-sdk/app") });
+      visitors.ImportDeclaration({
+        source: literal("@sandy-sdk/plugin-sdk/app"),
+      });
       visitors.ImportDeclaration({ source: literal("@dnd-kit/core") });
       visitors.ExportNamedDeclaration({ source: null });
     });

@@ -64,7 +64,7 @@
     "@types/semver": "^7.7.1",
     "esbuild": "^0.28.0",
     "hono": "^4.7.0",
-    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
+    "tsrs": "catalog:",
     "tsx": "^4.23.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   }

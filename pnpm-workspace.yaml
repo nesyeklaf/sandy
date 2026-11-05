@@ -8,3 +8,6 @@ packages:
   # dependencies are installed into each plugin's own node_modules — plugins
   # bring their own dependencies.
   - "examples/plugins/*"
+
+catalog:
+  tsrs: 0.22.0-ts7.1.0-beta
