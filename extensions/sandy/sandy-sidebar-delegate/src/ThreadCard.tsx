@@ -28,6 +28,7 @@ import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { projectIconUrl as iconUrl } from "./project-icons";
 import { ParkButton, SelectCheckbox } from "./ThreadCardParts";
 import { useSelection } from "./SelectionHost";
+import { useRowActivation } from "./row-activation";
 import { RowMetaLine } from "./RowMetaLine";
 import { RowQuestion } from "./RowQuestion";
 import { askingThreadOf } from "./row-question";
@@ -168,6 +169,12 @@ export function ThreadCard({
   const titleInline = !showProject || twoLine;
   const stripeView = compact ? "collapsed" : "full";
   const projectColor = useProjectColor(thread.projectId);
+  const openThread = () => {
+    if (isWoke) onAcknowledgeWake();
+    navigate.toThread(thread.id, { split: false });
+    onNavigate();
+  };
+  const activation = useRowActivation({ onActivate: openThread, disabled: isRenaming, ignoreRepeatClicks: true });
   const changeRenaming = (editing: boolean) => {
     if (editing) densityAtRenameStart.current = currentDensity;
     setIsRenaming(editing);
@@ -262,11 +269,7 @@ export function ThreadCard({
               isDragging={!!reorder?.isDragging}
               isRenaming={isRenaming}
               onRenamingChange={changeRenaming}
-              onOpen={() => {
-                if (isWoke) onAcknowledgeWake();
-                navigate.toThread(thread.id, { split: false });
-                onNavigate();
-              }}
+              onOpen={openThread}
               rowProps={{
                 "data-parent-card": "",
                 "data-row-density": "dense",
@@ -350,14 +353,12 @@ export function ThreadCard({
                   onPointerDown={(event) => {
                     splitProps.onPointerDown?.(event);
                     reorder?.onPointerDown(event);
+                    activation.onPointerDown(event);
                   }}
                   onKeyDown={reorder?.onKeyDown}
                   onClick={(event) => {
                     event.preventDefault();
-                    if (isRenaming || event.detail > 1) return;
-                    if (isWoke) onAcknowledgeWake();
-                    navigate.toThread(thread.id, { split: false });
-                    onNavigate();
+                    activation.onClick(event);
                   }}
                   onDoubleClick={(event) => {
                     event.preventDefault();

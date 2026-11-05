@@ -16,6 +16,7 @@ import { OpenPortDetails } from "./OpenPorts";
 import { ThreadPullRequestDetails } from "./ThreadPullRequests";
 import { compareChildThreads, useChildThreadDisplay } from "./ChildThreadDisplay";
 import { cn } from "./lib/utils";
+import { useRowActivation } from "./row-activation";
 
 export function ThreadDetailsTooltip({
   thread,
@@ -211,15 +212,19 @@ function SubthreadRow({ thread, onOpen }: { thread: PluginSidebarThread; onOpen:
   const provider = providers.find((entry) => entry.id === thread.providerId);
   const statusThread = useThreadWithDraft(thread);
   const status = thread.hasPendingInteraction ? "Needs you" : (statusThread.indicatorLabel ?? "Idle");
+  const activation = useRowActivation({ onActivate: onOpen });
   return (
     <button
       type="button"
       aria-label={`Open subthread: ${threadDisplayTitle(thread)}`}
       draggable={false}
-      onPointerDown={splitProps.onPointerDown}
+      onPointerDown={(event) => {
+        splitProps.onPointerDown?.(event);
+        activation.onPointerDown(event);
+      }}
       onClick={(event) => {
         event.stopPropagation();
-        onOpen();
+        activation.onClick(event);
       }}
       className={cn(
         "flex w-full min-w-0 items-start gap-2 rounded-sm text-left hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

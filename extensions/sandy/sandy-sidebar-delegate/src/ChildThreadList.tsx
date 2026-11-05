@@ -12,6 +12,7 @@ import { STATUS_SLOT_CLASS, StatusOrTime, threadStatusLabel, useThreadWithDraft 
 import { useWorkingSinceContext } from "./useWorkingSince";
 import { threadDisplayTitle } from "./inbox";
 import { canParkThread } from "./lifecycle";
+import { useRowActivation } from "./row-activation";
 import { RowContextMenu } from "./RowContextMenu";
 import { InlineThreadTitle } from "./InlineThreadTitle";
 import { ThreadDetailsTooltip } from "./ThreadDetailsTooltip";
@@ -359,6 +360,7 @@ function ChildThreadRow({
   const [isRenaming, setIsRenaming] = useState(false);
   const { splitProps } = useSidebarThreadSplit(thread.id);
   const RowAction = isRenaming ? "div" : "button";
+  const activation = useRowActivation({ onActivate: () => onOpenThread(thread.id), disabled: isRenaming });
 
   return (
     <RowContextMenu thread={thread} canArchive={canParkThread(thread)} onRename={() => setIsRenaming(true)}>
@@ -391,8 +393,15 @@ function ChildThreadRow({
             aria-label={isRenaming ? undefined : childThreadOpenLabel(relation, title, visibleStatus, foreignProject)}
             aria-current={isActive && !isRenaming ? "page" : undefined}
             draggable={false}
-            onPointerDown={isRenaming ? undefined : splitProps.onPointerDown}
-            onClick={isRenaming ? undefined : () => onOpenThread(thread.id)}
+            onPointerDown={
+              isRenaming
+                ? undefined
+                : (event) => {
+                    splitProps.onPointerDown?.(event);
+                    activation.onPointerDown(event);
+                  }
+            }
+            onClick={isRenaming ? undefined : activation.onClick}
             onKeyDown={isRenaming ? (event) => event.stopPropagation() : undefined}
             className={cn(
               "flex min-w-0 flex-1 items-center text-left outline-none focus-visible:ring-1 focus-visible:ring-ring",
