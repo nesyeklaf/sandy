@@ -26,33 +26,50 @@ export type Scope = Readonly<Record<string, string>>;
 export type ValueType =
   | { kind: "text" }
   | { kind: "choice"; options: string[] }
-  | { kind: "list"; of: { kind: "text" } | { kind: "choice"; options: string[] } }
+  | {
+      kind: "list";
+      of: { kind: "text" } | { kind: "choice"; options: string[] };
+    }
   | { kind: "map"; list: string; options: string[] };
 
 const CHOICE_OPTION = /^[A-Za-z0-9][A-Za-z0-9 _.-]*$/;
 const REF = /^\$?([a-z0-9][a-z0-9_-]*)\.([A-Za-z][A-Za-z0-9_]*)$/;
 
-export function parseRef(text: string): { stage: string; name: string } | undefined {
+export function parseRef(
+  text: string,
+): { stage: string; name: string } | undefined {
   const match = REF.exec(text.trim());
   return match === null ? undefined : { stage: match[1]!, name: match[2]! };
 }
 
-function parseChoice(inner: string): { ok: true; options: string[] } | { ok: false; error: string } {
+function parseChoice(
+  inner: string,
+): { ok: true; options: string[] } | { ok: false; error: string } {
   const options = inner.split(",").map((option) => option.trim());
-  if (options.length < 2) return { ok: false, error: "a choice needs at least two values" };
+  if (options.length < 2)
+    return { ok: false, error: "a choice needs at least two values" };
   for (const option of options)
-    if (!CHOICE_OPTION.test(option)) return { ok: false, error: `choice value "${option}" may use letters, digits, space, _ . - only` };
-  if (new Set(options).size !== options.length) return { ok: false, error: "a choice lists a value twice" };
+    if (!CHOICE_OPTION.test(option))
+      return {
+        ok: false,
+        error: `choice value "${option}" may use letters, digits, space, _ . - only`,
+      };
+  if (new Set(options).size !== options.length)
+    return { ok: false, error: "a choice lists a value twice" };
   return { ok: true, options };
 }
 
-export function parseType(source: string): { ok: true; type: ValueType } | { ok: false; error: string } {
+export function parseType(
+  source: string,
+): { ok: true; type: ValueType } | { ok: false; error: string } {
   const text = source.trim();
   if (text === "text") return { ok: true, type: { kind: "text" } };
   const choice = /^choice\((.*)\)$/.exec(text);
   if (choice !== null) {
     const parsed = parseChoice(choice[1]!);
-    return parsed.ok ? { ok: true, type: { kind: "choice", options: parsed.options } } : parsed;
+    return parsed.ok
+      ? { ok: true, type: { kind: "choice", options: parsed.options } }
+      : parsed;
   }
   const list = /^list\((.*)\)$/.exec(text);
   if (list !== null) {
@@ -65,12 +82,26 @@ export function parseType(source: string): { ok: true; type: ValueType } | { ok:
   const map = /^map\(\s*(\$[^,\s]+)\s*,\s*choice\((.*)\)\s*\)$/.exec(text);
   if (map !== null) {
     const ref = parseRef(map[1]!);
-    if (ref === undefined) return { ok: false, error: `map key "${map[1]}" is not a $stage.Output reference` };
+    if (ref === undefined)
+      return {
+        ok: false,
+        error: `map key "${map[1]}" is not a $stage.Output reference`,
+      };
     const parsed = parseChoice(map[2]!);
     if (!parsed.ok) return parsed;
-    return { ok: true, type: { kind: "map", list: `${ref.stage}.${ref.name}`, options: parsed.options } };
+    return {
+      ok: true,
+      type: {
+        kind: "map",
+        list: `${ref.stage}.${ref.name}`,
+        options: parsed.options,
+      },
+    };
   }
-  return { ok: false, error: `unknown type "${text}": use text, choice(a, b), list(text), list(choice(a, b)) or map($stage.List, choice(a, b))` };
+  return {
+    ok: false,
+    error: `unknown type "${text}": use text, choice(a, b), list(text), list(choice(a, b)) or map($stage.List, choice(a, b))`,
+  };
 }
 
 export function formatType(type: ValueType): string {
