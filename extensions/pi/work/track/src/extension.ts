@@ -133,13 +133,13 @@ export default function stageGuardExtension(
   });
 
   pi.on('tool_result', (event, ctx) => {
-    const skillView = trackSkillRead(event, ctx.cwd, () => pi.getAllTools());
-    if (skillView !== undefined) return { content: [{ type: 'text', text: skillView }] };
-    if (event.isError || !TICKET_RESULT.test(event.toolName)) return undefined;
-    const text = event.content.map(c => (c.type === 'text' ? c.text : '')).join('\n');
-    const found = TICKET_LINE.exec('\n' + text)?.[1];
-    if (found) capture(found, ctx);
-    return undefined;
+    if (!event.isError && TICKET_RESULT.test(event.toolName)) {
+      const text = event.content.map(c => (c.type === 'text' ? c.text : '')).join('\n');
+      const found = TICKET_LINE.exec('\n' + text)?.[1];
+      if (found) capture(found, ctx);
+      return undefined;
+    }
+    return trackSkillRead(event, ctx.cwd, () => pi.getAllTools()).then(view => (view === undefined ? undefined : { content: [{ type: 'text' as const, text: view }] }));
   });
 
   pi.on('tool_call', (event, ctx) => {
