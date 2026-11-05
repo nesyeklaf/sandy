@@ -7,14 +7,16 @@ import type { SandyPluginApi, JsonValue, PluginAgentToolResult } from "@sandy-sd
 import { z } from "zod";
 import { hostContract, rpcContract, RUN_CHANGED } from "./contract.ts";
 import { hostContract as goalsContract } from "../goals/contract.ts";
+import { dialectOf, formatProblem, parseSkill } from "@sandy/skill-dialect";
 import { clip, parseMachine, type Machine } from "./machine.ts";
 import { createExecutor, type Executor } from "./effects.ts";
 import { createOperations, type Committed } from "./operations.ts";
-import { desired, policyFor, statusText, type AskForm, type Command, type Driver, type GoalVerdict, type LeaseUsage, type Reply, type Run, type StartSource } from "./run.ts";
+import { desired, policyFor, resultLines, statusText, type AskForm, type Command, type Driver, type GoalVerdict, type LeaseUsage, type Reply, type Run, type StartSource } from "./run.ts";
 
 export { rpcContract };
 
 const TEMPLATE_FILE = "stages.json";
+const SKILL_FILE = "SKILL.md";
 const APPROVAL_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 /** Expiry resolution: launch grace and heartbeat deadlines are checked this often. */
 const TICK_MS = 15_000;
@@ -108,6 +110,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     if (matches.length === 0) throw new Error(`no skill named "${skill}" in this thread's workspace`);
     for (const match of matches) {
       const { files } = await sandy.sdk.skills.listFiles({ ...ws, skillId: match.id });
+      if (files.includes(SKILL_FILE)) {
+        const { content } = await sandy.sdk.skills.getContent({ ...ws, skillId: match.id, path: SKILL_FILE });
+        if (dialectOf(content) !== undefined) return machineFromSkill(content, match.filePath);
+      }
       if (!files.includes(TEMPLATE_FILE)) continue;
       const { content } = await sandy.sdk.skills.getContent({ ...ws, skillId: match.id, path: TEMPLATE_FILE });
       let raw: unknown;
@@ -120,13 +126,21 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (!parsed.ok) throw new Error(`${skill}/${TEMPLATE_FILE} is invalid: ${parsed.error}`);
       return parsed.machine;
     }
-    throw new Error(`skill "${skill}" ships no ${TEMPLATE_FILE}. Build an ad-hoc track with stage_start({machine}) instead (needs the owner's approval).`);
+    throw new Error(`skill "${skill}" has no SKILL.md stages (metadata.dialect) and ships no ${TEMPLATE_FILE}. Build an ad-hoc track with stage_start({machine}) instead (needs the owner's approval).`);
+  }
+
+  function machineFromSkill(source: string, file: string): Machine {
+    const compiled = parseSkill(source, file);
+    if (!compiled.ok) throw new Error(compiled.problems.map(formatProblem).join("\n"));
+    const parsed = parseMachine(compiled.machine);
+    if (!parsed.ok) throw new Error(`${file} compiles to an invalid track: ${parsed.error}`);
+    return parsed.machine;
   }
 
   async function startSource(threadId: string, input: { skill?: string; machine?: unknown }): Promise<StartSource> {
     if (input.machine !== undefined) return { kind: "adhoc", machine: input.machine };
     if (input.skill) return { kind: "skill", skill: input.skill, machine: await loadTemplate(threadId, input.skill) };
-    throw new Error("Pass skill (its stages.json) or machine (an ad-hoc track).");
+    throw new Error("Pass skill (its SKILL.md stages or stages.json) or machine (an ad-hoc track).");
   }
 
   // ---- effects --------------------------------------------------------------------------------------------------
@@ -271,7 +285,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       case "pending":
         return `${done} The result arrives as a message; do not repeat the call meanwhile.\n\n${status}${warning}`;
       case "finished":
-        return "Track finished.";
+        return ["Track finished.", ...(run ? resultLines(run) : [])].join("\n");
       default: {
         const handOff = lease?.driver.kind === "autopilot" ? "\n\nThis stage is driven by an autopilot. End your turn now; the plugin launches it." : "";
         return `${done}\n\n${status}${handOff}${warning}`;
@@ -285,16 +299,17 @@ export default async function plugin(sandy: SandyPluginApi) {
   sandy.agents.registerTool({
     name: "stage_start",
     description:
-      "Start a track for this session. Pass skill to load the skill's stages.json template, or machine to propose an ad-hoc track (the owner must approve it). Only one track runs per thread.",
+      "Start a track for this session. Pass skill to load the skill's SKILL.md stages or stages.json template (with inputs when the skill declares run inputs), or machine to propose an ad-hoc track (the owner must approve it). Only one track runs per thread.",
     instructions: [
-      "Track: when a skill ships a stages.json (or the owner asks for a track), call stage_start({skill}) before following it.",
+      "Track: when a skill ships SKILL.md stages or stages.json (or the owner asks for a track), call stage_start({skill}) before following it.",
       "While a track is active, a guard blocks tools the current stage does not allow. Work stage by stage: stage_status shows the stage, its inputs, required outputs, gate and branches;",
       "stage_submit records outputs and evidence; stage_advance({to}) checks the gate and moves on. If a gate blocks for a reason you cannot fix, stage_propose_force asks the owner to switch stages.",
       "Never try to work around the guard; if a block is wrong, say so and ask the owner.",
     ].join(" "),
     presentation: { label: { pending: "Starting track", completed: "Started track" }, icon: { glyph: "Milestone" } },
     parameters: z.object({
-      skill: z.string().min(1).optional().describe("Skill name whose stages.json is the template"),
+      skill: z.string().min(1).optional().describe("Skill name whose SKILL.md stages or stages.json is the template"),
+      inputs: z.record(z.string(), z.string()).optional().describe("Run inputs the skill declares, by name (stage_status shows them as input.<name>)"),
       machine: z
         .unknown()
         .optional()
@@ -303,14 +318,14 @@ export default async function plugin(sandy: SandyPluginApi) {
         ),
       note: z.string().max(2000).optional().describe("Why this track, shown to the owner with an ad-hoc track"),
     }),
-    async execute({ skill, machine, note }, { threadId }) {
+    async execute({ skill, machine, note, inputs }, { threadId }) {
       let source: StartSource;
       try {
         source = await startSource(threadId, { skill, machine });
       } catch (error) {
         return { content: [{ type: "text", text: message(error) }], isError: true };
       }
-      return toolText(threadId, await operations.commit(threadId, { by: "agent", op: "start", source, ...(note ? { note } : {}), ...(await focusedGoal(threadId)) }), "Started.");
+      return toolText(threadId, await operations.commit(threadId, { by: "agent", op: "start", source, ...(note ? { note } : {}), ...(inputs ? { inputs } : {}), ...(await focusedGoal(threadId)) }), "Started.");
     },
   });
 
@@ -401,9 +416,9 @@ export default async function plugin(sandy: SandyPluginApi) {
   const usage = [
     "Usage:",
     "  sandy work track status [--thread <id>] [--json]   the thread's track (default: the calling thread)",
-    "  sandy work track validate <stages.json>            check a template against the schema",
+    "  sandy work track validate <SKILL.md|stages.json>  check a template against the schema",
     "  sandy work track drive <command> [--thread <id>]   an autopilot's lease commands, JSON replies:",
-    "    start --skill <name> | --machine <json> [--note <text>] [--autopilot <name> [--args <text>]]",
+    "    start --skill <name> [--inputs <json>] | --machine <json> [--note <text>] [--autopilot <name> [--args <text>]]",
     "    status [--lease <ticket|grant>]            the current station; with the grant it renews the claim",
     "    claim --ticket <ticket> --invocation <id>  takes the launched lease; replies the grant",
     "    submit --grant <grant> [--outputs <json>] [--evidence <json>] [--usage <json>]",
@@ -468,7 +483,8 @@ export default async function plugin(sandy: SandyPluginApi) {
         const name = flag(args, "autopilot");
         const note = flag(args, "note");
         const autopilotArgs = flag(args, "args");
-        return committed(threadId, { by: "driver", op: "start", source, ...(note ? { note } : {}), ...(await focusedGoal(threadId)), ...(name ? { autopilot: { name, ...(autopilotArgs ? { args: autopilotArgs } : {}) } } : {}) });
+        const inputs = jsonFlag(args, "inputs", strings);
+        return committed(threadId, { by: "driver", op: "start", source, ...(note ? { note } : {}), ...(inputs ? { inputs } : {}), ...(await focusedGoal(threadId)), ...(name ? { autopilot: { name, ...(autopilotArgs ? { args: autopilotArgs } : {}) } } : {}) });
       }
       case "status": {
         const lease = flag(args, "lease");
@@ -498,10 +514,10 @@ export default async function plugin(sandy: SandyPluginApi) {
 
   sandy.cli.register({
     name: "track",
-    summary: "Inspect tracks, validate stages.json templates, drive a stage lease",
+    summary: "Inspect tracks, validate SKILL.md stages and stages.json templates, drive a stage lease",
     commands: [
       { name: "status", summary: "Show a thread's track", usage: "sandy work track status [--thread <id>] [--json]" },
-      { name: "validate", summary: "Validate a stages.json template", usage: "sandy work track validate <stages.json>" },
+      { name: "validate", summary: "Validate a SKILL.md with stages or a stages.json template", usage: "sandy work track validate <SKILL.md|stages.json>" },
       { name: "drive", summary: "Lease commands for an autopilot (JSON replies)", usage: "sandy work track drive <start|status|claim|submit|run|advance|propose-force|release> ..." },
       { name: "usage", summary: "Report a lease's measured token usage (the track guard calls it)", usage: "sandy work track usage --ticket <ticket> --usage <json> [--thread <id>]" },
     ],
@@ -543,11 +559,26 @@ export default async function plugin(sandy: SandyPluginApi) {
       if (command === "validate" && rest[0]) {
         const { readFile } = await import("node:fs/promises");
         const { resolve } = await import("node:path");
-        let raw: unknown;
+        let text: string;
         try {
-          raw = JSON.parse(await readFile(resolve(ctx.cwd ?? process.cwd(), rest[0]), "utf8"));
+          text = await readFile(resolve(ctx.cwd ?? process.cwd(), rest[0]), "utf8");
         } catch (error) {
           return { exitCode: 1, stderr: `Cannot read ${rest[0]}: ${String(error)}` };
+        }
+        if (rest[0].endsWith(".md")) {
+          if (dialectOf(text) === undefined) return { exitCode: 1, stderr: `${rest[0]} has no metadata.dialect in its frontmatter, so it declares no stages` };
+          try {
+            const machine = machineFromSkill(text, rest[0]);
+            return { exitCode: 0, stdout: `OK: "${machine.title}", ${machine.stages.length} stages` };
+          } catch (error) {
+            return { exitCode: 1, stderr: message(error) };
+          }
+        }
+        let raw: unknown;
+        try {
+          raw = JSON.parse(text);
+        } catch (error) {
+          return { exitCode: 1, stderr: `${rest[0]} is not JSON: ${String(error)}` };
         }
         const parsed = parseMachine(raw);
         return parsed.ok ? { exitCode: 0, stdout: `OK: "${parsed.machine.title}", ${parsed.machine.stages.length} stages` } : { exitCode: 1, stderr: parsed.error };

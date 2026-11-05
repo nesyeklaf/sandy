@@ -970,7 +970,7 @@ export function desired(run: Run | null): Effect[] {
     return effects;
   }
   if (state.kind === "done") {
-    if (!state.told && published) effects.push({ key: `tell:${run.runId}:done`, kind: "tell", runId: run.runId, ticket: null, text: `Track "${run.machine.title}" finished.` });
+    if (!state.told && published) effects.push({ key: `tell:${run.runId}:done`, kind: "tell", runId: run.runId, ticket: null, text: [`Track "${run.machine.title}" finished.`, ...resultLines(run)].join("\n") });
     return effects;
   }
   if (state.kind !== "active") return effects;

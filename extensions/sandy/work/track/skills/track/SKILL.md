@@ -1,6 +1,6 @@
 ---
 name: track
-description: Work through a track in the main session with the stage_* tools. Use when a skill ships a stages.json, when the owner asks for a track, or when a track guard blocked a tool call.
+description: Work through a track in the main session with the stage_* tools. Use when a skill ships SKILL.md stages or a stages.json, when the owner asks for a track, or when a track guard blocked a tool call.
 ---
 
 # Stage gate
@@ -13,7 +13,9 @@ who drives each stage, pause the guard, force a stage or abort.
 
 ## Tools
 
-- `stage_start({skill})` loads `<skill>/stages.json`. Call it before you follow a skill that ships one.
+- `stage_start({skill, inputs})` loads the skill's track: the stages of its `SKILL.md` when its frontmatter sets
+  `metadata.dialect`, else `<skill>/stages.json`. Call it before you follow a skill that ships one. Pass the run inputs
+  the skill lists by name in `inputs`; a missing one is refused with its name.
 - `stage_start({machine, note})` proposes an ad-hoc track. The owner approves or rejects it in the composer. Propose
   one only when the owner asked for a track or a skill tells you to.
 - `stage_status()` shows the current stage, who drives it and why, its inputs, outputs, gate, what is allowed, the
@@ -60,6 +62,16 @@ or the owner takes over, the plugin tells you that you drive again.
 
 The block reason names the stage and what it allows. Do not work around it (another tool, bash, a different path).
 Either finish the stage and advance, or tell the owner why the block is wrong and let them decide.
+
+## SKILL.md stages
+
+A skill whose frontmatter sets `metadata.dialect: "1"` declares its track in its own `SKILL.md` with Markdoc tags
+(`{% stage %}`, `{% output %}`, `{% gate %}`, `{% next %}`, `{% derive %}`, `{% input %}`, `{% result %}`). You never read the
+tags: reading the file shows only its prose and the `stage_start` call, and `stage_status` shows the current stage's
+instructions with the inputs filled in. Typed outputs show their line format; submit exactly that format. When the
+branches say "the track decides", call `stage_advance` without `to`: the track evaluates the branches from the
+outputs, and a branch with a round limit refuses with "round limit reached: ask the owner" once it is used up; only
+then may you propose a force. Validate a file with `sandy work track validate <SKILL.md>`.
 
 ## stages.json
 

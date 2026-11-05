@@ -407,7 +407,7 @@ export function StagesTab({ threadId }: { threadId: string }) {
   if (run === null)
     return (
       <Empty>
-        No track in this thread. The agent starts one with <code>stage_start</code> from a skill's <code>stages.json</code>, or proposes an
+        No track in this thread. The agent starts one with <code>stage_start</code> from a skill's <code>SKILL.md</code> stages or <code>stages.json</code>, or proposes an
         ad-hoc track for your approval.
       </Empty>
     );

@@ -14,7 +14,7 @@ to pass and the branches that follow.
 
 ## How it works
 
-Skills ship a `stages.json` template, or the agent proposes a track for your approval. The plugin checks each gate
+Skills declare their stages in `SKILL.md` or ship a `stages.json` template, or the agent proposes a track for your approval. The plugin checks each gate
 (outputs, commands, evidence, your approval) and writes the current stage's allow list to a policy file on the
 thread's host. The pi `track-guard` extension reads it and blocks skills, edits and subagent routing the stage does
 not allow.
