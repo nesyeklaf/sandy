@@ -607,12 +607,7 @@ describe("echo-provider canary: plugin install → server command → runtime �
     }
     expect(
       command.injectedSkillSources.map((source) => source.name).sort(),
-    ).toEqual([
-      "sandy-cli",
-      "sandy-plugin-authoring",
-      "skill-creator",
-      "submit-a-plugin",
-    ]);
+    ).toEqual(["sandy-cli", "sandy-plugin-authoring", "skill-creator"]);
     expect(command.instructions).toContain("sandy status");
 
     const skillDirectoryRootPath = join(guideRoot, "skills");

@@ -86,7 +86,7 @@ case "$CONFIG" in
       (
         cd "$REPO_ROOT"
         pnpm run build
-        npm pack --ignore-scripts --pack-destination "$ARTIFACT_DIR"
+        pnpm pack --ignore-scripts --pack-destination "$ARTIFACT_DIR"
       )
       PACKAGES=("$ARTIFACT_DIR"/pi-fabric-*.tgz)
       FABRIC_PACKAGE=${PACKAGES[0]}

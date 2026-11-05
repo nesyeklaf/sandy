@@ -6,3 +6,7 @@ apps/mobile/README.md	App Store listing documentation, not in the app bundle
 apps/desktop/README.md	get-bb release documentation
 docs	get-bb release documentation
 plugins/provider-claude-code/src/__fixtures__	recorded transcripts contain the word as data
+FORK.md	fork history names the BB origin it was taken from
+extensions/sandy/thread-namer/README.md	forked plugin documentation links the BB site
+extensions/sandy/value/README.md	forked plugin documentation links the BB marketplace
+extensions/sandy/work/delegate/probes/slice19-child-log.json	recorded probe transcript contains host paths with the machine name as data

@@ -30,7 +30,7 @@ if [[ -n "$VENDOR_PKG" ]]; then
   DEST="$BENCH/vendor/$NAME"
   if [[ ! -d "$DEST/node_modules/pi-fabric" ]]; then
     mkdir -p "$DEST"
-    (cd "$DEST" && npm init -y >/dev/null 2>&1 && npm install --legacy-peer-deps --no-audit --no-fund "$VENDOR_PKG" >/dev/null 2>&1)
+    (cd "$DEST" && pnpm init >/dev/null 2>&1 && pnpm add --ignore-workspace --config.auto-install-peers=false --config.strict-peer-dependencies=false "$VENDOR_PKG" >/dev/null 2>&1)
   fi
   echo "vendored $VENDOR_PKG at $DEST/node_modules/pi-fabric"
 fi

@@ -1,7 +1,6 @@
 # Backend API symbol index
 
-Use this index to check backend, host, AI-service, and test imports.
-Read the detailed backend references for behavior, fields, and examples.
+Use this index to check backend, host, AI-service, and test imports. Read the detailed backend references for behavior, fields, and examples.
 Read the installed declarations for exact current signatures.
 
 ## `@sandy-sdk/plugin-sdk`

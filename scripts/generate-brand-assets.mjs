@@ -11,7 +11,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   GROUND,
-  GROUND_DEEP,
   canvasSvg,
   glyphShapes,
   glyphSvg,
@@ -148,7 +147,7 @@ await mobile(
 );
 await mobile(
   "ios-icon-dark.png",
-  await png(fullBleed(palettes.sandy, GROUND_DEEP), { flatten: GROUND_DEEP }),
+  await png(free(palettes.sandy, 0.62)),
 );
 // Adaptive icons: the launcher masks the 108dp canvas to about 66dp.
 await mobile(
