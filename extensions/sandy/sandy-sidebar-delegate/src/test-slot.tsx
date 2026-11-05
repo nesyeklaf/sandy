@@ -1,4 +1,4 @@
-import { createContext, useContext, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from "react";
 import { useSandyNavigate, useSdk } from "@sandy-sdk/plugin-sdk/app";
 import type { PluginSdkApp, PluginThreadActionEntry } from "@sandy-sdk/plugin-sdk/app";
 import {
@@ -30,6 +30,18 @@ runtime.experimental_useSidebarThreadSplit = (threadId) => {
   };
 };
 
+const sdkUseRpc = runtime.useRpc;
+
+export function giveEachHookItsOwnRpcClient(): () => void {
+  runtime.useRpc = (() => {
+    const shared = sdkUseRpc();
+    return useMemo(() => ({ call: shared.call }), [shared]);
+  }) as typeof runtime.useRpc;
+  return () => {
+    runtime.useRpc = sdkUseRpc;
+  };
+}
+
 /** Supply core registrations explicitly: the official fake does not emulate them. */
 export function renderSlot<Props extends object>(
   slot: { component: ComponentType<Props> },
@@ -52,6 +64,7 @@ export function renderSlot<Props extends object>(
       unarchive: async () => ({ ok: true as const }),
       markRead: response,
       markUnread: response,
+      interactions: { list: async () => [] },
       ...options.sdk?.threads,
     },
   };
@@ -127,11 +140,10 @@ export function renderSlot<Props extends object>(
   };
   rendered.rerender = rerender;
   rendered.lifecycle.rerender = rerender;
-  // rpcCalls is what the UI sent because of a user action. The background
-  // delegate-children read is not one, so tests asserting "no rpc" skip it.
   const allRpcCalls = rendered.rpcCalls;
+  const backgroundReads = new Set(["listDelegateChildren", "listIdeas", "listOrchestrators"]);
   Object.defineProperty(rendered, "rpcCalls", {
-    get: () => allRpcCalls.filter((call) => call.method !== "listDelegateChildren"),
+    get: () => allRpcCalls.filter((call) => !backgroundReads.has(call.method)),
   });
   return Object.assign(rendered, { threadActionCalls, splitSourceCalls });
 }

@@ -566,6 +566,7 @@ const MESSAGE_ACTION_REGISTRATION_FIELDS = [
   "id",
   "title",
   "icon",
+  "surfaces",
   "run",
 ] as const satisfies readonly (keyof PluginMessageActionRegistration)[];
 

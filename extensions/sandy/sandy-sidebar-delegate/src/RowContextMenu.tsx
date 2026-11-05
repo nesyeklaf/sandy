@@ -9,6 +9,9 @@ import { SectionAssignMenu } from "./SectionAssignMenu";
 import { notifiesParent, ParentNotificationsMenu } from "./ParentNotificationsMenu";
 import { DeleteThreadDialog } from "./DeleteThreadDialog";
 import { SnoozePickerDialog } from "./SnoozePickerDialog";
+import { SessionLabelsDialog } from "./SessionLabelsDialog";
+import { useIsIdea, useMarkIdeas } from "./useIdeas";
+import { useIsOrchestrator, useMarkOrchestrators } from "./useOrchestrators";
 import { Icon, type IconName } from "./components/Icon";
 import { cn } from "./lib/utils";
 import { usePortalScopeProps } from "./lib/portal-scope";
@@ -34,6 +37,8 @@ type RowContextMenuProps = {
   onUnsettle?: () => void;
   onWake?: () => void;
   onRename?: () => void;
+  onUnarchive?: () => void;
+  onClean?: () => void;
 };
 
 /** Keep the plugin's menus, but build their actions and dialogs only on first open. */
@@ -63,6 +68,8 @@ function RowMenuContents({
   onUnsettle,
   onWake,
   onRename,
+  onUnarchive,
+  onClean,
 }: Omit<RowContextMenuProps, "children">) {
   const actions = useThreadActions(thread, {
     keys: ["sandy--core/split", "sandy--core/pin", "sandy--core/read", "sandy--core/rename", "sandy--core/archive"],
@@ -86,6 +93,23 @@ function RowMenuContents({
   const pendingNotificationSave = useRef<Promise<void> | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pickingSnooze, setPickingSnooze] = useState(false);
+  const [editingLabels, setEditingLabels] = useState(false);
+  const isIdea = useIsIdea(thread.id);
+  const markIdeas = useMarkIdeas();
+  const isOrchestrator = useIsOrchestrator(thread.id);
+  const markOrchestrators = useMarkOrchestrators();
+  const toggleOrchestrator = () =>
+    markOrchestrators([thread.id], !isOrchestrator).catch((error: unknown) => {
+      toast.error("Could not change the orchestrator mark", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    });
+  const toggleIdea = () =>
+    markIdeas([thread.id], !isIdea).catch((error: unknown) => {
+      toast.error("Could not change the idea mark", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    });
   // Archive takes the children with it, and sandy leaves every idle one's agent
   // session loaded. Release them alongside the archive. Working children are
   // skipped, so this never interrupts a turn archive itself would not.
@@ -119,6 +143,7 @@ function RowMenuContents({
     onResume ||
     onSettle ||
     onUnsettle ||
+    onUnarchive ||
     onWake ||
     (canSnooze && onSnooze && snoozePresets.length > 0)
   );
@@ -148,7 +173,7 @@ function RowMenuContents({
               onCloseAutoFocus={(event) => {
                 onCloseAutoFocus?.(event);
                 // A dialog takes focus next; do not pull it back to the row.
-                if (confirmingDelete || pickingSnooze) event.preventDefault();
+                if (confirmingDelete || pickingSnooze || editingLabels) event.preventDefault();
                 if (!renameAfterClose.current) return;
                 renameAfterClose.current = false;
                 // Hand focus to the editor after the menu releases its focus scope.
@@ -218,6 +243,16 @@ function RowMenuContents({
                   Un-settle
                 </Item>
               ) : null}
+              {onUnarchive ? (
+                <Item icon="Pulse" onSelect={onUnarchive}>
+                  Restore
+                </Item>
+              ) : null}
+              {onClean ? (
+                <Item icon="Clean" onSelect={onClean}>
+                  Close terminals and ports…
+                </Item>
+              ) : null}
               <Separator />
               {onRename ? (
                 <Item
@@ -233,6 +268,16 @@ function RowMenuContents({
               </Item>
               <Item onSelect={() => void run("read")}>{thread.isUnread ? "Mark read" : "Mark unread"}</Item>
               <Separator />
+              <Item icon="Tag" onSelect={() => setEditingLabels(true)}>
+                Tags & Themen…
+              </Item>
+              <Item icon="Bulb" onSelect={() => void toggleIdea()}>
+                {isIdea ? "Keine Idee mehr" : "Als Idee markieren"}
+              </Item>
+              <Item icon="Orchestrator" onSelect={() => void toggleOrchestrator()}>
+                {isOrchestrator ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
+              </Item>
+              <Separator />
               <CopySubmenu thread={thread} />
               <Separator />
               <Item disabled={!canArchive} onSelect={archive}>
@@ -246,6 +291,12 @@ function RowMenuContents({
         )}
       </ProjectActions>
       <DeleteThreadDialog thread={thread} open={confirmingDelete} onOpenChange={setConfirmingDelete} />
+      <SessionLabelsDialog
+        threadId={thread.id}
+        title={thread.title ?? ""}
+        open={editingLabels}
+        onOpenChange={setEditingLabels}
+      />
       {onSnooze ? (
         <SnoozePickerDialog open={pickingSnooze} onOpenChange={setPickingSnooze} onSnooze={onSnooze} />
       ) : null}

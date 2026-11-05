@@ -1,13 +1,23 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { projectColorsById } from "./project-colors";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, defaultSidebarSettings, thread, listProps, deferred, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+
+async function openClean(shelf: HTMLElement) {
+  const toggle = within(shelf).queryByRole("button", { name: /^Archived/, expanded: false });
+  if (toggle) fireEvent.click(toggle);
+  fireEvent.contextMenu(within(shelf).getAllByRole("link")[0]!);
+  const menu = await screen.findByRole("menu", { name: "Thread actions" });
+  fireEvent.click(within(menu).getByText("Close terminals and ports…"));
+}
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("parking threads", () => {
   it("previews every Settled row and cleans only after confirmation", async () => {
@@ -50,14 +60,14 @@ describe("parking threads", () => {
         cleanSettled,
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     await waitFor(() => expect(previewSettledCleanup).toHaveBeenCalledTimes(1));
-    expect(new Set((previewSettledCleanup.mock.calls[0]![0] as { threadIds: string[] }).threadIds)).toEqual(
-      new Set(settledThreads.map((item) => item.id)),
-    );
-    expect(dialog.textContent).toContain("1 terminal to close · 1 listening port to stop");
+    const previewed = (previewSettledCleanup.mock.calls[0]![0] as { threadIds: string[] }).threadIds;
+    expect(previewed).toHaveLength(1);
+    expect(settledThreads.map((item) => item.id)).toContain(previewed[0]);
+    expect(dialog.textContent).toContain("1 terminal to close");
     expect(dialog.textContent).not.toContain("0 terminals");
     expect(dialog.textContent).not.toContain("session");
     expect(within(dialog).queryByText("thr_2")).toBeNull();
@@ -93,8 +103,8 @@ describe("parking threads", () => {
         }),
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     await waitFor(() => expect(dialog.textContent).toContain('shares a workspace with "Review Login fix"'));
     expect(dialog.textContent).not.toContain("@thread:thr_x");
@@ -128,8 +138,8 @@ describe("parking threads", () => {
         }),
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: /Settled/ }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    fireEvent.click(within(shelf).getByRole("button", { name: /^Archived/ }));
     const stripeOf = async (title: string) =>
       (await within(shelf).findByText(title))
         .closest("li")!
@@ -159,8 +169,8 @@ describe("parking threads", () => {
         previewSettledCleanup: () => ({ token: "98bb67b5-b58b-4fc4-9a55-34e557dc8f55", threads: [], skipped: [] }),
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     await waitFor(() =>
       expect(dialog.textContent).toContain("No live terminals or thread-owned listening ports found."),
@@ -191,8 +201,8 @@ describe("parking threads", () => {
         },
       },
     );
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     fireEvent.click(await within(dialog).findByRole("button", { name: "Open thread: Check this terminal" }));
     expect(rendered.navigateCalls).toContainEqual({ method: "toThread", threadId: "thr_terminal" });
@@ -226,8 +236,8 @@ describe("parking threads", () => {
         cleanSettled: () => pending.promise,
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     const cleanButton = await within(dialog).findByRole("button", { name: "Clean resources" });
     fireEvent.click(cleanButton);
@@ -261,15 +271,15 @@ describe("parking threads", () => {
         cleanSettled: () => pending.promise,
       },
     });
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    fireEvent.click(within(shelf).getByRole("button", { name: "Close terminals and ports of settled threads" }));
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    await openClean(shelf);
     const dialog = await screen.findByRole("dialog", { name: "Clean settled resources?" });
     fireEvent.click(await within(dialog).findByRole("button", { name: "Clean resources" }));
     await within(dialog).findByRole("button", { name: "Cleaning..." });
 
     settled = false;
     await rendered.emitRealtime("lifecycle", {});
-    await waitFor(() => expect(shelf.hidden).toBe(true));
+    await waitFor(() => expect(screen.queryByRole("region", { name: "Archived" })).toBeNull());
     expect(screen.getByRole("dialog", { name: "Clean settled resources?" })).toBe(dialog);
 
     await act(async () => pending.reject(new Error("Cleanup connection lost")));

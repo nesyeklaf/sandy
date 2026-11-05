@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+
+function shelfToggleOf(title: string) {
+  const section = screen.getByRole("link", { name: title }).closest<HTMLElement>("section[aria-label]")!;
+  return within(section).getByRole("button", { name: new RegExp(`^${section.getAttribute("aria-label")}`) });
+}
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("four-level sidebar hierarchy", () => {
   it.each([
@@ -60,7 +67,7 @@ describe("four-level sidebar hierarchy", () => {
     expect(rendered.threadActionCalls).toEqual([]);
     expect(rendered.rpcCalls.filter((call) => /Parent|reorder|Pinned/.test(call.method))).toEqual([]);
     {
-      fireEvent.click(screen.getByRole("button", { name: "Needs you" }));
+      fireEvent.click(shelfToggleOf("Root"));
       expect(screen.getByRole("link", { name: "Root" })).toBeDefined();
       expect(screen.getByRole("button", { name: /^Open great-grandchild thread: Deep/ })).toBeDefined();
     }
@@ -146,6 +153,6 @@ it("honors disabled attention retention for fourth-level descendants", async () 
   fireEvent.click(screen.getByRole("button", { name: "Show 1 grandchild thread for Child, 1 need you" }));
   fireEvent.click(screen.getByRole("button", { name: "Show 1 great-grandchild thread for Grandchild, 1 need you" }));
   expect(screen.getByRole("button", { name: "Open great-grandchild thread: Deep, Needs you" })).toBeDefined();
-  fireEvent.click(screen.getByRole("button", { name: "Needs you" }));
+  fireEvent.click(shelfToggleOf("Root"));
   expect(screen.queryByRole("link", { name: "Root" })).toBeNull();
 });

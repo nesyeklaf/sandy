@@ -233,7 +233,9 @@ Requires SDK 0.6.98.
 `app.slots.experimental_messageMetadata({ id, placement?, component })` mounts
 React metadata beside realized user and assistant conversation messages,
 including windowing overscan and embedded ThreadChat timelines. `placement`
-accepts "above" or "actionRow"; omission defaults to "above". "above" renders
+accepts "above", "actionRow" or "below"; omission defaults to "above". "below"
+renders under the message in its column width, for cards that belong to it.
+"above" renders
 over the message, aligned to its side. "actionRow" renders in the message's
 action row and shows and hides with the actions: on hover or focus where the
 device can hover, and always where it cannot. It sits before the actions on
@@ -4275,3 +4277,22 @@ precedence, bounded discovery failure, and module-ABI preservation after Node
 replacement. Settle the shared process-local instance lifecycle across SDK
 bundle versions and whether `bundledNpmCli` belongs on the public surface before
 removing the prefix.
+
+## Theme kit (`sandy.sdk.theme.experimental_create`, `sandy.sdk.theme.experimental_check`)
+
+`experimental_create({ name, kit, overwrite? })` generates a complete custom theme
+from three anchor colors per mode (`kit.light` and `kit.dark`: `canvas`, `ink`,
+`accent`, each `oklch(L C H)` or `#rrggbb`), plus optional `statusChroma` (0 to
+0.16) and `fonts`, and writes it to `<theme dir>/<name>/theme.css`. It returns
+`{ name, path, css, issues }`. An existing name rejects with a 409 unless
+`overwrite` is set; built-in ids, unreadable colors and font stacks containing
+`;`, `{` or `}` reject with a 400. Findings never block the write.
+`experimental_check(css)` runs the same checks locally and returns
+`ThemeIssue[]` (`severity`, `mode`, `token`, `message`): text contrast
+below 4.5:1, missing required tokens, saturated status colors, a near-black dark
+or near-white light canvas, and oklch mixing of a colored value into grey.
+Core callers: `sandy theme new` and `sandy theme check` call the same SDK
+methods, and the server route `POST /settings/themes` is the only writer.
+Stabilize once the token derivations have survived a few third-party themes,
+decide whether `create` should also accept per-token overrides, and whether
+`check` belongs on the server for plugin and built-in themes.

@@ -739,6 +739,7 @@ const EMPTY_CONSUMER_MESSAGE_ACTIONS: readonly ThreadTimelineConsumerMessageActi
   [];
 
 function buildRowPluginMessageActions(args: {
+  surface: "actionBar" | "selection";
   slots: readonly PluginMessageActionSlot[];
   timelineThreadId: string | undefined;
   message: ThreadChatMessageReference;
@@ -747,13 +748,16 @@ function buildRowPluginMessageActions(args: {
   composerHost: PluginComposerHost | null;
 }): readonly ThreadTimelinePluginMessageAction[] | undefined {
   const {
-    slots,
+    surface,
     timelineThreadId,
     message,
     selectedText,
     panel,
     composerHost,
   } = args;
+  const slots = args.slots.filter(
+    (slot) => slot.surfaces === undefined || slot.surfaces.includes(surface),
+  );
   if (timelineThreadId === undefined || slots.length === 0) {
     return undefined;
   }
@@ -900,6 +904,7 @@ const ConversationRowContent = memo(function ConversationRowContent({
     experimental_messageSeq: row.messageSeq,
   };
   const rowSlotActions = buildRowPluginMessageActions({
+    surface: "actionBar",
     slots: pluginMessageActions,
     timelineThreadId: threadId,
     message: messageReference,
@@ -1029,6 +1034,7 @@ const ConversationRowContent = memo(function ConversationRowContent({
           turnRequest={row.turnRequest}
           workspaceRootPath={workspaceRootPath}
         />
+        <MessageMetadata placement="below" {...metadata} />
       </>
     );
   }
@@ -1074,6 +1080,7 @@ const ConversationRowContent = memo(function ConversationRowContent({
         turnId={row.turnId}
         workspaceRootPath={workspaceRootPath}
       />
+      <MessageMetadata placement="below" {...metadata} />
     </>
   );
 });
@@ -2461,6 +2468,7 @@ function ThreadTimelineRowsForTimelineView(props: ThreadTimelineRowsProps) {
     }
     return (
       buildRowPluginMessageActions({
+        surface: "selection",
         slots:
           props.includePluginMessageActions === false
             ? EMPTY_PLUGIN_SLOT_SNAPSHOT.messageActions

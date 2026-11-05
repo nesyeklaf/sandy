@@ -1,0 +1,193 @@
+import { randomUUID } from "node:crypto";
+import type { ServerContext, ServerHandlers } from "./server-context";
+import type { createServerLifecycle, StoredLifecycleRow } from "./server-lifecycle";
+import type { createServerSettleCleanup } from "./server-settle-cleanup";
+import { pinnedNeighbors, rebaseMovedId, sortPinnedThreads } from "./pinned-order";
+
+const UNDO_TTL_MS = 5 * 60_000;
+const MAX_UNDOS = 50;
+
+interface ThreadState {
+  pinned: boolean;
+  row: StoredLifecycleRow | null;
+}
+
+interface BulkUndo {
+  expiresAt: number;
+  pinOrder: string[];
+  threads: Array<{ threadId: string; before: ThreadState; after: ThreadState }>;
+}
+
+export function createServerBulkActions(
+  ctx: ServerContext,
+  lifecycle: ReturnType<typeof createServerLifecycle>,
+  cleanup: ReturnType<typeof createServerSettleCleanup>,
+) {
+  const {
+    readOne,
+    write,
+    serializeThreads,
+    withPinParentChange,
+    loadPolicyThreads,
+    settleTree,
+    sameLifecycle,
+    publishLifecycleChanges,
+  } = lifecycle;
+  const { reclaimThreadResources } = cleanup;
+  const undos = new Map<string, BulkUndo>();
+  ctx.sandy.onDispose(() => undos.clear());
+
+  const pinThread = (threadId: string) =>
+    withPinParentChange(threadId, async () => {
+      const thread = await ctx.sandy.sdk.threads.get({ threadId });
+      if (thread.parentThreadId != null) throw new Error("Child threads cannot be pinned");
+      await ctx.sandy.sdk.threads.pin({ threadId });
+      write({
+        threadId,
+        parkedAt: null,
+        settledAt: null,
+        settledOverride: "active",
+        snoozedUntil: null,
+        snoozedAt: null,
+      });
+    });
+
+  const hasOtherPendingQuestion = async (threadId: string, deferredInteractionId: string) => {
+    for (const thread of settleTree(await loadPolicyThreads(true), threadId)) {
+      if (!thread.hasPendingInteraction) continue;
+      const pending = await ctx.sandy.sdk.threads.interactions.list({ threadId: thread.id });
+      if (pending.some((interaction) => interaction.id !== deferredInteractionId)) return true;
+    }
+    return false;
+  };
+
+  const commitSnooze = (threadId: string, snoozedUntil: number, deferredInteractionId: string | null) =>
+    serializeThreads([threadId], async () => {
+      if (deferredInteractionId !== null && (await hasOtherPendingQuestion(threadId, deferredInteractionId))) {
+        throw new Error("Another question arrived. Answer it or choose Later again.");
+      }
+      await ctx.sandy.sdk.threads.unpin({ threadId });
+      write({
+        threadId,
+        settledAt: null,
+        settledOverride: null,
+        snoozedUntil,
+        snoozedAt: Date.now(),
+        deferredInteractionId,
+      });
+    });
+
+  const snoozeThread = async (threadId: string, snoozedUntil: number, deferredInteractionId: string | null = null) => {
+    await commitSnooze(threadId, snoozedUntil, deferredInteractionId);
+    return reclaimThreadResources(threadId);
+  };
+
+  const pinnedRoots = async () => {
+    const threads = await loadPolicyThreads();
+    const roots = sortPinnedThreads(
+      threads.filter((thread) => thread.pinnedAt !== null && thread.parentThreadId === null),
+    );
+    return roots.map((thread) => thread.id);
+  };
+
+  const remember = (pinOrder: string[], threads: BulkUndo["threads"]) => {
+    const now = Date.now();
+    for (const [token, undo] of undos) if (undo.expiresAt <= now) undos.delete(token);
+    while (undos.size >= MAX_UNDOS) undos.delete(undos.keys().next().value!);
+    const undoToken = randomUUID();
+    undos.set(undoToken, { expiresAt: now + UNDO_TTL_MS, pinOrder, threads });
+    return undoToken;
+  };
+
+  const runEach = async (
+    threadIds: readonly string[],
+    change: (threadId: string, before: ThreadState) => Promise<{ pinned: boolean } | null>,
+  ) => {
+    const pinOrder = await pinnedRoots();
+    const pinned = new Set(pinOrder);
+    const changed: BulkUndo["threads"] = [];
+    const failed: string[] = [];
+    for (const threadId of new Set(threadIds)) {
+      const before = { pinned: pinned.has(threadId), row: readOne(threadId) };
+      try {
+        const committed = await change(threadId, before);
+        if (committed === null) continue;
+        changed.push({ threadId, before, after: { pinned: committed.pinned, row: readOne(threadId) } });
+      } catch {
+        failed.push(threadId);
+      }
+    }
+    return { changed: changed.map((entry) => entry.threadId), failed, undoToken: remember(pinOrder, changed) };
+  };
+
+  const restorePinOrder = async (undo: BulkUndo, restoredIds: ReadonlySet<string>) => {
+    let current = await pinnedRoots();
+    for (const threadId of undo.pinOrder) {
+      if (!restoredIds.has(threadId) || !current.includes(threadId)) continue;
+      const target = pinnedNeighbors(rebaseMovedId(current, undo.pinOrder, threadId), threadId);
+      const present = pinnedNeighbors(current, threadId);
+      if (target.previousThreadId === present.previousThreadId && target.nextThreadId === present.nextThreadId)
+        continue;
+      const reordered = await ctx.sandy.sdk.threads.reorderPinned({ threadId, ...target });
+      current = reordered.filter((thread) => thread.pinnedAt !== null).map((thread) => thread.id);
+    }
+  };
+
+  const handlers = {
+    async pinThreads({ threadIds, pinned }) {
+      return runEach(threadIds, async (threadId, before) => {
+        if (before.pinned === pinned) return null;
+        if (pinned) await pinThread(threadId);
+        else await serializeThreads([threadId], () => ctx.sandy.sdk.threads.unpin({ threadId }));
+        return { pinned };
+      });
+    },
+    async snoozeThreads({ threadIds, snoozedUntil }) {
+      const result = await runEach(threadIds, async (threadId) => {
+        await commitSnooze(threadId, snoozedUntil, null);
+        return { pinned: false };
+      });
+      for (const threadId of result.changed) {
+        await reclaimThreadResources(threadId).catch((error: unknown) => {
+          ctx.sandy.log.warn(
+            `Could not reclaim resources for ${threadId}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        });
+      }
+      return result;
+    },
+    async undoBulkAction({ undoToken }) {
+      const undo = undos.get(undoToken);
+      if (!undo || undo.expiresAt <= Date.now()) throw new Error("This change can no longer be undone");
+      undos.delete(undoToken);
+      const restored: string[] = [];
+      const failed: string[] = [];
+      for (const { threadId, before, after } of undo.threads) {
+        try {
+          const reverted = await serializeThreads([threadId], async () => {
+            const pinnedNow = (await ctx.sandy.sdk.threads.get({ threadId })).pinnedAt !== null;
+            if (pinnedNow !== after.pinned || !sameLifecycle(readOne(threadId), after.row)) return false;
+            if (before.pinned && !pinnedNow) await ctx.sandy.sdk.threads.pin({ threadId });
+            if (!before.pinned && pinnedNow) await ctx.sandy.sdk.threads.unpin({ threadId });
+            if (!sameLifecycle(readOne(threadId), after.row)) throw new Error("Thread changed during Undo");
+            if (before.row) write(before.row, false);
+            else ctx.db.prepare("DELETE FROM thread_lifecycle WHERE thread_id = ?").run(threadId);
+            return true;
+          });
+          if (reverted) restored.push(threadId);
+        } catch {
+          failed.push(threadId);
+        }
+      }
+      publishLifecycleChanges(restored);
+      try {
+        await restorePinOrder(undo, new Set(restored));
+      } catch (error) {
+        ctx.sandy.log.warn(`Could not restore pin order: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      return { restored, failed };
+    },
+  } satisfies Pick<ServerHandlers, "pinThreads" | "snoozeThreads" | "undoBulkAction">;
+
+  return { handlers, pinThread, snoozeThread };
+}

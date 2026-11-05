@@ -25,8 +25,11 @@ export type PullRequestAttention =
   | "closed"
   | "none";
 
+export type PullRequestChecksState = "passing" | "failing" | "pending" | "no_checks" | "unknown";
+
 export interface EnvironmentPullRequest {
   number: number;
+  checks?: { state: PullRequestChecksState };
   title: string;
   url: string;
   state: PullRequestState;

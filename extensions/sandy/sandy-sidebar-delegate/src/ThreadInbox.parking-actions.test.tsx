@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   SETTLED_NOTHING,
@@ -15,6 +16,7 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("parking threads", () => {
   it("snoozes to a picked date and time from the snooze menu", async () => {
@@ -280,7 +282,7 @@ describe("parking threads", () => {
     expect(within(row).queryByText(/^Working/)).toBeNull();
     expect(within(row).getByLabelText("Needs you")).toBeDefined();
     expect(within(row).queryByLabelText("Agent is working")).toBeNull();
-    expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
   });
 
   // Parked rows share the status vocabulary: a settled thread that failed
@@ -317,7 +319,7 @@ describe("parking threads", () => {
       },
     });
 
-    const shelf = await screen.findByRole("region", { name: "Settled" });
+    const shelf = await screen.findByRole("region", { name: "Archived" });
     fireEvent.click(within(shelf).getByRole("button", { expanded: false }));
     const row = within(shelf).getByText("Settled failure").closest("li")!;
     expect(within(row).getByText("Failed").className).toContain("text-[color:var(--sandy-sidebar-tone-error)]");

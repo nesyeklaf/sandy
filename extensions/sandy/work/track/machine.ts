@@ -70,7 +70,14 @@ export const ruleSchema = z.discriminatedUnion("type", [
 export type Rule = z.infer<typeof ruleSchema>;
 
 const fieldSchema = z
-  .object({ name: fieldName, description: z.string().optional(), optional: z.boolean().optional(), type: valueType.optional() })
+  .object({
+    name: fieldName,
+    description: z.string().optional(),
+    optional: z.boolean().optional(),
+    type: valueType.optional(),
+    /** The owner picks this choice in the gate form; the driver does not submit it. */
+    by: z.literal("owner").optional(),
+  })
   .strict();
 
 export const stageSchema = z
@@ -98,7 +105,8 @@ export const stageSchema = z
             gate: z.array(ruleSchema).optional(),
             cond: condSchema.optional(),
             max: z.number().int().min(1).optional(),
-            exceeded: z.literal("owner").optional(),
+            /** When max is used up: "owner" refuses the step (the agent asks the owner); a stage id (or done) routes there instead. */
+            exceeded: z.union([z.literal("owner"), id]).optional(),
           })
           .strict(),
       )
@@ -143,7 +151,11 @@ export const machineSchema = z
         if (edge.to !== DONE_STAGE && !ids.has(edge.to)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" is not a stage` });
         if (edge.exceeded !== undefined && edge.max === undefined)
           ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" sets exceeded without max` });
+        if (edge.exceeded !== undefined && edge.exceeded !== "owner" && edge.exceeded !== DONE_STAGE && !ids.has(edge.exceeded))
+          ctx.addIssue({ code: "custom", message: `stage "${stage.id}": next "${edge.to}" exceeded "${edge.exceeded}" is not a stage` });
       }
+      if (stage.outputs.some((o) => o.by === "owner") && !stage.gate.some((r) => r.type === "user"))
+        ctx.addIssue({ code: "custom", message: `stage "${stage.id}": an owner-picked output needs a user gate` });
       for (const input of stage.inputs) {
         if (input.split(".")[1] === undefined) continue;
         if (!produces(input)) ctx.addIssue({ code: "custom", message: `stage "${stage.id}": input "${input}" names no output` });

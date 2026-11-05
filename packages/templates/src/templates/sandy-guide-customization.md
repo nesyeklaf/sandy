@@ -24,16 +24,33 @@ sandy theme list Built-in and custom themes; shows the active one
 sandy theme dir Print the custom-theme directory (where to author)
 sandy theme set <id> [--favicon-color <color>]
 Activate a theme (built-ins: default, nord,
-dracula, solarized, gruvbox, catppuccin),
+dracula, solarized, gruvbox, catppuccin, sandy, sand),
 preserving the favicon color unless the flag
 supplies the complete selection
+sandy theme new <name> --light-canvas <c> --light-ink <c> --light-accent <c>
+--dark-canvas <c> --dark-ink <c> --dark-accent <c>
+[--status-chroma <n>] [--font-sans|--font-mono|--font-terminal <stack>]
+[--overwrite] [--set]
+Generate a complete custom theme from three anchor
+colors per mode (oklch(L C H) or #rrggbb), check it
+and write <theme-dir>/<name>/theme.css; --set activates it
+sandy theme check <name|file> Check a custom theme or theme.css for text contrast
+(4.5:1), missing tokens, saturated status colors and
+eye comfort; exits 1 on errors
 sandy theme show [id] [--css] Print the active palette, or resolve <id> without
 activating it; --css dumps the CSS
 sandy theme reset Back to the default theme; preserve favicon color
 sandy theme favicon set <color> Set favicon color; preserve the active theme
 sandy theme favicon reset Reset favicon color; preserve the active theme
 
-To author a custom theme, run `sandy theme dir`, write <that-dir>/<name>/theme.css,
+The quickest way to author a theme is `sandy theme new`: pick a canvas, an ink
+and an accent for light and for dark, and it derives the neutral ramp, text tiers,
+status colors, diff colors and the ANSI palette with oklab mixing. It refuses an
+existing name without --overwrite and a built-in id. Findings are printed but
+never block the write. Plugins use the same generator through
+`sandy.sdk.theme.experimental_create` and `experimental_check`.
+
+To hand-write a custom theme, run `sandy theme dir`, write <that-dir>/<name>/theme.css,
 then `sandy theme set <name>`. A name has at most 64 characters, starts with a
 letter or digit, then uses letters, digits, `.`, `_`, or `-`; avoid built-in
 ids. Optional `pierre-dark.json` / `pierre-light.json`

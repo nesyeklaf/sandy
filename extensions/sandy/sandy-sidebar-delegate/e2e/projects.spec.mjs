@@ -33,14 +33,14 @@ test("project filter remembers multiple projects per window and All repos restor
   });
   const unfilteredLayout = await scopeLayout();
   await page.getByRole("row", { name: secondProject.name, exact: true }).click();
-  await expect(page.getByRole("button", { name: "Repo scope: 1 project", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Repo scope: 1 repo", exact: true })).toBeVisible();
   expect(await scopeLayout()).toEqual(unfilteredLayout);
   await expect(page.getByRole("button", { name: "Reset repo filter", exact: true })).toBeVisible();
   await expect
     .poll(() => page.getByRole("dialog").evaluate((element) => element.getBoundingClientRect().width))
     .toBe(pickerWidth);
   await page.getByRole("dialog").screenshot({ path: test.info().outputPath("project-picker-selected.png") });
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(1);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(1);
   await expect(link(page, secondProject.thread.title)).toBeVisible();
   for (const { title } of fixture.threads) await expect(link(page, title)).toHaveCount(0);
 
@@ -52,15 +52,15 @@ test("project filter remembers multiple projects per window and All repos restor
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.reload();
   await expect(page.getByRole("button", { name: selectedLabel, exact: true })).toBeVisible();
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(fixture.threads.length + 1);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(fixture.threads.length + 1);
   const shortcut = page.getByRole("button", { name: `Filter by ${secondProject.name}`, exact: true });
   await expect(shortcut).toBeVisible();
   await expect(shortcut).toHaveAttribute("aria-pressed", "true");
   await shortcut.click();
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(fixture.threads.length);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(fixture.threads.length);
   await expect(shortcut).toHaveAttribute("aria-pressed", "false");
   await shortcut.click();
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(fixture.threads.length + 1);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(fixture.threads.length + 1);
   await expect(shortcut).toHaveAttribute("aria-pressed", "true");
   await page.locator("[data-sandy-sidebar-root]").screenshot({ path: test.info().outputPath("pinned-projects.png") });
   await page.getByRole("button", { name: "Reset repo filter", exact: true }).click();
@@ -74,12 +74,12 @@ test("project filter remembers multiple projects per window and All repos restor
   await shortcut.click();
   expect(await scopeLayout()).toEqual(unfilteredLayout);
   await page.getByRole("button", { name: "Filter by Sidebar smoke", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Repo scope: 2 projects", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Repo scope: 2 repos", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Filter by Sidebar smoke", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await page.getByRole("button", { name: "Repo scope: 2 projects", exact: true }).click();
+  await page.getByRole("button", { name: "Repo scope: 2 repos", exact: true }).click();
   await expect(page.getByRole("row", { name: secondProject.name, exact: true })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -103,7 +103,7 @@ test("project filter remembers multiple projects per window and All repos restor
 
   await page.getByRole("button", { name: selectedLabel, exact: true }).click();
   await page.getByRole("row", { name: "Sidebar smoke", exact: true }).click();
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(1);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(1);
   await page.getByRole("row", { name: "All repos", exact: true }).click();
   await expect
     .poll(() => page.getByRole("dialog").evaluate((element) => element.getBoundingClientRect().width))
@@ -111,7 +111,7 @@ test("project filter remembers multiple projects per window and All repos restor
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await page.reload();
   await expect(page.getByRole("button", { name: "Repo scope: All repos", exact: true })).toBeVisible();
-  await expect(shelf(page, "Active").getByRole("link")).toHaveCount(fixture.threads.length + 1);
+  await expect(shelf(page, "Waiting").getByRole("link")).toHaveCount(fixture.threads.length + 1);
   for (const { title } of [...fixture.threads, secondProject.thread]) await expect(link(page, title)).toBeVisible();
   await page.getByRole("button", { name: "Repo scope: All repos", exact: true }).click();
   await page.getByRole("button", { name: `Unpin ${secondProject.name}`, exact: true }).click();
@@ -126,7 +126,7 @@ test("custom project color styles persist after reload", async ({ page, request 
   await open(page);
   try {
     await page.getByRole("button", { name: /^Settings \(/ }).click();
-    await page.getByRole("link", { name: "SANDY Sidebar", exact: true }).click();
+    await page.getByRole("link", { name: "SANDY Sidebar (Delegate)", exact: true }).click();
     await page.getByRole("switch", { name: "Repo colors", exact: true }).check();
     await page.getByRole("combobox", { name: "Show repo stripes in", exact: true }).selectOption("full");
     await expect.poll(async () => (await rpc(request, "getSidebarSettings")).projectColorsEnabled).toBe(true);
@@ -135,7 +135,7 @@ test("custom project color styles persist after reload", async ({ page, request 
     await page.getByRole("button", { name: "Save color", exact: true }).click();
     await expect.poll(async () => (await rpc(request, "getProjectColors")).colors[fixture.projectId]).toBe("#1f4e79");
     await page.getByRole("button", { name: "Home", exact: true }).click();
-    const row = shelf(page, "Active")
+    const row = shelf(page, "Waiting")
       .getByRole("listitem")
       .filter({ has: page.getByRole("link", { name: fixture.threads[0].title, exact: true }) });
     for (let pass = 0; pass < 2; pass++) {

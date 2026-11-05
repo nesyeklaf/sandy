@@ -336,7 +336,9 @@ never stop recording or switch microphones automatically.
 `sandy theme` controls CSS-variable overrides for the app palette and typography
 (see `sandy guide customization`). Custom themes live at
 `<sandy-data-dir>/theme/<name>/theme.css`, with optional `pierre-dark.json` and
-`pierre-light.json` code themes.
+`pierre-light.json` code themes. `sandy theme new <name>` generates a complete
+theme from canvas, ink and accent colors per mode; `sandy theme check` lints
+any theme for contrast, missing tokens and eye comfort.
 
 The typography tokens are mode-independent and belong in the `:root, .light`
 block:

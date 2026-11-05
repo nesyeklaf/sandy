@@ -11,6 +11,7 @@ import {
   appKeybindingOverridesSchema,
   appKeybindingsSchema,
   appThemeSchema,
+  customThemeNameSchema,
   availableModelSchema,
   experimentsSchema,
   featureFlagsSchema,
@@ -18,6 +19,7 @@ import {
   permissionModeSchema,
   pluginThemeMetaSchema,
   providerInfoSchema,
+  themeKitInputSchema,
 } from "@sandy/domain";
 import { providerHealthSchema as providerHealthSchema } from "@sandy/provider-bridge-protocol/provider-maintenance";
 import { hostPlatformSchema } from "@sandy/host-daemon-contract/local";
@@ -296,6 +298,28 @@ export const themeCatalogResponseSchema = z.object({
   active: appThemeSchema,
 });
 export type ThemeCatalogResponse = z.infer<typeof themeCatalogResponseSchema>;
+
+export const createThemeRequestSchema = z.object({
+  name: customThemeNameSchema,
+  kit: themeKitInputSchema,
+  overwrite: z.boolean().default(false),
+});
+export type CreateThemeRequest = z.input<typeof createThemeRequestSchema>;
+
+export const createThemeResponseSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  css: z.string(),
+  issues: z.array(
+    z.object({
+      severity: z.enum(["error", "warning"]),
+      mode: z.enum(["light", "dark", "both"]),
+      token: z.string(),
+      message: z.string(),
+    }),
+  ),
+});
+export type CreateThemeResponse = z.infer<typeof createThemeResponseSchema>;
 
 export const systemCliCommandShadowSchema = z.object({
   path: z.string().min(1),

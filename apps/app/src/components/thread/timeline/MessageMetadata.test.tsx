@@ -83,6 +83,28 @@ describe("MessageMetadata", () => {
     );
   });
 
+  it("renders only the below contributions in the below placement, tagged with the message id", () => {
+    const card = vi.fn(() => <span>Note card</span>);
+    const above = vi.fn(() => <span>Above chip</span>);
+    const { container } = render(
+      <MemoryRouter>
+        <MessageMetadata
+          placement="below"
+          slots={[
+            { ...slot("card", card), placement: "below" },
+            slot("chip", above),
+          ]}
+          {...message}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("Note card")).toBeTruthy();
+    expect(screen.queryByText("Above chip")).toBeNull();
+    expect(
+      container.querySelector("[data-message-metadata-below=\"msg_1\"]"),
+    ).not.toBeNull();
+  });
+
   it("contains a crashing contribution without hiding sibling metadata", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});

@@ -189,6 +189,8 @@ export const BUILTIN_THEMES: ReadonlyArray<{ id: string; name: string }> = [
   { id: "solarized", name: "Solarized" },
   { id: "gruvbox", name: "Gruvbox" },
   { id: "catppuccin", name: "Catppuccin" },
+  { id: "sandy", name: "Sandy" },
+  { id: "sand", name: "Sand" },
 ];
 
 export const BUILTIN_SWATCHES: Record<
@@ -334,6 +336,54 @@ export const BUILTIN_SWATCHES: Record<
       primary: "#cba6f7",
       accent: "#89b4fa",
       foreground: "#cdd6f4",
+      fontSans: '"Inter Variable", Inter, sans-serif',
+      fontMono:
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    },
+  },
+  sandy: {
+    light: {
+      canvas: "oklch(0.972 0.014 85)",
+      sidebar: "color-mix(in oklch, oklch(0.27 0.02 60) 2.2%, oklch(0.972 0.014 85))",
+      card: "oklch(0.972 0.014 85)",
+      primary: "oklch(0.56 0.135 52)",
+      accent: "oklch(0.56 0.135 52)",
+      foreground: "oklch(0.27 0.02 60)",
+      fontSans: '"Inter Variable", Inter, sans-serif',
+      fontMono:
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    },
+    dark: {
+      canvas: "oklch(0.18 0.008 60)",
+      sidebar: "color-mix(in oklch, oklch(0.9 0.03 85) 4.3%, oklch(0.18 0.008 60))",
+      card: "oklch(0.18 0.008 60)",
+      primary: "oklch(0.77 0.135 70)",
+      accent: "oklch(0.77 0.135 70)",
+      foreground: "oklch(0.9 0.03 85)",
+      fontSans: '"Inter Variable", Inter, sans-serif',
+      fontMono:
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    },
+  },
+  sand: {
+    light: {
+      canvas: "oklch(0.972 0.014 85)",
+      sidebar: "color-mix(in oklch, oklch(0.27 0.02 60) 2.2%, oklch(0.972 0.014 85))",
+      card: "oklch(0.972 0.014 85)",
+      primary: "oklch(0.27 0.02 60)",
+      accent: "oklch(0.52 0.1 70)",
+      foreground: "oklch(0.27 0.02 60)",
+      fontSans: '"Inter Variable", Inter, sans-serif',
+      fontMono:
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    },
+    dark: {
+      canvas: "oklch(0.18 0.008 60)",
+      sidebar: "color-mix(in oklch, oklch(0.9 0.03 85) 4.3%, oklch(0.18 0.008 60))",
+      card: "oklch(0.18 0.008 60)",
+      primary: "oklch(0.9 0.03 85)",
+      accent: "oklch(0.78 0.11 85)",
+      foreground: "oklch(0.9 0.03 85)",
       fontSans: '"Inter Variable", Inter, sans-serif',
       fontMono:
         'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',

@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import { inbox, thread, listProps, render, toastMocks, loadInboxApp } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("ThreadInbox", () => {
   it.each(["hover", "menu"])("leaves failed %s unpin feedback to the host action", async (source) => {
@@ -48,7 +50,7 @@ describe("ThreadInbox", () => {
     );
   });
 
-  it.each(["Needs you", "Settled", "Snoozed", "Parked"])(
+  it.each(["Waiting", "Settled", "Snoozed", "Parked"])(
     "pins a thread from %s through the lifecycle RPC",
     async (shelf) => {
       const now = Date.now();
@@ -61,7 +63,7 @@ describe("ThreadInbox", () => {
         rpc: {
           listLifecycle: () => ({
             rows:
-              shelf === "Needs you"
+              shelf === "Waiting"
                 ? []
                 : [
                     {
@@ -77,8 +79,10 @@ describe("ThreadInbox", () => {
           pin: () => ({ ok: true }),
         },
       });
-      const section = await screen.findByRole("region", { name: shelf });
-      if (shelf !== "Needs you") {
+      const section = await screen.findByRole("region", {
+        name: shelf === "Parked" ? "Snoozed" : shelf === "Settled" ? "Archived" : shelf,
+      });
+      if (shelf !== "Waiting") {
         fireEvent.click(within(section).getByRole("button", { expanded: false }));
       }
       fireEvent.contextMenu(within(section).getByText("Pin this thread"));
@@ -122,7 +126,7 @@ describe("ThreadInbox", () => {
         },
       },
     });
-    const section = await screen.findByRole("region", { name: "Settled" });
+    const section = await screen.findByRole("region", { name: "Archived" });
     fireEvent.click(within(section).getByRole("button", { expanded: false }));
     fireEvent.contextMenu(within(section).getByText("Still settled"));
     fireEvent.click(
@@ -185,7 +189,7 @@ describe("ThreadInbox", () => {
     expect(within(pinned).getByText("Pinned auto")).toBeDefined();
     expect(within(pinned).queryByText("Pinned manual")).toBeNull();
     expect(within(pinned).queryByText("Pinned snooze")).toBeNull();
-    expect(await screen.findByRole("region", { name: "Settled" })).toBeDefined();
+    expect(await screen.findByRole("region", { name: "Archived" })).toBeDefined();
     expect(await screen.findByRole("region", { name: "Snoozed" })).toBeDefined();
   });
 });

@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRealtime, useRpc } from "@sandy-sdk/plugin-sdk/app";
 import type { sandySidebarRpcContract } from "./contract";
 import { TOPICS_CHANNEL } from "./realtime-channels";
-import { filterByTags, isFiltering, type TagIndex } from "./tag-filter";
+import { filterThreads, isSelecting, type TagIndex } from "./tag-filter";
+import { useSessionSearch } from "./useSessionSearch";
 import { useTagFilter } from "./useTagFilter";
 
-const EMPTY: TagIndex = { threadTags: {}, segments: [] };
+const EMPTY: TagIndex = { threadTags: {}, threadTopics: {}, segments: [] };
 
 /** Every tag and topic the server knows, refreshed when they change. */
 export function useTagIndex(enabled = true): TagIndex {
@@ -29,9 +30,10 @@ export function useTagIndex(enabled = true): TagIndex {
   return index;
 }
 
-/** The sidebar's threads, narrowed to the tag and text the filter bar holds. */
+/** The sidebar's threads, narrowed to the tags, topics and search text the filter bar holds. */
 export function useTagFilteredThreads<T extends { id: string }>(threads: readonly T[]): readonly T[] {
   const filter = useTagFilter();
-  const index = useTagIndex(isFiltering(filter));
-  return useMemo(() => filterByTags(threads, index, filter), [threads, index, filter]);
+  const index = useTagIndex(isSelecting(filter.tags) || isSelecting(filter.topics));
+  const found = useSessionSearch(filter.query, filter.scope);
+  return useMemo(() => filterThreads(threads, index, filter, found), [threads, index, filter, found]);
 }

@@ -74,7 +74,8 @@ test("the plugin's watchdog service delivers a queued input once a slot is free:
     background: { service: (name: string, service: { start(signal: AbortSignal): Promise<void> }) => { services.set(name, service); } },
     agents: { registerTool: () => {}, configure: () => {} },
     cli: { register: () => {} },
-    rpc: { register: () => {} },
+    rpc: { register: () => {}, experimental_invalidate: () => {} },
+    events: { on: () => {} },
     ui: { requestInput: async () => ({ outcome: "cancelled", reason: "plugin-disposed" }) },
     log: { info: log("info"), warn: log("warn"), error: log("error") },
   } as unknown as SandyPluginApi;

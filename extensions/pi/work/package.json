@@ -12,7 +12,7 @@
   "scripts": {
     "test": "npm run test:goal && npm run test:parts",
     "test:goal": "cd goal && npm test",
-    "test:parts": "node --test --experimental-strip-types index.test.mjs gate.test.ts link.test.ts tasks/*.test.ts track/tests/*.test.ts autopilot/*.test.ts autopilot/autopilots/*.test.ts delegate/*.test.ts delegate/*.test.mjs",
+    "test:parts": "node --test --experimental-strip-types index.test.mjs gate.test.ts link.test.ts sandy-cli.test.ts tasks/*.test.ts track/tests/*.test.ts autopilot/*.test.ts autopilot/autopilots/*.test.ts delegate/*.test.ts delegate/*.test.mjs",
     "check": "cd goal && npx tsc --noEmit"
   }
 }

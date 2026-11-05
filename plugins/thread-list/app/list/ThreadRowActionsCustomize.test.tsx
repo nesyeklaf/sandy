@@ -212,6 +212,11 @@ it("keeps customizing through picker choices and dismissals, then finishes on a 
     ]),
   );
   expect(finish).not.toHaveBeenCalled();
+  await waitFor(() =>
+    expect(
+      document.activeElement?.hasAttribute("data-sidebar-customize-launch"),
+    ).toBe(true),
+  );
 
   fireEvent.click(screen.getByRole("button", { name: "Row action 1: Empty" }));
   await screen.findByRole("menu");

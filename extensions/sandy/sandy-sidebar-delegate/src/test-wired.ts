@@ -2,11 +2,14 @@ import { copyFileSync } from "node:fs";
 import { act } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { makeThreadResponse } from "@sandy-sdk/plugin-sdk/testing";
-import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk";
+import type { PluginSidebarThread, PluginThreadEventPayloads } from "@sandy-sdk/plugin-sdk";
+
+type PendingInteraction = PluginThreadEventPayloads["interaction.pending"]["interaction"];
 import { afterEach, vi } from "vitest";
 import { toast } from "sonner";
 import plugin from "./server";
 import { sandySidebarRpcContract } from "./contract";
+import { sortPinnedThreads } from "./pinned-order";
 import { createFakePluginHost, projectThread, projectsWith, standardProject } from "./test-server";
 import { inbox, sidebarSettings, listProps, defaultProviders } from "./test-inbox";
 import { deferred } from "./test-fixtures";
@@ -17,12 +20,17 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-/** Keep the SDK's validation and JSON wire drivers across the explicit host/app bridge. */
 export async function createWired(
   initial: PluginSidebarThread[],
-  options: { fixture?: string; rpcGate?: Promise<void>; terminals?: boolean } = {},
+  options: {
+    fixture?: string;
+    rpcGate?: (method: string) => Promise<void> | undefined;
+    terminals?: boolean;
+    interactions?: Record<string, PendingInteraction[]>;
+  } = {},
 ) {
   let threads = [...initial];
+  const interactions = new Map(Object.entries(options.interactions ?? {}));
   let terminalOpen = options.terminals ?? false;
   const treeIds = (threadId: string) => {
     const ids = new Set([threadId]);
@@ -60,17 +68,37 @@ export async function createWired(
                 pinnedAt: item.pinnedAt,
                 pinSortKey: item.pinSortKey,
                 updatedAt: item.updatedAt,
+                hasPendingInteraction: (interactions.get(item.id) ?? []).length > 0,
               }),
             ),
           ),
       },
       threads: {
         get: async ({ threadId }) => response(threadId),
+        interactions: { list: async ({ threadId }) => interactions.get(threadId) ?? [] },
         pin: async ({ threadId }) => {
           threads = threads.map((item) =>
-            item.id === threadId ? { ...item, isPinned: true, pinnedAt: Date.now(), pinSortKey: "UU" } : item,
+            item.id === threadId && item.pinnedAt === null
+              ? { ...item, isPinned: true, pinnedAt: Date.now(), pinSortKey: "UU" }
+              : item,
           );
           return response(threadId);
+        },
+        reorderPinned: async ({ threadId, previousThreadId, nextThreadId }) => {
+          const order = sortPinnedThreads(threads.filter((item) => item.pinnedAt !== null)).map((item) => item.id);
+          const without = order.filter((id) => id !== threadId);
+          const at =
+            previousThreadId !== null
+              ? without.indexOf(previousThreadId) + 1
+              : nextThreadId !== null
+                ? without.indexOf(nextThreadId)
+                : without.length;
+          const next = [...without.slice(0, at), threadId, ...without.slice(at)];
+          threads = threads.map((item) => {
+            const index = next.indexOf(item.id);
+            return index < 0 ? item : { ...item, pinSortKey: `k${String(index).padStart(4, "0")}` };
+          });
+          return next.map(response);
         },
         unpin: async ({ threadId }) => {
           threads = threads.map((item) =>
@@ -104,12 +132,19 @@ export async function createWired(
         },
         archive: async ({ threadId }) => {
           const ids = treeIds(threadId);
+          const archivedThreadIds = threads
+            .filter((item) => ids.has(item.id) && item.archivedAt === null)
+            .map((item) => item.id);
           threads = threads.map((item) =>
-            ids.has(item.id) ? { ...item, isArchived: true, archivedAt: Date.now() } : item,
+            archivedThreadIds.includes(item.id) ? { ...item, isArchived: true, archivedAt: Date.now() } : item,
           );
-          return { ok: true, archivedThreadIds: [...ids] };
+          return { ok: true, archivedThreadIds };
         },
         unarchive: async ({ threadId }) => {
+          const parentId = threads.find((item) => item.id === threadId)?.parentThreadId ?? null;
+          if (threads.some((item) => item.id === parentId && item.archivedAt !== null)) {
+            throw new Error("Lifecycle owner must be unarchived first");
+          }
           threads = threads.map((item) =>
             item.id === threadId ? { ...item, isArchived: false, archivedAt: null } : item,
           );
@@ -161,8 +196,6 @@ export async function createWired(
   const slots = new Set<ReturnType<typeof renderSlot>>();
   const archiveRequests: Array<{ threadId: string; confirm: () => Promise<void>; cancel: () => void }> = [];
   let delivered = 0;
-  // Publications stay in the fake host's normalized ledger. Explicit flush is
-  // the transport pump, so events can also be driven without an app RPC call.
   async function flush() {
     while (delivered < harness.inspection.realtimeSignals.length) {
       const signal = harness.inspection.realtimeSignals[delivered++]!;
@@ -174,7 +207,7 @@ export async function createWired(
       Object.keys(sandySidebarRpcContract).map((method) => [
         method,
         async (input: unknown) => {
-          await options.rpcGate;
+          await options.rpcGate?.(method);
           const result = await harness.behavior.callRpc(method, input);
           replies.push({ method, result });
           return result;
@@ -213,10 +246,21 @@ export async function createWired(
                 markUnread: (args) => sandy.sdk.threads.markUnread(args),
                 archive: (args) => sandy.sdk.threads.archive(args),
                 unarchive: (args) => sandy.sdk.threads.unarchive(args),
+                interactions: {
+                  list: async ({ threadId }) => interactions.get(threadId) ?? [],
+                  resolve: async ({ threadId, interactionId }) => {
+                    const pending = interactions.get(threadId) ?? [];
+                    const resolved = pending.find((interaction) => interaction.id === interactionId);
+                    if (!resolved) throw new Error(`No pending interaction ${interactionId}`);
+                    interactions.set(
+                      threadId,
+                      pending.filter((interaction) => interaction !== resolved),
+                    );
+                    return resolved;
+                  },
+                },
               },
             },
-            // Confirmation and the Undo toast below are harness-produced, not host UI.
-            // The real checks assert server-side archive/unarchive calls and state.
             archiveThread: async (threadId, sdk) => {
               const done = deferred<void>();
               archiveRequests.push({
@@ -265,6 +309,13 @@ export async function createWired(
       });
       await flush();
     },
+    async interactionPending(threadId: string, interaction: PendingInteraction) {
+      interactions.set(threadId, [...(interactions.get(threadId) ?? []), interaction]);
+      await act(async () => {
+        await harness.behavior.emitThreadEvent("interaction.pending", { thread: response(threadId), interaction });
+      });
+      await flush();
+    },
     unmount(slot: ReturnType<typeof renderSlot>) {
       slots.delete(slot);
       slot.lifecycle.unmount();
@@ -275,5 +326,26 @@ export async function createWired(
       });
       await flush();
     },
+  };
+}
+
+export async function createLabelsHost(threadId: string, seed: { tags: string[]; topics: string[] }) {
+  const { sandy, harness } = createFakePluginHost({ pluginId: "sandy-sidebar" });
+  await plugin(sandy);
+  disposers.push(() => harness.lifecycle.dispose());
+  await harness.behavior.callRpc("setTopicTags", { kind: "thread", ownerId: threadId, tags: seed.tags });
+  await harness.behavior.callRpc("setThreadTopics", { threadId, topics: seed.topics });
+  return {
+    listTopics: () => harness.behavior.callRpc("listTopics", { threadId }),
+    setTopicTags: (input: unknown) => harness.behavior.callRpc("setTopicTags", input as never),
+    storedTags: () =>
+      (
+        sandy.storage
+          .database()
+          .prepare("SELECT tag FROM topic_tags WHERE owner_id = ? ORDER BY tag")
+          .all(threadId) as Array<{
+          tag: string;
+        }>
+      ).map((row) => row.tag),
   };
 }

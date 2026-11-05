@@ -30,7 +30,7 @@ export const test = base.extend({
     page.on("console", (message) => {
       if (
         message.type() === "error" &&
-        /\[plugin:sandy-sidebar\]|is not a function|ReferenceError|TypeError/.test(message.text())
+        /\[plugin:sandy-sidebar(-delegate)?\]|is not a function|ReferenceError|TypeError/.test(message.text())
       ) {
         errors.push(message.text());
       }
@@ -49,7 +49,9 @@ export async function cli(args) {
 }
 
 export async function rpc(request, method, input = {}) {
-  const response = await request.post(`${fixture.url}/api/v1/plugins/sandy-sidebar/rpc/${method}`, { data: input });
+  const response = await request.post(`${fixture.url}/api/v1/plugins/sandy-sidebar-delegate/rpc/${method}`, {
+    data: input,
+  });
   expect(response.ok(), `RPC ${method}: ${await response.text()}`).toBe(true);
   const payload = await response.json();
   expect(payload.ok, `RPC ${method} failed`).toBe(true);
@@ -60,11 +62,11 @@ export function shelf(page, name) {
   return page.getByRole("region", { name, exact: true });
 }
 
-export function link(page, title, name = "Active") {
+export function link(page, title, name = "Waiting") {
   return shelf(page, name).getByRole("link", { name: new RegExp(`${title}$`) });
 }
 
-export async function menu(page, title, name = "Active") {
+export async function menu(page, title, name = "Waiting") {
   await link(page, title, name).click({ button: "right" });
   return page.getByRole("menu", { name: "Thread actions", exact: true });
 }
@@ -86,18 +88,36 @@ export async function reset(request) {
 }
 
 export async function open(page, { theme = "light", width = 320, empty = false } = {}) {
-  await page.addInitScript(
-    ({ theme, width }) => {
-      localStorage.setItem("sandy.theme", theme);
-      // sandy 0.47.0 reserves 49 px for its navigation rail and border.
-      localStorage.setItem("sandy.sidebar.width", String(width + 49));
-    },
-    { theme, width },
-  );
+  const storeWidth = (stored) =>
+    page.addInitScript((value) => localStorage.setItem("sandy.sidebar.width", String(value)), stored);
+  await page.addInitScript((theme) => localStorage.setItem("sandy.theme", theme), theme);
+  const railReserve = 49;
+  await storeWidth(width + railReserve);
   await page.goto(fixture.url);
+  const root = page.locator("[data-sandy-sidebar-root]");
+  await expect(root).toBeVisible();
+  const drift = width - Math.round((await root.boundingBox()).width);
+  if (drift !== 0) {
+    await storeWidth(width + railReserve + drift);
+    await page.evaluate(() => {
+      for (const key of Object.keys(sessionStorage))
+        if (key.includes("sandy.sidebar.width")) sessionStorage.removeItem(key);
+    });
+    await page.reload();
+    await expect(root).toBeVisible();
+  }
   if (empty) {
     await expect(page.getByText("All clear. Time to touch some grass.")).toBeVisible();
   } else {
-    await expect(shelf(page, "Active")).toBeVisible();
+    await expect(shelf(page, "Waiting")).toBeVisible();
   }
+}
+
+export async function showArchived(page) {
+  await page.getByRole("button", { name: /^View options:/ }).click();
+  const sheet = page.getByRole("dialog", { name: "View options", exact: true });
+  const checkbox = sheet.getByLabel("Show archived", { exact: true });
+  if (!(await checkbox.isChecked())) await sheet.getByText("Show archived", { exact: true }).click();
+  await expect(checkbox).toBeChecked();
+  await page.keyboard.press("Escape");
 }

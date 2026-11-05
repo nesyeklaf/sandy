@@ -17,7 +17,7 @@ export type EffectPorts = {
   /** host.ts runCheck on the thread's host; tail is the end of the output. */
   runCheck(threadId: string, input: { command: string; timeoutSec: number }, signal: AbortSignal): Promise<{ exitCode: number; durationMs: number; tail: string }>;
   /** sandy.ui.requestInput; null = cancelled or timed out (a rejection). */
-  requestInput(threadId: string, form: { rendererId: string; title: string; payload: unknown }, signal: AbortSignal): Promise<{ approved: boolean; note?: string } | null>;
+  requestInput(threadId: string, form: { rendererId: string; title: string; payload: unknown }, signal: AbortSignal): Promise<{ approved: boolean; note?: string; picks?: Record<string, string> } | null>;
   /** sandy.sdk.threads.send; SANDY queues it while the thread is busy. */
   send(threadId: string, text: string): Promise<void>;
   /** Writes the guard policy of the committed run if it is still at rev; the host refuses a rev older than the file's. */
@@ -84,7 +84,7 @@ export function createExecutor(ports: EffectPorts, dispatch: Dispatch, boot: str
       case "ask": {
         const answer = await ports.requestInput(threadId, effect.form, signal);
         const note = answer?.note?.trim();
-        return report({ by: "system", op: "answered", runId: effect.runId, ticket: effect.ticket, formId: effect.formId, approved: answer?.approved === true, ...(note ? { note } : {}) });
+        return report({ by: "system", op: "answered", runId: effect.runId, ticket: effect.ticket, formId: effect.formId, approved: answer?.approved === true, ...(note ? { note } : {}), ...(answer?.picks ? { picks: answer.picks } : {}) });
       }
       case "check":
       case "run": {

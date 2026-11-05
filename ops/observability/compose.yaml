@@ -24,6 +24,8 @@ services:
       - "127.0.0.1:${SANDY_LGTM_OTLP_HTTP_PORT:-4318}:4318"
     volumes:
       - lgtm-data:/data
+      - ./grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/sandy.yaml:ro
+      - ./grafana/dashboards:/otel-lgtm/sandy-dashboards:ro
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/ready"]
       interval: 5s

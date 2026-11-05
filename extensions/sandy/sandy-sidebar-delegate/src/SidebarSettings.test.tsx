@@ -44,14 +44,14 @@ it.each([false, true])("drains an edit made during a pending save, unmounted=%s"
       },
     },
   );
-  await screen.findByRole("switch", { name: "Working shelf" });
+  await screen.findByRole("switch", { name: "Hide repo names in compact cards" });
   vi.useFakeTimers();
   fireEvent.click(screen.getByRole("switch", { name: "Dock shelves to the bottom" }));
   await act(async () => {
     await vi.advanceTimersByTimeAsync(500);
   });
   expect(writes).toEqual([{ dockShelves: true }]);
-  fireEvent.click(screen.getByRole("switch", { name: "Working shelf" }));
+  fireEvent.click(screen.getByRole("switch", { name: "Hide repo names in compact cards" }));
   if (unmount) slot.lifecycle.unmount();
   await act(async () => {
     pending.resolve();
@@ -62,8 +62,8 @@ it.each([false, true])("drains an edit made during a pending save, unmounted=%s"
       await vi.advanceTimersByTimeAsync(500);
     });
   }
-  expect(writes).toEqual([{ dockShelves: true }, { workingShelf: true }]);
-  expect(stored).toMatchObject({ dockShelves: true, workingShelf: true });
+  expect(writes).toEqual([{ dockShelves: true }, { compactProjectIconOnly: true }]);
+  expect(stored).toMatchObject({ dockShelves: true, compactProjectIconOnly: true });
 });
 
 it("saves a reversal of the same field made while its first write is pending", async () => {
@@ -86,7 +86,7 @@ it("saves a reversal of the same field made while its first write is pending", a
       },
     },
   );
-  const toggle = await screen.findByRole("switch", { name: "Working shelf" });
+  const toggle = await screen.findByRole("switch", { name: "Hide repo names in compact cards" });
   vi.useFakeTimers();
   fireEvent.click(toggle);
   await act(async () => {
@@ -97,8 +97,8 @@ it("saves a reversal of the same field made while its first write is pending", a
   await act(async () => {
     pending.resolve();
   });
-  expect(writes).toEqual([{ workingShelf: true }, { workingShelf: false }]);
-  expect(stored.workingShelf).toBe(false);
+  expect(writes).toEqual([{ compactProjectIconOnly: true }, { compactProjectIconOnly: false }]);
+  expect(stored.compactProjectIconOnly).toBe(false);
 });
 
 it.each([false, true])("preserves an unrelated remote edit, realtime delivered=%s", async (realtime) => {
@@ -119,7 +119,7 @@ it.each([false, true])("preserves an unrelated remote edit, realtime delivered=%
       },
     },
   );
-  const toggle = await screen.findByRole("switch", { name: "Working shelf" });
+  const toggle = await screen.findByRole("switch", { name: "Hide repo names in compact cards" });
   vi.useFakeTimers();
   fireEvent.click(toggle);
   stored = { ...stored, childSortDirection: "descending" };
@@ -127,8 +127,8 @@ it.each([false, true])("preserves an unrelated remote edit, realtime delivered=%
   await act(async () => {
     await vi.advanceTimersByTimeAsync(500);
   });
-  expect(writes).toEqual([{ workingShelf: true }]);
-  expect(stored).toMatchObject({ workingShelf: true, childSortDirection: "descending" });
+  expect(writes).toEqual([{ compactProjectIconOnly: true }]);
+  expect(stored).toMatchObject({ compactProjectIconOnly: true, childSortDirection: "descending" });
   expect(screen.getByLabelText("Child threads sort direction")).toHaveProperty("value", "descending");
 });
 
@@ -148,9 +148,9 @@ it("flushes a valid edit when leaving before the debounce expires", async () => 
       },
     },
   );
-  fireEvent.click(await screen.findByRole("switch", { name: "Working shelf" }));
+  fireEvent.click(await screen.findByRole("switch", { name: "Hide repo names in compact cards" }));
   slot.lifecycle.unmount();
-  await waitFor(() => expect(stored.workingShelf).toBe(true));
+  await waitFor(() => expect(stored.compactProjectIconOnly).toBe(true));
 });
 
 it("removes obsolete archive-preview cache keys before an early save", async () => {
@@ -174,13 +174,15 @@ it("removes obsolete archive-preview cache keys before an early save", async () 
       },
     },
   );
-  fireEvent.click(await screen.findByRole("switch", { name: "Working shelf" }));
-  await waitFor(() => expect(writes).toEqual([{ workingShelf: true }]));
+  fireEvent.click(await screen.findByRole("switch", { name: "Hide repo names in compact cards" }));
+  await waitFor(() => expect(writes).toEqual([{ compactProjectIconOnly: true }]));
   await act(async () => {
     pending.resolve(DEFAULT_SIDEBAR_SETTINGS);
   });
-  expect(screen.getByRole("switch", { name: "Working shelf" }).getAttribute("aria-checked")).toBe("true");
-  expect(JSON.parse(localStorage.getItem("sandy-sidebar:settings-cache:v1")!)).not.toHaveProperty("archivedShelfEnabled");
+  expect(screen.getByRole("switch", { name: "Hide repo names in compact cards" }).getAttribute("aria-checked")).toBe("true");
+  expect(JSON.parse(localStorage.getItem("sandy-sidebar:settings-cache:v1")!)).not.toHaveProperty(
+    "archivedShelfEnabled",
+  );
 });
 
 it("keeps the typing debounce when an earlier settings save finishes", async () => {
@@ -203,7 +205,7 @@ it("keeps the typing debounce when an earlier settings save finishes", async () 
       },
     },
   );
-  const toggle = await screen.findByRole("switch", { name: "Working shelf" });
+  const toggle = await screen.findByRole("switch", { name: "Hide repo names in compact cards" });
   vi.useFakeTimers();
   fireEvent.click(toggle);
   await act(async () => {
@@ -215,7 +217,7 @@ it("keeps the typing debounce when an earlier settings save finishes", async () 
     await vi.advanceTimersByTimeAsync(10);
     pending.resolve();
   });
-  expect(writes).toEqual([{ workingShelf: true }]);
+  expect(writes).toEqual([{ compactProjectIconOnly: true }]);
   fireEvent.change(days, { target: { value: "12" } });
   await act(async () => {
     await vi.advanceTimersByTimeAsync(499);
@@ -224,7 +226,7 @@ it("keeps the typing debounce when an earlier settings save finishes", async () 
   await act(async () => {
     await vi.advanceTimersByTimeAsync(1);
   });
-  expect(writes).toEqual([{ workingShelf: true }, { autoSettleAfterDays: 12 }]);
+  expect(writes).toEqual([{ compactProjectIconOnly: true }, { autoSettleAfterDays: 12 }]);
 });
 
 it("replaces the compact switch with a thread display choice", async () => {
@@ -245,27 +247,27 @@ it("replaces the compact switch with a thread display choice", async () => {
       },
     },
   );
-  const picker = await screen.findByRole("combobox", { name: "Thread display" });
+  const picker = await screen.findByRole("combobox", { name: "Density" });
   const projectIconOnly = screen.getByRole("switch", { name: "Hide repo names in compact cards" });
   expect(projectIconOnly.getAttribute("aria-checked")).toBe("false");
   expect(screen.queryByRole("switch", { name: "Compact working threads" })).toBeNull();
   expect([...(picker as HTMLSelectElement).options].map((option) => option.textContent)).toEqual([
-    "Full cards",
-    "Compact working threads",
-    "Compact all threads",
+    "Auto",
+    "Comfortable",
+    "Compact",
+    "Dense",
   ]);
-  expect((picker as HTMLSelectElement).value).toBe("full");
-  fireEvent.change(picker, { target: { value: "compact-working" } });
-  await waitFor(() => expect(writes).toEqual([{ threadDisplay: "compact-working" }]));
-  // The Compact all options appear only with that choice.
+  expect((picker as HTMLSelectElement).value).toBe("comfortable");
   expect(screen.queryByRole("switch", { name: "Keep pinned threads full" })).toBeNull();
-  fireEvent.change(picker, { target: { value: "compact-all" } });
+  fireEvent.change(picker, { target: { value: "auto" } });
+  await waitFor(() => expect(writes).toEqual([{ threadDensity: "auto" }]));
+  fireEvent.change(picker, { target: { value: "dense" } });
   fireEvent.click(await screen.findByRole("switch", { name: "Keep pinned threads full" }));
   fireEvent.click(screen.getByRole("switch", { name: "Keep woken threads full" }));
   fireEvent.click(projectIconOnly);
   await waitFor(() =>
     expect(stored).toMatchObject({
-      threadDisplay: "compact-all",
+      threadDensity: "dense",
       compactProjectIconOnly: true,
       keepPinnedThreadsFull: true,
       keepWokeThreadsFull: true,

@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { renderSlot } from "./test-slot";
-import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
+import { STORAGE_KEYS } from "./lib/storage-keys";
+import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp, render } from "./test-inbox";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 const projects = [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }];
 const sandbox = { icon: "SquareUnlock02", label: "Runs without an OS sandbox", tone: "error" } as const;
@@ -17,20 +19,20 @@ const glyph = (title: string) => row(title).querySelector(`[data-row-status="${s
 function renderWithStatus(
   threads: PluginSidebarThread[],
   marked: string[],
-  { rows = [], threadDisplay = "full" }: { rows?: unknown[]; threadDisplay?: string } = {},
+  { rows = [], threadDensity = "comfortable" }: { rows?: unknown[]; threadDensity?: string } = {},
 ) {
   return renderSlot(inbox, listProps, {
     sidebarThreads: { status: "ready", threads, projects },
     sidebarRowStatuses: Object.fromEntries(marked.map((id) => [id, sandbox])),
     rpc: {
-      getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: false, threadDisplay }),
+      getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity }),
       listLifecycle: () => ({ rows }),
     },
   });
 }
 
 describe("row statuses from other plugins", () => {
-  it.each(["full", "compact-all"])(
+  it.each(["comfortable", "dense"])(
     "draws sandy's glyph with its tone in place of a quiet status (%s)",
     async (display) => {
       renderWithStatus(
@@ -41,19 +43,18 @@ describe("row statuses from other plugins", () => {
         ],
         ["unread", "settled"],
         {
-          threadDisplay: display,
+          threadDensity: display,
           rows: [{ threadId: "settled", settledAt: 200, snoozedUntil: null, snoozedAt: null }],
         },
       );
       await screen.findByRole("link", { name: /Unread work/ });
       await waitFor(() => expect(glyph("Unread work")).not.toBeNull());
       expect(glyph("Unread work")!.getAttribute("data-row-status-tone")).toBe("error");
-      // The status replaces "Unread"; the age stays beside it.
       expect(within(row("Unread work")).queryByText("Unread")).toBeNull();
       expect(glyph("Plain work")).toBeNull();
 
-      const settled = screen.getByRole("region", { name: "Settled" });
-      fireEvent.click(within(settled).getByRole("button", { name: /^Settled/ }));
+      const settled = screen.getByRole("region", { name: "Archived" });
+      fireEvent.click(within(settled).getByRole("button", { name: /^Archived/ }));
       expect(glyph("Settled work")).not.toBeNull();
     },
   );
@@ -85,5 +86,36 @@ describe("row statuses from other plugins", () => {
     fireEvent.pointerMove(await screen.findByRole("link", { name: /Marked work/ }), { pointerType: "mouse" });
     const details = await screen.findByRole("dialog", { name: "Thread details" });
     expect(within(details).getByText(sandbox.label)).toBeDefined();
+  });
+});
+
+describe("unread dot", () => {
+  it.each(["comfortable", "compact", "dense"] as const)(
+    "marks only unread rows in %s density",
+    async (threadDensity) => {
+      render(
+        [thread({ id: "fresh", title: "Fresh result", isUnread: true }), thread({ id: "seen", title: "Seen result" })],
+        undefined,
+        { getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity }) },
+      );
+      const fresh = (await screen.findByRole("link", { name: "Fresh result" })).closest("[data-parent-card], li")!;
+      await waitFor(() => expect(fresh.querySelector("[data-unread-dot]")).not.toBeNull());
+      const seen = screen.getByRole("link", { name: "Seen result" }).closest("[data-parent-card], li")!;
+      expect(seen.querySelector("[data-unread-dot]")).toBeNull();
+    },
+  );
+
+  it("colors an unread failed row's dot as a failure, not a success", async () => {
+    render([
+      thread({ id: "broken", title: "Broken run", isUnread: true, status: "error" }),
+      thread({ id: "done", title: "Done run", isUnread: true }),
+    ]);
+    const dotOf = async (name: string) => {
+      const row = (await screen.findByRole("link", { name })).closest("[data-parent-card], li")!;
+      await waitFor(() => expect(row.querySelector("[data-unread-dot]")).not.toBeNull());
+      return row.querySelector("[data-unread-dot]")!.className;
+    };
+    expect(await dotOf("Broken run")).toContain("--sandy-sidebar-tone-error");
+    expect(await dotOf("Done run")).toContain("--sandy-sidebar-tone-success");
   });
 });

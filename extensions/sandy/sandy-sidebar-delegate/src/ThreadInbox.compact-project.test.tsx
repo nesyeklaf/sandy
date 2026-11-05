@@ -3,20 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { inbox, defaultSidebarSettings, thread, listProps, loadInboxApp } from "./test-inbox";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
 
 describe("Compact project display", () => {
-  it.each(["full", "compact-working", "compact-all", "working-shelf"])(
+  it.each(["comfortable", "compact", "dense"] as const)(
     "updates project names without hiding icons or changing full cards (%s)",
     async (display) => {
       let settings = {
         ...defaultSidebarSettings,
-        inactiveThreadsEnabled: false,
-        threadDisplay: display === "working-shelf" ? "full" : display,
-        workingShelf: display === "working-shelf",
+        threadDensity: display,
         keepPinnedThreadsFull: true,
       };
       const view = renderSlot(inbox, listProps, {
@@ -34,10 +33,12 @@ describe("Compact project display", () => {
           listLifecycle: () => ({ rows: [{ threadId: "parked", parkedAt: Date.now() }] }),
         },
       });
-      fireEvent.click(await screen.findByRole("button", { name: "Parked (1)" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Snoozed (1)" }));
       const row = (title: string) => screen.getByText(title).closest("li")!;
       await waitFor(() => {
-        expect(row("Working thread").querySelector(".h-8") !== null).toBe(display !== "full");
+        expect(row("Working thread").querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe(
+          display,
+        );
         expect(screen.getByText("Parked thread")).toBeDefined();
       });
 
@@ -47,7 +48,8 @@ describe("Compact project display", () => {
         await waitFor(() => {
           for (const title of ["Working thread", "Full pinned thread", "Parked thread"]) {
             const card = row(title);
-            const iconOnly = compactProjectIconOnly && title === "Working thread" && display !== "full";
+            const iconOnly =
+              title === "Working thread" && (display === "dense" || (compactProjectIconOnly && display === "compact"));
             expect(within(card).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);
             expect(card.querySelector("[data-letter]")).not.toBeNull();
             if (iconOnly) expect(within(card).queryByText("·")).toBeNull();
@@ -58,8 +60,35 @@ describe("Compact project display", () => {
     },
   );
 
-  it("limits icon-only projects to Active, Pinned, and Working when all cards are compact", async () => {
+  it("shows only the project icon in dense rows and gives the title the width", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        projects: [{ id: "proj_1", name: "Sidebar project", isPersonal: false, href: "", settingsHref: "" }],
+        threads: [
+          thread({ id: "waiting", title: "Birch implementation" }),
+          thread({ id: "pinned", title: "Atlas planning", isPinned: true }),
+        ],
+      },
+      rpc: {
+        getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity: "dense", compactProjectIconOnly: false }),
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    await waitFor(() => {
+      for (const title of ["Birch implementation", "Atlas planning"]) {
+        const row = screen.getByText(title).closest("li")!;
+        expect(row.querySelector("[data-row-density]")?.getAttribute("data-row-density")).toBe("dense");
+        expect(row.querySelector("[data-letter]")).not.toBeNull();
+        expect(within(row).getByText("Sidebar project").classList.contains("sr-only")).toBe(true);
+        expect(within(row).queryByText("·")).toBeNull();
+      }
+    });
+  });
+
+  it("limits icon-only projects to Waiting, Pinned, and Working when all cards are compact", async () => {
     const now = Date.now();
+    localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -77,9 +106,8 @@ describe("Compact project display", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          threadDisplay: "compact-all",
+          threadDensity: "dense",
           compactProjectIconOnly: true,
-          workingShelf: true,
         }),
         listLifecycle: () => ({
           rows: [
@@ -90,18 +118,24 @@ describe("Compact project display", () => {
         }),
       },
     });
-    for (const shelf of ["Inactive", "Parked", "Snoozed", "Settled"]) {
+    for (const shelf of ["Snoozed", "Archived"]) {
       const region = await screen.findByRole("region", { name: shelf });
-      const collapsed = within(region).queryByRole("button", { expanded: false });
+      const collapsed = within(region).queryByRole("button", { name: new RegExp(`^${shelf} \\(`), expanded: false });
       if (collapsed) fireEvent.click(collapsed);
     }
     await waitFor(() => {
-      for (const shelf of ["Needs you", "Pinned", "Working", "Inactive", "Parked", "Snoozed", "Settled"]) {
+      for (const [shelf, title] of [
+        ["Waiting", "Active"],
+        ["Waiting", "Inactive"],
+        ["Pinned", "Pinned"],
+        ["Working", "Working"],
+        ["Snoozed", "Parked"],
+        ["Snoozed", "Snoozed"],
+        ["Archived", "Settled"],
+      ] as const) {
         const region = screen.getByRole("region", { name: shelf });
-        const row = within(region)
-          .getByText(`${shelf === "Needs you" ? "Active" : shelf} thread`)
-          .closest("li")!;
-        const iconOnly = ["Needs you", "Pinned", "Working"].includes(shelf);
+        const row = within(region).getByText(`${title} thread`).closest("li")!;
+        const iconOnly = ["Waiting", "Pinned", "Working"].includes(shelf);
         expect(row.querySelector(".h-8")).not.toBeNull();
         expect(row.querySelector("[data-letter]")).not.toBeNull();
         expect(within(row).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);

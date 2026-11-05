@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { test, fixture, cli, rpc, shelf, link, menu, expand, reset, open } from "./helpers.mjs";
+import { test, fixture, cli, rpc, shelf, link, menu, expand, reset, open, showArchived } from "./helpers.mjs";
 
 const [atlas, birch, cedar, delta] = fixture.threads;
 
@@ -8,9 +8,9 @@ test.beforeEach(async ({ request, page }) => {
   await open(page);
 });
 
-test("selected sidebar renders all seeded threads in Active", async ({ page }) => {
+test("selected sidebar renders all seeded threads in Waiting", async ({ page }) => {
   const settings = await cli(["settings", "ui", "get", "sidebar.threadListProvider"]);
-  expect(settings.value).toBe("sandy-sidebar/inbox");
+  expect(settings.value).toBe("sandy-sidebar-delegate/inbox");
   for (const thread of fixture.threads) {
     await expect(link(page, thread.title)).toBeVisible();
     const state = await cli(["thread", "get", thread.id]);
@@ -47,7 +47,7 @@ test("holding the shortcut modifier shows sandy's jump keys on sidebar rows", as
 });
 
 test("manual keyboard reorder persists after reload", async ({ page, request }) => {
-  const active = shelf(page, "Active");
+  const active = shelf(page, "Waiting");
   await expect(active.getByRole("link").first()).toHaveAttribute("aria-keyshortcuts", /Alt\+ArrowUp/);
   await link(page, birch.title).focus();
   await link(page, birch.title).press("Alt+ArrowUp");
@@ -64,8 +64,8 @@ test("manual keyboard reorder persists after reload", async ({ page, request }) 
     .toEqual(expected.map(({ title }) => title));
 });
 
-test("snooze moves to Snoozed and wake returns to Active", async ({ page, request }) => {
-  const row = shelf(page, "Active")
+test("snooze moves to Snoozed and wake returns to Waiting", async ({ page, request }) => {
+  const row = shelf(page, "Waiting")
     .getByRole("listitem")
     .filter({ has: page.getByRole("link", { name: birch.title, exact: true }) });
   await link(page, birch.title).hover();
@@ -84,11 +84,12 @@ test("snooze moves to Snoozed and wake returns to Active", async ({ page, reques
   ).toBeNull();
 });
 
-test("settle moves to Settled and Undo restores Active", async ({ page, request }) => {
+test("settle moves to Archived under Show archived and Undo restores Waiting", async ({ page, request }) => {
+  await showArchived(page);
   await (await menu(page, cedar.title)).getByRole("menuitem", { name: "Settle", exact: true }).click();
-  await expect(shelf(page, "Settled")).toBeVisible();
-  await expand(page, "Settled");
-  await expect(link(page, cedar.title, "Settled")).toBeVisible();
+  await expect(shelf(page, "Archived")).toBeVisible();
+  await expand(page, "Archived");
+  await expect(link(page, cedar.title, "Archived")).toBeVisible();
   await expect(link(page, cedar.title)).toHaveCount(0);
   expect((await rpc(request, "listLifecycle")).rows.find((row) => row.threadId === cedar.id).settledAt).not.toBeNull();
   await page.getByRole("button", { name: "Undo", exact: true }).click();
@@ -103,7 +104,8 @@ test("right-click menu matches the sidebar action list", async ({ page }) => {
   await expect(actions.getByRole("menuitem")).toHaveText([
     "Open in split",
     "Parent",
-    "Project",
+    "Move to project…",
+    "Repo",
     "Pin",
     "Snooze",
     "Park thread",

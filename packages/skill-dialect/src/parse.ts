@@ -41,13 +41,14 @@ export type CompiledField = {
   description?: string;
   optional?: boolean;
   type?: string;
+  by?: "owner";
 };
 export type CompiledEdge = {
   to: string;
   when?: string;
   cond?: Cond;
   max?: number;
-  exceeded?: "owner";
+  exceeded?: string;
   gate?: CompiledRule[];
 };
 export type CompiledStage = {
@@ -146,6 +147,7 @@ const TAGS: Record<string, TagSpec> = {
     attrs: {
       name: "string",
       type: "string",
+      by: "string",
       description: "string",
       optional: "bool",
     },
@@ -984,6 +986,16 @@ function compileStage(
           field.description = a.description;
         if (a.optional === true) field.optional = true;
         if (type !== "text") field.type = type;
+        if (a.by !== undefined) {
+          if (a.by !== "owner")
+            c.problem(
+              child.line,
+              "output",
+              `by="${String(a.by)}" is not supported`,
+              'write by="owner" or remove by=',
+            );
+          else field.by = "owner";
+        }
         stage.outputs.push(field);
         return;
       }
@@ -1015,12 +1027,12 @@ function compileStage(
         }
         if (typeof a.max === "number") edge.max = a.max;
         if (a.exceeded !== undefined) {
-          if (a.exceeded !== "owner")
+          if (typeof a.exceeded !== "string" || !a.exceeded.trim())
             c.problem(
               child.line,
               "next",
               `exceeded="${String(a.exceeded)}" is not supported`,
-              'write exceeded="owner"',
+              'write exceeded="owner" or exceeded="<stage id>"',
             );
           else if (edge.max === undefined)
             c.problem(
@@ -1029,7 +1041,7 @@ function compileStage(
               "exceeded= needs max=",
               "add max=2 or remove exceeded=",
             );
-          else edge.exceeded = "owner";
+          else edge.exceeded = a.exceeded.trim();
         }
         const rules: CompiledRule[] = [];
         for (const inner of child.children) {
@@ -1168,6 +1180,17 @@ function check(
       const parsed = parseType(output.type ?? "text");
       const line = draft.outputLines.get(output.name) ?? draft.line;
       if (!parsed.ok) c.problem(line, "output", parsed.error, "fix type=");
+      else if (
+        output.by === "owner" &&
+        (parsed.type.kind !== "choice" ||
+          !draft.stage.gate.some((r) => r.type === "user"))
+      )
+        c.problem(
+          line,
+          "output",
+          `by="owner" output "${output.name}" needs a choice(...) type in a stage with gate="user"`,
+          'give it type="choice(...)" and the stage gate="user", or remove by=',
+        );
       else
         symbols.set(`${draft.stage.id}.${output.name}`, {
           type: parsed.type,
@@ -1311,6 +1334,18 @@ function check(
           "next",
           `next to="${edge.to}" is not a stage`,
           `use one of: ${[...ids, DONE_STAGE].join(", ")}`,
+        );
+      if (
+        edge.exceeded !== undefined &&
+        edge.exceeded !== "owner" &&
+        edge.exceeded !== DONE_STAGE &&
+        !ids.has(edge.exceeded)
+      )
+        c.problem(
+          line,
+          "next",
+          `exceeded="${edge.exceeded}" is not a stage`,
+          `use owner or one of: ${[...ids, DONE_STAGE].join(", ")}`,
         );
       if (edge.max !== undefined && !decided)
         c.problem(

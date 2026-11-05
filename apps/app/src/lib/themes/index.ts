@@ -7,6 +7,8 @@ import { catppuccinThemeCss } from "./catppuccin";
 import { draculaThemeCss } from "./dracula";
 import { gruvboxThemeCss } from "./gruvbox";
 import { nordThemeCss } from "./nord";
+import { sandThemeCss } from "./sand";
+import { sandyThemeCss } from "./sandy";
 import { solarizedThemeCss } from "./solarized";
 
 const APP_THEME_STYLE_ELEMENT_ID = "sandy-app-theme";
@@ -19,6 +21,8 @@ const builtInThemeCss: Record<BuiltInThemeId, string> = {
   solarized: solarizedThemeCss,
   gruvbox: gruvboxThemeCss,
   catppuccin: catppuccinThemeCss,
+  sandy: sandyThemeCss,
+  sand: sandThemeCss,
 };
 
 export function resolveAppThemeCss(appearance: AppTheme): string {

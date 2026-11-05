@@ -11,10 +11,9 @@
 // acknowledged with `sandy work delegate ack`, which unlocks the child's brief. Every turn is acked, with a
 // policy (and nonce) fetched for that turn: the plugin stops a child whose turn has no ack, also when
 // SANDY resumes it in a new pi session.
-import { execFile } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { decide, parsePolicy, policyHash, type GateState, type Policy } from "../../../sandy/work/delegate/shared/policy.ts";
-import { workCliArgs } from "../sandy-cli.ts";
+import { sandyCli, workCliArgs, type RunSandy } from "../sandy-cli.ts";
 
 export const DELEGATE_MARKER_TOOL = "sandy_delegate_brief";
 
@@ -50,25 +49,6 @@ export function filePolicySource(path: string): PolicySource {
   return { load: async () => parsePolicy(JSON.parse(readFileSync(path, "utf8"))) };
 }
 
-export type RunSandy = (args: string[]) => Promise<string>;
-
-// The program and leading arguments that run the sandy CLI. On Windows SANDY_CLI is the extensionless node script
-// of SANDY's host daemon (a shebang file, which CreateProcess cannot run) and execFile cannot start a .cmd
-// wrapper without a shell, so anything that is not an .exe runs under the node that runs pi.
-export function sandyCommand(env: Record<string, string | undefined>, platform: string, nodePath: string): { file: string; leadingArgs: string[] } {
-  const cli = env.SANDY_CLI;
-  if (platform === "win32" && cli && !/\.(exe|com|cmd|bat)$/i.test(cli)) return { file: nodePath, leadingArgs: [cli] };
-  return { file: cli || "sandy", leadingArgs: [] };
-}
-
-const runSandyCli: RunSandy = (args) =>
-  new Promise((resolve, reject) => {
-    const { file, leadingArgs } = sandyCommand(process.env, process.platform, process.execPath);
-    execFile(file, [...leadingArgs, ...args], { timeout: 15_000, windowsHide: true }, (error, stdout, stderr) =>
-      error ? reject(new Error(String(stderr || error.message).trim())) : resolve(String(stdout)),
-    );
-  });
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Calls the plugin CLI, retrying a thrown call (the plugin is unreachable, e.g. reloading) every
@@ -89,7 +69,7 @@ async function runRetrying(run: RunSandy, args: string[], retryMs: number, deadl
 // the deny-all policy the server sends, and a malformed answer throws at once. The server's nonce and
 // hash are kept for the ack of exactly that policy; a thrown ack call is retried the same way.
 export function cliPolicySource(threadId: string, options: { run?: RunSandy; retryMs?: number; pendingTimeoutMs?: number } = {}): PolicySource {
-  const run = options.run ?? runSandyCli;
+  const run = options.run ?? sandyCli();
   const retryMs = options.retryMs ?? 1_000;
   const pendingTimeoutMs = options.pendingTimeoutMs ?? 30_000;
   let issued: { hash: string; nonce: string } | null = null;

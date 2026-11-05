@@ -1,16 +1,7 @@
-import { ThreadLocation, ThreadPullRequest } from "./ThreadMetadata";
 import { CompactRow } from "./CompactRow";
 import { WokeMarker } from "./WokeMarker";
 import { ShortcutHint, useSidebarThreadSplit, useThreadActions } from "./sandy-sdk";
-import {
-  useId,
-  useLayoutEffect,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEventHandler,
-  type PointerEventHandler,
-} from "react";
+import { useId, useEffect, useRef, useState, type KeyboardEventHandler, type PointerEventHandler } from "react";
 import { useSidebarThreadShortcut, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { ChildThreadBadge, ChildThreadList, useShowsChildList } from "./ChildThreadList";
 import { Icon } from "./components/Icon";
@@ -26,15 +17,25 @@ import { CompactStatusOrTime } from "./StatusGlyph";
 import { threadDisplayTitle } from "./inbox";
 import { InlineThreadTitle } from "./InlineThreadTitle";
 import { isWorkingTree } from "./working-tree";
+import { rowDensity as resolveRowDensity } from "./density";
+import { threadNeedsAttention } from "./useRenamingShelfLocks";
+import type { RowDensity, ThreadDensity } from "./sidebar-settings-values";
 import { ProjectFavicon, ProjectStripe } from "./ProjectFavicon";
 import { useProjectColor } from "./ProjectColors";
 import { OpenPortsIndicator } from "./OpenPorts";
 import { useInboxEnvironment, useInboxActions, useInboxActivity } from "./InboxContext";
 import { DEFAULT_SIDEBAR_SETTINGS } from "./sidebar-settings";
 import { projectIconUrl as iconUrl } from "./project-icons";
+import { ParkButton, SelectCheckbox } from "./ThreadCardParts";
+import { useSelection } from "./SelectionHost";
+import { RowMetaLine } from "./RowMetaLine";
+import { RowQuestion } from "./RowQuestion";
+import { askingThreadOf } from "./row-question";
+import { useRowFocusHandoff } from "./useRowFocusHandoff";
 import "./settle-button.css";
 
 /** How long the settle sweep plays before the thread actually moves. */
+const LATER_MS = 60 * 60 * 1000;
 const SETTLE_SWEEP_MS = 520;
 /** A settle that worked has unmounted the card by now; one that failed has not. */
 const SETTLE_RECOVER_MS = 4_000;
@@ -50,11 +51,6 @@ export interface ThreadReorderControls {
   onKeyDown: KeyboardEventHandler<HTMLElement>;
 }
 
-/**
- * Three-line card, or one line in compact mode. Project groups omit the project
- * line. Status follows manual reorders. Controls sit above a full-bleed anchor
- * for valid markup and keyboard access.
- */
 export function ThreadCard({
   thread,
   showProject = true,
@@ -66,8 +62,8 @@ export function ThreadCard({
   childThreads,
   childrenExpanded,
   reorder,
-  compactWhenWorking = false,
-  compactAlways = false,
+  density = "comfortable",
+  keepFull = false,
   onRenamingChange,
 }: {
   thread: PluginSidebarThread;
@@ -83,10 +79,8 @@ export function ThreadCard({
   childThreads: readonly PluginSidebarThread[];
   childrenExpanded: boolean;
   reorder?: ThreadReorderControls;
-  /** Experimental: show threads with live work as a single line. */
-  compactWhenWorking?: boolean;
-  /** Compact all threads: one line regardless of work, woke state included. */
-  compactAlways?: boolean;
+  density?: ThreadDensity;
+  keepFull?: boolean;
   onRenamingChange?: (editing: boolean) => void;
 }) {
   const [pin] = useThreadActions(thread, { keys: ["sandy--core/pin"] });
@@ -97,7 +91,10 @@ export function ThreadCard({
     snoozePresets,
     childrenByParentId: childrenByParent,
     sidebarSettings,
+    rowFields,
   } = useInboxEnvironment();
+  const selection = useSelection();
+  const selecting = selection.active && thread.parentThreadId == null;
   const { navigate, onNavigate, parkThread, settleThread, snoozeThread, acknowledgeWake, toggleChildExpansion } =
     useInboxActions();
   const { now } = useInboxActivity();
@@ -129,35 +126,9 @@ export function ThreadCard({
     return () => observer.disconnect();
   }, []);
   const [isRenaming, setIsRenaming] = useState(false);
-  useLayoutEffect(() => {
-    return () => {
-      const focused = document.activeElement;
-      if (!(focused instanceof HTMLElement) || !rowRef.current?.contains(focused)) return;
-      const sidebar = rowRef.current.closest<HTMLElement>("[data-sandy-sidebar-root]");
-      const childId = focused.getAttribute("data-child-thread-id");
-      const control = focused.getAttribute("data-thread-control");
-      // Moving a row between shelf trees unmounts its focused control.
-      queueMicrotask(() => {
-        if (!sidebar?.isConnected || document.activeElement !== document.body) return;
-        const replacement = [...sidebar.querySelectorAll<HTMLAnchorElement>("a[data-sidebar-thread-id]")].find(
-          (link) => link.dataset.sidebarThreadId === thread.id,
-        );
-        const row = replacement?.closest("li");
-        const child =
-          childId &&
-          [...(row?.querySelectorAll<HTMLElement>("[data-child-thread-id]") ?? [])].find(
-            (item) => item.dataset.childThreadId === childId,
-          );
-        const matchingControl =
-          control &&
-          [...(row?.querySelectorAll<HTMLElement>("[data-thread-control]") ?? [])].find(
-            (item) => item.dataset.threadControl === control,
-          );
-        (child || matchingControl || replacement)?.focus();
-      });
-    };
-  }, [thread.id]);
-  const compactAtRenameStart = useRef(false);
+  useRowFocusHandoff(rowRef, thread.id);
+  const asker = askingThreadOf(thread, childrenByParent);
+  const densityAtRenameStart = useRef<RowDensity>("comfortable");
   const [isSnoozeOpen, setIsSnoozeOpen] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
   const settleTimer = useRef<number | null>(null);
@@ -185,21 +156,26 @@ export function ThreadCard({
   // it starts from does not disappear when the cursor leaves the row.
   const holdParkActions = isSnoozeOpen || isSettling;
   const childListId = useId();
-  // A thread stays folded until everything under it is done; it unfolds at
-  // once when it needs you, fails, or just woke.
-  const naturalCompact =
-    compactAlways || (compactWhenWorking && !isWoke && isWorkingTree(thread, childThreads, childrenByParent));
-  const compact = isRenaming ? compactAtRenameStart.current : naturalCompact;
+  const naturalDensity = resolveRowDensity({
+    density,
+    needsAttention: isWoke || threadNeedsAttention(thread),
+    working: density === "auto" && isWorkingTree(thread, childThreads, childrenByParent),
+    keepFull,
+  });
+  const currentDensity = isRenaming ? densityAtRenameStart.current : naturalDensity;
+  const compact = currentDensity === "dense";
+  const twoLine = currentDensity === "compact";
+  const titleInline = !showProject || twoLine;
   const stripeView = compact ? "collapsed" : "full";
   const projectColor = useProjectColor(thread.projectId);
   const changeRenaming = (editing: boolean) => {
-    if (editing) compactAtRenameStart.current = compact;
+    if (editing) densityAtRenameStart.current = currentDensity;
     setIsRenaming(editing);
     onRenamingChange?.(editing);
   };
   // A folded row stays one line: its children wait for the badge to expand
   // them, whatever "Show children that need attention" says.
-  const showChildrenWhenCollapsed = showRunningChildrenWhenCollapsed && !compact;
+  const showChildrenWhenCollapsed = showRunningChildrenWhenCollapsed && currentDensity === "comfortable";
   const showChildren = useShowsChildList(childThreads, childrenByParent, childrenExpanded, showChildrenWhenCollapsed);
   const emphasis = isWoke ? "woke" : thread.isUnread ? "unread" : thread.indicator === "none" ? "read-idle" : "active";
   const showParkActions = !isWoke && canPark && (snoozePresets.length > 0 || !!onPark);
@@ -232,7 +208,7 @@ export function ThreadCard({
       data-settle-fade=""
       className={cn(
         "pointer-events-none relative truncate text-sm",
-        showProject ? "mt-0.5" : "min-w-0 flex-1",
+        titleInline ? "min-w-0 flex-1" : "mt-0.5",
         isRenaming && "pointer-events-auto",
         emphasis === "read-idle" ? "text-muted-foreground" : "text-foreground",
         (emphasis === "unread" || emphasis === "woke") && "font-medium",
@@ -263,13 +239,20 @@ export function ThreadCard({
           reorder?.isDragging && "relative z-20",
         )}
       >
-        <div data-drag-visual="">
+        <div data-drag-visual="" className={cn(selecting && "relative pl-5")}>
+          {selecting ? (
+            <SelectCheckbox
+              label={threadDisplayTitle(thread)}
+              checked={selection.selectedIds.has(thread.id)}
+              onToggle={() => selection.toggle(thread.id)}
+            />
+          ) : null}
           {compact ? (
             <CompactRow
               thread={thread}
               tone="normal"
               showProject={showProject}
-              projectIconOnly={projectIconOnly}
+              projectIconOnly
               projectName={projectName}
               projectIconUrl={projectIconUrl}
               projectColor={projectColor}
@@ -284,7 +267,11 @@ export function ThreadCard({
                 navigate.toThread(thread.id, { split: false });
                 onNavigate();
               }}
-              rowProps={{ "data-parent-card": "", "data-settling": isSettling ? "" : undefined }}
+              rowProps={{
+                "data-parent-card": "",
+                "data-row-density": "dense",
+                "data-settling": isSettling ? "" : undefined,
+              }}
               linkProps={{
                 draggable: false,
                 "aria-keyshortcuts": rowKeyshortcuts(shortcut?.ariaKeyshortcuts, !!reorder),
@@ -304,7 +291,7 @@ export function ThreadCard({
               trailing={
                 <span className="pointer-events-none relative flex shrink-0 items-center gap-1.5">
                   <OpenPortsIndicator thread={thread} />
-                  {childThreads.length > 0 ? (
+                  {rowFields.subagents && childThreads.length > 0 ? (
                     <ChildThreadBadge
                       threads={childThreads}
                       childrenByParent={childrenByParent}
@@ -319,20 +306,21 @@ export function ThreadCard({
                     <>
                       {unpinButton}
                       {isWoke ? <WokeMarker onDismiss={onAcknowledgeWake} /> : null}
-                      <CompactStatusOrTime thread={thread} now={now} />
+                      <CompactStatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                     </>
                   )}
-                  <ProviderGlyph providerId={thread.providerId} provider={provider} />
+                  {rowFields.provider ? <ProviderGlyph providerId={thread.providerId} provider={provider} /> : null}
                 </span>
               }
             />
           ) : (
             <div
               data-parent-card=""
+              data-row-density={currentDensity}
               data-settling={isSettling ? "" : undefined}
               className={cn(
                 "group/card relative rounded-md px-2.5 transition-colors duration-150 ease-out motion-reduce:transition-none",
-                compact ? "flex h-8 items-center gap-2 text-xs" : "py-2",
+                twoLine ? "py-1.5" : "py-2",
                 !compact && !showEnvironment && "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-1.5 py-1.5",
                 isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60",
                 // A thread open in another pane gets a weaker tint than the active
@@ -385,7 +373,15 @@ export function ThreadCard({
                 />
               </ThreadDetailsTooltip>
               <div className="pointer-events-none relative flex h-5 min-w-0 items-center gap-1.5">
-                {showProject ? (
+                {twoLine && showProject && projectName ? (
+                  <ProjectFavicon
+                    projectId={thread.projectId}
+                    src={projectIconUrl}
+                    name={projectName}
+                    className="size-3 shrink-0"
+                  />
+                ) : null}
+                {!titleInline ? (
                   <span
                     data-settle-fade=""
                     className="flex min-w-0 flex-1 items-center gap-1.5 text-2xs font-medium text-muted-foreground"
@@ -418,7 +414,7 @@ export function ThreadCard({
                   <span className={cn(STATUS_SLOT_CLASS, "w-auto gap-1.5")}>
                     {unpinButton}
                     <WokeMarker onDismiss={onAcknowledgeWake} />
-                    <StatusOrTime thread={thread} now={now} />
+                    <StatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                   </span>
                 ) : (
                   <span
@@ -429,11 +425,11 @@ export function ThreadCard({
                       !showParkActions && "w-auto min-w-20",
                       // Beside the title a fixed slot would cut every title short,
                       // so it hugs the time and widens only while the actions show.
-                      !showProject && "w-auto min-w-0",
-                      !showProject &&
+                      titleInline && "w-auto min-w-0",
+                      titleInline &&
                         showParkActions &&
                         "[@media(hover:hover)]:group-hover/card:min-w-11 has-[:focus-visible]:min-w-11",
-                      !showProject && holdParkActions && "min-w-11",
+                      titleInline && holdParkActions && "min-w-11",
                     )}
                   >
                     <span
@@ -441,12 +437,12 @@ export function ThreadCard({
                         "flex items-center justify-end gap-0.5 transition-opacity duration-150 ease-out motion-reduce:transition-none",
                         showParkActions &&
                           "[@media(hover:hover)]:group-hover/card:opacity-0 [@media(hover:hover)]:group-has-[:focus-visible]/status-slot:opacity-0 [@media(hover:none)]:static [@media(hover:none)]:opacity-100",
-                        showParkActions && showProject && "absolute inset-y-0 right-0",
+                        showParkActions && !titleInline && "absolute inset-y-0 right-0",
                         holdParkActions && "opacity-0 [@media(hover:none)]:opacity-100",
                       )}
                     >
                       {!showParkActions ? unpinButton : null}
-                      <StatusOrTime thread={thread} now={now} />
+                      <StatusOrTime thread={thread} now={now} showAge={rowFields.age} />
                     </span>
                     {showParkActions ? (
                       <span
@@ -470,44 +466,30 @@ export function ThreadCard({
                   </span>
                 )}
               </div>
-              {showProject ? titleLine : null}
-              <div
-                data-settle-fade=""
-                className={cn(
-                  "pointer-events-none relative flex items-center gap-1.5 text-2xs text-muted-foreground",
-                  showEnvironment ? "mt-0.5 h-4" : "h-5",
-                )}
-              >
-                {/* A thread without a worktree still runs somewhere, so the
-                  machine takes the branch's place rather than leaving the line
-                  blank. */}
-                {showEnvironment ? <ThreadLocation thread={thread} /> : null}
-                <OpenPortsIndicator thread={thread} />
-                {childThreads.length > 0 ? (
-                  <ChildThreadBadge
-                    threads={childThreads}
-                    childrenByParent={childrenByParent}
-                    expanded={childrenExpanded}
-                    controls={childListId}
-                    onToggle={onToggleChildren}
-                  />
-                ) : null}
-                {thread.environment?.branchName && thread.host ? (
-                  <Icon
-                    name="Computer"
-                    aria-label={`Machine: ${thread.host.name}`}
-                    className="size-3 shrink-0 text-muted-foreground/60"
-                  />
-                ) : null}
-                {thread.activity.workflows > 0 ? (
-                  <ActivityCount label="workflows" count={thread.activity.workflows} />
-                ) : null}
-                {thread.activity.backgroundAgents > 0 ? (
-                  <ActivityCount label="background agents" count={thread.activity.backgroundAgents} />
-                ) : null}
-                {isVisible ? <ThreadPullRequest environmentId={thread.environment?.id ?? null} /> : null}
-                <ProviderGlyph providerId={thread.providerId} provider={provider} />
-              </div>
+              {titleInline ? null : titleLine}
+              <RowMetaLine
+                thread={thread}
+                twoLine={twoLine}
+                showProject={showProject}
+                projectIconOnly={projectIconOnly}
+                showEnvironment={showEnvironment}
+                childThreads={childThreads}
+                childrenExpanded={childrenExpanded}
+                childListId={childListId}
+                onToggleChildren={onToggleChildren}
+                isVisible={isVisible}
+              />
+              {asker && isVisible ? (
+                <RowQuestion
+                  thread={thread}
+                  asker={asker}
+                  onOpen={() => {
+                    navigate.toThread(asker.id, { split: false });
+                    onNavigate();
+                  }}
+                  onLater={(interactionId) => snoozeThread(thread, Date.now() + LATER_MS, interactionId)}
+                />
+              ) : null}
             </div>
           )}
           {showChildren ? (
@@ -523,51 +505,5 @@ export function ThreadCard({
         </div>
       </li>
     </RowContextMenu>
-  );
-}
-
-function ParkButton({ label, settling, onActivate }: { label: string; settling: boolean; onActivate: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      data-settling={settling ? "" : undefined}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onActivate();
-      }}
-      className={cn(
-        "sandy-sidebar-settle relative flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground",
-        "transition-colors duration-200 ease-out hover:text-[color:var(--sandy-sidebar-settle-active)]",
-        "focus-visible:text-[color:var(--sandy-sidebar-settle-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50",
-        "motion-reduce:transition-none",
-        settling && "text-[color:var(--sandy-sidebar-settle-active)]",
-      )}
-    >
-      {/* Move only the artwork so hovering an edge cannot move the hit area. */}
-      <span
-        aria-hidden="true"
-        className="sandy-sidebar-settle-art pointer-events-none relative flex size-full items-center justify-center rounded-[inherit]"
-      >
-        <Icon name="Check" aria-hidden className="sandy-sidebar-settle-check size-3.5" />
-        <span className="sandy-sidebar-settle-stars">
-          {[0, 1, 2].map((star) => (
-            <span key={star} className="sandy-sidebar-settle-star" />
-          ))}
-        </span>
-      </span>
-    </button>
-  );
-}
-
-function ActivityCount({ label, count }: { label: string; count: number }) {
-  return (
-    <span
-      aria-label={`${count} ${label}`}
-      className="shrink-0 rounded bg-muted px-1 font-mono text-2xs text-muted-foreground"
-    >
-      {count}
-    </span>
   );
 }

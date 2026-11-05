@@ -4,7 +4,7 @@ import type { HiddenHelper } from "./hidden-helper";
 import { messageFromEvent } from "./topic-messages";
 import { buildSuggestPrompt, parseSuggestions } from "./topic-suggest";
 import { groupTurns } from "./topic-turns";
-import type { TopicMessage, TopicSegment } from "./topics-contract";
+import { MAX_TOPIC_TAGS, type TopicMessage, type TopicSegment } from "./topics-contract";
 
 export const TOPICS_MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS topic_segments (
@@ -22,6 +22,14 @@ export const TOPICS_MIGRATIONS = [
      owner_id    TEXT NOT NULL,
      tag         TEXT NOT NULL,
      PRIMARY KEY (owner_kind, owner_id, tag)
+   )`,
+];
+
+export const SESSION_TOPICS_MIGRATIONS = [
+  `CREATE TABLE IF NOT EXISTS thread_topics (
+     thread_id  TEXT NOT NULL,
+     topic      TEXT NOT NULL,
+     PRIMARY KEY (thread_id, topic)
    )`,
 ];
 
@@ -47,6 +55,13 @@ export function createServerTopics(ctx: ServerContext, helper: Pick<HiddenHelper
         .prepare("SELECT tag FROM topic_tags WHERE owner_kind = ? AND owner_id = ? ORDER BY tag")
         .all(kind, ownerId) as Array<{ tag: string }>
     ).map((row) => row.tag);
+
+  const topicsOf = (threadId: string): string[] =>
+    (
+      ctx.db.prepare("SELECT topic FROM thread_topics WHERE thread_id = ? ORDER BY topic").all(threadId) as Array<{
+        topic: string;
+      }>
+    ).map((row) => row.topic);
 
   const toSegment = (row: SegmentRow): TopicSegment => ({
     id: row.id,
@@ -86,7 +101,11 @@ export function createServerTopics(ctx: ServerContext, helper: Pick<HiddenHelper
       const rows = ctx.db
         .prepare("SELECT * FROM topic_segments WHERE thread_id = ? ORDER BY from_seq, to_seq")
         .all(threadId) as SegmentRow[];
-      return { segments: rows.map(toSegment), threadTags: tagsOf("thread", threadId) };
+      return {
+        segments: rows.map(toSegment),
+        threadTags: tagsOf("thread", threadId),
+        threadTopics: topicsOf(threadId),
+      };
     },
     async saveTopic({ threadId, id, fromSeq, toSeq, title }) {
       const from = Math.min(fromSeq, toSeq);
@@ -126,6 +145,88 @@ export function createServerTopics(ctx: ServerContext, helper: Pick<HiddenHelper
       ctx.sandy.realtime.publish(TOPICS_CHANNEL, {});
       return { tags: tagsOf(kind, ownerId).sort() };
     },
+    async tagThreads({ threadIds, tag }) {
+      const clean = tag.trim().toLowerCase();
+      const tagged: string[] = [];
+      const atLimit: string[] = [];
+      ctx.db.transaction(() => {
+        const count = ctx.db.prepare(
+          "SELECT COUNT(*) AS total, SUM(tag = ?) AS present FROM topic_tags WHERE owner_kind = 'thread' AND owner_id = ?",
+        );
+        const insert = ctx.db.prepare("INSERT INTO topic_tags (owner_kind, owner_id, tag) VALUES ('thread', ?, ?)");
+        for (const ownerId of new Set(threadIds)) {
+          const { total, present } = count.get(clean, ownerId) as { total: number; present: number | null };
+          if (present) continue;
+          if (total >= MAX_TOPIC_TAGS) {
+            atLimit.push(ownerId);
+            continue;
+          }
+          insert.run(ownerId, clean);
+          tagged.push(ownerId);
+        }
+      })();
+      if (tagged.length > 0) ctx.sandy.realtime.publish(TOPICS_CHANNEL, {});
+      return { tagged, atLimit };
+    },
+    async untagThreads({ threadIds, tag }) {
+      const clean = tag.trim().toLowerCase();
+      const untagged: string[] = [];
+      ctx.db.transaction(() => {
+        const remove = ctx.db.prepare(
+          "DELETE FROM topic_tags WHERE owner_kind = 'thread' AND owner_id = ? AND tag = ?",
+        );
+        for (const ownerId of new Set(threadIds)) {
+          if (remove.run(ownerId, clean).changes > 0) untagged.push(ownerId);
+        }
+      })();
+      if (untagged.length > 0) ctx.sandy.realtime.publish(TOPICS_CHANNEL, {});
+      return { untagged };
+    },
+    async setThreadTopics({ threadId, topics }) {
+      const clean = [...new Set(topics.map((topic) => topic.trim()))].filter(Boolean);
+      ctx.db.transaction(() => {
+        ctx.db.prepare("DELETE FROM thread_topics WHERE thread_id = ?").run(threadId);
+        const insert = ctx.db.prepare("INSERT INTO thread_topics (thread_id, topic) VALUES (?, ?)");
+        for (const topic of clean) insert.run(threadId, topic);
+      })();
+      ctx.sandy.realtime.publish(TOPICS_CHANNEL, { threadId });
+      return { topics: topicsOf(threadId) };
+    },
+    async addThreadTopic({ threadIds, topic }) {
+      const clean = topic.trim();
+      const added: string[] = [];
+      const atLimit: string[] = [];
+      ctx.db.transaction(() => {
+        const count = ctx.db.prepare(
+          "SELECT COUNT(*) AS total, SUM(topic = ?) AS present FROM thread_topics WHERE thread_id = ?",
+        );
+        const insert = ctx.db.prepare("INSERT INTO thread_topics (thread_id, topic) VALUES (?, ?)");
+        for (const threadId of new Set(threadIds)) {
+          const { total, present } = count.get(clean, threadId) as { total: number; present: number | null };
+          if (present) continue;
+          if (total >= MAX_TOPIC_TAGS) {
+            atLimit.push(threadId);
+            continue;
+          }
+          insert.run(threadId, clean);
+          added.push(threadId);
+        }
+      })();
+      if (added.length > 0) ctx.sandy.realtime.publish(TOPICS_CHANNEL, {});
+      return { added, atLimit };
+    },
+    async removeThreadTopic({ threadIds, topic }) {
+      const clean = topic.trim();
+      const removed: string[] = [];
+      ctx.db.transaction(() => {
+        const remove = ctx.db.prepare("DELETE FROM thread_topics WHERE thread_id = ? AND topic = ?");
+        for (const threadId of new Set(threadIds)) {
+          if (remove.run(threadId, clean).changes > 0) removed.push(threadId);
+        }
+      })();
+      if (removed.length > 0) ctx.sandy.realtime.publish(TOPICS_CHANNEL, {});
+      return { removed };
+    },
     async suggestTopics({ threadId }) {
       const turns = groupTurns(await loadMessages(threadId));
       if (turns.length === 0) throw new Error("This session has no messages to analyse yet");
@@ -140,12 +241,30 @@ export function createServerTopics(ctx: ServerContext, helper: Pick<HiddenHelper
         .all() as Array<{ owner_id: string; tag: string }>) {
         (threadTags[row.owner_id] ??= []).push(row.tag);
       }
+      const threadTopics: Record<string, string[]> = {};
+      for (const row of ctx.db.prepare("SELECT thread_id, topic FROM thread_topics ORDER BY topic").all() as Array<{
+        thread_id: string;
+        topic: string;
+      }>) {
+        (threadTopics[row.thread_id] ??= []).push(row.topic);
+      }
       const rows = ctx.db.prepare("SELECT * FROM topic_segments ORDER BY thread_id, from_seq").all() as SegmentRow[];
-      return { threadTags, segments: rows.map(toSegment) };
+      return { threadTags, threadTopics, segments: rows.map(toSegment) };
     },
   } satisfies Pick<
     ServerHandlers,
-    "getThreadMessages" | "listTopics" | "saveTopic" | "deleteTopic" | "setTopicTags" | "suggestTopics" | "listAllTags"
+    | "getThreadMessages"
+    | "listTopics"
+    | "saveTopic"
+    | "deleteTopic"
+    | "setTopicTags"
+    | "tagThreads"
+    | "untagThreads"
+    | "setThreadTopics"
+    | "addThreadTopic"
+    | "removeThreadTopic"
+    | "suggestTopics"
+    | "listAllTags"
   >;
 
   return { handlers };

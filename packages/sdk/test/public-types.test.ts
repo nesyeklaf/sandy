@@ -371,7 +371,13 @@ type ExpectedSystemKey =
 
 type ExpectedSystemUiPreferencesKey = "list" | "reset" | "set";
 
-type ExpectedThemeKey = "catalog" | "get" | "resolve" | "set";
+type ExpectedThemeKey =
+  | "catalog"
+  | "experimental_check"
+  | "experimental_create"
+  | "get"
+  | "resolve"
+  | "set";
 
 type ExpectedThreadSectionsKey = "create" | "delete" | "list" | "update";
 

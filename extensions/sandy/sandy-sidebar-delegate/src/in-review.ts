@@ -14,6 +14,13 @@ function threadPullRequest(
   return environmentId ? (byEnvironment.get(environmentId) ?? null) : null;
 }
 
+export function threadPullRequestState(
+  thread: Pick<PluginSidebarThread, "environment">,
+  byEnvironment: PullRequestsByEnvironment,
+): EnvironmentPullRequest["state"] | null {
+  return threadPullRequest(thread, byEnvironment)?.state ?? null;
+}
+
 export function isInReview(
   thread: Pick<PluginSidebarThread, "environment">,
   byEnvironment: PullRequestsByEnvironment,

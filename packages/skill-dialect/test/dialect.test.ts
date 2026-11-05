@@ -62,7 +62,7 @@ describe("think-it-through", () => {
     expect(review.next.map((e) => e.to)).toEqual(["weigh", "decide", "done"]);
     expect(review.next[0]).toMatchObject({
       max: 2,
-      exceeded: "owner",
+      exceeded: "decide",
       cond: { fn: "equals", ref: "review.Verdict", value: "fix" },
     });
     expect(review.next[2]?.cond).toBeUndefined();
@@ -199,6 +199,18 @@ describe("broken skills", () => {
       'Address those first.\n{% next to="done" label="x" /%}',
     );
     expect(nested.problems[0]?.message).toBe("{% next %} inside an if");
+  });
+
+  it("refuses an exceeded target that is no stage and an owner pick outside a user gate", () => {
+    expect(
+      broken('exceeded="decide"', 'exceeded="decid"').problems[0]?.message,
+    ).toBe('exceeded="decid" is not a stage');
+    expect(
+      broken('{% stage id="decide" gate="user" %}', '{% stage id="decide" %}')
+        .problems[0]?.message,
+    ).toBe(
+      'by="owner" output "Decision" needs a choice(...) type in a stage with gate="user"',
+    );
   });
 });
 

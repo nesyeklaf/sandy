@@ -1342,6 +1342,33 @@ describe("loadPluginApp", () => {
     ).rejects.toThrow('slots.messageAction: duplicate id "dup"');
   });
 
+  it("keeps messageAction surfaces and rejects unknown ones", async () => {
+    const loaded = await loadPluginApp(
+      definePluginApp((builder) => {
+        builder.slots.messageAction({
+          id: "pill",
+          title: "Pill",
+          surfaces: ["selection"],
+          run: () => {},
+        });
+      }),
+    );
+    expect(loaded.messageActions[0]?.surfaces).toEqual(["selection"]);
+    await expect(
+      loadPluginApp(
+        definePluginApp((builder) => {
+          builder.slots.messageAction({
+            id: "bad",
+            title: "Bad",
+            // @ts-expect-error deliberately invalid surface
+            surfaces: ["toolbar"],
+            run: () => {},
+          });
+        }),
+      ),
+    ).rejects.toThrow('slots.messageAction: "surfaces" must be');
+  });
+
   it("validates message metadata components and placement", async () => {
     const component = () => null;
     const captured = await loadPluginApp(
@@ -1365,7 +1392,7 @@ describe("loadPluginApp", () => {
           });
         }),
       ),
-    ).rejects.toThrow('"placement" must be "above" or "actionRow"');
+    ).rejects.toThrow('"placement" must be "above", "actionRow" or "below"');
 
     await expect(
       loadPluginApp(

@@ -3475,9 +3475,13 @@ export interface ExperimentalMessageMetadataProps {
  * its side. `"actionRow"` sits in the message's action row and shows and hides
  * with the actions, before them on user messages and after the overflow menu
  * on assistant messages. It extends into the space beside the message rather
- * than narrowing the actions.
+ * than narrowing the actions. `"below"` sits under the message in its full
+ * column width, for cards that belong to the message, such as notes.
  */
-export type ExperimentalMessageMetadataPlacement = "above" | "actionRow";
+export type ExperimentalMessageMetadataPlacement =
+  | "above"
+  | "actionRow"
+  | "below";
 
 /** A React contribution beside a conversation message. */
 export interface ExperimentalMessageMetadataRegistration {
@@ -3521,6 +3525,11 @@ export interface PluginMessageActionRegistration {
   /** Tooltip / menu label for the action. */
   title: string;
   icon?: SandyIconName;
+  /**
+   * Where the action shows. Omitted means both the per-message action bar and
+   * the text-selection menu; ['selection'] keeps it out of the action bar.
+   */
+  surfaces?: readonly ("actionBar" | "selection")[];
   /**
    * Runs when the user activates the action. Errors (sync or async) are
    * contained and logged; they never break the timeline.

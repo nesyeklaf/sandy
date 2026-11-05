@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   sidebarSettings,
@@ -16,10 +17,11 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("sidebar settings", () => {
   it("keeps project colors opt-in and ignores the removed archive preview settings", async () => {
-    localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ settled: true, archived: true }));
+    localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ archived: true }));
     let settings = { ...defaultSidebarSettings, archivedShelfEnabled: true };
     const rendered = renderSlot(inbox, listProps, {
       sidebarThreads: {
@@ -38,21 +40,20 @@ describe("sidebar settings", () => {
       },
     });
     await screen.findByText("Live work");
-    const settledShelf = await screen.findByRole("region", { name: "Settled" });
+    const settledShelf = await screen.findByRole("region", { name: "Archived" });
     await within(settledShelf).findByText("Settled work");
     expect(within(settledShelf).queryByRole("button", { name: "Archive thread" })).toBeNull();
-    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
+    expect(within(settledShelf).getByText("Old work")).toBeDefined();
     expect(document.querySelector("[data-project-stripe]")).toBeNull();
     expect(rendered.rpcCalls.some((call) => call.method === "getProjectColors")).toBe(false);
     expect(screen.queryByRole("button", { name: "Archive all settled threads" })).toBeNull();
     settings = { ...settings, projectColorsEnabled: true };
     await rendered.emitRealtime("sidebar-settings", {});
-    expect(screen.queryByText("Old work")).toBeNull();
     expect(within(settledShelf).queryByRole("button", { name: "Archive thread" })).toBeNull();
     await waitFor(() => expect(document.querySelector("[data-project-stripe]")).not.toBeNull());
     settings = { ...settings, projectColorsEnabled: false };
     await rendered.emitRealtime("sidebar-settings", {});
-    await waitFor(() => expect(screen.queryByRole("region", { name: "Archived" })).toBeNull());
+    await waitFor(() => expect(document.querySelector("[data-project-stripe]")).toBeNull());
     expect(within(settledShelf).queryByRole("button", { name: "Archive thread" })).toBeNull();
     expect(within(settledShelf).getByText("Settled work")).toBeDefined();
     expect(document.querySelector("[data-project-stripe]")).toBeNull();
@@ -71,7 +72,6 @@ describe("sidebar settings", () => {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
           projectColorsEnabled: true,
-          inactiveThreadsEnabled: false,
         }),
         getProjectColors: () => ({ colors }),
         listLifecycle: () => ({ rows: [] }),
@@ -80,7 +80,9 @@ describe("sidebar settings", () => {
     const group = await screen.findByRole("region", { name: "add_on project" });
     await waitFor(() =>
       expect(
-        (group.querySelector("[data-project-stripe]") as HTMLElement)?.style.getPropertyValue("--sandy-sidebar-project"),
+        (group.querySelector("[data-project-stripe]") as HTMLElement)?.style.getPropertyValue(
+          "--sandy-sidebar-project",
+        ),
       ).toBe("#123456"),
     );
     expect(group.querySelectorAll("[data-project-stripe]")).toHaveLength(1);
@@ -98,12 +100,12 @@ describe("sidebar settings", () => {
 
   it("limits stripes by display mode while keeping all project names colored", async () => {
     localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-    localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ settled: true, archived: true }));
+    localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ archived: true }));
     let settings = {
       ...defaultSidebarSettings,
       projectColorsEnabled: true,
-      inactiveThreadsEnabled: false,
-      threadDisplay: "compact-working" as const,
+      threadDensity: "dense" as const,
+      keepPinnedThreadsFull: true,
       compactWorkingThreads: true,
     };
     const rendered = renderSlot(inbox, listProps, {
@@ -119,14 +121,8 @@ describe("sidebar settings", () => {
         threads: [
           thread({ id: "a", projectId: "group", title: "First grouped" }),
           thread({ id: "b", projectId: "group", title: "Second grouped" }),
-          thread({ id: "single", projectId: "single", title: "Full card" }),
-          thread({
-            id: "busy",
-            projectId: "busy",
-            title: "Compact card",
-            indicator: "runtime",
-            indicatorLabel: "Working",
-          }),
+          thread({ id: "single", projectId: "single", title: "Full card", isPinned: true }),
+          thread({ id: "busy", projectId: "busy", title: "Compact card" }),
           thread({ id: "settled", projectId: "settled", title: "Settled row" }),
         ],
       },
@@ -138,9 +134,9 @@ describe("sidebar settings", () => {
     });
     const group = await screen.findByRole("region", { name: "group project" });
     await screen.findByText("Settled row");
-    const assertColor = (element: Element, showStripe: boolean) => {
+    const assertColor = (element: Element, showStripe: boolean, named = true) => {
       expect(element.querySelectorAll("[data-project-stripe]")).toHaveLength(showStripe ? 1 : 0);
-      expect(element.querySelector(".sandy-sidebar-project-name")).not.toBeNull();
+      if (named) expect(element.querySelector(".sandy-sidebar-project-name")).not.toBeNull();
       expect(element.querySelector(".sandy-sidebar-project-monogram")).not.toBeNull();
     };
     const row = (title: string) => screen.getByText(title).closest("li")!;
@@ -151,7 +147,7 @@ describe("sidebar settings", () => {
       await waitFor(() => {
         assertColor(group, true);
         assertColor(row("Full card"), display !== "grouped");
-        assertColor(row("Compact card"), display === "all");
+        assertColor(row("Compact card"), display === "all", false);
         assertColor(row("Settled row"), display === "all");
       });
       expect(within(group).getByRole("list").querySelector("[data-project-stripe]")).toBeNull();
@@ -163,9 +159,8 @@ describe("sidebar settings", () => {
     fireEvent.click(await screen.findByRole("radio", { name: "Manual order" }), { detail: 1 });
     await waitFor(() => expect(screen.queryByRole("region", { name: "group project" })).toBeNull());
     expect(document.querySelector("[data-project-stripe]")).toBeNull();
-    for (const title of ["First grouped", "Second grouped", "Full card", "Compact card", "Settled row"]) {
-      assertColor(row(title), false);
-    }
+    for (const title of ["Full card", "Settled row"]) assertColor(row(title), false);
+    for (const title of ["First grouped", "Second grouped", "Compact card"]) assertColor(row(title), false, false);
     settings = { ...settings, projectColorsEnabled: false };
     await rendered.emitRealtime("sidebar-settings", {});
     await waitFor(() => expect(document.querySelector(".sandy-sidebar-project-name")).toBeNull());
@@ -290,8 +285,8 @@ describe("sidebar settings", () => {
     ]);
     expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull();
     const layout = screen.getByRole("region", { name: "Sidebar layout" });
-    expect(within(layout).getAllByText("Experimental")).toHaveLength(3);
-    expect(within(layout).getByRole("switch", { name: "Working shelf" })).toBeDefined();
+    expect(within(layout).getAllByText("Experimental")).toHaveLength(1);
+    expect(within(layout).queryByRole("switch", { name: "Working shelf" })).toBeNull();
     expect(within(layout).queryByRole("switch", { name: "Archived shelf" })).toBeNull();
     const appearance = screen.getByRole("region", { name: "Repo appearance" });
     expect(within(appearance).getByRole("switch", { name: "Repo colors" })).toBeDefined();
@@ -301,9 +296,6 @@ describe("sidebar settings", () => {
     expect(screen.queryByRole("region", { name: "Archiving" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Archive all settled threads" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
-    expect(screen.getByRole("switch", { name: "Inactive shelf" }).querySelector("span")?.className).toContain(
-      "left-0.5",
-    );
     expect(screen.getByRole("switch", { name: "Show children that need attention" }).getAttribute("aria-checked")).toBe(
       "true",
     );
@@ -377,25 +369,14 @@ describe("sidebar settings", () => {
 
     fireEvent.change(snoozeInput, { target: { value: "tomorrow@25:00" } });
     expect(snoozeInput.getAttribute("aria-invalid")).toBe("true");
+    await act(async () => vi.advanceTimersByTimeAsync(700));
+    expect(saves).toEqual([]);
     fireEvent.change(snoozeInput, { target: { value: "Morning=tomorrow@08:30" } });
     expect(preview()).toEqual(["Morning"]);
 
-    const inactiveHours = screen.getByLabelText("Hours before inactive");
-    fireEvent.change(inactiveHours, { target: { value: "0" } });
-    expect(inactiveHours.getAttribute("aria-invalid")).toBe("true");
-    expect(screen.getByText("Enter a whole number from 1 to 720.")).toBeDefined();
-    // Past the save delay, nothing invalid has been sent.
     await act(async () => vi.advanceTimersByTimeAsync(700));
-    expect(saves).toEqual([]);
-
-    // Turning the rule off hides the value it no longer uses.
-    fireEvent.click(screen.getByRole("switch", { name: "Inactive shelf" }));
-    expect(screen.queryByLabelText("Hours before inactive")).toBeNull();
-    await act(async () => vi.advanceTimersByTimeAsync(500));
     expect(saves).toHaveLength(1);
     expect(saves[0]).toMatchObject({
-      inactiveThreadsEnabled: false,
-      inactiveAfterHours: defaultSidebarSettings.inactiveAfterHours,
       snoozePresets: "Morning=tomorrow@08:30",
     });
   });
@@ -454,7 +435,6 @@ describe("sidebar settings", () => {
   it("keeps a settings cache written before the child-thread settings", () => {
     const previous: Record<string, unknown> = {
       ...defaultSidebarSettings,
-      inactiveAfterHours: 12,
     };
     delete previous.childSortField;
     delete previous.childSortDirection;
@@ -475,7 +455,6 @@ describe("sidebar settings", () => {
 
     expect(screen.queryByText("Loading settings...")).toBeNull();
     expect(screen.getByRole("combobox", { name: "Show repo stripes in" })).toHaveProperty("value", "all");
-    expect((screen.getByLabelText("Hours before inactive") as HTMLInputElement).value).toBe("12");
     expect((screen.getByLabelText("Child threads sort field") as HTMLSelectElement).value).toBe("created");
     expect((screen.getByLabelText("Child thread icon") as HTMLSelectElement).value).toBe("disc");
   });
@@ -495,7 +474,7 @@ describe("sidebar settings", () => {
 
     const shortcuts = await screen.findByLabelText("Snooze shortcuts");
     fireEvent.change(shortcuts, { target: { value: "Local=45m" } });
-    remoteSettings = { ...defaultSidebarSettings, inactiveAfterHours: 12 };
+    remoteSettings = { ...defaultSidebarSettings, autoSettleAfterDays: 12 };
 
     await rendered.emitRealtime("sidebar-settings", {});
 

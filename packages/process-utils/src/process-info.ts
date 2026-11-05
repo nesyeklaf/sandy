@@ -51,7 +51,7 @@ async function readWindowsProcess(pid: number) {
         [
           "$ErrorActionPreference = 'Stop'",
           "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)",
-          `Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}' | ForEach-Object { @{ command = $_.CommandLine; startedAt = ([DateTimeOffset]$_.CreationDate).ToUnixTimeMilliseconds() } | ConvertTo-Json -Compress }`,
+          `foreach ($p in ([wmisearcher]'select CommandLine,CreationDate from Win32_Process where ProcessId = ${pid}').Get()) { $started = ([DateTimeOffset][Management.ManagementDateTimeConverter]::ToDateTime($p.CreationDate)).ToUnixTimeMilliseconds(); [Console]::Out.Write([string]$started + [char]10 + $p.CommandLine); break }`,
         ].join("; "),
       ],
       {
@@ -63,18 +63,12 @@ async function readWindowsProcess(pid: number) {
     );
     pending.child.stdin?.end();
     const { stdout } = await pending;
-    const value: unknown = JSON.parse(stdout);
-    if (
-      typeof value !== "object" ||
-      value === null ||
-      !("command" in value) ||
-      !("startedAt" in value) ||
-      (typeof value.command !== "string" && value.command !== null) ||
-      typeof value.startedAt !== "number" ||
-      !Number.isFinite(value.startedAt)
-    )
-      return null;
-    return { command: value.command, startedAt: value.startedAt };
+    const separator = stdout.indexOf("\n");
+    if (separator < 0) return null;
+    const startedAt = Number(stdout.slice(0, separator));
+    if (!Number.isFinite(startedAt)) return null;
+    const command = stdout.slice(separator + 1).trim();
+    return { command: command === "" ? null : command, startedAt };
   } catch {
     return null;
   }

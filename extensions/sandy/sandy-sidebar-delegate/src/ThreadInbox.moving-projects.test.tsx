@@ -11,7 +11,7 @@ await loadInboxApp();
 describe("ThreadInbox", () => {
   describe("moving projects as a whole", () => {
     it.each([true, false])(
-      "retains scoped active and deep queued attention in a collapsed project: setting=%s",
+      "retains scoped active and deep finished attention in a collapsed project: setting=%s",
       async (showAttention) => {
         window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
         window.localStorage.setItem("sandy-sidebar:project-collapse:v1", JSON.stringify(["web"]));
@@ -30,8 +30,8 @@ describe("ThreadInbox", () => {
                   id: "deep",
                   projectId: "web",
                   parentThreadId: "grandchild",
-                  title: "Queued failed leaf",
-                  queuedWork: "failed",
+                  title: "Done leaf",
+                  indicator: "unread-success",
                 }),
               ],
               projects: [{ id: "web", name: "Web", isPersonal: false, href: "", settingsHref: "" }],
@@ -47,7 +47,7 @@ describe("ThreadInbox", () => {
           },
         );
         await waitFor(() => expect(rendered.rpcCalls.some((call) => call.method === "getSidebarSettings")).toBe(true));
-        const active = screen.getByRole("region", { name: "Needs you" });
+        const active = screen.getByRole("region", { name: "Waiting" });
         await waitFor(() =>
           expect(
             within(active)
@@ -56,7 +56,7 @@ describe("ThreadInbox", () => {
           ).toEqual(showAttention ? ["Attention root", "Active root"] : ["Active root"]),
         );
         expect(within(active).getByRole("button", { name: "Web (2)", expanded: false })).toBeDefined();
-        expect(Boolean(within(active).queryByText("Queued failed leaf"))).toBe(showAttention);
+        expect(Boolean(within(active).queryByText("Done leaf"))).toBe(showAttention);
         expect(rendered.rpcCalls.filter((call) => call.method.startsWith("reorder"))).toEqual([]);
       },
     );
@@ -65,7 +65,7 @@ describe("ThreadInbox", () => {
       "persists collapsed project attention rows: $gesture/singleton=$singleton",
       async ({ gesture, singleton }) => {
         window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-        window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+        window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
         const childIds = ["a1", "a2", "a3", "b1", ...(singleton ? ["x1"] : [])];
         const storedIds = ["a", "x", "b", "c", ...childIds];
         const rendered = renderSlot(inbox, listProps, {
@@ -78,13 +78,13 @@ describe("ThreadInbox", () => {
               thread({ id: "x", projectId: "api", title: "Hidden other project", updatedAt: Date.now() }),
               thread({ id: "a1", projectId: "web", parentThreadId: "a", title: "Child a" }),
               thread({ id: "a2", projectId: "web", parentThreadId: "a1", title: "Grandchild a" }),
-              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep failed", queuedWork: "failed" }),
+              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep done", indicator: "unread-success" }),
               thread({
                 id: "b1",
                 projectId: "web",
                 parentThreadId: "b",
                 title: "Child b",
-                hasPendingInteraction: true,
+                indicator: "unread-success",
               }),
               ...(singleton
                 ? [
@@ -93,7 +93,7 @@ describe("ThreadInbox", () => {
                       projectId: "api",
                       parentThreadId: "x",
                       title: "Child x",
-                      hasPendingInteraction: true,
+                      indicator: "unread-success",
                     }),
                   ]
                 : []),
@@ -110,7 +110,7 @@ describe("ThreadInbox", () => {
             reorderInbox: (input) => input,
           },
         });
-        const active = await screen.findByRole("region", { name: "Needs you" });
+        const active = await screen.findByRole("region", { name: "Waiting" });
         const rowOrder = () =>
           within(active)
             .getAllByRole("link")
@@ -119,7 +119,7 @@ describe("ThreadInbox", () => {
           expect(rowOrder()).toEqual(singleton ? ["Web a", "Hidden other project", "Web b"] : ["Web a", "Web b"]),
         );
         expect(within(active).queryByRole("button", { name: "Web (3)" })).toBeNull();
-        expect(within(active).getByText("Deep failed")).toBeDefined();
+        expect(within(active).getByText("Deep done")).toBeDefined();
         const card = within(active).getByRole("link", { name: singleton ? "Hidden other project" : "Web a" });
         let preview: Array<string | null> | undefined;
         if (gesture === "keyboard") {
@@ -141,7 +141,7 @@ describe("ThreadInbox", () => {
           input: { inboxThreadIds: [...(singleton ? ["x", "a", "b", "c"] : ["b", "x", "a", "c"]), ...childIds] },
         });
         await waitFor(() => expect(rowOrder()).toEqual(expectedVisible));
-        fireEvent.click(within(active).getByRole("button", { name: /^Needs you/, expanded: false }));
+        fireEvent.click(within(active).getByRole("button", { name: /^Waiting/, expanded: false }));
         expect(within(active).getByRole("button", { name: "Web (3)" })).toBeDefined();
         expect(within(active).getByRole("link", { name: "Web c" })).toBeDefined();
         expect(rendered.rpcCalls.filter((call) => /^(pin|setThreadParent|reorderPinned)$/.test(call.method))).toEqual(
@@ -155,7 +155,7 @@ describe("ThreadInbox", () => {
       async ({ fold, gesture }) => {
         window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
         if (fold === "shelf")
-          window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+          window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
         else window.localStorage.setItem("sandy-sidebar:project-collapse:v1", JSON.stringify(["web"]));
         const order = ["a", "hidden", "b", "ca", "cb"];
         const rendered = renderSlot(inbox, listProps, {
@@ -164,8 +164,8 @@ describe("ThreadInbox", () => {
             projects: [{ id: "web", name: "Web", isPersonal: false, href: "", settingsHref: "" }],
             threads: [
               ...["a", "hidden", "b"].map((id) => thread({ id, title: id, projectId: "web", updatedAt: Date.now() })),
-              thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", hasPendingInteraction: true }),
-              thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", hasPendingInteraction: true }),
+              thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+              thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
             ],
           },
           rpc: {
@@ -175,7 +175,7 @@ describe("ThreadInbox", () => {
             reorderInbox: (input) => input,
           },
         });
-        const active = screen.getByRole("region", { name: "Needs you" });
+        const active = screen.getByRole("region", { name: "Waiting" });
         const visible = () =>
           within(active)
             .getAllByRole("link")
@@ -200,7 +200,7 @@ describe("ThreadInbox", () => {
     );
     it.each(["keyboard", "pointer"])("F1 keeps unrepresented project slot: %s", async (gesture) => {
       window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
       const order = ["a", "hidden-project", "x", "b", "ca", "cx"];
       const rendered = renderSlot(inbox, listProps, {
         sidebarThreads: {
@@ -222,8 +222,8 @@ describe("ThreadInbox", () => {
               updatedAt: Date.now(),
             }),
             thread({ id: "x", title: "x", projectId: "api", updatedAt: Date.now() }),
-            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", hasPendingInteraction: true }),
-            thread({ id: "cx", title: "cx", projectId: "api", parentThreadId: "x", hasPendingInteraction: true }),
+            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+            thread({ id: "cx", title: "cx", projectId: "api", parentThreadId: "x", indicator: "unread-success" }),
           ],
         },
         rpc: {
@@ -233,7 +233,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Needs you" });
+      const active = screen.getByRole("region", { name: "Waiting" });
       await waitFor(() =>
         expect(
           within(active)
@@ -258,7 +258,7 @@ describe("ThreadInbox", () => {
 
     it("F1 rebases participating siblings onto a pushed order without moving hidden slots", async () => {
       window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
       let order = ["a", "hidden", "b", "z", "ca", "cb"];
       const rendered = renderSlot(inbox, listProps, {
         sidebarThreads: {
@@ -268,8 +268,8 @@ describe("ThreadInbox", () => {
             ...["a", "hidden", "b", "z"].map((id) =>
               thread({ id, title: id, projectId: "web", updatedAt: Date.now() }),
             ),
-            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", hasPendingInteraction: true }),
-            thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", hasPendingInteraction: true }),
+            thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+            thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
           ],
         },
         rpc: {
@@ -279,7 +279,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Needs you" });
+      const active = screen.getByRole("region", { name: "Waiting" });
       const visible = () =>
         within(active)
           .getAllByRole("link")
@@ -305,7 +305,7 @@ describe("ThreadInbox", () => {
 
     it.each(["singleton-grows", "source-joins-target"])("F2 cancels a vanished moving unit key: %s", async (change) => {
       window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
       const rows = [
         thread({ id: "a", title: "a", projectId: "web", updatedAt: Date.now() }),
         thread({ id: "x", title: "x", projectId: "api", updatedAt: Date.now() }),
@@ -316,7 +316,7 @@ describe("ThreadInbox", () => {
           ["cx", "x", "api"],
           ["cy", "y", "zed"],
         ].map(([id, parentThreadId, projectId]) =>
-          thread({ id, title: id, parentThreadId, projectId, hasPendingInteraction: true }),
+          thread({ id, title: id, parentThreadId, projectId, indicator: "unread-success" }),
         ),
       ];
       let order = ["a", "x", "y", "b", "ca", "cx", "cy"];
@@ -346,7 +346,7 @@ describe("ThreadInbox", () => {
           },
         },
       );
-      const active = screen.getByRole("region", { name: "Needs you" });
+      const active = screen.getByRole("region", { name: "Waiting" });
       const visible = () =>
         within(active)
           .getAllByRole("link")
@@ -388,11 +388,11 @@ describe("ThreadInbox", () => {
 
     it("F2 preserves the member-shrinks no-op", async () => {
       window.localStorage.setItem("sandy-sidebar:active-sort:v1", "project");
-      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ active: false }));
+      window.localStorage.setItem("sandy-sidebar:shelf-expansion:v1", JSON.stringify({ waiting: false }));
       const rows = [
         ...["a", "hidden", "b"].map((id) => thread({ id, title: id, projectId: "web", updatedAt: Date.now() })),
-        thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", hasPendingInteraction: true }),
-        thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", hasPendingInteraction: true }),
+        thread({ id: "ca", title: "ca", projectId: "web", parentThreadId: "a", indicator: "unread-success" }),
+        thread({ id: "cb", title: "cb", projectId: "web", parentThreadId: "b", indicator: "unread-success" }),
       ];
       let order = ["a", "hidden", "b", "ca", "cb"];
       const rendered = renderSlot(inbox, listProps, {
@@ -408,7 +408,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Needs you" });
+      const active = screen.getByRole("region", { name: "Waiting" });
       const visible = () =>
         within(active)
           .getAllByRole("link")

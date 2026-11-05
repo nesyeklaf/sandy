@@ -1,7 +1,12 @@
 import { z } from "zod";
 import type { ServerContext } from "./server-context";
 import { sidebarSettingsSchema } from "./contract";
-import { DEFAULT_SIDEBAR_SETTINGS, threadDisplayOf, type SidebarSettingsValues } from "./sidebar-settings-values";
+import {
+  DEFAULT_SIDEBAR_SETTINGS,
+  shelfDensitiesOf,
+  threadDensityOf,
+  type SidebarSettingsValues,
+} from "./sidebar-settings-values";
 
 // Derive each field's fallback from the shared defaults. Adding a setting
 // needs no repository change, and one invalid field cannot discard others.
@@ -25,15 +30,14 @@ export async function createServerSettings(ctx: ServerContext) {
       if (stored === null || typeof stored !== "object" || Array.isArray(stored)) {
         throw new Error("Expected a JSON object");
       }
-      // Merge defaults before parsing so older JSON also covers new fields.
-      // Thread display falls back to the old switch, not the default.
-      const threadDisplay = threadDisplayOf(stored);
+      const threadDensity = threadDensityOf(stored);
       return sidebarSettingsSchema.parse(
         storedSettingsSchema.parse({
           ...DEFAULT_SIDEBAR_SETTINGS,
           ...stored,
-          threadDisplay,
-          compactWorkingThreads: threadDisplay !== "full",
+          threadDensity,
+          shelfDensities: shelfDensitiesOf((stored as { shelfDensities?: unknown }).shelfDensities),
+          compactWorkingThreads: threadDensity !== "comfortable",
         }),
       );
     } catch (error) {
@@ -58,8 +62,6 @@ export async function createServerSettings(ctx: ServerContext) {
       const values = legacy.values;
       const hasLegacyValues = [
         "snoozePresets",
-        "inactiveThreadsEnabled",
-        "inactiveAfterHours",
         "showRunningChildrenWhenCollapsed",
         "autoSettleInactive",
         "autoSettleAfterDays",
@@ -69,14 +71,6 @@ export async function createServerSettings(ctx: ServerContext) {
         ...DEFAULT_SIDEBAR_SETTINGS,
         snoozePresets:
           typeof values.snoozePresets === "string" ? values.snoozePresets : DEFAULT_SIDEBAR_SETTINGS.snoozePresets,
-        inactiveThreadsEnabled:
-          typeof values.inactiveThreadsEnabled === "boolean"
-            ? values.inactiveThreadsEnabled
-            : DEFAULT_SIDEBAR_SETTINGS.inactiveThreadsEnabled,
-        inactiveAfterHours:
-          typeof values.inactiveAfterHours === "string"
-            ? Number(values.inactiveAfterHours)
-            : DEFAULT_SIDEBAR_SETTINGS.inactiveAfterHours,
         showRunningChildrenWhenCollapsed:
           typeof values.showRunningChildrenWhenCollapsed === "boolean"
             ? values.showRunningChildrenWhenCollapsed

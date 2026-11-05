@@ -39,10 +39,10 @@ test("Active sort arrow keys keep the picker open until Enter commits", async ({
   await expect(picker).toBeHidden();
 });
 
-test("Active sort keeps Project open and dismisses other pointer choices", async ({ page }) => {
+test("Active sort keeps Repo open and dismisses other pointer choices", async ({ page }) => {
   await page.getByRole("button", { name: "Sort active threads: Manual order" }).click();
   const picker = page.getByRole("dialog", { name: "Sort active threads" });
-  await picker.getByText("Project", { exact: true }).click();
+  await picker.getByText("Repo", { exact: true }).click();
   const project = picker.getByRole("radio", { name: "Repo", exact: true });
   await expect(project).toBeChecked();
   await project.press("Enter");

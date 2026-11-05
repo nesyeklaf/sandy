@@ -124,14 +124,19 @@ export function threadAsksForInput(thread: PluginSidebarThread): boolean {
  * is shown under its parent rather than in its own row, so the parent's
  * placement has to answer for it: such a tree belongs in Active, and wakes
  * from a snooze, just as it would if the parent itself had asked.
- *
- * Walks up from each asking thread; archived ancestors and cycles stop it.
  */
 export function threadsWithAskingDescendants(threads: readonly PluginSidebarThread[]): ReadonlySet<string> {
+  return threadsWithDescendantsWhere(threads, threadAsksForInput);
+}
+
+export function threadsWithDescendantsWhere(
+  threads: readonly PluginSidebarThread[],
+  matches: (thread: PluginSidebarThread) => boolean,
+): ReadonlySet<string> {
   const result = new Set<string>();
   let byId: ReadonlyMap<string, PluginSidebarThread> | undefined;
   for (const thread of threads) {
-    if (thread.isArchived || thread.parentThreadId === null || !threadAsksForInput(thread)) continue;
+    if (thread.isArchived || thread.parentThreadId === null || !matches(thread)) continue;
     byId ??= new Map(threads.map((candidate) => [candidate.id, candidate]));
     const visited = new Set([thread.id]);
     let parent = byId.get(thread.parentThreadId);

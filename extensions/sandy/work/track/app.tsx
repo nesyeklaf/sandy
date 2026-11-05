@@ -581,12 +581,17 @@ function HeaderPill({ threadId, isCompactViewport }: { threadId: string; isCompa
 
 // ---- composer forms --------------------------------------------------------------------------------
 
-function Decision({ submit, cancel, approveLabel }: Pick<PluginPendingInteractionProps, "submit" | "cancel"> & { approveLabel: string }) {
+function Decision({
+  submit,
+  cancel,
+  approveLabel,
+  picks,
+}: Pick<PluginPendingInteractionProps, "submit" | "cancel"> & { approveLabel: string; picks?: { values: Record<string, string>; complete: boolean } }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const send = (approved: boolean) => {
     setBusy(true);
-    submit({ approved, ...(note.trim() ? { note: note.trim() } : {}) }).finally(() => setBusy(false));
+    submit({ approved, ...(note.trim() ? { note: note.trim() } : {}), ...(approved && picks ? { picks: picks.values } : {}) }).finally(() => setBusy(false));
   };
   return (
     <div className="space-y-2">
@@ -599,7 +604,7 @@ function Decision({ submit, cancel, approveLabel }: Pick<PluginPendingInteractio
         className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm"
       />
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" disabled={busy} onClick={() => send(true)}>
+        <Button size="sm" disabled={busy || (picks !== undefined && !picks.complete)} onClick={() => send(true)}>
           <Icon name="Check" />
           {approveLabel}
         </Button>
@@ -625,10 +630,13 @@ type GatePayload = {
   evidence: { name: string; value: string }[];
   results: { ok: boolean; detail: string }[];
   driver: string;
+  choices?: { name: string; options: string[] }[];
 };
 
 function GateApproval({ interaction, submit, cancel }: PluginPendingInteractionProps) {
   const p = interaction.payload as unknown as GatePayload;
+  const choices = p.choices ?? [];
+  const [picked, setPicked] = useState<Record<string, string>>({});
   return (
     <div className="max-h-[60vh] space-y-2 overflow-y-auto p-3 text-sm">
       <div className="flex items-center gap-2">
@@ -675,7 +683,31 @@ function GateApproval({ interaction, submit, cancel }: PluginPendingInteractionP
           ))}
         </Section>
       ) : null}
-      <Decision submit={submit} cancel={cancel} approveLabel="Approve" />
+      {choices.map((choice) => (
+        <div key={choice.name} className="space-y-1">
+          <div className="text-xs font-medium">{choice.name}</div>
+          <div role="radiogroup" aria-label={choice.name} className="flex flex-wrap gap-2">
+            {choice.options.map((option) => (
+              <Button
+                key={option}
+                size="sm"
+                role="radio"
+                aria-checked={picked[choice.name] === option}
+                variant={picked[choice.name] === option ? "default" : "outline"}
+                onClick={() => setPicked((prev) => ({ ...prev, [choice.name]: option }))}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <Decision
+        submit={submit}
+        cancel={cancel}
+        approveLabel={choices.length ? "Confirm pick" : "Approve"}
+        {...(choices.length ? { picks: { values: picked, complete: choices.every((c) => picked[c.name] !== undefined) } } : {})}
+      />
     </div>
   );
 }

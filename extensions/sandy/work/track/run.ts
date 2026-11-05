@@ -196,7 +196,7 @@ export type SystemCommand =
   | { by: "system"; op: "ran"; ticket: Ticket; workId: number; exitCode: number; durationMs: number; tail: string }
   | { by: "system"; op: "interrupted"; ticket: Ticket; workId: number; reason: string } // a started job's command could not run: no exit code, never run again
   // answered and woke name their run: a ticket-less (run-scoped) form or tell of one run never settles a later one.
-  | { by: "system"; op: "answered"; runId: RunId; ticket: Ticket | null; formId: number; approved: boolean; note?: string }
+  | { by: "system"; op: "answered"; runId: RunId; ticket: Ticket | null; formId: number; approved: boolean; note?: string; picks?: Record<string, string> }
   | { by: "system"; op: "woke"; runId: RunId; ticket: Ticket | null; kind: "told" | "launched"; attempt: number }
   | { by: "system"; op: "outcomeTold"; ticket: Ticket; workId: number }
   | { by: "system"; op: "pendingTold"; runId: RunId; rev: number }
@@ -478,11 +478,13 @@ function submit(run: Active, input: { outputs?: Record<string, string>; evidence
   const evidence = input.evidence ?? {};
   const derivedNames = new Set((stage.derive ?? []).map((d) => d.name));
   const derivedOut = Object.keys(outputs).filter((n) => derivedNames.has(n));
+  const ownerOut = Object.keys(outputs).filter((n) => ownerPicks(stage).some((o) => o.name === n));
   const unknownOut = Object.keys(outputs).filter((n) => !outputNames.has(n) && !derivedNames.has(n));
   const unknownEv = Object.keys(evidence).filter((n) => !evidenceNames.has(n));
   const typedRan = Object.keys(evidence).filter((n) => ranOnly.has(n));
   const reasons = [
     derivedOut.length ? `${derivedOut.join(", ")} ${derivedOut.length === 1 ? "is" : "are"} decided by the track from the other outputs; submit only: ${[...outputNames].join(", ") || "none"}` : "",
+    ownerOut.length ? `${ownerOut.join(", ")} ${ownerOut.length === 1 ? "is" : "are"} picked by the owner in the gate form; call stage_advance and do not ask in chat` : "",
     unknownOut.length ? `Unknown outputs for stage "${stage.id}": ${unknownOut.join(", ")} (expected: ${[...outputNames].join(", ") || "none"})` : "",
     unknownEv.length ? `Unknown evidence: ${unknownEv.join(", ")} (expected: ${[...evidenceNames].join(", ") || "none"})` : "",
     typedRan.length ? `Evidence ${typedRan.join(", ")} is recorded only by a plugin-run command (sandy work track drive run --label <name>)` : "",
@@ -506,7 +508,9 @@ function advance(run: Active, to: string | undefined, note: string | undefined, 
   const lease = run.state.lease;
   if (lease.work !== null) return { run, reply: { kind: "busy", work: lease.work } };
   const stage = stageOf(run.machine, lease.stage);
-  const edge: { ok: true; to: string | null; because?: string } | { ok: false; error: string } = decides(stage) ? decidedEdge(run, stage, to) : pickEdge(stage, to);
+  const picked = ownerPicks(stage).length > 0;
+  if (picked && to !== undefined) return { run, reply: refusedReply("The owner picks the branch of this stage in the gate form: call stage_advance without to.") };
+  const edge: { ok: true; to: string | null; because?: string } | { ok: false; error: string } = picked ? { ok: true, to: null } : decides(stage) ? decidedEdge(run, stage, to) : pickEdge(stage, to);
   if (!edge.ok) return { run, reply: refusedReply(edge.error) };
   const because = edge.because;
   const rules = rulesFor(stage, edge.to);
@@ -562,7 +566,7 @@ function pass(run: Active, edgeTo: string | null, now: number, how: string, fina
     return { run: mint(closed, null, { kind: "agent" }, "advance", now, ""), reply: { kind: "finished" } };
   }
   const stage = stageOf(run.machine, lease.stage);
-  const next = mint(closed, to, driverFor(run.machine, run.plan, to), "advance", now, `advanced from ${stage.title} (${stage.id}): ${how}`);
+  const next = mint(closed, to, driverFor(run.machine, run.plan, to), "advance", now, `advanced from ${stage.title} (${stage.id}): ${how}${because ? `; ${because}` : ""}`);
   return { run: next, reply: { kind: "entered", station: stationOf(next)! } };
 }
 
@@ -634,6 +638,31 @@ function typedOutputs(run: Run, stage: Stage, outputs: Record<string, string>, n
 
 type Decided = { ok: true; to: string; because: string } | { ok: false; error: string; limited: boolean };
 
+function ownerPicks(stage: Stage): Stage["outputs"] {
+  return stage.outputs.filter((o) => o.by === "owner");
+}
+
+function ownerChoices(stage: Stage): { name: string; options: string[] }[] {
+  return ownerPicks(stage).flatMap((o) => {
+    const parsed = o.type === undefined ? undefined : parseType(o.type);
+    return parsed?.ok && parsed.type.kind === "choice" ? [{ name: o.name, options: parsed.type.options }] : [];
+  });
+}
+
+/** The owner approved a gate whose stage has owner-picked outputs: the picks become outputs, then the track picks the branch. */
+function ownerPicked(run: Active, stage: Stage, workId: number, picks: Record<string, string>, ownerNote: string | undefined, now: number): Step {
+  const lease = run.state.lease;
+  const missing = ownerChoices(stage).filter((c) => !c.options.includes(picks[c.name] ?? ""));
+  const refuse = (reasons: string[]): Step => ({ run: withLease(run, { ...lease, work: null, outcome: { kind: "refused", workId, reasons, delivered: false } }), reply: { kind: "ok" } });
+  if (missing.length) return refuse([`the owner approved without picking ${missing.map((c) => `${c.name} (${c.options.join(", ")})`).join(", ")}`]);
+  const outputs = { ...lease.submissions.outputs, ...Object.fromEntries(ownerChoices(stage).map((c) => [c.name, picks[c.name]!])) };
+  const filled = withLease(run, { ...lease, submissions: { ...lease.submissions, outputs } });
+  const edge: { ok: true; to: string | null; because?: string } | { ok: false; error: string } = decides(stage) ? decidedEdge(filled, stage, undefined) : pickEdge(stage, undefined);
+  if (!edge.ok) return refuse([edge.error]);
+  const because = edge.because;
+  return { run: pass(filled, edge.to, now, `the owner picked ${Object.entries(picks).map(([k, v]) => `${k}=${v}`).join(", ")}${ownerNote ? `: ${ownerNote}` : ""}`, undefined, because).run, reply: { kind: "ok" } };
+}
+
 function decidedEdge(run: Active, stage: Stage, to: string | undefined): Decided {
   const outputs = run.state.lease.submissions.outputs;
   const typed = typedOutputs(run, stage, outputs, Object.keys(outputs));
@@ -648,6 +677,8 @@ function decidedEdge(run: Active, stage: Stage, to: string | undefined): Decided
   if (to !== undefined && to !== edge.to)
     return { ok: false, error: `The track decides this branch: "${edge.to}"${edge.when ? ` (${edge.when})` : ""}, because ${because}. Call stage_advance without to.`, limited: false };
   const taken = run.edgeCounts?.[`${stage.id}>${edge.to}`] ?? 0;
+  if (edge.max !== undefined && taken >= edge.max && edge.exceeded !== undefined && edge.exceeded !== "owner")
+    return { ok: true, to: edge.exceeded, because: clip(`round limit reached: "${edge.to}" was taken ${taken} of at most ${edge.max} times (${because})`, BECAUSE_CHARS) };
   if (edge.max !== undefined && taken >= edge.max)
     return {
       ok: false,
@@ -798,6 +829,8 @@ function systemStep(run: Run | null, c: SystemCommand, now: number): Step {
       if (work === null || work.id !== c.formId || work.kind === "run" || (work.kind === "gate" && work.phase !== "asking")) return ignored("no such open form");
       const ownerNote = c.note?.trim() ? clip(c.note.trim(), REASON_CHARS) : undefined;
       if (work.kind === "gate") {
+        const stage = stageOf(run.machine, lease.stage);
+        if (c.approved && ownerPicks(stage).length > 0) return ownerPicked(run, stage, work.id, c.picks ?? {}, ownerNote, now);
         if (c.approved) return { run: pass(run, work.to, now, `the owner approved its gate${ownerNote ? `: ${ownerNote}` : ""}`, undefined, work.because).run, reply: { kind: "ok" } };
         const reasons = ["the owner did not approve the gate", ...(ownerNote ? [`owner's note: ${ownerNote}`] : [])];
         return { run: withLease(run, { ...lease, work: null, outcome: { kind: "refused", workId: work.id, reasons, delivered: false } }), reply: { kind: "ok" } };
@@ -1029,9 +1062,10 @@ function launchAttempt(run: Run, lease: Lease): number {
 function gateForm(run: Run, lease: Lease, stage: Stage, work: Extract<Work, { kind: "gate" }>): AskForm {
   const target = work.to === null ? null : stageOf(run.machine, work.to);
   const prompts = rulesFor(stage, work.to).flatMap(({ rule }) => (rule.type === "user" ? [rule.prompt ?? "Approve this gate?"] : []));
+  const choices = ownerChoices(stage);
   return {
     rendererId: "gate-approval",
-    title: clip(`Gate: ${stage.title} → ${target?.title ?? "finish"}`, 120),
+    title: clip(`Gate: ${stage.title} → ${choices.length ? "your pick" : (target?.title ?? "finish")}`, 120),
     payload: {
       machine: run.machine.title,
       stage: { id: stage.id, title: stage.title },
@@ -1039,7 +1073,8 @@ function gateForm(run: Run, lease: Lease, stage: Stage, work: Extract<Work, { ki
       prompts,
       note: work.note ?? null,
       driver: driverLabel(lease.driver),
-      outputs: stage.outputs.map((o) => ({ name: o.name, value: lease.submissions.outputs[o.name] ?? null })),
+      outputs: stage.outputs.filter((o) => o.by !== "owner").map((o) => ({ name: o.name, value: lease.submissions.outputs[o.name] ?? null })),
+      choices,
       evidence: lease.submissions.evidence.map((e) => ({ name: e.name, value: evidenceValue(e) })),
       results: Object.values(work.results).map((r) => ({ ok: r.ok, detail: clip(r.detail, SHOWN_VALUE_CHARS) })),
     },
@@ -1149,15 +1184,18 @@ function briefLines(run: Run, lease: Lease): string[] {
       lines.push(`  - ${input}${value === undefined ? " (not produced)" : `: ${clip(value, 400)}`}`);
     }
   }
-  if (stage.outputs.length) {
+  if (stage.outputs.some((o) => o.by !== "owner")) {
     lines.push(autopilot ? "Outputs:" : "Outputs (submit with stage_submit):");
-    for (const o of stage.outputs) {
+    for (const o of stage.outputs.filter((f) => f.by !== "owner")) {
       const value = lease.submissions.outputs[o.name];
       const parsed = o.type === undefined ? undefined : parseType(o.type);
       const format = parsed?.ok ? lineFormat(parsed.type) : undefined;
       lines.push(`  - [${value?.trim() ? "x" : " "}] ${o.name}${o.type ? ` (${o.type})` : ""}${o.optional ? " (optional)" : ""}${o.description ? `: ${o.description}` : ""}${format ? ` — format: ${format}` : ""}${value?.trim() ? ` = ${clip(value.replace(/\s+/g, " "), SHOWN_VALUE_CHARS)}` : ""}`);
     }
   }
+  const choices = ownerChoices(stage);
+  if (choices.length)
+    lines.push(`The owner picks ${choices.map((c) => `${c.name} (${c.options.join(", ")})`).join(", ")} in the gate form. Do not ask in chat: call stage_advance with a note that gives the owner what they need to pick.`);
   if (stage.derive?.length) lines.push(`Decided by the track (do not submit): ${stage.derive.map((d) => `${d.name} (${d.type})`).join(", ")}`);
   if (lease.submissions.evidence.length) lines.push(`Evidence: ${lease.submissions.evidence.map((e) => `${e.name}: ${clip(evidenceValue(e).replace(/\s+/g, " "), SHOWN_VALUE_CHARS)}`).join("; ")}`);
   const allow = effectiveAllow(run.machine, stage);
@@ -1360,7 +1398,7 @@ function goalResult(goalId: string | null, goal: GoalVerdict | undefined, option
 
 function localResult(stage: Stage, rule: Rule, submissions: Submissions, now: number): RuleResult | null {
   if (rule.type === "outputs") {
-    const missing = stage.outputs.filter((o) => !o.optional && !(submissions.outputs[o.name] ?? "").trim()).map((o) => o.name);
+    const missing = stage.outputs.filter((o) => !o.optional && o.by !== "owner" && !(submissions.outputs[o.name] ?? "").trim()).map((o) => o.name);
     return missing.length === 0 ? { ok: true, detail: "all outputs submitted", at: now } : { ok: false, detail: `missing outputs: ${missing.join(", ")}`, at: now };
   }
   if (rule.type === "evidence") {

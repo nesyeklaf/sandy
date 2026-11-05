@@ -45,15 +45,33 @@ function createCommandGroupDeps(
   };
 }
 
+// How long a finished plugin command may wait for open handles before it exits anyway.
+const PLUGIN_COMMAND_EXIT_FALLBACK_MS = 2_000;
+
+// Ends a plugin command without calling process.exit right away. On Windows, Node 24, process.exit right after the
+// undici request of a plugin command aborts in libuv ("Assertion failed: !(handle->flags & UV_HANDLE_CLOSING),
+// file src\win\async.c", exit 0xC0000409, nodejs/node#56645) after the answer is printed. The process ends when
+// its event loop drains; the unref'd timer fires only if a handle still holds the loop open.
+function finishPluginCommand(exitCode: number): true {
+  process.exitCode = exitCode;
+  setTimeout(
+    () => process.exit(exitCode),
+    PLUGIN_COMMAND_EXIT_FALLBACK_MS,
+  ).unref();
+  return true;
+}
+
+// Runs `candidate` as a plugin command. Returns true when it handled the invocation (the exit code is set and the
+// process must end without running anything else), false when commander should parse it.
 async function tryPluginCommandProxy(
   candidate: string,
   getUrl: () => string,
   isSoftAlias: boolean,
-): Promise<void> {
+): Promise<boolean> {
   const proxy = await import("./plugin-cli-proxy.js");
   const result = await proxy.fetchPluginCliContributions(getUrl());
   if (result.outcome === "unreachable") {
-    if (isSoftAlias) return;
+    if (isSoftAlias) return false;
     const message = proxy.describeUnreachableServer(
       getUrl(),
       result.cause,
@@ -67,9 +85,9 @@ async function tryPluginCommandProxy(
       { code: "server_unreachable", hint: null, message },
       isJsonInvocation(process.argv),
     );
-    process.exit(1);
+    return finishPluginCommand(1);
   }
-  if (result.outcome === "invalid") return;
+  if (result.outcome === "invalid") return false;
   const match = proxy.findPluginCliCommand(result.contributions, candidate);
   if (match === undefined) {
     const disabledId = await proxy.findDisabledPluginForCommand(
@@ -81,9 +99,9 @@ async function tryPluginCommandProxy(
         `sandy ${candidate} is provided by the "${disabledId}" plugin, which is disabled — ` +
           `run \`sandy plugin enable ${disabledId}\` or enable it in Plugins.`,
       );
-      process.exit(1);
+      return finishPluginCommand(1);
     }
-    return;
+    return false;
   }
   const argv = process.argv.slice(3);
   const command = match.commands.find((entry) => entry.name === argv[0]);
@@ -93,7 +111,7 @@ async function tryPluginCommandProxy(
     argv.slice(1).some((arg) => arg === "--help" || arg === "-h")
   ) {
     console.log(command.usage);
-    process.exit(0);
+    return finishPluginCommand(0);
   }
   const exitCode = await proxy.runPluginCliCommand(
     getUrl(),
@@ -108,7 +126,7 @@ async function tryPluginCommandProxy(
       token: null,
     });
   }
-  process.exit(exitCode);
+  return finishPluginCommand(exitCode);
 }
 
 async function logCliError(args: {
@@ -247,11 +265,12 @@ Quick start:
   if (candidate !== null) {
     const { TOP_LEVEL_SOFT_ALIASES } = await import("./command-resolution.js");
     const aliasTarget = TOP_LEVEL_SOFT_ALIASES[candidate];
-    await tryPluginCommandProxy(
+    const handled = await tryPluginCommandProxy(
       candidate,
       deps.getUrl,
       aliasTarget !== undefined,
     );
+    if (handled) return;
     if (aliasTarget !== undefined) process.argv[2] = aliasTarget;
   }
   await rejectHelpForUnknownSubcommand(deps.getUrl);

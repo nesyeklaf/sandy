@@ -14,8 +14,6 @@ describe("ThreadInbox", () => {
     const storedSettings = {
       ...DEFAULT_SIDEBAR_SETTINGS,
       ...{
-        inactiveThreadsEnabled: true,
-        inactiveAfterHours: 6,
       },
     };
     localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
@@ -159,7 +157,8 @@ describe("ThreadInbox", () => {
     await waitFor(() => expect(screen.getAllByRole("listitem")[0]!.textContent).toContain("Inbox B"));
   });
 
-  it.each(["Needs you", "Inactive"])("keeps %s order on remount while the saved order reloads", async (shelf) => {
+  it("keeps Waiting order on remount while the saved order reloads", async () => {
+    const shelf = "Waiting";
     const sidebarThreads = {
       status: "ready" as const,
       threads: [
@@ -168,7 +167,7 @@ describe("ThreadInbox", () => {
       ],
       projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
     };
-    const settings = { ...defaultSidebarSettings, inactiveThreadsEnabled: shelf === "Inactive" };
+    const settings = defaultSidebarSettings;
     const first = renderSlot(inbox, listProps, {
       sidebarThreads,
       rpc: {
@@ -178,9 +177,6 @@ describe("ThreadInbox", () => {
       },
     });
     await screen.findByRole("region", { name: shelf });
-    if (shelf === "Inactive") {
-      fireEvent.click(within(screen.getByRole("region", { name: shelf })).getByRole("button", { expanded: false }));
-    }
     const titles = () =>
       within(screen.getByRole("region", { name: shelf }))
         .getAllByRole("listitem")
@@ -202,19 +198,6 @@ describe("ThreadInbox", () => {
     await act(async () => pending.reject(new Error("temporarily offline")));
     expect(titles()[0]).toContain("Inbox B");
     second.lifecycle.unmount();
-  });
-
-  it("uses saved disabled inactivity even when the legacy setting is enabled", async () => {
-    renderSlot(inbox, listProps, {
-      sidebarThreads: { status: "ready", threads: [thread()], projects: [] },
-      settings: { inactiveThreadsEnabled: true, inactiveAfterHours: "6" },
-      rpc: {
-        getSidebarSettings: () => ({ ...defaultSidebarSettings, inactiveThreadsEnabled: false }),
-        listLifecycle: () => ({ rows: [] }),
-      },
-    });
-    await waitFor(() => expect(screen.queryByRole("region", { name: "Inactive" })).toBeNull());
-    expect(screen.getByRole("link", { name: "A thread" })).toBeDefined();
   });
 
   it("reorders inbox threads with the keyboard and persists the full order", async () => {

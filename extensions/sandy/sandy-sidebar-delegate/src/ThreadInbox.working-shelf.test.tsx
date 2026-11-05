@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderSlot } from "./test-slot";
 import { isWorkingTree } from "./working-tree";
+import { STORAGE_KEYS } from "./lib/storage-keys";
 import {
   inbox,
   SETTLED_NOTHING,
@@ -16,6 +17,7 @@ import {
 vi.mock("sonner", async () => (await import("./test-inbox")).sonnerMock());
 
 await loadInboxApp();
+beforeEach(() => localStorage.setItem(STORAGE_KEYS.showArchived.key, "true"));
 
 describe("parking threads", () => {
   it("moves a settled thread to the Settled shelf", async () => {
@@ -39,8 +41,8 @@ describe("parking threads", () => {
       },
     });
     // The shelf renders once the lifecycle read resolves.
-    const shelf = await screen.findByRole("region", { name: "Settled" });
-    expect(within(shelf).getByText(/Settled \(1\)/)).toBeDefined();
+    const shelf = await screen.findByRole("region", { name: "Archived" });
+    expect(within(shelf).getByText(/Archived \(1\)/)).toBeDefined();
     // Collapsed by default: parked work is out of the way, never gone.
     expect(screen.queryByText("Finished work")).toBeNull();
     fireEvent.click(within(shelf).getByRole("button", { expanded: false }));
@@ -84,7 +86,7 @@ describe("parking threads", () => {
       },
     });
     expect(await screen.findByText("Still running")).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
     expect(screen.queryByLabelText("Settle thread")).toBeNull();
   });
 
@@ -116,7 +118,7 @@ describe("parking threads", () => {
       },
     });
     expect(await screen.findByText("Not done")).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Archived" })).toBeNull();
     expect(screen.queryByLabelText("Settle thread")).toBeNull();
   });
 
@@ -192,7 +194,7 @@ describe("parking threads", () => {
       rpc: { listLifecycle: () => ({ rows: [] }), snooze, settle },
     });
 
-    expect(await screen.findByText("Failed")).toBeDefined();
+    expect(within((await screen.findByText("Failed work")).closest("li")!).getByText("Failed")).toBeDefined();
     expect(screen.getByText("Unread")).toBeDefined();
     expect(screen.getByText(/^\d+m$/)).toBeDefined();
 
@@ -217,7 +219,7 @@ describe("parking threads", () => {
   });
 
   it.each([false, true])(
-    "folds working threads to one line only when the experiment is on (%s)",
+    "draws working threads on two lines in Auto and quiet ones on one line (auto %s)",
     async (compactWorkingThreads) => {
       renderSlot(inbox, listProps, {
         sidebarThreads: {
@@ -233,28 +235,27 @@ describe("parking threads", () => {
           // Fixture threads are old; keep them all in Active.
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
-            threadDisplay: compactWorkingThreads ? "compact-working" : "full",
+            threadDensity: compactWorkingThreads ? "auto" : "comfortable",
             compactWorkingThreads,
           }),
           listLifecycle: () => ({ rows: [] }),
         },
       });
-      const card = (title: string) => screen.getByRole("link", { name: title }).closest("[data-parent-card]")!;
+      const density = (title: string) =>
+        screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
       await screen.findByRole("link", { name: "Busy work" });
 
-      await waitFor(() => expect(card("Busy work").classList.contains("h-8")).toBe(compactWorkingThreads));
-      expect(card("Asking work").classList.contains("h-8")).toBe(false);
-      expect(card("Idle work").classList.contains("h-8")).toBe(false);
-      // The folded row keeps sandy's spinner and the full label for screen readers.
-      expect(card("Busy work").querySelector('[data-icon="Loading"]') !== null).toBe(compactWorkingThreads);
-      expect(within(card("Busy work") as HTMLElement).getByText("Working")).toBeDefined();
+      await waitFor(() => expect(density("Idle work")).toBe(compactWorkingThreads ? "dense" : "comfortable"));
+      expect(density("Busy work")).toBe(compactWorkingThreads ? "compact" : "comfortable");
+      expect(density("Asking work")).toBe("comfortable");
+      const busy = screen.getByRole("link", { name: "Busy work" }).closest("[data-parent-card]") as HTMLElement;
+      expect(within(busy).getByText("Working")).toBeDefined();
     },
   );
 
   it.each([false, true])(
-    "keeps a compact row's working children folded until expanded (compact %s)",
-    async (compactWorkingThreads) => {
+    "keeps a dense row's working children folded until expanded (dense %s)",
+    async (dense) => {
       renderSlot(inbox, listProps, {
         sidebarThreads: {
           status: "ready",
@@ -267,26 +268,25 @@ describe("parking threads", () => {
         rpc: {
           getSidebarSettings: () => ({
             ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
             showRunningChildrenWhenCollapsed: true,
-            threadDisplay: compactWorkingThreads ? "compact-working" : "full",
-            compactWorkingThreads,
+            threadDensity: dense ? "dense" : "comfortable",
+            compactWorkingThreads: dense,
           }),
           listLifecycle: () => ({ rows: [] }),
         },
       });
       await screen.findByRole("link", { name: "Parent work" });
       // The full card surfaces a working child; the one-line row does not.
-      await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(compactWorkingThreads));
+      await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(dense));
 
-      if (compactWorkingThreads) {
+      if (dense) {
         fireEvent.click(screen.getByRole("button", { name: /1 child thread/ }));
         expect(await screen.findByText("Child work")).toBeDefined();
       }
     },
   );
 
-  it("keeps a row compact until its children and agents are done", async () => {
+  it("keeps a row on two lines in Auto until its children and agents are done", async () => {
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -308,22 +308,20 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
-          threadDisplay: "compact-working",
+          threadDensity: "auto",
           compactWorkingThreads: true,
         }),
         listLifecycle: () => ({ rows: [] }),
       },
     });
-    const isCompact = (title: string) =>
-      screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.classList.contains("h-8");
+    const density = (title: string) =>
+      screen.getByRole("link", { name: title }).closest("[data-parent-card]")!.getAttribute("data-row-density");
     await screen.findByRole("link", { name: "Waiting on child" });
 
-    await waitFor(() => expect(isCompact("Waiting on child")).toBe(true));
-    expect(isCompact("Agent parent")).toBe(true);
-    // The parent's own question outranks its children's work.
-    expect(isCompact("Asking parent")).toBe(false);
-    expect(isCompact("Done parent")).toBe(false);
+    await waitFor(() => expect(density("Done parent")).toBe("dense"));
+    expect(density("Waiting on child")).toBe("compact");
+    expect(density("Agent parent")).toBe("compact");
+    expect(density("Asking parent")).toBe("comfortable");
   });
 
   it("counts live descendants despite unread success and keeps requests for input in Active", () => {
@@ -357,7 +355,7 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          threadDisplay: "compact-working",
+          threadDensity: "auto",
           compactWorkingThreads: true,
         }),
         listLifecycle: () => ({ rows: [] }),
@@ -367,55 +365,37 @@ describe("parking threads", () => {
     expect(button.classList.contains("pointer-events-auto")).toBe(true);
   });
 
-  it.each([true, false])(
-    "moves threads with work running under them to a Working shelf (enabled %s)",
-    async (workingShelf) => {
-      renderSlot(inbox, listProps, {
-        sidebarThreads: {
-          status: "ready",
-          threads: [
-            thread({ id: "busy", title: "Busy work", indicator: "runtime" }),
-            thread({ id: "waiting", title: "Waiting on child" }),
-            thread({ id: "child", parentThreadId: "waiting", title: "Child work", indicator: "runtime" }),
-            thread({ id: "asking", title: "Asking parent", hasPendingInteraction: true }),
-            thread({ id: "asking-child", parentThreadId: "asking", title: "Asking child", indicator: "runtime" }),
-            thread({ id: "done", title: "Done work", indicator: "unread-success", isUnread: true }),
-            thread({ id: "pinned", title: "Pinned busy", indicator: "runtime", isPinned: true }),
-          ],
-          projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-        },
-        rpc: {
-          getSidebarSettings: () => ({
-            ...defaultSidebarSettings,
-            inactiveThreadsEnabled: false,
-            workingShelf,
-          }),
-          listLifecycle: () => ({ rows: [] }),
-        },
-      });
-      await screen.findByRole("link", { name: "Busy work" });
-      const titlesIn = (name: string) =>
-        within(screen.getByRole("region", { name }))
-          .getAllByRole("link")
-          .map((link) => link.getAttribute("aria-label"));
+  it("moves threads with work running under them to the Working shelf", async () => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "busy", title: "Busy work", indicator: "runtime" }),
+          thread({ id: "waiting", title: "Waiting on child" }),
+          thread({ id: "child", parentThreadId: "waiting", title: "Child work", indicator: "runtime" }),
+          thread({ id: "asking", title: "Asking parent", hasPendingInteraction: true }),
+          thread({ id: "asking-child", parentThreadId: "asking", title: "Asking child", indicator: "runtime" }),
+          thread({ id: "done", title: "Done work", indicator: "unread-success", isUnread: true }),
+          thread({ id: "pinned", title: "Pinned busy", indicator: "runtime", isPinned: true }),
+        ],
+        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
+      },
+      rpc: {
+        getSidebarSettings: () => defaultSidebarSettings,
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    await screen.findByRole("link", { name: "Busy work" });
+    const titlesIn = (name: string) =>
+      within(screen.getByRole("region", { name }))
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("aria-label"));
 
-      if (!workingShelf) {
-        await waitFor(() => expect(titlesIn("Needs you")).toContain("Busy work"));
-        expect(screen.queryByRole("region", { name: "Working" })).toBeNull();
-        return;
-      }
-      await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
-      // Done, or needing you, is Active's business; pinned stays pinned.
-      expect(titlesIn("Needs you")).toEqual(["Asking parent", "Done work"]);
-      expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
-      // One line like the other shelves, even with compact mode off.
-      for (const title of ["Busy work", "Waiting on child"]) {
-        const row = screen.getByRole("link", { name: title }).closest("[data-parent-card]")! as HTMLElement;
-        expect(row.classList.contains("h-8")).toBe(true);
-        expect(within(row).getByRole("img", { name: "codex" }).querySelector(".rounded-full")).not.toBeNull();
-      }
-    },
-  );
+    await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
+    expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
+    expect(titlesIn("Waiting")).toEqual(["Done work"]);
+    expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
+  });
 
   it.each([true, false])("docks the shelves after Active to the bottom when enabled (%s)", async (dockShelves) => {
     renderSlot(inbox, listProps, {
@@ -427,7 +407,6 @@ describe("parking threads", () => {
       rpc: {
         getSidebarSettings: () => ({
           ...defaultSidebarSettings,
-          inactiveThreadsEnabled: false,
           dockShelves,
         }),
         listLifecycle: () => ({
@@ -443,8 +422,8 @@ describe("parking threads", () => {
         }),
       },
     });
-    const settled = await screen.findByRole("region", { name: "Settled" });
-    const active = screen.getByRole("region", { name: "Needs you" });
+    const settled = await screen.findByRole("region", { name: "Archived" });
+    const active = screen.getByRole("region", { name: "Waiting" });
     await waitFor(() => expect(settled.closest("[data-shelf-dock]") !== null).toBe(dockShelves));
     // Active never moves into the dock; it scrolls in the space above.
     expect(active.closest("[data-shelf-dock]")).toBeNull();

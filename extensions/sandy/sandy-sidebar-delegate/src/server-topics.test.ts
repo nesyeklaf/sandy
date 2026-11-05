@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import { describe, expect, it } from "vitest";
 import type { ServerContext } from "./server-context";
-import { createServerTopics, TOPICS_MIGRATIONS } from "./server-topics";
+import { createServerTopics, SESSION_TOPICS_MIGRATIONS, TOPICS_MIGRATIONS } from "./server-topics";
 import { measureText, topicStats } from "./topic-messages";
 
 type Row = { seq: number; type: string; data: unknown };
@@ -19,7 +19,7 @@ const agent = (seq: number, text: string): Row => ({
 
 function setup(rows: Row[]) {
   const db = new Database(":memory:");
-  for (const sql of TOPICS_MIGRATIONS) db.exec(sql);
+  for (const sql of [...TOPICS_MIGRATIONS, ...SESSION_TOPICS_MIGRATIONS]) db.exec(sql);
   const published: string[] = [];
   const calls: Array<Record<string, unknown>> = [];
   const ctx = {
@@ -118,6 +118,67 @@ describe("topic segments and tags", () => {
     expect((await handlers.listTopics({ threadId: "t" })).segments).toEqual([]);
     expect((await handlers.listAllTags()).segments).toEqual([]);
     expect(published).toContain("topics");
+  });
+});
+
+describe("bulk thread tags", () => {
+  it("adds a tag without dropping existing ones and Undo removes only that tag", async () => {
+    const { handlers } = setup([]);
+    await handlers.setTopicTags({ kind: "thread", ownerId: "a", tags: ["existing"] });
+    await handlers.setTopicTags({ kind: "thread", ownerId: "b", tags: ["new"] });
+    await handlers.setTopicTags({
+      kind: "thread",
+      ownerId: "full",
+      tags: Array.from({ length: 20 }, (_, index) => `t${index}`),
+    });
+    const result = await handlers.tagThreads({ threadIds: ["a", "b", "full", "c"], tag: " New " });
+    expect(result).toEqual({ tagged: ["a", "c"], atLimit: ["full"] });
+    const all = await handlers.listAllTags();
+    expect(all.threadTags.a).toEqual(["existing", "new"]);
+    expect(all.threadTags.b).toEqual(["new"]);
+    expect(all.threadTags.c).toEqual(["new"]);
+    expect(await handlers.untagThreads({ threadIds: result.tagged, tag: "new" })).toEqual({ untagged: ["a", "c"] });
+    const after = await handlers.listAllTags();
+    expect(after.threadTags.a).toEqual(["existing"]);
+    expect(after.threadTags.b).toEqual(["new"]);
+    expect(after.threadTags.c).toBeUndefined();
+  });
+});
+
+describe("session topics", () => {
+  it("keeps a session's own topics apart from its segment titles and lists them in one read", async () => {
+    const { handlers, published } = setup([]);
+    await handlers.saveTopic({ threadId: "t", fromSeq: 1, toSeq: 2, title: "Tree view" });
+    const saved = await handlers.setThreadTopics({ threadId: "t", topics: [" Sidebar ", "Sidebar", "Tree view"] });
+    expect(saved).toEqual({ topics: ["Sidebar", "Tree view"] });
+    expect((await handlers.listTopics({ threadId: "t" })).threadTopics).toEqual(["Sidebar", "Tree view"]);
+    const all = await handlers.listAllTags();
+    expect(all.threadTopics).toEqual({ t: ["Sidebar", "Tree view"] });
+    expect(all.segments.map((segment) => segment.title)).toEqual(["Tree view"]);
+    expect(all.threadTags).toEqual({});
+    expect(published).toContain("topics");
+    await handlers.setThreadTopics({ threadId: "t", topics: [] });
+    expect((await handlers.listAllTags()).threadTopics).toEqual({});
+  });
+
+  it("adds a topic to many sessions up to the limit and Undo removes only that topic", async () => {
+    const { handlers, published } = setup([]);
+    await handlers.setThreadTopics({ threadId: "a", topics: ["Existing"] });
+    await handlers.setThreadTopics({
+      threadId: "full",
+      topics: Array.from({ length: 20 }, (_, index) => `t${index}`),
+    });
+    published.length = 0;
+    const result = await handlers.addThreadTopic({ threadIds: ["a", "full", "c", "c"], topic: " Release " });
+    expect(result).toEqual({ added: ["a", "c"], atLimit: ["full"] });
+    expect(published).toEqual(["topics"]);
+    expect((await handlers.listAllTags()).threadTopics.a).toEqual(["Existing", "Release"]);
+    expect(await handlers.removeThreadTopic({ threadIds: result.added, topic: "Release" })).toEqual({
+      removed: ["a", "c"],
+    });
+    const after = await handlers.listAllTags();
+    expect(after.threadTopics.a).toEqual(["Existing"]);
+    expect(after.threadTopics.c).toBeUndefined();
   });
 });
 
