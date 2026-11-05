@@ -1,7 +1,4 @@
 // @vitest-environment jsdom
-// Mounting a block must not force a layout: the browser reports sizes after
-// layout and before paint (ResizeObserver), and everything a block needs at
-// mount is read from that report. A thread switch mounts many blocks at once.
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -60,11 +57,23 @@ class FakeResizeObserver {
   }
 }
 
-/** The browser's first report after layout, and every later one. */
 function report(width: number, height: number): void {
   act(() => {
     for (const observer of [...observers]) observer.report(width, height);
   });
+}
+
+function deliverWithoutAct(width: number, height: number): void {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", false);
+  try {
+    for (const observer of [...observers]) observer.report(width, height);
+  } finally {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  }
+}
+
+function flushQueuedUpdates(): void {
+  act(() => {});
 }
 
 const LAYOUT_PROPERTIES = ["offsetHeight", "offsetWidth", "clientHeight", "clientWidth", "scrollHeight", "scrollWidth"] as const;
@@ -218,7 +227,9 @@ describe("useReservedHeight", () => {
     rememberHeight("mount-narrow", 720, 500);
     render(<Block id="mount-narrow" />);
     expect(container.querySelector<HTMLElement>("[data-testid=holder]")?.style.minHeight).toBe("500px");
-    report(360, 700);
+    deliverWithoutAct(360, 700);
+    expect(container.querySelector<HTMLElement>("[data-testid=holder]")?.style.minHeight).toBe("");
+    flushQueuedUpdates();
     expect(container.querySelector<HTMLElement>("[data-testid=holder]")?.style.minHeight).toBe("");
   });
 });
@@ -233,7 +244,9 @@ describe("useWidth", () => {
     render(<Frame />);
     expect(reads).toEqual([]);
     expect(container.textContent).toBe("0");
-    report(321, 100);
+    deliverWithoutAct(321, 100);
+    expect(container.textContent).toBe("321");
+    flushQueuedUpdates();
     expect(container.textContent).toBe("321");
     report(400, 100);
     expect(container.textContent).toBe("400");
