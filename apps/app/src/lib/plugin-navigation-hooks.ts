@@ -1,6 +1,13 @@
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useContext, useLayoutEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { matchPath, useLocation, useNavigate } from "react-router-dom";
+import {
+  matchPath,
+  useLocation,
+  useNavigate,
+  type NavigateFunction,
+  type NavigateOptions,
+  type To,
+} from "react-router-dom";
 import type {
   SandyNavigate,
   ExperimentalLiveFileTarget,
@@ -60,7 +67,21 @@ export function useSandyNavigate(): SandyNavigate {
   const pluginId = usePluginId();
   const onNavigate = useContext(RouteNavigationCallbackContext);
   const location = useLocation();
-  const navigate = useNavigate();
+  const currentNavigate = useNavigate();
+  const latestRoute = useRef({ navigate: currentNavigate, pathname: location.pathname });
+  useLayoutEffect(() => {
+    latestRoute.current = {
+      navigate: currentNavigate,
+      pathname: location.pathname,
+    };
+  });
+  const navigate = useCallback<NavigateFunction>(
+    (to: To | number, options?: NavigateOptions) =>
+      typeof to === "number"
+        ? latestRoute.current.navigate(to)
+        : latestRoute.current.navigate(to, options),
+    [],
+  );
   const appNavigation = useAppNavigationHost();
   const store = useStore();
   const queryClient = useQueryClient();
@@ -134,7 +155,7 @@ export function useSandyNavigate(): SandyNavigate {
     (options) => {
       const replacesAutomationEditRoute =
         pluginId === AUTOMATIONS_PLUGIN_ID &&
-        isAutomationEditRoutePath(location.pathname);
+        isAutomationEditRoutePath(latestRoute.current.pathname);
       if (options?.projectId !== undefined) {
         setRootComposeProjectId(options.projectId);
       }
@@ -158,13 +179,7 @@ export function useSandyNavigate(): SandyNavigate {
         },
       });
     },
-    [
-      location.pathname,
-      navigate,
-      onNavigate,
-      pluginId,
-      setRootComposeProjectId,
-    ],
+    [navigate, onNavigate, pluginId, setRootComposeProjectId],
   );
   const openThreadPanel = useMemo(
     () =>
