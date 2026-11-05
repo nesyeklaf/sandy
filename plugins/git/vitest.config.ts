@@ -8,6 +8,7 @@ export default defineWorkspaceTestConfig({
   test: {
     silent: "passed-only",
     testTimeout: 15_000,
+    maxConcurrency: 2,
     projects: sharedWorkerProjects({
       pkgDir: __dirname,
       name: "sandy-plugin-sandy--git",
