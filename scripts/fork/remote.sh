@@ -60,7 +60,8 @@ free_port() {
 upgrade_test() (
   tgz=$1
   test -f "$tgz" || { echo "No such tarball: $tgz"; exit 1; }
-  u=$(mktemp -d /tmp/sandy-upgrade-test.XXXXXX)
+  mkdir -p "$HOME/.cache"
+  u=$(mktemp -d "$HOME/.cache/sandy-upgrade-test.XXXXXX")
   pid=""
   trap '[ -n "$pid" ] && kill -TERM -- "-$pid" 2>/dev/null; sleep 1; rm -rf "$u"' EXIT
   echo "=== $(date -Is) upgrade-test $tgz in $u"
