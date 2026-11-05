@@ -148,6 +148,20 @@ export function beginSidebarPaneContentSplitDrag({
   const startX = event.clientX;
   const startY = event.clientY;
   const startLayout = store.get(splitLayoutAtom);
+  let layoutAfterPress: SplitLayout | null = null;
+  window.addEventListener(
+    "pointerdown",
+    () => {
+      layoutAfterPress = store.get(splitLayoutAtom);
+    },
+    { once: true },
+  );
+  const layoutToDecideAgainst = () => {
+    const live = store.get(splitLayoutAtom);
+    return layoutAfterPress !== null && live === layoutAfterPress
+      ? startLayout
+      : live;
+  };
   const mentionsOnly = mentionThreads.length > 1;
   const fallback = mentionsOnly ? null : singlePaneFallback(startLayout);
   beginSplitDrag({
@@ -173,7 +187,7 @@ export function beginSidebarPaneContentSplitDrag({
             sidebarRightEdge,
           }),
     decide: (_paneId, zone) => {
-      const layout = startLayout;
+      const layout = layoutToDecideAgainst();
       if (layout === null || mentionsOnly) return null;
       return decideThreadDrop({
         zone,
@@ -182,7 +196,7 @@ export function beginSidebarPaneContentSplitDrag({
       });
     },
     onDrop: (target) => {
-      const layout = startLayout;
+      const layout = layoutToDecideAgainst();
       if (layout === null) return;
       const existing = findPaneByContent(layout.root, content);
       const next =

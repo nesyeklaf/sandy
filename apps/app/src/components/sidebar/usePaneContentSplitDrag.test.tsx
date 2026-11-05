@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createStore } from "jotai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { countPanes, listPanes } from "@/lib/split-layout";
+import { countPanes, listPanes, splitPane } from "@/lib/split-layout";
 import { splitLayoutAtom } from "@/lib/split-layout/atoms";
 import {
   createSinglePaneLayout,
@@ -24,8 +24,10 @@ afterEach(() => {
 
 function dragRowIntoMain({
   openOnPress,
+  addSplitDuringDrag = false,
 }: {
   openOnPress: boolean;
+  addSplitDuringDrag?: boolean;
 }) {
   const store = createStore();
   store.set(
@@ -78,6 +80,16 @@ function dragRowIntoMain({
     clientX: 20,
     clientY: 300,
   });
+  if (addSplitDuringDrag) {
+    store.set(
+      splitLayoutAtom,
+      splitPane(store.get(splitLayoutAtom)!, "pane-1", "right", {
+        kind: "thread",
+        projectId: "p",
+        threadId: "C",
+      }),
+    );
+  }
   fireEvent.pointerMove(window, { clientX: 1150, clientY: 400 });
   fireEvent.pointerUp(window, { clientX: 1150, clientY: 400 });
   return { store, navigate };
@@ -101,6 +113,22 @@ describe("beginSidebarPaneContentSplitDrag", () => {
             pane.content.kind === "thread" && pane.content.threadId === "B",
         )!.paneId,
       );
+    },
+  );
+
+  it.each([false, true])(
+    "keeps a split added during the drag (openOnPress=%s)",
+    (openOnPress) => {
+      const { store } = dragRowIntoMain({
+        openOnPress,
+        addSplitDuringDrag: true,
+      });
+      const threadIds = listPanes(store.get(splitLayoutAtom)!.root).map(
+        (pane) =>
+          pane.content.kind === "thread" ? pane.content.threadId : null,
+      );
+      expect(threadIds).toContain("C");
+      expect(threadIds).toContain("B");
     },
   );
 });
