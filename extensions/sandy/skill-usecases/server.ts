@@ -26,6 +26,7 @@ export { rpcContract };
 const USE_CASES_KEY = "usecases";
 const ASSIGNMENTS_KEY = "assignments";
 const FLOWS_KEY = "flows";
+const SKILLS_FRESH_MS = 5000;
 
 const storedUseCases = z.array(useCaseSchema);
 const storedAssignments = z.record(z.string(), z.string());
@@ -47,7 +48,59 @@ function slug(label: string, taken: ReadonlySet<string>): string {
   return id;
 }
 
+type ListedSkills = Awaited<ReturnType<SandyPluginApi["sdk"]["skills"]["list"]>>;
+
 export default async function plugin(sandy: SandyPluginApi) {
+  const listedByProject = new Map<string, { listed: ListedSkills; at: number }>();
+  const listInFlight = new Map<string, Promise<ListedSkills>>();
+  let listGeneration = 0;
+
+  function invalidateListed() {
+    listGeneration += 1;
+    listedByProject.clear();
+    listInFlight.clear();
+  }
+
+  function fetchListed(projectId: string): Promise<ListedSkills> {
+    const running = listInFlight.get(projectId);
+    if (running !== undefined) return running;
+    const generation = listGeneration;
+    const request = sandy.sdk.skills.list({ projectId, environmentId: null }).then(
+      (listed) => {
+        if (generation === listGeneration) {
+          listedByProject.set(projectId, { listed, at: Date.now() });
+          listInFlight.delete(projectId);
+        }
+        return listed;
+      },
+      (cause: unknown) => {
+        if (generation === listGeneration) listInFlight.delete(projectId);
+        throw cause;
+      },
+    );
+    listInFlight.set(projectId, request);
+    return request;
+  }
+
+  function refreshListed(projectId: string, previous: ListedSkills) {
+    fetchListed(projectId).then(
+      (listed) => {
+        if (JSON.stringify(listed) !== JSON.stringify(previous)) changed();
+      },
+      () => undefined,
+    );
+  }
+
+  async function listedSkills(projectId: string, staleOk: boolean): Promise<ListedSkills> {
+    const cached = listedByProject.get(projectId);
+    if (cached === undefined) return fetchListed(projectId);
+    const age = Date.now() - cached.at;
+    if (age <= SKILLS_FRESH_MS) return cached.listed;
+    if (!staleOk) return fetchListed(projectId);
+    if (!listInFlight.has(projectId)) refreshListed(projectId, cached.listed);
+    return cached.listed;
+  }
+
   async function readUseCases(): Promise<UseCase[]> {
     const parsed = storedUseCases.safeParse(await sandy.storage.kv.get(USE_CASES_KEY));
     return parsed.success ? parsed.data : DEFAULT_USE_CASES;
@@ -75,8 +128,13 @@ export default async function plugin(sandy: SandyPluginApi) {
     return (projects.find((project) => project.id === projectId) ?? projects[0])?.id ?? null;
   }
 
-  async function skillRows(projectId: string, useCases: UseCase[], assignments: Record<string, string>): Promise<SkillRow[]> {
-    const listed = await sandy.sdk.skills.list({ projectId, environmentId: null });
+  async function skillRows(
+    projectId: string,
+    useCases: UseCase[],
+    assignments: Record<string, string>,
+    staleOk = false,
+  ): Promise<SkillRow[]> {
+    const listed = await listedSkills(projectId, staleOk);
     const sourcesByName = new Map<string, Set<string>>();
     for (const skill of listed.skills) {
       const sources = sourcesByName.get(skill.name) ?? new Set<string>();
@@ -121,26 +179,26 @@ export default async function plugin(sandy: SandyPluginApi) {
 
   sandy.rpc.register(rpcContract, {
     async state({ projectId }) {
-      const selected = await resolveProjectId(projectId);
-      const useCases = await readUseCases();
-      const assignments = await readAssignments();
+      const [projects, useCases, assignments, flows] = await Promise.all([
+        listProjects(),
+        readUseCases(),
+        readAssignments(),
+        readFlows(),
+      ]);
+      const selected = (projects.find((project) => project.id === projectId) ?? projects[0])?.id ?? null;
       return {
-        projects: await listProjects(),
+        projects,
         projectId: selected,
         useCases,
         fallbackId: FALLBACK_ID,
         fallbackLabel: FALLBACK_LABEL,
-        skills: selected === null ? [] : await skillRows(selected, useCases, assignments),
-        flows: await readFlows(),
+        skills: selected === null ? [] : await skillRows(selected, useCases, assignments, true),
+        flows,
       };
     },
     async overview() {
-      return {
-        useCases: await readUseCases(),
-        fallbackId: FALLBACK_ID,
-        fallbackLabel: FALLBACK_LABEL,
-        flows: await readFlows(),
-      };
+      const [useCases, flows] = await Promise.all([readUseCases(), readFlows()]);
+      return { useCases, fallbackId: FALLBACK_ID, fallbackLabel: FALLBACK_LABEL, flows };
     },
     async assign({ skillName, useCaseId }) {
       const assignments = await readAssignments();
@@ -193,7 +251,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     },
     async writeSkill({ projectId, skillId, content, revision }) {
       const result = await sandy.sdk.skills.experimental_write({ projectId, environmentId: null, skillId, content, revision });
-      if (result.outcome === "written") changed();
+      if (result.outcome === "written") {
+        invalidateListed();
+        changed();
+      }
       return result;
     },
     async recommendAssignments({ projectId }) {

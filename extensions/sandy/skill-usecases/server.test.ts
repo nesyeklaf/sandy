@@ -318,3 +318,77 @@ test("writeSkill saves through the SDK, reports a conflict and only announces re
   assert.equal(disk.content, "new");
   assert.deepEqual(writes.at(-1), { projectId: "proj_1", environmentId: null, skillId: "skill_a", content: "mine", revision: "a".repeat(64) });
 });
+
+async function bootCounting(listed: () => readonly unknown[], delayMs = 0) {
+  const calls = { list: 0 };
+  const { sandy, harness } = createFakePluginHost({
+    pluginId: "skill-usecases",
+    sdk: {
+      projects: { list: async () => [{ id: "proj_1", name: "One" }] },
+      skills: {
+        list: async () => {
+          calls.list += 1;
+          if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+          return { skills: listed() };
+        },
+        experimental_write: async () => ({ outcome: "written", filePath: "/skill_a", revision: "r2" }),
+      },
+    } as never,
+  });
+  await plugin(sandy);
+  return { harness, calls };
+}
+
+test("state reuses one skills listing across calls and shares a listing already in flight", async () => {
+  const { harness, calls } = await bootCounting(() => skills, 20);
+  await Promise.all([1, 2, 3].map(() => harness.behavior.callRpc("state", { projectId: null })));
+  assert.equal(calls.list, 1);
+  await harness.behavior.callRpc("state", { projectId: null });
+  await harness.behavior.callRpc("overview", {});
+  assert.equal(calls.list, 1);
+});
+
+test("an old listing is served at once, refreshed in the background and announced when it changed", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 1000 });
+  let current: readonly unknown[] = skills;
+  const { harness, calls } = await bootCounting(() => current);
+  const first = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.equal(first.skills.length, 3);
+  current = [...skills, skillEntry("skill_e", "fresh-skill", "New")];
+  t.mock.timers.tick(6000);
+  const before = harness.realtimeSignals.length;
+  const second = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.equal(second.skills.length, 3);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.list, 2);
+  assert.equal(harness.realtimeSignals.length, before + 1);
+  const third = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.equal(third.skills.length, 4);
+  assert.equal(calls.list, 2);
+});
+
+test("an unchanged background refresh stays quiet", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 1000 });
+  const { harness } = await bootCounting(() => skills);
+  await harness.behavior.callRpc("state", { projectId: null });
+  t.mock.timers.tick(6000);
+  const before = harness.realtimeSignals.length;
+  await harness.behavior.callRpc("state", { projectId: null });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(harness.realtimeSignals.length, before);
+});
+
+test("agent tools never read a listing older than the fresh window, and a skill write drops the cache", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 1000 });
+  let current: readonly unknown[] = skills;
+  const { harness, calls } = await bootCounting(() => current);
+  await harness.behavior.callRpc("state", { projectId: null });
+  current = [...skills, skillEntry("skill_e", "fresh-skill", "New")];
+  t.mock.timers.tick(6000);
+  assert.match((await harness.behavior.callAgentTool("skill_areas", {})) as string, /fresh-skill/u);
+  assert.equal(calls.list, 2);
+  await harness.behavior.callRpc("writeSkill", { projectId: "proj_1", skillId: "skill_a", content: "x", revision: "r1" });
+  const after = (await harness.behavior.callRpc("state", { projectId: null })) as any;
+  assert.equal(after.skills.length, 4);
+  assert.equal(calls.list, 3);
+});
