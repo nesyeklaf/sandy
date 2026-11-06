@@ -299,8 +299,11 @@ function checkSkill(shape: Shape, node: SkillNode, skills: readonly SkillInfo[],
       const mine = { inputs: formatIo(node.inputs), outputs: formatIo(node.outputs) };
       const theirs = { inputs: formatIo(info.inputs), outputs: formatIo(info.outputs) };
       const said = (text: string) => (text === "" ? "nothing" : text);
-      const message =
-        mine.outputs !== theirs.outputs
+      const covers = (own: readonly IoField[], skill: readonly IoField[]) => skill.every((field) => own.some((item) => item.name === field.name && formatType(item.type) === formatType(field.type)));
+      const extended = covers(node.outputs, info.outputs) && (node.inputs.length === 0 || covers(node.inputs, info.inputs));
+      const message = extended
+        ? null
+        : mine.outputs !== theirs.outputs
           ? node.skill + " now outputs " + said(theirs.outputs) + ", not " + said(mine.outputs)
           : mine.inputs !== theirs.inputs
             ? node.skill + " now takes " + said(theirs.inputs) + ", not " + said(mine.inputs)
@@ -402,6 +405,7 @@ function checkReach(shape: Shape, problems: Problem[]): void {
     const title = nodeTitle(node);
     if (roots.includes(node.id)) continue;
     if (node.kind === "input") continue;
+    if (node.kind === "output" && node.source !== null && shape.reachable.has(node.source.nodeId)) continue;
     if (!incoming.has(node.id)) problems.push({ severity: "error", nodeId: node.id, message: title + ": unreachable, nothing leads into it so it would never run", fixes: connect(node) });
     else if (!shape.reachable.has(node.id)) problems.push({ severity: "error", nodeId: node.id, message: title + ": unreachable from the start of the flow", fixes: connect(node) });
   }
@@ -427,7 +431,8 @@ function checkLoops(shape: Shape, problems: Problem[]): void {
     const down = new Set([wire.to, ...reach(shape.forward, [wire.to], "down")]);
     const up = new Set([wire.from, ...reach(shape.forward, [wire.from], "up")]);
     const loop = [...down].filter((id) => up.has(id));
-    if (loop.some((id) => shape.byId.get(id)?.kind === "gate")) continue;
+    if (wire.max !== undefined) continue;
+    if (loop.some((id) => { const item = shape.byId.get(id); return item?.kind === "gate" || (item?.kind === "skill" && item.ownerApproves); })) continue;
     const from = shape.byId.get(wire.from);
     const to = shape.byId.get(wire.to);
     if (from === undefined || to === undefined) continue;
@@ -471,13 +476,14 @@ export function check(flow: Flow, skills: readonly SkillInfo[]): Problem[] {
   const shape = shapeOf(flow);
   for (const node of flow.nodes) {
     if (node.kind === "skill") checkSkill(shape, node, skills, problems);
-    if (node.kind === "skill" && flow.wires.filter((wire) => wire.from === node.id).length > 1)
+    if (node.kind === "skill" && flow.wires.filter((wire) => wire.from === node.id && wire.when === undefined).length > 1)
       problems.push({ severity: "error", nodeId: node.id, message: node.name + " leads to several blocks at once. A track runs one step at a time, so chain them or put a Fork in between.", fixes: [] });
     if (node.kind === "gate") checkGate(shape, node, problems);
     if (node.kind === "fork") checkFork(shape, node, problems);
     if (node.kind === "output") {
       if (node.source === null) problems.push({ severity: "error", nodeId: node.id, message: node.label + ": choose the file this Output delivers", fixes: [] });
-      else checkBinding(shape, node, "content", null, node.source, problems);
+      else if (flow.wires.some((wire) => wire.to === node.id)) checkBinding(shape, node, "content", null, node.source, problems);
+      else if (sourcePort(flow, node.source) === null) problems.push({ severity: "error", nodeId: node.id, message: node.label + ": delivers an output that no longer exists", fixes: [] });
     }
   }
   checkReach(shape, problems);

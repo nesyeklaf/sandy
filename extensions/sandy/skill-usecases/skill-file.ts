@@ -18,7 +18,7 @@ export function newSkillSource(name: string, description: string): string {
   const title = name.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
   return "---\n" + new Document({ name, description }).toString() + "---\n\n# " + title + "\n\n" + description + "\n";
 }
-export const IO_KINDS = ["text", "url", "file", "choice"] as const;
+export const IO_KINDS = ["text", "url", "file", "choice", "raw"] as const;
 export type IoKind = (typeof IO_KINDS)[number];
 export const IO_KEYS = ["inputs", "outputs"] as const;
 export type IoKey = (typeof IO_KEYS)[number];
@@ -87,7 +87,7 @@ export function ioRow(field: IoField): IoRow {
     optional: field.optional,
     kind: field.type.kind,
     path: field.type.kind === "file" ? (field.type.path ?? "") : "",
-    values: field.type.kind === "choice" ? field.type.values.join(", ") : "",
+    values: field.type.kind === "choice" ? field.type.values.join(", ") : field.type.kind === "raw" ? field.type.text : "",
   };
 }
 
@@ -98,6 +98,7 @@ export function emptyIoRow(): IoRow {
 function rowType(row: IoRow): string {
   if (row.kind === "file") return row.path.trim() === "" ? "file" : "file(" + row.path.trim() + ")";
   if (row.kind === "choice") return "choice(" + row.values.split(",").map((value) => value.trim()).join(", ") + ")";
+  if (row.kind === "raw") return row.values.trim();
   return row.kind;
 }
 

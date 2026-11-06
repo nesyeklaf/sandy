@@ -2,7 +2,8 @@ export type IoType =
   | { kind: "text" }
   | { kind: "url" }
   | { kind: "file"; path: string | null }
-  | { kind: "choice"; values: string[] };
+  | { kind: "choice"; values: string[] }
+  | { kind: "raw"; text: string };
 
 export interface IoField {
   name: string;
@@ -26,6 +27,7 @@ export function parseIoType(raw: string): IoType | string {
   const call = CALL.exec(text);
   if (call === null) return 'unknown type "' + text + '", use text, url, file, file(path) or choice(a, b)';
   const [, kind = "", inner = ""] = call;
+  if (kind === "list" || kind === "map") return inner.trim() === "" ? kind + "() needs an item type" : { kind: "raw", text };
   if (kind === "file") {
     const path = inner.trim();
     return path === "" ? "file() needs a path, or write file without parentheses" : { kind: "file", path };
@@ -79,13 +81,15 @@ export function parseIo(value: string | undefined): IoParseResult {
 export function satisfies(output: IoType, input: IoType): boolean {
   switch (input.kind) {
     case "text":
-      return output.kind === "text" || output.kind === "file" || output.kind === "choice";
+      return output.kind === "text" || output.kind === "file" || output.kind === "choice" || output.kind === "raw";
     case "url":
       return output.kind === "url";
     case "file":
       return output.kind === "file";
     case "choice":
       return output.kind === "choice" && output.values.every((value) => input.values.includes(value));
+    case "raw":
+      return output.kind === "raw" && output.text === input.text;
   }
 }
 
@@ -98,6 +102,8 @@ export function formatType(type: IoType): string {
       return type.path === null ? "file" : "file(" + type.path + ")";
     case "choice":
       return "choice(" + type.values.join(", ") + ")";
+    case "raw":
+      return type.text;
   }
 }
 

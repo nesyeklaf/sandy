@@ -333,11 +333,12 @@ function cut(source: string, start: number, end: number, ranges: { start: number
 function stageDraft(source: string, stage: OutlineTag): StageDraft {
   const removed: { start: number; end: number }[] = [];
   const draft: StageDraft = { id: text(stage, "id") ?? "", title: text(stage, "title"), skill: text(stage, "skill"), userGate: stage.attrs.gate === "user", outputsGate: false, outputs: [], edges: [], binds: [], instruction: "" };
-  const modeled = stage.children.filter((child) => child.name === "output").every((child) => typeof text(child, "name") === "string" && typeof parseIoType(text(child, "type") ?? "text") !== "string" && Object.keys(child.attrs).every((key) => ["name", "type", "description", "optional", "by"].includes(key)));
+  const modeled = stage.children.filter((child) => child.name === "output").every((child) => typeof text(child, "name") === "string" && Object.keys(child.attrs).every((key) => ["name", "type", "description", "optional", "by"].includes(key)));
   for (const child of stage.children) {
     if (child.name === "output" && modeled) {
-      const type = parseIoType(text(child, "type") ?? "text");
-      if (typeof type === "string") continue;
+      const raw = text(child, "type") ?? "text";
+      const parsed = parseIoType(raw);
+      const type: IoType = typeof parsed === "string" ? { kind: "raw", text: raw } : parsed;
       draft.outputs.push({ name: text(child, "name") ?? "", type, description: text(child, "description") ?? "", optional: child.attrs.optional === true, by: text(child, "by") });
       removed.push({ start: child.lineStart, end: child.lineEnd });
     } else if (child.name === "next" && child.children.length === 0 && child.end === child.innerEnd && text(child, "to") !== undefined) {
@@ -406,7 +407,7 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
   const inputFields: InputField[] = (machine.inputs ?? []).map((input) => {
     const type = parseIoType(input.type ?? "text");
     const base = { name: input.name, options: [], prompt: input.description ?? "", path: "", optional: input.optional === true };
-    if (typeof type === "string") return { ...base, type: "text" };
+    if (typeof type === "string" || type.kind === "raw") return { ...base, type: "text" };
     if (type.kind === "choice") return { ...base, type: "choice", options: [...type.values] };
     if (type.kind === "file") return { ...base, type: "file", path: type.path ?? "" };
     return { ...base, type: type.kind };

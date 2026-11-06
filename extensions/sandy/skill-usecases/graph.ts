@@ -17,6 +17,7 @@ export const ioTypeSchema: z.ZodType<IoType> = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("url") }),
   z.object({ kind: z.literal("file"), path: z.string().min(1).nullable() }),
   z.object({ kind: z.literal("choice"), values: z.array(z.string().min(1)).min(2) }),
+  z.object({ kind: z.literal("raw"), text: z.string().min(1) }),
 ]);
 
 const skillInputSchema = z.object({ name: label, optional: z.boolean(), type: ioTypeSchema, bind: bindingSchema.nullable() });

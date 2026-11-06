@@ -201,3 +201,49 @@ test("optional and file inputs keep their declaration through a flow round trip"
   assert.ok(flow.ok);
   assert.deepEqual(inputsOf(flowToSkill(flow.flow)), inputsOf(source));
 });
+
+test("a dialect skill with list outputs, bounded loops, owner gates and results checks clean", () => {
+  const source = [
+    "---",
+    "name: loop-demo",
+    "description: demo",
+    "metadata:",
+    '  dialect: "1"',
+    "---",
+    "",
+    '{% input name="Task" /%}',
+    "",
+    '{% stage id="frame" title="Frame" skill="frame" %}',
+    "- Task: {% $input.Task %}",
+    '{% output name="Frame" /%}',
+    '{% output name="Musts" type="list(text)" /%}',
+    '{% output name="Clear" type="choice(yes, no)" /%}',
+    '{% next to="ask" when=equals($frame.Clear, "no") /%}',
+    '{% next to="review" /%}',
+    "{% /stage %}",
+    "",
+    '{% stage id="ask" title="Ask" gate="user" %}',
+    "Ask.",
+    '{% next to="frame" /%}',
+    "{% /stage %}",
+    "",
+    '{% stage id="review" title="Review" %}',
+    "{% $frame.Musts %}",
+    '{% output name="Checks" type="map($frame.Musts, choice(met, broken))" /%}',
+    '{% output name="Verdict" type="choice(fix, go)" /%}',
+    '{% next to="frame" when=equals($review.Verdict, "fix") max=2 exceeded="done" /%}',
+    '{% next to="done" /%}',
+    "{% /stage %}",
+    "",
+    '{% result name="Musts" from=$frame.Musts /%}',
+    "",
+  ].join("\n");
+  const skills = [{ name: "frame", purpose: "", inputs: [{ name: "Task", optional: false, type: { kind: "text" as const } }], outputs: [{ name: "Frame", optional: false, type: { kind: "text" as const } }] }];
+  const result = skillToFlow(source, skills, { useCaseId: "x" });
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  const review = result.flow.nodes.find((node) => node.kind === "skill" && node.name === "Review");
+  assert.deepEqual(review?.kind === "skill" ? review.outputs.map((output) => output.name) : [], ["Checks", "Verdict"]);
+  assert.deepEqual(check(result.flow, skills).map((problem) => problem.message), []);
+});
+

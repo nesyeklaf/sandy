@@ -65,6 +65,9 @@ function IoRows({ title, rows, disabled, onChange }: { title: string; rows: IoRo
           {row.kind === "choice" ? (
             <input aria-label={title + " choice values"} placeholder="a, b" className={INPUT + " min-w-40 flex-1"} value={row.values} onChange={(event) => update(index, { values: event.target.value })} />
           ) : null}
+          {row.kind === "raw" ? (
+            <input aria-label={title + " type text"} placeholder="list(text)" className={INPUT + " min-w-40 flex-1"} value={row.values} onChange={(event) => update(index, { values: event.target.value })} />
+          ) : null}
           <button type="button" className={GHOST} onClick={() => onChange(rows.filter((_, at) => at !== index))}>
             Remove
           </button>
