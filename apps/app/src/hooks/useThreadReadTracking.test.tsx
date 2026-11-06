@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
+import { useState } from "react";
 import { act, cleanup, renderHook } from "@testing-library/react";
+import type { ThreadReadState } from "@sandy/client-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ACTIVITY_WINDOW_MS } from "@/lib/user-activity";
 import { useThreadReadTracking } from "./useThreadReadTracking";
@@ -51,6 +53,45 @@ function pressKeyWithFakeTimers(): void {
   setDocumentVisibilityState("visible");
   vi.useFakeTimers();
   pressKey();
+}
+
+const FAILED_READ_LATENCY_MS = 100;
+
+async function advanceFakeTimers(ms: number): Promise<void> {
+  for (let elapsed = 0; elapsed < ms; elapsed += 10) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+  }
+}
+
+function renderReadWithSettlingMutation(
+  succeedsOnAttempt: (attempt: number) => boolean,
+): number[] {
+  const sentAt: number[] = [];
+  renderHook(() => {
+    const [, setMutationState] = useState(0);
+    return useThreadReadTracking({
+      markThreadRead: {
+        mutateAsync: () => {
+          const attempt = sentAt.length;
+          sentAt.push(Date.now());
+          return new Promise<ThreadReadState>((resolve, reject) => {
+            setTimeout(() => {
+              if (succeedsOnAttempt(attempt)) {
+                resolve({ lastReadAt: 20, latestAttentionAt: 20 });
+              } else {
+                reject(new Error("Failed"));
+              }
+              setMutationState((count) => count + 1);
+            }, FAILED_READ_LATENCY_MS);
+          });
+        },
+      },
+      thread: { id: "thr_backoff", lastReadAt: 10, latestAttentionAt: 20 },
+    });
+  });
+  return sentAt;
 }
 
 describe("useThreadReadTracking", () => {
@@ -326,5 +367,30 @@ describe("useThreadReadTracking", () => {
     pressKey();
 
     expect(markThreadRead.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("backs off a permanently failing read instead of resending on every mutation state change", async () => {
+    pressKeyWithFakeTimers();
+    const sentAt = renderReadWithSettlingMutation(() => false);
+
+    await advanceFakeTimers(1_000);
+    expect(sentAt).toHaveLength(1);
+
+    await advanceFakeTimers(3_000);
+    expect(sentAt).toHaveLength(3);
+    const [first, second, third] = sentAt;
+    expect(second! - first!).toBeGreaterThanOrEqual(1_000);
+    expect(third! - second!).toBeGreaterThan(second! - first!);
+  });
+
+  it("stops retrying a failed read once a retry succeeds", async () => {
+    pressKeyWithFakeTimers();
+    const sentAt = renderReadWithSettlingMutation((attempt) => attempt === 2);
+
+    await advanceFakeTimers(4_000);
+    expect(sentAt).toHaveLength(3);
+
+    await advanceFakeTimers(10_000);
+    expect(sentAt).toHaveLength(3);
   });
 });
