@@ -30,6 +30,16 @@ function scopeUtilities(utilities: string): string {
 }
 
 describe("scopePluginUtilities", () => {
+  it("emits utilities outside any cascade layer so detaching the sheet skips a full-document restyle", () => {
+    expect(scopeUtilities(".a{color:red}")).not.toContain("@layer");
+    expect(
+      scopePluginUtilities(
+        "@layer theme,utilities;@layer utilities;@layer theme{:root{--a:1}}@layer utilities{.a{color:red}}",
+        ROOTS,
+      ),
+    ).toBe(`@layer theme;@layer theme{:root{--a:1}}${each(".a", "color:red")}`);
+  });
+
   it("scopes to the plugin's own id only", () => {
     expect(pluginScopeRoots("demo")).toEqual(['[data-sandy-plugin="demo"]']);
   });
@@ -42,53 +52,53 @@ describe("scopePluginUtilities", () => {
 
   it("emits descendant and self selectors per root", () => {
     expect(scopeUtilities(".flex-col{flex-direction:column}")).toBe(
-      `@layer utilities{${each(".flex-col", "flex-direction:column")}}`,
+      `${each(".flex-col", "flex-direction:column")}`,
     );
   });
 
   it("scopes each selector in a list", () => {
     expect(scopeUtilities(".a,.b{color:red}")).toBe(
-      `@layer utilities{${both(".a")},${both(".b")}{color:red}}`,
+      `${both(".a")},${both(".b")}{color:red}`,
     );
   });
 
   it("preserves nesting specificity when the original selector list has different specificities", () => {
     expect(scopeUtilities(".a,#b{&:hover{color:red}}")).toBe(
-      `@layer utilities{${both(".a")},${both("#b")}{&:hover{color:red}}}`,
+      `${both(".a")},${both("#b")}{&:hover{color:red}}`,
     );
   });
 
   it("keeps commas inside :is()/:not() out of the selector split", () => {
     const scoped = scopeUtilities(":is(.a,.b) > .c{color:red}");
     expect(scoped).toBe(
-      `@layer utilities{${OWNED} :is(.a,.b) > .c{color:red}${OWNED}:is(.a,.b) > .c{color:red}}`,
+      `${OWNED} :is(.a,.b) > .c{color:red}${OWNED}:is(.a,.b) > .c{color:red}`,
     );
   });
 
   it("drops the self arm for sibling combinators so a portal root cannot reach host siblings", () => {
     const hidden = String.raw`.\[\&\~\*\]\:hidden`;
     expect(scopeUtilities(`${hidden}{&~*{display:none}}`)).toBe(
-      `@layer utilities{${OWNED} ${hidden}{&~*{display:none}}}`,
+      `${OWNED} ${hidden}{&~*{display:none}}`,
     );
     expect(scopeUtilities(`${hidden} ~ *{display:none}`)).toBe(
-      `@layer utilities{${OWNED} ${hidden} ~ *{display:none}}`,
+      `${OWNED} ${hidden} ~ *{display:none}`,
     );
     expect(scopeUtilities(".a{+ .b{color:red}}")).toBe(
-      `@layer utilities{${OWNED} .a{+ .b{color:red}}}`,
+      `${OWNED} .a{+ .b{color:red}}`,
     );
     expect(
       scopeUtilities(".a{@media (hover:hover){&:hover + .b{color:red}}}"),
     ).toBe(
-      `@layer utilities{${OWNED} .a{@media (hover:hover){&:hover + .b{color:red}}}}`,
+      `${OWNED} .a{@media (hover:hover){&:hover + .b{color:red}}}`,
     );
   });
 
   it("keeps both arms when a sibling combinator precedes & so the subject stays on the element", () => {
     expect(scopeUtilities(".x{.a ~ &{color:red}}")).toBe(
-      `@layer utilities{${each(".x", ".a ~ &{color:red}")}}`,
+      `${each(".x", ".a ~ &{color:red}")}`,
     );
     expect(scopeUtilities(".x{&:hover{color:red}}")).toBe(
-      `@layer utilities{${each(".x", "&:hover{color:red}")}}`,
+      `${each(".x", "&:hover{color:red}")}`,
     );
   });
 
@@ -110,7 +120,7 @@ describe("scopePluginUtilities", () => {
   it("survives escaped class names and braces inside strings", () => {
     const scoped = scopeUtilities(String.raw`.w-\[50\%\]{content:"}"}`);
     expect(scoped).toBe(
-      `@layer utilities{${each(String.raw`.w-\[50\%\]`, 'content:"}"')}}`,
+      each(String.raw`.w-\[50\%\]`, 'content:"}"'),
     );
   });
 
@@ -119,7 +129,7 @@ describe("scopePluginUtilities", () => {
       "@media (min-width:40rem){.md-flex{display:flex}}",
     );
     expect(scoped).toBe(
-      `@layer utilities{@media (min-width:40rem){${each(".md-flex", "display:flex")}}}`,
+      `@media (min-width:40rem){${each(".md-flex", "display:flex")}}`,
     );
   });
 
@@ -127,9 +137,7 @@ describe("scopePluginUtilities", () => {
     const scoped = scopeUtilities(
       "@keyframes spin{from{rotate:0deg}to{rotate:360deg}}",
     );
-    expect(scoped).toBe(
-      "@layer utilities{@keyframes spin{from{rotate:0deg}to{rotate:360deg}}}",
-    );
+    expect(scoped).toBe("@keyframes spin{from{rotate:0deg}to{rotate:360deg}}");
   });
 
   it("leaves theme variables and @property registrations unscoped", () => {
@@ -151,7 +159,7 @@ describe("scopePluginUtilities", () => {
       "/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */";
     expect(
       scopePluginUtilities(`${banner}@layer utilities{.a{color:red}}`, ROOTS),
-    ).toBe(`${banner}@layer utilities{${each(".a", "color:red")}}`);
+    ).toBe(`${banner}${each(".a", "color:red")}`);
   });
 
   it("accepts a build with no utilities layer", () => {
@@ -296,6 +304,36 @@ describe("dropHostDuplicateUtilities", () => {
     expect(drop(legacy + each(".a", "color:red"))).toBe(
       `@layer utilities{${each(".a", "color:red")}}`,
     );
+  });
+
+  it("drops a duplicate from an unlayered build", () => {
+    expect(
+      dropHostDuplicateUtilities(
+        scopePluginUtilities(
+          "@layer utilities{.flex{display:flex}.a{color:red}}",
+          ROOTS,
+        ),
+        HOST_APP,
+        "demo",
+      ),
+    ).toBe(each(".a", "color:red"));
+  });
+
+  it("keeps unscoped authored rules of an unlayered build", () => {
+    const css = `${each(".flex", "display:flex")}[data-x]{display:flex}@media (width>=40rem){[data-x]{display:flex}}`;
+    expect(dropHostDuplicateUtilities(css, HOST_APP, "demo")).toBe(
+      "[data-x]{display:flex}@media (width>=40rem){[data-x]{display:flex}}",
+    );
+  });
+
+  it("drops a duplicate inside an at-rule of an unlayered build", () => {
+    expect(
+      dropHostDuplicateUtilities(
+        `@media (width>=40rem){${each(".sm\\:flex", "display:flex")}}`,
+        HOST_APP,
+        "demo",
+      ),
+    ).toBe("");
   });
 
   it("leaves layers other than utilities alone", () => {

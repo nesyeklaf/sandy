@@ -369,7 +369,7 @@ describe("plugin app runtime shim", () => {
     expect(css).not.toContain(`${scope} .bb71-authored-decoration`);
     expect(css).not.toContain(`${scope}.bb71-authored-decoration`);
     expect(css.indexOf(".bb71-authored-decoration{")).toBeGreaterThan(
-      css.lastIndexOf("@layer utilities{"),
+      css.lastIndexOf(scope),
     );
     expect(css).toContain("@keyframes bb71-authored-pulse");
   });

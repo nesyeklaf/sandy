@@ -29,14 +29,24 @@ export function scopePluginUtilities(
 
   return splitStatements(css)
     .map((statement) => {
-      if (statement.body === null) return statement.prelude;
+      if (statement.body === null) return withoutUtilitiesLayerName(statement);
       if (isUtilitiesLayer(statement.prelude)) {
-        return `${statement.prelude}{${scopeStatements(statement.body, scope)}}`;
+        return scopeStatements(statement.body, scope);
       }
       assertNoUnscopedClassRule(statement);
       return `${statement.prelude}{${statement.body}}`;
     })
     .join("");
+}
+
+function withoutUtilitiesLayerName(statement: Statement): string {
+  const names = /^\s*@layer\s+([^;]+);$/.exec(statement.prelude)?.[1];
+  if (names === undefined) return statement.prelude;
+  const kept = names
+    .split(",")
+    .map((name) => name.trim())
+    .filter((name) => name !== "utilities");
+  return kept.length === 0 ? "" : `@layer ${kept.join(",")};`;
 }
 
 interface HostProvidedTailwind {
@@ -215,13 +225,36 @@ export function dropHostDuplicateUtilities(
   return splitStatements(css)
     .map((statement) => {
       if (statement.body === null) return statement.prelude;
-      if (!isUtilitiesLayer(statement.prelude)) {
-        return `${statement.prelude}{${statement.body}}`;
+      if (isUtilitiesLayer(statement.prelude)) {
+        const body = filter(statement.body, HOST_UTILITIES_CONTEXT);
+        return body === null ? "" : `${statement.prelude}{${body}}`;
       }
-      const body = filter(statement.body, "@layer utilities{");
-      return body === null ? "" : `${statement.prelude}{${body}}`;
+      const text = `${statement.prelude}{${statement.body}}`;
+      if (!holdsScopedRule(statement, scope)) return text;
+      return filter(text, HOST_UTILITIES_CONTEXT) ?? "";
     })
     .join("");
+}
+
+const HOST_UTILITIES_CONTEXT = "@layer utilities{";
+
+function holdsScopedRule(
+  statement: Statement,
+  scope: readonly string[],
+): boolean {
+  if (statement.body === null) return false;
+  const prelude = normalizePrelude(statement.prelude);
+  if (!prelude.startsWith("@")) {
+    return unscopedSelectors(prelude, scope) !== null;
+  }
+  const name = /^@([\w-]+)/.exec(prelude)?.[1]?.toLowerCase() ?? "";
+  return (
+    name !== "layer" &&
+    NESTED_STYLE_RULE_AT_RULES.has(name) &&
+    splitStatements(statement.body).some((nested) =>
+      holdsScopedRule(nested, scope),
+    )
+  );
 }
 
 function isLayer(statement: Statement, name: string): boolean {
