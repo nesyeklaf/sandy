@@ -2,6 +2,7 @@ export const CONTENT_SETTLE_MS = 1000;
 export const CONTENT_CAP_MS = 5000;
 
 const CONTENT_ROOT = '[data-sidebar="inset"]';
+const CONTENT_EXCLUDED = "[data-thread-toc]";
 
 export const VISUAL_ATTRIBUTES = [
   "style",
@@ -64,7 +65,7 @@ function hasClosest(target: ContentTarget): target is ContentTarget & Closest {
 export function isContentTarget(target: ContentTarget): boolean {
   if (!target.isConnected) return false;
   const element = hasClosest(target) ? target : target.parentElement;
-  return element !== null && element.closest(CONTENT_ROOT) !== null;
+  return element !== null && element.closest(CONTENT_ROOT) !== null && element.closest(CONTENT_EXCLUDED) === null;
 }
 
 export class ContentRun {

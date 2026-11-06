@@ -4,7 +4,7 @@ import { startCollector, type Collector } from "./collector.ts";
 import type { Sample } from "./contract.ts";
 
 type Listener = (event: unknown) => void;
-type Region = "main" | "sidebar";
+type Region = "main" | "sidebar" | "toc";
 
 class FakeElement {
   region: Region;
@@ -25,7 +25,8 @@ class FakeElement {
     return this.attrs[name] ?? null;
   }
   closest(selector: string) {
-    if (selector === '[data-sidebar="inset"]') return this.region === "main" ? this : null;
+    if (selector === '[data-sidebar="inset"]') return this.region === "main" || this.region === "toc" ? this : null;
+    if (selector === "[data-thread-toc]") return this.region === "toc" ? this : null;
     if (selector === "[data-sidebar-thread-id]") return this.attrs["data-sidebar-thread-id"] === undefined ? null : this;
     if (selector.startsWith("button, a")) return this.trigger ? this : null;
     return null;
@@ -119,6 +120,7 @@ function install(): Lab {
   const sidebarItems = new Map<string, FakeElement>();
   const main = new FakeElement("main");
   const sidebar = new FakeElement("sidebar");
+  const toc = new FakeElement("toc");
   const samples: Sample[] = [];
   controller = new AbortController();
   collector = startCollector((sample) => samples.push(sample), controller.signal);
@@ -153,13 +155,13 @@ function install(): Lab {
       this.mutate("main");
     },
     mutate(region) {
-      const target = region === "main" ? main : sidebar;
+      const target = region === "main" ? main : region === "toc" ? toc : sidebar;
       for (const observer of FakeMutationObserver.all) {
         if (observer.observing) observer.callback([{ target, addedNodes: [] }]);
       }
     },
     mutateAttribute(region, name, from, to) {
-      const target = region === "main" ? main : sidebar;
+      const target = region === "main" ? main : region === "toc" ? toc : sidebar;
       if (to === null) delete target.attrs[name];
       else target.attrs[name] = to;
       for (const observer of FakeMutationObserver.all) {
@@ -354,6 +356,35 @@ test("a late attribute-only reveal in the content moves the mark; sidebar and un
   assert.equal(sample.contentDone, "settled");
   assert.ok(sample.readyMs !== null && sample.contentDoneMs !== null);
   assert.ok(sample.contentDoneMs >= sample.readyMs + 400 && sample.contentDoneMs < sample.readyMs + 440, String(sample.contentDoneMs));
+});
+
+test("a late class change in the table of contents does not extend content done, a late card attribute change does", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(300);
+  lab.mutateAttribute("toc", "class", "w-3", "w-5");
+  lab.advance(600);
+  lab.mutate("toc");
+  lab.advance(6000);
+  const withToc = onlySwitch(lab, 0);
+  assert.equal(withToc.contentDone, "settled");
+  assert.ok(withToc.readyMs !== null && withToc.contentDoneMs !== null);
+  assert.ok(withToc.contentDoneMs < withToc.readyMs + 40, String(withToc.contentDoneMs));
+
+  const other = install();
+  other.click("thr_a");
+  other.advance(100);
+  other.ready("thr_a");
+  other.advance(300);
+  other.mutateAttribute("toc", "class", "w-3", "w-5");
+  other.advance(100);
+  other.mutateAttribute("main", "class", "card-a", "card-b");
+  other.advance(6000);
+  const withCard = onlySwitch(other, 0);
+  assert.ok(withCard.readyMs !== null && withCard.contentDoneMs !== null);
+  assert.ok(withCard.contentDoneMs >= withCard.readyMs + 400, String(withCard.contentDoneMs));
 });
 
 test("the content watch asks the browser only for visual attributes and old values", () => {

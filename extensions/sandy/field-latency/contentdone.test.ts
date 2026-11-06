@@ -2,11 +2,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONTENT_CAP_MS, CONTENT_SETTLE_MS, ContentRun, isContentRecord, isContentTarget, type ContentTarget } from "./contentdone.ts";
 
-function element(region: "main" | "sidebar" | "outside", connected = true) {
+function element(region: "main" | "sidebar" | "outside" | "toc", connected = true) {
   return {
     isConnected: connected,
     parentElement: null,
-    closest: (selector: string) => (selector === '[data-sidebar="inset"]' && region === "main" ? {} : null),
+    closest: (selector: string) => {
+      if (selector === '[data-sidebar="inset"]') return region === "main" || region === "toc" ? {} : null;
+      if (selector === "[data-thread-toc]") return region === "toc" ? {} : null;
+      return null;
+    },
   };
 }
 
@@ -53,6 +57,7 @@ test("only connected nodes inside the main content count, sidebar and outside re
   assert.equal(isContentTarget(element("main")), true);
   assert.equal(isContentTarget(element("sidebar")), false);
   assert.equal(isContentTarget(element("outside")), false);
+  assert.equal(isContentTarget(element("toc")), false);
   assert.equal(isContentTarget(element("main", false)), false);
 });
 
@@ -89,6 +94,10 @@ test("attribute records count only when the value really changed inside the cont
   assert.equal(isContentRecord({ target: main, type: "attributes", attributeName: "style", oldValue: "display:block" }), false);
   assert.equal(isContentRecord({ target: main, type: "attributes", attributeName: "class", oldValue: null }), false);
   assert.equal(isContentRecord({ target: sidebar, type: "attributes", attributeName: "style", oldValue: "y" }), false);
+  const tocSpan = { ...element("toc"), getAttribute: (name: string) => (name === "class" ? "w-5 bg-foreground/30" : null) };
+  assert.equal(isContentRecord({ target: tocSpan, type: "attributes", attributeName: "class", oldValue: "w-3 bg-foreground/5" }), false);
+  const card = { ...element("main"), getAttribute: (name: string) => (name === "class" ? "w-5 bg-foreground/30" : null) };
+  assert.equal(isContentRecord({ target: card, type: "attributes", attributeName: "class", oldValue: "w-3 bg-foreground/5" }), true);
   const spacer = { ...element("main"), getAttribute: (name: string) => (name === "class" ? "w-px invisible shrink-0" : "height: 20px;") };
   assert.equal(isContentRecord({ target: spacer, type: "attributes", attributeName: "style", oldValue: "height: 10px;" }), false);
   const revealed = { ...element("main"), getAttribute: () => "w-px shrink-0" };
