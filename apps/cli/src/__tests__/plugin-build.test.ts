@@ -129,10 +129,7 @@ describe("buildPluginApp", () => {
     expect(css).toContain(".animate-in");
     expect(css).toContain(".fade-in-0");
     const scope = ":where([data-sandy-plugin=fixture])";
-    expect(css).not.toContain(",[data-sandy-plugin-root]");
-    expect(css).toContain(
-      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
-    );
+    expect(css).not.toContain("[data-sandy-plugin-root]");
     expect(css).toContain(`${scope} .animate-in`);
     expect(css).toContain(`${scope}.animate-in`);
     expect(css).not.toContain("@scope");

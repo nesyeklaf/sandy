@@ -341,10 +341,7 @@ describe("plugin app runtime shim", () => {
     const css = await readFile(result.cssPath, "utf8");
 
     const scope = ":where([data-sandy-plugin=css-fixture])";
-    expect(css).not.toContain(",[data-sandy-plugin-root]");
-    expect(css).toContain(
-      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
-    );
+    expect(css).not.toContain("[data-sandy-plugin-root]");
     expect(css).toContain(`${scope} .flex-col`);
     expect(css).toContain(`${scope}.flex-col`);
     const sibling = String.raw`.\[\&\~\*\]\:hidden`;

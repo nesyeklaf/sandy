@@ -8,10 +8,14 @@ import {
 
 const ROOTS = pluginScopeRoots("demo");
 const OWNED = ':where([data-sandy-plugin="demo"])';
-const PORTAL = ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))";
+const LEGACY = ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))";
 
 function both(selector: string): string {
-  return `${OWNED} ${selector},${OWNED}${selector},${PORTAL} ${selector},${PORTAL}${selector}`;
+  return `${OWNED} ${selector},${OWNED}${selector}`;
+}
+
+function legacyBoth(selector: string): string {
+  return `${both(selector)},${LEGACY} ${selector},${LEGACY}${selector}`;
 }
 
 function each(selector: string, body: string): string {
@@ -26,11 +30,8 @@ function scopeUtilities(utilities: string): string {
 }
 
 describe("scopePluginUtilities", () => {
-  it("preserves owned and anonymous portal roots", () => {
-    expect(pluginScopeRoots("demo")).toEqual([
-      '[data-sandy-plugin="demo"]',
-      "[data-sandy-plugin-root]:not([data-sandy-plugin])",
-    ]);
+  it("scopes to the plugin's own id only", () => {
+    expect(pluginScopeRoots("demo")).toEqual(['[data-sandy-plugin="demo"]']);
   });
 
   it("gives every root its own selector so no selector carries a root list", () => {
@@ -60,25 +61,25 @@ describe("scopePluginUtilities", () => {
   it("keeps commas inside :is()/:not() out of the selector split", () => {
     const scoped = scopeUtilities(":is(.a,.b) > .c{color:red}");
     expect(scoped).toBe(
-      `@layer utilities{${[OWNED, PORTAL].flatMap((root) => [`${root} :is(.a,.b) > .c{color:red}`, `${root}:is(.a,.b) > .c{color:red}`]).join("")}}`,
+      `@layer utilities{${OWNED} :is(.a,.b) > .c{color:red}${OWNED}:is(.a,.b) > .c{color:red}}`,
     );
   });
 
   it("drops the self arm for sibling combinators so a portal root cannot reach host siblings", () => {
     const hidden = String.raw`.\[\&\~\*\]\:hidden`;
     expect(scopeUtilities(`${hidden}{&~*{display:none}}`)).toBe(
-      `@layer utilities{${OWNED} ${hidden}{&~*{display:none}}${PORTAL} ${hidden}{&~*{display:none}}}`,
+      `@layer utilities{${OWNED} ${hidden}{&~*{display:none}}}`,
     );
     expect(scopeUtilities(`${hidden} ~ *{display:none}`)).toBe(
-      `@layer utilities{${OWNED} ${hidden} ~ *{display:none}${PORTAL} ${hidden} ~ *{display:none}}`,
+      `@layer utilities{${OWNED} ${hidden} ~ *{display:none}}`,
     );
     expect(scopeUtilities(".a{+ .b{color:red}}")).toBe(
-      `@layer utilities{${OWNED} .a{+ .b{color:red}}${PORTAL} .a{+ .b{color:red}}}`,
+      `@layer utilities{${OWNED} .a{+ .b{color:red}}}`,
     );
     expect(
       scopeUtilities(".a{@media (hover:hover){&:hover + .b{color:red}}}"),
     ).toBe(
-      `@layer utilities{${OWNED} .a{@media (hover:hover){&:hover + .b{color:red}}}${PORTAL} .a{@media (hover:hover){&:hover + .b{color:red}}}}`,
+      `@layer utilities{${OWNED} .a{@media (hover:hover){&:hover + .b{color:red}}}}`,
     );
   });
 
@@ -94,7 +95,7 @@ describe("scopePluginUtilities", () => {
   it("keeps both arms when + or ~ only appear escaped, in attributes, or inside :is()", () => {
     const peer = String.raw`.peer-checked\:hidden:is(:where(.peer):checked ~ *)`;
     expect(scopeUtilities(`${peer}{display:none}`)).toContain(
-      `${PORTAL}${peer}`,
+      `${OWNED}${peer}`,
     );
     const attr = String.raw`[data-x~="a"].mt-\[calc\(1px\+2px\)\]`;
     expect(scopeUtilities(`${attr}{margin:0}`)).toContain(`${OWNED}${attr}`);
@@ -285,6 +286,16 @@ describe("dropHostDuplicateUtilities", () => {
     expect(
       drop(each(".hidden", "display:none") + each(".grid-ish", "display:grid")),
     ).toBe(`@layer utilities{${each(".grid-ish", "display:grid")}}`);
+  });
+
+  it("drops a duplicate from a bundle built with the legacy anonymous root", () => {
+    const legacy = legacyBoth(".flex")
+      .split(",")
+      .map((arm) => `${arm}{display:flex}`)
+      .join("");
+    expect(drop(legacy + each(".a", "color:red"))).toBe(
+      `@layer utilities{${each(".a", "color:red")}}`,
+    );
   });
 
   it("leaves layers other than utilities alone", () => {

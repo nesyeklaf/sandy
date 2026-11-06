@@ -14,11 +14,11 @@ interface Statement {
   body: string | null;
 }
 
+const LEGACY_ANONYMOUS_ROOT =
+  "[data-sandy-plugin-root]:not([data-sandy-plugin])";
+
 export function pluginScopeRoots(pluginId: string): readonly string[] {
-  return [
-    `[data-sandy-plugin="${pluginId}"]`,
-    "[data-sandy-plugin-root]:not([data-sandy-plugin])",
-  ];
+  return [`[data-sandy-plugin="${pluginId}"]`];
 }
 
 export function scopePluginUtilities(
@@ -182,7 +182,7 @@ export function dropHostDuplicateUtilities(
     };
   }
   const hostKeys = hostUtilityKeysCache.keys;
-  const scope = pluginScopeRoots(pluginId)
+  const scope = [...pluginScopeRoots(pluginId), LEGACY_ANONYMOUS_ROOT]
     .flatMap(scopeRootVariants)
     .map((root) => `:where(${root})`);
   const claimed = new Set<string>();

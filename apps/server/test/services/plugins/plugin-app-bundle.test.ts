@@ -180,10 +180,7 @@ describe("plugin app bundles (build policy, inventory, asset routes)", () => {
     const cssText = await css.text();
     expect(cssText).toContain("line-clamp-2");
     const scope = ":where([data-sandy-plugin=appy])";
-    expect(cssText).not.toContain(",[data-sandy-plugin-root]");
-    expect(cssText).toContain(
-      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
-    );
+    expect(cssText).not.toContain("[data-sandy-plugin-root]");
     expect(cssText).toContain(`${scope} .line-clamp-2`);
     expect(cssText).toContain(`${scope}.line-clamp-2`);
     expect(cssText).not.toMatch(/@layer utilities\{\./);

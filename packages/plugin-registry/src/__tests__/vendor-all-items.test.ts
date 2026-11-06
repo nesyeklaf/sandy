@@ -132,9 +132,7 @@ describe("plugin component registry", () => {
 
     const css = await readFile(result.cssPath, "utf8");
     expect(css).toContain(":where([data-sandy-plugin=registry-fixture])");
-    expect(css).toContain(
-      ":where([data-sandy-plugin-root]:not([data-sandy-plugin]))",
-    );
+    expect(css).not.toContain("[data-sandy-plugin-root]");
     expect(css).toMatch(/var\(--background\)/);
   });
 });
