@@ -20,6 +20,9 @@ fi
 
 cd "$ROOT"
 pnpm exec turbo run build --filter=@sandy/app^... > "$LAB/build-deps.log" 2>&1
+for plugin in extensions/sandy/genui; do
+  [ -d "$plugin/node_modules" ] || (cd "$plugin" && npm ci --ignore-scripts --no-audit --no-fund) >> "$LAB/build-plugin-deps.log" 2>&1
+done
 (
   cd apps/app
   node scripts/generate-pwa-icons.mjs
