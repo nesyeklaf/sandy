@@ -43,3 +43,14 @@ test("removing every input deletes its tag line and nothing else", () => {
   const next = writeIoTags(STAGED, { inputs: [] });
   assert.equal(next, STAGED.replace('{% input name="Diff" type="file" description="The change" /%}\n', ""));
 });
+
+test("adding inputs to a plain skill marks it as a dialect skill and keeps the rest of the file", () => {
+  const plain = "---\nname: plain\ndescription: A plain skill\n---\n# Plain\n\nDo the thing.\n";
+  const next = writeIoTags(plain, { inputs: [{ name: "Topic", optional: false, type: { kind: "text" } }] });
+  assert.match(next, /^---\nname: plain\ndescription: A plain skill\nmetadata:\n  dialect: "1"\n---\n/u);
+  assert.deepEqual(readIo(next, {}).inputs.map((field) => field.name), ["Topic"]);
+  const withMetadata = "---\nname: plain\nmetadata:\n  inputs: \"Old: text\"\n---\n# Plain\n";
+  assert.match(writeIoTags(withMetadata, { outputs: [{ name: "Notes", optional: false, type: { kind: "text" } }] }), /^---\nname: plain\nmetadata:\n  dialect: "1"\n  inputs: "Old: text"\n---\n/u);
+  assert.equal(writeIoTags(plain, { inputs: [] }), plain);
+});
+

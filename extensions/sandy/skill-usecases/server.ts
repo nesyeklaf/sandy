@@ -227,7 +227,7 @@ export default async function plugin(sandy: SandyPluginApi) {
   ): Promise<{ rows: SkillRow[]; files: Map<string, SkillFile | Error> }> {
     const listed = await listedSkills(projectId, staleOk);
     const unique = listed.skills.filter((skill, index) => listed.skills.findIndex((other) => other.name === skill.name) === index);
-    const files = await skillFiles(projectId, unique);
+    const files = await skillFiles(projectId, unique.filter((skill) => skillMetadata.parse(skill.metadata).dialect !== undefined));
     const sourcesByName = new Map<string, Set<string>>();
     for (const skill of listed.skills) {
       const sources = sourcesByName.get(skill.name) ?? new Set<string>();

@@ -1,4 +1,4 @@
-import { applyEdits, outlineSkill, readSkillIo, type CompiledField, type OutlineTag, type SourceEdit } from "@sandy/skill-dialect";
+import { applyEdits, outlineSkill, readFrontmatter, readSkillIo, type CompiledField, type OutlineTag, type SourceEdit } from "@sandy/skill-dialect";
 import { formatType, parseIo, parseIoType, type IoField } from "./io.ts";
 
 export type IoSource = "tags" | "metadata" | "none";
@@ -110,5 +110,20 @@ export function writeIoTags(content: string, changes: Partial<Record<IoKey, read
     const point = insertionPoint(content, outline.tags, outline.bodyStart);
     edits.push({ start: point.at, end: point.at, text: point.lead + pending.join("\n") + "\n" + point.trail });
   }
-  return applyEdits(content, edits);
+  return markDialect(applyEdits(content, edits));
+}
+
+function markDialect(content: string): string {
+  const front = readFrontmatter(content);
+  if (front === undefined || front.metadata.dialect !== undefined) return content;
+  if (!(outlineSkill(content)?.tags.some((tag) => tag.name === "input" || tag.name === "output") ?? false)) return content;
+  const start = content.indexOf(front.raw);
+  const section = /^metadata:[ \t]*$/mu.exec(front.raw);
+  if (section !== null) {
+    const at = start + section.index + section[0].length;
+    return content.slice(0, at) + '\n  dialect: "1"' + content.slice(at);
+  }
+  if (front.fields.metadata !== undefined) return content;
+  const at = start + front.raw.length;
+  return content.slice(0, at) + '\nmetadata:\n  dialect: "1"' + content.slice(at);
 }

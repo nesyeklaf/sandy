@@ -81,18 +81,18 @@ test("state groups skills, dedupes by name, picks the first project", async () =
   ]);
 });
 
-test("skill IO comes from input and output tags, frontmatter metadata is the fallback, and reads follow the revision", async (t) => {
+test("skill IO comes from input and output tags of dialect skills, frontmatter metadata is the fallback without a read, and reads follow the revision", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: 1000 });
   const files: Record<string, { content: string; revision: string }> = {
     skill_tags: {
-      content: '---\nname: summarize\nmetadata:\n  inputs: "Ignored: text"\n---\n# Summarize\n\n{% input name="Page" type="url" /%}\n{% output name="Summary" type="file(summary.md)" /%}\n{% output name="Bad" type="choice(a)" /%}\n',
+      content: '---\nname: summarize\nmetadata:\n  inputs: "Ignored: text"\n  dialect: "1"\n---\n# Summarize\n\n{% input name="Page" type="url" /%}\n{% output name="Summary" type="file(summary.md)" /%}\n{% output name="Bad" type="choice(a)" /%}\n',
       revision: "1".repeat(64),
     },
     skill_meta: { content: "---\nname: old\nmetadata:\n  inputs: \"Topic: text\"\n---\n# Old\n", revision: "2".repeat(64) },
   };
   const reads: string[] = [];
   const listed = () => [
-    skillEntry("skill_tags", "summarize", "Summarize a page", { inputs: "Ignored: text" }, { revision: files.skill_tags!.revision }),
+    skillEntry("skill_tags", "summarize", "Summarize a page", { inputs: "Ignored: text", dialect: "1" }, { revision: files.skill_tags!.revision }),
     skillEntry("skill_meta", "old", "Old skill", { inputs: "Topic: text" }, { revision: files.skill_meta!.revision }),
   ];
   const { sandy, harness } = createFakePluginHost({
@@ -114,9 +114,9 @@ test("skill IO comes from input and output tags, frontmatter metadata is the fal
   let state = (await harness.behavior.callRpc("state", { projectId: null })) as any;
   assert.deepEqual(row(state, "summarize").inputs, [{ name: "Page", optional: false, type: { kind: "url" } }]);
   assert.deepEqual(row(state, "summarize").outputs, [{ name: "Summary", optional: false, type: { kind: "file", path: "summary.md" } }]);
-  assert.deepEqual(row(state, "summarize").ioErrors, ["line 10: a choice needs at least two values"]);
+  assert.deepEqual(row(state, "summarize").ioErrors, ["line 11: a choice needs at least two values"]);
   assert.deepEqual(row(state, "old").inputs, [{ name: "Topic", optional: false, type: { kind: "text" } }]);
-  assert.deepEqual(reads.sort(), ["skill_meta", "skill_tags"]);
+  assert.deepEqual(reads.sort(), ["skill_tags"]);
   reads.length = 0;
   await harness.behavior.callRpc("state", { projectId: null });
   assert.deepEqual(reads, []);

@@ -108,7 +108,7 @@ test("editing IO rows moves metadata IO into input and output tags; other keys s
   const reparsed = parseSkillFile(next);
   assert.ok(reparsed.ok);
   assert.deepEqual(reparsed.warnings, []);
-  assert.deepEqual(reread.metadata, [{ key: "author", value: "owner" }, { key: "version", value: "2" }]);
+  assert.deepEqual(reread.metadata, [{ key: "dialect", value: "1" }, { key: "author", value: "owner" }, { key: "version", value: "2" }]);
 });
 
 test("removing every metadata entry drops the empty metadata block", () => {
@@ -120,7 +120,7 @@ test("removing every metadata entry drops the empty metadata block", () => {
 test("adding inputs to a skill without metadata writes an input tag and leaves the frontmatter alone", () => {
   const plain = "---\nname: tiny\ndescription: Small\n---\nBody\n";
   const next = written(plain, { ...draftOf(plain), inputs: [{ name: "Goal", optional: true, kind: "text", path: "", values: "" }] });
-  assert.equal(next, '---\nname: tiny\ndescription: Small\n---\n{% input name="Goal" optional=true /%}\n\nBody\n');
+  assert.equal(next, '---\nname: tiny\ndescription: Small\nmetadata:\n  dialect: "1"\n---\n{% input name="Goal" optional=true /%}\n\nBody\n');
 });
 
 test("tags win over metadata IO and edits keep untouched tags byte for byte", () => {
@@ -130,7 +130,7 @@ test("tags win over metadata IO and edits keep untouched tags byte for byte", ()
   assert.deepEqual(parsed.draft.inputs.map((row) => row.name), ["Goal"]);
   assert.deepEqual(parsed.warnings, []);
   const next = written(tagged, { ...parsed.draft, outputs: [...parsed.draft.outputs, { name: "Extra", optional: true, kind: "url", path: "", values: "" }] });
-  assert.equal(next, '---\nname: x\ndescription: d\n---\n# X\n\n{%  input   name="Goal" description="What to do" /%}\n{% output name="Notes" type="file(notes.md)" /%}\n{% output name="Extra" type="url" optional=true /%}\n\nBody\n');
+  assert.equal(next, '---\nname: x\ndescription: d\nmetadata:\n  dialect: "1"\n---\n# X\n\n{%  input   name="Goal" description="What to do" /%}\n{% output name="Notes" type="file(notes.md)" /%}\n{% output name="Extra" type="url" optional=true /%}\n\nBody\n');
 });
 
 test("unreadable IO entries stay as written until their rows are edited", () => {
