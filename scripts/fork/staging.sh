@@ -53,8 +53,10 @@ const D=require("better-sqlite3");
 new D(process.argv[1],{readonly:true}).backup(process.argv[2],{progress:()=>2147483647}).then(()=>{
   const db=new D(process.argv[2]);
   const off=process.argv[3].split(" ");
-  const r=db.prepare("update plugins set enabled=0 where id in ("+off.map(()=>"?").join(",")+")").run(...off);
-  console.log("db copied, "+r.changes+" plugins with outside effects disabled");
+  const r=db.prepare("update plugins set enabled=0, enabled_follows_default=0 where id in ("+off.map(()=>"?").join(",")+")").run(...off);
+  const t=db.prepare("update threads set status=? where status=?").run("idle","active");
+  const q=db.prepare("delete from queued_thread_messages").run();
+  console.log("db copied, "+r.changes+" plugins with outside effects disabled, "+t.changes+" active threads set idle, "+q.changes+" queued messages dropped");
 },e=>{console.error(e);process.exit(1)})' "$live/sandy.db" "$dir/data/sandy.db" "$side_effect_plugins")
   for f in config.json auth-secret auth.json host-id telemetry-id theme; do
     if [ -e "$live/$f" ]; then cp -a "$live/$f" "$dir/data/"; fi
