@@ -25,6 +25,7 @@ export const START_THREAD = "thr_yge7c483t3";
 const { values } = parseArgs({
   options: {
     lab: { type: "string" },
+    labs: { type: "string" },
     out: { type: "string" },
     rounds: { type: "string", default: "8" },
     variants: { type: "string", default: "prod,genui-off,profiling,prod~bare,genui-off~bare" },
@@ -33,7 +34,15 @@ const { values } = parseArgs({
     "keep-traces": { type: "boolean", default: true },
   },
 });
-if (!values.lab || !values.out) throw new Error("usage: rounds.mjs --lab <dir> --out <dir> [--rounds 8] [--variants prod,genui-off,profiling]");
+if ((!values.lab && !values.labs) || !values.out)
+  throw new Error("usage: rounds.mjs (--lab <dir> | --labs name=dir,...) --out <dir> [--rounds 8] [--variants prod,genui-off,profiling]");
+const labs = values.labs
+  ? values.labs.split(",").map((entry) => {
+      const [name, dir] = entry.split("=");
+      return { name, dir };
+    })
+  : [{ name: null, dir: values.lab }];
+const labDirOf = Object.fromEntries(labs.map((lab) => [lab.name ?? "", lab.dir]));
 const rounds = Number(values.rounds);
 const variants = values.variants.split(",");
 const [width, height] = values.viewport.split(",").map(Number);
@@ -71,9 +80,11 @@ const start = await threadInfo(STAGING_ORIGIN, START_THREAD);
 const threads = await Promise.all(THREADS.map(async (thread) => ({ ...thread, ...(await threadInfo(STAGING_ORIGIN, thread.id)) })));
 const sequence = [...threads.map((thread) => ({ thread, visit: "first" })), ...threads.map((thread) => ({ thread, visit: "revisit" }))];
 
-const baseOf = (variant) => variant.split("~")[0];
+const served = (variant) => variant.split("~")[0];
+const labOf = (variant) => (served(variant).includes(":") ? served(variant).split(":")[0] : "");
+const baseOf = (variant) => served(variant).split(":").at(-1);
 const isBare = (variant) => variant.endsWith("~bare");
-const servers = await startProxy({ labDir: values.lab, auditPath: join(values.out, "proxy-audit.jsonl"), variants: [...new Set(variants.map(baseOf))] });
+const servers = await startProxy({ labs, auditPath: join(values.out, "proxy-audit.jsonl"), variants: [...new Set(variants.map(baseOf))] });
 const urlOf = Object.fromEntries(servers.map((server) => [server.name, server.url]));
 const sourceMapCache = new Map();
 
@@ -89,7 +100,7 @@ const runVariantRound = async (variant, round) => {
       source: (base === "profiling" ? "window.__RA_REACT_HOOK__ = true;\n" : "") + PROBE,
     });
     const { product } = await browser.client.send("Browser.getVersion");
-    await browser.navigate(labThreadUrl(urlOf[base], start));
+    await browser.navigate(labThreadUrl(urlOf[served(variant)], start));
     await browser.waitForExpression(threadReadyExpression(start), { timeoutMs: 45_000, description: "start thread" });
     await browser.evaluate(settleExpression(600, 15_000));
     await wait(1500);
@@ -97,7 +108,7 @@ const runVariantRound = async (variant, round) => {
     const hostBusy = await sampleHostBusyShare(500);
     validity.push({ name: "page visible", passed: page.visibility === "visible", page });
     validity.push({ name: "host CPU quiet", passed: hostBusy < 0.5, hostBusy });
-    const cache = sourceMapCache.get(base) ?? sourceMapCache.set(base, new Map()).get(base);
+    const cache = sourceMapCache.get(served(variant)) ?? sourceMapCache.set(served(variant), new Map()).get(served(variant));
     for (const [index, { thread, visit }] of sequence.entries()) {
       const selector = "[data-sidebar-thread-id=" + JSON.stringify(thread.id) + "]";
       await browser.reveal(selector);
@@ -121,7 +132,7 @@ const runVariantRound = async (variant, round) => {
         tracePath = join(values.out, "traces", variant + "-r" + round + "-" + index + "-" + thread.key + "-" + visit + ".json.gz");
         if (values["keep-traces"]) writeFileSync(tracePath, gzipSync(JSON.stringify(events)));
         try {
-          analysis = await analyzeEvents(events, { labDir: values.lab, variant: base, pluginByHash, cache, probe });
+          analysis = await analyzeEvents(events, { labDir: labDirOf[labOf(variant)], variant: base, pluginByHash, cache, probe });
         } catch (error) {
           analysis = { error: String(error?.stack ?? error).slice(0, 500) };
         }
@@ -156,7 +167,7 @@ try {
         console.log(variant, round, "ERROR", String(error?.stack ?? error).slice(0, 400));
         results.push({ variant, round, error: String(error).slice(0, 400), samples: [] });
       }
-      writeFileSync(join(values.out, "rounds.json"), JSON.stringify({ node: process.version, variants: Object.fromEntries(variants.map((name) => [name, { ...VARIANTS[baseOf(name)], traced: !isBare(name) }])), pluginByHash, results }, null, 1));
+      writeFileSync(join(values.out, "rounds.json"), JSON.stringify({ node: process.version, labs, variants: Object.fromEntries(variants.map((name) => [name, { ...VARIANTS[baseOf(name)], traced: !isBare(name) }])), pluginByHash, results }, null, 1));
     }
   }
 } finally {

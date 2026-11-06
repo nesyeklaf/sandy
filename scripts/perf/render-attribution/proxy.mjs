@@ -125,12 +125,24 @@ const rewritePlugins = (body, variant, labDir) => {
   return JSON.stringify(data);
 };
 
-export const startProxy = ({ labDir, auditPath, variants = Object.keys(VARIANTS) }) => {
+const PLUGIN_ASSETS = "/api/v1/plugin-app-assets/";
+
+const labPluginFile = (labDir, path) => {
+  if (!path.startsWith(PLUGIN_ASSETS)) return null;
+  const [hash, ...rest] = path.slice(PLUGIN_ASSETS.length).split("/");
+  if (!/^[0-9a-f]{16}$/.test(hash) || rest.length === 0) return null;
+  return localFile(join(labDir, "plugins", hash), rest.join("/"));
+};
+
+export const startProxy = ({ labDir, labs = [{ name: null, dir: labDir }], auditPath, variants = Object.keys(VARIANTS) }) => {
   if (upstream.port !== "39886") throw new Error("upstream must be staging");
   const audit = (entry) => appendFileSync(auditPath, JSON.stringify({ t: Date.now(), ...entry }) + "\n");
-  const servers = variants.map((name) => {
-    const variant = VARIANTS[name];
-    const port = String(variant.port);
+  const entries = labs.flatMap((lab, labIndex) =>
+    variants.map((base) => ({ name: lab.name === null ? base : lab.name + ":" + base, base, labDir: lab.dir, port: VARIANTS[base].port + 10 * labIndex })),
+  );
+  const servers = entries.map(({ name, base, labDir, port: portNumber }) => {
+    const variant = VARIANTS[base];
+    const port = String(portNumber);
     const hostRoot = join(labDir, variant.host);
     const genuiBase = "/api/v1/plugin-app-assets/" + GENUI_HASH + "/";
     const delegateBase = "/api/v1/plugin-app-assets/" + SIDEBAR_DELEGATE_HASH + "/";
@@ -153,6 +165,8 @@ export const startProxy = ({ labDir, auditPath, variants = Object.keys(VARIANTS)
           return sendFile(res, join(hostRoot, "index.html"), "no-store");
         }
       }
+      const pluginFile = labPluginFile(labDir, path);
+      if (pluginFile) return sendFile(res, pluginFile, IMMUTABLE);
       if (path.startsWith(delegateBase)) {
         const file = localFile(join(labDir, "sidebar-delegate"), path.slice(delegateBase.length));
         if (file) return sendFile(res, file, IMMUTABLE);
@@ -247,7 +261,7 @@ export const startProxy = ({ labDir, auditPath, variants = Object.keys(VARIANTS)
     });
     return new Promise((resolve, reject) => {
       server.once("error", reject);
-      server.listen(variant.port, "127.0.0.1", () => resolve({ name, server, url: "http://127.0.0.1:" + port }));
+      server.listen(portNumber, "127.0.0.1", () => resolve({ name, server, url: "http://127.0.0.1:" + port }));
     });
   });
   return Promise.all(servers);

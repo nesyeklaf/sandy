@@ -36,11 +36,13 @@ const main = async () => {
   for (const result of data.results)
     for (const sample of result.samples) {
       if (!sample.tracePath) continue;
-      const variant = sample.variant.split("~")[0];
-      const cache = caches.get(variant) ?? caches.set(variant, new Map()).get(variant);
+      const served = sample.variant.split("~")[0];
+      const [labName, variant] = served.includes(":") ? served.split(":") : ["", served];
+      const labDir = data.labs?.find((lab) => (lab.name ?? "") === labName)?.dir ?? values.lab;
+      const cache = caches.get(served) ?? caches.set(served, new Map()).get(served);
       const events = JSON.parse(gunzipSync(readFileSync(sample.tracePath)).toString("utf8"));
       try {
-        sample.analysis = await analyzeEvents(events, { labDir: values.lab, variant, pluginByHash: data.pluginByHash, cache, probe: sample.probe });
+        sample.analysis = await analyzeEvents(events, { labDir, variant, pluginByHash: data.pluginByHash, cache, probe: sample.probe });
       } catch (error) {
         sample.analysis = { error: String(error?.stack ?? error).slice(0, 500) };
       }

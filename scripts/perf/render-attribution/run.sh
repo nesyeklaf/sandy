@@ -6,8 +6,9 @@ LAB=${1:?$usage}
 OUT=${2:?$usage}
 ROUNDS=${3:-8}
 DELEGATE=${4:-}
-ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
-HERE="$ROOT/scripts/perf/render-attribution"
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=${RA_ROOT:-$(cd "$HERE/../../.." && pwd)}
+COMPACT_COMPOSER_HASH=251ed887b7756d76
 mkdir -p "$LAB" "$OUT/run"
 LAB=$(cd "$LAB" && pwd)
 OUT=$(cd "$OUT" && pwd)
@@ -20,7 +21,7 @@ fi
 
 cd "$ROOT"
 pnpm exec turbo run build --filter=@sandy/app^... > "$LAB/build-deps.log" 2>&1
-for plugin in extensions/sandy/genui; do
+for plugin in extensions/sandy/genui extensions/sandy/compact-composer; do
   [ -d "$plugin/node_modules" ] || (cd "$plugin" && npm ci --ignore-scripts --no-audit --no-fund) >> "$LAB/build-plugin-deps.log" 2>&1
 done
 (
@@ -33,6 +34,9 @@ done
 ) > "$LAB/build-host.log" 2>&1
 node --import tsx "$HERE/build-genui.ts" extensions/sandy/genui "$LAB/genui" 0.49.0 > "$LAB/build-genui.log" 2>&1
 node --import tsx "$HERE/build-genui.ts" extensions/sandy/genui "$LAB/genui-unminified" 0.49.0 no-minify >> "$LAB/build-genui.log" 2>&1
+rm -rf "$LAB/plugins"
+node --import tsx "$HERE/build-genui.ts" extensions/sandy/compact-composer "$LAB/plugins/$COMPACT_COMPOSER_HASH" 0.49.0 > "$LAB/build-compact-composer.log" 2>&1
+[ "${RA_BUILD_ONLY:-0}" = 1 ] && exit 0
 
 timeout 4000 flock /tmp/staging-lab.lock node "$HERE/rounds.mjs" --lab "$LAB" --out "$OUT/run" --rounds "$ROUNDS" 2>&1 | tee "$OUT/run/rounds.log"
 node "$HERE/report.mjs" --run "$OUT/run" --out "$OUT"
