@@ -141,9 +141,15 @@ describe("buildSidebarData structural sharing", () => {
     };
     const data = getSidebarData(state);
     expect(getSidebarData({ ...state })).toBe(data);
-    expect(getSidebarData({ ...state, threads: [...state.threads] })).not.toBe(
+    expect(getSidebarData({ ...state, threads: [...state.threads] })).toBe(
       data,
     );
+    expect(
+      getSidebarData({
+        ...state,
+        threads: [makeSidebarThread({ id: "a2", projectId: "proj_a" })],
+      }),
+    ).not.toBe(data);
     resetSidebarDataCacheForTest();
   });
 });
