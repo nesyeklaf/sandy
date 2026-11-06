@@ -15,12 +15,13 @@ import {
 } from "@/components/sidebar/sidebarFooterPreferences";
 import { SidebarFooterCustomize } from "@/components/sidebar/SidebarFooterCustomize";
 import { SidebarFooterSettings } from "@/components/settings/SidebarFooterSettings";
-import type { ReactNode } from "react";
+import { Profiler, type ReactNode } from "react";
 import type {
   ExperimentalSidebarFooterActionContext,
   ExperimentalSidebarFooterDisclosureController,
 } from "@sandy-sdk/plugin-sdk";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { TooltipProvider } from "@sandy/shared-ui/tooltip";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SidebarMenu, SidebarProvider } from "@/components/ui/sidebar.js";
@@ -64,12 +65,14 @@ function renderWithProviders(ui: ReactNode, store = createStore()) {
   return render(
     <Provider store={store}>
       <MemoryRouter>
-        <TooltipProvider delayDuration={0}>
-          <SidebarProvider>
-            {ui}
-            <LocationProbe />
-          </SidebarProvider>
-        </TooltipProvider>
+        <LatestRouteProvider>
+          <TooltipProvider delayDuration={0}>
+            <SidebarProvider>
+              {ui}
+              <LocationProbe />
+            </SidebarProvider>
+          </TooltipProvider>
+        </LatestRouteProvider>
       </MemoryRouter>
     </Provider>,
   );
@@ -117,6 +120,43 @@ afterEach(() => {
 });
 
 describe("PluginSidebarFooterItems", () => {
+  it("does not re-render the footer when the route changes", () => {
+    const router: { goTo: ReturnType<typeof useNavigate> | null } = {
+      goTo: null,
+    };
+    const commits = { footer: 0 };
+    function Navigator() {
+      router.goTo = useNavigate();
+      return null;
+    }
+    renderWithProviders(
+      <>
+        <Navigator />
+        <Profiler
+          id="footer"
+          onRender={() => {
+            commits.footer += 1;
+          }}
+        >
+          <SidebarMenu>
+            <PluginSidebarFooterItems
+              onCustomize={() => {}}
+              activeDisclosureKey={null}
+              onDisclosureCommand={() => {}}
+            />
+          </SidebarMenu>
+        </Profiler>
+      </>,
+    );
+    const commitsAfterMount = commits.footer;
+
+    act(() => void router.goTo?.("/threads/thr_a"));
+    act(() => void router.goTo?.("/threads/thr_b"));
+
+    expect(commitsAfterMount).toBeGreaterThan(0);
+    expect(commits.footer).toBe(commitsAfterMount);
+  });
+
   it("fills the footer to its measured capacity and keeps overflow in More when an icon is removed", () => {
     setPluginSlotRegistrations(
       "example",

@@ -7,7 +7,8 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useStableNavigate } from "@/lib/latest-route";
 import type { ExperimentalSidebarFooterCommandKind } from "@sandy-sdk/plugin-sdk/internal/plugin-app-collector";
 import { cn } from "@sandy/shared-ui/lib/utils";
 import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
@@ -206,7 +207,7 @@ export function PluginSidebarFooterItems({
   onCustomize: () => void;
   builtInActions?: readonly BuiltinFooterAction[];
 }) {
-  const navigate = useNavigate();
+  const navigate = useStableNavigate();
   const preferences = useSidebarFooterPreferences();
   const isCompactViewport = useIsCompactViewport();
   const previousHidden = useRef(preferences.hidden);
