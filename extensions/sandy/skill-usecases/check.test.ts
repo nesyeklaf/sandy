@@ -150,9 +150,9 @@ test("an empty fork path without a name is a warning", () => {
   assert.equal(hasErrors(run(flow)), false);
 });
 
-test("a block nothing leads into is unreachable, with a connect fix", () => {
+test("a block with no wire at all is not connected, with a connect fix", () => {
   const flow = { ...uxFlow(), nodes: [...uxFlow().nodes, skillNode("lonely", "ux-users", { frame: ["frame", "frame.md"] })] };
-  const problem = find(run(flow), /ux-users: unreachable, nothing leads into it/u);
+  const problem = find(run(flow), /ux-users: not connected to any block/u);
   assert.equal(problem.nodeId, "lonely");
   assert.equal(problem.fixes.at(-1)?.action.kind, "delete-node");
 });

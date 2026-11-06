@@ -433,11 +433,13 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
     wires.push({ id: "w" + String(wireCount), from, port, to, ...extra });
   };
   if (inputFields.length > 0 && startId !== undefined) addWire(INPUT_NODE_ID, 0, startId);
-  const doneTarget = (from: string): string => {
-    const own = outputNodes.find((node) => node.source?.nodeId === from) ?? outputNodes[outputNodes.length - 1];
-    if (own !== undefined) return own.id;
+  const addDone = (from: string, port: number, extra: Partial<Wire> = {}) => {
+    if (outputNodes.length > 0) {
+      for (const node of outputNodes) addWire(from, port, node.id, extra);
+      return;
+    }
     doneNode ??= { id: "end", kind: "output", label: DONE_LABEL, x: 0, y: 0, source: null, deliverable: false };
-    return doneNode.id;
+    addWire(from, port, doneNode.id, extra);
   };
   for (const draft of stages) {
     if (isGate(draft)) {
@@ -449,7 +451,7 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
       const routes = draft.edges.flatMap((edge) => (equalsAll(edge.when) ?? []).map((cond) => ({ port: values.indexOf(cond.value), to: edge.to }))).filter((route) => route.port >= 0).sort((a, b) => a.port - b.port);
       for (const route of routes) {
         if (route.to !== DONE_STAGE) addWire(draft.id, route.port, route.to);
-        else if (outputNodes.length > 0) addWire(draft.id, route.port, doneTarget(draft.id));
+        else if (outputNodes.length > 0) addDone(draft.id, route.port);
         else ends.push(route.port);
       }
       continue;
@@ -475,7 +477,10 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
         if (route.to !== DONE_STAGE) addWire(draft.id, paths.length - 1, route.to);
       }
       const last = draft.edges[draft.edges.length - 1];
-      if (otherwise !== null && last !== undefined) addWire(draft.id, paths.length, last.to === DONE_STAGE ? doneTarget(draft.id) : last.to);
+      if (otherwise !== null && last !== undefined) {
+        if (last.to === DONE_STAGE) addDone(draft.id, paths.length);
+        else addWire(draft.id, paths.length, last.to);
+      }
       nodes.push({ id: draft.id, kind: "fork", name: draft.title ?? draft.id, x: 0, y: 0, choice: { nodeId: INPUT_NODE_ID, port: field }, paths, otherwise });
       continue;
     }
@@ -502,7 +507,8 @@ export function skillToFlow(source: string, skills: readonly SkillInfo[], option
       if (edge.label !== undefined) extra.label = edge.label;
       if (edge.max !== undefined) extra.max = edge.max;
       if (edge.exceeded !== undefined) extra.exceeded = edge.exceeded;
-      addWire(draft.id, 0, edge.to === DONE_STAGE ? doneTarget(draft.id) : edge.to, extra);
+      if (edge.to === DONE_STAGE) addDone(draft.id, 0, extra);
+      else addWire(draft.id, 0, edge.to, extra);
     }
   }
   nodes.push(...outputNodes);

@@ -401,11 +401,15 @@ function checkReach(shape: Shape, problems: Problem[]): void {
     ...(tail === undefined || tail.id === node.id || node.kind === "input" ? [] : [{ label: "Connect after " + nodeTitle(tail), action: { kind: "connect-after", nodeId: tail.id } } as const]),
     { label: "Delete " + nodeTitle(node), action: { kind: "delete-node" } },
   ];
+  const wired = new Set(flow.wires.flatMap((wire) => [wire.from, wire.to]));
   for (const node of flow.nodes) {
     const title = nodeTitle(node);
+    if (flow.nodes.length > 2 && !wired.has(node.id)) {
+      problems.push({ severity: "error", nodeId: node.id, message: title + ": not connected to any block", fixes: connect(node) });
+      continue;
+    }
     if (roots.includes(node.id)) continue;
     if (node.kind === "input") continue;
-    if (node.kind === "output" && node.source !== null && shape.reachable.has(node.source.nodeId)) continue;
     if (!incoming.has(node.id)) problems.push({ severity: "error", nodeId: node.id, message: title + ": unreachable, nothing leads into it so it would never run", fixes: connect(node) });
     else if (!shape.reachable.has(node.id)) problems.push({ severity: "error", nodeId: node.id, message: title + ": unreachable from the start of the flow", fixes: connect(node) });
   }
@@ -469,6 +473,12 @@ function checkPaths(shape: Shape, problems: Problem[]): void {
   });
 }
 
+function nextSteps(flow: Flow, nodeId: string): number {
+  const plain = flow.wires.filter((wire) => wire.from === nodeId && wire.when === undefined);
+  const ends = plain.some((wire) => flow.nodes.find((node) => node.id === wire.to)?.kind === "output");
+  return plain.filter((wire) => flow.nodes.find((node) => node.id === wire.to)?.kind !== "output").length + (ends ? 1 : 0);
+}
+
 export function check(flow: Flow, skills: readonly SkillInfo[]): Problem[] {
   const problems: Problem[] = [];
   if (flow.nodes.length === 0) return [{ severity: "error", nodeId: null, message: "The flow is empty.", fixes: [] }];
@@ -476,14 +486,13 @@ export function check(flow: Flow, skills: readonly SkillInfo[]): Problem[] {
   const shape = shapeOf(flow);
   for (const node of flow.nodes) {
     if (node.kind === "skill") checkSkill(shape, node, skills, problems);
-    if (node.kind === "skill" && flow.wires.filter((wire) => wire.from === node.id && wire.when === undefined).length > 1)
+    if (node.kind === "skill" && nextSteps(flow, node.id) > 1)
       problems.push({ severity: "error", nodeId: node.id, message: node.name + " leads to several blocks at once. A track runs one step at a time, so chain them or put a Fork in between.", fixes: [] });
     if (node.kind === "gate") checkGate(shape, node, problems);
     if (node.kind === "fork") checkFork(shape, node, problems);
     if (node.kind === "output") {
       if (node.source === null) problems.push({ severity: "error", nodeId: node.id, message: node.label + ": choose the file this Output delivers", fixes: [] });
-      else if (flow.wires.some((wire) => wire.to === node.id)) checkBinding(shape, node, "content", null, node.source, problems);
-      else if (sourcePort(flow, node.source) === null) problems.push({ severity: "error", nodeId: node.id, message: node.label + ": delivers an output that no longer exists", fixes: [] });
+      else checkBinding(shape, node, "content", null, node.source, problems);
     }
   }
   checkReach(shape, problems);

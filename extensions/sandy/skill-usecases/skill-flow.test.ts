@@ -247,3 +247,40 @@ test("a dialect skill with list outputs, bounded loops, owner gates and results 
   assert.deepEqual(check(result.flow, skills).map((problem) => problem.message), []);
 });
 
+
+test("every result output gets a wire from each stage that ends the flow", () => {
+  const source = [
+    "---",
+    "name: results-demo",
+    "description: demo",
+    "metadata:",
+    '  dialect: "1"',
+    "---",
+    "",
+    '{% stage id="one" title="One" %}',
+    "Do one.",
+    '{% output name="A" /%}',
+    '{% output name="B" /%}',
+    '{% next to="two" /%}',
+    "{% /stage %}",
+    "",
+    '{% stage id="two" title="Two" %}',
+    "Do two.",
+    '{% next to="done" /%}',
+    "{% /stage %}",
+    "",
+    '{% result name="A" from=$one.A /%}',
+    '{% result name="B" from=$one.B /%}',
+    "",
+  ].join("\n");
+  const result = skillToFlow(source, [], { useCaseId: "x" });
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  const outputs = result.flow.nodes.filter((node) => node.kind === "output").map((node) => node.id);
+  assert.deepEqual(outputs.map((id) => result.flow.wires.filter((wire) => wire.to === id).map((wire) => wire.from)), [["two"], ["two"]]);
+  assert.deepEqual(check(result.flow, []).map((problem) => problem.message), []);
+  assert.match(flowToSkill(result.flow), /\{% next to="done" \/%\}\n\{% \/stage %\}/u);
+  const loose = { ...result.flow, wires: result.flow.wires.filter((wire) => wire.to !== outputs[0]) };
+  assert.ok(check(loose, []).some((problem) => problem.message === "A: not connected to any block"));
+});
+
