@@ -68,6 +68,12 @@ function parseDevices(rows: readonly DeviceRow[]): DeviceInfo[] {
   return devices;
 }
 
+function contentText(sample: Sample): string {
+  if (sample.contentDone === "settled" && sample.contentDoneMs !== null) return `${Math.round(sample.contentDoneMs)} ms`;
+  if (sample.contentDone === "capped") return sample.contentDoneMs === null ? "capped" : `>${Math.round(sample.contentDoneMs)} ms (capped)`;
+  return sample.contentDone ?? "-";
+}
+
 function sinceText(ms: number): string {
   return new Date(Date.now() - ms).toISOString().replace("T", " ").slice(0, 16);
 }
@@ -165,7 +171,8 @@ export default function fieldLatency(sandy: SandyPluginApi) {
               const main = primaryMs(sample);
               const value = sample.timedOut ? "timeout" : main === null ? "-" : `${Math.round(main)} ms`;
               const visit = sample.visit ? ` (${sample.visit})` : "";
-              return `${time}  ${sample.kind.padEnd(6)} ${value.padStart(8)}  event ${sample.eventMs ?? "-"}  style+layout ${sample.styleLayoutMs}  ${sample.label}${visit}`;
+              const content = sample.kind === "switch" && sample.contentDone !== null ? `  content ${contentText(sample)}` : "";
+              return `${time}  ${sample.kind.padEnd(6)} ${value.padStart(8)}${content}  event ${sample.eventMs ?? "-"}  style+layout ${sample.styleLayoutMs}  ${sample.label}${visit}`;
             });
             return { exitCode: 0, stdout: lines.length > 0 ? lines.join("\n") : "No samples yet." };
           },

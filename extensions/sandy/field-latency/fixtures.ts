@@ -12,6 +12,8 @@ export function sample(overrides: Partial<Sample>): Sample {
     mountMs: 10,
     readyMs: 20,
     settledMs: null,
+    contentDoneMs: null,
+    contentDone: null,
     timedOut: false,
     eventMs: 24,
     inputDelayMs: 1,

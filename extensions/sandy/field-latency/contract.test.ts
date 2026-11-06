@@ -15,3 +15,11 @@ test("a scroll sample needs its session stats to be well formed", () => {
   const bad = sample({ kind: "scroll", scroll: { durationMs: 1, frames: 1, dropped: 0, refreshMs: 6.9, p95FrameMs: 1, maxFrameMs: 1, smoothnessPct: 101, truncated: false } });
   assert.equal(sampleSchema.safeParse(bad).success, false);
 });
+
+test("samples stored before the content-done mark parse with null content fields", () => {
+  const { contentDoneMs: _ms, contentDone: _status, ...old } = sample({});
+  const parsed = sampleSchema.parse(old);
+  assert.deepEqual([parsed.contentDoneMs, parsed.contentDone], [null, null]);
+  assert.equal(sampleSchema.safeParse(sample({ contentDone: "settled", contentDoneMs: 453 })).success, true);
+  assert.equal(sampleSchema.safeParse({ ...old, contentDone: "done" }).success, false);
+});

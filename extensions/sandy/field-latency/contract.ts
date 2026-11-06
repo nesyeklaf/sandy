@@ -37,6 +37,8 @@ export const sampleSchema = z
     mountMs: ms.nullable(),
     readyMs: ms.nullable(),
     settledMs: ms.nullable(),
+    contentDoneMs: ms.nullable().default(null),
+    contentDone: z.enum(["settled", "capped", "aborted"]).nullable().default(null),
     timedOut: z.boolean(),
     eventMs: ms.nullable(),
     inputDelayMs: ms.nullable(),

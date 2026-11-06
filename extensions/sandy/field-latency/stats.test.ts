@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeLabel, percentile, summarize } from "./stats.ts";
+import { formatReport, normalizeLabel, percentile, summarize } from "./stats.ts";
 import { sample } from "./fixtures.ts";
 
 test("summarize gives each traced phase its median and counts traced samples", () => {
@@ -47,4 +47,26 @@ test("summarize falls back to mount time when the paint was not observed and ran
   ]);
   assert.equal(group?.max, 60);
   assert.deepEqual(group?.topScripts, [{ source: "app.js", totalMs: 50 }, { source: "plugin.js", totalMs: 5 }]);
+});
+
+test("switch content-done percentiles count settled samples only and report capped and aborted ones", () => {
+  const groups = summarize([
+    sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 324, contentDoneMs: 453, contentDone: "settled" }),
+    sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 330, contentDoneMs: 500, contentDone: "settled" }),
+    sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 320, contentDoneMs: 4900, contentDone: "capped" }),
+    sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 310, contentDoneMs: null, contentDone: "aborted" }),
+    sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 300 }),
+  ]);
+  const [group] = groups;
+  assert.deepEqual([group?.n, group?.contentN, group?.contentCapped, group?.contentAborted], [5, 2, 1, 1]);
+  assert.deepEqual([group?.p50, group?.contentP50, group?.contentP75], [320, 453, 500]);
+  const text = formatReport(groups, "x");
+  assert.match(text, /5 \(1 capped, 1 aborted\)/);
+  assert.match(text, /453 \(n 2\)\s+500/);
+});
+
+test("samples without a content-done mark keep their ready numbers and show no content column value", () => {
+  const groups = summarize([sample({ kind: "switch", label: "sidebar thread", visit: "first", readyMs: 300 })]);
+  assert.deepEqual([groups[0]?.p75, groups[0]?.contentN, groups[0]?.contentP75], [300, 0, null]);
+  assert.match(formatReport(groups, "x"), /sidebar thread \(first\)\s+1\s+300\s+300\s+300\s+300\s+-\s+-/);
 });

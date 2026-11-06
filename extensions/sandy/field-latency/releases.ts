@@ -1,5 +1,5 @@
 import type { Sample } from "./contract.ts";
-import { formatDevice, percentile, primaryMs, textTable, type DeviceInfo } from "./stats.ts";
+import { contentDoneValue, formatDevice, percentile, primaryMs, textTable, type DeviceInfo } from "./stats.ts";
 import { UNKNOWN_RELEASE } from "./release.ts";
 
 export interface ReleaseSample {
@@ -17,12 +17,20 @@ export interface ReleaseRow {
   firstSeen: number;
   n: number;
   switchFirstP75: Metric;
+  switchFirstContentP75: Metric;
   switchRevisitP75: Metric;
+  switchRevisitContentP75: Metric;
   openP75: Metric;
   scrollSmoothnessP25: Metric;
 }
 
-export type MetricKey = "switchFirstP75" | "switchRevisitP75" | "openP75" | "scrollSmoothnessP25";
+export type MetricKey =
+  | "switchFirstP75"
+  | "switchFirstContentP75"
+  | "switchRevisitP75"
+  | "switchRevisitContentP75"
+  | "openP75"
+  | "scrollSmoothnessP25";
 
 export interface MetricDelta {
   metric: MetricKey;
@@ -42,7 +50,9 @@ export interface ReleaseCompare {
 
 export const METRICS: readonly { key: MetricKey; title: string; unit: string; higherIsBetter: boolean }[] = [
   { key: "switchFirstP75", title: "switch first p75", unit: "ms", higherIsBetter: false },
+  { key: "switchFirstContentP75", title: "switch first content p75", unit: "ms", higherIsBetter: false },
   { key: "switchRevisitP75", title: "switch revisit p75", unit: "ms", higherIsBetter: false },
+  { key: "switchRevisitContentP75", title: "switch revisit content p75", unit: "ms", higherIsBetter: false },
   { key: "openP75", title: "open p75", unit: "ms", higherIsBetter: false },
   { key: "scrollSmoothnessP25", title: "scroll smoothness p25", unit: "%", higherIsBetter: true },
 ];
@@ -56,6 +66,10 @@ function readyValues(samples: readonly Sample[]): number[] {
     .filter((sample) => !sample.timedOut)
     .map(primaryMs)
     .filter((value): value is number => value !== null);
+}
+
+function contentValues(samples: readonly Sample[]): number[] {
+  return samples.map(contentDoneValue).filter((value): value is number => value !== null);
 }
 
 export function summarizeReleases(items: readonly ReleaseSample[], firstSeen: ReadonlyMap<string, number>): ReleaseRow[] {
@@ -73,7 +87,9 @@ export function summarizeReleases(items: readonly ReleaseSample[], firstSeen: Re
       firstSeen: firstSeen.get(release) ?? Math.min(...samples.map((sample) => sample.at)),
       n: samples.length,
       switchFirstP75: metric(readyValues(switches.filter((sample) => sample.visit === "first")), 75),
+      switchFirstContentP75: metric(contentValues(switches.filter((sample) => sample.visit === "first")), 75),
       switchRevisitP75: metric(readyValues(switches.filter((sample) => sample.visit === "revisit")), 75),
+      switchRevisitContentP75: metric(contentValues(switches.filter((sample) => sample.visit === "revisit")), 75),
       openP75: metric(readyValues(samples.filter((sample) => sample.kind === "open")), 75),
       scrollSmoothnessP25: metric(
         samples.filter((sample) => sample.scroll !== null).map((sample) => sample.scroll?.smoothnessPct ?? 0),
@@ -130,7 +146,7 @@ export function formatReleases(rows: readonly ReleaseRow[], compare: ReleaseComp
       return found.n > 0 ? `${cell(found.value)} (n ${found.n})` : "-";
     }),
   ]);
-  const lines = [`Field latency by release since ${since} (p75 of ms until painted; scroll: p25 of smoothness %, higher is better)`, formatDevice(device), ...textTable(header, body)];
+  const lines = [`Field latency by release since ${since} (p75 of ms until painted; content: until the thread content stopped changing; scroll: p25 of smoothness %, higher is better)`, formatDevice(device), ...textTable(header, body)];
   if (compare === null) {
     lines.push("", "Compare: needs two releases with a known version or script hash.");
     return lines.join("\n");

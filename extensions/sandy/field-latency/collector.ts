@@ -2,6 +2,7 @@ import type { Sample, ScrollStats } from "./contract.ts";
 import { normalizeLabel } from "./stats.ts";
 import { TraceBook, type TraceRecord } from "./traces.ts";
 import { deriveNetworkPhases, type RequestTiming } from "./network.ts";
+import { ContentRun, isContentTarget, type ContentDoneResult } from "./contentdone.ts";
 import { CALIBRATION_FRAMES, INPUT_WINDOW_MS, ScrollSession, estimateRefreshMs, scrollContainerLabel } from "./scroll.ts";
 
 const TRIGGER = 'button, a, [role="menuitem"], [role="option"], [role="tab"], [role="combobox"], [data-sidebar-thread-id]';
@@ -65,7 +66,18 @@ interface Pending {
   settledAt: number | null;
   timedOut: boolean;
   timer: ReturnType<typeof setTimeout> | null;
+  watch: ContentWatch | null;
 }
+
+interface ContentWatch {
+  run: ContentRun;
+  observer: MutationObserver;
+  timer: ReturnType<typeof setTimeout> | null;
+  result: ContentDoneResult | null;
+  onResult: ((result: ContentDoneResult) => void) | null;
+}
+
+const ABORTED: ContentDoneResult = { status: "aborted", doneMs: null };
 
 export interface Collector {
   dispose(): void;
@@ -132,6 +144,7 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
   let refreshMs: number | null = null;
   let calibrationTimer: ReturnType<typeof setTimeout> | null = null;
   let pending: Pending | null = null;
+  let activeWatch: ContentWatch | null = null;
   let slowTimer: ReturnType<typeof setTimeout> | null = null;
   let traceTimer: ReturnType<typeof setTimeout> | null = null;
   const traces = new TraceBook();
@@ -332,6 +345,8 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       mountMs: args.mountMs === null ? null : round(args.mountMs),
       readyMs: args.readyMs === null ? null : round(args.readyMs),
       settledMs: args.settledMs === null ? null : round(args.settledMs),
+      contentDoneMs: null,
+      contentDone: null,
       timedOut: args.timedOut,
       eventMs: event ? round(event.duration) : null,
       inputDelayMs: event ? round(event.processingStart - event.start) : null,
@@ -373,18 +388,74 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     }
   }
 
+  function closeWatch(watch: ContentWatch, result: ContentDoneResult) {
+    if (watch.result !== null) return;
+    watch.result = result;
+    watch.observer.disconnect();
+    if (watch.timer !== null) clearTimeout(watch.timer);
+    watch.timer = null;
+    if (activeWatch === watch) activeWatch = null;
+    const deliver = watch.onResult;
+    watch.onResult = null;
+    deliver?.(result);
+  }
+
+  function scheduleWatch(watch: ContentWatch) {
+    if (watch.result !== null) return;
+    if (watch.timer !== null) clearTimeout(watch.timer);
+    watch.timer = setTimeout(() => {
+      watch.timer = null;
+      const result = watch.run.evaluate(performance.now());
+      if (result !== null) closeWatch(watch, result);
+      else scheduleWatch(watch);
+    }, Math.max(0, watch.run.nextCheckAt() - performance.now()) + 1);
+  }
+
+  function onContentMutations(watch: ContentWatch, records: readonly MutationRecord[]) {
+    if (!records.some((record) => isContentTarget(record.target))) return;
+    afterPaint(() => {
+      if (watch.result !== null) return;
+      watch.run.paint(performance.now());
+      scheduleWatch(watch);
+    });
+  }
+
+  function beginWatch(item: Pending) {
+    if (item.watch !== null) return;
+    if (activeWatch !== null) closeWatch(activeWatch, ABORTED);
+    const watch: ContentWatch = {
+      run: new ContentRun(item.t0),
+      observer: new MutationObserver((records) => onContentMutations(watch, records)),
+      timer: null,
+      result: null,
+      onResult: null,
+    };
+    watch.observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    item.watch = watch;
+    activeWatch = watch;
+    scheduleWatch(watch);
+  }
+
+  function markWatchReady(item: Pending, at: number) {
+    const watch = item.watch;
+    if (watch === null || watch.result !== null) return;
+    watch.run.markReady(at);
+    scheduleWatch(watch);
+  }
+
   function finalize(item: Pending) {
     stop(item);
     const kind = item.kind;
     if (item.finalized || kind === null) return;
     item.finalized = true;
+    if (item.timedOut && item.watch !== null) closeWatch(item.watch, ABORTED);
     setTimeout(() => {
       if (signal.aborted) return;
       const end = item.settledAt ?? item.readyAt ?? item.mountAt ?? item.t0 + (kind === "switch" ? SWITCH_TIMEOUT_MS : OPEN_TIMEOUT_MS);
       const threadId = kind === "switch" ? item.threadTarget : threadIdOf(location.pathname);
       const visit = kind === "switch" && threadId ? (visited.has(threadId) ? "revisit" : "first") : null;
       if (kind === "switch" && threadId && !item.timedOut) visited.add(threadId);
-      emit(buildSample({
+      const sample = buildSample({
         kind: kind,
         label: item.label,
         at: item.at,
@@ -399,7 +470,25 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
         timedOut: item.timedOut,
         event: interactionEvent(item.t0, end),
         trace: traces.claim(kind, item.t0),
-      }));
+      });
+      const watch = item.watch;
+      if (watch === null) {
+        emit(sample);
+        return;
+      }
+      const withContent = (reached: ContentDoneResult): Sample => {
+        const result = item.timedOut ? ABORTED : reached;
+        return {
+          ...sample,
+          contentDoneMs: result.doneMs === null ? null : round(result.doneMs),
+          contentDone: result.status,
+        };
+      };
+      if (watch.result !== null) emit(withContent(watch.result));
+      else
+        watch.onResult = (result) => {
+          if (!signal.aborted) emit(withContent(result));
+        };
     }, FINALIZE_DELAY_MS);
   }
 
@@ -436,10 +525,12 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     }
     if (item.threadTarget !== null) {
       item.kind = "switch";
+      beginWatch(item);
       if (switchReady(item)) {
         item.mountAt = now;
         afterPaint(() => {
           item.readyAt = performance.now();
+          markWatchReady(item, item.readyAt);
           item.settledAt = item.readyAt;
           finalize(item);
         });
@@ -477,7 +568,10 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     if (event.button !== 0 || document.visibilityState !== "visible") return;
     const target = event.target instanceof Element ? event.target.closest(TRIGGER) : null;
     if (!target) return;
-    if (pending !== null && pending.mountAt === null) stop(pending);
+    if (pending !== null && pending.mountAt === null) {
+      if (pending.watch !== null) closeWatch(pending.watch, ABORTED);
+      stop(pending);
+    }
     if (pending !== null) return;
     const href = target instanceof HTMLAnchorElement ? target.getAttribute("href") ?? "" : "";
     const threadTarget = target.closest("[data-sidebar-thread-id]")?.getAttribute("data-sidebar-thread-id") ?? threadIdOf(href);
@@ -499,14 +593,18 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       settledAt: null,
       timedOut: false,
       timer: null,
+      watch: null,
     };
     pending = item;
+    if (threadTarget !== null) beginWatch(item);
     armTimer(item, threadTarget !== null ? SWITCH_TIMEOUT_MS : OPEN_TIMEOUT_MS);
     mutationObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   function onHidden() {
-    if (document.visibilityState === "hidden" && pending !== null) stop(pending);
+    if (document.visibilityState !== "hidden") return;
+    if (activeWatch !== null) closeWatch(activeWatch, ABORTED);
+    if (pending !== null) stop(pending);
   }
 
   function onInput(event: Event) {
@@ -620,6 +718,7 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     if (calibrationTimer !== null) clearTimeout(calibrationTimer);
     mutationObserver.disconnect();
     for (const observer of observers) observer.disconnect();
+    if (activeWatch !== null) closeWatch(activeWatch, ABORTED);
     if (pending !== null) stop(pending);
     if (slowTimer !== null) clearTimeout(slowTimer);
     if (traceTimer !== null) clearTimeout(traceTimer);

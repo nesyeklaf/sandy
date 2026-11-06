@@ -19,6 +19,10 @@ export function primaryMs(sample: Sample): number | null {
   return sample.readyMs ?? sample.mountMs;
 }
 
+export function contentDoneValue(sample: Sample): number | null {
+  return sample.contentDone === "settled" && !sample.timedOut ? sample.contentDoneMs : null;
+}
+
 export interface Group {
   kind: Sample["kind"];
   label: string;
@@ -28,6 +32,11 @@ export interface Group {
   p75: number | null;
   p95: number | null;
   max: number | null;
+  contentN: number;
+  contentCapped: number;
+  contentAborted: number;
+  contentP50: number | null;
+  contentP75: number | null;
   eventP75: number | null;
   styleLayoutP75: number | null;
   blockingP75: number | null;
@@ -101,6 +110,7 @@ export function summarize(samples: readonly Sample[]): Group[] {
   for (const [key, list] of byKey) {
     const [kind, label] = key.split("\u0000") as [Sample["kind"], string];
     const primary = finite(list.filter((sample) => !sample.timedOut).map(primaryMs));
+    const content = finite(list.map(contentDoneValue));
     const scriptTotals = new Map<string, number>();
     for (const sample of list) {
       for (const script of sample.scripts) {
@@ -116,6 +126,11 @@ export function summarize(samples: readonly Sample[]): Group[] {
       p75: percentile(primary, 75),
       p95: percentile(primary, 95),
       max: primary.length === 0 ? null : Math.max(...primary),
+      contentN: content.length,
+      contentCapped: list.filter((sample) => sample.contentDone === "capped").length,
+      contentAborted: list.filter((sample) => sample.contentDone === "aborted").length,
+      contentP50: percentile(content, 50),
+      contentP75: percentile(content, 75),
       eventP75: percentile(finite(list.map((sample) => sample.eventMs)), 75),
       styleLayoutP75: percentile(list.map((sample) => sample.styleLayoutMs), 75),
       blockingP75: percentile(list.map((sample) => sample.blockingMs), 75),
@@ -159,6 +174,15 @@ export function textTable(header: readonly string[], rows: readonly (readonly st
   return [line(header), ...rows.map(line)];
 }
 
+function countCell(group: Group): string {
+  const notes = [
+    group.timedOut > 0 ? `${group.timedOut} timeout` : null,
+    group.contentCapped > 0 ? `${group.contentCapped} capped` : null,
+    group.contentAborted > 0 ? `${group.contentAborted} aborted` : null,
+  ].filter((note) => note !== null);
+  return notes.length > 0 ? `${group.n} (${notes.join(", ")})` : String(group.n);
+}
+
 function formatScrollGroups(groups: readonly Group[]): string[] {
   if (groups.length === 0) return [];
   const header = ["container", "n", "smooth% p25", "smooth% p50", "dropped p50", "frame p95 p75 ms", "frame max ms", "refresh ms", "duration p50 ms"];
@@ -180,22 +204,24 @@ export function formatReport(groups: readonly Group[], since: string, device: De
   if (groups.length === 0) return `No samples since ${since}.`;
   const interactions = groups.filter((group) => group.kind !== "scroll");
   const scrolls = groups.filter((group) => group.kind === "scroll");
-  const header = ["kind", "label", "n", "p50", "p75", "p95", "max", "event p75", "style+layout p75", "nodes", "traced p50", "phases p50"];
+  const header = ["kind", "label", "n", "p50", "p75", "p95", "max", "content p50", "content p75", "event p75", "style+layout p75", "nodes", "traced p50", "phases p50"];
   const rows = interactions.map((group) => [
     group.kind,
     group.label,
-    group.timedOut > 0 ? `${group.n} (${group.timedOut} timeout)` : String(group.n),
+    countCell(group),
     cell(group.p50),
     cell(group.p75),
     cell(group.p95),
     cell(group.max),
+    group.contentN > 0 ? `${cell(group.contentP50)} (n ${group.contentN})` : "-",
+    group.contentN > 0 ? cell(group.contentP75) : "-",
     cell(group.eventP75),
     cell(group.styleLayoutP75),
     cell(group.domNodesP50),
     group.traced > 0 ? `${cell(group.tracedP50)} (n ${group.traced})` : "-",
     formatPhases(group.phasesP50),
   ]);
-  const title = `Field latency since ${since} (ms; open and switch: until painted, slow: event duration)`;
+  const title = `Field latency since ${since} (ms; open and switch: until painted, switch content: until the thread content stopped changing, slow: event duration)`;
   const main = interactions.length > 0 ? textTable(header, rows) : [];
   return [title, formatDevice(device), ...main, ...formatScrollGroups(scrolls)].join("\n");
 }

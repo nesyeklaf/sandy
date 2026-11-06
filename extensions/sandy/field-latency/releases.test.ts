@@ -94,3 +94,22 @@ test("the text report lists releases and the compare block", () => {
   assert.match(text, /switch first p75\s+310 -> 250\s+-60 ms \(-19\.4%\)/);
   assert.match(formatReleases([], null, "x"), /No samples since x/);
 });
+
+test("content-done p75 sits next to the ready p75 per release and counts settled samples only", () => {
+  const rows = summarizeReleases(
+    [
+      item("r", { kind: "switch", visit: "revisit", readyMs: 324, contentDoneMs: 453, contentDone: "settled" }),
+      item("r", { kind: "switch", visit: "revisit", readyMs: 340, contentDoneMs: 480, contentDone: "settled" }),
+      item("r", { kind: "switch", visit: "revisit", readyMs: 330, contentDoneMs: 4900, contentDone: "capped" }),
+      item("r", { kind: "switch", visit: "revisit", readyMs: 300 }),
+      item("r", { kind: "switch", visit: "first", readyMs: 600 }),
+    ],
+    new Map(),
+  );
+  assert.deepEqual(rows[0]?.switchRevisitP75, { n: 4, value: 330 });
+  assert.deepEqual(rows[0]?.switchRevisitContentP75, { n: 2, value: 480 });
+  assert.deepEqual(rows[0]?.switchFirstContentP75, { n: 0, value: null });
+  const text = formatReleases(rows, null, "x");
+  assert.match(text, /switch revisit content p75 \(ms\)/);
+  assert.match(text, /330 \(n 4\)\s+480 \(n 2\)/);
+});

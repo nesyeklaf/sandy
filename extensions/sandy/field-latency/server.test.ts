@@ -116,3 +116,27 @@ test("a headless or webdriver browser counts as automated", () => {
   assert.equal(isAutomatedBrowser("Mozilla/5.0 Chrome/156.0.0.0", true), true);
   assert.equal(isAutomatedBrowser("Mozilla/5.0 Firefox/157.0", false), false);
 });
+
+test("switch reports show content done next to ready, and samples stored without it still report", async () => {
+  const { db, record, report } = setup();
+  const now = Date.now();
+  record({
+    client: { ...baseClient, appScript: "aaa" },
+    samples: [
+      sample({ kind: "switch", visit: "revisit", label: "sidebar thread", readyMs: 324, contentDoneMs: 453, contentDone: "settled", at: now - 2000 }),
+      sample({ kind: "switch", visit: "revisit", label: "sidebar thread", readyMs: 300, contentDoneMs: 4900, contentDone: "capped", at: now - 1000 }),
+    ],
+  });
+  const legacy = Object.fromEntries(Object.entries(sample({ kind: "switch", visit: "revisit", label: "sidebar thread", readyMs: 280, at: now - 3000 })).filter(([key]) => !key.startsWith("contentDone")));
+  db.prepare("INSERT INTO samples (at, kind, label, sample, client, release) VALUES (?, 'switch', 'sidebar thread', ?, '{}', NULL)").run(now - 3000, JSON.stringify(legacy));
+  const json = JSON.parse(await report("--kind", "switch", "--json"));
+  const group = json.groups[0];
+  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50, group.contentCapped], [3, 300, 1, 453, 1]);
+  assert.match(await report("--kind", "switch"), /sidebar thread \(revisit\)\s+3 \(1 capped\)\s+300\s+324\s+324\s+324\s+453 \(n 1\)/);
+  const byRelease = JSON.parse(await report("--by-release", "--kind", "switch", "--json"));
+  const release = byRelease.releases.find((row: { release: string }) => row.release === "unknown");
+  assert.deepEqual(release.switchRevisitContentP75, { n: 0, value: null });
+  assert.deepEqual(release.switchRevisitP75, { n: 1, value: 280 });
+  const current = byRelease.releases.find((row: { release: string }) => row.release === "aaa");
+  assert.deepEqual(current.switchRevisitContentP75, { n: 1, value: 453 });
+});
