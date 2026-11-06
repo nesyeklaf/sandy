@@ -80,6 +80,11 @@ export type ScrollStats = z.output<typeof scrollSchema>;
 export type Sample = z.output<typeof sampleSchema>;
 export type Client = z.output<typeof clientSchema>;
 
+export function toWire(sample: Sample): z.input<typeof sampleSchema> {
+  const { contentDoneMs, contentDone, ...rest } = sample;
+  return contentDone === null && contentDoneMs === null ? rest : sample;
+}
+
 export const AUTOMATED_USER_AGENT_MARKER = "HeadlessChrome";
 
 export function isAutomatedBrowser(userAgent: string, webdriver: boolean): boolean {

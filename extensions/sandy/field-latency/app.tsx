@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { definePluginApp, useRpc } from "@sandy-sdk/plugin-sdk/app";
-import { isAutomatedBrowser, type Client, type Sample, type rpcContract } from "./contract.ts";
+import { isAutomatedBrowser, toWire, type Client, type Sample, type rpcContract } from "./contract.ts";
 import { startCollector } from "./collector.ts";
 import { loadBenchmarkState, scheduleBenchmark } from "./benchmark.ts";
 import { readRelease, type ReleaseInfo } from "./release.ts";
@@ -55,7 +55,7 @@ function Flusher() {
       sending = true;
       const batch = queue.splice(0, BATCH);
       try {
-        await rpc.call("record", { client: client(), samples: batch });
+        await rpc.call("record", { client: client(), samples: batch.map(toWire) });
       } catch {
         queue.unshift(...batch);
         if (queue.length > MAX_QUEUED) queue.splice(MAX_QUEUED);

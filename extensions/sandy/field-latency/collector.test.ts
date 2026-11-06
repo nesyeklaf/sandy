@@ -40,8 +40,10 @@ class FakeMutationObserver {
     this.callback = callback;
     FakeMutationObserver.all.push(this);
   }
-  observe() {
+  options: MutationObserverInit | undefined;
+  observe(_target: unknown, options?: MutationObserverInit) {
     this.observing = true;
+    this.options = options;
   }
   disconnect() {
     this.observing = false;
@@ -61,6 +63,7 @@ interface Lab {
   click(threadId: string): void;
   ready(threadId: string): void;
   mutate(region: Region): void;
+  mutateAttribute(region: Region, name: string, from: string | null, to: string | null): void;
   hide(): void;
 }
 
@@ -153,6 +156,14 @@ function install(): Lab {
       const target = region === "main" ? main : sidebar;
       for (const observer of FakeMutationObserver.all) {
         if (observer.observing) observer.callback([{ target, addedNodes: [] }]);
+      }
+    },
+    mutateAttribute(region, name, from, to) {
+      const target = region === "main" ? main : sidebar;
+      if (to === null) delete target.attrs[name];
+      else target.attrs[name] = to;
+      for (const observer of FakeMutationObserver.all) {
+        if (observer.observing) observer.callback([{ type: "attributes", attributeName: name, oldValue: from, target }]);
       }
     },
     hide() {
@@ -270,4 +281,88 @@ test("a switch that never becomes ready times out without a content value", () =
   assert.equal(sample.timedOut, true);
   assert.equal(sample.contentDone, "aborted");
   assert.equal(sample.contentDoneMs, null);
+});
+
+test("a content write just before the quiet deadline extends the mark instead of settling early", () => {
+  for (let offset = 980; offset < 1000; offset += 3) {
+    const lab = install();
+    lab.click("thr_a");
+    lab.advance(100);
+    lab.ready("thr_a");
+    lab.advance(offset);
+    lab.mutate("main");
+    lab.advance(6000);
+    const sample = onlySwitch(lab, 0);
+    assert.equal(sample.contentDone, "settled", "offset " + offset);
+    assert.ok(sample.contentDoneMs !== null && sample.contentDoneMs >= 100 + offset, "offset " + offset + ": " + sample.contentDoneMs);
+    controller?.abort();
+    collector?.dispose();
+  }
+});
+
+test("a burst of writes before the paint queues one paint callback and one result", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(500);
+  for (let write = 0; write < 20; write += 1) lab.mutate("main");
+  lab.advance(6000);
+  assert.equal(lab.samples.length, 1);
+  assert.equal(onlySwitch(lab, 0).contentDone, "settled");
+});
+
+test("a second thread click between mount and the ready paint aborts the first content measurement", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(50);
+  lab.ready("thr_a");
+  lab.click("thr_b");
+  lab.advance(100);
+  lab.mutate("main");
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.threadId, "thr_a");
+  assert.notEqual(sample.readyMs, null);
+  assert.equal(sample.contentDone, "aborted");
+  assert.equal(sample.contentDoneMs, null);
+});
+
+test("a second click on the same thread between mount and the ready paint keeps the measurement", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(50);
+  lab.ready("thr_a");
+  lab.click("thr_a");
+  lab.advance(6000);
+  assert.equal(onlySwitch(lab, 0).contentDone, "settled");
+});
+
+test("a late attribute-only reveal in the content moves the mark; sidebar and unchanged attributes do not", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(200);
+  lab.mutateAttribute("sidebar", "class", "a", "b");
+  lab.advance(100);
+  lab.mutateAttribute("main", "class", "same", "same");
+  lab.advance(100);
+  lab.mutateAttribute("main", "style", "display:none", "display:block");
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.contentDone, "settled");
+  assert.ok(sample.readyMs !== null && sample.contentDoneMs !== null);
+  assert.ok(sample.contentDoneMs >= sample.readyMs + 400 && sample.contentDoneMs < sample.readyMs + 440, String(sample.contentDoneMs));
+});
+
+test("the content watch asks the browser only for visual attributes and old values", () => {
+  const lab = install();
+  lab.click("thr_a");
+  const options = FakeMutationObserver.all.map((observer) => observer.options).find((candidate) => candidate?.attributes === true);
+  assert.ok(options);
+  assert.equal(options.attributeOldValue, true);
+  const filter = options.attributeFilter ?? [];
+  for (const name of ["style", "class", "hidden", "data-cc-collapsed", "data-cc-fold", "data-cc-pin"]) assert.ok(filter.includes(name), name);
+  assert.ok(!filter.includes("data-testid") && !filter.includes("aria-label"));
 });

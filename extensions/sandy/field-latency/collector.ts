@@ -2,7 +2,7 @@ import type { Sample, ScrollStats } from "./contract.ts";
 import { normalizeLabel } from "./stats.ts";
 import { TraceBook, type TraceRecord } from "./traces.ts";
 import { deriveNetworkPhases, type RequestTiming } from "./network.ts";
-import { ContentRun, isContentTarget, type ContentDoneResult } from "./contentdone.ts";
+import { ContentRun, isContentRecord, VISUAL_ATTRIBUTES, type ContentDoneResult } from "./contentdone.ts";
 import { CALIBRATION_FRAMES, INPUT_WINDOW_MS, ScrollSession, estimateRefreshMs, scrollContainerLabel } from "./scroll.ts";
 
 const TRIGGER = 'button, a, [role="menuitem"], [role="option"], [role="tab"], [role="combobox"], [data-sidebar-thread-id]';
@@ -73,6 +73,7 @@ interface ContentWatch {
   run: ContentRun;
   observer: MutationObserver;
   timer: ReturnType<typeof setTimeout> | null;
+  paintQueued: boolean;
   result: ContentDoneResult | null;
   onResult: ((result: ContentDoneResult) => void) | null;
 }
@@ -412,8 +413,13 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
   }
 
   function onContentMutations(watch: ContentWatch, records: readonly MutationRecord[]) {
-    if (!records.some((record) => isContentTarget(record.target))) return;
+    if (watch.result !== null || !records.some(isContentRecord)) return;
+    watch.run.touch();
+    scheduleWatch(watch);
+    if (watch.paintQueued) return;
+    watch.paintQueued = true;
     afterPaint(() => {
+      watch.paintQueued = false;
       if (watch.result !== null) return;
       watch.run.paint(performance.now());
       scheduleWatch(watch);
@@ -427,10 +433,18 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       run: new ContentRun(item.t0),
       observer: new MutationObserver((records) => onContentMutations(watch, records)),
       timer: null,
+      paintQueued: false,
       result: null,
       onResult: null,
     };
-    watch.observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    watch.observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: VISUAL_ATTRIBUTES,
+      attributeOldValue: true,
+    });
     item.watch = watch;
     activeWatch = watch;
     scheduleWatch(watch);
@@ -568,13 +582,15 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     if (event.button !== 0 || document.visibilityState !== "visible") return;
     const target = event.target instanceof Element ? event.target.closest(TRIGGER) : null;
     if (!target) return;
+    const href = target instanceof HTMLAnchorElement ? target.getAttribute("href") ?? "" : "";
+    const threadTarget = target.closest("[data-sidebar-thread-id]")?.getAttribute("data-sidebar-thread-id") ?? threadIdOf(href);
+    if (pending !== null && pending.watch !== null && threadTarget !== null && threadTarget !== pending.threadTarget)
+      closeWatch(pending.watch, ABORTED);
     if (pending !== null && pending.mountAt === null) {
       if (pending.watch !== null) closeWatch(pending.watch, ABORTED);
       stop(pending);
     }
     if (pending !== null) return;
-    const href = target instanceof HTMLAnchorElement ? target.getAttribute("href") ?? "" : "";
-    const threadTarget = target.closest("[data-sidebar-thread-id]")?.getAttribute("data-sidebar-thread-id") ?? threadIdOf(href);
     const currentThread = threadIdOf(location.pathname);
     if (threadTarget !== null && threadTarget === currentThread) return;
     const item: Pending = {

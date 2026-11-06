@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { clientSchema, sampleSchema } from "./contract.ts";
+import { clientSchema, sampleSchema, toWire } from "./contract.ts";
 import { sample } from "./fixtures.ts";
 
 test("samples and clients stored by 0.2.0 still parse and get null for the new fields", () => {
@@ -22,4 +22,14 @@ test("samples stored before the content-done mark parse with null content fields
   assert.deepEqual([parsed.contentDoneMs, parsed.contentDone], [null, null]);
   assert.equal(sampleSchema.safeParse(sample({ contentDone: "settled", contentDoneMs: 453 })).success, true);
   assert.equal(sampleSchema.safeParse({ ...old, contentDone: "done" }).success, false);
+});
+
+test("samples without a content mark are sent without the new fields so an older strict server accepts them", () => {
+  const wire = toWire(sample({ kind: "open" }));
+  assert.equal("contentDoneMs" in wire, false);
+  assert.equal("contentDone" in wire, false);
+  assert.equal(sampleSchema.safeParse(wire).success, true);
+  const withMark = toWire(sample({ kind: "switch", contentDone: "aborted" }));
+  assert.equal(withMark.contentDone, "aborted");
+  assert.equal(sampleSchema.parse(withMark).contentDoneMs, null);
 });
