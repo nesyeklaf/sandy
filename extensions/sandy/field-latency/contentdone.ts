@@ -23,12 +23,18 @@ export interface ContentRecord {
   readonly oldValue?: string | null;
 }
 
+function hasInvisibleClass(value: unknown): boolean {
+  return typeof value === "string" && value.split(/\s+/).includes("invisible");
+}
+
 function changedAttribute(record: ContentRecord): boolean {
   if (record.type !== "attributes" || typeof record.attributeName !== "string") return true;
   const read: unknown = Reflect.get(record.target, "getAttribute");
   if (typeof read !== "function") return true;
   const current: unknown = Reflect.apply(read, record.target, [record.attributeName]);
-  return current !== (record.oldValue ?? null);
+  if (current === (record.oldValue ?? null)) return false;
+  if (record.attributeName === "class") return !(hasInvisibleClass(current) && hasInvisibleClass(record.oldValue));
+  return !hasInvisibleClass(Reflect.apply(read, record.target, ["class"]));
 }
 
 export function isContentRecord(record: ContentRecord): boolean {

@@ -89,5 +89,10 @@ test("attribute records count only when the value really changed inside the cont
   assert.equal(isContentRecord({ target: main, type: "attributes", attributeName: "style", oldValue: "display:block" }), false);
   assert.equal(isContentRecord({ target: main, type: "attributes", attributeName: "class", oldValue: null }), false);
   assert.equal(isContentRecord({ target: sidebar, type: "attributes", attributeName: "style", oldValue: "y" }), false);
+  const spacer = { ...element("main"), getAttribute: (name: string) => (name === "class" ? "w-px invisible shrink-0" : "height: 20px;") };
+  assert.equal(isContentRecord({ target: spacer, type: "attributes", attributeName: "style", oldValue: "height: 10px;" }), false);
+  const revealed = { ...element("main"), getAttribute: () => "w-px shrink-0" };
+  assert.equal(isContentRecord({ target: revealed, type: "attributes", attributeName: "class", oldValue: "w-px invisible shrink-0" }), true);
+  assert.equal(isContentRecord({ target: spacer, type: "attributes", attributeName: "class", oldValue: "invisible w-px" }), false);
   assert.equal(isContentRecord({ target: main, type: "childList" }), true);
 });
