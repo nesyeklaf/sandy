@@ -14,6 +14,7 @@ import {
   createDiffWorker,
   getDiffWorkerPoolSize,
 } from "../src/lib/diff-worker-pool";
+import { LatestRouteProvider } from "../src/lib/latest-route";
 import { createAppQueryClient } from "../src/lib/query-client";
 import { applyAppFrameGeometry } from "../src/lib/sandy-desktop";
 import { ModelPickerStoryQueryProvider } from "./model-picker-query-provider";
@@ -89,28 +90,30 @@ export const Provider: GlobalProvider = ({
 
   return (
     <MemoryRouter initialEntries={["/"]}>
-      <RouteNavigationProvider>
-        <JotaiProvider store={store}>
-          <QueryClientProvider client={queryClient}>
-            <WorkerPoolContextProvider
-              poolOptions={{
-                workerFactory: createDiffWorker,
-                poolSize: getDiffWorkerPoolSize(),
-              }}
-              highlighterOptions={{}}
-            >
-              <TooltipProvider delayDuration={300} disableHoverableContent>
-                <div className="min-h-screen text-foreground">
-                  <StoryModelPickerCatalog storyMeta={storyMeta}>
-                    {children}
-                  </StoryModelPickerCatalog>
-                  <AppToaster />
-                </div>
-              </TooltipProvider>
-            </WorkerPoolContextProvider>
-          </QueryClientProvider>
-        </JotaiProvider>
-      </RouteNavigationProvider>
+      <LatestRouteProvider>
+        <RouteNavigationProvider>
+          <JotaiProvider store={store}>
+            <QueryClientProvider client={queryClient}>
+              <WorkerPoolContextProvider
+                poolOptions={{
+                  workerFactory: createDiffWorker,
+                  poolSize: getDiffWorkerPoolSize(),
+                }}
+                highlighterOptions={{}}
+              >
+                <TooltipProvider delayDuration={300} disableHoverableContent>
+                  <div className="min-h-screen text-foreground">
+                    <StoryModelPickerCatalog storyMeta={storyMeta}>
+                      {children}
+                    </StoryModelPickerCatalog>
+                    <AppToaster />
+                  </div>
+                </TooltipProvider>
+              </WorkerPoolContextProvider>
+            </QueryClientProvider>
+          </JotaiProvider>
+        </RouteNavigationProvider>
+      </LatestRouteProvider>
     </MemoryRouter>
   );
 };
