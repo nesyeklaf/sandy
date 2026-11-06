@@ -118,16 +118,30 @@ export function buildSidebarData(
     previous !== null && sameElements(previous.projects, groupedProjects)
       ? previous.projects
       : groupedProjects;
+  const sharedSections =
+    previous !== null && sameElements(previous.sections, sections)
+      ? previous.sections
+      : sections;
+  const sharedHostsById =
+    previous !== null && sameHosts(previous.hostsById, hostsById)
+      ? previous.hostsById
+      : hostsById;
+  if (
+    previous !== null &&
+    previous.status === status &&
+    previous.sections === sharedSections &&
+    previous.projects === sharedProjects &&
+    previous.hostsById === sharedHostsById
+  ) {
+    return previous;
+  }
   return {
     status,
-    sections,
+    sections: sharedSections,
     projects: sharedProjects,
     personalProject:
       sharedProjects.find((project) => project.isPersonal) ?? null,
-    hostsById:
-      previous !== null && sameHosts(previous.hostsById, hostsById)
-        ? previous.hostsById
-        : hostsById,
+    hostsById: sharedHostsById,
   };
 }
 

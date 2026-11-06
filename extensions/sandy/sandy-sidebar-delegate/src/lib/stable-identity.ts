@@ -6,6 +6,20 @@ export function shareArray<T>(previous: readonly T[], next: readonly T[]): reado
   return previous.every((item, index) => item === next[index]) ? previous : next;
 }
 
+function shallowEqual(a: object, b: object): boolean {
+  const aKeys = Object.keys(a);
+  return (
+    aKeys.length === Object.keys(b).length &&
+    aKeys.every((key) => Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]))
+  );
+}
+
+export function shareShallowArray<T extends object>(previous: readonly T[], next: readonly T[]): readonly T[] {
+  if (previous === next) return previous;
+  if (previous.length !== next.length) return next;
+  return previous.every((item, index) => shallowEqual(item, next[index]!)) ? previous : next;
+}
+
 export function shareArrayMap<K, T>(
   previous: ReadonlyMap<K, readonly T[]>,
   next: ReadonlyMap<K, readonly T[]>,

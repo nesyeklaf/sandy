@@ -1,7 +1,7 @@
 import { useSidebarThreads, useProviders, useThreadPullRequestsByEnvironment } from "./sandy-sdk";
 import { STORAGE_KEYS } from "./lib/storage-keys";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { shareArray, shareArrayMap, useSharedValue } from "./lib/stable-identity";
+import { shareArray, shareArrayMap, shareShallowArray, useSharedValue } from "./lib/stable-identity";
 import { useSandyNavigate, type PluginSidebarThread, type PluginThreadListProps } from "@sandy-sdk/plugin-sdk/app";
 import { useInboxShelfThreads } from "./useInboxShelfThreads";
 import { createDragReorderHandler } from "./drag-reorder";
@@ -74,11 +74,12 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const {
     status,
     threads: allThreads,
-    projects,
+    projects: hostProjects,
     sections,
     delegateChildrenLoaded,
     experimental_archived: archivedPages,
   } = useSidebarThreads({ archived: showArchived || activityOpen });
+  const projects = useSharedValue(hostProjects, shareShallowArray);
   const { settings: sidebarSettings, update: updateSidebarSettings } = useSidebarSettingsState();
   const hideFinishedSubagents =
     sidebarSettings?.hideFinishedSubagents ?? DEFAULT_SIDEBAR_SETTINGS.hideFinishedSubagents;
