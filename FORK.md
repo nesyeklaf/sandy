@@ -67,6 +67,19 @@ ssh AI 'bash ~/sandy-fork-remote.sh rollback --with-db'   # also sandy.db
 
 A newer sandy migrates `sandy.db` on its first start, and an older sandy does not know those migrations. So a rollback without `--with-db` fails when the deploy brought new migrations. Check with `git diff --stat <old>..<new> -- packages/db/drizzle`. `--with-db` restores the database as it was before the deploy and loses every thread, message and setting written since.
 
+## Staging
+
+A staging instance runs on the server host next to the live one, from a copy of its data, so a plugin or release can be checked against the real projects, skills and threads without touching them.
+
+```sh
+bash scripts/fork/staging.sh refresh [<tgz>]   # copy live data, install <tgz> or the live install, start
+bash scripts/fork/staging.sh status            # unit state and health
+```
+
+- It lives in `~/sandy-staging` and listens on 39886 (daemon 39888), published on the tailnet like the live server. `SANDY_STAGING_DIR` and `SANDY_STAGING_PORT` override both.
+- `refresh` disables the plugins with outside effects listed in `side_effect_plugins` in the script (automations, push, GitHub, work and others) in the copied database. Everything else, user plugins included, runs as on the live server.
+- Point the CLI at it with `SANDY_SERVER_URL=http://127.0.0.1:39886` and unset the `SANDY_THREAD_ID`, `SANDY_ENVIRONMENT_ID`, `SANDY_PROJECT_ID`, `SANDY_HOST_DAEMON_PORT` and `SANDY_CLI` variables a thread sets.
+
 ## Network
 
 The server listens on `127.0.0.1:38886` only. Tailscale Serve publishes it inside the tailnet:
