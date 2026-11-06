@@ -11,3 +11,4 @@ packages/process-utils/src/host-toolchain.ts	keep	defines the npm launchers that
 scripts/fork/release.sh	fork	npm pack of the local sandy-app package, no registry access
 scripts/fork/remote.sh	fork	deploy installs the fork tarball with npm install -g; its dependencies resolve through the npm registry
 extensions/scripts/build.sh	keep	extensions units are outside the pnpm workspace and pin npm package-lock.json files; npm ci installs them as locked until extensions move to pnpm
+scripts/fork/staging.sh	fork	staging installs the fork tarball with npm install -g into its own prefix, like remote.sh deploy

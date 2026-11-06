@@ -10,3 +10,4 @@ FORK.md	fork history names the BB origin it was taken from
 extensions/sandy/thread-namer/README.md	forked plugin documentation links the BB site
 extensions/sandy/value/README.md	forked plugin documentation links the BB marketplace
 extensions/sandy/work/delegate/probes/slice19-child-log.json	recorded probe transcript contains host paths with the machine name as data
+scripts/fork/staging.sh	local data directory name, no network access
