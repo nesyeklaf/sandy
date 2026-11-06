@@ -11,6 +11,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { PluginContext } from "@/components/plugin/plugin-context";
 import { SidebarHistoryNavigationControls } from "@/components/sidebar/SidebarHistoryNavigationControls";
 import { useSandyNavigate } from "./plugin-sdk-hooks";
@@ -169,7 +170,9 @@ describe("useRouteStateHistoryNavigation", () => {
   it("keeps the sidebar arrows' stack when the controls remount across sidebar layouts", async () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
-        <RemountableSidebarControlsHarness />
+        <LatestRouteProvider>
+          <RemountableSidebarControlsHarness />
+        </LatestRouteProvider>
       </MemoryRouter>,
     );
 
@@ -199,7 +202,9 @@ describe("useRouteStateHistoryNavigation", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter initialEntries={[getAutomationsRoutePath()]}>
-          <RemountablePluginNavigationHarness />
+          <LatestRouteProvider>
+            <RemountablePluginNavigationHarness />
+          </LatestRouteProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );

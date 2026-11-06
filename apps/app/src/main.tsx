@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+import { LatestRouteProvider } from "./lib/latest-route";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { ApplicationUrlDialog } from "./components/ApplicationUrlDialog";
 import { AppToaster } from "./components/AppToaster";
@@ -11,7 +12,10 @@ import { initializeFavicon } from "./lib/favicon-color-preference";
 import { installForeignDomMutationGuard } from "./lib/foreign-dom-mutation-guard";
 import { installAppQueryClientBrowserEvents } from "./lib/query-client";
 import { appQueryClient } from "./lib/app-query-client";
-import { applyAppFrameGeometry, getSandyDesktopInfo } from "./lib/sandy-desktop";
+import {
+  applyAppFrameGeometry,
+  getSandyDesktopInfo,
+} from "./lib/sandy-desktop";
 import { applyCachedAppThemeCss } from "./lib/themes";
 import { installStaleChunkRecovery } from "./lib/stale-chunk-recovery";
 import {
@@ -70,9 +74,11 @@ createRoot(document.getElementById("root")!, {
     <AppErrorBoundary>
       <QueryClientProvider client={appQueryClient}>
         <BrowserRouter>
-          <App />
-          <AppToaster />
-          <ApplicationUrlDialog />
+          <LatestRouteProvider>
+            <App />
+            <AppToaster />
+            <ApplicationUrlDialog />
+          </LatestRouteProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </AppErrorBoundary>

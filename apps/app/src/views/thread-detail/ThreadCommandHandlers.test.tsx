@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import type { Thread } from "@sandy/domain";
 import { makeThread as makeThreadFixture } from "@sandy/test-helpers/domain-fixtures";
 import { defaultAppSettings } from "@sandy/domain";
@@ -124,32 +125,34 @@ function SplitHandlers({
   return (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <ThreadActionCollectors
-          coreRegistrations={CORE_THREAD_ACTIONS}
-          requestRename={() => {}}
-        />
-        <AppCommandProvider>
-          <PaneContext.Provider
-            value={paneContext(
-              "pane-first",
-              focusedThreadId === firstPaneThread.id,
-            )}
-          >
-            <PaneThreadActionCommandHandler
-              thread={toThreadActionTarget(firstPaneThread, null)}
-            />
-          </PaneContext.Provider>
-          <PaneContext.Provider
-            value={paneContext(
-              "pane-second",
-              focusedThreadId === secondThread.id,
-            )}
-          >
-            <PaneThreadActionCommandHandler
-              thread={toThreadActionTarget(secondThread, null)}
-            />
-          </PaneContext.Provider>
-        </AppCommandProvider>
+        <LatestRouteProvider>
+          <ThreadActionCollectors
+            coreRegistrations={CORE_THREAD_ACTIONS}
+            requestRename={() => {}}
+          />
+          <AppCommandProvider>
+            <PaneContext.Provider
+              value={paneContext(
+                "pane-first",
+                focusedThreadId === firstPaneThread.id,
+              )}
+            >
+              <PaneThreadActionCommandHandler
+                thread={toThreadActionTarget(firstPaneThread, null)}
+              />
+            </PaneContext.Provider>
+            <PaneContext.Provider
+              value={paneContext(
+                "pane-second",
+                focusedThreadId === secondThread.id,
+              )}
+            >
+              <PaneThreadActionCommandHandler
+                thread={toThreadActionTarget(secondThread, null)}
+              />
+            </PaneContext.Provider>
+          </AppCommandProvider>
+        </LatestRouteProvider>
       </MemoryRouter>
     </QueryClientProvider>
   );

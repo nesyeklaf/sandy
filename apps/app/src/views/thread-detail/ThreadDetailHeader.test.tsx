@@ -18,6 +18,7 @@ import { createSandyDesktopApi } from "@/test/sandy-desktop-test-utils";
 import { MACOS_TITLE_BAR_TRAILING_TOGGLE_CLASS } from "@/lib/sandy-desktop";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemoryRouter } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppCommandProvider } from "@/components/commands/AppCommandProvider";
 import {
@@ -143,10 +144,12 @@ function HeaderActionCollectors({
   return (
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter>
-        <ThreadActionCollectors
-          coreRegistrations={registrations}
-          requestRename={vi.fn()}
-        />
+        <LatestRouteProvider>
+          <ThreadActionCollectors
+            coreRegistrations={registrations}
+            requestRename={vi.fn()}
+          />
+        </LatestRouteProvider>
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -720,19 +723,21 @@ describe("ThreadDetailHeader", () => {
     });
     const { container } = render(
       <MemoryRouter>
-        <SidebarProvider framed>
-          <PaneContext.Provider
-            value={{ ...PANE_CONTEXT, reservesWindowPanelToggle: true }}
-          >
-            <ThreadDetailHeader
-              actionsMenu={null}
-              isSecondaryPanelOpen={false}
-              onToggleSecondaryPanel={vi.fn()}
-              thread={THREAD_TARGET}
-              threadTitle="Pinned toggle"
-            />
-          </PaneContext.Provider>
-        </SidebarProvider>
+        <LatestRouteProvider>
+          <SidebarProvider framed>
+            <PaneContext.Provider
+              value={{ ...PANE_CONTEXT, reservesWindowPanelToggle: true }}
+            >
+              <ThreadDetailHeader
+                actionsMenu={null}
+                isSecondaryPanelOpen={false}
+                onToggleSecondaryPanel={vi.fn()}
+                thread={THREAD_TARGET}
+                threadTitle="Pinned toggle"
+              />
+            </PaneContext.Provider>
+          </SidebarProvider>
+        </LatestRouteProvider>
       </MemoryRouter>,
     );
 

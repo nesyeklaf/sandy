@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { Provider as JotaiProvider } from "jotai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PERSONAL_PROJECT_ID } from "@sandy/domain";
@@ -128,31 +129,33 @@ function renderAppSidebar() {
 
   return render(
     <MemoryRouter initialEntries={["/"]}>
-      <JotaiProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider delayDuration={0}>
-            <AppCommandProvider>
-              <QuickCreateProjectProvider>
-                <ProjectActionsProvider>
-                  <ThreadActionsProvider>
-                    <SidebarProvider>
-                      <AppSidebar
-                        onResizeMouseDown={() => {}}
-                        isResizing={false}
-                        isBodyHidden={false}
-                        navigation={{ kind: "loading", placement: "rail" }}
-                        settingsRoutePath="/settings"
-                        isSettingsActive={false}
-                        alternateBody={null}
-                      />
-                    </SidebarProvider>
-                  </ThreadActionsProvider>
-                </ProjectActionsProvider>
-              </QuickCreateProjectProvider>
-            </AppCommandProvider>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </JotaiProvider>
+      <LatestRouteProvider>
+        <JotaiProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider delayDuration={0}>
+              <AppCommandProvider>
+                <QuickCreateProjectProvider>
+                  <ProjectActionsProvider>
+                    <ThreadActionsProvider>
+                      <SidebarProvider>
+                        <AppSidebar
+                          onResizeMouseDown={() => {}}
+                          isResizing={false}
+                          isBodyHidden={false}
+                          navigation={{ kind: "loading", placement: "rail" }}
+                          settingsRoutePath="/settings"
+                          isSettingsActive={false}
+                          alternateBody={null}
+                        />
+                      </SidebarProvider>
+                    </ThreadActionsProvider>
+                  </ProjectActionsProvider>
+                </QuickCreateProjectProvider>
+              </AppCommandProvider>
+            </TooltipProvider>
+          </QueryClientProvider>
+        </JotaiProvider>
+      </LatestRouteProvider>
     </MemoryRouter>,
   );
 }

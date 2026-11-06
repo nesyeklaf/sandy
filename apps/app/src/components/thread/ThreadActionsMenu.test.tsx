@@ -13,6 +13,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createStore, Provider } from "jotai";
 import { useSyncExternalStore, type ReactElement } from "react";
 import { MemoryRouter } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   experimental_THREAD_ACTION_GROUPS,
@@ -295,13 +296,17 @@ function renderSurface(
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <MemoryRouter initialEntries={[route]}>
-          <CompactViewportOverrideProvider isCompactViewport={surface.compact}>
-            <ThreadActionCollectors
-              coreRegistrations={CORE_THREAD_ACTIONS}
-              requestRename={defaultRequestRename}
-            />
-            {surface.render(options)}
-          </CompactViewportOverrideProvider>
+          <LatestRouteProvider>
+            <CompactViewportOverrideProvider
+              isCompactViewport={surface.compact}
+            >
+              <ThreadActionCollectors
+                coreRegistrations={CORE_THREAD_ACTIONS}
+                requestRename={defaultRequestRename}
+              />
+              {surface.render(options)}
+            </CompactViewportOverrideProvider>
+          </LatestRouteProvider>
         </MemoryRouter>
       </Provider>
     </QueryClientProvider>,
@@ -1011,15 +1016,17 @@ describe("thread action data input", () => {
       return (
         <QueryClientProvider client={queryClient}>
           <MemoryRouter>
-            <ThreadActionCollectors
-              coreRegistrations={[]}
-              requestRename={defaultRequestRename}
-            />
-            <ThreadActionSurfaceVisibility visible={visible}>
-              {ids.map((id, index) => (
-                <Row key={`${id}-${index}`} id={id} />
-              ))}
-            </ThreadActionSurfaceVisibility>
+            <LatestRouteProvider>
+              <ThreadActionCollectors
+                coreRegistrations={[]}
+                requestRename={defaultRequestRename}
+              />
+              <ThreadActionSurfaceVisibility visible={visible}>
+                {ids.map((id, index) => (
+                  <Row key={`${id}-${index}`} id={id} />
+                ))}
+              </ThreadActionSurfaceVisibility>
+            </LatestRouteProvider>
           </MemoryRouter>
         </QueryClientProvider>
       );
@@ -1078,13 +1085,15 @@ describe("thread action data input", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter>
-          <ThreadActionCollectors
-            coreRegistrations={[]}
-            requestRename={defaultRequestRename}
-          />
-          <Row id="thr_row_a" />
-          <Row id="thr_row_b" />
-          <Header id="thr_open" />
+          <LatestRouteProvider>
+            <ThreadActionCollectors
+              coreRegistrations={[]}
+              requestRename={defaultRequestRename}
+            />
+            <Row id="thr_row_a" />
+            <Row id="thr_row_b" />
+            <Header id="thr_open" />
+          </LatestRouteProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -1168,22 +1177,24 @@ describe.each([
       <QueryClientProvider client={queryClient}>
         <Provider store={createStore()}>
           <MemoryRouter>
-            <CompactViewportOverrideProvider isCompactViewport={compact}>
-              <ThreadActionCollectors
-                coreRegistrations={CORE_THREAD_ACTIONS}
-                requestRename={defaultRequestRename}
-              />
-              <ThreadActionsContextMenu
-                thread={threadListEntryActionTarget(threads[0] ?? baseThread)}
-                experimental_bulkThreads={threads.map(
-                  threadListEntryActionTarget,
-                )}
-                inline={[CLEAR]}
-                onEscapeKeyDown={onEscapeKeyDown}
-              >
-                <div>Selection</div>
-              </ThreadActionsContextMenu>
-            </CompactViewportOverrideProvider>
+            <LatestRouteProvider>
+              <CompactViewportOverrideProvider isCompactViewport={compact}>
+                <ThreadActionCollectors
+                  coreRegistrations={CORE_THREAD_ACTIONS}
+                  requestRename={defaultRequestRename}
+                />
+                <ThreadActionsContextMenu
+                  thread={threadListEntryActionTarget(threads[0] ?? baseThread)}
+                  experimental_bulkThreads={threads.map(
+                    threadListEntryActionTarget,
+                  )}
+                  inline={[CLEAR]}
+                  onEscapeKeyDown={onEscapeKeyDown}
+                >
+                  <div>Selection</div>
+                </ThreadActionsContextMenu>
+              </CompactViewportOverrideProvider>
+            </LatestRouteProvider>
           </MemoryRouter>
         </Provider>
       </QueryClientProvider>,
@@ -1460,13 +1471,15 @@ describe("thread action rows", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter>
-          <ThreadActionCollectors
-            coreRegistrations={[]}
-            requestRename={defaultRequestRename}
-          />
-          <Row id="thr_a" />
-          <Row id="thr_b" />
-          <Row id="thr_c" />
+          <LatestRouteProvider>
+            <ThreadActionCollectors
+              coreRegistrations={[]}
+              requestRename={defaultRequestRename}
+            />
+            <Row id="thr_a" />
+            <Row id="thr_b" />
+            <Row id="thr_c" />
+          </LatestRouteProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );

@@ -1,13 +1,6 @@
-import { useCallback, useContext, useLayoutEffect, useMemo, useRef } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  matchPath,
-  useLocation,
-  useNavigate,
-  type NavigateFunction,
-  type NavigateOptions,
-  type To,
-} from "react-router-dom";
+import { matchPath } from "react-router-dom";
 import type {
   SandyNavigate,
   ExperimentalLiveFileTarget,
@@ -27,6 +20,7 @@ import {
   AUTOMATION_EDIT_ROUTE_PATH,
 } from "@/lib/route-paths";
 import { RouteNavigationCallbackContext } from "@/components/ui/app-route-anchor";
+import { useGetLocation, useStableNavigate } from "@/lib/latest-route";
 import { useStore } from "jotai";
 import { useIsCompactViewport } from "@sandy/shared-ui/hooks/use-compact-viewport";
 import { getThreadConversationCollapsedAtom } from "@/components/secondary-panel/threadSecondaryPanelAtoms";
@@ -66,22 +60,8 @@ export function usePluginCanOpenFileExternally(
 export function useSandyNavigate(): SandyNavigate {
   const pluginId = usePluginId();
   const onNavigate = useContext(RouteNavigationCallbackContext);
-  const location = useLocation();
-  const currentNavigate = useNavigate();
-  const latestRoute = useRef({ navigate: currentNavigate, pathname: location.pathname });
-  useLayoutEffect(() => {
-    latestRoute.current = {
-      navigate: currentNavigate,
-      pathname: location.pathname,
-    };
-  });
-  const navigate = useCallback<NavigateFunction>(
-    (to: To | number, options?: NavigateOptions) =>
-      typeof to === "number"
-        ? latestRoute.current.navigate(to)
-        : latestRoute.current.navigate(to, options),
-    [],
-  );
+  const navigate = useStableNavigate();
+  const getLocation = useGetLocation();
   const appNavigation = useAppNavigationHost();
   const store = useStore();
   const queryClient = useQueryClient();
@@ -155,7 +135,7 @@ export function useSandyNavigate(): SandyNavigate {
     (options) => {
       const replacesAutomationEditRoute =
         pluginId === AUTOMATIONS_PLUGIN_ID &&
-        isAutomationEditRoutePath(latestRoute.current.pathname);
+        isAutomationEditRoutePath(getLocation().pathname);
       if (options?.projectId !== undefined) {
         setRootComposeProjectId(options.projectId);
       }
@@ -179,7 +159,7 @@ export function useSandyNavigate(): SandyNavigate {
         },
       });
     },
-    [navigate, onNavigate, pluginId, setRootComposeProjectId],
+    [getLocation, navigate, onNavigate, pluginId, setRootComposeProjectId],
   );
   const openThreadPanel = useMemo(
     () =>
@@ -219,7 +199,8 @@ export function useSandyNavigate(): SandyNavigate {
       const session = await sdk.terminals
         .get({ terminalId })
         .catch((error: unknown) => {
-          if (error instanceof SandyHttpError && error.status === 404) return null;
+          if (error instanceof SandyHttpError && error.status === 404)
+            return null;
           throw error;
         });
       return session !== null && appNavigation.openTerminal(session);

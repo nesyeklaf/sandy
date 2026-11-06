@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   RouteNavigationProvider,
@@ -92,10 +93,12 @@ function renderTree(children: ReactNode) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={["/projects/p1/threads/t1"]}>
-        <RouteNavigationProvider>
-          <NavigationProbe />
-          {children}
-        </RouteNavigationProvider>
+        <LatestRouteProvider>
+          <RouteNavigationProvider>
+            <NavigationProbe />
+            {children}
+          </RouteNavigationProvider>
+        </LatestRouteProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );

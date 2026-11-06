@@ -20,6 +20,7 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { twMerge } from "tailwind-merge";
 import { beforeAll, afterEach, describe, expect, it, vi } from "vitest";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount";
@@ -57,28 +58,30 @@ describe("plugin SDK Markdown", () => {
 
       render(
         <MemoryRouter>
-          <RouteNavigationProvider>
-            <ThreadTitleMentionResourcesProvider
-              sectionNamesById={new Map()}
-              projectNamesById={new Map()}
-              threadById={
-                new Map([
-                  [
-                    "thr_1234567890",
-                    {
-                      id: "thr_1234567890",
-                      projectId: "proj_demo",
-                      title: "Rendering regression",
-                      titleFallback: "Rendering regression",
-                    },
-                  ],
-                ])
-              }
-            >
-              <Markdown content={`Continue in ${mention}.`} />
-              <Location />
-            </ThreadTitleMentionResourcesProvider>
-          </RouteNavigationProvider>
+          <LatestRouteProvider>
+            <RouteNavigationProvider>
+              <ThreadTitleMentionResourcesProvider
+                sectionNamesById={new Map()}
+                projectNamesById={new Map()}
+                threadById={
+                  new Map([
+                    [
+                      "thr_1234567890",
+                      {
+                        id: "thr_1234567890",
+                        projectId: "proj_demo",
+                        title: "Rendering regression",
+                        titleFallback: "Rendering regression",
+                      },
+                    ],
+                  ])
+                }
+              >
+                <Markdown content={`Continue in ${mention}.`} />
+                <Location />
+              </ThreadTitleMentionResourcesProvider>
+            </RouteNavigationProvider>
+          </LatestRouteProvider>
         </MemoryRouter>,
       );
 
@@ -285,11 +288,13 @@ describe("plugin SDK navigation components", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <MemoryRouter>
-          <AppNavigationHostProvider capabilities={{ openUrl }}>
-            <PluginSlotMount pluginId="demo" slotKind="test" slotId="probe">
-              <Probe />
-            </PluginSlotMount>
-          </AppNavigationHostProvider>
+          <LatestRouteProvider>
+            <AppNavigationHostProvider capabilities={{ openUrl }}>
+              <PluginSlotMount pluginId="demo" slotKind="test" slotId="probe">
+                <Probe />
+              </PluginSlotMount>
+            </AppNavigationHostProvider>
+          </LatestRouteProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -337,9 +342,11 @@ describe("plugin SDK navigation components", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <PluginSlotMount pluginId="demo" slotKind="test" slotId="probe">
-            <Probe />
-          </PluginSlotMount>
+          <LatestRouteProvider>
+            <PluginSlotMount pluginId="demo" slotKind="test" slotId="probe">
+              <Probe />
+            </PluginSlotMount>
+          </LatestRouteProvider>
         </MemoryRouter>
       </QueryClientProvider>,
     );

@@ -10,6 +10,7 @@ import {
 import { afterEach, describe, expect, it } from "vitest";
 import type { SandyNavigate } from "@sandy-sdk/plugin-sdk";
 import { PluginSlotMount } from "@/components/plugin/PluginSlotMount";
+import { LatestRouteProvider } from "./latest-route";
 import { useSandyNavigate } from "./plugin-navigation-hooks";
 
 afterEach(cleanup);
@@ -38,9 +39,11 @@ function mountProbe(pluginId: string, initialPath: string): Probe {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={[initialPath]}>
-        <PluginSlotMount pluginId={pluginId} slotKind="test" slotId="probe">
-          <Consumer />
-        </PluginSlotMount>
+        <LatestRouteProvider>
+          <PluginSlotMount pluginId={pluginId} slotKind="test" slotId="probe">
+            <Consumer />
+          </PluginSlotMount>
+        </LatestRouteProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -89,5 +92,44 @@ describe("useSandyNavigate", () => {
 
     expect(probe.location.pathname).toBe("/");
     expect(probe.location.type).toBe("REPLACE");
+  });
+
+  it("does not re-render a component that only calls useSandyNavigate when the route changes", () => {
+    const counts = { renders: 0 };
+    const router: { navigate: ReturnType<typeof useNavigate> | null } = {
+      navigate: null,
+    };
+    function Navigator() {
+      router.navigate = useNavigate();
+      return null;
+    }
+    function OnlyNavigates() {
+      useSandyNavigate();
+      counts.renders += 1;
+      return null;
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={["/threads/thr_a"]}>
+          <LatestRouteProvider>
+            <Navigator />
+            <PluginSlotMount pluginId="demo" slotKind="test" slotId="probe">
+              <OnlyNavigates />
+            </PluginSlotMount>
+          </LatestRouteProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const rendersAfterMount = counts.renders;
+
+    act(() => {
+      void router.navigate?.("/threads/thr_b");
+    });
+    act(() => {
+      void router.navigate?.("/plugins/demo/panel");
+    });
+
+    expect(rendersAfterMount).toBeGreaterThan(0);
+    expect(counts.renders).toBe(rendersAfterMount);
   });
 });

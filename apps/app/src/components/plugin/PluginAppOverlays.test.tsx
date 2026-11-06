@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 import { createPortal } from "react-dom";
 import { MemoryRouter } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThreadActionsProvider } from "@/components/thread/ThreadActionsProvider";
@@ -141,7 +142,9 @@ describe("PluginAppOverlays", () => {
     );
     render(
       <MemoryRouter>
-        <PluginAppOverlays />
+        <LatestRouteProvider>
+          <PluginAppOverlays />
+        </LatestRouteProvider>
       </MemoryRouter>,
     );
 
@@ -190,12 +193,14 @@ describe("PluginAppOverlays", () => {
       <QueryClientProvider client={queryClient}>
         <SidebarThreadEntriesTestProvider>
           <MemoryRouter initialEntries={["/projects/proj_1/threads/thr_1"]}>
-            <RouteNavigationProvider>
-              <ThreadActionsProvider>
-                <PluginAppOverlays />
-                <LocationProbe />
-              </ThreadActionsProvider>
-            </RouteNavigationProvider>
+            <LatestRouteProvider>
+              <RouteNavigationProvider>
+                <ThreadActionsProvider>
+                  <PluginAppOverlays />
+                  <LocationProbe />
+                </ThreadActionsProvider>
+              </RouteNavigationProvider>
+            </LatestRouteProvider>
           </MemoryRouter>
         </SidebarThreadEntriesTestProvider>
       </QueryClientProvider>,
@@ -247,7 +252,9 @@ describe("PluginAppOverlays", () => {
 
     render(
       <MemoryRouter>
-        <PluginAppOverlays />
+        <LatestRouteProvider>
+          <PluginAppOverlays />
+        </LatestRouteProvider>
       </MemoryRouter>,
     );
 

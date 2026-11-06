@@ -12,6 +12,7 @@ import { makeThreadWithRuntime } from "@sandy/test-helpers/domain-fixtures";
 import { threadQueryKey } from "@/hooks/queries/query-keys";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { LatestRouteProvider } from "@/lib/latest-route";
 import { RouteNavigationProvider } from "@/components/ui/app-route-anchor";
 import { resetAppRouteHistoryForTest } from "@/lib/app-route-history";
 import { useSandyNavigate } from "@/lib/plugin-sdk-hooks";
@@ -453,24 +454,26 @@ function panelSidebarTree({
   return (
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={["/plugins/home/home/inbox"]}>
-        <RouteNavigationProvider>
-          <CompactViewportOverrideProvider isCompactViewport={compact}>
-            <SidebarProvider>
-              <TooltipProvider>
-                <AppLayoutSidebar
-                  routeSidebar={routeSidebar}
-                  isSettingsActive={pathname === "/settings"}
-                  onResizeMouseDown={onResizeMouseDown}
-                  isResizing={false}
-                  settingsRoutePath="/settings"
-                  backToAppRoutePath={routeSidebar === null ? null : "/"}
-                />
-                <SidebarTrigger />
-                <CurrentPath />
-              </TooltipProvider>
-            </SidebarProvider>
-          </CompactViewportOverrideProvider>
-        </RouteNavigationProvider>
+        <LatestRouteProvider>
+          <RouteNavigationProvider>
+            <CompactViewportOverrideProvider isCompactViewport={compact}>
+              <SidebarProvider>
+                <TooltipProvider>
+                  <AppLayoutSidebar
+                    routeSidebar={routeSidebar}
+                    isSettingsActive={pathname === "/settings"}
+                    onResizeMouseDown={onResizeMouseDown}
+                    isResizing={false}
+                    settingsRoutePath="/settings"
+                    backToAppRoutePath={routeSidebar === null ? null : "/"}
+                  />
+                  <SidebarTrigger />
+                  <CurrentPath />
+                </TooltipProvider>
+              </SidebarProvider>
+            </CompactViewportOverrideProvider>
+          </RouteNavigationProvider>
+        </LatestRouteProvider>
       </MemoryRouter>
     </QueryClientProvider>
   );
