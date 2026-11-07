@@ -52,6 +52,8 @@ export interface LagEnv {
   setTimeout(callback: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
   visible(): boolean;
+  random(): number;
+  onVisibilityChange(callback: () => void): () => void;
 }
 
 const BROWSER_ENV: LagEnv = {
@@ -59,26 +61,63 @@ const BROWSER_ENV: LagEnv = {
   setTimeout: (callback, ms) => setTimeout(callback, ms),
   clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
   visible: () => document.visibilityState === "visible",
+  random: () => Math.random(),
+  onVisibilityChange: (callback) => {
+    document.addEventListener("visibilitychange", callback);
+    return () => document.removeEventListener("visibilitychange", callback);
+  },
 };
+
+export const TICK_SPREAD = 0.5;
+
+export function nextDelay(random: number, tickMs: number): number {
+  return Math.round(tickMs * (1 - TICK_SPREAD + random * 2 * TICK_SPREAD));
+}
 
 export function startLagSampler(log: LagLog, signal: AbortSignal, env: LagEnv = BROWSER_ENV, tickMs = TICK_MS): void {
   let lastAt = env.now();
-  let lastVisible = env.visible();
   let handle: unknown = null;
-  const schedule = () => {
-    const expected = env.now() + tickMs;
-    handle = env.setTimeout(() => {
-      if (signal.aborted) return;
-      const at = env.now();
-      const visible = env.visible();
-      if (visible && lastVisible) log.record(at, Math.max(0, at - expected - JITTER_FLOOR_MS), at - lastAt);
-      lastAt = at;
-      lastVisible = visible;
-      schedule();
-    }, tickMs);
+  let running = false;
+  const stop = () => {
+    if (handle !== null) env.clearTimeout(handle);
+    handle = null;
+    running = false;
   };
-  schedule();
-  signal.addEventListener("abort", () => env.clearTimeout(handle), { once: true });
+  const schedule = () => {
+    const delay = nextDelay(env.random(), tickMs);
+    const expected = env.now() + delay;
+    handle = env.setTimeout(() => {
+      handle = null;
+      if (signal.aborted || !running) return;
+      const at = env.now();
+      if (env.visible()) {
+        log.record(at, Math.max(0, at - expected - JITTER_FLOOR_MS), at - lastAt);
+        lastAt = at;
+        schedule();
+      } else {
+        running = false;
+      }
+    }, delay);
+  };
+  const start = () => {
+    if (running || signal.aborted) return;
+    running = true;
+    lastAt = env.now();
+    schedule();
+  };
+  const unsubscribe = env.onVisibilityChange(() => {
+    if (env.visible()) start();
+    else stop();
+  });
+  if (env.visible()) start();
+  signal.addEventListener(
+    "abort",
+    () => {
+      stop();
+      unsubscribe();
+    },
+    { once: true },
+  );
 }
 
 interface PressureRecord {

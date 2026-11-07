@@ -88,9 +88,11 @@ export const clientSchema = z
   })
   .strict();
 
+const recordInput = z.object({ client: clientSchema, samples: z.array(sampleSchema).min(1).max(200) }).strict();
+
 export const rpcContract = defineRpcContract({
   record: {
-    input: z.object({ client: clientSchema, samples: z.array(sampleSchema).min(1).max(200) }).strict(),
+    input: recordInput,
     output: z.object({ stored: z.number().int() }).strict(),
   },
 });
@@ -99,6 +101,7 @@ export type ScrollStats = z.output<typeof scrollSchema>;
 export type Sample = z.output<typeof sampleSchema>;
 export type Load = z.output<typeof loadSchema>;
 export type Client = z.output<typeof clientSchema>;
+export type RecordInput = z.input<typeof recordInput>;
 
 export function toWire(sample: Sample): z.input<typeof sampleSchema> {
   const { contentDoneMs, contentDone, load, ...rest } = sample;
@@ -112,6 +115,42 @@ export function toClientWire(client: Client): z.input<typeof clientSchema> {
   const wire: z.input<typeof clientSchema> = { ...client };
   for (const key of NEW_CLIENT_KEYS) if (wire[key] === null) delete wire[key];
   return wire;
+}
+
+export function toLegacyWire(client: Client, samples: readonly Sample[]): RecordInput {
+  const legacyClient: z.input<typeof clientSchema> = { ...client };
+  for (const key of NEW_CLIENT_KEYS) delete legacyClient[key];
+  return {
+    client: legacyClient,
+    samples: samples.map((sample) => {
+      const { load: _load, ...wire } = toWire(sample);
+      return wire;
+    }),
+  };
+}
+
+function rpcRejection(error: unknown): { code: string; messages: string[] } | null {
+  if (typeof error !== "object" || error === null) return null;
+  const code: unknown = Reflect.get(error, "code");
+  if (typeof code !== "string") return null;
+  const issues: unknown = Reflect.get(error, "issues");
+  const messages: string[] = [];
+  if (Array.isArray(issues)) {
+    for (const issue of issues) {
+      const message: unknown = typeof issue === "object" && issue !== null ? Reflect.get(issue, "message") : undefined;
+      if (typeof message === "string") messages.push(message);
+    }
+  }
+  return { code, messages };
+}
+
+export function isInvalidInput(error: unknown): boolean {
+  return rpcRejection(error)?.code === "invalid_input";
+}
+
+export function isUnknownKeyRejection(error: unknown): boolean {
+  const rejection = rpcRejection(error);
+  return rejection?.code === "invalid_input" && rejection.messages.some((message) => /unrecognized key/i.test(message));
 }
 
 export const AUTOMATED_USER_AGENT_MARKER = "HeadlessChrome";

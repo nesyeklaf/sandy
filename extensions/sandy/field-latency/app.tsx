@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { definePluginApp, useRpc } from "@sandy-sdk/plugin-sdk/app";
-import { isAutomatedBrowser, toClientWire, toWire, type Client, type Sample, type rpcContract } from "./contract.ts";
+import { isAutomatedBrowser, type Client, type Sample, type rpcContract } from "./contract.ts";
+import { createRecordSender } from "./record.ts";
 import { startCollector } from "./collector.ts";
 import { loadBenchmarkState, scheduleBenchmark } from "./benchmark.ts";
 import { startLoadProbe } from "./load.ts";
@@ -12,6 +13,7 @@ const BATCH = 100;
 const MAX_QUEUED = 1000;
 
 const queue: Sample[] = [];
+const recordSender = createRecordSender();
 let release: ReleaseInfo | null = null;
 let benchmarkIndex: number | null = null;
 let gpu: string | null = null;
@@ -64,7 +66,7 @@ function Flusher() {
       sending = true;
       const batch = queue.splice(0, BATCH);
       try {
-        await rpc.call("record", { client: toClientWire(client()), samples: batch.map(toWire) });
+        await recordSender.send((input) => rpc.call("record", input), client(), batch);
       } catch {
         queue.unshift(...batch);
         if (queue.length > MAX_QUEUED) queue.splice(MAX_QUEUED);
