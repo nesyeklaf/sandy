@@ -25,6 +25,19 @@ const script = z
   })
   .strict();
 
+export const PRESSURE_STATES = ["nominal", "fair", "serious", "critical"] as const;
+
+const loadSchema = z
+  .object({
+    windowMs: ms,
+    busyPct: z.number().min(0).max(100).nullable(),
+    maxLagMs: ms.nullable(),
+    pressure: z.enum(PRESSURE_STATES).nullable(),
+    charging: z.boolean().nullable(),
+    batteryPct: z.number().min(0).max(100).nullable(),
+  })
+  .strict();
+
 export const sampleSchema = z
   .object({
     kind: z.enum(["open", "switch", "slow", "scroll"]),
@@ -52,6 +65,7 @@ export const sampleSchema = z
     tracedMs: ms.nullable().default(null),
     phases: z.record(z.string().max(40), ms).nullable().default(null),
     scroll: scrollSchema.nullable().default(null),
+    load: loadSchema.nullable().default(null),
   })
   .strict();
 
@@ -66,6 +80,11 @@ export const clientSchema = z
     sandyVersion: z.string().max(80).nullable().default(null),
     appScript: z.string().max(80).nullable().default(null),
     benchmarkIndex: z.number().min(0).max(1000000).nullable().default(null),
+    deviceId: z.string().min(8).max(64).nullable().default(null),
+    platform: z.string().max(80).nullable().default(null),
+    screen: z.string().max(20).nullable().default(null),
+    refreshMs: z.number().min(0).max(1000).nullable().default(null),
+    gpu: z.string().max(200).nullable().default(null),
   })
   .strict();
 
@@ -78,11 +97,21 @@ export const rpcContract = defineRpcContract({
 
 export type ScrollStats = z.output<typeof scrollSchema>;
 export type Sample = z.output<typeof sampleSchema>;
+export type Load = z.output<typeof loadSchema>;
 export type Client = z.output<typeof clientSchema>;
 
 export function toWire(sample: Sample): z.input<typeof sampleSchema> {
-  const { contentDoneMs, contentDone, ...rest } = sample;
-  return contentDone === null && contentDoneMs === null ? rest : sample;
+  const { contentDoneMs, contentDone, load, ...rest } = sample;
+  const withContent = contentDone === null && contentDoneMs === null ? rest : { ...rest, contentDoneMs, contentDone };
+  return load === null ? withContent : { ...withContent, load };
+}
+
+const NEW_CLIENT_KEYS = ["deviceId", "platform", "screen", "refreshMs", "gpu"] as const;
+
+export function toClientWire(client: Client): z.input<typeof clientSchema> {
+  const wire: z.input<typeof clientSchema> = { ...client };
+  for (const key of NEW_CLIENT_KEYS) if (wire[key] === null) delete wire[key];
+  return wire;
 }
 
 export const AUTOMATED_USER_AGENT_MARKER = "HeadlessChrome";

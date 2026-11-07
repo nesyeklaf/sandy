@@ -1,8 +1,11 @@
 import { PluginCliError, cliCommand, defineCli, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { AUTOMATED_USER_AGENT_MARKER, clientSchema, isAutomatedBrowser, rpcContract, sampleSchema, type Sample } from "./contract.ts";
 import { UNKNOWN_RELEASE, releaseKey } from "./release.ts";
-import { compareLastTwo, formatReleases, summarizeReleases, type ReleaseSample } from "./releases.ts";
-import { formatReport, primaryMs, summarize, type DeviceInfo } from "./stats.ts";
+import { compareLastTwo, formatCompare, formatReleases, formatReleaseTable, releaseTitle, summarizeReleases } from "./releases.ts";
+import { formatGroups, primaryMs, reportTitle, formatReport, summarize, type DeviceInfo } from "./stats.ts";
+import { formatDeviceTable, formatSectionTitle, matchDevices, partitionByDevice, profileFromClient, type DeviceMatch } from "./devices.ts";
+import { loadCounts } from "./load.ts";
+import { shortDeviceId } from "./device.ts";
 
 const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS samples (
@@ -16,20 +19,19 @@ const MIGRATIONS = [
   "CREATE INDEX IF NOT EXISTS samples_at ON samples (at)",
   "ALTER TABLE samples ADD COLUMN release TEXT",
   "CREATE INDEX IF NOT EXISTS samples_release ON samples (release)",
+  "ALTER TABLE samples ADD COLUMN device TEXT",
+  "CREATE INDEX IF NOT EXISTS samples_device ON samples (device)",
 ];
 
 const DAY_MS = 86400000;
 
-interface Row {
-  sample: string;
-}
-
-interface ReleaseRow {
+interface DeviceSampleRow {
   sample: string;
   release: string | null;
+  device: string | null;
 }
 
-interface DeviceRow {
+interface ClientRow {
   client: string;
   at: number;
 }
@@ -39,33 +41,28 @@ interface FirstSeenRow {
   firstSeen: number;
 }
 
-function parseRows(rows: readonly Row[]): Sample[] {
-  const samples: Sample[] = [];
-  for (const row of rows) {
-    const parsed = sampleSchema.safeParse(JSON.parse(row.sample));
-    if (parsed.success) samples.push(parsed.data);
-  }
-  return samples;
+interface Item {
+  device: string | null;
+  release: string;
+  sample: Sample;
 }
 
-function parseReleaseRows(rows: readonly ReleaseRow[]): ReleaseSample[] {
-  const items: ReleaseSample[] = [];
+function parseItems(rows: readonly DeviceSampleRow[]): Item[] {
+  const items: Item[] = [];
   for (const row of rows) {
     const parsed = sampleSchema.safeParse(JSON.parse(row.sample));
-    if (parsed.success) items.push({ release: row.release ?? UNKNOWN_RELEASE, sample: parsed.data });
+    if (parsed.success) items.push({ device: row.device, release: row.release ?? UNKNOWN_RELEASE, sample: parsed.data });
   }
   return items;
 }
 
-function parseDevices(rows: readonly DeviceRow[]): DeviceInfo[] {
-  const devices: DeviceInfo[] = [];
+function parseProfiles(rows: readonly ClientRow[]): DeviceInfo[] {
+  const profiles: DeviceInfo[] = [];
   for (const row of rows) {
     const parsed = clientSchema.safeParse(JSON.parse(row.client));
-    if (!parsed.success) continue;
-    const { benchmarkIndex, cores, deviceMemoryGb, devicePixelRatio, userAgent } = parsed.data;
-    devices.push({ benchmarkIndex, cores, deviceMemoryGb, devicePixelRatio, userAgent, lastSeen: row.at });
+    if (parsed.success) profiles.push(profileFromClient(parsed.data, row.at));
   }
-  return devices;
+  return profiles;
 }
 
 function contentText(sample: Sample): string {
@@ -85,23 +82,42 @@ export default function fieldLatency(sandy: SandyPluginApi) {
     `CREATE TEMP VIEW IF NOT EXISTS field_samples AS SELECT * FROM samples
      WHERE COALESCE(json_extract(client, '$.userAgent'), '') NOT LIKE '%${AUTOMATED_USER_AGENT_MARKER}%'`,
   );
-  const insert = db.prepare("INSERT INTO samples (at, kind, label, sample, client, release) VALUES (?, ?, ?, ?, ?, ?)");
-  const since = db.prepare<[number], Row>("SELECT sample FROM field_samples WHERE at >= ? ORDER BY at");
-  const sinceKind = db.prepare<[number, string], Row>("SELECT sample FROM field_samples WHERE at >= ? AND kind = ? ORDER BY at");
-  const sinceRelease = db.prepare<[number], ReleaseRow>("SELECT sample, release FROM field_samples WHERE at >= ? ORDER BY at");
-  const sinceKindRelease = db.prepare<[number, string], ReleaseRow>(
-    "SELECT sample, release FROM field_samples WHERE at >= ? AND kind = ? ORDER BY at",
-  );
+  const insert = db.prepare("INSERT INTO samples (at, kind, label, sample, client, release, device) VALUES (?, ?, ?, ?, ?, ?, ?)");
   const firstSeen = db.prepare<[], FirstSeenRow>(
     "SELECT COALESCE(release, 'unknown') AS release, MIN(at) AS firstSeen FROM field_samples GROUP BY COALESCE(release, 'unknown')",
   );
-  const devices = db.prepare<[number], DeviceRow>(
+  const knownDevices = db.prepare<[number], ClientRow>(
+    `SELECT client, MAX(at) AS at FROM field_samples WHERE at >= ? AND device IS NOT NULL GROUP BY device ORDER BY at DESC`,
+  );
+  const legacyDevices = db.prepare<[number], ClientRow>(
     `SELECT client, MAX(at) AS at FROM field_samples
-     WHERE at >= ? AND json_extract(client, '$.benchmarkIndex') IS NOT NULL
+     WHERE at >= ? AND device IS NULL AND json_extract(client, '$.benchmarkIndex') IS NOT NULL
      GROUP BY json_extract(client, '$.userAgent'), json_extract(client, '$.cores')
      ORDER BY at DESC`,
   );
-  const recent = db.prepare<[number], Row>("SELECT sample FROM field_samples ORDER BY at DESC LIMIT ?");
+  const recent = db.prepare<[number], DeviceSampleRow>("SELECT sample, release, device FROM field_samples ORDER BY at DESC LIMIT ?");
+
+  function selectItems(from: number, kind: string | undefined, match: DeviceMatch | null): Item[] {
+    const conditions = ["at >= ?"];
+    const params: (number | string)[] = [from];
+    if (kind) {
+      conditions.push("kind = ?");
+      params.push(kind);
+    }
+    if (match !== null) {
+      const parts: string[] = [];
+      if (match.ids.length > 0) {
+        parts.push(`device IN (${match.ids.map(() => "?").join(", ")})`);
+        params.push(...match.ids);
+      }
+      if (match.unknown) parts.push("device IS NULL");
+      conditions.push(`(${parts.join(" OR ")})`);
+    }
+    const rows = db
+      .prepare<(number | string)[], DeviceSampleRow>(`SELECT sample, release, device FROM field_samples WHERE ${conditions.join(" AND ")} ORDER BY at`)
+      .all(...params);
+    return parseItems(rows);
+  }
 
   sandy.rpc.register(rpcContract, {
     record({ client, samples }) {
@@ -109,7 +125,7 @@ export default function fieldLatency(sandy: SandyPluginApi) {
       const clientJson = JSON.stringify(client);
       const release = releaseKey(client);
       const store = db.transaction((items: readonly Sample[]) => {
-        for (const sample of items) insert.run(sample.at, sample.kind, sample.label, JSON.stringify(sample), clientJson, release);
+        for (const sample of items) insert.run(sample.at, sample.kind, sample.label, JSON.stringify(sample), clientJson, release, client.deviceId);
       });
       store(samples);
       return { stored: samples.length };
@@ -122,34 +138,77 @@ export default function fieldLatency(sandy: SandyPluginApi) {
       summary: "Menu, popover, dialog and thread-switch latency measured in your own browser",
       commands: {
         report: cliCommand({
-          summary: "Percentiles per interaction, slowest first; --by-release groups p75 by sandy release and compares the last two",
+          summary: "Percentiles per interaction and device, slowest first; --by-release groups p75 by sandy release and compares the last two",
           options: {
             since: { type: "duration", defaultUnit: "h", default: 7 * DAY_MS, description: "How far back (default 7d)" },
             kind: { type: "enum", values: ["open", "switch", "slow", "scroll"], description: "Only this kind" },
+            device: { type: "string", description: "Only this device: id prefix or part of its label (for example firefox, 'windows firefox', a1b2c3, unknown)" },
+            merged: { type: "boolean", description: "One table over all devices instead of one section per device" },
             "by-release": { type: "boolean", description: "Group p75 per release (first seen, release key, n) and compare the last two releases" },
+            "by-device": { type: "boolean", description: "With --by-release: one release table per device" },
             json: { type: "boolean", description: "Emit JSON" },
           },
           async run(input) {
             const from = Date.now() - input.options.since;
             const sinceLabel = sinceText(input.options.since);
-            const deviceList = parseDevices(devices.all(from));
-            const device = deviceList[0] ?? null;
+            const known = parseProfiles(knownDevices.all(from));
+            const filter = input.options.device;
+            const match = filter === undefined ? null : matchDevices(known, filter);
+            if (match !== null && match.ids.length === 0 && !match.unknown) {
+              throw new PluginCliError(
+                `No device matches "${filter}". Seen: ${known.map((profile) => `${profile.label} #${shortDeviceId(profile.id)}`).join(", ") || "none"}`,
+                { code: "device_not_found" },
+              );
+            }
+            const selectedKnown = match === null ? known : known.filter((profile) => profile.id !== null && match.ids.includes(profile.id));
+            const legacy = match === null || match.unknown ? parseProfiles(legacyDevices.all(from)) : [];
+            const deviceList = [...selectedKnown, ...legacy];
+            const device = (selectedKnown.length === 1 && match !== null ? selectedKnown[0] : deviceList.find((entry) => entry.benchmarkIndex !== null)) ?? null;
+            const profiles = new Map(known.flatMap((profile) => (profile.id === null ? [] : [[profile.id, profile] as const])));
+            const items = selectItems(from, input.options.kind, match);
+            const sections = partitionByDevice(items, (item) => item.device, profiles);
             if (input.options["by-release"]) {
-              const rows = input.options.kind ? sinceKindRelease.all(from, input.options.kind) : sinceRelease.all(from);
               const seen = new Map(firstSeen.all().map((row) => [row.release, row.firstSeen]));
-              const releases = summarizeReleases(parseReleaseRows(rows), seen);
-              const compare = compareLastTwo(releases);
+              const byRelease = (list: readonly Item[]) => {
+                const releases = summarizeReleases(list, seen);
+                return { releases, compare: compareLastTwo(releases) };
+              };
+              const total = byRelease(items);
+              const perDevice = input.options["by-device"] ? sections.map((section) => ({ device: section.device, n: section.items.length, ...byRelease(section.items) })) : null;
               if (input.options.json) {
-                return { exitCode: 0, stdout: JSON.stringify({ since: sinceLabel, device, devices: deviceList, releases, compare }, null, 2) };
+                const body = { since: sinceLabel, device, devices: deviceList, ...total };
+                return { exitCode: 0, stdout: JSON.stringify(perDevice === null ? body : { ...body, byDevice: perDevice }, null, 2) };
               }
-              return { exitCode: 0, stdout: formatReleases(releases, compare, sinceLabel, device) };
+              if (perDevice === null) return { exitCode: 0, stdout: formatReleases(total.releases, total.compare, sinceLabel, device) };
+              if (items.length === 0) return { exitCode: 0, stdout: `No samples since ${sinceLabel}.` };
+              const lines = [releaseTitle(sinceLabel), ""];
+              sections.forEach((section, index) => {
+                const entry = perDevice[index];
+                if (entry === undefined) return;
+                lines.push(formatSectionTitle(section), ...formatReleaseTable(entry.releases), ...formatCompare(entry.compare), "");
+              });
+              return { exitCode: 0, stdout: lines.join("\n").trimEnd() };
             }
-            const rows = input.options.kind ? sinceKind.all(from, input.options.kind) : since.all(from);
-            const groups = summarize(parseRows(rows));
+            const groups = summarize(items.map((item) => item.sample));
+            const perDevice = sections.map((section) => ({
+              device: section.device,
+              n: section.items.length,
+              load: loadCounts(section.items.map((item) => item.sample)),
+              groups: summarize(section.items.map((item) => item.sample)),
+            }));
             if (input.options.json) {
-              return { exitCode: 0, stdout: JSON.stringify({ since: sinceLabel, device, devices: deviceList, groups }, null, 2) };
+              return { exitCode: 0, stdout: JSON.stringify({ since: sinceLabel, device, devices: deviceList, groups, byDevice: perDevice }, null, 2) };
             }
-            return { exitCode: 0, stdout: formatReport(groups, sinceLabel, device) };
+            if (input.options.merged) return { exitCode: 0, stdout: formatReport(groups, sinceLabel, device) };
+            if (items.length === 0) return { exitCode: 0, stdout: `No samples since ${sinceLabel}.` };
+            const lines = [reportTitle(sinceLabel)];
+            if (sections.length > 1) lines.push(...formatDeviceTable(sections.map((section) => ({ device: section.device, items: section.items.map((item) => item.sample) }))));
+            sections.forEach((section, index) => {
+              const entry = perDevice[index];
+              if (entry === undefined) return;
+              lines.push("", formatSectionTitle(section), ...formatGroups(entry.groups));
+            });
+            return { exitCode: 0, stdout: lines.join("\n") };
           },
         }),
         recent: cliCommand({
@@ -159,20 +218,21 @@ export default function fieldLatency(sandy: SandyPluginApi) {
             json: { type: "boolean", description: "Emit JSON" },
           },
           async run(input) {
-            const samples = parseRows(recent.all(input.options.limit));
-            if (input.options.json) return { exitCode: 0, stdout: JSON.stringify(samples, null, 2) };
-            const lines = samples.map((sample) => {
+            const items = parseItems(recent.all(input.options.limit));
+            if (input.options.json) return { exitCode: 0, stdout: JSON.stringify(items.map((item) => ({ device: item.device, release: item.release, ...item.sample })), null, 2) };
+            const lines = items.map(({ sample, device }) => {
+              const where = `  [#${shortDeviceId(device)} load ${sample.load?.busyPct ?? "-"}%]`;
               if (sample.scroll !== null) {
                 const time = new Date(sample.at).toISOString().slice(11, 19);
                 const scroll = sample.scroll;
-                return `${time}  scroll ${String(scroll.smoothnessPct).padStart(7)}%  dropped ${scroll.dropped}/${scroll.frames}  p95 frame ${scroll.p95FrameMs} ms (refresh ${scroll.refreshMs})  ${sample.label}`;
+                return `${time}  scroll ${String(scroll.smoothnessPct).padStart(7)}%  dropped ${scroll.dropped}/${scroll.frames}  p95 frame ${scroll.p95FrameMs} ms (refresh ${scroll.refreshMs})  ${sample.label}${where}`;
               }
               const time = new Date(sample.at).toISOString().slice(11, 19);
               const main = primaryMs(sample);
               const value = sample.timedOut ? "timeout" : main === null ? "-" : `${Math.round(main)} ms`;
               const visit = sample.visit ? ` (${sample.visit})` : "";
               const content = sample.kind === "switch" && sample.contentDone !== null ? `  content ${contentText(sample)}` : "";
-              return `${time}  ${sample.kind.padEnd(6)} ${value.padStart(8)}${content}  event ${sample.eventMs ?? "-"}  style+layout ${sample.styleLayoutMs}  ${sample.label}${visit}`;
+              return `${time}  ${sample.kind.padEnd(6)} ${value.padStart(8)}${content}  event ${sample.eventMs ?? "-"}  style+layout ${sample.styleLayoutMs}  ${sample.label}${visit}${where}`;
             });
             return { exitCode: 0, stdout: lines.length > 0 ? lines.join("\n") : "No samples yet." };
           },

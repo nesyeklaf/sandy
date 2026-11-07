@@ -1,4 +1,5 @@
 import type { Sample } from "./contract.ts";
+import { loadCounts, type LoadBucket } from "./load.ts";
 import { contentDoneValue, formatDevice, percentile, primaryMs, textTable, type DeviceInfo } from "./stats.ts";
 import { UNKNOWN_RELEASE } from "./release.ts";
 
@@ -16,6 +17,7 @@ export interface ReleaseRow {
   release: string;
   firstSeen: number;
   n: number;
+  load: Record<LoadBucket, number>;
   switchFirstP75: Metric;
   switchFirstContentP75: Metric;
   switchRevisitP75: Metric;
@@ -86,6 +88,7 @@ export function summarizeReleases(items: readonly ReleaseSample[], firstSeen: Re
       release,
       firstSeen: firstSeen.get(release) ?? Math.min(...samples.map((sample) => sample.at)),
       n: samples.length,
+      load: loadCounts(samples),
       switchFirstP75: metric(readyValues(switches.filter((sample) => sample.visit === "first")), 75),
       switchFirstContentP75: metric(contentValues(switches.filter((sample) => sample.visit === "first")), 75),
       switchRevisitP75: metric(readyValues(switches.filter((sample) => sample.visit === "revisit")), 75),
@@ -134,22 +137,35 @@ function dateText(ms: number): string {
   return new Date(ms).toISOString().slice(0, 16).replace("T", " ");
 }
 
-export function formatReleases(rows: readonly ReleaseRow[], compare: ReleaseCompare | null, since: string, device: DeviceInfo | null = null): string {
-  if (rows.length === 0) return `No samples since ${since}.`;
-  const header = ["first seen", "release", "n", ...METRICS.map((entry) => `${entry.title} (${entry.unit})`)];
+export function formatReleaseTable(rows: readonly ReleaseRow[]): string[] {
+  const header = ["first seen", "release", "n", "load idle/busy/?", ...METRICS.map((entry) => `${entry.title} (${entry.unit})`)];
   const body = rows.map((row) => [
     dateText(row.firstSeen),
     row.release,
     String(row.n),
+    `${row.load.idle}/${row.load.busy}/${row.load.unknown}`,
     ...METRICS.map((entry) => {
       const found = row[entry.key];
       return found.n > 0 ? `${cell(found.value)} (n ${found.n})` : "-";
     }),
   ]);
-  const lines = [`Field latency by release since ${since} (p75 of ms until painted; content: until the thread content stopped changing; scroll: p25 of smoothness %, higher is better)`, formatDevice(device), ...textTable(header, body)];
+  return textTable(header, body);
+}
+
+export function releaseTitle(since: string): string {
+  return `Field latency by release since ${since} (p75 of ms until painted; content: until the thread content stopped changing; scroll: p25 of smoothness %, higher is better; load: samples with little / much main-thread lag in the 5 s before / unknown)`;
+}
+
+export function formatReleases(rows: readonly ReleaseRow[], compare: ReleaseCompare | null, since: string, device: DeviceInfo | null = null): string {
+  if (rows.length === 0) return `No samples since ${since}.`;
+  return [releaseTitle(since), formatDevice(device), ...formatReleaseTable(rows), ...formatCompare(compare)].join("\n");
+}
+
+export function formatCompare(compare: ReleaseCompare | null): string[] {
+  const lines: string[] = [];
   if (compare === null) {
     lines.push("", "Compare: needs two releases with a known version or script hash.");
-    return lines.join("\n");
+    return lines;
   }
   lines.push("", `Compare ${compare.previous} -> ${compare.latest}`);
   for (const entry of compare.deltas) {
@@ -161,5 +177,5 @@ export function formatReleases(rows: readonly ReleaseRow[], compare: ReleaseComp
         : `${entry.delta > 0 ? "+" : ""}${entry.delta} ${info.unit}${entry.deltaPct === null ? "" : ` (${entry.deltaPct > 0 ? "+" : ""}${entry.deltaPct}%)`}`;
     lines.push(`  ${info.title.padEnd(24)} ${cell(entry.previous)} -> ${cell(entry.latest)}  ${change}  n ${entry.previousN} -> ${entry.latestN}`);
   }
-  return lines.join("\n");
+  return lines;
 }

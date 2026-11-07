@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { definePluginApp, useRpc } from "@sandy-sdk/plugin-sdk/app";
-import { isAutomatedBrowser, toWire, type Client, type Sample, type rpcContract } from "./contract.ts";
+import { isAutomatedBrowser, toClientWire, toWire, type Client, type Sample, type rpcContract } from "./contract.ts";
 import { startCollector } from "./collector.ts";
 import { loadBenchmarkState, scheduleBenchmark } from "./benchmark.ts";
+import { startLoadProbe } from "./load.ts";
+import { loadDeviceId, readGpu, readPlatform, screenText } from "./device.ts";
 import { readRelease, type ReleaseInfo } from "./release.ts";
 
 const FLUSH_INTERVAL_MS = 10000;
@@ -12,6 +14,8 @@ const MAX_QUEUED = 1000;
 const queue: Sample[] = [];
 let release: ReleaseInfo | null = null;
 let benchmarkIndex: number | null = null;
+let gpu: string | null = null;
+let activeRefreshMs: (() => number | null) | null = null;
 
 function enqueue(sample: Sample) {
   queue.push(sample);
@@ -43,6 +47,11 @@ function client(): Client {
     cores: Math.min(1024, navigator.hardwareConcurrency || 0),
     devicePixelRatio: Math.min(16, window.devicePixelRatio || 1),
     viewport: `${window.innerWidth}x${window.innerHeight}`,
+    deviceId: loadDeviceId(),
+    platform: readPlatform(),
+    screen: screenText(screen.width, screen.height),
+    refreshMs: activeRefreshMs?.() ?? null,
+    gpu,
   };
 }
 
@@ -55,7 +64,7 @@ function Flusher() {
       sending = true;
       const batch = queue.splice(0, BATCH);
       try {
-        await rpc.call("record", { client: client(), samples: batch.map(toWire) });
+        await rpc.call("record", { client: toClientWire(client()), samples: batch.map(toWire) });
       } catch {
         queue.unshift(...batch);
         if (queue.length > MAX_QUEUED) queue.splice(MAX_QUEUED);
@@ -77,16 +86,28 @@ function Flusher() {
   return null;
 }
 
+function scheduleGpuRead(signal: AbortSignal) {
+  if (gpu !== null) return;
+  const read = () => {
+    if (!signal.aborted) gpu = readGpu();
+  };
+  const timer = setTimeout(() => (typeof requestIdleCallback === "function" ? requestIdleCallback(read, { timeout: 30000 }) : read()), 8000);
+  signal.addEventListener("abort", () => clearTimeout(timer), { once: true });
+}
+
 export default definePluginApp((app) => {
   app.contentScripts.register({
     id: "field-latency-collector",
     mount({ signal }) {
       const automated = isAutomatedBrowser(navigator.userAgent, navigator.webdriver === true);
-      const collector = startCollector(automated ? () => {} : enqueue, signal);
-      if (!automated)
+      const collector = startCollector(automated ? () => {} : enqueue, signal, automated ? null : startLoadProbe(signal));
+      activeRefreshMs = collector.refreshMs;
+      if (!automated) {
         scheduleBenchmark((index) => {
           benchmarkIndex = index;
         }, signal);
+        scheduleGpuRead(signal);
+      }
       return () => collector.dispose();
     },
   });

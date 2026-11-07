@@ -1,4 +1,5 @@
 import type { Sample } from "./contract.ts";
+import { loadBucket, type LoadBucket } from "./load.ts";
 
 export function normalizeLabel(raw: string): string {
   const flat = raw.replace(/\s+/g, " ").trim();
@@ -23,6 +24,26 @@ export function contentDoneValue(sample: Sample): number | null {
   return sample.contentDone === "settled" && !sample.timedOut ? sample.contentDoneMs : null;
 }
 
+export interface LoadMetric {
+  n: number;
+  p75: number | null;
+}
+
+export type LoadSplit = Record<LoadBucket, LoadMetric>;
+
+export function summarizeLoad(samples: readonly Sample[]): LoadSplit {
+  const split: LoadSplit = { idle: { n: 0, p75: null }, busy: { n: 0, p75: null }, unknown: { n: 0, p75: null } };
+  for (const bucket of ["idle", "busy", "unknown"] as const) {
+    const values = finite(samples.filter((sample) => !sample.timedOut && loadBucket(sample.load) === bucket).map(primaryMs));
+    split[bucket] = { n: values.length, p75: percentile(values, 75) };
+  }
+  return split;
+}
+
+function loadCell(metric: LoadMetric): string {
+  return metric.n === 0 ? "-" : `${cell(metric.p75)} (n ${metric.n})`;
+}
+
 export interface Group {
   kind: Sample["kind"];
   label: string;
@@ -45,6 +66,7 @@ export interface Group {
   tracedP50: number | null;
   phasesP50: Record<string, number>;
   topScripts: { source: string; totalMs: number }[];
+  load: LoadSplit;
   scroll: ScrollGroup | null;
 }
 
@@ -142,6 +164,7 @@ export function summarize(samples: readonly Sample[]): Group[] {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([source, totalMs]) => ({ source, totalMs: Math.round(totalMs) })),
+      load: summarizeLoad(list),
       scroll: kind === "scroll" ? scrollGroup(list) : null,
     });
   }
@@ -153,19 +176,37 @@ function cell(value: number | null): string {
 }
 
 export interface DeviceInfo {
+  id: string | null;
+  label: string;
+  userAgent: string | null;
+  platform: string | null;
   benchmarkIndex: number | null;
-  cores: number;
+  cores: number | null;
   deviceMemoryGb: number | null;
-  devicePixelRatio: number;
-  userAgent: string;
-  lastSeen: number;
+  devicePixelRatio: number | null;
+  screen: string | null;
+  refreshMs: number | null;
+  gpu: string | null;
+  lastSeen: number | null;
+}
+
+export function hardwareText(device: DeviceInfo): string {
+  const index = device.benchmarkIndex === null ? "no benchmark" : `benchmark ${device.benchmarkIndex} iterations/s`;
+  const parts = [
+    index,
+    device.cores === null ? null : `${device.cores} cores`,
+    device.deviceMemoryGb === null ? null : `${device.deviceMemoryGb} GB`,
+    device.devicePixelRatio === null ? null : `dpr ${device.devicePixelRatio}`,
+    device.screen,
+    device.refreshMs === null || device.refreshMs <= 0 ? null : `${Math.round(1000 / device.refreshMs)} Hz`,
+    device.gpu === null ? null : `GPU ${device.gpu}`,
+  ];
+  return parts.filter((part) => part !== null).join(", ");
 }
 
 export function formatDevice(device: DeviceInfo | null): string {
   if (device === null) return "device: no benchmark recorded yet";
-  const memory = device.deviceMemoryGb === null ? "" : `, ${device.deviceMemoryGb} GB`;
-  const index = device.benchmarkIndex === null ? "no benchmark" : `benchmark ${device.benchmarkIndex} iterations/s`;
-  return `device: ${index}, ${device.cores} cores${memory}, dpr ${device.devicePixelRatio}`;
+  return `device: ${hardwareText(device)}`;
 }
 
 export function textTable(header: readonly string[], rows: readonly (readonly string[])[]): string[] {
@@ -185,7 +226,7 @@ function countCell(group: Group): string {
 
 function formatScrollGroups(groups: readonly Group[]): string[] {
   if (groups.length === 0) return [];
-  const header = ["container", "n", "smooth% p25", "smooth% p50", "dropped p50", "frame p95 p75 ms", "frame max ms", "refresh ms", "duration p50 ms"];
+  const header = ["container", "n", "smooth% p25", "smooth% p50", "dropped p50", "frame p95 p75 ms", "frame max ms", "refresh ms", "duration p50 ms", "idle frame p75", "busy frame p75"];
   const rows = groups.map((group) => [
     group.label,
     String(group.n),
@@ -196,15 +237,16 @@ function formatScrollGroups(groups: readonly Group[]): string[] {
     cell(group.max),
     group.scroll?.refreshMsP50 === null || group.scroll === null ? "-" : String(group.scroll.refreshMsP50),
     cell(group.scroll?.durationMsP50 ?? null),
+    loadCell(group.load.idle),
+    loadCell(group.load.busy),
   ]);
   return ["", "Scroll sessions (user-initiated; smooth% = presented / expected frames, higher is better)", ...textTable(header, rows)];
 }
 
-export function formatReport(groups: readonly Group[], since: string, device: DeviceInfo | null = null): string {
-  if (groups.length === 0) return `No samples since ${since}.`;
+export function formatGroups(groups: readonly Group[]): string[] {
   const interactions = groups.filter((group) => group.kind !== "scroll");
   const scrolls = groups.filter((group) => group.kind === "scroll");
-  const header = ["kind", "label", "n", "p50", "p75", "p95", "max", "content p50", "content p75", "event p75", "style+layout p75", "nodes", "traced p50", "phases p50"];
+  const header = ["kind", "label", "n", "p50", "p75", "p95", "max", "content p50", "content p75", "event p75", "style+layout p75", "nodes", "traced p50", "idle p75", "busy p75", "phases p50"];
   const rows = interactions.map((group) => [
     group.kind,
     group.label,
@@ -219,9 +261,19 @@ export function formatReport(groups: readonly Group[], since: string, device: De
     cell(group.styleLayoutP75),
     cell(group.domNodesP50),
     group.traced > 0 ? `${cell(group.tracedP50)} (n ${group.traced})` : "-",
+    loadCell(group.load.idle),
+    loadCell(group.load.busy),
     formatPhases(group.phasesP50),
   ]);
-  const title = `Field latency since ${since} (ms; open and switch: until painted, switch content: until the thread content stopped changing, slow: event duration)`;
   const main = interactions.length > 0 ? textTable(header, rows) : [];
-  return [title, formatDevice(device), ...main, ...formatScrollGroups(scrolls)].join("\n");
+  return [...main, ...formatScrollGroups(scrolls)];
+}
+
+export function formatReport(groups: readonly Group[], since: string, device: DeviceInfo | null = null): string {
+  if (groups.length === 0) return `No samples since ${since}.`;
+  return [reportTitle(since), formatDevice(device), ...formatGroups(groups)].join("\n");
+}
+
+export function reportTitle(since: string): string {
+  return `Field latency since ${since} (ms; open and switch: until painted, switch content: until the thread content stopped changing, slow: event duration; idle/busy p75: samples with little or much main-thread lag in the 5 s before)`;
 }

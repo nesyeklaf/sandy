@@ -3,6 +3,7 @@ import { normalizeLabel } from "./stats.ts";
 import { TraceBook, type TraceRecord } from "./traces.ts";
 import { deriveNetworkPhases, type RequestTiming } from "./network.ts";
 import { ContentRun, isContentRecord, VISUAL_ATTRIBUTES, type ContentDoneResult } from "./contentdone.ts";
+import type { LoadProbe } from "./load.ts";
 import { CALIBRATION_FRAMES, INPUT_WINDOW_MS, ScrollSession, estimateRefreshMs, scrollContainerLabel } from "./scroll.ts";
 
 const TRIGGER = 'button, a, [role="menuitem"], [role="option"], [role="tab"], [role="combobox"], [data-sidebar-thread-id]';
@@ -81,6 +82,7 @@ interface ContentWatch {
 const ABORTED: ContentDoneResult = { status: "aborted", doneMs: null };
 
 export interface Collector {
+  refreshMs(): number | null;
   dispose(): void;
 }
 
@@ -132,7 +134,7 @@ function round(value: number): number {
   return Math.max(0, Math.round(value * 10) / 10);
 }
 
-export function startCollector(emit: (sample: Sample) => void, signal: AbortSignal): Collector {
+export function startCollector(emit: (sample: Sample) => void, signal: AbortSignal, loadProbe: LoadProbe | null = null): Collector {
   const frames: FrameEntry[] = [];
   const events: SeenEvent[] = [];
   const tracked = new Set<number>();
@@ -366,6 +368,7 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       tracedMs: args.trace === null ? null : round(args.trace.end - args.trace.start),
       phases: args.trace === null ? null : { ...args.trace.phases, ...network },
       scroll: args.scroll ?? null,
+      load: loadProbe?.read(args.start) ?? null,
     };
   }
 
@@ -740,5 +743,5 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     if (traceTimer !== null) clearTimeout(traceTimer);
   };
   signal.addEventListener("abort", dispose, { once: true });
-  return { dispose };
+  return { dispose, refreshMs: () => refreshMs };
 }

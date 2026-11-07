@@ -27,6 +27,7 @@ export function sample(overrides: Partial<Sample>): Sample {
     tracedMs: null,
     phases: null,
     scroll: null,
+    load: null,
     ...overrides,
   };
 }

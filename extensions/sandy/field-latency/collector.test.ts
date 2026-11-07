@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { startCollector, type Collector } from "./collector.ts";
-import type { Sample } from "./contract.ts";
+import type { Load, Sample } from "./contract.ts";
+import type { LoadProbe } from "./load.ts";
 
 type Listener = (event: unknown) => void;
 type Region = "main" | "sidebar" | "toc";
@@ -73,7 +74,7 @@ const saved = new Map<string, PropertyDescriptor | undefined>();
 let collector: Collector | null = null;
 let controller: AbortController | null = null;
 
-function install(): Lab {
+function install(probe: LoadProbe | null = null): Lab {
   for (const name of globals) saved.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
   let now = 5000;
   let nextId = 1;
@@ -123,7 +124,7 @@ function install(): Lab {
   const toc = new FakeElement("toc");
   const samples: Sample[] = [];
   controller = new AbortController();
-  collector = startCollector((sample) => samples.push(sample), controller.signal);
+  collector = startCollector((sample) => samples.push(sample), controller.signal, probe);
   const dispatch = (type: string, event: unknown) => {
     for (const listener of listeners.get(type) ?? []) listener(event);
   };
@@ -396,4 +397,31 @@ test("the content watch asks the browser only for visual attributes and old valu
   const filter = options.attributeFilter ?? [];
   for (const name of ["style", "class", "hidden", "data-cc-collapsed", "data-cc-fold", "data-cc-pin"]) assert.ok(filter.includes(name), name);
   assert.ok(!filter.includes("data-testid") && !filter.includes("aria-label"));
+});
+
+test("every sample carries the load read for the window that ends at its pointerdown", () => {
+  const ends: number[] = [];
+  const load: Load = { windowMs: 5000, busyPct: 42, maxLagMs: 900, pressure: "fair", charging: true, batteryPct: 80 };
+  const lab = install({
+    read: (end) => {
+      ends.push(end);
+      return load;
+    },
+  });
+  const clickedAt = lab.now();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(6000);
+  assert.deepEqual(onlySwitch(lab, 0).load, load);
+  assert.deepEqual(ends, [clickedAt]);
+});
+
+test("without a probe the sample has no load", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(6000);
+  assert.equal(onlySwitch(lab, 0).load, null);
 });

@@ -1,6 +1,6 @@
 {
   "name": "sandy-plugin-field-latency",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "scripts": {
     "test": "node --test --experimental-strip-types *.test.ts",
