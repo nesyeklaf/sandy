@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
@@ -216,6 +216,35 @@ describe("sandy holon in a Git repository", () => {
     git(dir, "commit", "-qam", "two");
     const view = await cli(host, ["view", "token", "--root", dir, "--json"]);
     expect((view.json!.focus as { sides: { It: { light: string } } }).sides.It.light).toBe("expired");
+  });
+
+  it("opens a .holon file of a nested model inside the repository", async () => {
+    const host = await loaded();
+    const dir = repo();
+    writeFileSync(join(dir, "top.holon"), holonJson("top"));
+    cpSync(SHOP, join(dir, "docs/shop"), { recursive: true });
+    git(dir, "add", ".");
+    git(dir, "commit", "-qm", "nested");
+    for (const file of ["docs/shop/apps/account/password-reset.holon", "docs/shop/shop.holon"]) {
+      const result = (await host.harness.callRpc("view", {
+        source: { kind: "host", threadId: "thread-test", environmentId: null },
+        path: join(dir, file),
+      })) as { ok: boolean; error?: string; root?: string };
+      expect(result, file).toMatchObject({ ok: true, root: join(dir, "docs/shop") });
+    }
+    const result = (await host.harness.callRpc("view", {
+      source: { kind: "host", threadId: "thread-test", environmentId: null },
+      path: join(dir, "docs/shop/apps/account/password-reset.holon"),
+    })) as { ok: true; view: { focus: { id: string }; parent: { id: string }; children: { id: string }[]; seams: { from: string; to: string }[] } };
+    expect(result.view.focus.id).toBe("password-reset");
+    expect(result.view.parent.id).toBe("account");
+    expect(result.view.children.map((child) => child.id)).toEqual(["reset-mail", "reset-rate-limit", "reset-token"]);
+    expect(result.view.seams.map((seam) => `${seam.from}>${seam.to}`)).toEqual(["password-reset>mail"]);
+    const top = (await host.harness.callRpc("view", {
+      source: { kind: "host", threadId: "thread-test", environmentId: null },
+      path: join(dir, "top.holon"),
+    })) as { ok: boolean; root?: string };
+    expect(top).toMatchObject({ ok: true, root: dir });
   });
 
   it("merges confirmations from two branches without a conflict", async () => {

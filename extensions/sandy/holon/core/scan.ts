@@ -1,5 +1,5 @@
 import { readdirSync, statSync, type Dirent } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 
 export interface ScannedFile {
   path: string;
@@ -55,6 +55,27 @@ function walkConfirmations(root: string, relative: string, out: ScannedFile[]): 
       if (file !== null) out.push(file);
     }
   }
+}
+
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+export function modelRootOf(file: string, bound: string): string {
+  const top = resolve(bound);
+  let dir = dirname(resolve(file));
+  if (relative(top, dir).startsWith("..")) return dir;
+  while (dir !== top) {
+    if (isDirectory(join(dir, ".holons"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return top;
 }
 
 export function scanRoot(root: string): ScanResult {

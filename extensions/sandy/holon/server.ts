@@ -5,6 +5,7 @@ import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { holonCli } from "./cli.ts";
 import { parseHolon } from "./core/format.ts";
 import { gitTopLevel } from "./core/git.ts";
+import { modelRootOf } from "./core/scan.ts";
 import type { ViewOutput } from "./core/outputs.ts";
 import { migrateIndex } from "./index/holon-index.ts";
 import { HolonInputError, HolonService } from "./service.ts";
@@ -62,7 +63,7 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
         if (!existsSync(file)) return { ok: false as const, error: `${path} is not on the disk of the SANDY server; holon views need a local workspace` };
         const parsed = parseHolon(readFileSync(file, "utf8"));
         if (!parsed.ok) return { ok: false as const, error: `${path}: ${parsed.error}` };
-        const root = workspace ?? gitTopLevel(dirname(file)) ?? dirname(file);
+        const root = modelRootOf(file, workspace ?? gitTopLevel(dirname(file)) ?? dirname(file));
         const { index } = service.open(root, {});
         const target = id ?? parsed.value.id;
         const view = index.view(target);
