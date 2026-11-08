@@ -24,6 +24,8 @@ A model is every `*.holon` under its root, except in `node_modules`, `.git` and 
 
 Errors (`sandy holon check` exits 1): invalid JSON or schema, a duplicate id, an id that differs from the file name, an unknown slug in `partOf`, `seams[].to` or `carriedBy`, a cycle in `partOf`. Warning: more than 7 children ("<id> has <n> children: a level may be missing in between").
 
+Every JSON input (holon files, confirmation files, evidence lines) must be well-formed Unicode, as in I-JSON ([RFC 7493](https://www.rfc-editor.org/rfc/rfc7493)): a key or string value with an unpaired surrogate escape such as `"\ud800"` is invalid JSON, reported as `invalid JSON: unpaired surrogate in a string`. A `.holon` file with one is a check error like any other invalid JSON; a confirmation file or evidence line with one fails the way invalid JSON fails there.
+
 ## Contract hash
 
 `"sha256:" + hex(sha256(utf8(contract)))` of the holon's `contract` string; for a seam, of the seam's `contract`.
