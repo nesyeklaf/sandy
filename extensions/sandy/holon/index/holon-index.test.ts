@@ -108,6 +108,50 @@ describe("HolonIndex", () => {
     sameAsCore(index, copy.dir, fixtureEnv);
   });
 
+  it.each(["refresh", "reindexPaths"] as const)("equals a fresh recompute after every edit kind (%s)", (mode) => {
+    const seam = (path: string, change: (seams: Record<string, unknown>[]) => void) => () => {
+      editHolon(copy.dir, path, (json) => change(json.seams as Record<string, unknown>[]));
+      return [path];
+    };
+    const resetMail = JSON.parse(readFileSync(join(copy.dir, "apps/account/reset-mail.holon"), "utf8")) as Record<string, unknown>;
+    const edits: [string, () => string[]][] = [
+      ["writer becomes readOnly", seam("apps/support-tool/support-tool.holon", (seams) => { seams[0]!.readOnly = true; })],
+      ["writer stops being readOnly", seam("apps/support-tool/support-tool.holon", (seams) => { seams[0]!.readOnly = false; })],
+      ["exclusive seam becomes shared", seam("apps/account/account.holon", (seams) => { seams.find((item) => item.to === "user-db")!.exclusive = false; })],
+      ["shared seam becomes exclusive", seam("apps/account/account.holon", (seams) => { seams.find((item) => item.to === "user-db")!.exclusive = true; })],
+      ["new writer to the exclusive target", seam("apps/search/search.holon", (seams) => { seams.push({ to: "user-db", contract: "Writes search history" }); })],
+      ["new writer becomes readOnly", seam("apps/search/search.holon", (seams) => { seams.at(-1)!.readOnly = true; })],
+      ["writer drops its seam", seam("apps/support-tool/support-tool.holon", (seams) => { seams.splice(0, 1); })],
+      ["writer is restored", seam("apps/support-tool/support-tool.holon", (seams) => { seams.push({ to: "user-db", contract: "Resets hashes" }); })],
+      ["writer moves under the exclusive holon", () => {
+        editHolon(copy.dir, "apps/support-tool/support-tool.holon", (json) => { json.partOf = "account"; });
+        return ["apps/support-tool/support-tool.holon"];
+      }],
+      ["writer moves back out", () => {
+        editHolon(copy.dir, "apps/support-tool/support-tool.holon", (json) => { json.partOf = "shop-platform"; });
+        return ["apps/support-tool/support-tool.holon"];
+      }],
+      ["holon with drift is deleted", () => {
+        rmSync(join(copy.dir, "apps/account/reset-mail.holon"));
+        return ["apps/account/reset-mail.holon"];
+      }],
+      ["holon with drift returns", () => {
+        writeFileSync(join(copy.dir, "apps/account/reset-mail.holon"), JSON.stringify(resetMail, null, 2));
+        return ["apps/account/reset-mail.holon"];
+      }],
+    ];
+    for (const [label, edit] of edits) {
+      const paths = edit();
+      if (mode === "refresh") index.refresh(fixtureEnv);
+      else index.reindexPaths(paths, fixtureEnv);
+      try {
+        sameAsCore(index, copy.dir, fixtureEnv);
+      } catch (cause) {
+        throw new Error(`after "${label}": ${cause instanceof Error ? cause.message : String(cause)}`);
+      }
+    }
+  });
+
   it("re-evaluates on a new confirmation, on time passing and on a cycle", () => {
     const confirmations = join(copy.dir, ".holons/confirmations/sign-in");
     const source = readFileSync(join(confirmations, "2026-10-20-I-maria.json"), "utf8");

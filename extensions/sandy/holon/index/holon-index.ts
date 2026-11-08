@@ -128,7 +128,7 @@ export class HolonIndex implements ViewSource {
       allHolons: prepare("SELECT id, path, holon_json FROM holons WHERE root = ?"),
       withDrift: prepare("SELECT id, evaluation_json FROM holons WHERE root = ? AND drift_count > 0"),
       countHolons: prepare("SELECT COUNT(*) AS n FROM holons WHERE root = ?"),
-      seamsFrom: prepare("SELECT to_id FROM seams WHERE root = ? AND from_id = ?"),
+      seamsFrom: prepare("SELECT to_id, read_only, exclusive FROM seams WHERE root = ? AND from_id = ? ORDER BY idx"),
       deleteSeams: prepare("DELETE FROM seams WHERE root = ? AND from_id = ?"),
       insertSeam: prepare("INSERT INTO seams (root, from_id, idx, to_id, read_only, exclusive) VALUES (?, ?, ?, ?, ?, ?)"),
       seamsTo: prepare("SELECT from_id, idx, read_only FROM seams WHERE root = ? AND to_id = ? ORDER BY from_id, idx"),
@@ -312,7 +312,7 @@ export class HolonIndex implements ViewSource {
     }
     const holon = JSON.parse(winner.holon_json) as Holon;
     let structural = false;
-    let oldTargets: string[] = [];
+    let oldSeams: { to_id: string; read_only: number; exclusive: number }[] = [];
     if (current === undefined) {
       const below = (this.statements.childBelowSum.get(this.root, id) as { total: number }).total;
       this.statements.insertHolon.run(this.root, id, winner.path, holon.partOf, winner.holon_json, JSON.stringify(openEvaluation()), below);
@@ -320,7 +320,7 @@ export class HolonIndex implements ViewSource {
       structural = true;
     } else {
       if (current.holon_json === winner.holon_json && current.path === winner.path) return false;
-      oldTargets = (this.statements.seamsFrom.all(this.root, id) as { to_id: string }[]).map((row) => row.to_id);
+      oldSeams = this.statements.seamsFrom.all(this.root, id) as { to_id: string; read_only: number; exclusive: number }[];
       if (current.part_of !== holon.partOf) {
         this.addAlong(current.part_of, id, -current.drift_below);
         this.statements.updateHolonSource.run(winner.path, holon.partOf, winner.holon_json, this.root, id);
@@ -334,8 +334,10 @@ export class HolonIndex implements ViewSource {
     holon.seams.forEach((seam, index) => {
       this.statements.insertSeam.run(this.root, id, index, seam.to, seam.readOnly ? 1 : 0, seam.exclusive ? 1 : 0);
     });
-    const newTargets = holon.seams.map((seam) => seam.to);
-    if (oldTargets.join("\u0000") !== newTargets.join("\u0000")) this.markExclusiveWriters(new Set([...oldTargets, ...newTargets]));
+    const signature = (seams: readonly { to: string; readOnly: boolean; exclusive: boolean }[]) =>
+      seams.map((seam) => `${seam.to}\u0000${seam.readOnly ? 1 : 0}${seam.exclusive ? 1 : 0}`).join("\u0001");
+    const before = oldSeams.map((row) => ({ to: row.to_id, readOnly: row.read_only === 1, exclusive: row.exclusive === 1 }));
+    if (signature(before) !== signature(holon.seams)) this.markExclusiveWriters(new Set([...before.map((seam) => seam.to), ...holon.seams.map((seam) => seam.to)]));
     this.markDirty(id);
     return structural;
   }
