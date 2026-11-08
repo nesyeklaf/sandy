@@ -1,0 +1,32 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "id": "holon-cli",
+  "kind": "container",
+  "partOf": "holon-extension",
+  "title": "sandy holon CLI",
+  "why": "People and agents check, read and prove holons from a shell and from scripts.",
+  "contract": "sandy holon check, drift, view, evidence record and confirm print the contract's JSON with --json and short glyph text otherwise, and fail with a coded error.",
+  "code": [
+    "extensions/sandy/holon/cli.ts",
+    "extensions/sandy/holon/server.ts",
+    "extensions/sandy/holon/service.ts",
+    "extensions/sandy/holon/render.ts"
+  ],
+  "seams": [
+    {
+      "to": "holon-index",
+      "contract": "Records evidence and reads computed views",
+      "readOnly": false
+    }
+  ],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/holon/server.test.ts"
+    }
+  }
+}

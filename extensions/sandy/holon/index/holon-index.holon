@@ -1,0 +1,29 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "id": "holon-index",
+  "kind": "container",
+  "partOf": "holon-extension",
+  "title": "Holon index",
+  "why": "A view must answer in under a millisecond and one changed file must not recompute 100k holons.",
+  "contract": "Keeps holons, seams, evidence and computed lights in SQLite, reparses only files whose hash changed, learns changed files from a file watcher so only a cold start or check walks the tree, and answers views and drift identical to the core.",
+  "code": [
+    "extensions/sandy/holon/index/"
+  ],
+  "seams": [
+    {
+      "to": "holon-core",
+      "contract": "Evaluates each holon with the core's functions",
+      "readOnly": true
+    }
+  ],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/holon/index/holon-index.test.ts"
+    }
+  }
+}
