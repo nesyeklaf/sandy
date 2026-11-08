@@ -1,17 +1,17 @@
 use crate::evaluate::{Drift, DriftKind, HolonLight, SideLight, SideView};
 use crate::format::Side;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub const MAX_CHILDREN: usize = 7;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CheckError {
     pub holon: Option<String>,
     pub file: String,
     pub message: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CheckWarning {
     pub holon: String,
     pub message: String,

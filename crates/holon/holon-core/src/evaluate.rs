@@ -1,11 +1,11 @@
-use crate::format::{is_human_kind, Confirmation, Evidence, Holon, Proof, Side};
+use crate::format::{is_human_kind, Confirmation, Evidence, Holon, Proof, Side, PROOF_KINDS};
 use crate::order::{is_js_blank, js_cmp};
 use crate::time::{contract_hash, format_date, format_instant, parse_instant, DAY_MS};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SideLight {
     Refuted,
@@ -16,7 +16,7 @@ pub enum SideLight {
     Hard,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum HolonLight {
     Drift,
@@ -26,7 +26,7 @@ pub enum HolonLight {
     Hard,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DriftKind {
     Break,
@@ -84,7 +84,7 @@ impl DriftKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Drift {
     pub kind: DriftKind,
     pub side: Option<Side>,
@@ -103,18 +103,80 @@ pub struct SideView {
     pub detail: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Deserialize)]
+struct StoredSideView {
+    light: SideLight,
+    kind: Option<String>,
+    source: Option<String>,
+    at: Option<String>,
+    expires: Option<String>,
+    by: Option<String>,
+    detail: String,
+}
+
+impl<'de> Deserialize<'de> for SideView {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<SideView, D::Error> {
+        let stored = StoredSideView::deserialize(deserializer)?;
+        let kind = match stored.kind {
+            None => None,
+            Some(kind) => Some(
+                PROOF_KINDS
+                    .iter()
+                    .copied()
+                    .find(|known| *known == kind)
+                    .ok_or_else(|| {
+                        serde::de::Error::custom(format!("unknown proof kind {kind}"))
+                    })?,
+            ),
+        };
+        Ok(SideView {
+            light: stored.light,
+            kind,
+            source: stored.source,
+            at: stored.at,
+            expires: stored.expires,
+            by: stored.by,
+            detail: stored.detail,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SeamEvaluation {
     pub light: SideLight,
     pub drift: Option<DriftKind>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Validity {
+    pub from_ms: Option<i64>,
+    pub until_ms: Option<i64>,
+    pub uses_commit: bool,
+    pub unknown_build: bool,
+}
+
+impl Validity {
+    fn expiry(&mut self, expiry: i64, now_ms: i64) {
+        if expiry <= now_ms {
+            self.from_ms = Some(self.from_ms.map_or(expiry, |from| from.max(expiry)));
+        } else {
+            self.until_ms = Some(self.until_ms.map_or(expiry, |until| until.min(expiry)));
+        }
+    }
+
+    pub fn holds_at(&self, now_ms: i64) -> bool {
+        self.from_ms.is_none_or(|from| from <= now_ms)
+            && self.until_ms.is_none_or(|until| now_ms < until)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HolonEvaluation {
     pub light: HolonLight,
     pub sides: [SideView; 4],
     pub seams: Vec<SeamEvaluation>,
     pub drift: Vec<Drift>,
+    pub validity: Validity,
 }
 
 pub trait CodeChanges: Sync {
@@ -219,6 +281,7 @@ fn evaluate_proof(
     current_hash: &str,
     ctx: &dyn EvalContext,
     env: &EvalEnv,
+    validity: &mut Validity,
 ) -> SideView {
     let Some(proof) = proof else {
         return SideView {
@@ -270,6 +333,9 @@ fn evaluate_proof(
         let expired = if confirmation.contract_hash != current_hash {
             Some("Checked against an older contract".to_string())
         } else {
+            if let Some(expiry) = expiry {
+                validity.expiry(expiry, env.now_ms);
+            }
             expiry
                 .filter(|expiry| env.now_ms >= *expiry)
                 .map(|expiry| format!("Expired on {}", format_date(expiry)))
@@ -306,11 +372,18 @@ fn evaluate_proof(
     let mut expired = None;
     if evidence.contract_hash != current_hash {
         expired = Some("Checked against an older contract".to_string());
-    } else if let Some(expiry) = expiry.filter(|expiry| env.now_ms >= *expiry) {
+    } else if let Some(expiry) = expiry
+        .inspect(|expiry| validity.expiry(*expiry, env.now_ms))
+        .filter(|expiry| env.now_ms >= *expiry)
+    {
         expired = Some(format!("Expired on {}", format_date(expiry)));
     } else if evidence.build != env.commit {
+        validity.uses_commit = true;
         match env.code.changed_paths(&evidence.build, &env.commit) {
-            None => expired = Some(format!("Build {} is no known commit", evidence.build)),
+            None => {
+                validity.unknown_build = true;
+                expired = Some(format!("Build {} is no known commit", evidence.build));
+            }
             Some(changed) => {
                 if let Some(touched) = code_touched(&holon.code, &changed) {
                     let short: String = evidence.build.chars().take(12).collect();
@@ -318,6 +391,8 @@ fn evaluate_proof(
                 }
             }
         }
+    } else {
+        validity.uses_commit = true;
     }
     if let Some(detail) = expired {
         return view(SideLight::Expired, at, expires, None, detail);
@@ -359,8 +434,17 @@ fn list_writers(writers: &[&str]) -> String {
 pub fn evaluate_holon(holon: &Holon, ctx: &dyn EvalContext, env: &EvalEnv) -> HolonEvaluation {
     let hash = contract_hash(&holon.contract);
     let mut drift = Vec::new();
+    let mut validity = Validity::default();
     let sides = Side::ALL.map(|side| {
-        let view = evaluate_proof(holon, side.as_str(), holon.proof(side), &hash, ctx, env);
+        let view = evaluate_proof(
+            holon,
+            side.as_str(),
+            holon.proof(side),
+            &hash,
+            ctx,
+            env,
+            &mut validity,
+        );
         let kind = match view.light {
             SideLight::Refuted => Some(DriftKind::Break),
             SideLight::Expired => Some(DriftKind::Expired),
@@ -388,6 +472,7 @@ pub fn evaluate_holon(holon: &Holon, ctx: &dyn EvalContext, env: &EvalEnv) -> Ho
                 &contract_hash(&seam.contract),
                 ctx,
                 env,
+                &mut validity,
             );
             let mut kinds = Vec::new();
             let lit = match view.light {
@@ -460,5 +545,6 @@ pub fn evaluate_holon(holon: &Holon, ctx: &dyn EvalContext, env: &EvalEnv) -> Ho
         sides,
         seams,
         drift,
+        validity,
     }
 }
