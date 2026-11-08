@@ -247,7 +247,8 @@ fn cold(root: &Path, view_id: &str, out: Option<&Path>) {
         "{}",
         serde_json::json!({
             "holons": model.len(),
-            "threads": std::thread::available_parallelism().map_or(1, |count| count.get()),
+            "threads": rayon::current_num_threads(),
+            "cpus": std::thread::available_parallelism().map_or(1, |count| count.get()),
             "scanMs": scan_ms,
             "readParseMs": read_parse_ms,
             "evidenceMs": evidence_ms,

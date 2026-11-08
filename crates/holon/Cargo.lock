@@ -92,6 +92,7 @@ name = "holon-bench"
 version = "0.1.0"
 dependencies = [
  "holon-core",
+ "rayon",
  "serde",
  "serde_json",
 ]

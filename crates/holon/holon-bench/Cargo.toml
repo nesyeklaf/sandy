@@ -8,5 +8,6 @@ description = "Kill check benchmark: the 137k-holon tree of extensions/sandy/hol
 
 [dependencies]
 holon-core.workspace = true
+rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
