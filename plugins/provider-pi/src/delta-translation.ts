@@ -739,7 +739,7 @@ export function createPiDeltaTranslator(
           noTurnFallback: noTurnFallbackFor(event, context),
         };
         return parsed.data.reason === "manual"
-          ? [{ kind: "turn.open" }, open]
+          ? [{ kind: "turn.open", purpose: "compaction" }, open]
           : [open];
       }
 

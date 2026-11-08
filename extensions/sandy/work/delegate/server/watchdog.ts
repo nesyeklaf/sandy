@@ -103,7 +103,7 @@ export function turnRefusalBoundMs(
 
 // One turn/started or turn/completed event of a thread: SANDY's sequence number and creation time.
 // A completed event also carries the turn's outcome and error message when SANDY recorded them (wait mode).
-export type TurnEvent = { seq: number; type: "started" | "completed"; at: number; outcome?: string; error?: string };
+export type TurnEvent = { seq: number; type: "started" | "completed"; at: number; outcome?: string; error?: string; maintenance?: true };
 
 // The window in ms; a missing, non-finite or non-positive setting falls back to the default.
 export function watchdogWindowMs(settings: Pick<DelegateSettings, "briefWatchdogSeconds">): number {
@@ -218,7 +218,8 @@ async function refuseUnmarkedChildren(db: Db, host: WatchdogHost, now: number, r
 // decided once its range is closed, by the next event or, with no later events (reachedEnd), by now; it
 // takes the oldest ack in range. A range closed without an ack is the missing turn: the scan stops there.
 // A turn whose range is closed by an event up to grandfatherThroughSeq (history before the upgrade, see
-// TurnCursor.baselinePending) still takes its ack but is not refused without one.
+// TurnCursor.baselinePending) still takes its ack but is not refused without one. A maintenance event is
+// read past without opening, closing or bounding a turn: a compaction turn needs no ack and takes none.
 // Advances state by events (after state.checkedSeq, in seq order); acks are the child's unmatched acks.
 export function advanceTurns(
   state: TurnState, events: readonly TurnEvent[], acks: readonly UnmatchedAck[], windowMs: number, now: number, reachedEnd: boolean,
@@ -237,6 +238,10 @@ export function advanceTurns(
   let { checkedSeq, lastAt, open } = state;
   for (const event of [...events].sort((a, b) => a.seq - b.seq)) {
     if (checkedSeq !== null && event.seq <= checkedSeq) continue;
+    if (event.maintenance === true) {
+      checkedSeq = event.seq;
+      continue;
+    }
     if (open !== null) {
       const grandfathered = grandfatherThroughSeq !== null && event.seq <= grandfatherThroughSeq;
       if (!decide(open, Math.min(open.at + windowMs, event.at)) && !grandfathered) {

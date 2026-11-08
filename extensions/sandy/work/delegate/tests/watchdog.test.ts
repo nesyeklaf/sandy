@@ -738,9 +738,10 @@ test("advanceTurns: an ack after the previous turn event and by min(window, next
 test("advanceTurns: a compaction turn before a resumed turn needs no ack; the resumed turn takes the ack recorded after the compaction (thr_ze7djbcrdi, dlg_08171da7)", () => {
   const stored = { checkedSeq: 2424, lastAt: 1794141725555, open: null };
   const events = [compactionStart(2426, 1794142317212), compactionEnd(2429, 1794142317217), turnStart(2431, 1794142317943)];
-  const scan = advanceTurns(stored, events, acksAt(1794142317879), WINDOW, 1794142337516, true);
-  assert.deepEqual([scan.missing, scan.matches], [null, [{ nonce: "n0", turnSeq: 2431 }]]);
-  assert.deepEqual(scan.state, { checkedSeq: 2431, lastAt: 1794141725555, open: null }, "the compaction events do not move the lower bound");
+  const atStop = advanceTurns(stored, events, acksAt(1794142317879), WINDOW, 1794142337516, true);
+  assert.deepEqual([atStop.missing, atStop.state.open], [null, { seq: 2431, at: 1794142317943, lowerAt: 1794141725555 }], "the compaction events do not move the lower bound");
+  const decided = advanceTurns(stored, events, acksAt(1794142317879), WINDOW, 1794142317943 + WINDOW, true);
+  assert.deepEqual([decided.missing, decided.matches], [null, [{ nonce: "n0", turnSeq: 2431 }]]);
 });
 
 test("advanceTurns: a compaction turn that failed, was interrupted or skipped needs no ack either; a real turn after it without an ack is refused", () => {

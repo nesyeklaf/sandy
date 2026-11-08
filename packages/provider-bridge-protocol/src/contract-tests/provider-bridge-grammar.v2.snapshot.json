@@ -162,7 +162,8 @@
     "turn.open": {
       "kind": "required",
       "providerTurnId": "optional",
-      "parentRef": "optional"
+      "parentRef": "optional",
+      "purpose": "optional"
     },
     "unhandled": {
       "kind": "required",
