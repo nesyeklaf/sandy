@@ -1,11 +1,11 @@
-use crate::format::{is_human_kind, Confirmation, Evidence, Holon, Proof, Side};
+use crate::format::{is_human_kind, Confirmation, Evidence, Holon, Proof, Side, PROOF_KINDS};
 use crate::order::{is_js_blank, js_cmp};
 use crate::time::{contract_hash, format_date, format_instant, parse_instant, DAY_MS};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SideLight {
     Refuted,
@@ -16,7 +16,7 @@ pub enum SideLight {
     Hard,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum HolonLight {
     Drift,
@@ -103,13 +103,51 @@ pub struct SideView {
     pub detail: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Deserialize)]
+struct StoredSideView {
+    light: SideLight,
+    kind: Option<String>,
+    source: Option<String>,
+    at: Option<String>,
+    expires: Option<String>,
+    by: Option<String>,
+    detail: String,
+}
+
+impl<'de> Deserialize<'de> for SideView {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<SideView, D::Error> {
+        let stored = StoredSideView::deserialize(deserializer)?;
+        let kind = match stored.kind {
+            None => None,
+            Some(kind) => Some(
+                PROOF_KINDS
+                    .iter()
+                    .copied()
+                    .find(|known| *known == kind)
+                    .ok_or_else(|| {
+                        serde::de::Error::custom(format!("unknown proof kind {kind}"))
+                    })?,
+            ),
+        };
+        Ok(SideView {
+            light: stored.light,
+            kind,
+            source: stored.source,
+            at: stored.at,
+            expires: stored.expires,
+            by: stored.by,
+            detail: stored.detail,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SeamEvaluation {
     pub light: SideLight,
     pub drift: Option<DriftKind>,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Validity {
     pub from_ms: Option<i64>,
     pub until_ms: Option<i64>,
@@ -132,7 +170,7 @@ impl Validity {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HolonEvaluation {
     pub light: HolonLight,
     pub sides: [SideView; 4],

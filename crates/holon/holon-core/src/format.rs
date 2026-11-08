@@ -31,7 +31,7 @@ pub const KINDS: [&str; 22] = [
 pub const STATUSES: [&str; 3] = ["proposed", "active", "retired"];
 pub const MACHINE_PROOF_KINDS: [&str; 6] = ["ci", "metric", "alert", "file", "ticket", "formal"];
 pub const HUMAN_PROOF_KINDS: [&str; 3] = ["interview", "confirmation", "ai-review"];
-const PROOF_KINDS: [&str; 9] = [
+pub const PROOF_KINDS: [&str; 9] = [
     "ci",
     "metric",
     "alert",

@@ -106,12 +106,19 @@ fn node_read_error(error: &std::io::Error, path: &Path) -> String {
     }
 }
 
-pub fn read_text(path: &Path) -> Result<String, String> {
-    let bytes = std::fs::read(path).map_err(|error| node_read_error(&error, path))?;
-    Ok(match String::from_utf8(bytes) {
+pub fn read_bytes(path: &Path) -> Result<Vec<u8>, String> {
+    std::fs::read(path).map_err(|error| node_read_error(&error, path))
+}
+
+pub fn decode_text(bytes: Vec<u8>) -> String {
+    match String::from_utf8(bytes) {
         Ok(text) => text,
         Err(error) => String::from_utf8_lossy(error.as_bytes()).into_owned(),
-    })
+    }
+}
+
+pub fn read_text(path: &Path) -> Result<String, String> {
+    read_bytes(path).map(decode_text)
 }
 
 pub struct Model {
@@ -126,8 +133,16 @@ pub struct Model {
     confirmations: HashMap<String, HashMap<String, usize>>,
 }
 
-fn newer_evidence(a: &Evidence, b: &Evidence) -> bool {
+pub fn newer_evidence(a: &Evidence, b: &Evidence) -> bool {
     parse_instant(&a.at) >= parse_instant(&b.at)
+}
+
+pub fn newer_confirmation(a: (&str, &Confirmation), b: (&str, &Confirmation)) -> bool {
+    match js_cmp(&a.1.at, &b.1.at) {
+        Ordering::Greater => true,
+        Ordering::Equal => js_cmp(a.0, b.0) == Ordering::Greater,
+        Ordering::Less => false,
+    }
 }
 
 impl Model {
@@ -205,16 +220,12 @@ impl Model {
                 None => true,
                 Some(&current) => {
                     let other = &confirmation_files[current];
-                    let other_at = &other
-                        .confirmation
-                        .as_ref()
-                        .expect("indexed confirmation")
-                        .at;
-                    match js_cmp(&confirmation.at, other_at) {
-                        Ordering::Greater => true,
-                        Ordering::Equal => js_cmp(&file.path, &other.path) == Ordering::Greater,
-                        Ordering::Less => false,
-                    }
+                    let other_confirmation =
+                        other.confirmation.as_ref().expect("indexed confirmation");
+                    newer_confirmation(
+                        (&file.path, confirmation),
+                        (&other.path, other_confirmation),
+                    )
                 }
             };
             if replace {
@@ -284,6 +295,10 @@ impl Model {
 
     fn path_at(&self, position: usize) -> &str {
         &self.files[self.winners[position]].path
+    }
+
+    pub fn winners(&self) -> impl Iterator<Item = (&str, &Holon)> {
+        (0..self.winners.len()).map(|position| (self.path_at(position), self.holon_at(position)))
     }
 
     pub fn get(&self, id: &str) -> Option<&Holon> {
