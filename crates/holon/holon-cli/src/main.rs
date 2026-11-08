@@ -587,11 +587,49 @@ fn complete_evidence(
     })
 }
 
+enum Holons {
+    Loaded(Box<Model>),
+    Cached,
+}
+
+impl Holons {
+    fn open(parsed: &Parsed, ctx: &Context, store: &Store) -> Result<Holons, Failure> {
+        if parsed.flag("no-cache") {
+            return Ok(Holons::Loaded(Box::new(Model::load(
+                &ctx.root,
+                Vec::new(),
+            )?)));
+        }
+        let code = GitCodeChanges::new(&ctx.root);
+        let env = EvalEnv {
+            now_ms: ctx.now_ms,
+            commit: ctx.commit.clone(),
+            code: &code,
+        };
+        cache::sync(store, &ctx.root, &env, false)?;
+        Ok(Holons::Cached)
+    }
+
+    fn get(&self, store: &Store, root: &Path, id: &str) -> Result<Option<Holon>, Failure> {
+        Ok(match self {
+            Holons::Loaded(model) => model.get(id).cloned(),
+            Holons::Cached => cache::holon(store, root, id)?,
+        })
+    }
+
+    fn exists(&self, store: &Store, id: &str) -> Result<bool, String> {
+        match self {
+            Holons::Loaded(model) => Ok(model.get(id).is_some()),
+            Holons::Cached => cache::exists(store, id),
+        }
+    }
+}
+
 fn record_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let ctx = context(parsed)?;
     let store = open_store(parsed, &ctx)?;
-    let model = Model::load(&ctx.root, Vec::new())?;
+    let holons = Holons::open(parsed, &ctx, &store)?;
     let records = if invocation.command.path == "evidence import" {
         read_evidence_file(
             &ctx.cwd,
@@ -602,8 +640,12 @@ fn record_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
     } else if let Some(text) = parsed.value("jsonl") {
         parse_evidence_text(text)?
     } else {
-        let holon = model.get(parsed.value("holon").expect("required holon"));
-        vec![complete_evidence(parsed, holon, &ctx)?]
+        let holon = holons.get(
+            &store,
+            &ctx.root,
+            parsed.value("holon").expect("required holon"),
+        )?;
+        vec![complete_evidence(parsed, holon.as_ref(), &ctx)?]
     };
     let evaluated = store.transaction(|| {
         let mut touched: Vec<String> = Vec::new();
@@ -615,15 +657,22 @@ fn record_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
         touched.extend(records.iter().map(|record| record.holon.clone()));
         touched.sort();
         touched.dedup();
-        Ok(touched.iter().filter(|id| model.get(id).is_some()).count())
+        let mut evaluated = 0;
+        for id in &touched {
+            evaluated += usize::from(holons.exists(&store, id)?);
+        }
+        Ok(evaluated)
     })?;
-    let mut unknown: Vec<String> = records
-        .iter()
-        .map(|record| record.holon.clone())
-        .filter(|id| model.get(id).is_none())
-        .collect();
+    let mut unknown: Vec<String> = records.iter().map(|record| record.holon.clone()).collect();
     unknown.sort();
     unknown.dedup();
+    let mut missing = Vec::new();
+    for id in unknown {
+        if !holons.exists(&store, &id)? {
+            missing.push(id);
+        }
+    }
+    let unknown = missing;
     let result = Recorded {
         format: "holon-evidence-recorded/v0",
         recorded: records.len(),

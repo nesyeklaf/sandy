@@ -922,6 +922,26 @@ struct StoredCheck {
     warnings: Vec<CheckWarning>,
 }
 
+pub fn holon(store: &Store, root: &Path, id: &str) -> Result<Option<Holon>, String> {
+    let path: Option<String> = db(store
+        .conn
+        .query_row("SELECT path FROM cache_holons WHERE id = ?", [id], |row| {
+            row.get(0)
+        })
+        .optional())?;
+    match path {
+        Some(path) => parse_at(root, &path),
+        None => Ok(None),
+    }
+}
+
+pub fn exists(store: &Store, id: &str) -> Result<bool, String> {
+    let mut statement = db(store
+        .conn
+        .prepare_cached("SELECT EXISTS (SELECT 1 FROM cache_holons WHERE id = ?)"))?;
+    db(statement.query_row([id], |row| row.get(0)))
+}
+
 pub fn check(store: &Store) -> Result<CheckOutput, String> {
     let json: Option<String> = db(store.conn.query_row(
         "SELECT check_json FROM cache_meta WHERE key = 0",
