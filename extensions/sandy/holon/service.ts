@@ -5,7 +5,9 @@ import {
   HUMAN_MAX_DAYS,
   SIDES,
   confirmationPath,
+  isCalendarDate,
   isHumanKind,
+  isIsoTimestamp,
   parseConfirmation,
   parseEvidence,
   parseEvidenceLines,
@@ -100,11 +102,10 @@ export class HolonService {
   env(root: string, options: EnvOptions): EvalEnv {
     let nowMs = this.clock();
     if (options.now !== undefined) {
-      try {
-        nowMs = parseInstant(options.now);
-      } catch {
+      if (!isIsoTimestamp(options.now)) {
         throw new HolonInputError(`--now ${options.now} is no ISO timestamp`, "invalid_now", "Use a form like 2026-11-08T12:00:00Z");
       }
+      nowMs = parseInstant(options.now);
     }
     const commit = options.commit ?? gitHead(root) ?? "none";
     return { nowMs, commit, code: gitCodeChanges(root) };
@@ -186,11 +187,14 @@ export class HolonService {
         "Record machine runs with sandy holon evidence record",
       );
     }
+    if (input.at !== undefined && !isCalendarDate(input.at)) throw new HolonInputError(`--at ${input.at} is no date`, "invalid_at", "Use yyyy-mm-dd");
+    if (input.expires !== undefined && !isCalendarDate(input.expires)) {
+      throw new HolonInputError(`--expires ${input.expires} is no date`, "invalid_expires", "Use yyyy-mm-dd");
+    }
     const at = input.at ?? formatDate(env.nowMs);
-    const atMs = parseInstant(at);
-    const limitMs = atMs + (declared.proof?.everyDays ?? HUMAN_MAX_DAYS) * DAY_MS;
+    const limitMs = parseInstant(at) + (declared.proof?.everyDays ?? HUMAN_MAX_DAYS) * DAY_MS;
     const expires = input.expires ?? formatDate(limitMs);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(expires) && parseInstant(expires) > limitMs) {
+    if (parseInstant(expires) > limitMs) {
       throw new HolonInputError(`--expires ${expires} is after ${formatDate(limitMs)}`, "expires_too_late", `Human proofs last at most ${HUMAN_MAX_DAYS} days`);
     }
     const draft = serializeConfirmation({

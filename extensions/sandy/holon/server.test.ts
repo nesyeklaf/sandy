@@ -132,6 +132,30 @@ describe("sandy holon on the shop fixture", () => {
     expect(machine.json).toMatchObject({ ok: false, error: { code: "machine_side" } });
   });
 
+  it("answers invalid dates with a JSON error envelope", async () => {
+    const host = await loaded();
+    const shop = track(tempCopy(SHOP));
+    const confirm = (...extra: string[]) =>
+      cli(host, ["confirm", "password-reset", "--side", "I", "--by", "maria", "--answer", "Works", "--root", shop.dir, ...at, ...extra, "--json"]);
+    for (const [flags, code] of [
+      [["--at", "not-date"], "invalid_at"],
+      [["--at", "2026-02-30"], "invalid_at"],
+      [["--expires", "2026-13-01"], "invalid_expires"],
+      [["--expires", "2027-01-01T00:00:00Z"], "invalid_expires"],
+    ] as const) {
+      const result = await confirm(...flags);
+      expect(result.exitCode, flags.join(" ")).not.toBe(0);
+      expect(result.json, flags.join(" ")).toMatchObject({ ok: false, error: { code } });
+    }
+    for (const now of ["nope", "2026", "2026-11-08", "2026-11-08T12"]) {
+      const check = await cli(host, ["check", "--root", shop.dir, "--now", now, "--json"]);
+      expect(check.json, now).toMatchObject({ ok: false, error: { code: "invalid_now" } });
+    }
+    for (const now of ["2026-11-08T12:00:00Z", "2026-11-08T12:00:00.250+01:00", "2026-11-08T12:00Z"]) {
+      expect((await cli(host, ["check", "--root", shop.dir, "--now", now, "--json"])).exitCode, now).toBe(0);
+    }
+  });
+
   it("serves the fileOpener view over RPC", async () => {
     const host = await loaded();
     const shop = track(tempCopy(SHOP));

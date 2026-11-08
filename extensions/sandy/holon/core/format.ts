@@ -83,8 +83,8 @@ const slug = z.string().regex(SLUG, "must be a slug like password-reset");
 const proofKind = z.enum([...MACHINE_PROOF_KINDS, ...HUMAN_PROOF_KINDS]);
 const every = z.string().regex(/^[1-9][0-9]*d$/, "must look like 90d");
 const evidenceSide = z.union([z.enum(SIDES), z.string().regex(/^seam:[a-z0-9]+(-[a-z0-9]+)*$/)]) as z.ZodType<EvidenceSide>;
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be yyyy-mm-dd").refine((value) => isValidDate(value), "is no calendar date");
-const iso = z.string().refine((value) => /^\d{4}-\d{2}-\d{2}T/.test(value) && Number.isFinite(Date.parse(value)), "must be an ISO timestamp");
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be yyyy-mm-dd").refine((value) => isCalendarDate(value), "is no calendar date");
+const iso = z.string().refine((value) => isIsoTimestamp(value), "must be an ISO timestamp with a time zone");
 const by = z.union([slug, z.string().regex(/^agent:[a-z0-9]+(-[a-z0-9]+)*$/, "must be a slug or agent:<name>")]);
 const contractHash = z.string().regex(/^sha256:[0-9a-f]{64}$/, "must be sha256:<64 hex>");
 
@@ -153,7 +153,12 @@ export const evidenceSchema = z
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
-function isValidDate(value: string): boolean {
+export function isIsoTimestamp(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(value) && isCalendarDate(value.slice(0, 10)) && Number.isFinite(Date.parse(value));
+}
+
+export function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const ms = Date.parse(`${value}T00:00:00Z`);
   return Number.isFinite(ms) && new Date(ms).toISOString().slice(0, 10) === value;
 }
