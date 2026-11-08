@@ -1,0 +1,11 @@
+view = Load("data/holon/view-password-reset.json")
+h = view.focus
+glyph = l => l == "hard" ? "●" : l == "soft" ? "◐" : l == "claimed" ? "◌" : l == "open" ? "○" : l == "refuted" ? "✕" : "◇"
+tone = l => l == "hard" ? "good" : l == "soft" ? "info" : l == "refuted" ? "bad" : l == "open" || l == "claimed" ? "neutral" : "warn"
+side = s => [s, Badge(glyph(h.sides[s].light) + " " + h.sides[s].light, tone: tone(h.sides[s].light)), h.sides[s].detail ?? "", h.sides[s].source ?? ""]
+Card(h.title, [
+  Text(`${h.kind} · ${h.status}`),
+  KeyValue([["Why", h.why], ["Contract", h.contract], ["Carried by", h.carriedBy.map(c => c.title).join(", ")]]),
+  Table(["Side", "Light", "What we know", "Source"], ["I", "It", "We", "They"].map(s => side(s))),
+  h.drift.length > 0 ? Callout(h.drift.map(d => `${d.kind}: ${d.detail}`).join("; "), tone: "warn", title: "Drift") : null
+])

@@ -1,0 +1,6 @@
+found = Load("data/holon/drift.json").drift
+kinds = [["break", "bad"], ["expired", "warn"], ["orphan-below", "warn"], ["orphan-above", "warn"], ["contradiction", "bad"]]
+Card("Drift across the shop", [
+  Row(kinds.map(k => Metric(k[0], found.filter(d => d.kind == k[0]).length, tone: found.filter(d => d.kind == k[0]).length > 0 ? k[1] : "neutral"))),
+  Table(["Holon", "Kind", "Where", "Detail"], found.map(d => [d.holon, Badge(d.kind, tone: kinds.find(k => k[0] == d.kind)[1]), d.side ?? d.seam ?? "", d.detail]))
+])

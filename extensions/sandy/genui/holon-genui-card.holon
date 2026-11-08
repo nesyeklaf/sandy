@@ -1,0 +1,29 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "seams": [
+    {
+      "to": "holon-genui-view-reader",
+      "contract": "Draws only what the reader returned",
+      "readOnly": true
+    }
+  ],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/genui/ui/components/Holon.test.tsx"
+    }
+  },
+  "kind": "component",
+  "partOf": "holon-genui",
+  "id": "holon-genui-card",
+  "title": "Holon card",
+  "why": "People read a holon's Why, Contract, four sides and drift at a glance in chat.",
+  "contract": "Draws a read holon view as a card with one glyph and tone per light, and shows every field as given.",
+  "code": [
+    "extensions/sandy/genui/ui/components/Holon.tsx"
+  ]
+}

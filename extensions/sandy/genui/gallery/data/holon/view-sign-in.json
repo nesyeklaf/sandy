@@ -1,0 +1,76 @@
+{
+  "format": "holon-view/v0",
+  "focus": {
+    "id": "sign-in",
+    "kind": "component",
+    "role": "system",
+    "title": "Sign-in",
+    "status": "active",
+    "why": "Customers reach their orders.",
+    "contract": "Signs a customer in with email and password, and locks the account after ten failures.",
+    "carriedBy": [
+      {
+        "id": "team-identity",
+        "title": "Identity team"
+      }
+    ],
+    "light": "open",
+    "drift": [],
+    "driftBelow": 0,
+    "sides": {
+      "I": {
+        "light": "soft",
+        "kind": "interview",
+        "source": null,
+        "at": "2026-10-20",
+        "expires": "2027-01-18",
+        "by": "maria",
+        "detail": "Confirmed by maria"
+      },
+      "It": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      },
+      "We": {
+        "light": "claimed",
+        "kind": "confirmation",
+        "source": null,
+        "at": "2026-10-20",
+        "expires": "2027-01-18",
+        "by": "nesyeklaf",
+        "detail": "Confirmed by its own carrier"
+      },
+      "They": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      }
+    },
+    "code": [
+      "apps/account/sign-in.ts"
+    ]
+  },
+  "parent": {
+    "id": "account",
+    "kind": "container",
+    "role": "environment",
+    "title": "Account service",
+    "status": "active",
+    "light": "drift",
+    "driftBelow": 4
+  },
+  "children": [],
+  "seams": [],
+  "warnings": [],
+  "computedAt": "2026-11-08T12:00:00Z",
+  "commit": "fixture"
+}

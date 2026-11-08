@@ -2,6 +2,7 @@
 // it (mobile app, notifications, CLI): readable on a phone, no HTML.
 import type { LoadedData } from "./data";
 import { acceptanceVerdict, BASIS_LABEL, cellsLine, checkLabel, isCellGap, isGap, needsPlaces, ownerContradiction, readAcceptance, type Check, type Evidence as AcceptanceEvidence } from "./acceptance";
+import { DRIFT_KINDS, LIGHTS, readHolonView, SIDE_NAMES, type HolonDrift, type HolonSide } from "./holon";
 import { conditionDifferences, conditionsWarning, readCompare, type CompareImage } from "./compare";
 import { analyse, countsText, describeRegion, formatClock, formatWer, readTracks } from "./transcript";
 import {
@@ -945,6 +946,8 @@ function blockBody(node: UiNode): string {
       return provenanceMarkdown(props.stages, props.expected);
     case "Acceptance":
       return acceptanceMarkdown(props.criteria, props.columns);
+    case "Holon":
+      return holonMarkdown(props.view);
     case "Approval":
       return approvalMarkdown(props.changes, inline(props.title).trim() || null);
     case "Hosts":
@@ -2410,6 +2413,65 @@ function provenanceMarkdown(stages: Value | undefined, expected: Value | undefin
     return out.join("\n");
   });
   return paragraphs([head, `${escapeProse(chainSummary(chain))}${wanted}`, lines.join("\n")]);
+}
+
+function holonSideLine(name: string, side: HolonSide): string {
+  const look = LIGHTS[side.light];
+  const facts = [side.kind, side.source, side.by === null ? null : `by ${side.by}`, side.at === null ? null : `at ${side.at}`, side.expires === null ? null : `expires ${side.expires}`].filter((part) => part !== null);
+  const detail = side.detail === null ? "" : ` — ${escapeProse(side.detail)}`;
+  return `- ${look.glyph} **${name}** ${look.label}${detail}${facts.length === 0 ? "" : ` _(${facts.map(escapeProse).join(" · ")})_`}`;
+}
+
+function holonDriftLine(drift: HolonDrift): string {
+  const where = drift.side !== null ? ` (side ${drift.side})` : drift.seam !== null ? ` (seam to ${escapeProse(drift.seam)})` : "";
+  return `- ${LIGHTS.drift.glyph} **${DRIFT_KINDS[drift.kind].label}**${where}: ${escapeProse(drift.detail)}`;
+}
+
+function holonMarkdown(value: Value | undefined): string {
+  const read = readHolonView(value);
+  if (!read.ok) return `_(${read.error})_`;
+  const { focus, parent, children, seams, warnings } = read.view;
+  const below = (driftBelow: number) => (driftBelow > 0 ? ` · ${driftBelow} drift below` : "");
+  const head = [
+    `${LIGHTS[focus.light].glyph} **${escapeProse(focus.title)}** \`${focus.id}\` · ${escapeProse(focus.kind)} · ${escapeProse(focus.status)}${below(focus.driftBelow)}`,
+    parent === null
+      ? ""
+      : `Part of ${LIGHTS[parent.light].glyph} ${escapeProse(parent.title)} \`${parent.id}\` · ${escapeProse(parent.kind)} · ${escapeProse(parent.status)}${below(parent.driftBelow)}`,
+  ].filter((line) => line !== "");
+  const carriers = focus.carriedBy.map((carrier) => `${escapeProse(carrier.title)} \`${carrier.id}\``).join(", ");
+  const text = [
+    `**Why** ${focus.why === "" ? "_nothing says why_" : escapeProse(focus.why)}`,
+    `**Contract** ${escapeProse(focus.contract)}`,
+    carriers === "" ? "" : `**Carried by** ${carriers}`,
+  ].filter((line) => line !== "");
+  const sides = ["**Sides**", ...SIDE_NAMES.map((name) => holonSideLine(name, focus.sides[name]))];
+  const drift = focus.drift.length === 0 ? "" : ["**Drift**", ...focus.drift.map(holonDriftLine)].join("\n");
+  const code = focus.code.length === 0 ? "" : `**Code** ${focus.code.map((path) => `\`${path}\``).join(", ")}`;
+  const parts =
+    children.length === 0
+      ? ""
+      : [
+          `**Parts (${children.length})**`,
+          ...children.slice(0, MARKDOWN_ROWS).map((child) => `- ${LIGHTS[child.light].glyph} ${escapeProse(child.title)} \`${child.id}\` · ${escapeProse(child.kind)}${child.status === "active" ? "" : ` · ${escapeProse(child.status)}`}${child.childCount === 0 ? "" : ` · ${child.childCount} ${child.childCount === 1 ? "part" : "parts"}`}${below(child.driftBelow)}`),
+          moreLine(Math.min(children.length, MARKDOWN_ROWS), children.length, "part"),
+        ]
+          .filter((line) => line !== "")
+          .join("\n");
+  const seamLines =
+    seams.length === 0
+      ? ""
+      : [
+          `**Seams (${seams.length})**`,
+          ...seams.slice(0, MARKDOWN_ROWS).map((seam) => {
+            const notes = [seam.readOnly ? "read-only" : "", seam.exclusive ? "exclusive" : "", seam.drift === null ? "" : `drift: ${DRIFT_KINDS[seam.drift].label}`].filter((note) => note !== "");
+            return `- ${escapeProse(seam.fromTitle)} \`${seam.from}\` ${seam.readOnly ? "⇢" : "→"} ${escapeProse(seam.toTitle)} \`${seam.to}\` ${LIGHTS[seam.light].glyph}${notes.length === 0 ? "" : ` (${notes.join(", ")})`}: ${escapeProse(seam.contract)}`;
+          }),
+          moreLine(Math.min(seams.length, MARKDOWN_ROWS), seams.length, "seam"),
+        ]
+          .filter((line) => line !== "")
+          .join("\n");
+  const warning = warnings.length === 0 ? "" : ["**Warnings**", ...warnings.map((entry) => `- ${escapeProse(entry)}`)].join("\n");
+  return paragraphs([head.join("\n"), text.join("\n"), sides.join("\n"), drift, code, parts, seamLines, warning, `_Computed ${escapeProse(read.view.computedAt)} at ${escapeProse(read.view.commit)}_`]);
 }
 
 /** A check as one glyph: checked results filled, a claim 💬, nothing run ⚪, n/a ➖. */
