@@ -20,7 +20,7 @@ JSON, next to the code it describes, one holon per file. Example: [password-rese
 | `seams[]` | `{to, contract, readOnly?, exclusive?, proof?}`. `readOnly` (default false) draws dashed. `exclusive` (default false) means "the only writer to `to`". |
 | `proofs` | Keys `I`, `It`, `We`, `They`; a missing side is open. Value `{kind, source?, every?, by?}`. Machine kinds: `ci`, `metric`, `alert`, `file`, `ticket`, `formal`. Human kinds: `interview`, `confirmation`, `ai-review`. `every` is `<n>d`; human kinds default to and max out at `90d`. |
 
-Every field is required except those marked `?`; defaults are filled once by the parser. The card's Proof is its It side.
+A model is every `*.holon` under its root, except in `node_modules`, `.git` and any subdirectory that has its own `.holons/` directory: that is a separate model, like [fixtures/shop](fixtures/shop). Every field is required except those marked `?`; defaults are filled once by the parser. The card's Proof is its It side.
 
 Errors (`sandy holon check` exits 1): invalid JSON or schema, a duplicate id, an id that differs from the file name, an unknown slug in `partOf`, `seams[].to` or `carriedBy`, a cycle in `partOf`. Warning: more than 7 children ("<id> has <n> children: a level may be missing in between").
 

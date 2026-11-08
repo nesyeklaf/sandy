@@ -1,0 +1,24 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "seams": [
+    {
+      "to": "holon-extension",
+      "contract": "Reads holon-view/v0 views the extension computed",
+      "readOnly": true
+    }
+  ],
+  "proofs": {},
+  "id": "holon-genui",
+  "kind": "system",
+  "partOf": "holons",
+  "title": "Holons in genui",
+  "why": "People see a holon in chat as a card with its neighbourhood.",
+  "contract": "Renders any holon-view/v0 view and computes nothing.",
+  "code": [
+    "extensions/sandy/genui/"
+  ]
+}

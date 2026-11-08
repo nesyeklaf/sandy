@@ -1,0 +1,18 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "seams": [],
+  "proofs": {},
+  "id": "holon-extension",
+  "kind": "system",
+  "partOf": "holons",
+  "title": "Holon extension",
+  "why": "Holons are files in Git that Sandy checks, indexes and computes.",
+  "contract": "Reads holon/v0 files, computes lights, drift and holon-view/v0 views, and records evidence.",
+  "code": [
+    "extensions/sandy/holon/"
+  ]
+}
