@@ -593,8 +593,8 @@ enum Holons {
 }
 
 impl Holons {
-    fn open(parsed: &Parsed, ctx: &Context, store: &Store) -> Result<Holons, Failure> {
-        if parsed.flag("no-cache") {
+    fn open(single: bool, ctx: &Context, store: &Store) -> Result<Holons, Failure> {
+        if !single {
             return Ok(Holons::Loaded(Box::new(Model::load(
                 &ctx.root,
                 Vec::new(),
@@ -629,7 +629,10 @@ fn record_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let ctx = context(parsed)?;
     let store = open_store(parsed, &ctx)?;
-    let holons = Holons::open(parsed, &ctx, &store)?;
+    let single = invocation.command.path == "evidence record"
+        && parsed.value("file").is_none()
+        && parsed.value("jsonl").is_none();
+    let holons = Holons::open(single, &ctx, &store)?;
     let records = if invocation.command.path == "evidence import" {
         read_evidence_file(
             &ctx.cwd,
