@@ -292,7 +292,7 @@ fn resolve(tokens: &[String]) -> Result<Invocation, Failure> {
     })
 }
 
-fn resolve_root(root: Option<&str>, cwd: &Path) -> Result<PathBuf, Failure> {
+fn resolve_root(root: Option<&str>, cwd: &Path) -> Result<(PathBuf, Option<PathBuf>), Failure> {
     if let Some(root) = root {
         let absolute = normalize(&cwd.join(root));
         if !absolute.is_dir() {
@@ -301,9 +301,10 @@ fn resolve_root(root: Option<&str>, cwd: &Path) -> Result<PathBuf, Failure> {
                 format!("--root {root} is no directory"),
             ));
         }
-        return Ok(absolute);
+        return Ok((absolute, None));
     }
-    Ok(git::top_level(cwd).map_or_else(|| cwd.to_path_buf(), PathBuf::from))
+    let top = git::top_level(cwd).map(PathBuf::from);
+    Ok((top.clone().unwrap_or_else(|| cwd.to_path_buf()), top))
 }
 
 fn normalize(path: &Path) -> PathBuf {
@@ -331,13 +332,14 @@ fn clock_ms() -> i64 {
 struct Context {
     cwd: PathBuf,
     root: PathBuf,
+    top: Option<PathBuf>,
     now_ms: i64,
     commit: String,
 }
 
 fn context(parsed: &Parsed) -> Result<Context, Failure> {
     let cwd = std::env::current_dir().map_err(|error| fail("command_failed", error.to_string()))?;
-    let root = resolve_root(parsed.value("root"), &cwd)?;
+    let (root, top) = resolve_root(parsed.value("root"), &cwd)?;
     let now_ms = match parsed.value("now") {
         Some(now) if !is_iso_timestamp(now) => {
             return Err(
@@ -356,6 +358,7 @@ fn context(parsed: &Parsed) -> Result<Context, Failure> {
     Ok(Context {
         cwd,
         root,
+        top,
         now_ms,
         commit,
     })
@@ -365,7 +368,10 @@ fn open_store(parsed: &Parsed, ctx: &Context) -> Result<Store, Failure> {
     let path = match parsed.value("db") {
         Some(db) => ctx.cwd.join(db),
         None => {
-            let top = git::top_level(&ctx.root).map_or_else(|| ctx.root.clone(), PathBuf::from);
+            let top = match &ctx.top {
+                Some(top) => top.clone(),
+                None => git::top_level(&ctx.root).map_or_else(|| ctx.root.clone(), PathBuf::from),
+            };
             store::default_db_path(&top).ok_or_else(|| {
                 fail("no_data_dir", "no data directory for the holon database")
                     .hint("Pass --db <path>")
@@ -414,6 +420,18 @@ fn holon_not_found(id: &str, root: &Path) -> Failure {
 }
 
 fn cached_read(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), Failure> {
+    let started = std::time::Instant::now();
+    let result = cached_result(invocation, ctx);
+    if std::env::var_os("HOLON_TIMING").is_some() {
+        eprintln!(
+            "holon timing: core {:.3} ms",
+            started.elapsed().as_secs_f64() * 1000.0
+        );
+    }
+    result
+}
+
+fn cached_result(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let store = open_store(parsed, ctx)?;
     let code = GitCodeChanges::new(&ctx.root);
@@ -781,10 +799,11 @@ fn confirm_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
 fn export_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let cwd = std::env::current_dir().map_err(|error| fail("command_failed", error.to_string()))?;
-    let root = resolve_root(parsed.value("root"), &cwd)?;
+    let (root, top) = resolve_root(parsed.value("root"), &cwd)?;
     let ctx = Context {
         cwd,
         root,
+        top,
         now_ms: 0,
         commit: String::new(),
     };
