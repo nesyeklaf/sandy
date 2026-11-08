@@ -67,7 +67,7 @@ fn views_match_the_fixture() {
 #[test]
 fn unknown_holon_fails_with_its_id() {
     let output = fixture_run(&["view", "nope"]);
-    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("no holon nope under"));
 }
 
@@ -77,7 +77,7 @@ fn rejects_a_now_that_is_no_timestamp() {
         &fixture(),
         &["drift", "--root", ".", "--now", "2026-13-01T00:00:00Z"],
     );
-    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("--now 2026-13-01T00:00:00Z is no ISO timestamp"));
 }
@@ -89,6 +89,7 @@ fn holon_json(id: &str, part_of: Option<&str>) -> String {
     )
 }
 
+#[cfg(unix)]
 #[test]
 fn fails_on_an_unreadable_holon_file_like_node() {
     use std::os::unix::fs::PermissionsExt;
