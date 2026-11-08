@@ -60,7 +60,7 @@ export const MIGRATIONS: string[] = [
     exclusive INTEGER NOT NULL,
     PRIMARY KEY (root, from_id, idx)
   );
-  CREATE INDEX seams_by_target ON seams (root, to_id);
+  CREATE INDEX seams_by_target ON seams (root, to_id, from_id, idx);
   CREATE INDEX seams_exclusive ON seams (root, to_id, from_id) WHERE exclusive = 1;
   CREATE TABLE evidence (
     id INTEGER PRIMARY KEY,
