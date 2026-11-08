@@ -695,6 +695,8 @@ test("watchdog: a child bound by its own launch whose first turn started without
 // The turn rule. spawned(): bound T0 + 1 s, turn 1 acked at T0 + 3 s (pi-1, turn 1), turn 1 runs T0 + 2.5 s .. T0 + 10 s.
 const turnStart = (seq: number, at: number): TurnEvent => ({ seq, type: "started", at });
 const turnEnd = (seq: number, at: number): TurnEvent => ({ seq, type: "completed", at });
+const compactionStart = (seq: number, at: number): TurnEvent => ({ seq, type: "started", at, maintenance: true });
+const compactionEnd = (seq: number, at: number, outcome = "completed"): TurnEvent => ({ seq, type: "completed", at, outcome, maintenance: true });
 
 // Fetches a fresh policy at issuedAt and acks its nonce at ackedAt, as the extension does at a turn start.
 const ackTurn = (db: Db, delegationId: string, piSessionId: string, turn: number, issuedAt: number, ackedAt = issuedAt) => {
@@ -731,6 +733,25 @@ test("advanceTurns: an ack after the previous turn event and by min(window, next
   assert.equal(missingSeqs(events, [90, 450, 600], 1_000, 10_000), 3, "an ack after turn 2's turn/completed is not turn 2's");
   const open = advanceTurns(NO_TURN, events, acksAt(90, 250), 1_000, 10_000, false);
   assert.deepEqual([open.missing, open.state.open], [null, { seq: 5, at: 500, lowerAt: 400 }], "with events left to read, the newest turn waits for them");
+});
+
+test("advanceTurns: a compaction turn before a resumed turn needs no ack; the resumed turn takes the ack recorded after the compaction (thr_ze7djbcrdi, dlg_08171da7)", () => {
+  const stored = { checkedSeq: 2424, lastAt: 1794141725555, open: null };
+  const events = [compactionStart(2426, 1794142317212), compactionEnd(2429, 1794142317217), turnStart(2431, 1794142317943)];
+  const atStop = advanceTurns(stored, events, acksAt(1794142317879), WINDOW, 1794142337516, true);
+  assert.deepEqual([atStop.missing, atStop.state.open], [null, { seq: 2431, at: 1794142317943, lowerAt: 1794141725555 }], "the compaction events do not move the lower bound");
+  const decided = advanceTurns(stored, events, acksAt(1794142317879), WINDOW, 1794142317943 + WINDOW, true);
+  assert.deepEqual([decided.missing, decided.matches], [null, [{ nonce: "n0", turnSeq: 2431 }]]);
+});
+
+test("advanceTurns: a compaction turn that failed, was interrupted or skipped needs no ack either; a real turn after it without an ack is refused", () => {
+  for (const outcome of ["completed", "failed", "interrupted"]) {
+    const events = [turnStart(1, 100), turnEnd(2, 200), compactionStart(3, 300), compactionEnd(4, 310, outcome), turnStart(5, 400)];
+    assert.equal(missingSeqs(events, [90, 350], 1_000, 10_000), null, `${outcome} compaction, acked real turn`);
+    assert.equal(missingSeqs(events, [90], 1_000, 10_000), 5, `${outcome} compaction, unacked real turn`);
+  }
+  const running = advanceTurns(NO_TURN, [turnStart(1, 100), turnEnd(2, 200), compactionStart(3, 300)], acksAt(90), 1_000, 10_000, true);
+  assert.deepEqual([running.missing, running.state.open], [null, null], "a running compaction is not a turn to decide");
 });
 
 test("advanceTurns: one ack is one turn's; a later turn's ack does not repair an earlier unacked turn (review repro 1)", () => {

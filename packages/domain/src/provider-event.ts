@@ -52,6 +52,11 @@ export const threadEventTurnStatusSchema = z.enum([
 ]);
 export type ThreadEventTurnStatus = z.infer<typeof threadEventTurnStatusSchema>;
 
+export const threadEventTurnPurposeSchema = z.enum(["compaction"]);
+export type ThreadEventTurnPurpose = z.infer<
+  typeof threadEventTurnPurposeSchema
+>;
+
 const providerErrorCategoryValues = [
   "active-turn-not-steerable",
   "bad-request",
@@ -497,6 +502,7 @@ const unscopedProviderEventSchema = z.discriminatedUnion("type", [
     threadId: z.string(),
     providerThreadId: z.string(),
     parentToolCallId: z.string().optional(),
+    purpose: threadEventTurnPurposeSchema.optional(),
   }),
   z.object({
     type: z.literal("turn/completed"),
@@ -505,6 +511,7 @@ const unscopedProviderEventSchema = z.discriminatedUnion("type", [
     status: threadEventTurnStatusSchema,
     error: z.object({ message: z.string() }).optional(),
     providerCheckpointId: z.string().min(1).optional(),
+    purpose: threadEventTurnPurposeSchema.optional(),
   }),
   z
     .object({

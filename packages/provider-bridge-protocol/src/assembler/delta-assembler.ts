@@ -5,6 +5,7 @@ import type {
   ThreadEventItem,
   ThreadEventItemPresentation,
   ThreadEventItemStatus,
+  ThreadEventTurnPurpose as TurnPurpose,
 } from "@sandy/domain";
 import { threadScope, turnScope } from "@sandy/domain";
 import type { BridgeGrammarVersions } from "../handshake.js";
@@ -126,6 +127,7 @@ interface EventSink {
 
 interface ThreadAssemblyState {
   currentTurnId: string | undefined;
+  currentTurnPurpose: TurnPurpose | undefined;
   lastTurnId: string | undefined;
   pendingAccepted: ClientTurnRequestId[];
   openItemsByKey: Map<string, OpenItemState>;
@@ -235,6 +237,7 @@ export function createDeltaAssembler(
     }
     const created: ThreadAssemblyState = {
       currentTurnId: undefined,
+      currentTurnPurpose: undefined,
       lastTurnId: undefined,
       pendingAccepted: [],
       openItemsByKey: new Map(),
@@ -447,17 +450,20 @@ export function createDeltaAssembler(
   function ensureTurnOpen(
     state: ThreadAssemblyState,
     events: EventSink,
+    purpose?: TurnPurpose,
   ): string {
     if (state.currentTurnId !== undefined) {
       return state.currentTurnId;
     }
     const turnId = mintTurnId();
     state.currentTurnId = turnId;
+    state.currentTurnPurpose = purpose;
     events.push({
       type: "turn/started",
       threadId: UNSTAMPED_THREAD_ID,
       providerThreadId: "",
       scope: turnScope(turnId),
+      ...(purpose === undefined ? {} : { purpose }),
     });
     while (state.pendingAccepted.length > 0) {
       const clientRequestId = state.pendingAccepted.shift();
@@ -475,9 +481,20 @@ export function createDeltaAssembler(
     return turnId;
   }
 
+  function closingPurpose(
+    state: ThreadAssemblyState,
+    turnId: string,
+  ): { purpose?: TurnPurpose } {
+    return turnId === state.currentTurnId &&
+      state.currentTurnPurpose !== undefined
+      ? { purpose: state.currentTurnPurpose }
+      : {};
+  }
+
   function finishTurn(state: ThreadAssemblyState): void {
     state.lastTurnId = state.currentTurnId ?? state.lastTurnId;
     state.currentTurnId = undefined;
+    state.currentTurnPurpose = undefined;
     for (const [key, open] of [...state.openItemsByKey]) {
       if (!open.threadAttached) {
         state.openItemsByKey.delete(key);
@@ -1313,7 +1330,7 @@ export function createDeltaAssembler(
           });
           return;
         }
-        ensureTurnOpen(state, events);
+        ensureTurnOpen(state, events, delta.purpose);
         return;
       }
 
@@ -1350,6 +1367,7 @@ export function createDeltaAssembler(
           ...(delta.providerCheckpointId === undefined
             ? {}
             : { providerCheckpointId: delta.providerCheckpointId }),
+          ...closingPurpose(state, turnId),
         });
         finishTurn(state);
         return;
@@ -1953,6 +1971,7 @@ export function createDeltaAssembler(
             providerThreadId: "",
             scope: turnScope(turnId),
             status: "failed",
+            ...closingPurpose(state, turnId),
           });
           finishTurn(state);
         }
@@ -2140,6 +2159,7 @@ export function createDeltaAssembler(
           providerThreadId: "",
           scope: turnScope(turnId),
           status: "interrupted",
+          ...closingPurpose(state, turnId),
         });
         finishTurn(state);
         return;

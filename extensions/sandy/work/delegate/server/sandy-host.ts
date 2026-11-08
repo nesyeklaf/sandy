@@ -73,12 +73,14 @@ export function createSandyHosts(sandy: SandyHostApi, workers: Pick<WorkersLink,
     try {
       const rows = await sandy.sdk.threads.events.list({ threadId, types: ["turn/started", "turn/completed"], ...page });
       return rows.map((event): TurnEvent => {
-        if (event.type !== "turn/completed") return { seq: event.seq, type: "started", at: event.createdAt };
-        const data = event.data as { status?: unknown; error?: { message?: unknown } };
+        const data = (event.data ?? {}) as { status?: unknown; error?: { message?: unknown }; purpose?: unknown };
+        const maintenance = data.purpose === "compaction" ? { maintenance: true as const } : {};
+        if (event.type !== "turn/completed") return { seq: event.seq, type: "started", at: event.createdAt, ...maintenance };
         return {
           seq: event.seq, type: "completed", at: event.createdAt,
           ...(typeof data.status === "string" ? { outcome: data.status } : {}),
           ...(typeof data.error?.message === "string" ? { error: data.error.message } : {}),
+          ...maintenance,
         };
       });
     } catch (error) {

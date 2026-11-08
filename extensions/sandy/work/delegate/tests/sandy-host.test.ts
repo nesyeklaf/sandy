@@ -88,6 +88,30 @@ test("sandy-host status adapter: tokens and context come from the newest usage e
   assert.equal(await statusHost.lastEventAt("thr_x"), null);
 });
 
+test("sandy-host watchdog adapter: turn events SANDY marks as compaction turns come back as maintenance; other turns do not", async () => {
+  const events: FakeEvent[] = [
+    { seq: 1, type: "turn/started", createdAt: 100, data: { providerThreadId: "pi_1" } },
+    { seq: 2, type: "turn/completed", createdAt: 200, data: { providerThreadId: "pi_1", status: "completed" } },
+    { seq: 3, type: "turn/started", createdAt: 300, data: { providerThreadId: "pi_1", purpose: "compaction" } },
+    { seq: 4, type: "turn/completed", createdAt: 310, data: { providerThreadId: "pi_1", status: "failed", error: { message: "boom" }, purpose: "compaction" } },
+    { seq: 5, type: "turn/started", createdAt: 400, data: { providerThreadId: "pi_1", purpose: "something-else" } },
+  ];
+  const { sandy } = fakeSandy({ descendants: {} });
+  const threads = sandy.sdk.threads as unknown as Record<string, unknown>;
+  threads.events = {
+    list: async ({ types, limit }: { types?: string[]; limit: string }) =>
+      events.filter((event) => types === undefined || types.includes(event.type)).slice(0, Number(limit)),
+  };
+  const { watchdogHost } = createSandyHosts(sandy);
+  assert.deepEqual(await watchdogHost.turnEventsAfter("thr_x", null, 10), [
+    { seq: 1, type: "started", at: 100 },
+    { seq: 2, type: "completed", at: 200, outcome: "completed" },
+    { seq: 3, type: "started", at: 300, maintenance: true },
+    { seq: 4, type: "completed", at: 310, outcome: "failed", error: "boom", maintenance: true },
+    { seq: 5, type: "started", at: 400 },
+  ]);
+});
+
 const reserve = (db: Db, now: number) => {
   const result = admit(db, { rootThreadId: "thr_parent", callerThreadId: "thr_parent", kind: "delegate", agent: "scout", inputHash: "h" }, DEFAULT_SETTINGS, now);
   assert.ok(result.ok);
