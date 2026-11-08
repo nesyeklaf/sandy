@@ -75,7 +75,7 @@ describe("toMarkdown: Holon", () => {
     expect(out).toContain("- ◇ **They** expired — Expired on 2026-07-30");
     expect(out).toContain("- ◇ **expired** (side They): Expired on 2026-07-30");
     expect(out).toContain("**Code** `apps/account/reset.ts`");
-    expect(out).toContain("- ◇ Reset rate limit · function · proposed · 1 drift below");
+    expect(out).toContain("- ◇ Reset rate limit · operation · proposed · 1 drift below");
     expect(out).toContain("- Password reset → Mail ●: Sends only to verified addresses");
   });
 

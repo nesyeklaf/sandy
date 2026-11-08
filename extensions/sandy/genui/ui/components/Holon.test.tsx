@@ -51,7 +51,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function render(view: Value | undefined): void {
+function render(view: Value): void {
   act(() =>
     root.render(
       <UiRuntimeContext value={runtime}>
@@ -86,9 +86,9 @@ describe("Holon", () => {
     expect(text()).toContain("Account service");
     expect(text()).toContain("4 drift below");
     expect(labels('ul[aria-label="Parts"] li').map((row) => row?.replace(/\s+/g, " "))).toEqual([
-      "Reset mailfunction1 drift below",
-      "Reset rate limitfunctionproposed1 drift below",
-      "Reset tokenfunction",
+      "◇Reset mailoperation1 drift below",
+      "◇Reset rate limitoperationproposed1 drift below",
+      "○Reset tokenoperation",
     ]);
     expect(lights("Parts")).toEqual(["drift", "drift", "open"]);
   });
@@ -112,8 +112,8 @@ describe("Holon", () => {
 
   it("shows the sign-in card with a side per light", () => {
     render(fixture("view-sign-in"));
-    expect(lights("Sides")).toHaveLength(4);
-    expect(text()).toContain("Sign in");
+    expect(lights("Sides")).toEqual(["soft", "open", "claimed", "open"]);
+    expect(text()).toContain("Sign-in");
   });
 
   it("shows warnings", () => {
@@ -130,7 +130,7 @@ describe("Holon", () => {
   });
 
   it("answers a missing view with an error line", () => {
-    render(undefined);
+    render(null);
     expect(text()).toContain("needs a holon-view/v0 object");
   });
 

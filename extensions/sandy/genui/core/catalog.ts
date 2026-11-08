@@ -625,8 +625,6 @@ export const COMPONENTS = {
   Holon: {
     group: "Evidence",
     params: [{ name: "view", kind: "any" }],
-    summary:
-      "a holon-view/v0 object from `sandy holon view <slug> --json`, usually Holon(Load(\"$SANDY_THREAD_STORAGE/view.json\")): the holon's Why, Contract, four sides with lights, its drift, parent, parts and seams; it shows the fields as given and computes nothing",
   },
   Transcript: {
     group: "Evidence",
@@ -638,7 +636,7 @@ export const COMPONENTS = {
     group: "Evidence",
     params: [{ name: "stages", kind: "list" }, { name: "expected", kind: "any", optional: true }],
     summary:
-      "which build/revision is really installed or deployed where: [{name, status, facts?: {branch, sha, build, device}}], source to live; expected flags mismatches",
+      "which build/revision is really installed or deployed where: [{name, status, facts?: {branch, sha, build, device}}]; expected flags mismatches",
   },
   Approval: {
     group: "Ops",
