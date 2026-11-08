@@ -15,6 +15,7 @@ import {
   threadEventPlanStepSchema,
   threadEventSearchModeSchema,
   threadEventTokenUsageBreakdownSchema,
+  threadEventTurnPurposeSchema,
   threadEventTurnStatusSchema,
   threadEventWarningCategorySchema,
   threadUsageCostSchema,
@@ -231,6 +232,7 @@ export const threadDeltaSchema = z.discriminatedUnion("kind", [
     kind: z.literal("turn.open"),
     providerTurnId: providerTurnIdSchema.optional(),
     parentRef: deltaKeyPartSchema.optional(),
+    purpose: threadEventTurnPurposeSchema.optional(),
   }),
 
   z.object({

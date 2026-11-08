@@ -54,6 +54,25 @@ describe("delta assembler", () => {
     });
   });
 
+  it("marks a turn opened for compaction on its turn/started and turn/completed only", () => {
+    const assembler = createAssembler();
+    const compaction = [
+      ...assemble(assembler, { kind: "turn.open", purpose: "compaction" }),
+      ...assemble(assembler, { kind: "turn.boundary", status: "failed", error: { message: "boom" } }),
+    ];
+    expect(compaction).toEqual([
+      expect.objectContaining({ type: "turn/started", purpose: "compaction" }),
+      expect.objectContaining({ type: "turn/completed", status: "failed", purpose: "compaction" }),
+    ]);
+    const agent = [
+      ...assemble(assembler, { kind: "turn.open" }),
+      ...assemble(assembler, { kind: "turn.open", purpose: "compaction" }),
+      ...assemble(assembler, { kind: "turn.boundary", status: "completed" }),
+    ];
+    expect(agent.map((event) => event.type)).toEqual(["turn/started", "turn/completed"]);
+    expect(agent.some((event) => "purpose" in event)).toBe(false);
+  });
+
   it("emits accepted input immediately into an already-open turn", () => {
     const assembler = createAssembler();
     assemble(assembler, { kind: "turn.open" });
