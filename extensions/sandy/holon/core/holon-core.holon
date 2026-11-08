@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "id": "holon-core",
+  "kind": "container",
+  "partOf": "holon-extension",
+  "title": "Holon core",
+  "why": "Lights, drift and views must come out the same whether a CLI, an index or a test computes them.",
+  "contract": "Given holon files, confirmations, evidence, a time and a commit, computes check, drift and view outputs exactly as contract.md defines them.",
+  "code": [
+    "extensions/sandy/holon/core/"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/holon/core/model.test.ts"
+    }
+  }
+}
