@@ -1,6 +1,9 @@
 mod args;
+mod cache;
+mod detect;
 mod git;
 mod render;
+mod snapshot;
 mod store;
 
 use args::{choice, flag, list, stdin, usage_line, value, ArgError, Parsed, Spec};
@@ -410,9 +413,42 @@ fn holon_not_found(id: &str, root: &Path) -> Failure {
     .hint("List them with holon check")
 }
 
+fn cached_read(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), Failure> {
+    let parsed = &invocation.parsed;
+    let store = open_store(parsed, ctx)?;
+    let code = GitCodeChanges::new(&ctx.root);
+    let env = EvalEnv {
+        now_ms: ctx.now_ms,
+        commit: ctx.commit.clone(),
+        code: &code,
+    };
+    let path = invocation.command.path;
+    cache::sync(&store, &ctx.root, &env, path == "check")?;
+    match path {
+        "check" => {
+            let check = cache::check(&store)?;
+            let code = u8::from(!check.errors.is_empty());
+            Ok((output(parsed, &check, render::render_check), code))
+        }
+        "drift" => Ok((
+            output(parsed, &cache::drift(&store, &env)?, render::render_drift),
+            0,
+        )),
+        _ => {
+            let slug = invocation.argument.as_deref().expect("checked slug");
+            let view = cache::view(&store, &ctx.root, &env, slug)?
+                .ok_or_else(|| holon_not_found(slug, &ctx.root))?;
+            Ok((output(parsed, &view, render::render_view), 0))
+        }
+    }
+}
+
 fn read_command(invocation: &Invocation) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let ctx = context(parsed)?;
+    if !parsed.flag("no-cache") && parsed.value("evidence").is_none() {
+        return cached_read(invocation, &ctx);
+    }
     let model = &load(parsed, &ctx)?;
     if invocation.command.path == "check" {
         let check = model.check();

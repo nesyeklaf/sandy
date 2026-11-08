@@ -18,6 +18,17 @@ CREATE TABLE IF NOT EXISTS evidence (
     record_json TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS evidence_by_side ON evidence (root, holon, side, at_ms, id);
+CREATE TABLE IF NOT EXISTS cache_dirty (
+    root TEXT NOT NULL,
+    holon TEXT NOT NULL,
+    PRIMARY KEY (root, holon)
+) WITHOUT ROWID;
+CREATE TRIGGER IF NOT EXISTS evidence_inserted AFTER INSERT ON evidence BEGIN
+    INSERT OR IGNORE INTO cache_dirty (root, holon) VALUES (new.root, new.holon);
+END;
+CREATE TRIGGER IF NOT EXISTS evidence_deleted AFTER DELETE ON evidence BEGIN
+    INSERT OR IGNORE INTO cache_dirty (root, holon) VALUES (old.root, old.holon);
+END;
 ";
 
 pub fn default_db_path(top_level: &Path) -> Option<PathBuf> {
@@ -30,7 +41,7 @@ pub fn default_db_path(top_level: &Path) -> Option<PathBuf> {
     Some(dirs::data_dir()?.join("holon").join(format!("{name}.db")))
 }
 
-fn store_error(error: rusqlite::Error) -> String {
+pub fn store_error(error: rusqlite::Error) -> String {
     format!("holon database: {error}")
 }
 
@@ -62,6 +73,23 @@ impl Store {
             .map_err(store_error)?;
         let rows = statement
             .query_map([&self.root], |row| row.get::<_, String>(0))
+            .map_err(store_error)?;
+        let mut records = Vec::new();
+        for row in rows {
+            records.push(decode_evidence(&row.map_err(store_error)?)?);
+        }
+        Ok(records)
+    }
+
+    pub fn holon_evidence(&self, holon: &str) -> Result<Vec<Evidence>, String> {
+        let mut statement = self
+            .conn
+            .prepare_cached(
+                "SELECT record_json FROM evidence WHERE root = ? AND holon = ? ORDER BY id",
+            )
+            .map_err(store_error)?;
+        let rows = statement
+            .query_map([&self.root, holon], |row| row.get::<_, String>(0))
             .map_err(store_error)?;
         let mut records = Vec::new();
         for row in rows {
