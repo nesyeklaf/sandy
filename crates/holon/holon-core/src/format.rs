@@ -432,8 +432,46 @@ fn parse_seam(issues: &mut Issues, path: &str, value: Option<&Value>) -> Option<
     })
 }
 
+const UNPAIRED_SURROGATE: &str = "invalid JSON: unpaired surrogate in a string";
+
+fn is_surrogate_error(error: &serde_json::Error) -> bool {
+    let message = error.to_string();
+    message.starts_with("lone leading surrogate in hex escape")
+        || message.starts_with("unexpected end of hex escape")
+}
+
+fn without_surrogate_escapes(text: &str) -> String {
+    let mut bytes = text.as_bytes().to_vec();
+    let mut index = 0;
+    while index + 1 < bytes.len() {
+        if bytes[index] != b'\\' {
+            index += 1;
+            continue;
+        }
+        if bytes[index + 1] == b'u' && index + 6 <= bytes.len() {
+            let code = std::str::from_utf8(&bytes[index + 2..index + 6])
+                .ok()
+                .and_then(|hex| u16::from_str_radix(hex, 16).ok());
+            if code.is_some_and(|code| (0xD800..=0xDFFF).contains(&code)) {
+                bytes[index + 2..index + 6].copy_from_slice(b"FFFD");
+            }
+        }
+        index += 2;
+    }
+    String::from_utf8(bytes).expect("only ASCII hex digits were replaced")
+}
+
 fn parse_json(text: &str) -> Result<Value, String> {
-    serde_json::from_str(text).map_err(|error| format!("invalid JSON: {error}"))
+    match serde_json::from_str(text) {
+        Ok(value) => Ok(value),
+        Err(error) if is_surrogate_error(&error) => {
+            match serde_json::from_str::<Value>(&without_surrogate_escapes(text)) {
+                Ok(_) => Err(UNPAIRED_SURROGATE.to_string()),
+                Err(syntax) => Err(format!("invalid JSON: {syntax}")),
+            }
+        }
+        Err(error) => Err(format!("invalid JSON: {error}")),
+    }
 }
 
 pub fn parse_holon(text: &str) -> Result<Holon, String> {
@@ -871,6 +909,51 @@ mod tests {
         assert!(parse_evidence_lines(&next_line)
             .unwrap_err()
             .starts_with("line 1: invalid JSON:"));
+    }
+
+    const UNPAIRED: &str = "invalid JSON: unpaired surrogate in a string";
+
+    #[test]
+    fn rejects_unpaired_surrogates_in_holons() {
+        let text = with(serde_json::json!({ "title": "TITLE", "carriedBy": ["carrier"] }));
+        for (needle, escape) in [
+            ("TITLE", r"a\ud800b"),
+            ("TITLE", r"\udc00"),
+            ("TITLE", r"\ud800\u0041"),
+            ("TITLE", r"\ud800\n"),
+            ("carrier", r"\ud83d"),
+        ] {
+            let broken = text.replace(needle, escape);
+            assert_eq!(parse_holon(&broken), Err(UNPAIRED.to_string()), "{broken}");
+        }
+        let key = text.replacen('{', r#"{"\ud800":1,"#, 1);
+        assert_eq!(parse_holon(&key), Err(UNPAIRED.to_string()));
+        let pair = parse_holon(&text.replace("TITLE", r"\ud83c\udf89")).unwrap();
+        assert_eq!(pair.title, "\u{1f389}");
+    }
+
+    #[test]
+    fn rejects_unpaired_surrogates_in_confirmations_and_evidence() {
+        assert_eq!(
+            parse_confirmation(r#"{"format":"holon-confirmation/v0","answer":"\ud800"}"#),
+            Err(UNPAIRED.to_string())
+        );
+        assert_eq!(
+            parse_evidence_lines("\n{\"holon\":\"a\",\"detail\":\"\\udfff\"}\n"),
+            Err(format!("line 2: {UNPAIRED}"))
+        );
+    }
+
+    #[test]
+    fn reports_a_syntax_error_before_an_unpaired_surrogate() {
+        let error = parse_holon(r#"{"a":"\ud800",}"#).unwrap_err();
+        assert!(error.starts_with("invalid JSON: "), "{error}");
+        assert_ne!(error, UNPAIRED);
+        let escaped_backslash = parse_holon(r#"{"a":"\\ud800"}"#).unwrap_err();
+        assert!(
+            escaped_backslash.starts_with("invalid holon/v0: "),
+            "{escaped_backslash}"
+        );
     }
 
     #[test]
