@@ -5,6 +5,7 @@ mod git;
 mod render;
 mod snapshot;
 mod store;
+mod timing;
 
 use args::{choice, flag, list, stdin, usage_line, value, ArgError, Parsed, Spec};
 use git::GitCodeChanges;
@@ -421,11 +422,14 @@ fn holon_not_found(id: &str, root: &Path) -> Failure {
 
 fn cached_read(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), Failure> {
     let started = std::time::Instant::now();
+    timing::start();
     let result = cached_result(invocation, ctx);
-    if std::env::var_os("HOLON_TIMING").is_some() {
+    if timing::enabled() {
+        timing::mark("render");
         eprintln!(
-            "holon timing: core {:.3} ms",
-            started.elapsed().as_secs_f64() * 1000.0
+            "holon timing: core {:.3} ms ({})",
+            started.elapsed().as_secs_f64() * 1000.0,
+            timing::summary()
         );
     }
     result
@@ -434,6 +438,7 @@ fn cached_read(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), F
 fn cached_result(invocation: &Invocation, ctx: &Context) -> Result<(String, u8), Failure> {
     let parsed = &invocation.parsed;
     let store = open_store(parsed, ctx)?;
+    timing::mark("open");
     let code = GitCodeChanges::new(&ctx.root);
     let env = EvalEnv {
         now_ms: ctx.now_ms,
@@ -442,6 +447,7 @@ fn cached_result(invocation: &Invocation, ctx: &Context) -> Result<(String, u8),
     };
     let path = invocation.command.path;
     cache::sync(&store, &ctx.root, &env, path == "check")?;
+    timing::mark("sync");
     match path {
         "check" => {
             let check = cache::check(&store)?;

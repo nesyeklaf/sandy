@@ -113,32 +113,6 @@ fn join_into<'b>(buffer: &'b mut PathBuf, root: &Path, relative: &str) -> &'b Pa
     buffer
 }
 
-pub fn changed_files(root: &Path, snapshot: &Snapshot) -> Vec<usize> {
-    snapshot
-        .files
-        .par_iter()
-        .enumerate()
-        .map_init(PathBuf::new, |buffer, (index, file)| {
-            let now = stat_file(join_into(buffer, root, &file.path));
-            (file.stat != now || is_racy(file.stat, snapshot.taken_ns)).then_some(index)
-        })
-        .flatten()
-        .collect()
-}
-
-pub fn changed_dirs(root: &Path, snapshot: &Snapshot) -> Vec<usize> {
-    snapshot
-        .dirs
-        .par_iter()
-        .enumerate()
-        .map_init(PathBuf::new, |buffer, (index, dir)| {
-            let now = stat(join_into(buffer, root, &dir.path));
-            (dir.stat != now || is_racy(dir.stat, snapshot.taken_ns)).then_some(index)
-        })
-        .flatten()
-        .collect()
-}
-
 fn put_u32(out: &mut Vec<u8>, value: usize) {
     let value = u32::try_from(value).expect("snapshot entry fits u32");
     out.extend_from_slice(&value.to_le_bytes());
@@ -261,6 +235,10 @@ struct Stats<'b> {
     dirs: Vec<(&'b str, Option<Stat>)>,
 }
 
+fn sorted(entries: &[(&str, Option<Stat>)]) -> bool {
+    entries.windows(2).all(|pair| pair[0].0 < pair[1].0)
+}
+
 fn read_stats(bytes: &[u8]) -> Option<Stats<'_>> {
     let mut reader = Reader { bytes, at: 0 };
     if reader.take(MAGIC.len())? != MAGIC {
@@ -276,36 +254,51 @@ fn read_stats(bytes: &[u8]) -> Option<Stats<'_>> {
     let dirs = (0..dir_count)
         .map(|_| entry())
         .collect::<Option<Vec<_>>>()?;
-    reader.done().then_some(Stats {
+    (reader.done() && sorted(&files) && sorted(&dirs)).then_some(Stats {
         taken_ns,
         files,
         dirs,
     })
 }
 
-pub fn unchanged(root: &Path, stats: &[u8]) -> bool {
-    let Some(stats) = read_stats(stats) else {
-        return false;
-    };
-    let same = |buffer: &mut PathBuf, path: &str, before: Option<Stat>, file: bool| {
-        let path = join_into(buffer, root, path);
-        let now = if file { stat_file(path) } else { stat(path) };
-        before == now && !is_racy(before, stats.taken_ns)
-    };
-    stats
-        .files
+pub struct Dirty {
+    pub taken_ns: i64,
+    pub files: Vec<usize>,
+    pub dirs: Vec<usize>,
+}
+
+impl Dirty {
+    pub fn is_empty(&self) -> bool {
+        self.files.is_empty() && self.dirs.is_empty()
+    }
+}
+
+fn dirty_entries(
+    root: &Path,
+    entries: &[(&str, Option<Stat>)],
+    file: bool,
+    taken_ns: i64,
+) -> Vec<usize> {
+    entries
         .par_iter()
-        .map_init(PathBuf::new, |buffer, (path, before)| {
-            same(buffer, path, *before, true)
+        .enumerate()
+        .map_init(PathBuf::new, |buffer, (index, (path, before))| {
+            let path = join_into(buffer, root, path);
+            let now = if file { stat_file(path) } else { stat(path) };
+            (*before != now || is_racy(*before, taken_ns)).then_some(index)
         })
-        .all(|same| same)
-        && stats
-            .dirs
-            .par_iter()
-            .map_init(PathBuf::new, |buffer, (path, before)| {
-                same(buffer, path, *before, false)
-            })
-            .all(|same| same)
+        .flatten()
+        .collect()
+}
+
+pub fn dirty(root: &Path, stats: &[u8]) -> Option<Dirty> {
+    let taken_ns = clock_ns();
+    let stats = read_stats(stats)?;
+    Some(Dirty {
+        taken_ns,
+        files: dirty_entries(root, &stats.files, true, stats.taken_ns),
+        dirs: dirty_entries(root, &stats.dirs, false, stats.taken_ns),
+    })
 }
 
 pub fn decode(stats: &[u8], details: &[u8]) -> Option<Snapshot> {
@@ -371,6 +364,13 @@ mod tests {
             taken_ns: 1_700_000_000_000_000_000,
             files: vec![
                 FileEntry {
+                    path: ".holons/confirmations/b/x.json".to_string(),
+                    confirmation: true,
+                    stat: None,
+                    hash: [0; 20],
+                    id: None,
+                },
+                FileEntry {
                     path: "a/b.holon".to_string(),
                     confirmation: false,
                     stat: Some(Stat {
@@ -381,13 +381,6 @@ mod tests {
                     hash: [9; 20],
                     id: Some("b".to_string()),
                 },
-                FileEntry {
-                    path: ".holons/confirmations/b/x.json".to_string(),
-                    confirmation: true,
-                    stat: None,
-                    hash: [0; 20],
-                    id: None,
-                },
             ],
             dirs: vec![DirEntry {
                 path: String::new(),
@@ -395,12 +388,17 @@ mod tests {
                 stat: None,
             }],
         };
+        let snapshot_clone = snapshot.clone();
         let encoded = encode(&snapshot);
         assert_eq!(decode(&encoded.stats, &encoded.details), Some(snapshot));
         let details = &encoded.details[..encoded.details.len() - 1];
         assert_eq!(decode(&encoded.stats, details), None);
+        let mut swapped = snapshot_clone.clone();
+        swapped.files.swap(0, 1);
+        let unsorted = encode(&swapped);
+        assert_eq!(decode(&unsorted.stats, &unsorted.details), None);
         let stats = &encoded.stats[..encoded.stats.len() - 1];
         assert_eq!(decode(stats, &encoded.details), None);
-        assert!(!unchanged(Path::new("."), stats));
+        assert!(dirty(Path::new("."), stats).is_none());
     }
 }

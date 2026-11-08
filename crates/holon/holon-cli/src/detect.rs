@@ -1,10 +1,9 @@
-use crate::snapshot::{
-    changed_dirs, changed_files, clock_ns, read, stat, stat_file, DirEntry, FileEntry, Snapshot,
-};
+use crate::snapshot::{read, stat, stat_file, DirEntry, Dirty, FileEntry, Snapshot};
 use holon_core::model::{decode_text, read_confirmation_file, read_holon_file, HolonFile};
 use holon_core::scan::{list_confirmation_dir, list_holon_dir, walk_confirmations, walk_holons};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::ops::Range;
 use std::path::Path;
 
 pub struct Detected {
@@ -20,91 +19,110 @@ fn parent(path: &str) -> &str {
     path.rsplit_once('/').map_or("", |(parent, _)| parent)
 }
 
-#[derive(Default)]
-struct Children {
-    files: Vec<String>,
-    dirs: Vec<String>,
+fn subtree<T>(entries: &[T], path: impl Fn(&T) -> &str, dir: &str) -> Range<usize> {
+    if dir.is_empty() {
+        return 0..entries.len();
+    }
+    let low = format!("{dir}/");
+    let high = format!("{dir}0");
+    let start = entries.partition_point(|entry| path(entry) < low.as_str());
+    let end = entries.partition_point(|entry| path(entry) < high.as_str());
+    start..end.max(start)
 }
 
-struct Work {
-    files: HashMap<String, FileEntry>,
-    dirs: HashMap<String, DirEntry>,
-    removed: Vec<FileEntry>,
+fn position<T>(entries: &[T], path: impl Fn(&T) -> &str, wanted: &str) -> Option<usize> {
+    entries
+        .binary_search_by(|entry| path(entry).cmp(wanted))
+        .ok()
+}
+
+fn file_path(file: &FileEntry) -> &str {
+    &file.path
+}
+
+fn dir_path(dir: &DirEntry) -> &str {
+    &dir.path
+}
+
+struct Work<'s> {
+    old: &'s Snapshot,
+    removed_files: HashSet<usize>,
+    removed_dirs: HashSet<usize>,
     added: Vec<(String, bool)>,
+    added_dirs: Vec<DirEntry>,
 }
 
-impl Work {
-    fn remove_subtree(&mut self, dir: &str, index: &HashMap<String, Children>) {
-        self.dirs.remove(dir);
-        let Some(children) = index.get(dir) else {
-            return;
+impl Work<'_> {
+    fn remove_subtree(&mut self, at: usize) {
+        let dir = &self.old.dirs[at].path;
+        self.removed_dirs.insert(at);
+        self.removed_dirs
+            .extend(subtree(&self.old.dirs, dir_path, dir));
+        self.removed_files
+            .extend(subtree(&self.old.files, file_path, dir));
+    }
+
+    fn known_dir(&self, path: &str) -> bool {
+        position(&self.old.dirs, dir_path, path).is_some()
+            || self.added_dirs.iter().any(|dir| dir.path == path)
+    }
+
+    fn relist(&mut self, root: &Path, dir: &DirEntry) {
+        let listing = if dir.confirmation {
+            list_confirmation_dir(root, &dir.path)
+        } else {
+            list_holon_dir(root, &dir.path)
         };
-        for file in &children.files {
-            if let Some(entry) = self.files.remove(file) {
-                self.removed.push(entry);
+        let listed_files: HashSet<&String> = listing.files.iter().collect();
+        let listed_dirs: HashSet<&String> = listing.dirs.iter().collect();
+        let old = self.old;
+        for at in subtree(&old.files, file_path, &dir.path) {
+            let file = &old.files[at].path;
+            if parent(file) == dir.path && !listed_files.contains(file) {
+                self.removed_files.insert(at);
             }
         }
-        for sub in &children.dirs {
-            self.remove_subtree(sub, index);
+        for at in subtree(&old.dirs, dir_path, &dir.path) {
+            let sub = &old.dirs[at].path;
+            if !sub.is_empty()
+                && parent(sub) == dir.path
+                && !listed_dirs.contains(sub)
+                && !self.removed_dirs.contains(&at)
+            {
+                self.remove_subtree(at);
+            }
         }
-    }
-
-    fn add_dir(&mut self, path: String, confirmation: bool) {
-        self.dirs.insert(
-            path.clone(),
-            DirEntry {
-                path,
-                confirmation,
-                stat: None,
-            },
-        );
-    }
-}
-
-fn relist(root: &Path, work: &mut Work, dir: &DirEntry, index: &HashMap<String, Children>) {
-    let listing = if dir.confirmation {
-        list_confirmation_dir(root, &dir.path)
-    } else {
-        list_holon_dir(root, &dir.path)
-    };
-    let listed_files: HashSet<&String> = listing.files.iter().collect();
-    let listed_dirs: HashSet<&String> = listing.dirs.iter().collect();
-    if let Some(children) = index.get(&dir.path) {
-        for file in &children.files {
-            if !listed_files.contains(file) {
-                if let Some(entry) = work.files.remove(file) {
-                    work.removed.push(entry);
+        for file in listing.files {
+            let known = position(&old.files, file_path, &file).is_some()
+                || self.added.iter().any(|(added, _)| *added == file);
+            if !known {
+                self.added.push((file, dir.confirmation));
+            }
+        }
+        for sub in listing.dirs {
+            if self.known_dir(&sub) {
+                continue;
+            }
+            let mut dirs = Vec::new();
+            let files = if dir.confirmation {
+                let mut files = Vec::new();
+                walk_confirmations(root, &sub, &mut files, &mut dirs);
+                files
+            } else {
+                walk_holons(root, &sub, &mut dirs)
+            };
+            for path in dirs {
+                if !self.known_dir(&path) {
+                    self.added_dirs.push(DirEntry {
+                        path,
+                        confirmation: dir.confirmation,
+                        stat: None,
+                    });
                 }
             }
+            self.added
+                .extend(files.into_iter().map(|file| (file, dir.confirmation)));
         }
-        for sub in &children.dirs {
-            if !listed_dirs.contains(sub) {
-                work.remove_subtree(sub, index);
-            }
-        }
-    }
-    for file in listing.files {
-        if !work.files.contains_key(&file) {
-            work.added.push((file, dir.confirmation));
-        }
-    }
-    for sub in listing.dirs {
-        if work.dirs.contains_key(&sub) {
-            continue;
-        }
-        let mut dirs = Vec::new();
-        let files = if dir.confirmation {
-            let mut files = Vec::new();
-            walk_confirmations(root, &sub, &mut files, &mut dirs);
-            files
-        } else {
-            walk_holons(root, &sub, &mut dirs)
-        };
-        for path in dirs {
-            work.add_dir(path, dir.confirmation);
-        }
-        work.added
-            .extend(files.into_iter().map(|file| (file, dir.confirmation)));
     }
 }
 
@@ -147,131 +165,201 @@ fn reread(
     Ok(Outcome::New(entry, Some(Box::new(file))))
 }
 
-pub fn detect(root: &Path, old: Snapshot) -> Result<Detected, String> {
-    let taken_ns = clock_ns();
-    let dirty_dirs = changed_dirs(root, &old);
-    let dirty_files = changed_files(root, &old);
-    let mut detected = Detected {
+impl Detected {
+    fn record(&mut self, confirmation: bool, id: Option<String>) {
+        let ids = if confirmation {
+            &mut self.confirmation_ids
+        } else {
+            &mut self.holon_ids
+        };
+        ids.extend(id);
+    }
+}
+
+pub fn detect(root: &Path, old: Snapshot, dirty: &Dirty) -> Result<Detected, String> {
+    let detected = Detected {
         snapshot: Snapshot::default(),
-        changed: !dirty_dirs.is_empty() || !dirty_files.is_empty(),
+        changed: !dirty.is_empty(),
         files_changed: false,
         holon_ids: HashSet::new(),
         confirmation_ids: HashSet::new(),
         parsed: HashMap::new(),
     };
     if !detected.changed {
-        detected.snapshot = old;
-        return Ok(detected);
+        return Ok(Detected {
+            snapshot: old,
+            ..detected
+        });
     }
-    let mut index: HashMap<String, Children> = HashMap::new();
-    if !dirty_dirs.is_empty() {
-        for file in &old.files {
-            index
-                .entry(parent(&file.path).to_string())
-                .or_default()
-                .files
-                .push(file.path.clone());
-        }
-        for dir in old.dirs.iter().filter(|dir| !dir.path.is_empty()) {
-            index
-                .entry(parent(&dir.path).to_string())
-                .or_default()
-                .dirs
-                .push(dir.path.clone());
-        }
-    }
-    let mut relisted: Vec<DirEntry> = dirty_dirs.iter().map(|at| old.dirs[*at].clone()).collect();
-    relisted.sort_by_key(|dir| dir.path.matches('/').count() + usize::from(!dir.path.is_empty()));
-    let dirty_paths: Vec<(String, bool)> = dirty_files
-        .iter()
-        .map(|at| (old.files[*at].path.clone(), old.files[*at].confirmation))
-        .collect();
-    let mut work = Work {
-        files: old
+    if dirty.dirs.is_empty() {
+        let outcomes: Vec<Result<Outcome, String>> = dirty
             .files
-            .into_iter()
-            .map(|file| (file.path.clone(), file))
-            .collect(),
-        dirs: old
-            .dirs
-            .into_iter()
-            .map(|dir| (dir.path.clone(), dir))
-            .collect(),
-        removed: Vec::new(),
-        added: Vec::new(),
-    };
-    for dir in &relisted {
-        if work.dirs.contains_key(&dir.path) {
-            relist(root, &mut work, dir, &index);
+            .par_iter()
+            .map(|at| {
+                let file = &old.files[*at];
+                reread(root, &file.path, file.confirmation, Some(file))
+            })
+            .collect();
+        let outcomes = outcomes.into_iter().collect::<Result<Vec<_>, String>>()?;
+        if !outcomes
+            .iter()
+            .any(|outcome| matches!(outcome, Outcome::Gone))
+        {
+            return Ok(in_place(old, dirty, outcomes, detected));
         }
     }
-    let mut targets: Vec<(String, bool)> = dirty_paths
-        .into_iter()
-        .filter(|(path, _)| work.files.contains_key(path))
-        .collect();
-    targets.append(&mut work.added);
-    let outcomes: Vec<Result<Outcome, String>> = targets
-        .par_iter()
-        .map(|(path, confirmation)| reread(root, path, *confirmation, work.files.get(path)))
-        .collect();
-    for ((path, confirmation), outcome) in targets.into_iter().zip(outcomes) {
-        let previous = match outcome? {
-            Outcome::Gone => work.files.remove(&path),
-            Outcome::Same(entry) => {
-                work.files.insert(path, entry);
-                continue;
-            }
+    detect_tree(root, old, dirty, detected)
+}
+
+fn in_place(
+    mut old: Snapshot,
+    dirty: &Dirty,
+    outcomes: Vec<Outcome>,
+    mut detected: Detected,
+) -> Detected {
+    for (at, outcome) in dirty.files.iter().zip(outcomes) {
+        let slot = &mut old.files[*at];
+        match outcome {
+            Outcome::Gone => unreachable!("gone files take the tree path"),
+            Outcome::Same(entry) => *slot = entry,
             Outcome::New(entry, file) => {
-                let ids = if confirmation {
-                    &mut detected.confirmation_ids
-                } else {
-                    &mut detected.holon_ids
-                };
-                ids.extend(entry.id.clone());
+                let previous = std::mem::replace(slot, entry);
+                detected.files_changed = true;
+                detected.record(previous.confirmation, previous.id);
+                detected.record(slot.confirmation, slot.id.clone());
                 if let Some(file) = file {
-                    detected.parsed.insert(path.clone(), *file);
+                    detected.parsed.insert(slot.path.clone(), *file);
                 }
-                work.files.insert(path, entry)
             }
-        };
-        detected.files_changed = true;
-        if let Some(previous) = previous {
-            let ids = if previous.confirmation {
-                &mut detected.confirmation_ids
-            } else {
-                &mut detected.holon_ids
-            };
-            ids.extend(previous.id);
         }
     }
-    for removed in work.removed {
-        detected.files_changed = true;
-        let ids = if removed.confirmation {
-            &mut detected.confirmation_ids
-        } else {
-            &mut detected.holon_ids
-        };
-        ids.extend(removed.id);
+    old.taken_ns = dirty.taken_ns;
+    Detected {
+        snapshot: old,
+        ..detected
     }
-    let mut dirs: Vec<DirEntry> = work.dirs.into_values().collect();
-    let stale: HashSet<&str> = relisted.iter().map(|dir| dir.path.as_str()).collect();
-    let stats: Vec<_> = dirs
+}
+
+fn detect_tree(
+    root: &Path,
+    old: Snapshot,
+    dirty: &Dirty,
+    mut detected: Detected,
+) -> Result<Detected, String> {
+    let mut relisted: Vec<usize> = dirty.dirs.clone();
+    relisted.sort_by_key(|at| {
+        let path = &old.dirs[*at].path;
+        path.matches('/').count() + usize::from(!path.is_empty())
+    });
+    let mut work = Work {
+        old: &old,
+        removed_files: HashSet::new(),
+        removed_dirs: HashSet::new(),
+        added: Vec::new(),
+        added_dirs: Vec::new(),
+    };
+    for at in &relisted {
+        if !work.removed_dirs.contains(at) {
+            work.relist(root, &old.dirs[*at]);
+        }
+    }
+    let Work {
+        mut removed_files,
+        removed_dirs,
+        added,
+        added_dirs,
+        ..
+    } = work;
+    let existing: Vec<usize> = dirty
+        .files
+        .iter()
+        .copied()
+        .filter(|at| !removed_files.contains(at))
+        .collect();
+    let existing_outcomes: Vec<Result<Outcome, String>> = existing
         .par_iter()
-        .map(|dir| {
-            (dir.stat.is_none() || stale.contains(dir.path.as_str()))
-                .then(|| stat(&root.join(&dir.path)))
+        .map(|at| {
+            let file = &old.files[*at];
+            reread(root, &file.path, file.confirmation, Some(file))
         })
         .collect();
-    for (dir, fresh) in dirs.iter_mut().zip(stats) {
-        if let Some(fresh) = fresh {
-            dir.stat = fresh;
+    let added_outcomes: Vec<Result<Outcome, String>> = added
+        .par_iter()
+        .map(|(path, confirmation)| reread(root, path, *confirmation, None))
+        .collect();
+    let mut replaced: HashMap<usize, FileEntry> = HashMap::new();
+    for (at, outcome) in existing.into_iter().zip(existing_outcomes) {
+        match outcome? {
+            Outcome::Same(entry) => {
+                replaced.insert(at, entry);
+            }
+            Outcome::Gone => {
+                removed_files.insert(at);
+            }
+            Outcome::New(entry, file) => {
+                let previous = &old.files[at];
+                detected.files_changed = true;
+                detected.record(previous.confirmation, previous.id.clone());
+                detected.record(entry.confirmation, entry.id.clone());
+                if let Some(file) = file {
+                    detected.parsed.insert(entry.path.clone(), *file);
+                }
+                replaced.insert(at, entry);
+            }
         }
     }
+    let mut fresh_files = Vec::new();
+    for outcome in added_outcomes {
+        detected.files_changed = true;
+        match outcome? {
+            Outcome::Gone => {}
+            Outcome::Same(entry) => fresh_files.push(entry),
+            Outcome::New(entry, file) => {
+                detected.record(entry.confirmation, entry.id.clone());
+                if let Some(file) = file {
+                    detected.parsed.insert(entry.path.clone(), *file);
+                }
+                fresh_files.push(entry);
+            }
+        }
+    }
+    for at in &removed_files {
+        let previous = &old.files[*at];
+        detected.files_changed = true;
+        detected.record(previous.confirmation, previous.id.clone());
+    }
+    let stale: HashSet<usize> = relisted.iter().copied().collect();
+    let Snapshot {
+        files: old_files,
+        dirs: old_dirs,
+        ..
+    } = old;
+    let mut files: Vec<FileEntry> = old_files
+        .into_iter()
+        .enumerate()
+        .filter(|(at, _)| !removed_files.contains(at))
+        .map(|(at, file)| replaced.remove(&at).unwrap_or(file))
+        .collect();
+    let mut dirs: Vec<(bool, DirEntry)> = old_dirs
+        .into_iter()
+        .enumerate()
+        .filter(|(at, _)| !removed_dirs.contains(at))
+        .map(|(at, dir)| (stale.contains(&at) || dir.stat.is_none(), dir))
+        .chain(added_dirs.into_iter().map(|dir| (true, dir)))
+        .collect();
+    dirs.par_iter_mut().for_each(|(refresh, dir)| {
+        if *refresh {
+            dir.stat = stat(&root.join(&dir.path));
+        }
+    });
+    let mut dirs: Vec<DirEntry> = dirs.into_iter().map(|(_, dir)| dir).collect();
+    if !fresh_files.is_empty() {
+        files.append(&mut fresh_files);
+        files.par_sort_unstable_by(|a, b| a.path.cmp(&b.path));
+    }
     dirs.sort_unstable_by(|a, b| a.path.cmp(&b.path));
-    let mut files: Vec<FileEntry> = work.files.into_values().collect();
-    files.par_sort_unstable_by(|a, b| a.path.cmp(&b.path));
     detected.snapshot = Snapshot {
-        taken_ns,
+        taken_ns: dirty.taken_ns,
         files,
         dirs,
     };

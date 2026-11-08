@@ -1,6 +1,7 @@
 use crate::detect::{detect, Detected};
 use crate::snapshot::{self, clock_ns, encode, read, stat, DirEntry, FileEntry, Snapshot};
 use crate::store::{store_error, Store};
+use crate::timing;
 use holon_core::evaluate::{evaluate_holon, EvalContext, HolonEvaluation};
 use holon_core::format::{Confirmation, Evidence, Holon, KINDS, STATUSES};
 use holon_core::model::{
@@ -335,11 +336,15 @@ fn rebuild(store: &Store, root: &Path, env: &EvalEnv) -> Result<(), String> {
     let model = Model::new(files, confirmation_files, store.evidence()?);
     let evaluated = model.evaluate(env);
     let check = model.check();
-    let snapshot = Snapshot {
+    let mut snapshot = Snapshot {
         taken_ns,
         files: entries,
         dirs: dir_entries,
     };
+    snapshot
+        .files
+        .par_sort_unstable_by(|a, b| a.path.cmp(&b.path));
+    snapshot.dirs.sort_unstable_by(|a, b| a.path.cmp(&b.path));
     store.transaction(|| {
         db(store.conn.execute_batch(
             "DELETE FROM cache_holons; DELETE FROM cache_seams; DELETE FROM cache_code;",
@@ -672,7 +677,9 @@ fn apply(
     }
     let check = detected.files_changed.then_some(None);
     let snapshot = detected.changed.then_some(snapshot);
+    timing::mark("apply");
     put_meta(store, &env.commit, snapshot, check)?;
+    timing::mark("write");
     Ok(Applied::Done)
 }
 
@@ -862,18 +869,27 @@ pub fn sync(store: &Store, root: &Path, env: &EvalEnv, need_check: bool) -> Resu
         let Some(meta) = read_meta(store)? else {
             return rebuild(store, root, env);
         };
-        if meta.commit == env.commit
-            && !(need_check && meta.check_json.is_none())
-            && snapshot::unchanged(root, &meta.stats)
+        timing::mark("meta");
+        let Some(dirty) = snapshot::dirty(root, &meta.stats) else {
+            return rebuild(store, root, env);
+        };
+        timing::mark("stat");
+        let check_ready = !(need_check && meta.check_json.is_none());
+        if dirty.is_empty()
+            && check_ready
+            && meta.commit == env.commit
             && !needs_work(store, env.now_ms)?
         {
+            timing::mark("needs_work");
             return Ok(());
         }
         let details = read_details(store)?;
         let Some(old) = snapshot::decode(&meta.stats, &details) else {
             return rebuild(store, root, env);
         };
-        let detected = detect(root, old)?;
+        timing::mark("decode");
+        let detected = detect(root, old, &dirty)?;
+        timing::mark("detect");
         if need_check && (meta.check_json.is_none() || detected.files_changed) {
             return rebuild(store, root, env);
         }
