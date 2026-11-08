@@ -1,0 +1,19 @@
+[workspace]
+resolver = "2"
+members = ["holon-core", "holon-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+holon-core = { path = "holon-core" }
+rayon = "1.11"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

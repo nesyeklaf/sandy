@@ -1,0 +1,15 @@
+[package]
+name = "holon-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The holon command: check, drift and view for holon/v0 models"
+
+[[bin]]
+name = "holon"
+path = "src/main.rs"
+
+[dependencies]
+holon-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
