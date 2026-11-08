@@ -22,6 +22,8 @@
     "server.ts",
     "app.tsx",
     "cli.ts",
+    "service.ts",
+    "render.ts",
     "core",
     "index",
     "ui",

@@ -5,7 +5,6 @@ import type Database from "better-sqlite3";
 import type { Confirmation, Evidence, EvidenceSide, Holon } from "../core/format.ts";
 import {
   evaluateHolon,
-  type CodeChanges,
   type EvalContext,
   type EvalEnv,
   type HolonEvaluation,
@@ -79,14 +78,12 @@ export function migrateIndex(db: Database.Database, migrate: (db: Database.Datab
 export class HolonIndex implements ViewSource {
   readonly root: string;
   private readonly db: Database.Database;
-  private readonly code: CodeChanges;
   private readonly statements;
   private partOfCache = new Map<string, string | null | undefined>();
 
-  constructor(db: Database.Database, root: string, code: CodeChanges) {
+  constructor(db: Database.Database, root: string) {
     this.db = db;
     this.root = resolve(root);
-    this.code = code;
     const prepare = (sql: string) => db.prepare(sql);
     this.statements = {
       model: prepare("SELECT now_ms, commit_sha FROM models WHERE root = ?"),

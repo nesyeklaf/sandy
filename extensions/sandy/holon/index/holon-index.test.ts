@@ -5,7 +5,7 @@ import type Database from "better-sqlite3";
 import { HolonIndex } from "./holon-index.ts";
 import { Model } from "../core/model.ts";
 import type { EvalEnv } from "../core/evaluate.ts";
-import { expected, fixtureEnv, noGit, SHOP, shopEvidence } from "../test/fixture.ts";
+import { expected, fixtureEnv, SHOP, shopEvidence } from "../test/fixture.ts";
 import { memoryDatabase, tempCopy } from "../test/temp.ts";
 
 function sameAsCore(index: HolonIndex, root: string, env: EvalEnv): void {
@@ -32,7 +32,7 @@ describe("HolonIndex", () => {
   beforeEach(() => {
     copy = tempCopy(SHOP);
     db = memoryDatabase();
-    index = new HolonIndex(db, copy.dir, noGit);
+    index = new HolonIndex(db, copy.dir);
     index.recordEvidence(shopEvidence(), fixtureEnv);
     index.refresh(fixtureEnv);
   });

@@ -1,5 +1,5 @@
 import { SIDES, type Holon, type HolonKind, type Side } from "./format.ts";
-import { compareDrift, type Drift, type DriftKind, type HolonEvaluation, type HolonLight, type SideView } from "./evaluate.ts";
+import { compareDrift, type Drift, type DriftKind, type HolonEvaluation, type HolonLight, type SideLight, type SideView } from "./evaluate.ts";
 import { formatInstant } from "./time.ts";
 
 export const MAX_CHILDREN = 7;
@@ -39,7 +39,7 @@ export interface ViewSeam {
   to: string;
   toTitle: string;
   contract: string;
-  light: string;
+  light: SideLight;
   readOnly: boolean;
   exclusive: boolean;
   drift: DriftKind | null;
