@@ -1,7 +1,7 @@
 use crate::format::{is_human_kind, Confirmation, Evidence, Holon, Proof, Side};
 use crate::order::{is_js_blank, js_cmp};
 use crate::time::{contract_hash, format_date, format_instant, parse_instant, DAY_MS};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
@@ -26,7 +26,7 @@ pub enum HolonLight {
     Hard,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DriftKind {
     Break,
@@ -84,7 +84,7 @@ impl DriftKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Drift {
     pub kind: DriftKind,
     pub side: Option<Side>,

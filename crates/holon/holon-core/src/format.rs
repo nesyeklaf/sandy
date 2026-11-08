@@ -44,7 +44,7 @@ const PROOF_KINDS: [&str; 9] = [
 ];
 pub const HUMAN_MAX_DAYS: u64 = 90;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, serde::Deserialize)]
 pub enum Side {
     I,
     It,

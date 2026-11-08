@@ -1,4 +1,7 @@
-use crate::evaluate::{compare_drift, evaluate_holon, EvalContext, EvalEnv, HolonEvaluation};
+use crate::evaluate::{
+    compare_drift, evaluate_holon, DriftKind, EvalContext, EvalEnv, HolonEvaluation, HolonLight,
+    SideLight,
+};
 use crate::format::{
     confirmation_path, parse_confirmation, parse_holon, Confirmation, Evidence, Holon,
 };
@@ -103,7 +106,7 @@ fn node_read_error(error: &std::io::Error, path: &Path) -> String {
     }
 }
 
-fn read_text(path: &Path) -> Result<String, String> {
+pub fn read_text(path: &Path) -> Result<String, String> {
     let bytes = std::fs::read(path).map_err(|error| node_read_error(&error, path))?;
     Ok(match String::from_utf8(bytes) {
         Ok(text) => text,
@@ -549,17 +552,16 @@ impl<'m> Evaluated<'m> {
         }
     }
 
-    fn node(&self, position: usize, role: &'static str, with_children: bool) -> ViewNode {
+    fn facts(&self, position: usize) -> NodeFacts {
         let holon = self.model.holon_at(position);
-        ViewNode {
+        NodeFacts {
             id: holon.id.clone(),
             kind: holon.kind,
-            role,
             title: holon.title.clone(),
             status: holon.status,
             light: self.evaluations[position].light,
             drift_below: self.drift_below[position],
-            child_count: with_children.then(|| self.model.children[position].len()),
+            child_count: self.model.children[position].len(),
         }
     }
 
@@ -567,33 +569,10 @@ impl<'m> Evaluated<'m> {
         let model = self.model;
         let position = *model.by_id.get(id)?;
         let holon = model.holon_at(position);
-        let evaluation = &self.evaluations[position];
-        let title = |other: &str| {
-            model
-                .get(other)
-                .map_or_else(|| other.to_string(), |found| found.title.clone())
-        };
         let parent = holon
             .part_of
             .as_ref()
             .and_then(|parent| model.by_id.get(parent).copied());
-        let children = &model.children[position];
-        let mut seams: Vec<ViewSeam> = holon
-            .seams
-            .iter()
-            .zip(&evaluation.seams)
-            .map(|(seam, result)| ViewSeam {
-                from: holon.id.clone(),
-                from_title: holon.title.clone(),
-                to: seam.to.clone(),
-                to_title: title(&seam.to),
-                contract: seam.contract.clone(),
-                light: result.light,
-                read_only: seam.read_only,
-                exclusive: seam.exclusive,
-                drift: result.drift,
-            })
-            .collect();
         let mut incoming: Vec<(usize, usize)> = model
             .incoming
             .get(id)
@@ -608,61 +587,175 @@ impl<'m> Evaluated<'m> {
         incoming.sort_by(|a, b| {
             js_cmp(&model.holon_at(a.0).id, &model.holon_at(b.0).id).then_with(|| a.1.cmp(&b.1))
         });
-        for (from, index) in incoming {
-            let source = model.holon_at(from);
-            let seam = &source.seams[index];
-            let result = &self.evaluations[from].seams[index];
-            seams.push(ViewSeam {
-                from: source.id.clone(),
-                from_title: source.title.clone(),
-                to: holon.id.clone(),
-                to_title: holon.title.clone(),
-                contract: seam.contract.clone(),
-                light: result.light,
-                read_only: seam.read_only,
-                exclusive: seam.exclusive,
-                drift: result.drift,
-            });
-        }
-        let warnings: Vec<String> = std::iter::once(position)
-            .chain(parent)
-            .chain(children.iter().copied())
-            .filter_map(|item| child_warning(&model.holon_at(item).id, model.children[item].len()))
+        let incoming = incoming
+            .into_iter()
+            .map(|(from, index)| {
+                let source = model.holon_at(from);
+                let seam = &source.seams[index];
+                let result = &self.evaluations[from].seams[index];
+                IncomingSeam {
+                    from: source.id.clone(),
+                    from_title: source.title.clone(),
+                    contract: seam.contract.clone(),
+                    read_only: seam.read_only,
+                    exclusive: seam.exclusive,
+                    light: result.light,
+                    drift: result.drift,
+                }
+            })
             .collect();
-        let [i, it, we, they] = evaluation.sides.clone();
-        Some(ViewOutput {
-            format: "holon-view/v0",
-            focus: ViewFocus {
-                id: holon.id.clone(),
-                kind: holon.kind,
-                role: "system",
-                title: holon.title.clone(),
-                status: holon.status,
-                why: holon.why.clone(),
-                contract: holon.contract.clone(),
-                carried_by: holon
-                    .carried_by
-                    .iter()
-                    .map(|carrier| Carrier {
-                        id: carrier.clone(),
-                        title: title(carrier),
-                    })
-                    .collect(),
-                light: evaluation.light,
-                drift: evaluation.drift.clone(),
-                drift_below: self.drift_below[position],
-                sides: ViewSides { i, it, we, they },
-                code: holon.code.clone(),
-            },
-            parent: parent.map(|parent| self.node(parent, "environment", false)),
-            children: children
+        let parts = ViewParts {
+            holon,
+            evaluation: self.evaluations[position].clone(),
+            drift_below: self.drift_below[position],
+            parent: parent.map(|parent| self.facts(parent)),
+            children: model.children[position]
                 .iter()
-                .map(|child| self.node(*child, "part", true))
+                .map(|child| self.facts(*child))
                 .collect(),
-            seams,
-            warnings,
-            computed_at: format_instant(self.now_ms),
-            commit: self.commit.clone(),
+            incoming,
+        };
+        let title = |other: &str| model.get(other).map(|found| found.title.clone());
+        Some(build_view(parts, &title, self.now_ms, &self.commit))
+    }
+}
+
+pub struct NodeFacts {
+    pub id: String,
+    pub kind: &'static str,
+    pub title: String,
+    pub status: &'static str,
+    pub light: HolonLight,
+    pub drift_below: usize,
+    pub child_count: usize,
+}
+
+pub struct IncomingSeam {
+    pub from: String,
+    pub from_title: String,
+    pub contract: String,
+    pub read_only: bool,
+    pub exclusive: bool,
+    pub light: SideLight,
+    pub drift: Option<DriftKind>,
+}
+
+pub struct ViewParts<'h> {
+    pub holon: &'h Holon,
+    pub evaluation: HolonEvaluation,
+    pub drift_below: usize,
+    pub parent: Option<NodeFacts>,
+    pub children: Vec<NodeFacts>,
+    pub incoming: Vec<IncomingSeam>,
+}
+
+fn view_node(facts: NodeFacts, role: &'static str, with_children: bool) -> ViewNode {
+    ViewNode {
+        id: facts.id,
+        kind: facts.kind,
+        role,
+        title: facts.title,
+        status: facts.status,
+        light: facts.light,
+        drift_below: facts.drift_below,
+        child_count: with_children.then_some(facts.child_count),
+    }
+}
+
+pub fn build_view(
+    parts: ViewParts,
+    title: &dyn Fn(&str) -> Option<String>,
+    now_ms: i64,
+    commit: &str,
+) -> ViewOutput {
+    let ViewParts {
+        holon,
+        evaluation,
+        drift_below,
+        parent,
+        children,
+        incoming,
+    } = parts;
+    let title = |other: &str| title(other).unwrap_or_else(|| other.to_string());
+    let mut seams: Vec<ViewSeam> = holon
+        .seams
+        .iter()
+        .zip(&evaluation.seams)
+        .map(|(seam, result)| ViewSeam {
+            from: holon.id.clone(),
+            from_title: holon.title.clone(),
+            to: seam.to.clone(),
+            to_title: title(&seam.to),
+            contract: seam.contract.clone(),
+            light: result.light,
+            read_only: seam.read_only,
+            exclusive: seam.exclusive,
+            drift: result.drift,
         })
+        .collect();
+    seams.extend(incoming.into_iter().map(|seam| ViewSeam {
+        from: seam.from,
+        from_title: seam.from_title,
+        to: holon.id.clone(),
+        to_title: holon.title.clone(),
+        contract: seam.contract,
+        light: seam.light,
+        read_only: seam.read_only,
+        exclusive: seam.exclusive,
+        drift: seam.drift,
+    }));
+    let warnings: Vec<String> = std::iter::once((holon.id.as_str(), children.len()))
+        .chain(
+            parent
+                .as_ref()
+                .map(|parent| (parent.id.as_str(), parent.child_count)),
+        )
+        .chain(
+            children
+                .iter()
+                .map(|child| (child.id.as_str(), child.child_count)),
+        )
+        .filter_map(|(id, count)| child_warning(id, count))
+        .collect();
+    let HolonEvaluation {
+        light,
+        sides,
+        drift,
+        ..
+    } = evaluation;
+    let [i, it, we, they] = sides;
+    ViewOutput {
+        format: "holon-view/v0",
+        focus: ViewFocus {
+            id: holon.id.clone(),
+            kind: holon.kind,
+            role: "system",
+            title: holon.title.clone(),
+            status: holon.status,
+            why: holon.why.clone(),
+            contract: holon.contract.clone(),
+            carried_by: holon
+                .carried_by
+                .iter()
+                .map(|carrier| Carrier {
+                    id: carrier.clone(),
+                    title: title(carrier),
+                })
+                .collect(),
+            light,
+            drift,
+            drift_below,
+            sides: ViewSides { i, it, we, they },
+            code: holon.code.clone(),
+        },
+        parent: parent.map(|parent| view_node(parent, "environment", false)),
+        children: children
+            .into_iter()
+            .map(|child| view_node(child, "part", true))
+            .collect(),
+        seams,
+        warnings,
+        computed_at: format_instant(now_ms),
+        commit: commit.to_string(),
     }
 }
