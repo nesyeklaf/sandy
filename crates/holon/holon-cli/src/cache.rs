@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-const VERSION: i64 = 1;
+const VERSION: i64 = 2;
 const REBUILD_ABOVE: usize = 10_000;
 
 const SCHEMA: &str = "
@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS cache_meta (
     root TEXT NOT NULL,
     generation INTEGER NOT NULL,
     commit_sha TEXT NOT NULL,
-    snapshot BLOB NOT NULL,
+    stats BLOB NOT NULL,
+    details BLOB NOT NULL,
     check_json TEXT
 );
 CREATE TABLE IF NOT EXISTS cache_holons (
@@ -106,7 +107,7 @@ fn known(list: &[&'static str], value: &str) -> Result<&'static str, String> {
 struct Meta {
     generation: i64,
     commit: String,
-    snapshot: Vec<u8>,
+    stats: Vec<u8>,
     check_json: Option<String>,
 }
 
@@ -115,7 +116,7 @@ fn read_meta(store: &Store) -> Result<Option<Meta>, String> {
     db(store
         .conn
         .query_row(
-            "SELECT version, root, generation, commit_sha, snapshot, check_json FROM cache_meta WHERE key = 0",
+            "SELECT version, root, generation, commit_sha, stats, check_json FROM cache_meta WHERE key = 0",
             [],
             |row| {
                 Ok((
@@ -124,7 +125,7 @@ fn read_meta(store: &Store) -> Result<Option<Meta>, String> {
                     Meta {
                         generation: row.get(2)?,
                         commit: row.get(3)?,
-                        snapshot: row.get(4)?,
+                        stats: row.get(4)?,
                         check_json: row.get(5)?,
                     },
                 ))
@@ -136,6 +137,14 @@ fn read_meta(store: &Store) -> Result<Option<Meta>, String> {
             .filter(|(version, root, _)| *version == VERSION && *root == store.root)
             .map(|(_, _, meta)| meta)
     })
+}
+
+fn read_details(store: &Store) -> Result<Vec<u8>, String> {
+    db(store
+        .conn
+        .query_row("SELECT details FROM cache_meta WHERE key = 0", [], |row| {
+            row.get(0)
+        }))
 }
 
 fn put_holon(
@@ -231,7 +240,7 @@ fn put_meta(
     ))? > 0;
     if !exists {
         db(conn.execute(
-            "INSERT INTO cache_meta (key, version, root, generation, commit_sha, snapshot) VALUES (0, ?, ?, 0, '', x'')",
+            "INSERT INTO cache_meta (key, version, root, generation, commit_sha, stats, details) VALUES (0, ?, ?, 0, '', x'', x'')",
             params![VERSION, store.root],
         ))?;
     }
@@ -240,9 +249,10 @@ fn put_meta(
         params![VERSION, store.root, generation, commit],
     ))?;
     if let Some(snapshot) = snapshot {
+        let encoded = encode(snapshot);
         db(conn.execute(
-            "UPDATE cache_meta SET snapshot = ? WHERE key = 0",
-            [encode(snapshot)],
+            "UPDATE cache_meta SET stats = ?, details = ? WHERE key = 0",
+            params![encoded.stats, encoded.details],
         ))?;
     }
     if let Some(check) = check {
@@ -852,7 +862,15 @@ pub fn sync(store: &Store, root: &Path, env: &EvalEnv, need_check: bool) -> Resu
         let Some(meta) = read_meta(store)? else {
             return rebuild(store, root, env);
         };
-        let Some(old) = snapshot::decode(&meta.snapshot) else {
+        if meta.commit == env.commit
+            && !(need_check && meta.check_json.is_none())
+            && snapshot::unchanged(root, &meta.stats)
+            && !needs_work(store, env.now_ms)?
+        {
+            return Ok(());
+        }
+        let details = read_details(store)?;
+        let Some(old) = snapshot::decode(&meta.stats, &details) else {
             return rebuild(store, root, env);
         };
         let detected = detect(root, old)?;
