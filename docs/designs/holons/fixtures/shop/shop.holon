@@ -1,0 +1,16 @@
+{
+  "format": "holon/v0",
+  "id": "shop",
+  "kind": "context",
+  "partOf": null,
+  "title": "Tea shop",
+  "status": "active",
+  "why": "Sell tea online without a call centre.",
+  "contract": "Customers find, buy and get help on their own.",
+  "carriedBy": [
+    "shop-org"
+  ],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

@@ -1,0 +1,15 @@
+{
+  "format": "holon-confirmation/v0",
+  "holon": "sign-in",
+  "side": "I",
+  "by": "maria",
+  "recordedBy": "agent:i-side",
+  "at": "2026-10-20",
+  "expires": "2027-01-18",
+  "contractHash": "sha256:6c4867012a2517f52433fa5717010e77cad8e55b8578f866ea02ba1bf048f558",
+  "answer": "After ten wrong passwords the customer calls us, and I unlock the account in the support tool.",
+  "hesitation": [
+    "Not sure whether the lock lifts by itself after a while"
+  ],
+  "result": "confirmed"
+}

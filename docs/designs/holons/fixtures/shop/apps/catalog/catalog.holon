@@ -1,0 +1,18 @@
+{
+  "format": "holon/v0",
+  "id": "catalog",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Catalog",
+  "status": "active",
+  "why": "Products and prices are defined once.",
+  "contract": "Every product has one price per currency.",
+  "carriedBy": [
+    "team-shop"
+  ],
+  "code": [
+    "apps/catalog/"
+  ],
+  "seams": [],
+  "proofs": {}
+}

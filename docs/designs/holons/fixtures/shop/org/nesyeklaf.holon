@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "nesyeklaf",
+  "kind": "person",
+  "partOf": "team-identity",
+  "title": "nesyeklaf",
+  "status": "active",
+  "why": "Builds the identity parts.",
+  "contract": "Reviews every change to sign-in and reset.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

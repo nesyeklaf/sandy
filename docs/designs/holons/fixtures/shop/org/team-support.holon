@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "team-support",
+  "kind": "team",
+  "partOf": "shop-org",
+  "title": "Support team",
+  "status": "active",
+  "why": "Customers reach a person when self-service fails.",
+  "contract": "Answers for the support tool.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

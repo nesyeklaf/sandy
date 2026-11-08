@@ -1,0 +1,27 @@
+{
+  "format": "holon/v0",
+  "id": "sign-in",
+  "kind": "component",
+  "partOf": "account",
+  "title": "Sign-in",
+  "status": "active",
+  "why": "Customers reach their orders.",
+  "contract": "Signs a customer in with email and password, and locks the account after ten failures.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [
+    "apps/account/sign-in.ts"
+  ],
+  "seams": [],
+  "proofs": {
+    "I": {
+      "kind": "interview",
+      "every": "90d"
+    },
+    "We": {
+      "kind": "confirmation",
+      "every": "90d"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "format": "holon/v0",
+  "id": "mail",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Mail",
+  "status": "active",
+  "why": "Customers hear from the shop by mail.",
+  "contract": "Delivers transactional mail within five minutes.",
+  "carriedBy": [
+    "team-shop"
+  ],
+  "code": [
+    "apps/mail/"
+  ],
+  "seams": [],
+  "proofs": {}
+}

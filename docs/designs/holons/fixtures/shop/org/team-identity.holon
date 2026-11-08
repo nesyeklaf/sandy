@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "team-identity",
+  "kind": "team",
+  "partOf": "shop-org",
+  "title": "Identity team",
+  "status": "active",
+  "why": "Accounts have one owner.",
+  "contract": "Answers for sign-in, reset and the user database.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

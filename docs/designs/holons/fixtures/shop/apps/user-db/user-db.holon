@@ -1,0 +1,18 @@
+{
+  "format": "holon/v0",
+  "id": "user-db",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "User database",
+  "status": "active",
+  "why": "Account data lives in one place.",
+  "contract": "Stores accounts and password hashes.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [
+    "apps/user-db/"
+  ],
+  "seams": [],
+  "proofs": {}
+}

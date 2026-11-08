@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "checkout",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Checkout",
+  "status": "active",
+  "why": "A customer pays without leaving the shop.",
+  "contract": "A paid order is stored exactly once.",
+  "carriedBy": [
+    "team-shop"
+  ],
+  "code": [
+    "apps/checkout/"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "apps/checkout/checkout.test.ts"
+    }
+  }
+}

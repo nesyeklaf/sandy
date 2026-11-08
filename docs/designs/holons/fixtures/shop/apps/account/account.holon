@@ -1,0 +1,24 @@
+{
+  "format": "holon/v0",
+  "id": "account",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Account service",
+  "status": "active",
+  "why": "Customers keep one identity across orders.",
+  "contract": "Signs customers in and out, and is the only writer of password hashes.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [
+    "apps/account/"
+  ],
+  "seams": [
+    {
+      "to": "user-db",
+      "contract": "Only writer of password hashes",
+      "exclusive": true
+    }
+  ],
+  "proofs": {}
+}

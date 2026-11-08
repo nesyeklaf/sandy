@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "reset-mail",
+  "kind": "function",
+  "partOf": "password-reset",
+  "title": "Reset mail",
+  "status": "active",
+  "why": "The link reaches the address it was asked for.",
+  "contract": "Builds the reset mail with a link for the requesting address only.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [
+    "apps/account/reset-mail.ts"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "apps/account/reset-mail.test.ts"
+    }
+  }
+}

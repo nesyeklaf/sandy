@@ -1,0 +1,13 @@
+{
+  "format": "holon-confirmation/v0",
+  "holon": "sign-in",
+  "side": "We",
+  "by": "nesyeklaf",
+  "recordedBy": "nesyeklaf",
+  "at": "2026-10-20",
+  "expires": "2027-01-18",
+  "contractHash": "sha256:6c4867012a2517f52433fa5717010e77cad8e55b8578f866ea02ba1bf048f558",
+  "answer": "The account service counts on sign-in for every order page.",
+  "hesitation": [],
+  "result": "confirmed"
+}

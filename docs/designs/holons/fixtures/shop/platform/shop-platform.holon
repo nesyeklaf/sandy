@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "shop-platform",
+  "kind": "system",
+  "partOf": "shop",
+  "title": "Shop platform",
+  "status": "active",
+  "why": "Run the shop's software in one place.",
+  "contract": "Storefront, accounts and support answer around the clock.",
+  "carriedBy": [
+    "shop-org"
+  ],
+  "code": [
+    "platform/"
+  ],
+  "seams": [],
+  "proofs": {
+    "They": {
+      "kind": "metric",
+      "source": "uptime-30d"
+    }
+  }
+}

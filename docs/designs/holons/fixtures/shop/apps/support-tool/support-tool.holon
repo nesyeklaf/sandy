@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "support-tool",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Support tool",
+  "status": "active",
+  "why": "Support staff solve a customer's problem in one place.",
+  "contract": "Shows a customer's orders and account to support staff.",
+  "carriedBy": [
+    "team-support"
+  ],
+  "code": [
+    "apps/support-tool/"
+  ],
+  "seams": [
+    {
+      "to": "user-db",
+      "contract": "Resets a customer's password hash on request"
+    }
+  ],
+  "proofs": {}
+}

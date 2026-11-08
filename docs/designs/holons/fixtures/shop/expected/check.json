@@ -1,0 +1,11 @@
+{
+  "format": "holon-check/v0",
+  "holons": 21,
+  "errors": [],
+  "warnings": [
+    {
+      "holon": "shop-platform",
+      "message": "shop-platform has 8 children: a level may be missing in between"
+    }
+  ]
+}

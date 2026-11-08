@@ -1,0 +1,16 @@
+{
+  "format": "holon/v0",
+  "id": "reset-rate-limit",
+  "kind": "function",
+  "partOf": "password-reset",
+  "title": "Reset rate limit",
+  "status": "proposed",
+  "why": "Nobody floods a customer's inbox with reset mails.",
+  "contract": "At most five reset mails per address per hour.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

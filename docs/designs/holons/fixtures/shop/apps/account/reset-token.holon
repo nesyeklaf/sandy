@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "reset-token",
+  "kind": "function",
+  "partOf": "password-reset",
+  "title": "Reset token",
+  "status": "active",
+  "why": "Only the person who asked can reset.",
+  "contract": "A token is random, single-use and valid for 30 minutes.",
+  "carriedBy": [
+    "team-identity"
+  ],
+  "code": [
+    "apps/account/reset-token.ts"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "apps/account/reset-token.test.ts"
+    }
+  }
+}

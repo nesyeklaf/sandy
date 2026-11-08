@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "maria",
+  "kind": "person",
+  "partOf": "team-support",
+  "title": "Maria",
+  "status": "active",
+  "why": "Helps customers who are stuck.",
+  "contract": "Answers support tickets within a day.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

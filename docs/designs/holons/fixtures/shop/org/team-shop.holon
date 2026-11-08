@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "team-shop",
+  "kind": "team",
+  "partOf": "shop-org",
+  "title": "Shop team",
+  "status": "active",
+  "why": "Selling has one owner.",
+  "contract": "Answers for storefront, catalog, checkout, search and mail.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}

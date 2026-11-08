@@ -1,7 +1,7 @@
 # Holons in Sandy: intent
 
 *   **Author:** nesyeklaf
-*   **Status:** Draft, nothing built
+*   **Status:** Decided, nothing built
 *   **Date:** 2026-11-08
 *   **Background:** [Every part is a whole](https://falkeysen.com/writing/every-part-is-a-whole/)
 
@@ -20,7 +20,7 @@ Two pieces of work share this intent. Each is written below as a holon itself.
 **Contract.**
 
 1.  The gallery holds holon templates built only from existing components: `Card-holon` (Why, Contract, Proof, four sides), `Card-seam` (two neighbours and the promise between them), `Card-drift` (what broke, where, which kind). Agents find them through `ui_examples(["Card"])`.
-2.  A `Holon` component draws a holon the holon extension has already computed: its card, its parent, its children and its direct seams. It never draws the whole holarchy.
+2.  A `Holon` component draws a computed view (`holon-view/v0`, see [contract.md](contract.md)) from the holon extension: the card, the parent, the children and the direct seams. It never draws the whole holarchy.
 3.  genui renders and computes nothing. Lights, expiry and drift are decided only by the holon extension.
 
 **Proof.**
@@ -35,16 +35,19 @@ Two pieces of work share this intent. Each is written below as a holon itself.
 
 **Contract.**
 
-1.  **One JSON file per holon in Git**, with a format version (`holon/v0`) and a JSON Schema. `partOf` is a field, not the folder: a fact lives in the model exactly once.
-2.  **Desired and actual stay apart.** The holon file says where its proof comes from (a test, a metric, an alert, an interview, an expiry). Results go to an append-only evidence log. A CI run never rewrites holon files, so a holon diff is a diff of intent.
+1.  **One file per holon in Git, next to the code it describes**: `<slug>.holon`, JSON content, format version `holon/v0`, a JSON Schema. The id is a readable slug without a path, unique per repository and never changed; renaming changes the title, moving changes `partOf`. `partOf` is a field, not the folder: a fact lives in the model exactly once.
+2.  **Desired and actual stay apart.** The holon file says where its proof comes from (a test, a metric, an alert, an interview, an expiry). Results never go into the holon file, so a holon diff is a diff of intent. Each kind of evidence has exactly one home: machine evidence (CI, metrics, alerts) is repeatable and belongs to one build, so it lives in the extension's database; human confirmations (I, We) are not repeatable, so each is one file in Git with who and when. Every proof records what it checked, the contract hash, the build, the environment and when it expires; a changed contract voids it at once.
 3.  **SQLite is the index, never the truth.** It is derived, gitignored, rebuilt per changed Git blob, and answers neighbourhood, drift and rollup queries. Drift sums are updated on write along the path to the root.
 4.  **Only a neighbourhood is shown:** the holon, its parent, its children, its direct seams. The scale rule from the essay is also the render budget.
 5.  **Every view is generated:** the map, the card, Markdown, Mermaid, C4 and Backstage exports.
-6.  **Sandy surfaces.** A `fileOpener` opens `*.holon.json` as a map; a `holon` code fence renders in chat; the `sandy holon` CLI checks schema and references, lists drift by kind and prints a computed view as JSON for genui to load.
+6.  **Lights follow the essay.** Only ● counts as proven; a holon is as proven as its weakest side. Soft proofs carry no weight and expire after 90 days into drift (expired). The I side is proven by an agent that questions a person with the card's fixed questions and records the answer as ◐ for 90 days.
+7.  **Levels.** The role (environment, system, part, building block, atom) is computed from the view and never stored. The kind comes from a fixed vocabulary per domain (software: context, system, container, component, function; work, knowledge, life as in the essay). Depth is free; more than 7 children is a warning that a level is missing. For software the model goes down to functions, and code is the atom it links to.
+8.  **Sandy surfaces.** A `fileOpener` opens `*.holon` as a map; in chat a holon is genui's `Holon` card over a view the CLI computed, so there is one chat renderer; the `sandy holon` CLI checks schema and references, lists drift by kind, records evidence and prints a computed view as JSON for genui to load.
+9.  **Several repositories later, one now.** v0 reads one repository. References across repositories are reserved as `repo:slug`; levels above several repositories will live in a model repository, with one index over all.
 
 **Proof.**
 
-*   One real Sandy feature is modelled completely: every holon with Why, Contract and Proof, all four sides rated.
+*   The holons work models itself first, in the same repository: Part A and Part B with every holon down to function level, each with Why, Contract and Proof and all four sides rated.
 *   `sandy holon check` reports each of the five drift kinds on a fixture built to contain them: orphan above, orphan below, break, expired, contradiction.
 *   Two branches that change different holons merge without a conflict.
 *   For 100,000 holons: cold index build under 1 s, neighbourhood query under 1 ms. A synthetic run with 137,257 holons over 7 levels measured 0.3 s parse, 0.5 s load and 4 µs per neighbourhood query (Node 26.12.1, SQLite in memory); real holons are still unmeasured.
@@ -56,11 +59,11 @@ Two pieces of work share this intent. Each is written below as a holon itself.
 *   **A central database as the source of truth.** It would need branching and merging for data before agents on worktrees could use it.
 *   **Rendering the whole holarchy at once.**
 
+## Risks
+
+*   **The model grows as complex as the code.** Function-level holons were chosen against the essay's warning about model-driven architecture. Countermeasures: a function becomes a holon only when it carries a contract at a seam, agents generate and update function holons from the code, and the 7-children warning flags levels that grow too wide.
+
 ## Open questions
 
-*   Names of the zoom levels, and how much depth is fixed.
-*   Stable IDs across renames: an immutable slug, an opaque ID, or aliases.
-*   How the I side is proven: which questions, which expiry, and the agent that asks them.
-*   How soft proofs are weighted so soft does not become the permanent state.
-*   Holons across several repositories: one file next to the code in each repo, with references across repos and one shared index.
-*   Where the evidence log lives: in Git, in Sandy's database, or both.
+*   The questions the I-side agent asks beyond the four fixed ones, and how hesitation is recorded.
+*   How the index works across several repositories.

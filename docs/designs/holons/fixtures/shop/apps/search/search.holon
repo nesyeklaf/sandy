@@ -1,0 +1,18 @@
+{
+  "format": "holon/v0",
+  "id": "search",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Search",
+  "status": "active",
+  "why": "",
+  "contract": "Finds products by name within 200 ms.",
+  "carriedBy": [
+    "team-shop"
+  ],
+  "code": [
+    "apps/search/"
+  ],
+  "seams": [],
+  "proofs": {}
+}

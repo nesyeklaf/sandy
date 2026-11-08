@@ -1,0 +1,24 @@
+{
+  "format": "holon/v0",
+  "id": "storefront",
+  "kind": "container",
+  "partOf": "shop-platform",
+  "title": "Storefront",
+  "status": "active",
+  "why": "Customers browse and pick tea.",
+  "contract": "Every product page loads in under a second.",
+  "carriedBy": [
+    "team-shop"
+  ],
+  "code": [
+    "apps/storefront/"
+  ],
+  "seams": [
+    {
+      "to": "catalog",
+      "contract": "Reads products and prices",
+      "readOnly": true
+    }
+  ],
+  "proofs": {}
+}

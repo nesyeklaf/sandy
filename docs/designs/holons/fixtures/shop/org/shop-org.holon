@@ -1,0 +1,14 @@
+{
+  "format": "holon/v0",
+  "id": "shop-org",
+  "kind": "organisation",
+  "partOf": null,
+  "title": "Tea shop company",
+  "status": "active",
+  "why": "Someone carries the shop.",
+  "contract": "Every part of the shop has a team.",
+  "carriedBy": [],
+  "code": [],
+  "seams": [],
+  "proofs": {}
+}
