@@ -1,0 +1,38 @@
+{
+  "name": "sandy-plugin-holon",
+  "version": "0.1.0",
+  "description": "SANDY plugin: holons as files in Git, checked, indexed and computed into lights, drift and views.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bench": "node --experimental-strip-types bench/holon-bench.ts",
+    "build": "sandy plugin build"
+  },
+  "engines": {
+    "sandy": ">=0.45",
+    "sandyPluginSdk": ">=0.6.15"
+  },
+  "sandy": {
+    "name": "Holons",
+    "description": "Checks holon files, computes lights and drift, records evidence and opens .holon files as a map.",
+    "branding": {
+      "icon": "Hierarchy"
+    },
+    "server": "./server.ts",
+    "app": "./app.tsx"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@sandy-sdk/plugin-sdk": "file:../../../packages/plugin-sdk",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "better-sqlite3": "^12.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  }
+}
