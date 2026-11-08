@@ -622,6 +622,10 @@ export const COMPONENTS = {
     params: [{ name: "images", kind: "list" }],
     summary: "a visual difference vs a reference or before/after: [src | {src, label?}], reference first; wipe, blink, pixel diff",
   },
+  Holon: {
+    group: "Evidence",
+    params: [{ name: "view", kind: "any" }],
+  },
   Transcript: {
     group: "Evidence",
     params: [{ name: "tracks", kind: "any" }, { name: "audio", kind: "string", optional: true }],
@@ -632,7 +636,7 @@ export const COMPONENTS = {
     group: "Evidence",
     params: [{ name: "stages", kind: "list" }, { name: "expected", kind: "any", optional: true }],
     summary:
-      "which build/revision is really installed or deployed where: [{name, status, facts?: {branch, sha, build, device}}], source to live; expected flags mismatches",
+      "which build/revision is really installed or deployed where: [{name, status, facts?: {branch, sha, build, device}}]; expected flags mismatches",
   },
   Approval: {
     group: "Ops",

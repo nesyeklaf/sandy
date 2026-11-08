@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/genui/core/holon.test.ts"
+    }
+  },
+  "kind": "component",
+  "partOf": "holon-genui",
+  "id": "holon-genui-view-reader",
+  "title": "Holon view reader",
+  "why": "A wrong or half-filled view must show one clear error line, never crash the card.",
+  "contract": "Turns a holon-view/v0 value into a typed view, or says which field is wrong; changes no value and computes nothing.",
+  "code": [
+    "extensions/sandy/genui/core/holon.ts"
+  ]
+}

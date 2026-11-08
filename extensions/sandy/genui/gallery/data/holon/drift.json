@@ -1,0 +1,49 @@
+{
+  "format": "holon-drift/v0",
+  "drift": [
+    {
+      "holon": "account",
+      "kind": "contradiction",
+      "side": null,
+      "seam": "user-db",
+      "detail": "Promises to be the only writer to user-db, but support-tool writes to it too"
+    },
+    {
+      "holon": "checkout",
+      "kind": "break",
+      "side": "It",
+      "seam": null,
+      "detail": "A retried payment stores the order twice"
+    },
+    {
+      "holon": "password-reset",
+      "kind": "expired",
+      "side": "They",
+      "seam": null,
+      "detail": "Expired on 2026-07-30"
+    },
+    {
+      "holon": "reset-mail",
+      "kind": "expired",
+      "side": "It",
+      "seam": null,
+      "detail": "Checked against an older contract"
+    },
+    {
+      "holon": "reset-rate-limit",
+      "kind": "orphan-below",
+      "side": null,
+      "seam": null,
+      "detail": "Proposed: a Why nothing fulfils yet"
+    },
+    {
+      "holon": "search",
+      "kind": "orphan-above",
+      "side": null,
+      "seam": null,
+      "detail": "No Why: nothing above asks for it"
+    }
+  ],
+  "computedAt": "2026-11-08T12:00:00Z",
+  "commit": "fixture"
+}

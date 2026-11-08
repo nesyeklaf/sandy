@@ -6,6 +6,7 @@ import type { ComponentName } from "../core/catalog";
 import { sourceCaption } from "../core/source";
 import type { UiNode } from "../core/types";
 import { Acceptance } from "./components/Acceptance";
+import { Holon } from "./components/Holon";
 import { CalendarHeatmap } from "./components/CalendarHeatmap";
 import { Benchmark } from "./components/Benchmark";
 import { Chart, Sparkline } from "./components/Chart";
@@ -156,6 +157,7 @@ const RENDERERS = {
   Compare,
   Provenance,
   Acceptance,
+  Holon,
   Approval,
   Hosts,
   Runbook,

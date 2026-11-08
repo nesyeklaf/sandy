@@ -11,7 +11,12 @@
       "readOnly": true
     }
   ],
-  "proofs": {},
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/genui/gallery.test.ts"
+    }
+  },
   "id": "holon-genui",
   "kind": "system",
   "partOf": "holons",

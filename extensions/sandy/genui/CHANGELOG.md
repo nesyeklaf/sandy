@@ -4,6 +4,11 @@ What changed in each version of the Generative UI plugin for SANDY. Update an in
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Holon.** `Holon(Load("view.json"))` draws a holon-view/v0 view from the holon extension as a card: Why, Contract, the four sides (I, It, We, They) with a light each, the holon's own drift, its parent, its parts and the seams to its neighbours, with a text fallback for clients that cannot draw it. A view of another format or shape shows one plain error line. Gallery examples: Holon, Card-holon, Card-seam, Card-drift.
+
 ## [0.3.1] - 2026-10-22
 
 ### Fixed
