@@ -428,6 +428,10 @@ the instructions list it.
   - Acceptance: criteria × conditions, each cell passed, failed, blocked,
     not tested or only claimed, with who checked and the evidence (code at a
     line, a file, a link, an image); a verdict and what needs the user.
+  - Holon: a holon-view/v0 view as a card (Why, Contract, the four sides
+    I, It, We and They with a light each, drift, parent, parts and seams). The
+    holon extension computes the view; core/holon.ts only validates its shape
+    at the boundary and the card shows every field as given.
   - Compare: a reference and a result image side by side, wiped, blinked
     or as a pixel difference with changed regions, zoomed together; it says
     when sizes or capture conditions differ.

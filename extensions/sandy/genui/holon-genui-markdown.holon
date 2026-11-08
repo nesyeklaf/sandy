@@ -1,0 +1,29 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "seams": [
+    {
+      "to": "holon-genui-view-reader",
+      "contract": "Writes only what the reader returned",
+      "readOnly": true
+    }
+  ],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/genui/core/holon.test.ts"
+    }
+  },
+  "kind": "component",
+  "partOf": "holon-genui",
+  "id": "holon-genui-markdown",
+  "title": "Holon text fallback",
+  "why": "Clients that cannot run the card (phone, notification, CLI) still need the holon in words.",
+  "contract": "Writes a read holon view as markdown with the same glyphs, lights and drift as the card.",
+  "code": [
+    "extensions/sandy/genui/core/markdown.ts"
+  ]
+}

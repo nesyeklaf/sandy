@@ -622,6 +622,12 @@ export const COMPONENTS = {
     params: [{ name: "images", kind: "list" }],
     summary: "a visual difference vs a reference or before/after: [src | {src, label?}], reference first; wipe, blink, pixel diff",
   },
+  Holon: {
+    group: "Evidence",
+    params: [{ name: "view", kind: "any" }],
+    summary:
+      "a holon-view/v0 object from `sandy holon view <slug> --json`, usually Holon(Load(\"$SANDY_THREAD_STORAGE/view.json\")): the holon's Why, Contract, four sides with lights, its drift, parent, parts and seams; it shows the fields as given and computes nothing",
+  },
   Transcript: {
     group: "Evidence",
     params: [{ name: "tracks", kind: "any" }, { name: "audio", kind: "string", optional: true }],

@@ -84,6 +84,8 @@ const SOURCES: Partial<Record<ComponentName, string>> = {
     "sandy tasks list --project <KEY> --json > $SANDY_THREAD_STORAGE/tasks.json · gh issue list --json number,title,state,labels,assignees,url,updatedAt > $SANDY_THREAD_STORAGE/issues.json · gh pr list --json number,title,state,isDraft,labels,assignees,author,url,updatedAt",
   Acceptance:
     "write {criteria: [{name, cells: {column: {status, note, evidence, by}}}]} to $SANDY_THREAD_STORAGE/acceptance.json as you check each criterion; a workflow gate's {matrix} or an owner's {complete, contract, blockers} loads as it is · evidence: file:line, a path, an https URL or an image",
+  Holon:
+    "sandy holon view <slug> --json > $SANDY_THREAD_STORAGE/view.json, then Holon(Load(\"$SANDY_THREAD_STORAGE/view.json\")) · the file is a holon-view/v0 object computed by the holon extension; Holon draws it and decides nothing",
   Transcript:
     "whisper-cli -m ggml-base.en.bin -f call.wav -ojf -of $SANDY_THREAD_STORAGE/hyp (whisper.cpp) · whisper --word_timestamps True --output_format json · an .srt or .vtt as {name, text: Load(…)} · the reference as {name: \"Reference\", text} or timed words; audio: wav, mp3, m4a, flac, ogg (25 MB)",
   Provenance:

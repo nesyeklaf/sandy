@@ -1,0 +1,118 @@
+{
+  "format": "holon-view/v0",
+  "focus": {
+    "id": "account",
+    "kind": "container",
+    "role": "system",
+    "title": "Account service",
+    "status": "active",
+    "why": "Customers keep one identity across orders.",
+    "contract": "Signs customers in and out, and is the only writer of password hashes.",
+    "carriedBy": [
+      {
+        "id": "team-identity",
+        "title": "Identity team"
+      }
+    ],
+    "light": "drift",
+    "drift": [
+      {
+        "kind": "contradiction",
+        "side": null,
+        "seam": "user-db",
+        "detail": "Promises to be the only writer to user-db, but support-tool writes to it too"
+      }
+    ],
+    "driftBelow": 4,
+    "sides": {
+      "I": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      },
+      "It": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      },
+      "We": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      },
+      "They": {
+        "light": "open",
+        "kind": null,
+        "source": null,
+        "at": null,
+        "expires": null,
+        "by": null,
+        "detail": "No proof declared"
+      }
+    },
+    "code": [
+      "apps/account/"
+    ]
+  },
+  "parent": {
+    "id": "shop-platform",
+    "kind": "system",
+    "role": "environment",
+    "title": "Shop platform",
+    "status": "active",
+    "light": "open",
+    "driftBelow": 6
+  },
+  "children": [
+    {
+      "id": "password-reset",
+      "kind": "component",
+      "role": "part",
+      "title": "Password reset",
+      "status": "active",
+      "light": "drift",
+      "driftBelow": 3,
+      "childCount": 3
+    },
+    {
+      "id": "sign-in",
+      "kind": "component",
+      "role": "part",
+      "title": "Sign-in",
+      "status": "active",
+      "light": "open",
+      "driftBelow": 0,
+      "childCount": 0
+    }
+  ],
+  "seams": [
+    {
+      "from": "account",
+      "fromTitle": "Account service",
+      "to": "user-db",
+      "toTitle": "User database",
+      "contract": "Only writer of password hashes",
+      "light": "open",
+      "readOnly": false,
+      "exclusive": true,
+      "drift": "contradiction"
+    }
+  ],
+  "warnings": [
+    "shop-platform has 8 children: a level may be missing in between"
+  ],
+  "computedAt": "2026-11-08T12:00:00Z",
+  "commit": "fixture"
+}

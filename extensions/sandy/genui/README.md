@@ -82,7 +82,7 @@ SANDY shows a card with a plan switch, a seat slider and a live total. Moving th
   </tr>
   <tr>
     <td><b>Evidence</b></td>
-    <td>Acceptance · Compare · Transcript · Provenance</td>
+    <td>Acceptance · Holon · Compare · Transcript · Provenance</td>
   </tr>
   <tr>
     <td><b>3D</b></td>
