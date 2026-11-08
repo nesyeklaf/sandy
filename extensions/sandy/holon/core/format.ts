@@ -6,7 +6,7 @@ export type Side = (typeof SIDES)[number];
 export type EvidenceSide = Side | `seam:${string}`;
 
 export const KINDS = [
-  "context", "system", "container", "component", "function",
+  "context", "system", "container", "component", "operation",
   "initiative", "project", "task", "step",
   "field", "topic", "concept", "claim", "source",
   "vision", "area", "goal", "habit", "data-point",
