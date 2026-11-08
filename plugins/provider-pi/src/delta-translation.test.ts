@@ -641,6 +641,7 @@ describe("pi delta translation equivalence", () => {
       "turn/started",
       "item/started",
     ]);
+    expect(started[0]).toMatchObject({ purpose: "compaction" });
     expect(completed).toEqual([
       expect.objectContaining({
         type: "thread/compacted",
@@ -650,6 +651,7 @@ describe("pi delta translation equivalence", () => {
         type: "turn/completed",
         scope: turnScope(turnId),
         status: "completed",
+        purpose: "compaction",
       }),
     ]);
   });
@@ -677,6 +679,7 @@ describe("pi delta translation equivalence", () => {
           type: "turn/completed",
           scope: turnScope(turnId),
           status: "completed",
+          purpose: "compaction",
         }),
       ]);
       expect(completed.some((event) => event.type === "thread/compacted")).toBe(
@@ -712,6 +715,7 @@ describe("pi delta translation equivalence", () => {
         expect.objectContaining({
           type: "turn/completed",
           scope: turnScope(turnId),
+          purpose: "compaction",
           ...expected,
         }),
       ]);
