@@ -179,6 +179,21 @@ describe("sandy holon in a Git repository", () => {
     expect(await light()).toMatchObject({ light: "expired", detail: expect.stringContaining("no known commit") });
   });
 
+  it.each(["src/über.ts", "src/line\nbreak.ts"])("expires machine evidence when %j changed, a path Git quotes", async (path) => {
+    const host = await loaded();
+    const dir = repo();
+    mkdirSync(join(dir, "src"));
+    writeFileSync(join(dir, path), "export const a = 1;\n");
+    writeFileSync(join(dir, "token.holon"), holonJson("token", { code: [path], proofs: { It: { kind: "ci", source: "src/token.test.ts" } } }));
+    git(dir, "add", ".");
+    git(dir, "commit", "-qm", "one");
+    await cli(host, ["evidence", "record", "--holon", "token", "--side", "It", "--result", "pass", "--root", dir]);
+    writeFileSync(join(dir, path), "export const a = 2;\n");
+    git(dir, "commit", "-qam", "two");
+    const view = await cli(host, ["view", "token", "--root", dir, "--json"]);
+    expect((view.json!.focus as { sides: { It: { light: string } } }).sides.It.light).toBe("expired");
+  });
+
   it("merges confirmations from two branches without a conflict", async () => {
     const host = await loaded();
     const dir = repo();

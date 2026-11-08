@@ -25,8 +25,8 @@ export function gitCodeChanges(root: string): CodeChanges {
       const cached = cache.get(key);
       if (cached !== undefined) return cached;
       const known = git(root, ["cat-file", "-e", `${build}^{commit}`]) !== null && git(root, ["cat-file", "-e", `${commit}^{commit}`]) !== null;
-      const output = known ? git(root, ["diff", "--name-only", "--relative", "--no-renames", build, commit]) : null;
-      const result = output === null ? null : output.split("\n").filter((line) => line !== "");
+      const output = known ? git(root, ["diff", "--name-only", "-z", "--relative", "--no-renames", build, commit]) : null;
+      const result = output === null ? null : output.split("\u0000").filter((path) => path !== "");
       cache.set(key, result);
       return result;
     },
