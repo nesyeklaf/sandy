@@ -90,6 +90,35 @@ fn holon_json(id: &str, part_of: Option<&str>) -> String {
 }
 
 #[test]
+fn fails_on_an_unreadable_holon_file_like_node() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = std::env::temp_dir().join(format!("holon-unreadable-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("temp dir");
+    let file = root.join("a.holon");
+    fs::write(&file, holon_json("a", None)).expect("write holon");
+    fs::set_permissions(&file, fs::Permissions::from_mode(0o000)).expect("chmod");
+    let readable = fs::read(&file).is_ok();
+    let output = holon(
+        &root,
+        &["check", "--json", "--root", root.to_str().expect("utf8")],
+    );
+    fs::remove_dir_all(&root).expect("clean up");
+    if readable {
+        return;
+    }
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        format!(
+            "error: EACCES: permission denied, open '{}'\n",
+            file.display()
+        )
+    );
+}
+
+#[test]
 fn check_reports_broken_models_and_exits_1() {
     let root = std::env::temp_dir().join(format!("holon-check-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);

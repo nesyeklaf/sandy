@@ -211,7 +211,7 @@ fn cold(root: &Path, view_id: &str, out: Option<&Path>) {
     let scan = scan_root(root);
     let scan_ms = ms(start);
     let start = Instant::now();
-    let (files, confirmations) = read_sources(root, scan);
+    let (files, confirmations) = read_sources(root, scan).expect("readable sources");
     let read_parse_ms = ms(start);
     let start = Instant::now();
     let text = fs::read_to_string(root.join("evidence.jsonl")).expect("evidence");

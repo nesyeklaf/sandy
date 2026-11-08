@@ -138,7 +138,7 @@ fn run(options: Options) -> Result<(String, u8), Failure> {
         None => clock_ms(),
     };
     let evidence = read_evidence(options.evidence.as_deref(), &cwd)?;
-    let model = Model::load(&root, evidence);
+    let model = Model::load(&root, evidence).map_err(fail)?;
     if command == "check" {
         let output = model.check();
         let text = if options.json {

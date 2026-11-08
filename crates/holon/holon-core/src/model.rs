@@ -86,14 +86,29 @@ pub fn read_confirmation_file(path: String, text: &str) -> ConfirmationFile {
     }
 }
 
-fn read_text(path: &Path) -> String {
-    match std::fs::read(path) {
-        Ok(bytes) => match String::from_utf8(bytes) {
-            Ok(text) => text,
-            Err(error) => String::from_utf8_lossy(error.as_bytes()).into_owned(),
-        },
-        Err(_) => String::new(),
+fn node_read_error(error: &std::io::Error, path: &Path) -> String {
+    let known = match error.raw_os_error() {
+        Some(1) => Some(("EPERM", "operation not permitted")),
+        Some(2) => Some(("ENOENT", "no such file or directory")),
+        Some(5) => Some(("EIO", "i/o error")),
+        Some(13) => Some(("EACCES", "permission denied")),
+        Some(20) => Some(("ENOTDIR", "not a directory")),
+        Some(21) => Some(("EISDIR", "illegal operation on a directory")),
+        Some(24) => Some(("EMFILE", "too many open files")),
+        _ => None,
+    };
+    match known {
+        Some((code, description)) => format!("{code}: {description}, open '{}'", path.display()),
+        None => format!("{error}, open '{}'", path.display()),
     }
+}
+
+fn read_text(path: &Path) -> Result<String, String> {
+    let bytes = std::fs::read(path).map_err(|error| node_read_error(&error, path))?;
+    Ok(match String::from_utf8(bytes) {
+        Ok(text) => text,
+        Err(error) => String::from_utf8_lossy(error.as_bytes()).into_owned(),
+    })
 }
 
 pub struct Model {
@@ -216,30 +231,36 @@ impl Model {
         }
     }
 
-    pub fn load(root: &Path, evidence: Vec<Evidence>) -> Model {
-        let (files, confirmation_files) = read_sources(root, scan_root(root));
-        Model::new(files, confirmation_files, evidence)
+    pub fn load(root: &Path, evidence: Vec<Evidence>) -> Result<Model, String> {
+        let (files, confirmation_files) = read_sources(root, scan_root(root))?;
+        Ok(Model::new(files, confirmation_files, evidence))
     }
 }
 
-pub fn read_sources(root: &Path, scan: ScanResult) -> (Vec<HolonFile>, Vec<ConfirmationFile>) {
-    let files: Vec<HolonFile> = scan
+pub type Sources = (Vec<HolonFile>, Vec<ConfirmationFile>);
+
+pub fn read_sources(root: &Path, scan: ScanResult) -> Result<Sources, String> {
+    let files: Vec<Result<HolonFile, String>> = scan
         .holon_files
         .into_par_iter()
         .map(|path| {
-            let text = read_text(&root.join(&path));
-            read_holon_file(path, &text)
+            let text = read_text(&root.join(&path))?;
+            Ok(read_holon_file(path, &text))
         })
         .collect();
-    let confirmation_files: Vec<ConfirmationFile> = scan
+    let files = files.into_iter().collect::<Result<Vec<_>, _>>()?;
+    let confirmation_files: Vec<Result<ConfirmationFile, String>> = scan
         .confirmation_files
         .into_par_iter()
         .map(|path| {
-            let text = read_text(&root.join(&path));
-            read_confirmation_file(path, &text)
+            let text = read_text(&root.join(&path))?;
+            Ok(read_confirmation_file(path, &text))
         })
         .collect();
-    (files, confirmation_files)
+    let confirmation_files = confirmation_files
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok((files, confirmation_files))
 }
 
 impl Model {
