@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { confirmationPath, parseHolon } from "./format.ts";
+import { confirmationPath, parseConfirmation, parseEvidenceLines, parseHolon } from "./format.ts";
 import { readConfirmationFile } from "./model.ts";
 import { contractHash } from "./time.ts";
 import { SHOP } from "../test/fixture.ts";
@@ -26,6 +26,39 @@ describe("confirmation file names", () => {
     expect(read.confirmation).toMatchObject({ side: "seam:mail", by: "agent:x" });
     const literal = readConfirmationFile(".holons/confirmations/login/2026-11-08-seam:mail-agent:x.json", JSON.stringify(confirmation));
     expect(literal.error).toContain("2026-11-08-seam_mail-agent_x.json");
+  });
+});
+
+describe("unpaired surrogates", () => {
+  const unpaired = { ok: false, error: "invalid JSON: unpaired surrogate in a string" };
+  const holonText = JSON.stringify(resetToken);
+
+  it.each([
+    ["a value", holonText.replace(/"title":"[^"]*"/, String.raw`"title":"a\ud800b"`)],
+    ["a trailing half", holonText.replace(/"title":"[^"]*"/, String.raw`"title":"\udc00"`)],
+    ["a key", holonText.replace(/^\{/, String.raw`{"\ud800":1,`)],
+    ["a nested array item", holonText.replace(/"carriedBy":\[[^\]]*\]/, String.raw`"carriedBy":[["\ud83d"]]`)],
+  ])("rejects a holon with one in %s", (_where, text) => {
+    expect(text).toMatch(/\\ud[89a-f]/);
+    expect(parseHolon(text)).toEqual(unpaired);
+  });
+
+  it("accepts a surrogate pair", () => {
+    const parsed = parseHolon(holonText.replace(/"title":"[^"]*"/, String.raw`"title":"\ud83c\udf89"`));
+    expect(parsed.ok && parsed.value.title).toBe("🎉");
+  });
+
+  it("rejects a confirmation with one", () => {
+    expect(parseConfirmation(String.raw`{"format":"holon-confirmation/v0","answer":"\ud800"}`)).toEqual(unpaired);
+  });
+
+  it("rejects an evidence line with one", () => {
+    expect(parseEvidenceLines(`\n${String.raw`{"holon":"a","detail":"\udfff"}`}\n`)).toEqual({ ok: false, error: `line 2: ${unpaired.error}` });
+  });
+
+  it("reports a syntax error before an unpaired surrogate", () => {
+    const parsed = parseHolon(String.raw`{"a":"\ud800",}`);
+    expect(parsed.ok || parsed.error).toMatch(/^invalid JSON: (?!unpaired)/);
   });
 });
 

@@ -169,12 +169,24 @@ function describeIssues(error: z.ZodError): string {
     .join("; ");
 }
 
+function isWellFormedJson(value: unknown): boolean {
+  if (typeof value === "string") return value.isWellFormed();
+  if (Array.isArray(value)) return value.every(isWellFormedJson);
+  if (value !== null && typeof value === "object") {
+    return Object.entries(value).every(([key, item]) => key.isWellFormed() && isWellFormedJson(item));
+  }
+  return true;
+}
+
 function parseJson(text: string): Parsed<unknown> {
+  let value: unknown;
   try {
-    return { ok: true, value: JSON.parse(text) as unknown };
+    value = JSON.parse(text) as unknown;
   } catch (cause) {
     return { ok: false, error: `invalid JSON: ${cause instanceof Error ? cause.message : String(cause)}` };
   }
+  if (!isWellFormedJson(value)) return { ok: false, error: "invalid JSON: unpaired surrogate in a string" };
+  return { ok: true, value };
 }
 
 function toProof(raw: z.infer<typeof proofSchema>): Proof {
