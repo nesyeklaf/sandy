@@ -30,7 +30,7 @@ Errors (`sandy holon check` exits 1): invalid JSON or schema, a duplicate id, an
 
 ## Human confirmation: `.holons/confirmations/<slug>/<yyyy-mm-dd>-<side>-<by>.json`
 
-In Git at the repository root, one file per confirmation so two branches never conflict. Example: [2026-10-20-I-maria.json](fixtures/shop/.holons/confirmations/sign-in/2026-10-20-I-maria.json). Fields: `format` (`holon-confirmation/v0`), `holon`, `side`, `by` (who-tree slug or `agent:<name>`), `recordedBy`, `at` and `expires` (yyyy-mm-dd), `contractHash`, `answer`, `hesitation[]`, `result` (`confirmed` or `refuted`).
+In Git at the repository root, one file per confirmation so two branches never conflict. Every `:` in the file name becomes `_`, so Windows can check it out: `by: "agent:claude"` on side `seam:mail` is stored as `<date>-seam_mail-agent_claude.json`. Slugs never contain `_`, so the name stays unambiguous. Readers take `side` and `by` from the JSON, never from the file name. Example: [2026-10-20-I-maria.json](fixtures/shop/.holons/confirmations/sign-in/2026-10-20-I-maria.json). Fields: `format` (`holon-confirmation/v0`), `holon`, `side`, `by` (who-tree slug or `agent:<name>`), `recordedBy`, `at` and `expires` (yyyy-mm-dd), `contractHash`, `answer`, `hesitation[]`, `result` (`confirmed` or `refuted`).
 
 ## Machine evidence: extension database, not Git
 
