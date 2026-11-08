@@ -1,3 +1,4 @@
+use crate::order::js_trim;
 use crate::time::{is_calendar_date, is_iso_timestamp};
 use rayon::prelude::*;
 use serde::Serialize;
@@ -773,7 +774,7 @@ pub fn parse_evidence_lines(text: &str) -> Result<Vec<Evidence>, String> {
     let lines: Vec<(usize, &str)> = text
         .split('\n')
         .enumerate()
-        .map(|(index, line)| (index, line.trim()))
+        .map(|(index, line)| (index, js_trim(line)))
         .filter(|(_, line)| !line.is_empty())
         .collect();
     let parsed: Vec<Result<Evidence, String>> = lines
@@ -852,6 +853,24 @@ mod tests {
             parse_confirmation(&text).unwrap_err(),
             "invalid holon-confirmation/v0: side: Invalid string: must match pattern /^seam:[a-z0-9]+(-[a-z0-9]+)*$/; by: Invalid input; at: must be yyyy-mm-dd; at: is no calendar date; expires: is no calendar date; contractHash: must be sha256:<64 hex>; hesitation.0: Invalid input: expected string, received number; result: Invalid option: expected one of \"confirmed\"|\"refuted\""
         );
+    }
+
+    #[test]
+    fn trims_evidence_lines_like_javascript() {
+        let record = concat!(
+            "{\"holon\":\"a\",\"side\":\"It\",\"kind\":\"ci\",\"source\":\"\",\"result\":\"pass\",",
+            "\"contractHash\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",",
+            "\"build\":\"b\",\"environment\":\"ci\",\"at\":\"2026-11-01T00:00:00Z\",\"expires\":null,\"detail\":\"\"}"
+        );
+        let with_bom = format!("\u{feff}{record}\u{2028}\n");
+        assert_eq!(
+            parse_evidence_lines(&with_bom).map(|records| records.len()),
+            Ok(1)
+        );
+        let next_line = format!("\u{85}{record}\n");
+        assert!(parse_evidence_lines(&next_line)
+            .unwrap_err()
+            .starts_with("line 1: invalid JSON:"));
     }
 
     #[test]

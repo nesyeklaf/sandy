@@ -8,28 +8,26 @@ pub fn js_cmp(a: &str, b: &str) -> Ordering {
     }
 }
 
+fn is_js_trimmed(c: char) -> bool {
+    matches!(
+        c,
+        '\u{9}' | '\u{a}' | '\u{b}' | '\u{c}' | '\u{d}' | ' ' | '\u{a0}' | '\u{1680}' | '\u{2000}'
+            ..='\u{200a}'
+                | '\u{2028}'
+                | '\u{2029}'
+                | '\u{202f}'
+                | '\u{205f}'
+                | '\u{3000}'
+                | '\u{feff}'
+    )
+}
+
+pub fn js_trim(value: &str) -> &str {
+    value.trim_matches(is_js_trimmed)
+}
+
 pub fn is_js_blank(value: &str) -> bool {
-    value.chars().all(|c| {
-        matches!(
-            c,
-            '\u{9}'
-                | '\u{a}'
-                | '\u{b}'
-                | '\u{c}'
-                | '\u{d}'
-                | ' '
-                | '\u{a0}'
-                | '\u{1680}'
-                | '\u{2000}'
-                ..='\u{200a}'
-                    | '\u{2028}'
-                    | '\u{2029}'
-                    | '\u{202f}'
-                    | '\u{205f}'
-                    | '\u{3000}'
-                    | '\u{feff}'
-        )
-    })
+    js_trim(value).is_empty()
 }
 
 #[cfg(test)]
@@ -48,5 +46,12 @@ mod tests {
         assert!(is_js_blank(" \t\u{feff}\u{3000}"));
         assert!(!is_js_blank("\u{85}"));
         assert!(!is_js_blank(" x "));
+    }
+
+    #[test]
+    fn trims_like_javascript_trim() {
+        assert_eq!(js_trim("\u{feff}\u{2028} x \u{3000}\n"), "x");
+        assert_eq!(js_trim("\u{85}x\u{85}"), "\u{85}x\u{85}");
+        assert_eq!(js_trim("\u{180e}x"), "\u{180e}x");
     }
 }

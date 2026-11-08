@@ -1,3 +1,4 @@
+use holon_core::order::js_trim;
 use holon_core::CodeChanges;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -21,7 +22,7 @@ fn git(cwd: &Path, args: &[&str]) -> Option<String> {
 
 fn trimmed(value: Option<String>) -> Option<String> {
     value
-        .map(|text| text.trim().to_string())
+        .map(|text| js_trim(&text).to_string())
         .filter(|text| !text.is_empty())
 }
 
