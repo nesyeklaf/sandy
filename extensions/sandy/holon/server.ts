@@ -17,8 +17,11 @@ const viewResult = z.union([
 export const rpcContract = defineRpcContract({
   view: {
     input: z.object({
-      threadId: z.string().min(1),
-      sourceKind: z.enum(["workspace", "host", "thread-storage"]),
+      source: z.object({
+        kind: z.enum(["workspace", "host", "thread-storage"]),
+        threadId: z.string().min(1).nullable(),
+        environmentId: z.string().min(1).nullable(),
+      }),
       path: z.string().min(1),
       id: z.string().optional(),
     }),
@@ -26,16 +29,25 @@ export const rpcContract = defineRpcContract({
   },
 });
 
-async function absoluteFile(sandy: SandyPluginApi, threadId: string, kind: "workspace" | "host" | "thread-storage", path: string): Promise<{ file: string; root: string | null }> {
-  if (kind === "host" || isAbsolute(path)) return { file: path, root: null };
-  if (kind === "thread-storage") {
-    const storage = await sandy.sdk.threads.storageLocation({ threadId });
+type Source = z.infer<typeof rpcContract.view.input>["source"];
+
+async function absoluteFile(sandy: SandyPluginApi, source: Source, path: string): Promise<{ file: string; root: string | null }> {
+  if (source.kind === "host" || isAbsolute(path)) return { file: path, root: null };
+  if (source.kind === "thread-storage") {
+    if (source.threadId === null) throw new HolonInputError("a thread-storage file needs its thread", "no_thread");
+    const storage = await sandy.sdk.threads.storageLocation({ threadId: source.threadId });
     return { file: join(storage.storageRootPath, path), root: null };
   }
-  const thread = await sandy.sdk.threads.get({ threadId, include: "environment" });
-  const environment = "environment" in thread ? thread.environment : null;
-  if (typeof environment?.path !== "string") throw new HolonInputError("the thread has no workspace", "no_workspace");
-  return { file: join(environment.path, path), root: environment.path };
+  let workspace: string | null = null;
+  if (source.environmentId !== null) {
+    workspace = (await sandy.sdk.environments.get({ environmentId: source.environmentId })).path ?? null;
+  } else if (source.threadId !== null) {
+    const thread = await sandy.sdk.threads.get({ threadId: source.threadId, include: "environment" });
+    const environment = "environment" in thread ? thread.environment : null;
+    workspace = typeof environment?.path === "string" ? environment.path : null;
+  }
+  if (workspace === null) throw new HolonInputError("the file has no workspace path", "no_workspace");
+  return { file: join(workspace, path), root: workspace };
 }
 
 export default async function plugin(sandy: SandyPluginApi): Promise<void> {
@@ -44,9 +56,9 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
   const service = new HolonService(db);
 
   sandy.rpc.register(rpcContract, {
-    async view({ threadId, sourceKind, path, id }) {
+    async view({ source, path, id }) {
       try {
-        const { file, root: workspace } = await absoluteFile(sandy, threadId, sourceKind, path);
+        const { file, root: workspace } = await absoluteFile(sandy, source, path);
         if (!existsSync(file)) return { ok: false as const, error: `${path} is not on the disk of the SANDY server; holon views need a local workspace` };
         const parsed = parseHolon(readFileSync(file, "utf8"));
         if (!parsed.ok) return { ok: false as const, error: `${path}: ${parsed.error}` };

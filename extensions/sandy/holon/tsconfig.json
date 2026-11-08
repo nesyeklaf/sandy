@@ -29,6 +29,7 @@
     "ui",
     "bench",
     "*.test.ts",
+    "*.test.tsx",
     "test",
     "vitest.config.ts"
   ]

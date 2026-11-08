@@ -136,8 +136,7 @@ describe("sandy holon on the shop fixture", () => {
     const host = await loaded();
     const shop = track(tempCopy(SHOP));
     const result = (await host.harness.callRpc("view", {
-      threadId: "thread-test",
-      sourceKind: "host",
+      source: { kind: "host", threadId: "thread-test", environmentId: null },
       path: join(shop.dir, "apps/account/password-reset.holon"),
     })) as { ok: boolean; view?: { focus: { id: string } } };
     expect(result.ok).toBe(true);
