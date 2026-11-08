@@ -1,7 +1,7 @@
 {
   "format": "holon/v0",
   "id": "reset-mail",
-  "kind": "function",
+  "kind": "operation",
   "partOf": "password-reset",
   "title": "Reset mail",
   "status": "active",

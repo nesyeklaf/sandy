@@ -1,7 +1,7 @@
 {
   "format": "holon/v0",
   "id": "reset-token",
-  "kind": "function",
+  "kind": "operation",
   "partOf": "password-reset",
   "title": "Reset token",
   "status": "active",
