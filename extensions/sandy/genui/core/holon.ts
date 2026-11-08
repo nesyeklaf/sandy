@@ -61,12 +61,26 @@ export interface HolonSide {
   readonly detail: string | null;
 }
 
+export const HOLON_KINDS = [
+  "context", "system", "container", "component", "operation",
+  "initiative", "project", "task", "step",
+  "field", "topic", "concept", "claim", "source",
+  "vision", "area", "goal", "habit", "data-point",
+  "organisation", "team", "person",
+] as const;
+export type HolonKind = (typeof HOLON_KINDS)[number];
+
+export const HOLON_STATUSES = ["proposed", "active", "retired"] as const;
+export type HolonStatus = (typeof HOLON_STATUSES)[number];
+
+export type HolonRole = "system" | "environment" | "part";
+
 export interface HolonSummary {
   readonly id: string;
-  readonly kind: string;
-  readonly role: string;
+  readonly kind: HolonKind;
+  readonly role: HolonRole;
   readonly title: string;
-  readonly status: string;
+  readonly status: HolonStatus;
   readonly light: Light;
   readonly driftBelow: number;
 }
@@ -177,13 +191,13 @@ function readDrift(value: Value | undefined, path: string): HolonDrift {
   };
 }
 
-function readSummary(fields: Fields, path: string): HolonSummary {
+function readSummary(fields: Fields, path: string, role: HolonRole): HolonSummary {
   return {
     id: text(fields, "id", path),
-    kind: text(fields, "kind", path),
-    role: text(fields, "role", path),
+    kind: oneOf(fields.kind, HOLON_KINDS, `${path}.kind`),
+    role: oneOf(fields.role, [role], `${path}.role`),
     title: text(fields, "title", path),
-    status: text(fields, "status", path),
+    status: oneOf(fields.status, HOLON_STATUSES, `${path}.status`),
     light: oneOf(fields.light, LIGHT_NAMES, `${path}.light`),
     driftBelow: count(fields, "driftBelow", path),
   };
@@ -194,7 +208,7 @@ function readFocus(value: Value | undefined): HolonFocus {
   const fields = object(value, path);
   const sides = object(fields.sides, `${path}.sides`);
   return {
-    ...readSummary(fields, path),
+    ...readSummary(fields, path, "system"),
     why: text(fields, "why", path),
     contract: text(fields, "contract", path),
     carriedBy: list(fields.carriedBy, `${path}.carriedBy`).map((entry, index) => {
@@ -215,7 +229,7 @@ function readFocus(value: Value | undefined): HolonFocus {
 function readChild(value: Value | undefined, index: number): HolonChild {
   const path = `children[${index}]`;
   const fields = object(value, path);
-  return { ...readSummary(fields, path), childCount: count(fields, "childCount", path) };
+  return { ...readSummary(fields, path, "part"), childCount: count(fields, "childCount", path) };
 }
 
 function readSeam(value: Value | undefined, index: number): HolonSeam {
@@ -241,7 +255,7 @@ function readView(value: Value | undefined): HolonView {
   }
   return {
     focus: readFocus(fields.focus),
-    parent: fields.parent === null ? null : readSummary(object(fields.parent, "parent"), "parent"),
+    parent: fields.parent === null ? null : readSummary(object(fields.parent, "parent"), "parent", "environment"),
     children: list(fields.children, "children").map(readChild),
     seams: list(fields.seams, "seams").map(readSeam),
     warnings: list(fields.warnings, "warnings").map((entry, index) => (typeof entry === "string" ? entry : fail(`warnings[${index}]`, "a string"))),

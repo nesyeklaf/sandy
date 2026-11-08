@@ -1,16 +1,20 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { dataKey, type LoadedData } from "./data";
-import { LIGHTS, readHolonView } from "./holon";
+import { HOLON_KINDS, HOLON_STATUSES, LIGHTS, readHolonView } from "./holon";
 import { compile, evaluate, formatDiagnostics, initialState, toMarkdown } from "./index";
 import type { Value } from "./types";
 
 const fixture = (name: string): Value => JSON.parse(readFileSync(new URL(`../gallery/data/holon/${name}.json`, import.meta.url), "utf8")) as Value;
 
 function markdown(name: string): string {
+  return markdownOf(fixture(name));
+}
+
+function markdownOf(view: Value): string {
   const result = compile(`Holon(Load("view.json"))`);
   if (result.program === null) throw new Error(formatDiagnostics(result.diagnostics));
-  const data = new Map<string, LoadedData>([[dataKey({ path: "view.json", raw: false }), { ok: true, value: fixture(name) } as LoadedData]]);
+  const data = new Map<string, LoadedData>([[dataKey({ path: "view.json", raw: false }), { ok: true, value: view } as LoadedData]]);
   return toMarkdown(evaluate(result.program, initialState(result.program, data), data).roots);
 }
 
@@ -57,6 +61,38 @@ describe("readHolonView", () => {
     expect(read).toEqual({ ok: false, error: expect.stringContaining("seams[0].drift should be one of") });
   });
 
+  it.each([
+    ["kind", "focus", "kind", "potato", "focus.kind should be one of"],
+    ["status", "focus", "status", "banana", "focus.status should be one of"],
+    ["focus role", "focus", "role", "part", 'focus.role should be one of system'],
+    ["parent role", "parent", "role", "system", 'parent.role should be one of environment'],
+    ["parent kind", "parent", "kind", "potato", "parent.kind should be one of"],
+    ["parent status", "parent", "status", "gone", "parent.status should be one of"],
+  ])("rejects a wrong %s", (_label, holon, field, value, message) => {
+    const view = structuredClone(fixture("view-password-reset")) as unknown as Record<string, Record<string, string>>;
+    view[holon][field] = value;
+    expect(readHolonView(view as unknown as Value)).toEqual({ ok: false, error: expect.stringContaining(message) });
+  });
+
+  it.each([
+    ["role", "environment", "children[0].role should be one of part"],
+    ["kind", "potato", "children[0].kind should be one of"],
+    ["status", "deleted", "children[0].status should be one of"],
+  ])("rejects a part with a wrong %s", (field, value, message) => {
+    const view = structuredClone(fixture("view-password-reset")) as unknown as { children: Record<string, string>[] };
+    view.children[0][field] = value;
+    expect(readHolonView(view as unknown as Value)).toEqual({ ok: false, error: expect.stringContaining(message) });
+  });
+
+  it("accepts every kind and status the contract names", () => {
+    for (const kind of HOLON_KINDS) for (const status of HOLON_STATUSES) {
+      const view = structuredClone(fixture("view-password-reset")) as unknown as { focus: Record<string, string> };
+      view.focus.kind = kind;
+      view.focus.status = status;
+      expect(readHolonView(view as unknown as Value).ok).toBe(true);
+    }
+  });
+
   it("gives every light a distinct glyph or tone", () => {
     expect(Object.keys(LIGHTS).sort()).toEqual(["claimed", "drift", "expired", "hard", "open", "refuted", "soft"]);
     expect(LIGHTS.hard.glyph).toBe("●");
@@ -67,16 +103,26 @@ describe("readHolonView", () => {
 describe("toMarkdown: Holon", () => {
   it("writes the focus with Why, Contract, the four sides, drift, code, parts and seams", () => {
     const out = markdown("view-password-reset");
-    expect(out).toContain("◇ **Password reset** · component · active · 3 drift below");
-    expect(out).toContain("Part of ◇ Account service · container · 4 drift below");
+    expect(out).toContain("◇ **Password reset** `password-reset` · component · active · 3 drift below");
+    expect(out).toContain("Part of ◇ Account service `account` · container · active · 4 drift below");
     expect(out).toContain("**Why** A forgotten password should not turn into a support ticket.");
     expect(out).toContain("- ○ **I** open — Declared, never checked");
     expect(out).toContain("- ● **It** hard — 14 tests passed, including expiry and reuse _(ci · apps/account/reset.test.ts");
     expect(out).toContain("- ◇ **They** expired — Expired on 2026-07-30");
     expect(out).toContain("- ◇ **expired** (side They): Expired on 2026-07-30");
     expect(out).toContain("**Code** `apps/account/reset.ts`");
-    expect(out).toContain("- ◇ Reset rate limit · operation · proposed · 1 drift below");
-    expect(out).toContain("- Password reset → Mail ●: Sends only to verified addresses");
+    expect(out).toContain("- ◇ Reset rate limit `reset-rate-limit` · operation · proposed · 1 drift below");
+    expect(out).toContain("- Password reset `password-reset` → Mail `mail` ●: Sends only to verified addresses");
+  });
+
+  it("shows the carriers' ids, a retired parent and the part count of a part", () => {
+    const view = structuredClone(fixture("view-password-reset")) as { parent: { status: string }; children: { childCount: number }[] };
+    view.parent.status = "retired";
+    view.children[0].childCount = 4321;
+    const out = markdownOf(view as unknown as Value);
+    expect(out).toMatch(/Part of .* · retired/);
+    expect(out).toContain("· 4321 parts");
+    expect(out).toMatch(/\*\*Carried by\*\* Identity team `[a-z-]+`/);
   });
 
   it("marks a seam with drift and an exclusive promise", () => {

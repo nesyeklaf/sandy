@@ -1,7 +1,8 @@
 view = Load("data/holon/view-account.json")
+tone = l => l == "hard" ? "good" : l == "soft" ? "info" : l == "refuted" ? "bad" : l == "open" || l == "claimed" ? "neutral" : "warn"
 glyph = l => l == "hard" ? "●" : l == "soft" ? "◐" : l == "claimed" ? "◌" : l == "open" ? "○" : l == "refuted" ? "✕" : "◇"
 seams = view.seams
 Card(`${view.focus.title}: its seams`, [
-  Table(["From", "To", "Contract", "Light", "Notes"], seams.map(s => [s.fromTitle, s.toTitle, s.contract, Badge(glyph(s.light) + " " + s.light, tone: s.drift == null ? "good" : "bad"), [s.readOnly ? "read-only" : null, s.exclusive ? "exclusive" : null, s.drift].filter(n => n != null).join(", ")])),
+  Table(["From", "To", "Contract", "Light", "Notes"], seams.map(s => [s.fromTitle, s.toTitle, s.contract, Badge(glyph(s.light) + " " + s.light, tone: tone(s.light)), [s.readOnly ? "read-only" : null, s.exclusive ? "exclusive" : null, s.drift].filter(n => n != null).join(", ")])),
   seams.filter(s => s.drift != null).map(s => Callout(`${s.fromTitle} promises ${s.contract}, but ${s.drift}`, tone: "bad", title: "False promise"))
 ])

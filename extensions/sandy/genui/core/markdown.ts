@@ -2427,17 +2427,18 @@ function holonDriftLine(drift: HolonDrift): string {
   return `- ${LIGHTS.drift.glyph} **${DRIFT_KINDS[drift.kind].label}**${where}: ${escapeProse(drift.detail)}`;
 }
 
-/** A holon-view/v0 as text: the focus with its sides and drift, then its parts and seams, shown as given. */
 function holonMarkdown(value: Value | undefined): string {
   const read = readHolonView(value);
   if (!read.ok) return `_(${read.error})_`;
   const { focus, parent, children, seams, warnings } = read.view;
   const below = (driftBelow: number) => (driftBelow > 0 ? ` · ${driftBelow} drift below` : "");
   const head = [
-    `${LIGHTS[focus.light].glyph} **${escapeProse(focus.title)}** · ${escapeProse(focus.kind)} · ${escapeProse(focus.status)}${below(focus.driftBelow)}`,
-    parent === null ? "" : `Part of ${LIGHTS[parent.light].glyph} ${escapeProse(parent.title)} · ${escapeProse(parent.kind)}${below(parent.driftBelow)}`,
+    `${LIGHTS[focus.light].glyph} **${escapeProse(focus.title)}** \`${focus.id}\` · ${escapeProse(focus.kind)} · ${escapeProse(focus.status)}${below(focus.driftBelow)}`,
+    parent === null
+      ? ""
+      : `Part of ${LIGHTS[parent.light].glyph} ${escapeProse(parent.title)} \`${parent.id}\` · ${escapeProse(parent.kind)} · ${escapeProse(parent.status)}${below(parent.driftBelow)}`,
   ].filter((line) => line !== "");
-  const carriers = focus.carriedBy.map((carrier) => escapeProse(carrier.title)).join(", ");
+  const carriers = focus.carriedBy.map((carrier) => `${escapeProse(carrier.title)} \`${carrier.id}\``).join(", ");
   const text = [
     `**Why** ${focus.why === "" ? "_nothing says why_" : escapeProse(focus.why)}`,
     `**Contract** ${escapeProse(focus.contract)}`,
@@ -2451,7 +2452,7 @@ function holonMarkdown(value: Value | undefined): string {
       ? ""
       : [
           `**Parts (${children.length})**`,
-          ...children.slice(0, MARKDOWN_ROWS).map((child) => `- ${LIGHTS[child.light].glyph} ${escapeProse(child.title)} · ${escapeProse(child.kind)}${child.status === "active" ? "" : ` · ${escapeProse(child.status)}`}${below(child.driftBelow)}`),
+          ...children.slice(0, MARKDOWN_ROWS).map((child) => `- ${LIGHTS[child.light].glyph} ${escapeProse(child.title)} \`${child.id}\` · ${escapeProse(child.kind)}${child.status === "active" ? "" : ` · ${escapeProse(child.status)}`}${child.childCount === 0 ? "" : ` · ${child.childCount} ${child.childCount === 1 ? "part" : "parts"}`}${below(child.driftBelow)}`),
           moreLine(Math.min(children.length, MARKDOWN_ROWS), children.length, "part"),
         ]
           .filter((line) => line !== "")
@@ -2463,7 +2464,7 @@ function holonMarkdown(value: Value | undefined): string {
           `**Seams (${seams.length})**`,
           ...seams.slice(0, MARKDOWN_ROWS).map((seam) => {
             const notes = [seam.readOnly ? "read-only" : "", seam.exclusive ? "exclusive" : "", seam.drift === null ? "" : `drift: ${DRIFT_KINDS[seam.drift].label}`].filter((note) => note !== "");
-            return `- ${escapeProse(seam.fromTitle)} ${seam.readOnly ? "⇢" : "→"} ${escapeProse(seam.toTitle)} ${LIGHTS[seam.light].glyph}${notes.length === 0 ? "" : ` (${notes.join(", ")})`}: ${escapeProse(seam.contract)}`;
+            return `- ${escapeProse(seam.fromTitle)} \`${seam.from}\` ${seam.readOnly ? "⇢" : "→"} ${escapeProse(seam.toTitle)} \`${seam.to}\` ${LIGHTS[seam.light].glyph}${notes.length === 0 ? "" : ` (${notes.join(", ")})`}: ${escapeProse(seam.contract)}`;
           }),
           moreLine(Math.min(seams.length, MARKDOWN_ROWS), seams.length, "seam"),
         ]

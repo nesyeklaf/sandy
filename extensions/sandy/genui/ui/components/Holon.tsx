@@ -42,6 +42,8 @@ function Glyph({ light }: { light: Light }) {
   );
 }
 
+const ID = "font-mono text-[11px] leading-5 text-muted-foreground [overflow-wrap:anywhere]";
+
 function CodePath({ path }: { path: string }) {
   const file = useFileOpener(path);
   if (file === null) return <span className="min-w-0 font-mono text-xs leading-5 text-foreground [overflow-wrap:anywhere]">{path}</span>;
@@ -133,7 +135,9 @@ function Parent({ parent }: { parent: HolonSummary }) {
       <span className="text-muted-foreground">Part of</span>
       <Glyph light={parent.light} />
       <span className="font-medium text-foreground">{parent.title}</span>
+      <span className={ID}>{parent.id}</span>
       <span className="text-muted-foreground">{parent.kind}</span>
+      <span className={cn(CHIP, parent.status === "active" ? "" : TONE_CHIP.warn)}>{parent.status}</span>
       {below === null ? null : <span className={cn(CHIP, TONE_CHIP.warn)}>{below}</span>}
     </div>
   );
@@ -145,6 +149,7 @@ const ChildRow = memo(function ChildRow({ child }: { child: HolonChild }) {
     <li className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-border/60 py-1.5 first:border-t-0">
       <Glyph light={child.light} />
       <span className="min-w-0 text-[13px] leading-5 text-foreground [overflow-wrap:anywhere]">{child.title}</span>
+      <span className={ID}>{child.id}</span>
       <span className={CAPTION}>{child.kind}</span>
       {child.status === "active" ? null : <span className={CHIP}>{child.status}</span>}
       {child.childCount > 0 ? <span className={CAPTION}>{`${formatNumber(child.childCount)} ${child.childCount === 1 ? "part" : "parts"}`}</span> : null}
@@ -159,11 +164,13 @@ const SeamRow = memo(function SeamRow({ seam }: { seam: HolonSeam }) {
     <li className={cn("flex min-w-0 flex-col gap-0.5 rounded-lg px-3 py-2", drifted ? "bg-destructive/8 ring-1 ring-destructive/30" : "bg-surface-recessed/70")}>
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
         <span className="text-[13px] font-medium leading-5 text-foreground">{seam.fromTitle}</span>
+        <span className={ID}>{seam.from}</span>
         <span
           aria-hidden
           className={cn("inline-block h-0 w-8 shrink-0 border-t-2", seam.readOnly ? "border-dashed" : "border-solid", drifted ? "border-destructive" : "border-muted-foreground/60")}
         />
         <span className="text-[13px] font-medium leading-5 text-foreground">{seam.toTitle}</span>
+        <span className={ID}>{seam.to}</span>
         <Glyph light={seam.light} />
         {seam.drift === null ? null : <DriftChip kind={seam.drift} />}
         {seam.readOnly ? <span className={CHIP}>read-only</span> : null}
@@ -205,6 +212,7 @@ function HolonCard({ view, id }: { view: HolonView; id: string }) {
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <Glyph light={focus.light} />
           <h3 className="m-0 min-w-0 text-base font-medium leading-6 text-foreground [overflow-wrap:anywhere]">{focus.title}</h3>
+          <span className={ID}>{focus.id}</span>
           <span className={CHIP}>{focus.kind}</span>
           <span className={cn(CHIP, focus.status === "active" ? "" : TONE_CHIP.warn)}>{focus.status}</span>
           {below === null ? null : <span className={cn(CHIP, TONE_CHIP.warn)}>{below}</span>}
@@ -219,7 +227,14 @@ function HolonCard({ view, id }: { view: HolonView; id: string }) {
       </Labelled>
       {focus.carriedBy.length === 0 ? null : (
         <Labelled label="Carried by">
-          <p className="m-0 text-xs leading-5 text-foreground">{focus.carriedBy.map((carrier) => carrier.title).join(", ")}</p>
+          <ul aria-label="Carried by" className="m-0 flex min-w-0 list-none flex-wrap gap-x-3 gap-y-0.5 p-0">
+            {focus.carriedBy.map((carrier) => (
+              <li key={carrier.id} className="flex min-w-0 items-baseline gap-1.5 text-xs leading-5 text-foreground">
+                {carrier.title}
+                <span className={ID}>{carrier.id}</span>
+              </li>
+            ))}
+          </ul>
         </Labelled>
       )}
       <Labelled label="Proof">

@@ -86,11 +86,24 @@ describe("Holon", () => {
     expect(text()).toContain("Account service");
     expect(text()).toContain("4 drift below");
     expect(labels('ul[aria-label="Parts"] li').map((row) => row?.replace(/\s+/g, " "))).toEqual([
-      "◇Reset mailoperation1 drift below",
-      "◇Reset rate limitoperationproposed1 drift below",
-      "○Reset tokenoperation",
+      "◇Reset mailreset-mailoperation1 drift below",
+      "◇Reset rate limitreset-rate-limitoperationproposed1 drift below",
+      "○Reset tokenreset-tokenoperation",
     ]);
     expect(lights("Parts")).toEqual(["drift", "drift", "open"]);
+  });
+
+  it("shows the ids of the holon, its parent, carriers, parts and seam ends, and a retired parent", () => {
+    const view = structuredClone(fixture("view-password-reset")) as { parent: { status: string }; seams: { from: string; to: string }[] };
+    view.parent.status = "retired";
+    render(view as unknown as Value);
+    expect(text()).toContain("password-reset");
+    expect(text()).toContain("account");
+    expect(text()).toContain("team-identity");
+    expect(text()).toContain("reset-token");
+    expect(text()).toContain("retired");
+    expect(labels('ul[aria-label="Seams"] li')[0]).toContain(view.seams[0].from);
+    expect(labels('ul[aria-label="Seams"] li')[0]).toContain(view.seams[0].to);
   });
 
   it("opens a code path as a file", () => {

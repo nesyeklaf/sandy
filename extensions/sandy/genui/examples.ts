@@ -122,6 +122,8 @@ The shader sits on the chat, never in a box: don't paint a background, vignette 
 The width varies with the reader (a phone is about 350px wide, often narrower than the shader is tall): scale by min(iResolution.x, iResolution.y), not one axis, and keep the subject centred with room on both sides. check_ui reports GLSL errors with the pass and line. Limits: 4 buffers, 4 textures, 16 inputs, 64 KiB per pass.`,
 };
 
+const HOLON_TEMPLATES = ["Card-seam.ui", "Card-drift.ui", "Card-holon.ui"];
+
 export function isComponentName(name: string): name is ComponentName {
   return Object.hasOwn(COMPONENTS, name);
 }
@@ -162,7 +164,8 @@ export async function examplesReport(components: readonly string[]): Promise<{ o
       sections.push(`${component}: not a component.`);
       continue;
     }
-    const examples = examplesOf(names, component).slice(0, 3);
+    const all = examplesOf(names, component);
+    const examples = [...new Set([...all.slice(0, 3), ...all.filter((name) => HOLON_TEMPLATES.includes(name))])];
     const described = await Promise.all(examples.map(describe));
     const source = SOURCES[component];
     sections.push(
