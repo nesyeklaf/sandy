@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "id": "holon-format",
+  "kind": "operation",
+  "partOf": "holon-core",
+  "title": "Holon format parsing",
+  "why": "A wrong file must fail at the boundary with its path, not as a wrong light later.",
+  "contract": "Accepts holon/v0, holon-confirmation/v0 and evidence records that follow contract.md and rejects every other kind, including function, node, action and binding.",
+  "code": [
+    "extensions/sandy/holon/core/format.ts"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/holon/core/format.test.ts"
+    }
+  }
+}
