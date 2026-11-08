@@ -1,4 +1,5 @@
 use crate::time::{is_calendar_date, is_iso_timestamp};
+use rayon::prelude::*;
 use serde::Serialize;
 use serde_json::{Map, Value};
 
@@ -769,17 +770,21 @@ pub fn parse_evidence(value: &Value) -> Result<Evidence, String> {
 }
 
 pub fn parse_evidence_lines(text: &str) -> Result<Vec<Evidence>, String> {
-    let mut records = Vec::new();
-    for (index, line) in text.split('\n').enumerate() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        let value = parse_json(line).map_err(|error| format!("line {}: {error}", index + 1))?;
-        records
-            .push(parse_evidence(&value).map_err(|error| format!("line {}: {error}", index + 1))?);
-    }
-    Ok(records)
+    let lines: Vec<(usize, &str)> = text
+        .split('\n')
+        .enumerate()
+        .map(|(index, line)| (index, line.trim()))
+        .filter(|(_, line)| !line.is_empty())
+        .collect();
+    let parsed: Vec<Result<Evidence, String>> = lines
+        .into_par_iter()
+        .map(|(index, line)| {
+            parse_json(line)
+                .and_then(|value| parse_evidence(&value))
+                .map_err(|error| format!("line {}: {error}", index + 1))
+        })
+        .collect();
+    parsed.into_iter().collect()
 }
 
 pub fn confirmation_path(holon: &str, at: &str, side: &str, by: &str) -> String {

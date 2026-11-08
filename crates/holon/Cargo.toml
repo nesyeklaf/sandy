@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["holon-core", "holon-cli"]
+members = ["holon-core", "holon-cli", "holon-bench"]
 
 [workspace.package]
 version = "0.1.0"

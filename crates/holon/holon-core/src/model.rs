@@ -7,7 +7,7 @@ use crate::outputs::{
     child_warning, Carrier, CheckError, CheckOutput, CheckWarning, DriftEntry, DriftOutput,
     ViewFocus, ViewNode, ViewOutput, ViewSeam, ViewSides,
 };
-use crate::scan::scan_root;
+use crate::scan::{scan_root, ScanResult};
 use crate::time::{format_instant, parse_instant};
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -104,7 +104,7 @@ pub struct Model {
     parents: Vec<Option<usize>>,
     children: Vec<Vec<usize>>,
     incoming: HashMap<String, Vec<(usize, usize, bool)>>,
-    evidence: HashMap<String, HashMap<String, Evidence>>,
+    evidence: HashMap<String, Vec<Evidence>>,
     confirmations: HashMap<String, HashMap<String, usize>>,
 }
 
@@ -165,14 +165,16 @@ impl Model {
         for list in &mut children {
             list.sort_by(|a, b| js_cmp(&holon_at(*a).id, &holon_at(*b).id));
         }
-        let mut latest: HashMap<String, HashMap<String, Evidence>> = HashMap::new();
+        let mut latest: HashMap<String, Vec<Evidence>> = HashMap::with_capacity(evidence.len());
         for record in evidence {
             let sides = latest.entry(record.holon.clone()).or_default();
-            match sides.get(&record.side) {
-                Some(current) if !newer_evidence(&record, current) => {}
-                _ => {
-                    sides.insert(record.side.clone(), record);
+            match sides.iter_mut().find(|current| current.side == record.side) {
+                Some(current) => {
+                    if newer_evidence(&record, current) {
+                        *current = record;
+                    }
                 }
+                None => sides.push(record),
             }
         }
         let mut confirmations: HashMap<String, HashMap<String, usize>> = HashMap::new();
@@ -215,26 +217,32 @@ impl Model {
     }
 
     pub fn load(root: &Path, evidence: Vec<Evidence>) -> Model {
-        let scan = scan_root(root);
-        let files: Vec<HolonFile> = scan
-            .holon_files
-            .into_par_iter()
-            .map(|path| {
-                let text = read_text(&root.join(&path));
-                read_holon_file(path, &text)
-            })
-            .collect();
-        let confirmation_files: Vec<ConfirmationFile> = scan
-            .confirmation_files
-            .into_par_iter()
-            .map(|path| {
-                let text = read_text(&root.join(&path));
-                read_confirmation_file(path, &text)
-            })
-            .collect();
+        let (files, confirmation_files) = read_sources(root, scan_root(root));
         Model::new(files, confirmation_files, evidence)
     }
+}
 
+pub fn read_sources(root: &Path, scan: ScanResult) -> (Vec<HolonFile>, Vec<ConfirmationFile>) {
+    let files: Vec<HolonFile> = scan
+        .holon_files
+        .into_par_iter()
+        .map(|path| {
+            let text = read_text(&root.join(&path));
+            read_holon_file(path, &text)
+        })
+        .collect();
+    let confirmation_files: Vec<ConfirmationFile> = scan
+        .confirmation_files
+        .into_par_iter()
+        .map(|path| {
+            let text = read_text(&root.join(&path));
+            read_confirmation_file(path, &text)
+        })
+        .collect();
+    (files, confirmation_files)
+}
+
+impl Model {
     pub fn len(&self) -> usize {
         self.winners.len()
     }
@@ -455,7 +463,10 @@ impl EvalContext for Model {
     }
 
     fn latest_evidence(&self, holon: &str, side: &str) -> Option<&Evidence> {
-        self.evidence.get(holon)?.get(side)
+        self.evidence
+            .get(holon)?
+            .iter()
+            .find(|record| record.side == side)
     }
 
     fn latest_confirmation(&self, holon: &str, side: &str) -> Option<&Confirmation> {

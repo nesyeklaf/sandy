@@ -1,14 +1,15 @@
 use sha2::{Digest, Sha256};
-use std::fmt::Write;
 
 pub const DAY_MS: i64 = 86_400_000;
 
 pub fn contract_hash(contract: &str) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
     let digest = Sha256::digest(contract.as_bytes());
     let mut out = String::with_capacity(71);
     out.push_str("sha256:");
     for byte in digest {
-        let _ = write!(out, "{byte:02x}");
+        out.push(char::from(HEX[usize::from(byte >> 4)]));
+        out.push(char::from(HEX[usize::from(byte & 15)]));
     }
     out
 }

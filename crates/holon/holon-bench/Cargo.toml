@@ -1,0 +1,12 @@
+[package]
+name = "holon-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Kill check benchmark: the 137k-holon tree of extensions/sandy/holon/bench/holon-bench.ts"
+
+[dependencies]
+holon-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true

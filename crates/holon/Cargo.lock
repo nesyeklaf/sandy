@@ -88,6 +88,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "holon-bench"
+version = "0.1.0"
+dependencies = [
+ "holon-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "holon-cli"
 version = "0.1.0"
 dependencies = [
