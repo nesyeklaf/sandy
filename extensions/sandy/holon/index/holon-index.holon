@@ -9,7 +9,7 @@
   "partOf": "holon-extension",
   "title": "Holon index",
   "why": "A view must answer in under a millisecond and one changed file must not recompute 100k holons.",
-  "contract": "Keeps holons, seams, evidence and computed lights in SQLite, reparses only files whose hash changed, and answers views and drift identical to the core.",
+  "contract": "Keeps holons, seams, evidence and computed lights in SQLite, reparses only files whose hash changed, learns changed files from a file watcher so only a cold start or check walks the tree, and answers views and drift identical to the core.",
   "code": [
     "extensions/sandy/holon/index/"
   ],

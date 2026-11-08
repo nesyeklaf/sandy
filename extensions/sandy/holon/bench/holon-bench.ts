@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +8,7 @@ import type { Evidence } from "../core/format.ts";
 import { contractHash } from "../core/time.ts";
 import { HolonIndex } from "../index/holon-index.ts";
 import { MIGRATIONS } from "../index/schema.ts";
+import { HolonService } from "../service.ts";
 
 const BRANCH = 7;
 const DEPTH = 7;
@@ -141,6 +143,59 @@ results.viewMs = Math.round((results.view1000Ms! / reps) * 1000) / 1000;
 const drift = measure("driftListMs", () => index.drift(), results);
 measure("rollupTopMs", () => index.get("h0")!.driftBelow, results);
 
+async function measureAsync<T>(label: string, run: () => Promise<T>): Promise<T> {
+  const start = performance.now();
+  const value = await run();
+  results[label] = Math.round((performance.now() - start) * 1000) / 1000;
+  return value;
+}
+
+const git = (...args: string[]) =>
+  execFileSync("git", ["-C", root, "-c", "user.name=bench", "-c", "user.email=bench@bench", "-c", "commit.gpgsign=false", ...args], { stdio: "ignore" });
+measure("gitCommitAllMs", () => {
+  git("init", "-q", "-b", "main");
+  git("add", "-A", "tree");
+  git("commit", "-qm", "bench");
+}, results);
+
+const serviceDb = new Database(join(root, "service.db"));
+serviceDb.pragma("journal_mode = WAL");
+for (const statement of MIGRATIONS) serviceDb.exec(statement);
+const service = new HolonService(serviceDb);
+const serviceCold = await measureAsync("serviceColdOpenMs", () => service.open(root, {}));
+serviceCold.index.recordEvidence(evidence, serviceCold.env);
+const viewThroughService = async (id: string) => {
+  const { index: opened, stats } = await service.open(root, {});
+  return { view: opened.view(id), stats };
+};
+await viewThroughService(component.id);
+const viewReps = 200;
+let unchangedStats = null;
+await measureAsync("serviceView200UnchangedMs", async () => {
+  for (let rep = 0; rep < viewReps; rep += 1) unchangedStats = (await viewThroughService(component.id)).stats;
+});
+results.serviceViewUnchangedMs = Math.round((results.serviceView200UnchangedMs! / viewReps) * 1000) / 1000;
+
+const edited = planned.find((item) => item.partOf === component.id)!;
+const editedText = (title: string) =>
+  JSON.stringify({ format: "holon/v0", id: edited.id, kind: KIND_AT_DEPTH[edited.depth], partOf: edited.partOf, title, status: "active", why: "x", contract: "y", carriedBy: [], code: [], seams: [], proofs: {} });
+writeFileSync(join(root, edited.path), editedText("Edited for the service benchmark"));
+const afterEdit = await measureAsync("serviceViewAfterOneEditMs", () => viewThroughService(component.id));
+const reflectsEdit = afterEdit.view!.children.find((child) => child.id === edited.id)?.title === "Edited for the service benchmark";
+
+rmSync(join(root, edited.path));
+const afterDelete = await measureAsync("serviceViewAfterDeleteMs", () => viewThroughService(component.id));
+const seesDelete = afterDelete.view!.children.every((child) => child.id !== edited.id);
+mkdirSync(join(root, "tree/new-dir"), { recursive: true });
+writeFileSync(join(root, "tree/new-dir", `${edited.id}.holon`), editedText("Added in a new directory"));
+const afterAdd = await measureAsync("serviceViewAfterNewFileMs", () => viewThroughService(component.id));
+const seesNew = afterAdd.view!.children.find((child) => child.id === edited.id)?.title === "Added in a new directory";
+git("commit", "-qam", "second");
+const afterCommit = await measureAsync("serviceViewAfterCommitMs", () => viewThroughService(component.id));
+const fullCheck = await measureAsync("serviceExplicitCheckMs", () => service.open(root, {}, "full"));
+service.close();
+serviceDb.close();
+
 console.log(
   JSON.stringify(
     {
@@ -155,6 +210,18 @@ console.log(
       refreshAfterOneEdit: scanned,
       driftEntries: drift.drift.length,
       driftBelowTop: { before: beforeTop, after: afterTop },
+      service: {
+        cold: serviceCold.stats,
+        unchanged: unchangedStats,
+        afterEdit: afterEdit.stats,
+        reflectsEdit,
+        afterDelete: afterDelete.stats,
+        seesDelete,
+        afterNewFile: afterAdd.stats,
+        seesNew,
+        afterCommit: afterCommit.stats,
+        explicitCheck: fullCheck.stats,
+      },
     },
     null,
     1,

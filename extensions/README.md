@@ -5,8 +5,8 @@ Sandy plugins and pi extensions that live in the repo but not in the pnpm worksp
 ```
 sandy/sandy-sidebar-delegate  fork of bb-sidebar 0.3.7 that lists delegate children and workflows-plus workers under their parent (see UPSTREAM.md)
 sandy/codex-voice    voice input through the ChatGPT login (Codex), sent with curl because chatgpt.com challenges Node's HTTP clients
-sandy/holon           holons as files in Git: sandy holon check|drift|view|evidence record|confirm, a SQLite index,
-                   and a .holon file opener (contract: docs/designs/holons/contract.md)
+sandy/holon           holons as files in Git: sandy holon check|drift|view|evidence record|confirm, a SQLite index
+                   kept current by a file watcher (check rescans), and a .holon file opener (contract: docs/designs/holons/contract.md)
 sandy/genui           inline ```ui and ```app blocks in chat (fork of ComicBit/bb-plugin-genui 0.3.1)
 sandy/bookmarks, compact-composer, files-editor, receipts, thread-namer, value   plugins forked from the BB ecosystem (see each UPSTREAM.md)
 sandy/permissions     permission modes and command blocklist (pairs with pi/permissions)

@@ -55,6 +55,7 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
   const db = sandy.storage.database();
   migrateIndex(db, (target, statements) => sandy.storage.migrate(target, statements));
   const service = new HolonService(db);
+  sandy.onDispose(() => service.close());
 
   sandy.rpc.register(rpcContract, {
     async view({ source, path, id }) {
@@ -64,7 +65,7 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
         const parsed = parseHolon(readFileSync(file, "utf8"));
         if (!parsed.ok) return { ok: false as const, error: `${path}: ${parsed.error}` };
         const root = modelRootOf(file, workspace ?? gitTopLevel(dirname(file)) ?? dirname(file));
-        const { index } = service.open(root, {});
+        const { index } = await service.open(root, {});
         const target = id ?? parsed.value.id;
         const view = index.view(target);
         if (view === null) return { ok: false as const, error: `no holon ${target} under ${root}` };

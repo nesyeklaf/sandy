@@ -1,6 +1,6 @@
 import { cliCommand, defineCli, PluginCliError, type PluginCliRegistration } from "@sandy-sdk/plugin-sdk";
 import { renderCheck, renderDrift, renderView } from "./render.ts";
-import { HolonInputError, HolonService, resolveRoot, type EnvOptions } from "./service.ts";
+import { HolonInputError, HolonService, resolveRoot, type EnvOptions, type OpenMode } from "./service.ts";
 import type { Evidence } from "./core/format.ts";
 
 const common = {
@@ -27,14 +27,14 @@ function json(value: unknown): string {
 }
 
 export function holonCli(service: HolonService): PluginCliRegistration {
-  const open = (options: CommonOptions, cwd: string | undefined) => {
+  const open = (options: CommonOptions, cwd: string | undefined, mode: OpenMode = "incremental") => {
     const root = resolveRoot(options.root, cwd);
     const env: EnvOptions = { now: options.now, commit: options.commit };
-    return service.open(root, env);
+    return service.open(root, env, mode);
   };
-  const guarded = <T>(run: () => T): T => {
+  const guarded = async <T>(run: () => Promise<T>): Promise<T> => {
     try {
-      return run();
+      return await run();
     } catch (cause) {
       rethrow(cause);
     }
@@ -50,8 +50,8 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         summary: "Validate every holon and confirmation file (holon-check/v0); exits 1 on errors",
         options: common,
         async run(input, ctx) {
-          return guarded(() => {
-            const { index } = open(input.options, ctx.cwd);
+          return guarded(async () => {
+            const { index } = await open(input.options, ctx.cwd, "full");
             const output = index.check();
             return { exitCode: output.errors.length === 0 ? 0 : 1, stdout: input.options.json ? json(output) : renderCheck(output) };
           });
@@ -61,8 +61,8 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         summary: "List every drift sorted by holon then kind (holon-drift/v0)",
         options: common,
         async run(input, ctx) {
-          return guarded(() => {
-            const { index } = open(input.options, ctx.cwd);
+          return guarded(async () => {
+            const { index } = await open(input.options, ctx.cwd);
             const output = index.drift();
             return { exitCode: 0, stdout: input.options.json ? json(output) : renderDrift(output) };
           });
@@ -73,8 +73,8 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         options: common,
         positionals: [{ name: "slug", description: "Holon id", required: true }],
         async run(input, ctx) {
-          return guarded(() => {
-            const { index } = open(input.options, ctx.cwd);
+          return guarded(async () => {
+            const { index } = await open(input.options, ctx.cwd);
             service.holonFor(index, input.positionals.slug);
             const output = index.view(input.positionals.slug)!;
             return { exitCode: 0, stdout: input.options.json ? json(output) : renderView(output) };
@@ -107,9 +107,9 @@ export function holonCli(service: HolonService): PluginCliRegistration {
           { kind: "requires", option: "holon", needs: ["side", "result"] },
         ],
         async run(input, ctx) {
-          return guarded(() => {
+          return guarded(async () => {
             const options = input.options;
-            const { index, env } = open(options, ctx.cwd);
+            const { index, env } = await open(options, ctx.cwd);
             let records: Evidence[];
             if (options.file !== undefined) records = service.readEvidenceFile(index.root, ctx.cwd, options.file);
             else if (options.jsonl !== undefined) records = service.parseEvidenceText(options.jsonl);
@@ -158,9 +158,9 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         },
         positionals: [{ name: "slug", description: "Holon id", required: true }],
         async run(input, ctx) {
-          return guarded(() => {
+          return guarded(async () => {
             const options = input.options;
-            const { index, env } = open(options, ctx.cwd);
+            const { index, env } = await open(options, ctx.cwd);
             const { path, confirmation } = service.confirm(index, env, {
               holon: input.positionals.slug,
               side: options.side,

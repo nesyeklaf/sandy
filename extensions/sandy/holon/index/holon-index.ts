@@ -20,7 +20,7 @@ import {
   type ViewOutput,
   type ViewSource,
 } from "../core/outputs.ts";
-import { scanRoot, type ScannedFile } from "../core/scan.ts";
+import { belongsToModel, isConfirmationPath, isNestedModelBoundary, scanRoot, scanUnder, type ScannedFile } from "../core/scan.ts";
 import { parseInstant } from "../core/time.ts";
 import { MIGRATIONS } from "./schema.ts";
 
@@ -50,8 +50,6 @@ interface HolonRow {
 }
 
 type StoredEvaluation = Pick<HolonEvaluation, "light" | "sides" | "seams" | "drift">;
-
-const CONFIRMATIONS = ".holons/confirmations/";
 
 function sha(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
@@ -97,6 +95,8 @@ export class HolonIndex implements ViewSource {
       ),
       touchHolonFile: prepare("UPDATE holon_files SET size = ?, mtime_ms = ? WHERE root = ? AND path = ?"),
       deleteHolonFile: prepare("DELETE FROM holon_files WHERE root = ? AND path = ?"),
+      holonPathsUnder: prepare("SELECT path FROM holon_files WHERE root = ? AND path > ? AND path < ?"),
+      confirmationPathsUnder: prepare("SELECT path FROM confirmation_files WHERE root = ? AND path > ? AND path < ?"),
       winner: prepare("SELECT path, holon_json FROM holon_files WHERE root = ? AND holon_id = ? AND holon_json IS NOT NULL ORDER BY path LIMIT 1"),
       confirmationFiles: prepare("SELECT path, size, mtime_ms, hash, holon AS holon_id FROM confirmation_files WHERE root = ?"),
       confirmationFile: prepare("SELECT path, size, mtime_ms, hash, holon AS holon_id FROM confirmation_files WHERE root = ? AND path = ?"),
@@ -151,12 +151,30 @@ export class HolonIndex implements ViewSource {
     return this.apply(env, scan.holonFiles, scan.confirmationFiles, true);
   }
 
+  syncPaths(changed: Iterable<string>, env: EvalEnv): RefreshStats {
+    const paths = new Set<string>();
+    for (const path of changed) {
+      if (isNestedModelBoundary(path)) return this.refresh(env);
+      if (path.endsWith(".holon") || isConfirmationPath(path)) {
+        paths.add(path);
+        continue;
+      }
+      const range = [this.root, `${path}/`, `${path}0`];
+      for (const statement of [this.statements.holonPathsUnder, this.statements.confirmationPathsUnder]) {
+        for (const row of statement.all(...range) as { path: string }[]) paths.add(row.path);
+      }
+      const scan = scanUnder(this.root, path);
+      for (const file of [...scan.holonFiles, ...scan.confirmationFiles]) paths.add(file.path);
+    }
+    return this.reindexPaths([...paths], env);
+  }
+
   reindexPaths(paths: readonly string[], env: EvalEnv): RefreshStats {
     const holonFiles: (ScannedFile | { path: string; missing: true })[] = [];
     const confirmationFiles: (ScannedFile | { path: string; missing: true })[] = [];
     for (const path of paths) {
-      const file = statFile(this.root, path) ?? { path, missing: true as const };
-      if (path.startsWith(CONFIRMATIONS)) confirmationFiles.push(file);
+      const file = (belongsToModel(this.root, path) ? statFile(this.root, path) : null) ?? { path, missing: true as const };
+      if (isConfirmationPath(path)) confirmationFiles.push(file);
       else if (path.endsWith(".holon")) holonFiles.push(file);
     }
     return this.apply(env, holonFiles, confirmationFiles, false);

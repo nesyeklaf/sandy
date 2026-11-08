@@ -1,4 +1,4 @@
-import { readFileSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, renameSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type Database from "better-sqlite3";
@@ -150,6 +150,18 @@ describe("HolonIndex", () => {
         throw new Error(`after "${label}": ${cause instanceof Error ? cause.message : String(cause)}`);
       }
     }
+  });
+
+  it("syncs a directory path that moved out and back in", () => {
+    const away = tempCopy(join(copy.dir, "apps/search"));
+    rmSync(join(copy.dir, "apps/search"), { recursive: true });
+    index.syncPaths(["apps/search"], fixtureEnv);
+    expect(index.get("search")).toBeNull();
+    sameAsCore(index, copy.dir, fixtureEnv);
+    renameSync(away.dir, join(copy.dir, "apps/search"));
+    index.syncPaths(["apps/search"], fixtureEnv);
+    expect(index.get("search")).not.toBeNull();
+    sameAsCore(index, copy.dir, fixtureEnv);
   });
 
   it("re-evaluates on a new confirmation, on time passing and on a cycle", () => {

@@ -19,9 +19,10 @@ import {
   type Proof,
 } from "./core/format.ts";
 import type { EvalEnv } from "./core/evaluate.ts";
-import { gitCodeChanges, gitHead, gitTopLevel } from "./core/git.ts";
+import { gitCodeChanges, gitHeadReader, gitTopLevel } from "./core/git.ts";
 import { DAY_MS, contractHash, formatDate, formatInstant, parseInstant } from "./core/time.ts";
 import { HolonIndex, type RefreshStats } from "./index/holon-index.ts";
+import { ModelWatch } from "./index/model-watch.ts";
 
 export class HolonInputError extends Error {
   readonly code: string;
@@ -37,6 +38,15 @@ export class HolonInputError extends Error {
 export interface EnvOptions {
   now?: string | undefined;
   commit?: string | undefined;
+}
+
+export type OpenMode = "incremental" | "full";
+
+interface WatchedModel {
+  index: HolonIndex;
+  watch: ModelWatch;
+  head: () => string | null;
+  scanned: boolean;
 }
 
 export interface Opened {
@@ -91,12 +101,22 @@ function sideProof(holon: Holon, side: EvidenceSide): { proof: Proof | null; con
 
 export class HolonService {
   private readonly db: Database.Database;
-  private readonly indexes = new Map<string, HolonIndex>();
+  private readonly models = new Map<string, WatchedModel>();
   private readonly clock: () => number;
 
   constructor(db: Database.Database, clock: () => number = Date.now) {
     this.db = db;
     this.clock = clock;
+  }
+
+  private model(root: string): WatchedModel {
+    let model = this.models.get(root);
+    if (model === undefined) {
+      const watch = new ModelWatch(root);
+      model = { index: new HolonIndex(this.db, root), watch, head: gitHeadReader(root), scanned: false };
+      this.models.set(root, model);
+    }
+    return model;
   }
 
   env(root: string, options: EnvOptions): EvalEnv {
@@ -107,24 +127,24 @@ export class HolonService {
       }
       nowMs = parseInstant(options.now);
     }
-    const commit = options.commit ?? gitHead(root) ?? "none";
+    const commit = options.commit ?? this.model(root).head() ?? "none";
     return { nowMs, commit, code: gitCodeChanges(root) };
   }
 
-  index(root: string): HolonIndex {
-    let index = this.indexes.get(root);
-    if (index === undefined) {
-      index = new HolonIndex(this.db, root);
-      this.indexes.set(root, index);
-    }
-    return index;
+  async open(root: string, options: EnvOptions, mode: OpenMode = "incremental"): Promise<Opened> {
+    const env = this.env(root, options);
+    const model = this.model(root);
+    await model.watch.drain();
+    const changes = model.watch.take();
+    const full = mode === "full" || !model.scanned || changes.full;
+    const stats = full ? model.index.refresh(env) : model.index.syncPaths(changes.paths, env);
+    model.scanned = true;
+    return { index: model.index, env, stats };
   }
 
-  open(root: string, options: EnvOptions): Opened {
-    const env = this.env(root, options);
-    const index = this.index(root);
-    const stats = index.refresh(env);
-    return { index, env, stats };
+  close(): void {
+    for (const model of this.models.values()) model.watch.close();
+    this.models.clear();
   }
 
   holonFor(index: HolonIndex, id: string): Holon {
