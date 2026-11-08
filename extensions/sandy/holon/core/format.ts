@@ -249,7 +249,8 @@ export function parseEvidenceLines(text: string): Parsed<Evidence[]> {
 }
 
 export function confirmationPath(confirmation: Pick<Confirmation, "holon" | "at" | "side" | "by">): string {
-  return `.holons/confirmations/${confirmation.holon}/${confirmation.at}-${confirmation.side}-${confirmation.by}.json`;
+  const name = `${confirmation.at}-${confirmation.side}-${confirmation.by}`.replaceAll(":", "_");
+  return `.holons/confirmations/${confirmation.holon}/${name}.json`;
 }
 
 export function serializeConfirmation(confirmation: Confirmation): string {

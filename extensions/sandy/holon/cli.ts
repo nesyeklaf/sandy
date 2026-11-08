@@ -144,7 +144,7 @@ export function holonCli(service: HolonService): PluginCliRegistration {
       confirm: cliCommand({
         summary: "Write a human confirmation file under .holons/confirmations",
         description:
-          "Writes .holons/confirmations/<slug>/<yyyy-mm-dd>-<side>-<by>.json against the holon's current contract. Expires after the proof's every, at most 90 days.",
+          "Writes .holons/confirmations/<slug>/<yyyy-mm-dd>-<side>-<by>.json, every : in the name as _, against the holon's current contract. Expires after the proof's every, at most 90 days.",
         options: {
           ...common,
           side: { type: "string", required: true, description: "I, It, We, They or seam:<to>" },
