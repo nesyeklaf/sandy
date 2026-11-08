@@ -35,6 +35,14 @@ describe("Card-seam", () => {
     expect(found[0].tone).toBe(TONE[light]);
   });
 
+  it("explains a drifting seam with the focus's drift detail", async () => {
+    const result = compile(await readGallerySpec("Card-seam.ui"));
+    const loaded = await loadGalleryFile(VIEW_PATH, { raw: false });
+    const data = new Map<string, LoadedData>([[dataKey({ path: VIEW_PATH, raw: false }), loaded as LoadedData]]);
+    const evaluated = evaluate(result.program!, initialState(result.program!, data), data);
+    expect(JSON.stringify(evaluated.roots)).toContain("Account service → User database: Promises to be the only writer to user-db, but support-tool writes to it too");
+  });
+
   it("keeps the light's tone when the seam also drifts", async () => {
     const found = await seamBadges("hard", "contradiction");
     expect(found[0].tone).toBe("good");

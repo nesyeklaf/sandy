@@ -106,6 +106,12 @@ describe("Holon", () => {
     expect(labels('ul[aria-label="Seams"] li')[0]).toContain(view.seams[0].to);
   });
 
+  it("shows evidence dates as days, so they do not break mid-value on a phone", () => {
+    render(fixture("view-password-reset"));
+    expect(text()).toContain("at 2026-11-08 · expires 2027-02-06");
+    expect(text()).not.toContain("T03:00:00Z");
+  });
+
   it("opens a code path as a file", () => {
     render(fixture("view-password-reset"));
     const button = container.querySelector<HTMLButtonElement>('ul[aria-label="Code"] button');

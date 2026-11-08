@@ -70,8 +70,8 @@ function sideFacts(side: HolonSide): string[] {
     side.kind,
     side.source,
     side.by === null ? null : `by ${side.by}`,
-    side.at === null ? null : `at ${side.at}`,
-    side.expires === null ? null : `expires ${side.expires}`,
+    side.at === null ? null : `at ${side.at.slice(0, 10)}`,
+    side.expires === null ? null : `expires ${side.expires.slice(0, 10)}`,
   ].filter((part): part is string => part !== null);
 }
 
