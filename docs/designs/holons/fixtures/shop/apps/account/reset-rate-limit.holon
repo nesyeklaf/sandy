@@ -1,7 +1,7 @@
 {
   "format": "holon/v0",
   "id": "reset-rate-limit",
-  "kind": "function",
+  "kind": "operation",
   "partOf": "password-reset",
   "title": "Reset rate limit",
   "status": "proposed",

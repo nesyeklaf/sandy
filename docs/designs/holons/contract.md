@@ -10,7 +10,7 @@ JSON, next to the code it describes, one holon per file. Example: [password-rese
 |---|---|
 | `format` | `"holon/v0"` |
 | `id` | `[a-z0-9]+(-[a-z0-9]+)*`, unique per repository, never changed. `repo:slug` is reserved for later. |
-| `kind` | Software: `context`, `system`, `container`, `component`, `function`. Work: `initiative`, `project`, `task`, `step`. Knowledge: `field`, `topic`, `concept`, `claim`, `source`. Life: `vision`, `area`, `goal`, `habit`, `data-point`. Who tree: `organisation`, `team`, `person`. |
+| `kind` | Software: `context`, `system`, `container`, `component`, `operation` (the function level). `node`, `action`, `binding` and `function` are never kinds: genui reserves them for its own values and rejects loaded JSON that uses them. Work: `initiative`, `project`, `task`, `step`. Knowledge: `field`, `topic`, `concept`, `claim`, `source`. Life: `vision`, `area`, `goal`, `habit`, `data-point`. Who tree: `organisation`, `team`, `person`. |
 | `partOf` | Parent slug, or `null` for a root. Several roots are allowed (the what tree and the who tree). |
 | `title` | Display name; renaming changes only this. |
 | `status` | `proposed`, `active`, `retired`. |
