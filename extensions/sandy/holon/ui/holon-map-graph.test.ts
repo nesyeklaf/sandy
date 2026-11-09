@@ -8,12 +8,14 @@ import {
   bundleSeams,
   buildModel,
   commonContainer,
+  fitTargetId,
   fitViewport,
   holonForFile,
   keepAnchor,
   openForFocus,
   openToDepth,
   placeLayout,
+  ROOT_ID,
   rep,
   shortenContract,
   toggled,
@@ -262,6 +264,15 @@ describe("viewport", () => {
     expect(screenOf(zoomed, worldBefore)).toEqual({ x: 100, y: 100 });
     expect(zoomAt(view, 1000, 0, 0).k).toBe(3);
     expect(zoomAt(view, 0.0001, 0, 0).k).toBe(0.1);
+  });
+
+  it("fits the parent of the visible box so siblings stay in view, and everything for a root", () => {
+    const tree = buildModel(output([holon("a", null, { childCount: 2 }), holon("b", "a", { childCount: 1 }), holon("c", "a"), holon("d", "b")], []));
+    expect(fitTargetId(tree, new Set(["a", "b"]), "d")).toBe("b");
+    expect(fitTargetId(tree, new Set(["a"]), "d")).toBe("a");
+    expect(fitTargetId(tree, new Set(["a"]), "c")).toBe("a");
+    expect(fitTargetId(tree, new Set(), "a")).toBe(ROOT_ID);
+    expect(fitTargetId(tree, new Set(["a"]), null)).toBe(ROOT_ID);
   });
 
   it("fits a box into the view centred", () => {

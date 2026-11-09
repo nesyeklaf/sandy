@@ -6,6 +6,7 @@ import {
   buildElkGraph,
   bundleSeams,
   childrenIds,
+  fitTargetId,
   fitViewport,
   isOpen,
   keepAnchor,
@@ -299,7 +300,7 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
     const fit = pendingFit.current;
     const { w, h } = sizeRef.current;
     if (fit !== null) {
-      const target = next.placed.rects.get(rep(model, open, fit)) ?? next.placed.rects.get(ROOT_ID);
+      const target = next.placed.rects.get(fitTargetId(model, open, fit)) ?? next.placed.rects.get(ROOT_ID);
       if (target !== undefined) {
         pendingFit.current = null;
         setView(fitViewport(target, w, h));
@@ -423,8 +424,9 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
   function fitTo(id: string | null): void {
     const placed = layoutRef.current?.placed;
     if (placed === undefined) return;
-    const target = (id === null ? undefined : placed.rects.get(rep(model, open, id))) ?? placed.rects.get(ROOT_ID);
-    const { w, h } = sizeRef.current;
+    const target = placed.rects.get(fitTargetId(model, open, id)) ?? placed.rects.get(ROOT_ID);
+    const box = svgRef.current?.getBoundingClientRect();
+    const { w, h } = box === undefined || box.width === 0 ? sizeRef.current : { w: box.width, h: box.height };
     if (target !== undefined) setView(fitViewport(target, w, h));
   }
 

@@ -321,6 +321,12 @@ export function placeLayout(result: ElkNode): PlacedLayout {
   return { rects, edges, width: rootRect?.w ?? 0, height: rootRect?.h ?? 0 };
 }
 
+export function fitTargetId(model: MapModel, open: OpenSet, id: string | null): string {
+  if (id === null) return ROOT_ID;
+  const parent = model.holons.get(rep(model, open, id))?.parent ?? null;
+  return parent !== null && model.holons.has(parent) ? parent : ROOT_ID;
+}
+
 export function fitViewport(box: Rect, width: number, height: number, maxZoom: number = 1.3): Viewport {
   if (width <= 0 || height <= 0 || box.w <= 0 || box.h <= 0) return { x: 0, y: 0, k: 1 };
   const k = clampZoom(Math.min((width - 24) / box.w, (height - 40) / box.h, maxZoom));
