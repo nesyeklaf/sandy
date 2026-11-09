@@ -81,8 +81,8 @@ interface BoxProps {
   onToggle(id: string): void;
 }
 
-function clip(text: string, width: number): string {
-  const chars = Math.max(4, Math.floor(width / 7.4));
+function clip(text: string, width: number, charWidth: number = 7.4): string {
+  const chars = Math.max(4, Math.floor(width / charWidth));
   return text.length <= chars ? text : `${text.slice(0, chars - 1)}…`;
 }
 
@@ -91,6 +91,7 @@ const Box = memo(function Box({ holon, rect, open, expandable, selected, side, o
   const lines = open ? [clip(holon.title, rect.w - 100)] : titleLines(holon.title);
   const gridX = rect.x + rect.w - (expandable ? 64 : 30);
   const gridY = rect.y + 10;
+  const headerText = clip(`${holon.kind} · ${holon.status}`, gridX - 6 - (rect.x + 26), 6.8);
   const stroke = selected ? "stroke-ring" : side === "All" ? (holon.status === "proposed" ? "stroke-muted-foreground" : "stroke-border") : BOX_STROKE[light];
   return (
     <g className={holon.status === "retired" ? "opacity-60" : undefined}>
@@ -122,7 +123,8 @@ const Box = memo(function Box({ holon, rect, open, expandable, selected, side, o
           <title>{light}</title>
         </circle>
         <text x={rect.x + 26} y={rect.y + 18} className="fill-muted-foreground font-mono text-2xs">
-          {holon.kind} · {holon.status}
+          {headerText}
+          <title>{`${holon.kind} · ${holon.status}`}</title>
         </text>
         {lines.map((line, index) => (
           <text key={index} x={rect.x + 12} y={rect.y + 38 + index * 17} className="fill-foreground text-sm font-semibold">
