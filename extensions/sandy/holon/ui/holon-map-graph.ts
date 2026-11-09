@@ -77,6 +77,16 @@ export function buildModel(map: MapOutput): MapModel {
   return { holons, childrenOf, roots, seams: map.seams.filter((seam) => holons.has(seam.from) && holons.has(seam.to)) };
 }
 
+export function holonForFile(model: MapModel, path: string): string | null {
+  const normalized = path.replace(/\\/g, "/");
+  let best: MapHolon | null = null;
+  for (const holon of model.holons.values()) {
+    const matches = normalized === holon.file || normalized.endsWith(`/${holon.file}`);
+    if (matches && (best === null || holon.file.length > best.file.length)) best = holon;
+  }
+  return best?.id ?? null;
+}
+
 export function childrenIds(model: MapModel, id: string): readonly string[] {
   return model.childrenOf.get(id) ?? [];
 }
