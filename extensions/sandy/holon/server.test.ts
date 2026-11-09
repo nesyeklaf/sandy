@@ -115,8 +115,7 @@ describe("sandy holon with a fake holon serve", () => {
 
   it("kills the serve processes when the plugin is disposed", async () => {
     process.env.HOLON_BIN = FAKE;
-    const host = createFakePluginHost({ pluginId: "holon" });
-    await plugin(host.sandy);
+    const host = await loaded();
     const dirs = [workDir(), workDir()];
     for (const dir of dirs) expect((await host.harness.runCli(["check", "--root", dir], {})).exitCode).toBe(0);
     const running = () => dirs.flatMap((dir) => pgrep(dir));

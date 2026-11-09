@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 const args = process.argv.slice(2);
@@ -11,6 +11,8 @@ if (args[0] !== "serve" || args[args.indexOf("--port") + 1] !== "0" || args[args
   process.stderr.write("fake holon: unexpected arguments " + args.join(" ") + "\n");
   process.exit(64);
 }
+
+if (process.env.FAKE_PID_LOG) appendFileSync(process.env.FAKE_PID_LOG, process.pid + "\n");
 
 if (mode === "hang") {
   process.stderr.write("fake holon: still waiting\n");

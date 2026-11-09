@@ -13,6 +13,7 @@ export default defineConfig({
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", "dist/**"],
     testTimeout: 30000,
+    globalSetup: ["./test/global-setup.ts"],
     server: { deps: { inline: [/@testing-library\//] } },
   },
 });
