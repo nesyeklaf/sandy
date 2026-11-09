@@ -13,20 +13,20 @@
   "code": [
     "extensions/sandy/holon/cli.ts",
     "extensions/sandy/holon/server.ts",
-    "extensions/sandy/holon/service.ts",
-    "extensions/sandy/holon/render.ts"
+    "extensions/sandy/holon/render.ts",
+    "extensions/sandy/holon/skills/holon/SKILL.md"
   ],
   "seams": [
     {
-      "to": "holon-index",
-      "contract": "Records evidence and reads computed views",
+      "to": "holon-engine",
+      "contract": "Reads check, drift and views and records evidence and confirmations through the holon serve routes under /v0",
       "readOnly": false
     }
   ],
   "proofs": {
     "It": {
       "kind": "ci",
-      "source": "extensions/sandy/holon/server.test.ts"
+      "source": "extensions/sandy/holon/cli.e2e.test.ts"
     }
   }
 }

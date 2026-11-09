@@ -1,6 +1,4 @@
-import { SIDES } from "./core/format.ts";
-import { glyph } from "./core/evaluate.ts";
-import type { CheckOutput, DriftOutput, ViewOutput } from "./core/outputs.ts";
+import { SIDES, glyph, type CheckOutput, type ConfirmedOutput, type DriftOutput, type EvidenceRecordedOutput, type ViewOutput } from "./core/outputs.ts";
 
 function plural(count: number, word: string): string {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -21,6 +19,16 @@ export function renderDrift(output: DriftOutput): string {
     lines.push(`◇ ${item.holon}  ${item.kind}${where === "" ? "" : `  ${where}`}  ${item.detail}`);
   }
   return `${lines.join("\n")}\n`;
+}
+
+export function renderEvidenceRecorded(output: EvidenceRecordedOutput, root: string): string {
+  const lines = [`● recorded ${plural(output.recorded, "evidence record")}, ${output.reevaluated} holons re-evaluated`];
+  for (const id of output.unknownHolons) lines.push(`! no holon ${id} under ${root}; kept for when it appears`);
+  return `${lines.join("\n")}\n`;
+}
+
+export function renderConfirmed(output: ConfirmedOutput): string {
+  return `● wrote ${output.path}; ${output.confirmation.side} is now ${output.light}\n`;
 }
 
 export function renderView(view: ViewOutput): string {

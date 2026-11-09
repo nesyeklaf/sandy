@@ -1,0 +1,25 @@
+{
+  "format": "holon/v0",
+  "status": "active",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "id": "holon-engine",
+  "kind": "container",
+  "partOf": "holon-extension",
+  "title": "holon serve client",
+  "why": "Holon lights must come from one implementation, the Rust holon binary, not from a second copy in TypeScript.",
+  "contract": "Starts one holon serve process per model root on demand with a random bearer token, restarts it once when it dies, stops it after 15 idle minutes and when the plugin unloads, and fails with a coded error and an install hint when the binary is missing.",
+  "code": [
+    "extensions/sandy/holon/engine.ts",
+    "extensions/sandy/holon/error.ts",
+    "extensions/sandy/holon/root.ts"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "extensions/sandy/holon/engine.test.ts"
+    }
+  }
+}

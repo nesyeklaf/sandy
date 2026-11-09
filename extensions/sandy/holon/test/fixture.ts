@@ -1,26 +1,20 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseEvidenceLines, type Evidence } from "../core/format.ts";
-import type { CodeChanges, EvalEnv } from "../core/evaluate.ts";
+import { fileURLToPath } from "node:url";
 
 export const SHOP = fileURLToPath(new URL("../../../../docs/designs/holons/fixtures/shop", import.meta.url));
-export const REPO = fileURLToPath(new URL("../../../../", import.meta.url));
 export const FIXTURE_NOW = "2026-11-08T12:00:00Z";
 export const FIXTURE_COMMIT = "fixture";
 
-export const noGit: CodeChanges = { changedPaths: () => null };
-
-export const fixtureEnv: EvalEnv = { nowMs: Date.parse(FIXTURE_NOW), commit: FIXTURE_COMMIT, code: noGit };
-
-export function shopEvidence(): Evidence[] {
-  const parsed = parseEvidenceLines(readFileSync(join(SHOP, "evidence.jsonl"), "utf8"));
-  if (!parsed.ok) throw new Error(parsed.error);
-  return parsed.value;
-}
-
 export function expected(name: string): unknown {
   return JSON.parse(readFileSync(join(SHOP, "expected", name), "utf8")) as unknown;
+}
+
+export function tempCopy(source: string): { dir: string; dispose(): void } {
+  const dir = mkdtempSync(join(tmpdir(), "holon-test-"));
+  cpSync(source, dir, { recursive: true });
+  return { dir, dispose: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 function strip(value: unknown, key: string | null): unknown {

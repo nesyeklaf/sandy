@@ -1,285 +1,148 @@
+import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import plugin from "./server.ts";
-import { contractHash } from "./core/time.ts";
-import { expected, FIXTURE_COMMIT, FIXTURE_NOW, SHOP, withoutText } from "./test/fixture.ts";
-import { tempCopy, tempDir } from "./test/temp.ts";
 
-const disposers: (() => void)[] = [];
+const FAKE = fileURLToPath(new URL("./test/fake-serve.mjs", import.meta.url));
 
-afterEach(() => {
-  while (disposers.length > 0) disposers.pop()!();
+const disposers: (() => Promise<void> | void)[] = [];
+const saved = { bin: process.env.HOLON_BIN, path: process.env.PATH };
+
+afterEach(async () => {
+  while (disposers.length > 0) await disposers.pop()!();
+  for (const [name, value] of [["HOLON_BIN", saved.bin], ["PATH", saved.path]] as const) {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
 });
 
 async function loaded() {
   const host = createFakePluginHost({ pluginId: "holon" });
   await plugin(host.sandy);
-  disposers.push(() => void host.harness.lifecycle.dispose());
+  disposers.push(() => host.harness.lifecycle.dispose());
   return host;
 }
 
-function track<T extends { dispose(): void }>(value: T): T {
-  disposers.push(() => value.dispose());
-  return value;
+function workDir(): string {
+  const dir = mkdtempSync(join(tmpdir(), "holon-server-"));
+  disposers.push(() => rmSync(dir, { recursive: true, force: true }));
+  return dir;
 }
 
-async function cli(host: Awaited<ReturnType<typeof loaded>>, argv: string[], cwd?: string) {
-  const result = await host.harness.runCli(argv, cwd === undefined ? {} : { cwd });
-  return { ...result, json: argv.includes("--json") && result.stdout !== "" ? (JSON.parse(result.stdout) as Record<string, unknown>) : null };
-}
-
-function git(cwd: string, ...args: string[]): string {
-  return execFileSync("git", ["-C", cwd, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...args], { encoding: "utf8" }).trim();
-}
-
-function holonJson(id: string, extra: Record<string, unknown> = {}): string {
-  return JSON.stringify(
-    {
-      format: "holon/v0",
-      id,
-      kind: "operation",
-      partOf: null,
-      title: id,
-      status: "active",
-      why: "Because a test asks for it.",
-      contract: `${id} keeps its promise.`,
-      carriedBy: [],
-      code: [],
-      seams: [],
-      proofs: {},
-      ...extra,
-    },
-    null,
-    2,
-  );
-}
-
-describe("sandy holon on the shop fixture", () => {
-  const at = ["--now", FIXTURE_NOW, "--commit", FIXTURE_COMMIT];
-
-  it("records evidence.jsonl and then answers like expected/*.json", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    const record = await cli(host, ["evidence", "record", "--file", join(shop.dir, "evidence.jsonl"), "--root", shop.dir, ...at, "--json"]);
-    expect(record.exitCode).toBe(0);
-    expect(record.json).toMatchObject({ format: "holon-evidence-recorded/v0", unknownHolons: [] });
-    const check = await cli(host, ["check", "--root", shop.dir, ...at, "--json"]);
-    expect(check.exitCode).toBe(0);
-    expect(withoutText(check.json)).toEqual(withoutText(expected("check.json")));
-    const drift = await cli(host, ["drift", "--root", shop.dir, ...at, "--json"]);
-    expect(withoutText(drift.json)).toEqual(withoutText(expected("drift.json")));
-    for (const slug of ["password-reset", "account", "sign-in"]) {
-      const view = await cli(host, ["view", slug, "--root", shop.dir, ...at, "--json"]);
-      expect(withoutText(view.json)).toEqual(withoutText(expected(`view-${slug}.json`)));
-    }
-  });
-
-  it("prints text with the light glyphs", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    await cli(host, ["evidence", "record", "--file", "evidence.jsonl", ...at], shop.dir);
-    const check = await cli(host, ["check", "--root", shop.dir, ...at]);
-    expect(check.stdout).toContain("● 21 holons, 0 errors, 1 warning");
-    const drift = await cli(host, ["drift", "--root", shop.dir, ...at]);
-    expect(drift.stdout).toContain("◇ 6 drifts");
-    expect(drift.stdout).toContain("◇ account  contradiction  seam user-db");
-    const view = await cli(host, ["view", "password-reset", "--root", shop.dir, ...at]);
-    expect(view.stdout).toMatch(/^◇ /);
-    expect(view.stdout).toContain("Parts:");
-  });
-
-  it("fails with a JSON envelope for an unknown holon", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    const view = await cli(host, ["view", "nope", "--root", shop.dir, ...at, "--json"]);
-    expect(view.exitCode).not.toBe(0);
-    expect(view.json).toMatchObject({ ok: false, error: { code: "holon_not_found" } });
-  });
-
-  it("fills evidence from the declared proof and clears the expired side", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    await cli(host, ["evidence", "record", "--file", "evidence.jsonl", ...at], shop.dir);
-    const record = await cli(host, ["evidence", "record", "--holon", "reset-mail", "--side", "It", "--result", "pass", "--detail", "rerun", "--root", shop.dir, ...at]);
-    expect(record.exitCode).toBe(0);
-    const view = await cli(host, ["view", "reset-mail", "--root", shop.dir, ...at, "--json"]);
-    const focus = view.json!.focus as { sides: { It: { light: string; kind: string; detail: string } }; drift: unknown[] };
-    expect(focus.sides.It).toMatchObject({ light: "hard", kind: "ci", detail: "rerun" });
-    const drift = await cli(host, ["drift", "--root", shop.dir, ...at, "--json"]);
-    expect((drift.json!.drift as { holon: string }[]).map((item) => item.holon)).not.toContain("reset-mail");
-  });
-
-  it("writes a confirmation file and refuses a second one for the same day", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    await cli(host, ["evidence", "record", "--file", "evidence.jsonl", ...at], shop.dir);
-    const args = ["confirm", "password-reset", "--side", "I", "--by", "maria", "--recorded-by", "agent:they-side", "--answer", "I get the mail within a minute.", "--hesitation", "Only tried on Gmail", "--root", shop.dir, ...at, "--json"];
-    const first = await cli(host, args);
-    expect(first.stderr).toBe("");
-    expect(first.exitCode).toBe(0);
-    expect(first.json).toMatchObject({ path: ".holons/confirmations/password-reset/2026-11-08-I-maria.json" });
-    expect(["soft", "claimed"]).toContain(first.json!.light);
-    const written = JSON.parse(readFileSync(join(shop.dir, ".holons/confirmations/password-reset/2026-11-08-I-maria.json"), "utf8")) as Record<string, unknown>;
-    expect(written).toMatchObject({ format: "holon-confirmation/v0", expires: "2027-02-06", hesitation: ["Only tried on Gmail"], result: "confirmed" });
-    const view = await cli(host, ["view", "password-reset", "--root", shop.dir, ...at, "--json"]);
-    expect((view.json!.focus as { sides: { I: { by: string; at: string } } }).sides.I).toMatchObject({ by: "maria", at: "2026-11-08" });
-    const second = await cli(host, args);
-    expect(second.json).toMatchObject({ ok: false, error: { code: "confirmation_exists" } });
-    const machine = await cli(host, ["confirm", "password-reset", "--side", "They", "--by", "maria", "--answer", "x", "--root", shop.dir, ...at, "--json"]);
-    expect(machine.json).toMatchObject({ ok: false, error: { code: "machine_side" } });
-  });
-
-  it("answers invalid dates with a JSON error envelope", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    const confirm = (...extra: string[]) =>
-      cli(host, ["confirm", "password-reset", "--side", "I", "--by", "maria", "--answer", "Works", "--root", shop.dir, ...at, ...extra, "--json"]);
-    for (const [flags, code] of [
-      [["--at", "not-date"], "invalid_at"],
-      [["--at", "2026-02-30"], "invalid_at"],
-      [["--expires", "2026-13-01"], "invalid_expires"],
-      [["--expires", "2027-01-01T00:00:00Z"], "invalid_expires"],
-    ] as const) {
-      const result = await confirm(...flags);
-      expect(result.exitCode, flags.join(" ")).not.toBe(0);
-      expect(result.json, flags.join(" ")).toMatchObject({ ok: false, error: { code } });
-    }
-    for (const now of ["nope", "2026", "2026-11-08", "2026-11-08T12"]) {
-      const check = await cli(host, ["check", "--root", shop.dir, "--now", now, "--json"]);
-      expect(check.json, now).toMatchObject({ ok: false, error: { code: "invalid_now" } });
-    }
-    for (const now of ["2026-11-08T12:00:00Z", "2026-11-08T12:00:00.250+01:00", "2026-11-08T12:00Z"]) {
-      expect((await cli(host, ["check", "--root", shop.dir, "--now", now, "--json"])).exitCode, now).toBe(0);
-    }
-  });
-
-  it("serves the fileOpener view over RPC", async () => {
-    const host = await loaded();
-    const shop = track(tempCopy(SHOP));
-    const result = (await host.harness.callRpc("view", {
-      source: { kind: "host", threadId: "thread-test", environmentId: null },
-      path: join(shop.dir, "apps/account/password-reset.holon"),
-    })) as { ok: boolean; view?: { focus: { id: string } } };
-    expect(result.ok).toBe(true);
-    expect(result.view?.focus.id).toBe("password-reset");
-  });
-});
-
-describe("sandy holon in a Git repository", () => {
-  function repo() {
-    const temp = track(tempDir());
-    git(temp.dir, "init", "-q", "-b", "main");
-    return temp.dir;
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
   }
+}
 
-  it("expires machine evidence when a path in code changed since its build", async () => {
+describe("sandy holon with a fake holon serve", () => {
+  it("exits 1 with the check output when serve answers 422", async () => {
+    process.env.HOLON_BIN = FAKE;
     const host = await loaded();
-    const dir = repo();
-    mkdirSync(join(dir, "src"));
-    writeFileSync(join(dir, "src/token.ts"), "export const a = 1;\n");
-    writeFileSync(join(dir, "README.md"), "hi\n");
-    writeFileSync(join(dir, "token.holon"), holonJson("token", { code: ["src/token.ts"], proofs: { It: { kind: "ci", source: "src/token.test.ts" } } }));
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "one");
-    const first = git(dir, "rev-parse", "HEAD");
-    await cli(host, ["evidence", "record", "--holon", "token", "--side", "It", "--result", "pass", "--root", dir]);
-    const light = async () => {
-      const view = await cli(host, ["view", "token", "--root", dir, "--json"]);
-      return (view.json!.focus as { sides: { It: { light: string; detail: string } } }).sides.It;
-    };
-    expect(await light()).toMatchObject({ light: "hard" });
-    writeFileSync(join(dir, "README.md"), "changed\n");
-    git(dir, "commit", "-qam", "two");
-    expect(await light()).toMatchObject({ light: "hard" });
-    writeFileSync(join(dir, "src/token.ts"), "export const a = 2;\n");
-    git(dir, "commit", "-qam", "three");
-    expect(await light()).toMatchObject({ light: "expired", detail: expect.stringContaining("src/token.ts") });
-    const back = await cli(host, ["view", "token", "--root", dir, "--commit", first, "--json"]);
-    expect((back.json!.focus as { sides: { It: { light: string } } }).sides.It.light).toBe("hard");
-    await cli(host, ["evidence", "record", "--holon", "token", "--side", "It", "--result", "pass", "--build", "0123456789abcdef0123456789abcdef01234567", "--root", dir]);
-    expect(await light()).toMatchObject({ light: "expired", detail: expect.stringContaining("no known commit") });
+    const dir = workDir();
+    const broken = await host.harness.runCli(["check", "--root", dir, "--commit", "broken", "--json"], {});
+    expect(broken.exitCode).toBe(1);
+    expect(JSON.parse(broken.stdout)).toMatchObject({ format: "holon-check/v0", errors: [{ file: "a.holon" }] });
+    const text = await host.harness.runCli(["check", "--root", dir, "--commit", "broken"], {});
+    expect(text.exitCode).toBe(1);
+    expect(text.stdout).toContain("✕ a.holon: invalid JSON");
+    const clean = await host.harness.runCli(["check", "--root", dir], {});
+    expect(clean.exitCode).toBe(0);
+    expect(clean.stdout).toContain("● 1 holon, 0 errors");
   });
 
-  it.each(["src/über.ts", "src/line\nbreak.ts"])("expires machine evidence when %j changed, a path Git quotes", async (path) => {
+  it("reads --file in the plugin and posts it as JSONL", async () => {
+    process.env.HOLON_BIN = FAKE;
     const host = await loaded();
-    const dir = repo();
-    mkdirSync(join(dir, "src"));
-    writeFileSync(join(dir, path), "export const a = 1;\n");
-    writeFileSync(join(dir, "token.holon"), holonJson("token", { code: [path], proofs: { It: { kind: "ci", source: "src/token.test.ts" } } }));
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "one");
-    await cli(host, ["evidence", "record", "--holon", "token", "--side", "It", "--result", "pass", "--root", dir]);
-    writeFileSync(join(dir, path), "export const a = 2;\n");
-    git(dir, "commit", "-qam", "two");
-    const view = await cli(host, ["view", "token", "--root", dir, "--json"]);
-    expect((view.json!.focus as { sides: { It: { light: string } } }).sides.It.light).toBe("expired");
+    const dir = workDir();
+    writeFileSync(join(dir, "evidence.jsonl"), '{"a":1}\n{"b":2}\n');
+    const recorded = await host.harness.runCli(["evidence", "record", "--file", "evidence.jsonl", "--root", dir, "--json"], { cwd: dir });
+    expect(recorded.exitCode).toBe(0);
+    expect(JSON.parse(recorded.stdout)).toMatchObject({ recorded: 2, contentType: "application/x-ndjson" });
+    const text = await host.harness.runCli(["evidence", "record", "--jsonl", '{"a":1}', "--root", dir], {});
+    expect(text.stdout).toBe("● recorded 1 evidence record, 1 holons re-evaluated\n");
+    const missing = await host.harness.runCli(["evidence", "record", "--file", "nope.jsonl", "--root", dir], { cwd: dir });
+    expect(missing.exitCode).not.toBe(0);
+    expect(missing.stderr).toContain("cannot read nope.jsonl");
   });
 
-  it("opens a .holon file of a nested model inside the repository", async () => {
+  it("reports a 413 from serve as body_too_large with the standalone import hint", async () => {
+    process.env.HOLON_BIN = FAKE;
+    process.env.FAKE_BODY_LIMIT = "100";
+    disposers.push(() => {
+      delete process.env.FAKE_BODY_LIMIT;
+    });
     const host = await loaded();
-    const dir = repo();
-    writeFileSync(join(dir, "top.holon"), holonJson("top"));
-    cpSync(SHOP, join(dir, "docs/shop"), { recursive: true });
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "nested");
-    for (const file of ["docs/shop/apps/account/password-reset.holon", "docs/shop/shop.holon"]) {
-      const result = (await host.harness.callRpc("view", {
-        source: { kind: "host", threadId: "thread-test", environmentId: null },
-        path: join(dir, file),
-      })) as { ok: boolean; error?: string; root?: string };
-      expect(result, file).toMatchObject({ ok: true, root: join(dir, "docs/shop") });
-    }
-    const result = (await host.harness.callRpc("view", {
-      source: { kind: "host", threadId: "thread-test", environmentId: null },
-      path: join(dir, "docs/shop/apps/account/password-reset.holon"),
-    })) as { ok: true; view: { focus: { id: string }; parent: { id: string }; children: { id: string }[]; seams: { from: string; to: string }[] } };
-    expect(result.view.focus.id).toBe("password-reset");
-    expect(result.view.parent.id).toBe("account");
-    expect(result.view.children.map((child) => child.id)).toEqual(["reset-mail", "reset-rate-limit", "reset-token"]);
-    expect(result.view.seams.map((seam) => `${seam.from}>${seam.to}`)).toEqual(["password-reset>mail"]);
-    const top = (await host.harness.callRpc("view", {
-      source: { kind: "host", threadId: "thread-test", environmentId: null },
-      path: join(dir, "top.holon"),
-    })) as { ok: boolean; root?: string };
-    expect(top).toMatchObject({ ok: true, root: dir });
+    const dir = workDir();
+    const result = await host.harness.runCli(["evidence", "record", "--jsonl", "x".repeat(500), "--root", dir], {});
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("the body is larger than 64 MB");
+    expect(result.stderr).toContain("holon evidence import --file");
   });
 
-  it("merges confirmations from two branches without a conflict", async () => {
+  it("refuses the flag form of evidence record and --replace, which holon serve cannot take", async () => {
+    process.env.HOLON_BIN = FAKE;
     const host = await loaded();
-    const dir = repo();
-    writeFileSync(join(dir, "maria.holon"), holonJson("maria", { kind: "person" }));
-    writeFileSync(join(dir, "bob.holon"), holonJson("bob", { kind: "person" }));
-    writeFileSync(
-      join(dir, "login.holon"),
-      holonJson("login", { proofs: { I: { kind: "interview" }, We: { kind: "confirmation" } } }),
-    );
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "base");
-    const now = ["--now", "2026-11-08T12:00:00Z"];
-    git(dir, "checkout", "-qb", "a");
-    expect((await cli(host, ["confirm", "login", "--side", "I", "--by", "maria", "--answer", "Works", "--root", dir, ...now])).exitCode).toBe(0);
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "maria confirms");
-    git(dir, "checkout", "-q", "main");
-    git(dir, "checkout", "-qb", "b");
-    expect((await cli(host, ["confirm", "login", "--side", "We", "--by", "bob", "--answer", "We rely on it", "--root", dir, ...now])).exitCode).toBe(0);
-    expect((await cli(host, ["confirm", "login", "--side", "I", "--by", "bob", "--answer", "Works for me too", "--root", dir, ...now])).exitCode).toBe(0);
-    git(dir, "add", ".");
-    git(dir, "commit", "-qm", "bob confirms");
-    git(dir, "checkout", "-q", "a");
-    git(dir, "merge", "-q", "--no-edit", "b");
-    expect(git(dir, "status", "--porcelain")).toBe("");
-    for (const file of ["2026-11-08-I-maria.json", "2026-11-08-I-bob.json", "2026-11-08-We-bob.json"]) {
-      expect(existsSync(join(dir, ".holons/confirmations/login", file))).toBe(true);
-    }
-    const check = await cli(host, ["check", "--root", dir, ...now, "--json"]);
-    expect(check.json).toMatchObject({ holons: 3, errors: [], warnings: [] });
-    const view = await cli(host, ["view", "login", "--root", dir, ...now, "--json"]);
-    const sides = (view.json!.focus as { sides: Record<string, { light: string; by: string }> }).sides;
-    expect(sides.I).toMatchObject({ light: "soft", by: "maria" });
-    expect(sides.We).toMatchObject({ light: "soft", by: "bob" });
+    const dir = workDir();
+    const flags = await host.harness.runCli(["evidence", "record", "--holon", "sign-in", "--side", "It", "--result", "pass", "--root", dir], {});
+    expect(flags.exitCode).not.toBe(0);
+    expect(flags.stderr).toContain("--holon has no equivalent in holon serve");
+    expect(flags.stderr).toContain("--file or --jsonl");
+    const replace = await host.harness.runCli(["evidence", "record", "--file", "x.jsonl", "--replace", "--root", dir], {});
+    expect(replace.exitCode).not.toBe(0);
+    expect(replace.stderr).toContain("--replace has no equivalent in holon serve");
+  });
+
+  it("maps a serve error envelope to a coded CLI error", async () => {
+    process.env.HOLON_BIN = FAKE;
+    const host = await loaded();
+    const result = await host.harness.runCli(["view", "sign-in", "--root", workDir()], {});
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("no route GET /v0/holons/sign-in");
+    expect(result.stderr).toContain("fake hint");
+  });
+
+  it("fails with holon_not_installed and its hint when there is no binary", async () => {
+    delete process.env.HOLON_BIN;
+    process.env.PATH = "/nonexistent";
+    const host = await loaded();
+    const result = await host.harness.runCli(["check", "--root", workDir()], {});
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("the holon binary is not installed");
+    expect(result.stderr).toContain("HOLON_BIN");
+    expect(result.stderr).toContain("cargo install --path holon-cli");
+  });
+
+  it("rejects a --root that is no directory before it starts any process", async () => {
+    process.env.HOLON_BIN = "/nonexistent/holon";
+    const host = await loaded();
+    const result = await host.harness.runCli(["check", "--root", "/nonexistent/dir"], {});
+    expect(result.stderr).toContain("--root /nonexistent/dir is no directory");
+  });
+
+  it("kills the serve processes when the plugin is disposed", async () => {
+    process.env.HOLON_BIN = FAKE;
+    const host = await loaded();
+    const dirs = [workDir(), workDir()];
+    for (const dir of dirs) expect((await host.harness.runCli(["check", "--root", dir], {})).exitCode).toBe(0);
+    const running = () => dirs.flatMap((dir) => pgrep(dir));
+    expect(running()).toHaveLength(2);
+    await host.harness.lifecycle.dispose();
+    expect(running()).toEqual([]);
   });
 });
+
+function pgrep(dir: string): number[] {
+  try {
+    return execFileSync("pgrep", ["-f", "--", `--root ${dir} `], { encoding: "utf8" }).split("\n").filter((line) => line !== "").map(Number);
+  } catch {
+    return [];
+  }
+}
