@@ -532,8 +532,8 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
             Layout failed: {failure}
           </p>
         )}
-        <p className="pointer-events-none absolute bottom-2 left-3 text-2xs text-muted-foreground">Drag to pan · Ctrl or ⌘ + scroll or pinch to zoom · +/− opens and closes a box</p>
       </div>
+      <p className="text-2xs text-muted-foreground">Drag to pan · Ctrl or ⌘ + scroll or pinch to zoom · +/− opens and closes a box</p>
     </div>
   );
 }
