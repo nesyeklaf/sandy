@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { ViewOutput } from "./core/outputs.ts";
+import type { MapOutput, ViewOutput } from "./core/outputs.ts";
 import plugin from "./server.ts";
 import { expected, FIXTURE_COMMIT, FIXTURE_NOW, SHOP, tempCopy, withoutText } from "./test/fixture.ts";
 
@@ -79,6 +79,36 @@ describe.skipIf(!run)("sandy holon against the real holon binary", () => {
       expect({ exitCode: wrapped.exitCode, stderr: wrapped.stderr }).toEqual({ exitCode: 0, stderr: "" });
       expect(JSON.parse(wrapped.stdout)).toEqual(JSON.parse(own));
     }
+  });
+
+  it("answers the map rpc with the same lights, drift and seams as the view rpc for every holon", async () => {
+    const root = shop();
+    const source = { kind: "host", threadId: null, environmentId: null };
+    const path = join(root, "shop.holon");
+    const mapReply = (await host.harness.callRpc("map", { source, path })) as { ok: true; map: MapOutput };
+    expect(mapReply).toMatchObject({ ok: true });
+    const { map } = mapReply;
+    expect(map.format).toBe("holon-map/v0");
+    expect(map.holons.length).toBeGreaterThan(5);
+    const seams: MapOutput["seams"] = [];
+    for (const holon of map.holons) {
+      const reply = (await host.harness.callRpc("view", { source, path, id: holon.id })) as { ok: true; view: ViewOutput };
+      const { focus } = reply.view;
+      expect({ kind: focus.kind, title: focus.title, status: focus.status, light: focus.light, drift: focus.drift, driftBelow: focus.driftBelow, parent: reply.view.parent?.id ?? null, childCount: reply.view.children.length }).toEqual({
+        kind: holon.kind,
+        title: holon.title,
+        status: holon.status,
+        light: holon.light,
+        drift: holon.drift,
+        driftBelow: holon.driftBelow,
+        parent: holon.parent,
+        childCount: holon.childCount,
+      });
+      expect(holon.sides).toEqual({ I: focus.sides.I.light, It: focus.sides.It.light, We: focus.sides.We.light, They: focus.sides.They.light });
+      for (const seam of reply.view.seams) if (seam.from === holon.id) seams.push({ from: seam.from, to: seam.to, contract: seam.contract, light: seam.light, readOnly: seam.readOnly, exclusive: seam.exclusive, drift: seam.drift });
+    }
+    const key = (seam: MapOutput["seams"][number]) => JSON.stringify(seam);
+    expect(map.seams.map(key).sort()).toEqual(seams.map(key).sort());
   });
 
   it("prints text with the light glyphs", async () => {

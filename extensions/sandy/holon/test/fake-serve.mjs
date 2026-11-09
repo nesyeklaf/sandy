@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { appendFileSync, existsSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 const args = process.argv.slice(2);
@@ -52,6 +52,8 @@ if (mode === "hang") {
         send(response, 200, { ok: true, format: "holon-health/v0", version: "fake" });
       } else if (url.pathname === "/v0/info") {
         send(response, 200, { pid: process.pid, root, token, address: server.address().port });
+      } else if (url.pathname === "/v0/map") {
+        send(response, 200, readFileSync(new URL("./map-fixture.json", import.meta.url), "utf8"));
       } else if (url.pathname === "/v0/slow") {
         setTimeout(() => send(response, 200, { pid: process.pid }), 5000);
       } else if (url.pathname === "/v0/exit-soon") {

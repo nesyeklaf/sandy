@@ -1,0 +1,104 @@
+{
+  "format": "holon-map/v0",
+  "holons": [
+    {
+      "id": "shop",
+      "kind": "system",
+      "title": "Shop",
+      "status": "active",
+      "parent": null,
+      "file": "shop.holon",
+      "light": "drift",
+      "sides": {
+        "I": "open",
+        "It": "soft",
+        "We": "claimed",
+        "They": "open"
+      },
+      "drift": [],
+      "driftBelow": 1,
+      "childCount": 2,
+      "carriedBy": [
+        "team-shop"
+      ]
+    },
+    {
+      "id": "account",
+      "kind": "container",
+      "title": "Account service",
+      "status": "active",
+      "parent": "shop",
+      "file": "apps/account.holon",
+      "light": "drift",
+      "sides": {
+        "I": "open",
+        "It": "hard",
+        "We": "open",
+        "They": "open"
+      },
+      "drift": [
+        {
+          "kind": "contradiction",
+          "side": null,
+          "seam": "user-db",
+          "detail": "Promises to be the only writer to user-db, but support-tool writes to it too"
+        }
+      ],
+      "driftBelow": 1,
+      "childCount": 0,
+      "carriedBy": []
+    },
+    {
+      "id": "user-db",
+      "kind": "container",
+      "title": "User database",
+      "status": "active",
+      "parent": "shop",
+      "file": "apps/user-db.holon",
+      "light": "soft",
+      "sides": {
+        "I": "open",
+        "It": "soft",
+        "We": "open",
+        "They": "open"
+      },
+      "drift": [],
+      "driftBelow": 0,
+      "childCount": 0,
+      "carriedBy": []
+    },
+    {
+      "id": "team-shop",
+      "kind": "team",
+      "title": "Shop team",
+      "status": "active",
+      "parent": null,
+      "file": "org/team-shop.holon",
+      "light": "open",
+      "sides": {
+        "I": "open",
+        "It": "open",
+        "We": "open",
+        "They": "open"
+      },
+      "drift": [],
+      "driftBelow": 0,
+      "childCount": 0,
+      "carriedBy": []
+    }
+  ],
+  "seams": [
+    {
+      "from": "account",
+      "to": "user-db",
+      "contract": "Only writer of password hashes",
+      "light": "refuted",
+      "readOnly": false,
+      "exclusive": true,
+      "drift": "contradiction"
+    }
+  ],
+  "warnings": [],
+  "computedAt": "2026-11-08T12:00:00Z",
+  "commit": "fixture"
+}
