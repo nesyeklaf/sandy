@@ -12,6 +12,12 @@ if (args[0] !== "serve" || args[args.indexOf("--port") + 1] !== "0" || args[args
   process.exit(64);
 }
 
+if (args.includes("--exit-on-stdin-close")) {
+  process.stdin.on("end", () => process.exit(0));
+  process.stdin.on("error", () => process.exit(0));
+  process.stdin.resume();
+}
+
 if (process.env.FAKE_PID_LOG) appendFileSync(process.env.FAKE_PID_LOG, process.pid + "\n");
 
 if (mode === "hang") {
@@ -35,7 +41,9 @@ if (mode === "hang") {
     request.on("data", (chunk) => chunks.push(chunk));
     request.on("end", () => {
       const body = Buffer.concat(chunks).toString("utf8");
-      if (url.pathname === "/v0/info") {
+      if (url.pathname === "/v0/health") {
+        send(response, 200, { ok: true, format: "holon-health/v0", version: "fake" });
+      } else if (url.pathname === "/v0/info") {
         send(response, 200, { pid: process.pid, root, token, address: server.address().port });
       } else if (url.pathname === "/v0/slow") {
         setTimeout(() => send(response, 200, { pid: process.pid }), 5000);

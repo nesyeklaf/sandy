@@ -84,10 +84,11 @@ export class HolonEngine {
     const { bin, explicit } = this.binary();
     const timeoutMs = this.options.startTimeoutMs ?? START_TIMEOUT_MS;
     return new Promise<ServeProcess>((resolve, reject) => {
-      const proc = spawn(bin, ["serve", "--root", root, "--host", "127.0.0.1", "--port", "0"], {
+      const proc = spawn(bin, ["serve", "--root", root, "--host", "127.0.0.1", "--port", "0", "--exit-on-stdin-close"], {
         env: { ...process.env, HOLON_TOKEN: token },
-        stdio: ["ignore", "ignore", "pipe"],
+        stdio: ["pipe", "ignore", "pipe"],
       });
+      proc.stdin!.on("error", () => {});
       let tail = "";
       let settled = false;
       let markExited!: () => void;
