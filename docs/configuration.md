@@ -1180,7 +1180,10 @@ The Holons plugin (`extensions/sandy/holon`) computes nothing itself: it asks a
 on demand and stopped after 15 idle minutes. It runs the binary in `HOLON_BIN`
 (absolute path), otherwise `holon` on `PATH`. Set it with
 `npx sandy-app env set HOLON_BIN /path/to/holon` and restart sandy. Without a
-binary `sandy holon` fails with `holon_not_installed`. Build the binary from
+binary `sandy holon` fails with `holon_not_installed`. `sandy holon evidence record`
+sends its file as one request, which `holon serve` limits to 64 MB; a larger
+file fails with `body_too_large` and must go through the standalone
+`holon evidence import --file`. Build the binary from
 github.com/nesyeklaf/holons with `cargo install --path holon-cli`. See the
 `holon` skill.
 

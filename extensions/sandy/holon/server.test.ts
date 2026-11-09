@@ -73,6 +73,20 @@ describe("sandy holon with a fake holon serve", () => {
     expect(missing.stderr).toContain("cannot read nope.jsonl");
   });
 
+  it("reports a 413 from serve as body_too_large with the standalone import hint", async () => {
+    process.env.HOLON_BIN = FAKE;
+    process.env.FAKE_BODY_LIMIT = "100";
+    disposers.push(() => {
+      delete process.env.FAKE_BODY_LIMIT;
+    });
+    const host = await loaded();
+    const dir = workDir();
+    const result = await host.harness.runCli(["evidence", "record", "--jsonl", "x".repeat(500), "--root", dir], {});
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("the body is larger than 64 MB");
+    expect(result.stderr).toContain("holon evidence import --file");
+  });
+
   it("refuses the flag form of evidence record and --replace, which holon serve cannot take", async () => {
     process.env.HOLON_BIN = FAKE;
     const host = await loaded();

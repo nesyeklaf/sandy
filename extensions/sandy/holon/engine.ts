@@ -14,6 +14,10 @@ const LISTENING = /holon serve: listening on http:\/\/(\S+)/;
 const STDERR_TAIL_BYTES = 2000;
 const KILL_GRACE_MS = 2000;
 const UNPROCESSABLE = 422;
+const PAYLOAD_TOO_LARGE = 413;
+const BODY_LIMIT_BYTES = 64 * 1024 * 1024;
+const BODY_LIMIT_MESSAGE = "the body is larger than 64 MB";
+const BODY_LIMIT_HINT = "The plugin sends a file as one request of at most 64 MB. Import larger files with the standalone `holon evidence import --file <path>`";
 
 export const START_TIMEOUT_MS = 10_000;
 export const IDLE_STOP_MS = 15 * 60_000;
@@ -57,6 +61,14 @@ function notInstalled(bin: string, explicit: boolean): HolonError {
     "holon_not_installed",
     "Install holon from github.com/nesyeklaf/holons (cargo install --path holon-cli) so `holon` is on PATH, or set HOLON_BIN to its absolute path",
   );
+}
+
+class NotSent extends Error {}
+
+function connectionRefused(cause: unknown): boolean {
+  if (!(cause instanceof Error)) return false;
+  const detail = cause.cause as { code?: string; errors?: { code?: string }[] } | undefined;
+  return detail?.code === "ECONNREFUSED" || (detail?.errors?.some((item) => item.code === "ECONNREFUSED") ?? false);
 }
 
 function canonicalRoot(root: string): string {
@@ -180,6 +192,7 @@ export class HolonEngine {
     for (const [name, value] of Object.entries(request.query ?? {})) if (value !== undefined) url.searchParams.set(name, value);
     const headers: Record<string, string> = { Authorization: `Bearer ${serve.token}` };
     if (request.contentType !== undefined) headers["Content-Type"] = request.contentType;
+    if (serve.proc.exitCode !== null || serve.proc.signalCode !== null) throw new NotSent("holon serve has exited");
     serve.inflight += 1;
     try {
       const response = await fetch(url, { method: request.method, headers, ...(request.body === undefined ? {} : { body: request.body }) });
@@ -190,6 +203,11 @@ export class HolonEngine {
     }
   }
 
+  private sendFailure(root: string, request: EngineRequest, cause: unknown): HolonError {
+    if (request.body !== undefined && Buffer.byteLength(request.body) > BODY_LIMIT_BYTES) return new HolonError(BODY_LIMIT_MESSAGE, "body_too_large", BODY_LIMIT_HINT);
+    return new HolonError(`holon serve for ${root} is unreachable: ${cause instanceof Error ? cause.message : String(cause)}`, "holon_unreachable");
+  }
+
   async request(requested: string, request: EngineRequest): Promise<EngineReply> {
     const root = canonicalRoot(requested);
     const first = await this.ensure(root);
@@ -197,13 +215,14 @@ export class HolonEngine {
       return await this.attempt(first, request);
     } catch (cause) {
       if (this.closed) throw closedError();
+      if (request.body !== undefined && !(cause instanceof NotSent) && !connectionRefused(cause)) throw this.sendFailure(root, request, cause);
       await this.stop(first);
       const second = await this.ensure(root);
       try {
         return await this.attempt(second, request);
       } catch {
         if (this.closed) throw closedError();
-        throw new HolonError(`holon serve for ${root} is unreachable: ${cause instanceof Error ? cause.message : String(cause)}`, "holon_unreachable");
+        throw this.sendFailure(root, request, cause);
       }
     }
   }
@@ -218,6 +237,7 @@ export class HolonEngine {
       body = null;
     }
     const failure = failureBody.safeParse(body);
+    if (reply.status === PAYLOAD_TOO_LARGE) throw new HolonError(failure.success ? failure.data.error.message : BODY_LIMIT_MESSAGE, "body_too_large", BODY_LIMIT_HINT);
     if (failure.success) {
       const { code, message, hint } = failure.data.error;
       throw new HolonError(message, code, hint ?? undefined);

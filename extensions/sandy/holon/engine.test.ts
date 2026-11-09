@@ -17,12 +17,12 @@ interface Info {
 
 const engines: HolonEngine[] = [];
 const dirs: string[] = [];
-const saved = { mode: process.env.FAKE_MODE, marker: process.env.FAKE_CRASH_MARKER, pidLog: process.env.FAKE_PID_LOG, path: process.env.PATH, bin: process.env.HOLON_BIN };
+const saved = { mode: process.env.FAKE_MODE, marker: process.env.FAKE_CRASH_MARKER, pidLog: process.env.FAKE_PID_LOG, limit: process.env.FAKE_BODY_LIMIT, bodyMode: process.env.FAKE_BODY_MODE, path: process.env.PATH, bin: process.env.HOLON_BIN };
 
 afterEach(async () => {
   await Promise.all(engines.splice(0).map((engine) => engine.close()));
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
-  for (const [name, value] of [["FAKE_MODE", saved.mode], ["FAKE_CRASH_MARKER", saved.marker], ["FAKE_PID_LOG", saved.pidLog], ["PATH", saved.path], ["HOLON_BIN", saved.bin]] as const) {
+  for (const [name, value] of [["FAKE_MODE", saved.mode], ["FAKE_CRASH_MARKER", saved.marker], ["FAKE_PID_LOG", saved.pidLog], ["FAKE_BODY_LIMIT", saved.limit], ["FAKE_BODY_MODE", saved.bodyMode], ["PATH", saved.path], ["HOLON_BIN", saved.bin]] as const) {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
   }
@@ -156,6 +156,38 @@ describe("HolonEngine processes", () => {
     expect(results[0]!.root).toBe(join(real, "model"));
     const later = await info(target, join(real, "link"));
     expect(later.pid).toBe(results[0]!.pid);
+  });
+
+  it("maps a 413 answer to body_too_large with the server's message and the standalone import hint", async () => {
+    process.env.FAKE_BODY_LIMIT = "1000";
+    const error = await failure(engine().call("/tmp/a", { method: "POST", path: "/v0/evidence", contentType: "application/x-ndjson", body: "x".repeat(5000) }));
+    expect(error.code).toBe("body_too_large");
+    expect(error.message).toBe("the body is larger than 64 MB");
+    expect(error.hint).toContain("holon evidence import --file");
+  });
+
+  it("neither restarts nor retries the server when sending a request body fails", async () => {
+    const log = pidLog();
+    process.env.FAKE_BODY_LIMIT = "1000";
+    process.env.FAKE_BODY_MODE = "reset";
+    const target = engine();
+    const before = await info(target, "/tmp/a");
+    const error = await failure(target.call("/tmp/a", { method: "POST", path: "/v0/evidence", contentType: "application/x-ndjson", body: "x".repeat(3_000_000) }));
+    expect(error.code).toBe("holon_unreachable");
+    expect(alive(before.pid)).toBe(true);
+    expect((await info(target, "/tmp/a")).pid).toBe(before.pid);
+    expect(pidsIn(log)).toEqual([before.pid]);
+  });
+
+  it("reports a failed upload above the server limit as body_too_large", async () => {
+    process.env.FAKE_BODY_LIMIT = "1000";
+    process.env.FAKE_BODY_MODE = "reset";
+    const target = engine();
+    const before = await info(target, "/tmp/a");
+    const error = await failure(target.call("/tmp/a", { method: "POST", path: "/v0/evidence", contentType: "application/x-ndjson", body: "x".repeat(65 * 1024 * 1024) }));
+    expect(error.code).toBe("body_too_large");
+    expect(error.hint).toContain("holon evidence import --file");
+    expect((await info(target, "/tmp/a")).pid).toBe(before.pid);
   });
 
   it("starts one process for concurrent first calls", async () => {

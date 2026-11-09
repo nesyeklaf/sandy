@@ -10,6 +10,7 @@ description: Check holon files in Git, list drift, view one holon, record eviden
 - `sandy holon check|drift|view <slug> [--root <dir>] [--now <iso>] [--commit <sha>] [--json]`: `--root` defaults to the repository root. `check` exits 1 when the model has errors.
 - `sandy holon evidence record --file <jsonl>` or `--jsonl <text>`: one complete evidence record per line, as in the `shop` fixture's `evidence.jsonl`.
 - `sandy holon confirm <slug> --side <I|It|We|They|seam:to> --by <who> --answer <text> [--hesitation <text>]... [--result confirmed|refuted]`: writes `.holons/confirmations/<slug>/…json`.
+- `evidence record` sends the whole file as one request; `holon serve` accepts at most 64 MB per request and the plugin does not split files. A larger file fails with `body_too_large`: import it with the standalone `holon evidence import --file <path>`.
 - Recording one run from flags (`--holon`, `--side`, `--result`, …) and `--replace` have no `holon serve` route yet and fail with `unsupported_option`. Use `--file`, `--jsonl` or the `holon` CLI.
 
 ## The holon binary

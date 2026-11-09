@@ -31,17 +31,24 @@ if (mode === "hang") {
     response.writeHead(status, { "content-type": "application/json" });
     response.end(typeof body === "string" ? body : JSON.stringify(body));
   };
+  const bodyLimit = Number(process.env.FAKE_BODY_LIMIT ?? "0");
   const server = createServer((request, response) => {
     if (request.headers.authorization !== "Bearer " + token) {
       send(response, 401, { ok: false, error: { code: "unauthorized", message: "missing or wrong bearer token" } });
       return;
     }
     const url = new URL(request.url, "http://fake");
+    if (bodyLimit > 0 && Number(request.headers["content-length"] ?? "0") > bodyLimit && process.env.FAKE_BODY_MODE === "reset") {
+      request.socket.destroy();
+      return;
+    }
     const chunks = [];
     request.on("data", (chunk) => chunks.push(chunk));
     request.on("end", () => {
       const body = Buffer.concat(chunks).toString("utf8");
-      if (url.pathname === "/v0/health") {
+      if (bodyLimit > 0 && body.length > bodyLimit) {
+        send(response, 413, { ok: false, error: { code: "body_too_large", message: "the body is larger than 64 MB" } });
+      } else if (url.pathname === "/v0/health") {
         send(response, 200, { ok: true, format: "holon-health/v0", version: "fake" });
       } else if (url.pathname === "/v0/info") {
         send(response, 200, { pid: process.pid, root, token, address: server.address().port });
