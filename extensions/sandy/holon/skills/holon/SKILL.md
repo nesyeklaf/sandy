@@ -17,5 +17,6 @@ description: Check holon files in Git, list drift, view one holon, record eviden
 
 - The plugin runs the binary in `HOLON_BIN` (absolute path), else `holon` on PATH. Set `HOLON_BIN` in the environment of the sandy server (`npx sandy-app env set HOLON_BIN /path/to/holon`) and restart it.
 - Without a binary every command fails with `holon_not_installed`. Install it from a checkout of github.com/nesyeklaf/holons with `cargo install --path holon-cli`.
+- Every request to the server has a 120 s deadline, for reads and writes. A request that exceeds it fails with `holon_timeout`; the server keeps running and the plugin does not retry.
 - A process that does not print its address within 10 seconds fails with `holon_start_timeout` and the tail of its stderr.
 - The index database lives in the holon data directory (`$XDG_DATA_HOME/holon`), one per repository.

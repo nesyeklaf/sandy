@@ -190,6 +190,19 @@ describe("HolonEngine processes", () => {
     expect((await info(target, "/tmp/a")).pid).toBe(before.pid);
   });
 
+  it("fails a request that outlives its deadline with holon_timeout and keeps the server", async () => {
+    const target = engine({ bin: FAKE, requestTimeoutMs: 300 });
+    const before = await info(target, "/tmp/a");
+    const read = await failure(target.call("/tmp/a", { method: "GET", path: "/v0/slow" }));
+    expect(read.code).toBe("holon_timeout");
+    expect(read.message).toContain("0.3 s");
+    expect(read.hint).toBeDefined();
+    const write = await failure(target.call("/tmp/a", { method: "POST", path: "/v0/slow", body: "{}" }));
+    expect(write.code).toBe("holon_timeout");
+    expect(alive(before.pid)).toBe(true);
+    expect((await info(target, "/tmp/a")).pid).toBe(before.pid);
+  });
+
   it("starts one process for concurrent first calls", async () => {
     const target = engine();
     const results = await Promise.all([info(target, "/tmp/a"), info(target, "/tmp/a"), info(target, "/tmp/a")]);

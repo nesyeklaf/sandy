@@ -1184,7 +1184,9 @@ binary `sandy holon` fails with `holon_not_installed`. `sandy holon evidence rec
 sends its file as one request, which `holon serve` limits to 64 MB; a larger
 file fails with `body_too_large` and must go through the standalone
 `holon evidence import --file`. Build the binary from
-github.com/nesyeklaf/holons with `cargo install --path holon-cli`. See the
+github.com/nesyeklaf/holons with `cargo install --path holon-cli`. Every request
+to the server has a 120 s deadline for reads and writes; one that exceeds it
+fails with `holon_timeout` and the server keeps running. See the
 `holon` skill.
 
 ### Thread list plugin

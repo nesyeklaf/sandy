@@ -21,11 +21,13 @@ const BODY_LIMIT_HINT = "The plugin sends a file as one request of at most 64 MB
 
 export const START_TIMEOUT_MS = 10_000;
 export const IDLE_STOP_MS = 15 * 60_000;
+export const REQUEST_TIMEOUT_MS = 120_000;
 
 export interface EngineOptions {
   bin?: string | undefined;
   startTimeoutMs?: number;
   idleStopMs?: number;
+  requestTimeoutMs?: number;
 }
 
 export interface EngineRequest {
@@ -64,6 +66,10 @@ function notInstalled(bin: string, explicit: boolean): HolonError {
 }
 
 class NotSent extends Error {}
+
+function timedOut(cause: unknown): boolean {
+  return cause instanceof Error && cause.name === "TimeoutError";
+}
 
 function connectionRefused(cause: unknown): boolean {
   if (!(cause instanceof Error)) return false;
@@ -195,12 +201,26 @@ export class HolonEngine {
     if (serve.proc.exitCode !== null || serve.proc.signalCode !== null) throw new NotSent("holon serve has exited");
     serve.inflight += 1;
     try {
-      const response = await fetch(url, { method: request.method, headers, ...(request.body === undefined ? {} : { body: request.body }) });
+      const response = await fetch(url, {
+        method: request.method,
+        headers,
+        signal: AbortSignal.timeout(this.options.requestTimeoutMs ?? REQUEST_TIMEOUT_MS),
+        ...(request.body === undefined ? {} : { body: request.body }),
+      });
       return { status: response.status, text: await response.text() };
     } finally {
       serve.inflight -= 1;
       this.armIdle(serve);
     }
+  }
+
+  private timeout(root: string, request: EngineRequest): HolonError {
+    const seconds = (this.options.requestTimeoutMs ?? REQUEST_TIMEOUT_MS) / 1000;
+    return new HolonError(
+      `holon serve for ${root} did not answer ${request.method} ${request.path} within ${seconds} s`,
+      "holon_timeout",
+      "The server is kept running and may still be working. Try again, or run the standalone holon CLI for a very large model or evidence file",
+    );
   }
 
   private sendFailure(root: string, request: EngineRequest, cause: unknown): HolonError {
@@ -215,13 +235,15 @@ export class HolonEngine {
       return await this.attempt(first, request);
     } catch (cause) {
       if (this.closed) throw closedError();
+      if (timedOut(cause)) throw this.timeout(root, request);
       if (request.body !== undefined && !(cause instanceof NotSent) && !connectionRefused(cause)) throw this.sendFailure(root, request, cause);
       await this.stop(first);
       const second = await this.ensure(root);
       try {
         return await this.attempt(second, request);
-      } catch {
+      } catch (retryCause) {
         if (this.closed) throw closedError();
+        if (timedOut(retryCause)) throw this.timeout(root, request);
         throw this.sendFailure(root, request, cause);
       }
     }
