@@ -6,6 +6,7 @@ import {
   buildElkGraph,
   bundleSeams,
   childrenIds,
+  fitTargetId,
   fitViewport,
   isOpen,
   keepAnchor,
@@ -80,8 +81,8 @@ interface BoxProps {
   onToggle(id: string): void;
 }
 
-function clip(text: string, width: number): string {
-  const chars = Math.max(4, Math.floor(width / 7.4));
+function clip(text: string, width: number, charWidth: number = 7.4): string {
+  const chars = Math.max(4, Math.floor(width / charWidth));
   return text.length <= chars ? text : `${text.slice(0, chars - 1)}…`;
 }
 
@@ -90,6 +91,7 @@ const Box = memo(function Box({ holon, rect, open, expandable, selected, side, o
   const lines = open ? [clip(holon.title, rect.w - 100)] : titleLines(holon.title);
   const gridX = rect.x + rect.w - (expandable ? 64 : 30);
   const gridY = rect.y + 10;
+  const headerText = clip(`${holon.kind} · ${holon.status}`, gridX - 6 - (rect.x + 26), 6.8);
   const stroke = selected ? "stroke-ring" : side === "All" ? (holon.status === "proposed" ? "stroke-muted-foreground" : "stroke-border") : BOX_STROKE[light];
   return (
     <g className={holon.status === "retired" ? "opacity-60" : undefined}>
@@ -121,7 +123,8 @@ const Box = memo(function Box({ holon, rect, open, expandable, selected, side, o
           <title>{light}</title>
         </circle>
         <text x={rect.x + 26} y={rect.y + 18} className="fill-muted-foreground font-mono text-2xs">
-          {holon.kind} · {holon.status}
+          {headerText}
+          <title>{`${holon.kind} · ${holon.status}`}</title>
         </text>
         {lines.map((line, index) => (
           <text key={index} x={rect.x + 12} y={rect.y + 38 + index * 17} className="fill-foreground text-sm font-semibold">
@@ -299,7 +302,7 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
     const fit = pendingFit.current;
     const { w, h } = sizeRef.current;
     if (fit !== null) {
-      const target = next.placed.rects.get(rep(model, open, fit)) ?? next.placed.rects.get(ROOT_ID);
+      const target = next.placed.rects.get(fitTargetId(model, open, fit)) ?? next.placed.rects.get(ROOT_ID);
       if (target !== undefined) {
         pendingFit.current = null;
         setView(fitViewport(target, w, h));
@@ -423,8 +426,9 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
   function fitTo(id: string | null): void {
     const placed = layoutRef.current?.placed;
     if (placed === undefined) return;
-    const target = (id === null ? undefined : placed.rects.get(rep(model, open, id))) ?? placed.rects.get(ROOT_ID);
-    const { w, h } = sizeRef.current;
+    const target = placed.rects.get(fitTargetId(model, open, id)) ?? placed.rects.get(ROOT_ID);
+    const box = svgRef.current?.getBoundingClientRect();
+    const { w, h } = box === undefined || box.width === 0 ? sizeRef.current : { w: box.width, h: box.height };
     if (target !== undefined) setView(fitViewport(target, w, h));
   }
 
@@ -528,8 +532,8 @@ export function HolonMap({ model, selected, onSelect }: HolonMapProps) {
             Layout failed: {failure}
           </p>
         )}
-        <p className="pointer-events-none absolute bottom-2 left-3 text-2xs text-muted-foreground">Drag to pan · Ctrl or ⌘ + scroll or pinch to zoom · +/− opens and closes a box</p>
       </div>
+      <p className="text-2xs text-muted-foreground">Drag to pan · Ctrl or ⌘ + scroll or pinch to zoom · +/− opens and closes a box</p>
     </div>
   );
 }
