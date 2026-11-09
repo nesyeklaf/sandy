@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { realpathSync } from "node:fs";
+import { resolve } from "node:path";
 import { z } from "zod";
 import { HolonError } from "./error.ts";
 
@@ -55,6 +57,15 @@ function notInstalled(bin: string, explicit: boolean): HolonError {
     "holon_not_installed",
     "Install holon from github.com/nesyeklaf/holons (cargo install --path holon-cli) so `holon` is on PATH, or set HOLON_BIN to its absolute path",
   );
+}
+
+function canonicalRoot(root: string): string {
+  const absolute = resolve(root);
+  try {
+    return realpathSync(absolute);
+  } catch {
+    return absolute;
+  }
 }
 
 function closedError(): HolonError {
@@ -179,7 +190,8 @@ export class HolonEngine {
     }
   }
 
-  async request(root: string, request: EngineRequest): Promise<EngineReply> {
+  async request(requested: string, request: EngineRequest): Promise<EngineReply> {
+    const root = canonicalRoot(requested);
     const first = await this.ensure(root);
     try {
       return await this.attempt(first, request);

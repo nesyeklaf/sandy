@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { HolonEngine } from "./engine.ts";
 import { HolonError } from "./error.ts";
@@ -141,6 +141,21 @@ describe("HolonEngine processes", () => {
     expect(other.root).toBe("/tmp/b");
     expect(first.token).toMatch(/^[0-9a-f]{48}$/);
     expect(other.token).not.toBe(first.token);
+  });
+
+  it("gives one process to a root spelled with a trailing slash, a symlink, a relative path and dot segments", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "holon-engine-"));
+    dirs.push(dir);
+    const real = realpathSync(dir);
+    mkdirSync(join(real, "model"));
+    symlinkSync(join(real, "model"), join(real, "link"));
+    const spellings = [join(real, "model"), `${join(real, "model")}/`, join(real, "link"), `${join(real, "link")}/`, join(real, "model", "..", "model"), relative(process.cwd(), join(real, "model"))];
+    const target = engine();
+    const results = await Promise.all(spellings.map((spelling) => info(target, spelling)));
+    expect(new Set(results.map((item) => item.pid)).size).toBe(1);
+    expect(results[0]!.root).toBe(join(real, "model"));
+    const later = await info(target, join(real, "link"));
+    expect(later.pid).toBe(results[0]!.pid);
   });
 
   it("starts one process for concurrent first calls", async () => {
