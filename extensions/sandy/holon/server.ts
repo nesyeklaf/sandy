@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join } from "node:path";
 import { z } from "zod";
 import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { holonCli } from "./cli.ts";
-import type { ViewOutput } from "./core/outputs.ts";
+import type { MapOutput, ViewOutput } from "./core/outputs.ts";
 import { HolonEngine } from "./engine.ts";
 import { HolonError } from "./error.ts";
 import { gitTopLevel, modelRootOf } from "./root.ts";
@@ -13,22 +13,32 @@ const viewResult = z.union([
   z.object({ ok: z.literal(false), error: z.string() }),
 ]);
 
+const mapResult = z.union([
+  z.object({ ok: z.literal(true), root: z.string(), map: z.custom<MapOutput>() }),
+  z.object({ ok: z.literal(false), error: z.string() }),
+]);
+
+const fileInput = z.object({
+  source: z.object({
+    kind: z.enum(["workspace", "host", "thread-storage"]),
+    threadId: z.string().min(1).nullable(),
+    environmentId: z.string().min(1).nullable(),
+  }),
+  path: z.string().min(1),
+});
+
 export const rpcContract = defineRpcContract({
   view: {
-    input: z.object({
-      source: z.object({
-        kind: z.enum(["workspace", "host", "thread-storage"]),
-        threadId: z.string().min(1).nullable(),
-        environmentId: z.string().min(1).nullable(),
-      }),
-      path: z.string().min(1),
-      id: z.string().optional(),
-    }),
+    input: fileInput.extend({ id: z.string().optional() }),
     output: viewResult,
+  },
+  map: {
+    input: fileInput,
+    output: mapResult,
   },
 });
 
-type Source = z.infer<typeof rpcContract.view.input>["source"];
+type Source = z.infer<typeof fileInput>["source"];
 
 const holonFile = z.object({ id: z.string().min(1) });
 
@@ -67,18 +77,37 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
   const engine = new HolonEngine();
   sandy.onDispose(() => engine.close());
 
+  const failure = (cause: unknown) => {
+    if (cause instanceof HolonError) return { ok: false as const, error: cause.hint === undefined ? cause.message : `${cause.message}. ${cause.hint}` };
+    return { ok: false as const, error: cause instanceof Error ? cause.message : String(cause) };
+  };
+
+  async function modelOf(source: Source, path: string): Promise<{ file: string; root: string } | { error: string }> {
+    const { file, root: workspace } = await absoluteFile(sandy, source, path);
+    if (!existsSync(file)) return { error: `${path} is not on the disk of the SANDY server; holon views need a local workspace` };
+    return { file, root: modelRootOf(file, workspace ?? gitTopLevel(dirname(file)) ?? dirname(file)) };
+  }
+
   sandy.rpc.register(rpcContract, {
     async view({ source, path, id }) {
       try {
-        const { file, root: workspace } = await absoluteFile(sandy, source, path);
-        if (!existsSync(file)) return { ok: false as const, error: `${path} is not on the disk of the SANDY server; holon views need a local workspace` };
-        const target = id ?? holonIdOf(file);
-        const root = modelRootOf(file, workspace ?? gitTopLevel(dirname(file)) ?? dirname(file));
-        const reply = await engine.call(root, { method: "GET", path: `/v0/holons/${encodeURIComponent(target)}` });
-        return { ok: true as const, root, view: JSON.parse(reply.text) as ViewOutput };
+        const model = await modelOf(source, path);
+        if ("error" in model) return { ok: false as const, error: model.error };
+        const target = id ?? holonIdOf(model.file);
+        const reply = await engine.call(model.root, { method: "GET", path: `/v0/holons/${encodeURIComponent(target)}` });
+        return { ok: true as const, root: model.root, view: JSON.parse(reply.text) as ViewOutput };
       } catch (cause) {
-        if (cause instanceof HolonError) return { ok: false as const, error: cause.hint === undefined ? cause.message : `${cause.message}. ${cause.hint}` };
-        return { ok: false as const, error: cause instanceof Error ? cause.message : String(cause) };
+        return failure(cause);
+      }
+    },
+    async map({ source, path }) {
+      try {
+        const model = await modelOf(source, path);
+        if ("error" in model) return { ok: false as const, error: model.error };
+        const reply = await engine.call(model.root, { method: "GET", path: "/v0/map" });
+        return { ok: true as const, root: model.root, map: JSON.parse(reply.text) as MapOutput };
+      } catch (cause) {
+        return failure(cause);
       }
     },
   });

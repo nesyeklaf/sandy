@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFakePluginHost } from "@sandy-sdk/plugin-sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
+import type { MapOutput } from "./core/outputs.ts";
 import plugin from "./server.ts";
 
 const FAKE = fileURLToPath(new URL("./test/fake-serve.mjs", import.meta.url));
@@ -98,6 +99,28 @@ describe("sandy holon with a fake holon serve", () => {
     const replace = await host.harness.runCli(["evidence", "record", "--file", "x.jsonl", "--replace", "--root", dir], {});
     expect(replace.exitCode).not.toBe(0);
     expect(replace.stderr).toContain("--replace has no equivalent in holon serve");
+  });
+
+  it("answers the map rpc with the parsed /v0/map reply and the model root", async () => {
+    process.env.HOLON_BIN = FAKE;
+    const host = await loaded();
+    const dir = workDir();
+    writeFileSync(join(dir, "shop.holon"), JSON.stringify({ id: "shop" }));
+    const source = { kind: "host", threadId: null, environmentId: null };
+    const reply = (await host.harness.callRpc("map", { source, path: join(dir, "shop.holon") })) as { ok: true; root: string; map: MapOutput };
+    expect(reply.ok).toBe(true);
+    expect(reply.root).toBe(dir);
+    expect(reply.map.format).toBe("holon-map/v0");
+    expect(reply.map.holons.map((holon) => holon.id)).toEqual(["shop", "account", "user-db", "team-shop"]);
+    expect(reply.map.seams[0]).toMatchObject({ from: "account", to: "user-db", drift: "contradiction" });
+  });
+
+  it("reports a map rpc on a file that is not on the server disk as an error reply", async () => {
+    process.env.HOLON_BIN = FAKE;
+    const host = await loaded();
+    const source = { kind: "host", threadId: null, environmentId: null };
+    const reply = await host.harness.callRpc("map", { source, path: "/nonexistent/x.holon" });
+    expect(reply).toMatchObject({ ok: false, error: expect.stringContaining("not on the disk") });
   });
 
   it("maps a serve error envelope to a coded CLI error", async () => {
