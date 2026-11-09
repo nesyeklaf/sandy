@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -17,12 +17,12 @@ interface Info {
 
 const engines: HolonEngine[] = [];
 const dirs: string[] = [];
-const saved = { mode: process.env.FAKE_MODE, marker: process.env.FAKE_CRASH_MARKER, path: process.env.PATH, bin: process.env.HOLON_BIN };
+const saved = { mode: process.env.FAKE_MODE, marker: process.env.FAKE_CRASH_MARKER, pidLog: process.env.FAKE_PID_LOG, path: process.env.PATH, bin: process.env.HOLON_BIN };
 
 afterEach(async () => {
   await Promise.all(engines.splice(0).map((engine) => engine.close()));
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
-  for (const [name, value] of [["FAKE_MODE", saved.mode], ["FAKE_CRASH_MARKER", saved.marker], ["PATH", saved.path], ["HOLON_BIN", saved.bin]] as const) {
+  for (const [name, value] of [["FAKE_MODE", saved.mode], ["FAKE_CRASH_MARKER", saved.marker], ["FAKE_PID_LOG", saved.pidLog], ["PATH", saved.path], ["HOLON_BIN", saved.bin]] as const) {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
   }
@@ -45,6 +45,22 @@ function alive(pid: number): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+function pidLog(): string {
+  const dir = mkdtempSync(join(tmpdir(), "holon-engine-"));
+  dirs.push(dir);
+  const log = join(dir, "pids");
+  process.env.FAKE_PID_LOG = log;
+  return log;
+}
+
+function pidsIn(log: string): number[] {
+  try {
+    return readFileSync(log, "utf8").split("\n").filter((line) => line !== "").map(Number);
+  } catch {
+    return [];
   }
 }
 
@@ -189,13 +205,47 @@ describe("HolonEngine processes", () => {
     expect(pids.some(alive)).toBe(false);
   });
 
-  it("stops a process still starting when close runs", async () => {
+  it("fails a call still starting when close runs with code closed and leaves no process behind", async () => {
+    const log = pidLog();
     const target = engine();
-    const pending = target.call("/tmp/a", { method: "GET", path: "/v0/info" }).catch(() => null);
+    const pending = failure(target.call("/tmp/a", { method: "GET", path: "/v0/info" }));
     await target.close();
-    await pending;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect((await target.call("/tmp/a", { method: "GET", path: "/v0/info" })).status).toBe(200);
+    expect((await pending).code).toBe("closed");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(pidsIn(log).filter(alive)).toEqual([]);
+  });
+
+  it("fails every call after close with code closed without starting a process", async () => {
+    const log = pidLog();
+    const target = engine();
+    await info(target, "/tmp/a");
+    await target.close();
+    expect((await failure(target.call("/tmp/a", { method: "GET", path: "/v0/info" }))).code).toBe("closed");
+    expect((await failure(target.call("/tmp/b", { method: "GET", path: "/v0/info" }))).code).toBe("closed");
+    expect(pidsIn(log)).toHaveLength(1);
+    expect(pidsIn(log).filter(alive)).toEqual([]);
+  });
+
+  it("does not retry on a new process when close runs while a call is in flight", async () => {
+    const log = pidLog();
+    const target = engine();
+    await info(target, "/tmp/a");
+    const pending = failure(target.call("/tmp/a", { method: "GET", path: "/v0/slow" }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await target.close();
+    expect((await pending).code).toBe("closed");
+    expect(pidsIn(log)).toHaveLength(1);
+    expect(pidsIn(log).filter(alive)).toEqual([]);
+  });
+
+  it("waits in close until every child has exited", async () => {
+    const log = pidLog();
+    const target = engine();
+    await Promise.all([info(target, "/tmp/a"), info(target, "/tmp/b")]);
+    const starting = target.call("/tmp/c", { method: "GET", path: "/v0/info" }).catch(() => null);
+    await target.close();
+    expect(pidsIn(log).filter(alive)).toEqual([]);
+    await starting;
   });
 
   it("stops an idle process and starts a new one on the next call", async () => {

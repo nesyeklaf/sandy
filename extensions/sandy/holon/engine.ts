@@ -57,12 +57,17 @@ function notInstalled(bin: string, explicit: boolean): HolonError {
   );
 }
 
+function closedError(): HolonError {
+  return new HolonError("the holon engine is closed", "closed");
+}
+
 export class HolonEngine {
   private readonly options: EngineOptions;
   private readonly entries = new Map<string, Entry>();
-  private readonly spawned = new Set<ChildProcess>();
+  private readonly owned = new Set<ServeProcess>();
+  private closed = false;
   private readonly onProcessExit = () => {
-    for (const proc of this.spawned) proc.kill("SIGKILL");
+    for (const serve of this.owned) serve.proc.kill("SIGKILL");
   };
 
   constructor(options: EngineOptions = {}) {
@@ -83,7 +88,6 @@ export class HolonEngine {
         env: { ...process.env, HOLON_TOKEN: token },
         stdio: ["ignore", "ignore", "pipe"],
       });
-      this.spawned.add(proc);
       let tail = "";
       let settled = false;
       let markExited!: () => void;
@@ -91,6 +95,7 @@ export class HolonEngine {
         markExited = done;
       });
       const serve: ServeProcess = { proc, base: "", token, exited, inflight: 0, idle: null };
+      this.owned.add(serve);
       const forget = () => {
         if (this.entries.get(root)?.token === token) this.entries.delete(root);
       };
@@ -100,7 +105,7 @@ export class HolonEngine {
         clearTimeout(timer);
         forget();
         proc.kill("SIGKILL");
-        reject(error);
+        reject(this.closed ? closedError() : error);
       };
       const timer = setTimeout(
         () => fail(new HolonError(`holon serve did not report its address within ${timeoutMs / 1000} s. stderr: ${tail.trim() || "(empty)"}`, "holon_start_timeout")),
@@ -118,12 +123,12 @@ export class HolonEngine {
         resolve(serve);
       });
       proc.on("error", (error: NodeJS.ErrnoException) => {
-        this.spawned.delete(proc);
+        this.owned.delete(serve);
         markExited();
         fail(error.code === "ENOENT" || error.code === "EACCES" ? notInstalled(bin, explicit) : new HolonError(`cannot start ${bin}: ${error.message}`, "holon_start_failed"));
       });
       proc.on("exit", (code, signal) => {
-        this.spawned.delete(proc);
+        this.owned.delete(serve);
         markExited();
         if (serve.idle !== null) clearTimeout(serve.idle);
         forget();
@@ -133,6 +138,7 @@ export class HolonEngine {
   }
 
   private ensure(root: string): Promise<ServeProcess> {
+    if (this.closed) return Promise.reject(closedError());
     let entry = this.entries.get(root);
     if (entry === undefined) {
       const token = randomBytes(24).toString("hex");
@@ -177,11 +183,13 @@ export class HolonEngine {
     try {
       return await this.attempt(first, request);
     } catch (cause) {
+      if (this.closed) throw closedError();
       await this.stop(first);
       const second = await this.ensure(root);
       try {
         return await this.attempt(second, request);
       } catch {
+        if (this.closed) throw closedError();
         throw new HolonError(`holon serve for ${root} is unreachable: ${cause instanceof Error ? cause.message : String(cause)}`, "holon_unreachable");
       }
     }
@@ -206,10 +214,9 @@ export class HolonEngine {
   }
 
   async close(): Promise<void> {
-    process.off("exit", this.onProcessExit);
-    const started = [...this.entries.values()].map((entry) => entry.started);
+    this.closed = true;
     this.entries.clear();
-    const serves = await Promise.all(started.map((promise) => promise.catch(() => null)));
-    await Promise.all(serves.filter((serve) => serve !== null).map((serve) => this.stop(serve)));
+    await Promise.all([...this.owned].map((serve) => this.stop(serve)));
+    process.off("exit", this.onProcessExit);
   }
 }

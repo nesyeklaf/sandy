@@ -37,6 +37,8 @@ if (mode === "hang") {
       const body = Buffer.concat(chunks).toString("utf8");
       if (url.pathname === "/v0/info") {
         send(response, 200, { pid: process.pid, root, token, address: server.address().port });
+      } else if (url.pathname === "/v0/slow") {
+        setTimeout(() => send(response, 200, { pid: process.pid }), 5000);
       } else if (url.pathname === "/v0/exit-soon") {
         send(response, 200, { pid: process.pid });
         setTimeout(() => process.exit(0), 20);
