@@ -122,6 +122,12 @@ describe("HolonEngine start", () => {
     expect(error.message).toContain("fake holon: boom");
   });
 
+  it("waits for the end of the listening line before it reads the port", async () => {
+    process.env.FAKE_MODE = "split";
+    const served = await info(engine(), "/tmp/a");
+    expect(served.pid).toBeGreaterThan(0);
+  });
+
   it("tries again on the next call after a failed start", async () => {
     process.env.FAKE_MODE = "die";
     const target = engine();

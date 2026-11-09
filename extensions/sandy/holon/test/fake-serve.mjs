@@ -87,6 +87,13 @@ if (mode === "hang") {
     });
   });
   server.listen(0, "127.0.0.1", () => {
-    process.stderr.write("holon serve: listening on http://127.0.0.1:" + server.address().port + "\n");
+    const port = String(server.address().port);
+    if (mode === "split") {
+      const cut = port.length - 1;
+      process.stderr.write("holon serve: listening on http://127.0.0.1:" + port.slice(0, cut));
+      setTimeout(() => process.stderr.write(port.slice(cut) + "\n"), 150);
+    } else {
+      process.stderr.write("holon serve: listening on http://127.0.0.1:" + port + "\n");
+    }
   });
 }

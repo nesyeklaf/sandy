@@ -10,7 +10,7 @@ const failureBody = z.object({
   error: z.object({ code: z.string(), message: z.string(), hint: z.string().nullish() }),
 });
 
-const LISTENING = /holon serve: listening on http:\/\/(\S+)/;
+const LISTENING = /holon serve: listening on http:\/\/(\S+)\r?\n/;
 const STDERR_TAIL_BYTES = 2000;
 const KILL_GRACE_MS = 2000;
 const UNPROCESSABLE = 422;

@@ -54,11 +54,11 @@ describe.skipIf(!run)("sandy holon against the real holon binary", () => {
   it("answers check, drift and view like expected/*.json after recording evidence.jsonl", async () => {
     const root = shop();
     const recorded = await sandy("evidence", "record", "--file", join(root, "evidence.jsonl"), "--root", root, ...at, "--json");
-    expect(recorded.exitCode).toBe(0);
+    expect({ exitCode: recorded.exitCode, stderr: recorded.stderr }).toEqual({ exitCode: 0, stderr: "" });
     expect(JSON.parse(recorded.stdout)).toMatchObject({ format: "holon-evidence-recorded/v0", unknownHolons: [] });
 
     const check = await sandy("check", "--root", root, ...at, "--json");
-    expect(check.exitCode).toBe(0);
+    expect({ exitCode: check.exitCode, stderr: check.stderr }).toEqual({ exitCode: 0, stderr: "" });
     expect(withoutText(JSON.parse(check.stdout))).toEqual(withoutText(expected("check.json")));
     const drift = await sandy("drift", "--root", root, ...at, "--json");
     expect(withoutText(JSON.parse(drift.stdout))).toEqual(withoutText(expected("drift.json")));
@@ -76,7 +76,7 @@ describe.skipIf(!run)("sandy holon against the real holon binary", () => {
     for (const args of [["check"], ["drift"], ["view", "sign-in"], ["view", "account"]]) {
       const own = holon(...args, "--root", viaCli, ...at, "--json");
       const wrapped = await sandy(...args, "--root", viaPlugin, ...at, "--json");
-      expect(wrapped.exitCode).toBe(0);
+      expect({ exitCode: wrapped.exitCode, stderr: wrapped.stderr }).toEqual({ exitCode: 0, stderr: "" });
       expect(JSON.parse(wrapped.stdout)).toEqual(JSON.parse(own));
     }
   });
@@ -125,7 +125,7 @@ describe.skipIf(!run)("sandy holon against the real holon binary", () => {
     const args = ["confirm", "sign-in", "--side", "We", "--by", "agent:test", "--answer", "Users sign in without help.", "--hesitation", "mobile is slow", ...at, "--json"];
     const own = JSON.parse(holon(...args, "--root", viaCli)) as Record<string, unknown>;
     const wrapped = await sandy(...args, "--root", viaPlugin);
-    expect(wrapped.exitCode).toBe(0);
+    expect({ exitCode: wrapped.exitCode, stderr: wrapped.stderr }).toEqual({ exitCode: 0, stderr: "" });
     const result = JSON.parse(wrapped.stdout) as Record<string, unknown>;
     expect(result.format).toBe("holon-confirmed/v0");
     expect(withoutText(result)).toEqual(withoutText(own));
@@ -135,7 +135,7 @@ describe.skipIf(!run)("sandy holon against the real holon binary", () => {
     const view = await sandy("view", "sign-in", "--root", viaPlugin, ...at, "--json");
     expect((JSON.parse(view.stdout) as ViewOutput).focus.sides.We).toMatchObject({ light: "soft", kind: "confirmation", by: "agent:test" });
     const text = await sandy("confirm", "sign-in", "--side", "We", "--by", "agent:other", "--answer", "Again.", ...at, "--root", viaPlugin);
-    expect(text.exitCode).toBe(0);
+    expect({ exitCode: text.exitCode, stderr: text.stderr }).toEqual({ exitCode: 0, stderr: "" });
     expect(text.stdout).toContain("sign-in");
   });
 });
