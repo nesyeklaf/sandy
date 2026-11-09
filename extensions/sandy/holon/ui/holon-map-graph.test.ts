@@ -9,6 +9,7 @@ import {
   buildModel,
   commonContainer,
   fitViewport,
+  holonForFile,
   keepAnchor,
   openForFocus,
   openToDepth,
@@ -91,6 +92,15 @@ describe("opening", () => {
     expect([...toggled(open, "org")]).toEqual([]);
     expect([...open]).toEqual(["org"]);
     expect([...openToDepth(model([]), 2)].sort()).toEqual(["org", "shop"]);
+  });
+});
+
+describe("holonForFile", () => {
+  it("matches a workspace path to the holon whose file ends it, longest first", () => {
+    const model = buildModel(output([holon("a", null, { file: "a.holon" }), holon("b", null, { file: "x/a.holon" })], []));
+    expect(holonForFile(model, "x/a.holon")).toBe("b");
+    expect(holonForFile(model, "/work/repo/a.holon")).toBe("a");
+    expect(holonForFile(model, "other.holon")).toBeNull();
   });
 });
 
