@@ -1173,6 +1173,17 @@ The builtin Workflows plugin is disabled on fresh installations
 The settings other than `maxActiveRuns` are snapshotted into each new run. See
 the `workflows` skill.
 
+### Holons plugin
+
+The Holons plugin (`extensions/sandy/holon`) computes nothing itself: it asks a
+`holon serve` process of the Rust `holon` binary, one per model root, started
+on demand and stopped after 15 idle minutes. It runs the binary in `HOLON_BIN`
+(absolute path), otherwise `holon` on `PATH`. Set it with
+`npx sandy-app env set HOLON_BIN /path/to/holon` and restart sandy. Without a
+binary `sandy holon` fails with `holon_not_installed`. Build the binary from
+github.com/nesyeklaf/holons with `cargo install --path holon-cli`. See the
+`holon` skill.
+
 ### Thread list plugin
 
 The bundled Thread list plugin owns the sidebar thread list layout, synced to

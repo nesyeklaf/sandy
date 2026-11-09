@@ -10,8 +10,8 @@
   "kind": "system",
   "partOf": "holons",
   "title": "Holon extension",
-  "why": "Holons are files in Git that Sandy checks, indexes and computes.",
-  "contract": "Reads holon/v0 files, computes lights, drift and holon-view/v0 views, and records evidence.",
+  "why": "Holons are files in Git that Sandy shows and checks through the Rust holon binary.",
+  "contract": "Shows the lights, drift and holon-view/v0 views of holon/v0 files and records evidence and confirmations by asking a holon serve process, and computes nothing itself.",
   "code": [
     "extensions/sandy/holon/"
   ]
