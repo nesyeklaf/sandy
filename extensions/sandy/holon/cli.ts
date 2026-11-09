@@ -1,7 +1,11 @@
+import { readFileSync } from "node:fs";
+import { isAbsolute, resolve } from "node:path";
 import { cliCommand, defineCli, PluginCliError, type PluginCliRegistration } from "@sandy-sdk/plugin-sdk";
-import { renderCheck, renderDrift, renderView } from "./render.ts";
-import { HolonInputError, HolonService, resolveRoot, type EnvOptions, type OpenMode } from "./service.ts";
-import type { Evidence } from "./core/format.ts";
+import type { HolonEngine } from "./engine.ts";
+import { HolonError } from "./error.ts";
+import type { CheckOutput, ConfirmedOutput, DriftOutput, EvidenceRecordedOutput, ViewOutput } from "./core/outputs.ts";
+import { renderCheck, renderConfirmed, renderDrift, renderEvidenceRecorded, renderView } from "./render.ts";
+import { resolveRoot } from "./root.ts";
 
 const common = {
   json: { type: "boolean", description: "Print the JSON output instead of text" },
@@ -18,20 +22,33 @@ interface CommonOptions {
 }
 
 function rethrow(cause: unknown): never {
-  if (cause instanceof HolonInputError) throw new PluginCliError(cause.message, { code: cause.code, ...(cause.hint === undefined ? {} : { hint: cause.hint }) });
+  if (cause instanceof HolonError) throw new PluginCliError(cause.message, { code: cause.code, ...(cause.hint === undefined ? {} : { hint: cause.hint }) });
   throw cause;
 }
 
-function json(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
+function withNewline(text: string): string {
+  return text.endsWith("\n") ? text : `${text}\n`;
 }
 
-export function holonCli(service: HolonService): PluginCliRegistration {
-  const open = (options: CommonOptions, cwd: string | undefined, mode: OpenMode = "incremental") => {
-    const root = resolveRoot(options.root, cwd);
-    const env: EnvOptions = { now: options.now, commit: options.commit };
-    return service.open(root, env, mode);
-  };
+const FLAG_FORM = ["replace", "holon", "side", "kind", "source", "result", "contract-hash", "build", "environment", "at", "expires", "detail"] as const;
+
+function unsupported(option: string): never {
+  throw new PluginCliError(`--${option} has no equivalent in holon serve yet`, {
+    code: "unsupported_option",
+    hint: "Record complete evidence records with --file or --jsonl, or run the holon CLI for this option",
+  });
+}
+
+function readEvidenceFile(file: string, base: string): string {
+  const path = isAbsolute(file) ? file : resolve(base, file);
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    throw new HolonError(`cannot read ${file}`, "file_not_found");
+  }
+}
+
+export function holonCli(engine: HolonEngine): PluginCliRegistration {
   const guarded = async <T>(run: () => Promise<T>): Promise<T> => {
     try {
       return await run();
@@ -39,21 +56,23 @@ export function holonCli(service: HolonService): PluginCliRegistration {
       rethrow(cause);
     }
   };
+  const readQuery = (options: CommonOptions) => ({ now: options.now, commit: options.commit });
 
   return defineCli({
     name: "holon",
     summary: "Check holon files, list drift, view a holon, and record evidence and confirmations",
     description:
-      "Holons are holon/v0 files in Git. Every command reads them under --root (default: the repository root), evaluates at --now and --commit, and keeps an incremental index in the plugin database.",
+      "Holons are holon/v0 files in Git. Every command reads them under --root (default: the repository root) and evaluates at --now and --commit, through a holon serve process per root. Needs the holon binary on PATH or HOLON_BIN.",
     commands: {
       check: cliCommand({
         summary: "Validate every holon and confirmation file (holon-check/v0); exits 1 on errors",
         options: common,
         async run(input, ctx) {
           return guarded(async () => {
-            const { index } = await open(input.options, ctx.cwd, "full");
-            const output = index.check();
-            return { exitCode: output.errors.length === 0 ? 0 : 1, stdout: input.options.json ? json(output) : renderCheck(output) };
+            const options = input.options;
+            const reply = await engine.call(resolveRoot(options.root, ctx.cwd), { method: "GET", path: "/v0/check", query: readQuery(options) });
+            const stdout = options.json ? withNewline(reply.text) : renderCheck(JSON.parse(reply.text) as CheckOutput);
+            return { exitCode: reply.status === 200 ? 0 : 1, stdout };
           });
         },
       }),
@@ -62,9 +81,9 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         options: common,
         async run(input, ctx) {
           return guarded(async () => {
-            const { index } = await open(input.options, ctx.cwd);
-            const output = index.drift();
-            return { exitCode: 0, stdout: input.options.json ? json(output) : renderDrift(output) };
+            const options = input.options;
+            const reply = await engine.call(resolveRoot(options.root, ctx.cwd), { method: "GET", path: "/v0/drift", query: readQuery(options) });
+            return { exitCode: 0, stdout: options.json ? withNewline(reply.text) : renderDrift(JSON.parse(reply.text) as DriftOutput) };
           });
         },
       }),
@@ -74,23 +93,23 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         positionals: [{ name: "slug", description: "Holon id", required: true }],
         async run(input, ctx) {
           return guarded(async () => {
-            const { index } = await open(input.options, ctx.cwd);
-            service.holonFor(index, input.positionals.slug);
-            const output = index.view(input.positionals.slug)!;
-            return { exitCode: 0, stdout: input.options.json ? json(output) : renderView(output) };
+            const options = input.options;
+            const path = `/v0/holons/${encodeURIComponent(input.positionals.slug)}`;
+            const reply = await engine.call(resolveRoot(options.root, ctx.cwd), { method: "GET", path, query: readQuery(options) });
+            return { exitCode: 0, stdout: options.json ? withNewline(reply.text) : renderView(JSON.parse(reply.text) as ViewOutput) };
           });
         },
       }),
       "evidence record": cliCommand({
-        summary: "Record machine evidence runs, from flags or a JSONL file",
+        summary: "Record machine evidence runs from a JSONL file or text",
         description:
-          "With flags, missing --kind, --source and --contract-hash come from the holon's declared proof and current contract, --build from --commit, --at from --now. --file and --jsonl take one evidence record per line, as in fixtures/shop/evidence.jsonl. --replace drops the evidence recorded before for this root.",
+          "--file and --jsonl take one complete evidence record per line, as in fixtures/shop/evidence.jsonl. Recording one run from flags (--holon, --side, --result and the optional --kind, --source, --contract-hash, --build, --environment, --at, --expires, --detail) and --replace need a holon serve route that does not exist yet and fail with unsupported_option.",
         options: {
           ...common,
           file: { type: "string", description: "JSONL file with one evidence record per line" },
           jsonl: { type: "string", stdin: true, description: "JSONL evidence records as text" },
-          replace: { type: "boolean", description: "Replace all evidence of this root instead of adding to it" },
-          holon: { type: "string", description: "Holon id" },
+          replace: { type: "boolean", description: "Replace all evidence of this root instead of adding to it (not supported by holon serve yet)" },
+          holon: { type: "string", description: "Holon id (not supported by holon serve yet)" },
           side: { type: "string", description: "I, It, We, They or seam:<to>" },
           kind: { type: "enum", values: ["ci", "metric", "alert", "file", "ticket", "formal"], description: "Machine proof kind" },
           source: { type: "string", description: "What ran: a test file, a metric, a ticket" },
@@ -109,35 +128,11 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         async run(input, ctx) {
           return guarded(async () => {
             const options = input.options;
-            const { index, env } = await open(options, ctx.cwd);
-            let records: Evidence[];
-            if (options.file !== undefined) records = service.readEvidenceFile(index.root, ctx.cwd, options.file);
-            else if (options.jsonl !== undefined) records = service.parseEvidenceText(options.jsonl);
-            else {
-              records = [
-                service.completeEvidence(index, env, {
-                  holon: options.holon!,
-                  side: options.side!,
-                  kind: options.kind,
-                  source: options.source,
-                  result: options.result!,
-                  contractHash: options["contract-hash"],
-                  build: options.build,
-                  environment: options.environment,
-                  at: options.at,
-                  expires: options.expires,
-                  detail: options.detail,
-                }),
-              ];
-            }
-            const stats = options.replace ? index.replaceEvidence(records, env) : index.recordEvidence(records, env);
-            const unknown = [...new Set(records.map((record) => record.holon).filter((id) => index.get(id) === null))].sort();
-            const output = { format: "holon-evidence-recorded/v0", recorded: records.length, reevaluated: stats.evaluated, unknownHolons: unknown };
-            const text = [
-              `● recorded ${records.length} evidence record${records.length === 1 ? "" : "s"}, ${stats.evaluated} holons re-evaluated`,
-              ...unknown.map((id) => `! no holon ${id} under ${index.root}; kept for when it appears`),
-            ].join("\n");
-            return { exitCode: 0, stdout: options.json ? json(output) : `${text}\n` };
+            for (const name of FLAG_FORM) if (options[name] !== undefined && options[name] !== false) unsupported(name);
+            const root = resolveRoot(options.root, ctx.cwd);
+            const text = options.file !== undefined ? readEvidenceFile(options.file, ctx.cwd ?? root) : options.jsonl!;
+            const reply = await engine.call(root, { method: "POST", path: "/v0/evidence", query: readQuery(options), contentType: "application/x-ndjson", body: text });
+            return { exitCode: 0, stdout: options.json ? withNewline(reply.text) : renderEvidenceRecorded(JSON.parse(reply.text) as EvidenceRecordedOutput, root) };
           });
         },
       }),
@@ -160,24 +155,21 @@ export function holonCli(service: HolonService): PluginCliRegistration {
         async run(input, ctx) {
           return guarded(async () => {
             const options = input.options;
-            const { index, env } = await open(options, ctx.cwd);
-            const { path, confirmation } = service.confirm(index, env, {
-              holon: input.positionals.slug,
+            const body = JSON.stringify({
               side: options.side,
               by: options.by,
               recordedBy: options["recorded-by"],
               answer: options.answer,
               hesitation: options.hesitation,
-              result: options.result as "confirmed" | "refuted",
+              result: options.result,
               at: options.at,
               expires: options.expires,
+              now: options.now,
+              commit: options.commit,
             });
-            const view = index.view(confirmation.holon)!;
-            const light = confirmation.side.startsWith("seam:")
-              ? view.seams.find((seam) => seam.from === confirmation.holon && `seam:${seam.to}` === confirmation.side)?.light ?? "open"
-              : view.focus.sides[confirmation.side as "I"].light;
-            const output = { format: "holon-confirmed/v0", path, confirmation, light };
-            return { exitCode: 0, stdout: options.json ? json(output) : `● wrote ${path}; ${confirmation.side} is now ${light}\n` };
+            const path = `/v0/holons/${encodeURIComponent(input.positionals.slug)}/confirmations`;
+            const reply = await engine.call(resolveRoot(options.root, ctx.cwd), { method: "POST", path, contentType: "application/json", body });
+            return { exitCode: 0, stdout: options.json ? withNewline(reply.text) : renderConfirmed(JSON.parse(reply.text) as ConfirmedOutput) };
           });
         },
       }),
