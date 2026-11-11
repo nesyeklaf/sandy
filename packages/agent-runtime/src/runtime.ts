@@ -5,7 +5,14 @@ import {
   normalizeProviderThreadNameEvent,
   toProviderExternalThreadName,
 } from "@sandy/domain";
-import type { DynamicTool, InstructionMode, ThreadEvent } from "@sandy/domain";
+import {
+  INHERIT_SKILL_SELECTION,
+  skillSelectionKey,
+  type DynamicTool,
+  type InstructionMode,
+  type SkillSelection,
+  type ThreadEvent,
+} from "@sandy/domain";
 import type { AdapterCommand } from "./provider-adapter.js";
 import {
   BRIDGE_JSON_RPC_ERRORS,
@@ -124,6 +131,7 @@ interface FindReapableIdleProviderSessionArgs {
 interface ResolveProviderProcessKeyArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   providerId: string;
 }
 
@@ -202,6 +210,7 @@ const PREPARED_THREAD_REWIND_RETRY_MS = 30_000;
 interface ThreadRuntimeConfig {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots: readonly AgentRuntimeSkillRoot[];
+  skillSelection: SkillSelection;
   contributedEnv: readonly AgentRuntimeContributedEnvEntry[];
   dynamicTools?: DynamicTool[];
   environmentId: string;
@@ -255,6 +264,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
   const additionalWorkspaceWriteRoots =
     options.additionalWorkspaceWriteRoots ?? [];
   const skillRoots = options.skillRoots ?? [];
+  const skillSelection = options.skillSelection ?? INHERIT_SKILL_SELECTION;
   for (const skillRoot of skillRoots) {
     if (!path.isAbsolute(skillRoot.path)) {
       throw new Error(
@@ -351,6 +361,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
     },
     onStderr: options.onStderr,
     skillRoots,
+    skillSelection,
     workspacePath: options.workspacePath,
   });
 
@@ -369,7 +380,12 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       roots.length === 0
         ? ""
         : `#skills:${createHash("sha256").update(JSON.stringify(roots)).digest("hex")}`;
-    return `${args.providerId}#bridge:${bridgeLaunchProcessKey(args.bridgeLaunch)}${catalogKey}`;
+    const selection = args.skillSelection ?? skillSelection;
+    const selectionKey =
+      selection.mode === "inherit"
+        ? ""
+        : `#selection:${createHash("sha256").update(skillSelectionKey(selection)).digest("hex")}`;
+    return `${args.providerId}#bridge:${bridgeLaunchProcessKey(args.bridgeLaunch)}${catalogKey}${selectionKey}`;
   }
 
   function requireProviderProcessForThread(threadId: string): ProviderProcess {
@@ -1071,6 +1087,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
     await runtime.resumeThread({
       bridgeLaunch: currentConfig.bridgeLaunch,
       skillRoots: currentConfig.skillRoots,
+      skillSelection: currentConfig.skillSelection,
       environmentId: currentConfig.environmentId,
       threadId: args.threadId,
       ...(currentConfig.projectId !== undefined
@@ -1109,6 +1126,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       providerId,
       bridgeLaunch,
       skillRoots: threadConfig?.skillRoots,
+      skillSelection: threadConfig?.skillSelection,
     });
     const proc = providerProcesses.requireProviderProcess({
       processKey,
@@ -1497,16 +1515,19 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       providerId,
       bridgeLaunch,
       skillRoots: sessionSkillRoots = skillRoots,
+      skillSelection: sessionSkillSelection = skillSelection,
     }) {
       await providerProcesses.ensureProvider({
         processKey: resolveProviderProcessKey({
           bridgeLaunch,
           providerId,
           skillRoots: sessionSkillRoots,
+          skillSelection: sessionSkillSelection,
         }),
         providerId,
         bridgeLaunch,
         skillRoots: sessionSkillRoots,
+        skillSelection: sessionSkillSelection,
       });
     },
 
@@ -1517,6 +1538,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       providerId,
       bridgeLaunch,
       skillRoots: sessionSkillRoots = skillRoots,
+      skillSelection: sessionSkillSelection = skillSelection,
       contributedEnv = [],
       clientRequestId,
       input,
@@ -1533,11 +1555,13 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
             bridgeLaunch,
             providerId,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
           await runtime.ensureProvider({
             providerId,
             bridgeLaunch,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
 
           const proc = providerProcesses.requireProviderProcess({
@@ -1563,6 +1587,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
           setThreadRuntimeConfig(threadId, {
             bridgeLaunch,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
             contributedEnv,
             dynamicTools,
             environmentId,
@@ -1678,6 +1703,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       retainThroughProviderCheckpoint,
       bridgeLaunch,
       skillRoots: sessionSkillRoots = skillRoots,
+      skillSelection: sessionSkillSelection = skillSelection,
       options: execOpts,
       instructions,
       dynamicTools,
@@ -1697,11 +1723,13 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
             bridgeLaunch,
             providerId,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
           await runtime.ensureProvider({
             providerId,
             bridgeLaunch,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
           const proc = providerProcesses.requireProviderProcess({
             processKey,
@@ -1847,6 +1875,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
       providerId,
       bridgeLaunch,
       skillRoots: sessionSkillRoots = skillRoots,
+      skillSelection: sessionSkillSelection = skillSelection,
       contributedEnv = [],
       options: execOpts,
       instructions,
@@ -1860,11 +1889,13 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
             bridgeLaunch,
             providerId,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
           await runtime.ensureProvider({
             providerId,
             bridgeLaunch,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
           });
 
           const proc = providerProcesses.requireProviderProcess({
@@ -1902,6 +1933,7 @@ export function createAgentRuntime(options: AgentRuntimeOptions): AgentRuntime {
           setThreadRuntimeConfig(threadId, {
             bridgeLaunch,
             skillRoots: sessionSkillRoots,
+            skillSelection: sessionSkillSelection,
             contributedEnv,
             dynamicTools,
             environmentId,

@@ -307,6 +307,7 @@ describe("skills/configure", () => {
       skillRoots: [
         { id: "global-skills:abc", path: "/staged/skills", skills: [] },
       ],
+      skillSelection: { mode: "inherit" as const },
     };
     expect(adapter.buildCommandPlan(command)).toMatchObject({ kind: "noop" });
     completeHandshake(adapter, { skills: { configure: true } });
@@ -328,6 +329,7 @@ describe("skills/configure", () => {
           skills: [{ name: "deploy", description: "Ship the app." }],
         },
       ],
+      skillSelection: { mode: "disable", names: ["review"] },
     });
 
     expect(plan).toEqual({
@@ -341,6 +343,7 @@ describe("skills/configure", () => {
             skills: [{ name: "deploy", description: "Ship the app." }],
           },
         ],
+        selection: { mode: "disable", names: ["review"] },
       },
     });
   });

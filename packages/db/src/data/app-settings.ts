@@ -8,11 +8,14 @@ import {
   defaultAppSettings,
   disabledProviderIdsSchema,
   pluginPackageJsonSchema,
+  INHERIT_SKILL_SELECTION,
+  skillSelectionSchema,
   type AiServiceSelection,
   type AiServiceSelections,
   type AiTask,
   type AppKeybindingOverrides,
   type AppSettings,
+  type SkillSelection,
 } from "@sandy/domain";
 import { eq, inArray } from "drizzle-orm";
 import type { DbConnection, DbQueryConnection } from "../connection.js";
@@ -25,6 +28,7 @@ const KEYBINDING_OVERRIDES_KEY = "keybindingOverrides";
 const AI_SERVICE_SELECTIONS_KEY = "aiServiceSelections";
 const PLUGIN_SAFE_MODE_KEY = "pluginSafeMode";
 const DISABLED_PROVIDER_IDS_KEY = "disabledProviderIds";
+const SKILL_SELECTION_KEY = "skillSelection";
 const LEGACY_DIAGNOSTIC_EVENTS_KEY = "showUnhandledProviderEvents";
 
 function parseStoredValue(text: string): unknown {
@@ -235,6 +239,24 @@ export function getDisabledProviderIds(db: DbConnection): string[] {
     row === undefined ? [] : parseStoredValue(row.value),
   );
   return parsed.success ? parsed.data : [];
+}
+
+export function getSkillSelection(db: DbConnection): SkillSelection {
+  const row = db
+    .select({ value: appSettingsValues.value })
+    .from(appSettingsValues)
+    .where(eq(appSettingsValues.key, SKILL_SELECTION_KEY))
+    .get();
+  if (row === undefined) return INHERIT_SKILL_SELECTION;
+  const parsed = skillSelectionSchema.safeParse(parseStoredValue(row.value));
+  return parsed.success ? parsed.data : INHERIT_SKILL_SELECTION;
+}
+
+export function setSkillSelection(
+  db: DbConnection,
+  selection: SkillSelection,
+): void {
+  writeValue(db, SKILL_SELECTION_KEY, selection, Date.now());
 }
 
 export function setDisabledProviderIds(

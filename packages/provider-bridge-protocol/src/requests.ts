@@ -3,6 +3,7 @@ import {
   dynamicToolSchema,
   instructionModeSchema,
   promptInputSchema,
+  skillSelectionSchema,
   threadProviderCommandsStateSchema,
 } from "@sandy/domain";
 import { z } from "zod";
@@ -141,6 +142,7 @@ export type SkillsConfigureRoot = z.infer<typeof skillsConfigureRootSchema>;
 export const skillsConfigureParamsSchema = z
   .object({
     roots: z.array(skillsConfigureRootSchema),
+    selection: skillSelectionSchema.default({ mode: "inherit" }),
   })
   .passthrough();
 

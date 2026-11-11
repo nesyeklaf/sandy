@@ -267,7 +267,10 @@ export function createBridgeProtocolAdapter(
           return {
             kind: "request",
             method: BRIDGE_REQUEST_METHODS.skillsConfigure,
-            params: { roots: command.skillRoots },
+            params: {
+              roots: command.skillRoots,
+              selection: command.skillSelection,
+            },
           };
         case "thread/start":
           return {

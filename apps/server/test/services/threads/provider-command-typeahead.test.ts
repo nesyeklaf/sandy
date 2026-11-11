@@ -30,6 +30,7 @@ describe("buildCommandListResponse", () => {
       ],
       includeBuiltinCompact: false,
       skillCatalog: [],
+      skillSelection: { mode: "inherit" },
     });
 
     expect(
@@ -65,6 +66,7 @@ describe("buildCommandListResponse", () => {
       liveCommands: [],
       includeBuiltinCompact: true,
       skillCatalog: [],
+      skillSelection: { mode: "inherit" },
     });
 
     expect(response.commands).toEqual([
@@ -103,6 +105,7 @@ describe("buildCommandListResponse", () => {
           },
         },
       ],
+      skillSelection: { mode: "inherit" },
     });
 
     expect(response.commands).toContainEqual({
@@ -124,6 +127,7 @@ describe("buildCommandListResponse", () => {
       liveCommands: [],
       includeBuiltinCompact: true,
       skillCatalog: [],
+      skillSelection: { mode: "inherit" },
     });
 
     expect(
@@ -139,12 +143,60 @@ describe("buildCommandListResponse", () => {
     ]);
   });
 
+  it("drops skill rows the selection turns off, from every source, and keeps commands", () => {
+    const catalogSkill = (name: string) => ({
+      provenance: { kind: "plugin" as const, pluginId: "ottonomous" },
+      runtimeSource: {
+        kind: "tree" as const,
+        sourceType: "data-dir" as const,
+        name,
+        description: `The ${name} skill`,
+        treeHash: "abc123",
+        entryPath: "SKILL.md",
+      },
+    });
+    const commands = [
+      skill("grilling"),
+      skill("simplify"),
+      {
+        name: "grilling",
+        source: "command" as const,
+        origin: "project" as const,
+        description: null,
+        argumentHint: null,
+      },
+    ];
+    const names = (selection: Parameters<
+      typeof buildCommandListResponse
+    >[0]["skillSelection"]) =>
+      buildCommandListResponse({
+        commands,
+        liveCommands: [{ name: "grilling", description: "Live copy" }],
+        includeBuiltinCompact: false,
+        skillCatalog: [catalogSkill("review"), catalogSkill("grilling")],
+        skillSelection: selection,
+      }).commands.map((command) => `${command.source}:${command.name}`);
+
+    expect(names({ mode: "disable", names: ["grilling"] })).toEqual([
+      "command:clear",
+      "skill:review",
+      "skill:simplify",
+      "command:grilling",
+    ]);
+    expect(names({ mode: "allow-only", names: ["review"] })).toEqual([
+      "command:clear",
+      "skill:review",
+      "command:grilling",
+    ]);
+  });
+
   it("omits the built-in compact row for unsupported providers", () => {
     const response = buildCommandListResponse({
       commands: [],
       liveCommands: [],
       includeBuiltinCompact: false,
       skillCatalog: [],
+      skillSelection: { mode: "inherit" },
     });
 
     expect(response.commands).toEqual([

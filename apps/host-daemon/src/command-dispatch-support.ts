@@ -3,7 +3,7 @@ import {
   CompetingTurnError,
   type AgentRuntimeBridgeLaunch,
 } from "@sandy/agent-runtime";
-import type { AvailableModel } from "@sandy/domain";
+import type { AvailableModel, SkillSelection } from "@sandy/domain";
 import type { EventSink } from "./event-sink.js";
 import {
   COMPETING_TURN_ERROR_CODE,
@@ -239,6 +239,7 @@ export async function requireWorkspaceEnvironment(
   args: {
     environmentId: string;
     injectedSkillSources?: readonly HostDaemonInjectedSkillSource[];
+    skillSelection?: SkillSelection;
     targetThreadId?: string;
     workspaceContext: WorkspaceContext;
   },
@@ -259,6 +260,9 @@ export async function requireWorkspaceEnvironment(
     environmentId: args.environmentId,
     ...(args.injectedSkillSources !== undefined
       ? { injectedSkillSources: args.injectedSkillSources }
+      : {}),
+    ...(args.skillSelection !== undefined
+      ? { skillSelection: args.skillSelection }
       : {}),
     ...(args.targetThreadId !== undefined
       ? { targetThreadId: args.targetThreadId }

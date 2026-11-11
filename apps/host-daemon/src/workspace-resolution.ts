@@ -1,3 +1,4 @@
+import type { SkillSelection } from "@sandy/domain";
 import type {
   HostDaemonInjectedSkillSource,
   WorkspaceContext,
@@ -14,6 +15,7 @@ import {
 interface ResolveWorkspaceForCommandArgs {
   environmentId: string;
   injectedSkillSources?: readonly HostDaemonInjectedSkillSource[];
+  skillSelection?: SkillSelection;
   requireGit?: boolean;
   runtimeManager: RuntimeManager;
   targetThreadId?: string;
@@ -29,6 +31,9 @@ export async function requireResolvedWorkspaceForCommand(
         environmentId: args.environmentId,
         ...(args.injectedSkillSources !== undefined
           ? { injectedSkillSources: args.injectedSkillSources }
+          : {}),
+        ...(args.skillSelection !== undefined
+          ? { skillSelection: args.skillSelection }
           : {}),
         ...(args.targetThreadId !== undefined
           ? { targetThreadId: args.targetThreadId }

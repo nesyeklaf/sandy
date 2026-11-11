@@ -13,6 +13,9 @@ import { sliceUtf16Tail } from "@sandy/text-utils";
 import {
   type PendingInteractionCreate,
   type PendingInteractionResolution,
+  INHERIT_SKILL_SELECTION,
+  type SkillSelection,
+  skillSelectionKey,
   type ThreadEvent,
   threadScope,
   turnScope,
@@ -60,11 +63,12 @@ const PROVIDER_PROCESS_EXIT_DETAIL_MAX_LENGTH = 4000;
 interface RuntimeSkillConfig {
   catalogHash: string;
   skillRoots: readonly AgentRuntimeSkillRoot[];
+  selection: SkillSelection;
 }
 
 interface CreateEntryArgs extends Omit<
   EnsureEnvironmentArgs,
-  "injectedSkillSources" | "targetThreadId"
+  "injectedSkillSources" | "skillSelection" | "targetThreadId"
 > {
   provisionSignal: AbortSignal;
   skillConfig: RuntimeSkillConfig | null;
@@ -130,6 +134,7 @@ export interface RuntimeEntry {
   shellEnvGeneration: number;
   skillCatalogHash: string | null;
   skillRoots: readonly AgentRuntimeSkillRoot[];
+  skillSelection: SkillSelection;
   retainedSkillCatalogHashes: Set<string>;
   workspace: HostWorkspace;
   path: string;
@@ -144,6 +149,7 @@ interface InjectedSkillsChangedNotification {
 export interface EnsureEnvironmentArgs {
   environmentId: string;
   injectedSkillSources?: readonly HostDaemonInjectedSkillSource[];
+  skillSelection?: SkillSelection;
   setupScriptTimeoutMs?: number | null;
   setupContributedEnv?: readonly HostDaemonContributedEnvEntry[];
   targetThreadId?: string;
@@ -599,16 +605,18 @@ export class RuntimeManager {
     if (args.injectedSkillSources === undefined) {
       return null;
     }
+    const selection = args.skillSelection ?? INHERIT_SKILL_SELECTION;
     if (args.injectedSkillSources.length === 0) {
       return {
         catalogHash: EMPTY_SKILL_CATALOG_HASH,
         skillRoots: [],
+        selection,
       };
     }
     if (!this.options.dataDir) {
       throw new Error("Runtime skill staging requires a host dataDir");
     }
-    return stageInjectedSkillSources({
+    const staged = await stageInjectedSkillSources({
       workspacePath:
         args.workspacePath ??
         this.entries.get(args.environmentId)?.path ??
@@ -620,6 +628,7 @@ export class RuntimeManager {
         : {}),
       logger: this.getInjectedSkillsLogger(),
     });
+    return { ...staged, selection };
   }
 
   private entryHasActiveRuntimeWork(entry: RuntimeEntry): boolean {
@@ -733,9 +742,11 @@ export class RuntimeManager {
 
     if (
       args.skillConfig === null ||
-      args.entry.skillCatalogHash === args.skillConfig.catalogHash ||
-      (args.entry.skillCatalogHash === null &&
-        args.skillConfig.skillRoots.length === 0)
+      ((args.entry.skillCatalogHash === args.skillConfig.catalogHash ||
+        (args.entry.skillCatalogHash === null &&
+          args.skillConfig.skillRoots.length === 0)) &&
+        skillSelectionKey(args.entry.skillSelection) ===
+          skillSelectionKey(args.skillConfig.selection))
     ) {
       return args.entry;
     }
@@ -750,6 +761,7 @@ export class RuntimeManager {
         ...args.entry,
         skillCatalogHash: args.skillConfig.catalogHash,
         skillRoots: args.skillConfig.skillRoots,
+        skillSelection: args.skillConfig.selection,
       };
     }
 
@@ -1255,7 +1267,12 @@ export class RuntimeManager {
     runtime = this.createRuntime({
       workspacePath: workspace.path,
       additionalWorkspaceWriteRoots,
-      ...(args.skillConfig ? { skillRoots: args.skillConfig.skillRoots } : {}),
+      ...(args.skillConfig
+        ? {
+            skillRoots: args.skillConfig.skillRoots,
+            skillSelection: args.skillConfig.selection,
+          }
+        : {}),
       ...(providerProcessEnv ? { env: providerProcessEnv } : {}),
       shellEnv,
       threadStorageRootPath: this.options.threadStorageRootPath ?? undefined,
@@ -1314,6 +1331,7 @@ export class RuntimeManager {
       shellEnvGeneration,
       skillCatalogHash: args.skillConfig?.catalogHash ?? null,
       skillRoots: args.skillConfig?.skillRoots ?? [],
+      skillSelection: args.skillConfig?.selection ?? INHERIT_SKILL_SELECTION,
       retainedSkillCatalogHashes: new Set(
         args.skillConfig ? [args.skillConfig.catalogHash] : [],
       ),

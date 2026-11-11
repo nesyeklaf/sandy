@@ -175,6 +175,7 @@ async function resolveThreadStartRuntime(
   const entry = await requireResolvedWorkspaceForCommand({
     environmentId: command.environmentId,
     injectedSkillSources: command.injectedSkillSources,
+    skillSelection: command.skillSelection,
     runtimeManager: options.runtimeManager,
     targetThreadId: command.threadId,
     workspaceContext: command.workspaceContext,
@@ -203,6 +204,7 @@ async function resumeThreadRuntimeIfMissing(
   await entry.runtime.resumeThread({
     bridgeLaunch,
     skillRoots: entry.skillRoots,
+    skillSelection: entry.skillSelection,
     environmentId: command.environmentId,
     threadId: command.threadId,
     projectId: resumeContext.projectId,
@@ -243,6 +245,7 @@ export async function startThread(
     const result = await entry.runtime.startThread({
       bridgeLaunch,
       skillRoots: entry.skillRoots,
+    skillSelection: entry.skillSelection,
       environmentId: command.environmentId,
       threadId: command.threadId,
       projectId: command.projectId,
@@ -275,6 +278,7 @@ export async function prepareThreadRewind(
   return entry.runtime.prepareThreadRewind({
     bridgeLaunch,
     skillRoots: entry.skillRoots,
+    skillSelection: entry.skillSelection,
     environmentId: command.environmentId,
     threadId: command.threadId,
     leaseId: command.leaseId,
@@ -310,6 +314,7 @@ export async function ensureThreadRuntime(
   const entry = await requireResolvedWorkspaceForCommand({
     environmentId: command.environmentId,
     injectedSkillSources: resumeContext.injectedSkillSources,
+    skillSelection: resumeContext.skillSelection,
     runtimeManager: options.runtimeManager,
     targetThreadId: command.threadId,
     workspaceContext: resumeContext.workspaceContext,

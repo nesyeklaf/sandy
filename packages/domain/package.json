@@ -74,6 +74,11 @@
       "types": "./src/provider-fork.ts",
       "default": "./src/provider-fork.ts"
     },
+    "./skill-selection": {
+      "source": "./src/skill-selection.ts",
+      "types": "./src/skill-selection.ts",
+      "default": "./src/skill-selection.ts"
+    },
     "./completed-turn-display": {
       "source": "./src/completed-turn-display.ts",
       "types": "./src/completed-turn-display.ts",

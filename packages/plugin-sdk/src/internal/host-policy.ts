@@ -15,6 +15,11 @@ import {
 } from "@sandy/domain/plugin-interaction-limits";
 import { PROVIDER_FORK_VALUES } from "@sandy/domain/provider-fork";
 import {
+  NOT_ENFORCED_SKILL_SELECTION_SUPPORT,
+  providerSkillSelectionSupportSchema,
+  type ProviderSkillSelectionSupport,
+} from "@sandy/domain/skill-selection";
+import {
   COMPLETED_TURN_DISPLAY_VALUES,
   DEFAULT_COMPLETED_TURN_DISPLAY,
 } from "@sandy/domain/completed-turn-display";
@@ -976,6 +981,22 @@ function validateProviderNativeRoots(
   }) as ProviderNativeRoots;
 }
 
+function validateProviderSkillSelectionSupport(
+  providerId: string,
+  value: unknown,
+): ProviderSkillSelectionSupport {
+  if (value === undefined) return NOT_ENFORCED_SKILL_SELECTION_SUPPORT;
+  const parsed = providerSkillSelectionSupportSchema.safeParse(value);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const where = issue?.path.length ? `.${issue.path.join(".")}` : "";
+    throw new Error(
+      `provider "${providerId}" experimental_skillSelection${where} ${issue?.message ?? "is invalid"}`,
+    );
+  }
+  return Object.freeze({ ...parsed.data });
+}
+
 const PROVIDER_MODEL_CATALOG_SCOPES = [
   "host",
   "workspace",
@@ -1277,10 +1298,12 @@ export type NormalizedPluginProviderDeclaration = Omit<
   | "experimental_nativeSkillRoots"
   | "experimental_nativeCommandRoots"
   | "experimental_resolvesNativeRoots"
+  | "experimental_skillSelection"
 > & {
   readonly experimental_nativeSkillRoots?: ProviderNativeRoots;
   readonly experimental_nativeCommandRoots?: ProviderNativeRoots;
   readonly experimental_resolvesNativeRoots: boolean;
+  readonly experimental_skillSelection: ProviderSkillSelectionSupport;
   readonly completedTurnDisplay: PluginProviderCompletedTurnDisplay;
   readonly maintenance: {
     readonly health: boolean;
@@ -1331,6 +1354,7 @@ const READ_EXPERIMENTAL_PROVIDER_DECLARATION_FIELDS: ReadonlySet<string> =
     "experimental_nativeSkillRoots",
     "experimental_nativeCommandRoots",
     "experimental_resolvesNativeRoots",
+    "experimental_skillSelection",
   ]);
 
 const RENAMED_PROVIDER_FIELDS_SDK_VERSION = "0.4.16";
@@ -1609,6 +1633,10 @@ export function validatePluginProviderDeclaration(
       `provider "${id}" experimental_resolvesNativeRoots must be a boolean`,
     );
   }
+  const skillSelectionSupport = validateProviderSkillSelectionSupport(
+    id,
+    declaration.experimental_skillSelection,
+  );
   const deriveProviderOptions = declaration.deriveProviderOptions;
   if (
     deriveProviderOptions !== undefined &&
@@ -1651,6 +1679,7 @@ export function validatePluginProviderDeclaration(
       ? {}
       : { experimental_nativeCommandRoots: nativeCommandRoots }),
     experimental_resolvesNativeRoots: resolvesNativeRoots ?? false,
+    experimental_skillSelection: skillSelectionSupport,
     ...(deriveProviderOptions === undefined
       ? {}
       : { deriveProviderOptions: deriveProviderOptions }),

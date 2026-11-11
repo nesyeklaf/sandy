@@ -15,6 +15,7 @@ import {
   type ClientErrorReport,
   type MachineEnvironmentReplace,
   type SetAiServiceSelectionRequest,
+  type SkillSelectionView,
   type SystemAiServicesResponse,
   type SystemProviderCatalogEntry,
   type SystemProviderEnabledRequest,
@@ -65,12 +66,14 @@ import {
   type ProjectExecutionDefaults,
   type ProjectSource,
   type ResolvedThreadExecutionOptions,
+  type SkillSelection,
   type ThreadEventRow,
   type ThreadQueuedMessage,
   appSettingsUpdateSchema,
   appKeybindingOverridesSchema,
   appThemeSelectionSchema,
   experimentUpdatesSchema,
+  skillSelectionSchema,
 } from "@sandy/domain";
 import type { ProviderUsageResponse } from "@sandy/host-daemon-contract";
 import {
@@ -1950,6 +1953,18 @@ export const publicApiRoutes = {
       response: jsonResponse<
         AppSettings & { showUnhandledProviderEvents?: boolean }
       >(),
+    }),
+    skillSelection: defineRoute({
+      path: "/settings/skill-selection",
+      method: "get",
+      request: noRequest(),
+      response: jsonResponse<SkillSelectionView>(),
+    }),
+    setSkillSelection: defineRoute({
+      path: "/settings/skill-selection",
+      method: "put",
+      request: jsonRequest<EmptyInput, SkillSelection>(skillSelectionSchema),
+      response: jsonResponse<SkillSelectionView>(),
     }),
     keyboardSettings: defineRoute({
       path: "/settings/keyboard",
