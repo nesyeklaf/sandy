@@ -1,0 +1,19 @@
+{
+  "format": "holon/v0",
+  "id": "sandy",
+  "kind": "context",
+  "partOf": null,
+  "title": "Sandy",
+  "status": "proposed",
+  "why": "The owner runs coding agents in threads from one place and wants it to feel like a fast local tool on every device he uses.",
+  "contract": "Sandy shows projects, threads and their agents in a browser or desktop app served by a server and host daemons.",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "code": [
+    "apps/",
+    "extensions/sandy/"
+  ],
+  "seams": [],
+  "proofs": {}
+}

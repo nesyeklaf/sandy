@@ -1,0 +1,23 @@
+{
+  "format": "holon/v0",
+  "id": "sandy-app",
+  "kind": "container",
+  "partOf": "sandy",
+  "title": "Sandy app",
+  "status": "proposed",
+  "why": "People read and steer their threads in the browser, on the desktop and on the phone.",
+  "contract": "The web client renders the sidebar, the thread view and plugin slots from server data and switches threads without a page load.",
+  "carriedBy": [
+    "nesyeklaf"
+  ],
+  "code": [
+    "apps/app/"
+  ],
+  "seams": [],
+  "proofs": {
+    "It": {
+      "kind": "ci",
+      "source": "apps/app/vitest.config.ts"
+    }
+  }
+}

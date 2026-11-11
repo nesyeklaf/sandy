@@ -1,9 +1,0 @@
-## 1. Implementation
-
-- [ ] 1.1 Create context `sandy` (Sandy), proposed; verify `holon check` reports no errors
-- [ ] 1.2 Create container `sandy-app` (Sandy app), proposed under `sandy`; verify `ci apps/app/vitest.config.ts` passes
-- [ ] 1.3 Create component `sandy-thread-view` (Thread view), proposed under `sandy-app`; verify `ci apps/app/src/components/thread/timeline/ThreadTimelineRows.presentation.test.tsx` passes
-- [ ] 1.4 Create component `field-latency` (Field latency), proposed under `sandy`; verify `ci extensions/sandy/field-latency/contentdone.test.ts` passes
-- [ ] 1.5 Put requirement `content-last-writer` (Last content writer is named) of `field-latency`; verify `ci extensions/sandy/field-latency/collector.test.ts::the plugin that writes last after ready is the sample's content source, ci extensions/sandy/field-latency/collector.test.ts::a host ticker after ready is named as the content source of a capped switch, ci extensions/sandy/field-latency/collector.test.ts::a switch with no content change after ready has no content source, ci extensions/sandy/field-latency/server.test.ts::the switch report shows per device the share and content p50 of each last writer, ci extensions/sandy/field-latency/server.test.ts::samples stored without a content source report under the unknown writer` passes
-- [ ] 1.6 Ask question `ship-attribution-first` of `field-latency`: The lab explains only 7-54 ms of the 0.5-1.1 s field gap between painted and really done. Ship this attribution and collect a day of field data per device before the first speed change to the thread view?; verify `holon check` reports no errors
-- [ ] 1.7 Ask question `ship-attribution-first` of `field-latency`: The lab explains only 7-54 ms of the 0.5-1.1 s field gap between painted and really done. Ship this attribution and collect a day of field data per device before the first speed change to the thread view?; verify `holon check` reports no errors
