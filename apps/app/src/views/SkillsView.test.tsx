@@ -24,6 +24,7 @@ import { SkillDetailView } from "../components/tools/SkillDetailView";
 import {
   SkillDetailDialogView,
   SkillsOverview,
+  skillSelectionModeText,
   skillSelectionStatusText,
 } from "../components/tools/SkillsCollection";
 import { SkillsLibrary } from "../components/tools/SkillsLibrary";
@@ -62,6 +63,7 @@ function makeSkill(overrides: Partial<SkillSummary> = {}): SkillSummary {
 
 function renderLibrarySkillRoute() {
   vi.spyOn(sdk.providers, "list").mockResolvedValue([]);
+  vi.spyOn(sdk.hosts, "list").mockResolvedValue([]);
   const fetchMock = vi.fn(
     async () =>
       new Response(
@@ -646,6 +648,32 @@ describe("skill selection on the Skills page", () => {
     expect(markup).not.toContain('aria-label="kept is turned off for agents"');
   });
 
+  it("keeps the Off chip outside the truncating title so a long name cannot clip it", () => {
+    const container = document.createElement("div");
+    container.innerHTML = render({
+      skills: [
+        makeSkill({
+          name: "claude-code-provider-with-a-very-long-name",
+          scope: "plugin",
+          provider: "claude-code",
+          selectionEnabled: false,
+        }),
+      ],
+    });
+    const chip = container.querySelector(
+      '[aria-label="claude-code-provider-with-a-very-long-name is turned off for agents"]',
+    );
+    expect(chip).not.toBeNull();
+    const holder = chip?.closest("[data-skill-selection-off]");
+    expect(holder?.classList.contains("shrink-0")).toBe(true);
+    let ancestor = chip?.parentElement ?? null;
+    while (ancestor !== null && ancestor !== container) {
+      expect(ancestor.classList.contains("truncate")).toBe(false);
+      ancestor = ancestor.parentElement;
+    }
+    expect(container.textContent).toContain("Included");
+  });
+
   it("states which providers apply the selection and which still load every skill", () => {
     const skills = [
       makeSkill({ name: "dropped", selectionEnabled: false }),
@@ -873,6 +901,33 @@ describe("skill selection on the Skills page", () => {
     });
   });
 
+  it("names allow-only mode so skills added later are known to start off", () => {
+    expect(skillSelectionModeText({ mode: "inherit" })).toBeNull();
+    expect(
+      skillSelectionModeText({ mode: "disable", names: ["code-review"] }),
+    ).toBeNull();
+    expect(skillSelectionModeText({ mode: "allow-only", names: [] })).toBe(
+      "All skills are off for agents, including skills added later.",
+    );
+    expect(
+      skillSelectionModeText({
+        mode: "allow-only",
+        names: ["code-review", "deploy"],
+      }),
+    ).toBe(
+      "Only 2 chosen skills are on for agents. Every other skill, including skills added later, stays off until you turn it on.",
+    );
+    renderSelectableOverview({
+      skills: [makeSkill()],
+      selection: { mode: "allow-only", names: ["code-review"] },
+    });
+    expect(
+      screen.getByText(
+        "Only 1 chosen skill is on for agents. Every other skill, including skills added later, stays off until you turn it on.",
+      ),
+    ).toBeTruthy();
+  });
+
   it("states when a change applies and that the selection is not a security boundary", () => {
     renderSelectableOverview({
       skills: [makeSkill()],
@@ -880,7 +935,7 @@ describe("skill selection on the Skills page", () => {
     });
     const note = screen.getByText(/applies to agent sessions that start afterwards/);
     expect(note.textContent).toContain(
-      "a running turn finishes with the skills it had",
+      "threads already loaded keep the skills they started with until you stop them",
     );
     expect(note.textContent).toContain(
       "an agent with file access can still open a skill's file",
@@ -924,7 +979,7 @@ describe("skill selection on the Skills page", () => {
     await waitFor(() => expect(toast).toHaveBeenCalledTimes(1));
     const [, options] = toast.mock.calls[0]!;
     expect(options?.description).toContain(
-      "1 running thread keeps the previous skills until its turn ends.",
+      "1 running thread keeps the previous skills until stopped.",
     );
     const action = options?.action;
     expect(action?.label).toBe("Stop thread");

@@ -41,15 +41,15 @@ The selection SHALL apply to the name, so every origin of a disabled name is off
 - **THEN** `sandy skill list --json` shows both rows with `selectionEnabled: false`, each naming the other as a `same-name` duplicate
 
 ### Requirement: New and restored sessions receive the selection
-When Sandy starts or restores a provider session, the server SHALL leave disabled Sandy-injected skills out of the injected roots and SHALL send the policy as `selection` with the `skills/configure` bridge request. The host daemon SHALL reuse a runtime only when both its skill catalog and its canonical selection match the request. A busy runtime SHALL keep running with the selection it has, and an idle one SHALL be replaced on its next turn. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
+When Sandy starts or restores a provider session, the server SHALL leave disabled Sandy-injected skills out of the injected roots and SHALL send the policy as `selection` with the `skills/configure` bridge request. A selection change alone SHALL NOT shut down a runtime, busy or idle: the host daemon SHALL keep the runtime, start new sessions in it with the new selection, and leave every loaded thread on the selection it started with until that thread is stopped or the runtime is retired. A change of the injected catalog keeps its existing replacement behavior. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
 
 #### Scenario: Restored session gets the selection
 - **WHEN** a thread whose runtime was stopped is resumed after `grill-me` was disabled
 - **THEN** the recorded `skills/configure` request carries `{mode: "disable", names: ["grill-me"]}`, and the injected roots do not contain `grill-me`
 
-#### Scenario: Selection change reaches an idle runtime only
-- **WHEN** the selection changes while a runtime runs a turn, and the runtime later becomes idle
-- **THEN** the busy runtime is not shut down, and the next ensure after it is idle starts a new runtime with the new selection, while a reordered but equal selection reuses it
+#### Scenario: Selection change keeps loaded runtimes
+- **WHEN** the selection changes while a runtime runs a turn, and again after it becomes idle
+- **THEN** the runtime is never shut down or recreated, and each ensure carries the new selection for new sessions
 
 ### Requirement: Per-provider enforcement status
 Each provider declaration SHALL state `experimental_skillSelection` as `{session, subagents, gaps}`, where `session` and `subagents` are each `enforced`, `unverified`, `not-enforced` or `not-applicable`, and `gaps` names the skill categories the bridge cannot filter (`bundled-skills`, `marketplace-plugin-skills`, `extension-skills`, `allow-only-skills-added-after-start`). A missing declaration SHALL read as `not-enforced` on both sides with no gaps. A bridge SHALL declare `enforced` only in the commit that adds its passing real-entry test. Sandy SHALL show the status and the gaps on the Skills page and in `sandy skill selection`.
@@ -106,7 +106,7 @@ The Skills page SHALL offer, without a new modal: a name-level switch on each ov
 - **THEN** the page stores `allow-only` with exactly those two names
 
 ### Requirement: Change applies to new and restarted sessions
-After a selection change, the Skills page, the CLI output and the SDK result SHALL name the running threads that keep the old selection until their running work ends (`pendingThreadIds`) and SHALL offer the existing stop (`sandy thread stop`, the toast's Stop action through `sdk.threads.stop`). They SHALL NOT stop or restart any thread themselves.
+After a selection change, the Skills page, the CLI output and the SDK result SHALL name the threads running a turn (`pendingThreadIds`), SHALL say that loaded threads keep the old selection until stopped, and SHALL offer the existing stop (`sandy thread stop`, the toast's Stop action through `sdk.threads.stop`). They SHALL NOT stop or restart any thread themselves.
 
 #### Scenario: No automatic restart
 - **WHEN** `grill-me` is disabled while two threads run a turn

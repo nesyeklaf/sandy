@@ -680,7 +680,7 @@ describe("RuntimeManager", () => {
     expect(firstEntry.runtime.shutdown).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps a busy runtime on a skill selection change and replaces it once idle", async () => {
+  it("keeps busy and idle runtimes with their loaded threads on a skill selection change", async () => {
     const dataDir = await makeTempDir("sandy-runtime-manager-skill-selection-");
     const source = await writeInjectedSkillSource({
       dataDir,
@@ -721,29 +721,17 @@ describe("RuntimeManager", () => {
       mode: "disable",
       names: ["release-notes", "deploy"],
     });
+
+    runtimes[0]?.endActiveTurn("thread-1");
+    const idleEntry = await ensure({ mode: "allow-only", names: [] });
+    expect(idleEntry.runtime).toBe(firstEntry.runtime);
+    expect(idleEntry.skillSelection).toEqual({ mode: "allow-only", names: [] });
+    expect(idleEntry.skillCatalogHash).toBe(firstEntry.skillCatalogHash);
     expect(firstEntry.runtime.shutdown).not.toHaveBeenCalled();
     expect(createRuntime).toHaveBeenCalledTimes(1);
 
-    runtimes[0]?.endActiveTurn("thread-1");
-    const idleEntry = await ensure({
-      mode: "disable",
-      names: ["release-notes", "deploy"],
-    });
-    expect(idleEntry.runtime).not.toBe(firstEntry.runtime);
-    expect(idleEntry.skillSelection).toEqual({
-      mode: "disable",
-      names: ["release-notes", "deploy"],
-    });
-    expect(idleEntry.skillCatalogHash).toBe(firstEntry.skillCatalogHash);
-    expect(firstEntry.runtime.shutdown).toHaveBeenCalledTimes(1);
-    expect(createRuntime).toHaveBeenCalledTimes(2);
-
-    const reordered = await ensure({
-      mode: "disable",
-      names: ["deploy", "release-notes"],
-    });
-    expect(reordered.runtime).toBe(idleEntry.runtime);
-    expect(createRuntime).toHaveBeenCalledTimes(2);
+    const reset = await ensure({ mode: "inherit" });
+    expect(reset).toBe(firstEntry);
   });
 
   it("replaces an idle runtime that hosts the target thread and keeps the new staged catalog", async () => {

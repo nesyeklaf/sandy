@@ -11,7 +11,7 @@
 
 ## 3. Delivery to new and restored sessions
 
-- [ ] 3.1 `selection` in `skills/configure`, protocol 266, runtime reuse keyed on the selection; verify `packages/agent-runtime/src/runtime.lifecycle.test.ts`, `runtime.process-lifecycle.test.ts`, `bridge-protocol-adapter.test.ts`, `packages/host-daemon-contract/test/contract.test.ts`, `apps/host-daemon/src/command-dispatch.test.ts` and `apps/host-daemon/src/runtime-manager.test.ts` "keeps a busy runtime on a skill selection change and replaces it once idle"
+- [ ] 3.1 `selection` in `skills/configure`, protocol 266, a selection change keeps busy and idle runtimes; verify `packages/agent-runtime/src/runtime.lifecycle.test.ts`, `runtime.process-lifecycle.test.ts`, `bridge-protocol-adapter.test.ts`, `packages/host-daemon-contract/test/contract.test.ts`, `apps/host-daemon/src/command-dispatch.test.ts` and `apps/host-daemon/src/runtime-manager.test.ts` "keeps busy and idle runtimes with their loaded threads on a skill selection change"
 
 ## 4. Provider enforcement (each declares enforced only once its probe passes)
 

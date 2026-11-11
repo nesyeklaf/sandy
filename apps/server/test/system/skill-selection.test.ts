@@ -54,7 +54,14 @@ describe("skill selection settings", () => {
           body: JSON.stringify(body),
         });
 
-      const first = await put({ mode: "disable", names: ["beta", "alpha", "beta"] });
+      const duplicated = await put({
+        mode: "disable",
+        names: ["beta", "alpha", "beta"],
+      });
+      expect(duplicated.status).toBe(400);
+      expect(getSkillSelection(harness.db)).toEqual({ mode: "inherit" });
+
+      const first = await put({ mode: "disable", names: ["beta", "alpha"] });
       expect(first.status).toBe(200);
       const changed = skillSelectionUpdateResultSchema.parse(
         await readJson(first),

@@ -73,9 +73,9 @@ Skills (.sandy/skills/):
   switch single names; `disable <names...>`, `allow-only <names...>` and
   `inherit` replace the whole selection. It applies to every copy of a name,
   native agent roots included, only in sessions sandy starts; under
-  `allow-only` new skills stay off. Changes reach a thread on its next turn;
-  the result lists running threads that keep the old selection for their
-  current turn. Under each agent it prints the categories that agent cannot
+  `allow-only` new skills stay off. Changes reach new sessions; a loaded
+  thread keeps the old selection until `sandy thread stop` releases it, and
+  the result lists the threads running a turn. Under each agent it prints the categories that agent cannot
   filter (for example Pi skills from extensions), which stay loaded even when
   every skill is off. Turning a skill off never turns off the plugin that
   ships it. `sandy skill list --json` marks each skill `selectionEnabled`.

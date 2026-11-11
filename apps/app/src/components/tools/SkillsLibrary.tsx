@@ -41,8 +41,10 @@ import { useLocalOpenTargets } from "@/hooks/useLocalOpenTargets";
 
 const EMPTY_SKILLS: readonly SkillSummary[] = [];
 
-function useSkillSelectionControl(): SkillSelectionControl {
-  const selectionQuery = useSkillSelection();
+function useSkillSelectionControl(options?: {
+  enabled: boolean;
+}): SkillSelectionControl {
+  const selectionQuery = useSkillSelection(options);
   const setSelection = useSetSkillSelection();
   const { mutate: stopThread } = useStopThread();
   const selection = selectionQuery.data?.selection;
@@ -55,7 +57,7 @@ function useSkillSelectionControl(): SkillSelectionControl {
           if (pending.length === 0) return;
           const one = pending.length === 1;
           appToast.message("Skill selection saved for new sessions", {
-            description: `${pending.length} running ${one ? "thread keeps" : "threads keep"} the previous skills until ${one ? "its" : "their"} turn ends. Stop ${one ? "it" : "them"} to apply the change on the next message.`,
+            description: `${pending.length} running ${one ? "thread keeps" : "threads keep"} the previous skills until stopped. Stop ${one ? "it" : "them"} to apply the change on the next message.`,
             action: {
               label: one ? "Stop thread" : `Stop ${pending.length} threads`,
               onClick: () => {
@@ -183,8 +185,11 @@ export function SkillsLibrary() {
   const { skillId: routeSkillId } = useParams<{ skillId?: string }>();
   const [libraryQuery, setLibraryQuery] = useState("");
   const skillsQuery = useProjectSkills(PERSONAL_PROJECT_ID);
-  const selectionQuery = useSkillSelection();
-  const selectionControl = useSkillSelectionControl();
+  const showsOverview = routeSkillId === undefined;
+  const selectionQuery = useSkillSelection({ enabled: showsOverview });
+  const selectionControl = useSkillSelectionControl({
+    enabled: showsOverview,
+  });
   const skills = skillsQuery.data?.skills ?? EMPTY_SKILLS;
   const hasError = skillsQuery.isError && skillsQuery.data === undefined;
   const isLoading =

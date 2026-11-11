@@ -742,13 +742,18 @@ export class RuntimeManager {
 
     if (
       args.skillConfig === null ||
-      ((args.entry.skillCatalogHash === args.skillConfig.catalogHash ||
-        (args.entry.skillCatalogHash === null &&
-          args.skillConfig.skillRoots.length === 0)) &&
-        skillSelectionKey(args.entry.skillSelection) ===
-          skillSelectionKey(args.skillConfig.selection))
+      args.entry.skillCatalogHash === args.skillConfig.catalogHash ||
+      (args.entry.skillCatalogHash === null &&
+        args.skillConfig.skillRoots.length === 0)
     ) {
-      return args.entry;
+      if (
+        args.skillConfig === null ||
+        skillSelectionKey(args.entry.skillSelection) ===
+          skillSelectionKey(args.skillConfig.selection)
+      ) {
+        return args.entry;
+      }
+      return { ...args.entry, skillSelection: args.skillConfig.selection };
     }
 
     if (

@@ -340,8 +340,19 @@ export function skillSelectionStatusText(
 const SKILL_OFF_TOOLTIP =
   "Turned off in the skill selection. New agent sessions start without it.";
 
+export function skillSelectionModeText(
+  selection: SkillSelection | undefined,
+): string | null {
+  if (selection?.mode !== "allow-only") return null;
+  const count = selection.names.length;
+  if (count === 0) {
+    return "All skills are off for agents, including skills added later.";
+  }
+  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on.`;
+}
+
 export const SKILL_SELECTION_APPLY_NOTE =
-  "Turning skills off or on applies to agent sessions that start afterwards; a running turn finishes with the skills it had. A name covers every copy of that skill. The selection decides what agents load, not what they can read: an agent with file access can still open a skill's file.";
+  "Turning skills off or on applies to agent sessions that start afterwards; threads already loaded keep the skills they started with until you stop them. A name covers every copy of that skill. The selection decides what agents load, not what they can read: an agent with file access can still open a skill's file.";
 
 export interface SkillSelectionControl {
   selection: SkillSelection | undefined;
@@ -451,18 +462,11 @@ function SkillRow({
         leading={<SkillLeading skill={skill} providerRoster={providerRoster} />}
         title={skill.name}
         titleMeta={
-          skill.duplicates.length === 0 && skill.selectionEnabled ? (
+          skill.duplicates.length === 0 ? (
             (skillProvenancePill(skill, providerRoster) ?? undefined)
           ) : (
             <span className="inline-flex items-baseline gap-1">
               {skillProvenancePill(skill, providerRoster)}
-              {skill.selectionEnabled ? null : (
-                <ProvenancePill
-                  label="Off"
-                  tooltip={SKILL_OFF_TOOLTIP}
-                  accessibleLabel={`${skill.name} is turned off for agents`}
-                />
-              )}
               {skill.duplicates.length === 0 ? null : (
               <ProvenancePill
                 label={`${skill.duplicates.length} ${skill.duplicates.length === 1 ? "duplicate" : "duplicates"}`}
@@ -475,6 +479,17 @@ function SkillRow({
                 accessibleLabel={`${skill.name} is also found at ${skill.duplicates.map((duplicate) => duplicate.filePath).join(", ")}`}
               />
               )}
+            </span>
+          )
+        }
+        state={
+          skill.selectionEnabled ? undefined : (
+            <span className="shrink-0" data-skill-selection-off="">
+              <ProvenancePill
+                label="Off"
+                tooltip={SKILL_OFF_TOOLTIP}
+                accessibleLabel={`${skill.name} is turned off for agents`}
+              />
             </span>
           )
         }
@@ -572,6 +587,7 @@ export function SkillsOverview({
     () => skillSelectionStatusText(skills, selectionProviders),
     [skills, selectionProviders],
   );
+  const selectionMode = skillSelectionModeText(selectionControl?.selection);
   const normalizedQuery = query.trim().toLowerCase();
   const libraryResetKey = [
     normalizedQuery,
@@ -753,6 +769,11 @@ export function SkillsOverview({
               ? SKILLS_LIBRARY_DESCRIPTION
               : `${SKILLS_LIBRARY_DESCRIPTION} ${selectionStatus}`}
           </span>
+          {selectionMode === null ? null : (
+            <span className="mt-1 block" data-skill-selection-mode="">
+              {selectionMode}
+            </span>
+          )}
           {selectionControl === undefined ? null : (
             <span className="mt-1 block">{SKILL_SELECTION_APPLY_NOTE}</span>
           )}

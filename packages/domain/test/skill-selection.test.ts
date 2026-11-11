@@ -5,6 +5,7 @@ import {
   setSkillNamesEnabled,
   skillSelectionKey,
   skillSelectionSchema,
+  type SkillSelection,
 } from "../src/skill-selection.js";
 
 describe("skillSelectionSchema", () => {
@@ -99,11 +100,12 @@ describe("setSkillNamesEnabled", () => {
   });
 
   it("matches isSkillNameEnabled after every toggle", () => {
-    for (const start of [
+    const starts: SkillSelection[] = [
       { mode: "inherit" },
       { mode: "disable", names: ["a"] },
       { mode: "allow-only", names: ["a"] },
-    ] as const) {
+    ];
+    for (const start of starts) {
       for (const enabled of [true, false]) {
         const next = setSkillNamesEnabled(start, ["a", "b"], enabled);
         expect(isSkillNameEnabled(next, "a")).toBe(enabled);

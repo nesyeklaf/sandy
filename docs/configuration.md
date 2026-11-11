@@ -642,11 +642,14 @@ added after a session started. The Skills page and `sandy skill selection`
 show both. The selection controls what an agent loads; an agent with file
 access can still read a skill's file by path.
 
-A change applies to sessions that start afterwards. sandy reloads an
-environment's runtime with the new selection on the next turn once no work
-runs in it, so a running turn finishes with the old skills; the change result
-(`pendingThreadIds`) lists the running threads, and `sandy thread stop`
-releases one so its next message starts fresh. Nothing is stopped for you.
+A change applies to sessions that start afterwards. A thread whose session is
+already loaded, running or idle, keeps the selection it started with until it
+is stopped or its runtime is retired; `sandy thread stop` releases one so its
+next message starts a session with the new selection. The change result
+(`pendingThreadIds`) lists the threads running a turn; loaded idle threads are
+not listed. Turning a sandy-injected skill off also changes the injected
+catalog, and an idle environment then reloads on its next turn as it does for
+any catalog change. Nothing is stopped for you.
 
 Each listed skill carries `providers`, the agents that load it, and
 `duplicates`, the other registrations of the same skill: `same-file` (the

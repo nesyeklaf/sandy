@@ -16,6 +16,7 @@ import {
   SKILL_FILES_QUERY_KEY,
 } from "@/hooks/queries/query-keys";
 import { invalidateProjectSkillsMutationQueries } from "@/hooks/cache-owners/skills-cache-effects";
+import type { QueryOptions } from "./query-helpers";
 
 export function useProjectSkills(projectId: string) {
   return useQuery({
@@ -28,10 +29,11 @@ export function useProjectSkills(projectId: string) {
   });
 }
 
-export function useSkillSelection() {
+export function useSkillSelection(options?: QueryOptions) {
   return useQuery({
     queryKey: skillSelectionQueryKey(),
     queryFn: ({ signal }) => sdk.skills.experimental_getSelection({ signal }),
+    enabled: options?.enabled ?? true,
     staleTime: 0,
     refetchOnMount: "always",
   });
