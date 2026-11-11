@@ -120,40 +120,6 @@ export interface ViewOutput {
   commit: string;
 }
 
-export interface MapHolon {
-  id: string;
-  kind: HolonKind;
-  title: string;
-  status: HolonStatus;
-  parent: string | null;
-  file: string;
-  light: HolonLight;
-  sides: Record<Side, SideLight>;
-  drift: Drift[];
-  driftBelow: number;
-  childCount: number;
-  carriedBy: string[];
-}
-
-export interface MapSeam {
-  from: string;
-  to: string;
-  contract: string;
-  light: SideLight;
-  readOnly: boolean;
-  exclusive: boolean;
-  drift: DriftKind | null;
-}
-
-export interface MapOutput {
-  format: "holon-map/v0";
-  holons: MapHolon[];
-  seams: MapSeam[];
-  warnings: string[];
-  computedAt: string;
-  commit: string;
-}
-
 export interface EvidenceRecordedOutput {
   format: "holon-evidence-recorded/v0";
   recorded: number;

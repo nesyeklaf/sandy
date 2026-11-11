@@ -1,0 +1,5 @@
+packages:
+  - "."
+
+overrides:
+  "@sandy-sdk/plugin-sdk": "link:../../../packages/plugin-sdk"

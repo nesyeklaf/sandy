@@ -67,6 +67,12 @@ if (mode === "hang") {
           process.exit(1);
         }
         send(response, 200, { pid: process.pid });
+      } else if (url.pathname === "/v0/policy") {
+        send(response, 200, { method: request.method, body: body === "" ? null : JSON.parse(body), contentType: request.headers["content-type"] ?? null, root });
+      } else if (url.pathname === "/v0/file" && request.method === "PUT") {
+        const write = JSON.parse(body);
+        if (write.ifMatch === "stale") send(response, 409, { ok: false, error: { code: "conflict", message: "the file changed since it was read" } });
+        else send(response, 200, { format: "holon-file-written/v0", path: write.path, hash: "h1" });
       } else if (url.pathname === "/v0/check") {
         const broken = url.searchParams.get("commit") === "broken";
         send(response, broken ? 422 : 200, {

@@ -1,76 +1,29 @@
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, isAbsolute, join } from "node:path";
-import { z } from "zod";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineRpcContract, type SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import { holonCli } from "./cli.ts";
-import type { MapOutput, ViewOutput } from "./core/outputs.ts";
 import { HolonEngine } from "./engine.ts";
 import { HolonError } from "./error.ts";
-import { gitTopLevel, modelRootOf } from "./root.ts";
-
-const viewResult = z.union([
-  z.object({ ok: z.literal(true), root: z.string(), view: z.custom<ViewOutput>() }),
-  z.object({ ok: z.literal(false), error: z.string() }),
-]);
-
-const mapResult = z.union([
-  z.object({ ok: z.literal(true), root: z.string(), map: z.custom<MapOutput>() }),
-  z.object({ ok: z.literal(false), error: z.string() }),
-]);
-
-const fileInput = z.object({
-  source: z.object({
-    kind: z.enum(["workspace", "host", "thread-storage"]),
-    threadId: z.string().min(1).nullable(),
-    environmentId: z.string().min(1).nullable(),
-  }),
-  path: z.string().min(1),
-});
+import { forwardInput, forwardResult } from "./forward.ts";
 
 export const rpcContract = defineRpcContract({
-  view: {
-    input: fileInput.extend({ id: z.string().optional() }),
-    output: viewResult,
-  },
-  map: {
-    input: fileInput,
-    output: mapResult,
+  forward: {
+    input: forwardInput,
+    output: forwardResult,
   },
 });
 
-type Source = z.infer<typeof fileInput>["source"];
+export const EDITOR_ASSETS = [
+  ["elk-worker.min.js", "text/javascript; charset=utf-8"],
+  ["routing-worker.js", "text/javascript; charset=utf-8"],
+  ["libavoid.wasm", "application/wasm"],
+] as const;
 
-const holonFile = z.object({ id: z.string().min(1) });
-
-function holonIdOf(file: string): string {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(readFileSync(file, "utf8"));
-  } catch {
-    throw new HolonError("not valid holon JSON", "invalid_holon_file");
-  }
-  const holon = holonFile.safeParse(parsed);
-  if (!holon.success) throw new HolonError("no holon id", "invalid_holon_file");
-  return holon.data.id;
-}
-
-async function absoluteFile(sandy: SandyPluginApi, source: Source, path: string): Promise<{ file: string; root: string | null }> {
-  if (source.kind === "host" || isAbsolute(path)) return { file: path, root: null };
-  if (source.kind === "thread-storage") {
-    if (source.threadId === null) throw new HolonError("a thread-storage file needs its thread", "no_thread");
-    const storage = await sandy.sdk.threads.storageLocation({ threadId: source.threadId });
-    return { file: join(storage.storageRootPath, path), root: null };
-  }
-  let workspace: string | null = null;
-  if (source.environmentId !== null) {
-    workspace = (await sandy.sdk.environments.get({ environmentId: source.environmentId })).path ?? null;
-  } else if (source.threadId !== null) {
-    const thread = await sandy.sdk.threads.get({ threadId: source.threadId, include: "environment" });
-    const environment = "environment" in thread ? thread.environment : null;
-    workspace = typeof environment?.path === "string" ? environment.path : null;
-  }
-  if (workspace === null) throw new HolonError("the file has no workspace path", "no_workspace");
-  return { file: join(workspace, path), root: workspace };
+function editorAssetDir(): string | null {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const candidates = [join(here, "vendor", "holon-ui"), join(here, "..", "vendor", "holon-ui")];
+  return candidates.find((dir) => EDITOR_ASSETS.every(([file]) => existsSync(join(dir, file)))) ?? null;
 }
 
 export default async function plugin(sandy: SandyPluginApi): Promise<void> {
@@ -82,35 +35,44 @@ export default async function plugin(sandy: SandyPluginApi): Promise<void> {
     return { ok: false as const, error: cause instanceof Error ? cause.message : String(cause) };
   };
 
-  async function modelOf(source: Source, path: string): Promise<{ file: string; root: string } | { error: string }> {
-    const { file, root: workspace } = await absoluteFile(sandy, source, path);
-    if (!existsSync(file)) return { error: `${path} is not on the disk of the SANDY server; holon views need a local workspace` };
-    return { file, root: modelRootOf(file, workspace ?? gitTopLevel(dirname(file)) ?? dirname(file)) };
+  async function threadRoot(threadId: string): Promise<string> {
+    const thread = await sandy.sdk.threads.get({ threadId, include: "environment" });
+    const environment = "environment" in thread ? (thread.environment ?? null) : null;
+    if (environment === null || typeof environment.path !== "string") throw new HolonError("the thread has no workspace", "no_workspace");
+    const { primaryHostId } = await sandy.sdk.system.config();
+    if (environment.hostId !== primaryHostId) {
+      throw new HolonError("the thread's workspace is on another machine", "remote_workspace", "The Holons tab edits holons on the disk of the SANDY server only");
+    }
+    if (!existsSync(environment.path) || !statSync(environment.path).isDirectory()) {
+      throw new HolonError(`${environment.path} is not a directory on the disk of the SANDY server`, "no_workspace");
+    }
+    return environment.path;
   }
 
   sandy.rpc.register(rpcContract, {
-    async view({ source, path, id }) {
+    async forward({ threadId, method, path, query, body }) {
       try {
-        const model = await modelOf(source, path);
-        if ("error" in model) return { ok: false as const, error: model.error };
-        const target = id ?? holonIdOf(model.file);
-        const reply = await engine.call(model.root, { method: "GET", path: `/v0/holons/${encodeURIComponent(target)}` });
-        return { ok: true as const, root: model.root, view: JSON.parse(reply.text) as ViewOutput };
-      } catch (cause) {
-        return failure(cause);
-      }
-    },
-    async map({ source, path }) {
-      try {
-        const model = await modelOf(source, path);
-        if ("error" in model) return { ok: false as const, error: model.error };
-        const reply = await engine.call(model.root, { method: "GET", path: "/v0/map" });
-        return { ok: true as const, root: model.root, map: JSON.parse(reply.text) as MapOutput };
+        const root = await threadRoot(threadId);
+        const reply = await engine.request(root, {
+          method,
+          path,
+          ...(query === undefined ? {} : { query }),
+          ...(body === undefined ? {} : { body, contentType: "application/json" }),
+        });
+        return { ok: true as const, status: reply.status, text: reply.text };
       } catch (cause) {
         return failure(cause);
       }
     },
   });
+
+  const vendorDir = editorAssetDir();
+  for (const [file, contentType] of EDITOR_ASSETS) {
+    sandy.http.route("GET", `/editor/${file}`, () => {
+      if (vendorDir === null) return new Response("the holon editor assets are not installed", { status: 404 });
+      return new Response(readFileSync(join(vendorDir, file)), { headers: { "Content-Type": contentType, "Cache-Control": "no-cache" } });
+    });
+  }
 
   sandy.cli.register(holonCli(engine));
 }

@@ -31,7 +31,7 @@ export interface EngineOptions {
 }
 
 export interface EngineRequest {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PUT";
   path: string;
   query?: Record<string, string | undefined>;
   contentType?: string;
