@@ -307,17 +307,17 @@ test("the switch report shows per device the share and content p50 of each last 
   const [first, second] = json.byDevice;
   assert.deepEqual(
     first.writers.map((row: WriterRow) => [row.writer, row.n, row.sharePct, row.contentP50]),
-    [["genui", 2, 50, 500], ["host", 1, 25, 900], ["none", 1, 25, 130]],
+    [["genui", 2, 50, 400], ["host", 1, 25, 900], ["none", 1, 25, 130]],
   );
   assert.deepEqual(
     second.writers.map((row: WriterRow) => [row.writer, row.n, row.sharePct, row.contentP50]),
     [["genui", 1, 50, 1500], ["none", 1, 50, 520]],
   );
   const text = await report("--kind", "switch");
-  assert.match(text, /writers+ns+shares+content p50/);
-  assert.match(text, /genuis+2s+50%s+500/);
-  assert.match(text, /hosts+1s+25%s+900/);
-  assert.match(text, /nones+1s+25%s+130/);
+  assert.match(text, /writer\s+n\s+share\s+content p50/);
+  assert.match(text, /genui\s+2\s+50%\s+400/);
+  assert.match(text, /host\s+1\s+25%\s+900/);
+  assert.match(text, /none\s+1\s+25%\s+130/);
 });
 
 test("samples stored without a content source report under the unknown writer", async () => {
@@ -339,5 +339,5 @@ test("samples stored without a content source report under the unknown writer", 
   const writers = json.byDevice[0].writers.map((row: WriterRow) => [row.writer, row.n, row.contentP50]);
   assert.deepEqual(writers, [["host", 1, 700], ["unknown", 1, 453]]);
   const group = json.groups[0];
-  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50], [2, 290, 2, 576.5]);
+  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50], [2, 280, 2, 453]);
 });

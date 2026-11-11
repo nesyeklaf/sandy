@@ -52,6 +52,8 @@ export const sampleSchema = z
     settledMs: ms.nullable(),
     contentDoneMs: ms.nullable().default(null),
     contentDone: z.enum(["settled", "capped", "aborted"]).nullable().default(null),
+    contentSource: z.string().max(80).nullable().default(null),
+    contentWrites: z.number().int().min(0).nullable().default(null),
     timedOut: z.boolean(),
     eventMs: ms.nullable(),
     inputDelayMs: ms.nullable(),
@@ -104,8 +106,8 @@ export type Client = z.output<typeof clientSchema>;
 export type RecordInput = z.input<typeof recordInput>;
 
 export function toWire(sample: Sample): z.input<typeof sampleSchema> {
-  const { contentDoneMs, contentDone, load, ...rest } = sample;
-  const withContent = contentDone === null && contentDoneMs === null ? rest : { ...rest, contentDoneMs, contentDone };
+  const { contentDoneMs, contentDone, contentSource, contentWrites, load, ...rest } = sample;
+  const withContent = contentDone === null && contentDoneMs === null ? rest : { ...rest, contentDoneMs, contentDone, contentSource, contentWrites };
   return load === null ? withContent : { ...withContent, load };
 }
 
@@ -123,7 +125,7 @@ export function toLegacyWire(client: Client, samples: readonly Sample[]): Record
   return {
     client: legacyClient,
     samples: samples.map((sample) => {
-      const { load: _load, ...wire } = toWire(sample);
+      const { load: _load, contentSource: _source, contentWrites: _writes, ...wire } = toWire(sample);
       return wire;
     }),
   };

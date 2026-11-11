@@ -2,7 +2,7 @@ import { PluginCliError, cliCommand, defineCli, type SandyPluginApi } from "@san
 import { AUTOMATED_USER_AGENT_MARKER, clientSchema, isAutomatedBrowser, rpcContract, sampleSchema, type Sample } from "./contract.ts";
 import { UNKNOWN_RELEASE, releaseKey } from "./release.ts";
 import { compareLastTwo, formatCompare, formatReleases, formatReleaseTable, releaseTitle, summarizeReleases } from "./releases.ts";
-import { formatGroups, primaryMs, reportTitle, formatReport, summarize, type DeviceInfo } from "./stats.ts";
+import { formatGroups, formatWriters, primaryMs, reportTitle, formatReport, summarize, summarizeWriters, type DeviceInfo } from "./stats.ts";
 import { formatDeviceTable, formatSectionTitle, matchDevices, partitionByDevice, profileFromClient, type DeviceMatch } from "./devices.ts";
 import { loadCounts } from "./load.ts";
 import { shortDeviceId } from "./device.ts";
@@ -195,6 +195,7 @@ export default function fieldLatency(sandy: SandyPluginApi) {
               n: section.items.length,
               load: loadCounts(section.items.map((item) => item.sample)),
               groups: summarize(section.items.map((item) => item.sample)),
+              writers: summarizeWriters(section.items.map((item) => item.sample)),
             }));
             if (input.options.json) {
               return { exitCode: 0, stdout: JSON.stringify({ since: sinceLabel, device, devices: deviceList, groups, byDevice: perDevice }, null, 2) };
@@ -206,7 +207,7 @@ export default function fieldLatency(sandy: SandyPluginApi) {
             sections.forEach((section, index) => {
               const entry = perDevice[index];
               if (entry === undefined) return;
-              lines.push("", formatSectionTitle(section), ...formatGroups(entry.groups));
+              lines.push("", formatSectionTitle(section), ...formatGroups(entry.groups), ...formatWriters(entry.writers));
             });
             return { exitCode: 0, stdout: lines.join("\n") };
           },

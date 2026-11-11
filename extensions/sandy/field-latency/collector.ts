@@ -75,6 +75,9 @@ interface ContentWatch {
   observer: MutationObserver;
   timer: ReturnType<typeof setTimeout> | null;
   paintQueued: boolean;
+  ready: boolean;
+  writes: number;
+  lastSource: string | null;
   result: ContentDoneResult | null;
   onResult: ((result: ContentDoneResult) => void) | null;
 }
@@ -128,6 +131,14 @@ function afterPaint(callback: () => void): void {
     };
     channel.port2.postMessage(null);
   });
+}
+
+const HOST_SOURCE = "host";
+
+function contentSourceOf(target: Node): string {
+  const element = target instanceof Element ? target : target.parentElement;
+  const root = element?.closest("[data-sandy-plugin-root]") ?? null;
+  return (root?.getAttribute("data-sandy-plugin") || HOST_SOURCE).slice(0, 80);
 }
 
 function round(value: number): number {
@@ -350,6 +361,8 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       settledMs: args.settledMs === null ? null : round(args.settledMs),
       contentDoneMs: null,
       contentDone: null,
+      contentSource: null,
+      contentWrites: null,
       timedOut: args.timedOut,
       eventMs: event ? round(event.duration) : null,
       inputDelayMs: event ? round(event.processingStart - event.start) : null,
@@ -416,7 +429,14 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
   }
 
   function onContentMutations(watch: ContentWatch, records: readonly MutationRecord[]) {
-    if (watch.result !== null || !records.some(isContentRecord)) return;
+    if (watch.result !== null) return;
+    const content = records.filter(isContentRecord);
+    const last = content[content.length - 1];
+    if (last === undefined) return;
+    if (watch.ready) {
+      watch.writes += 1;
+      watch.lastSource = contentSourceOf(last.target);
+    }
     watch.run.touch();
     scheduleWatch(watch);
     if (watch.paintQueued) return;
@@ -437,6 +457,9 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
       observer: new MutationObserver((records) => onContentMutations(watch, records)),
       timer: null,
       paintQueued: false,
+      ready: false,
+      writes: 0,
+      lastSource: null,
       result: null,
       onResult: null,
     };
@@ -457,6 +480,7 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
     const watch = item.watch;
     if (watch === null || watch.result !== null) return;
     watch.run.markReady(at);
+    watch.ready = true;
     scheduleWatch(watch);
   }
 
@@ -499,6 +523,8 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
           ...sample,
           contentDoneMs: result.doneMs === null ? null : round(result.doneMs),
           contentDone: result.status,
+          contentSource: watch.writes === 0 ? null : watch.lastSource,
+          contentWrites: watch.writes,
         };
       };
       if (watch.result !== null) emit(withContent(watch.result));

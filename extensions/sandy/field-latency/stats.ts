@@ -277,3 +277,44 @@ export function formatReport(groups: readonly Group[], since: string, device: De
 export function reportTitle(since: string): string {
   return `Field latency since ${since} (ms; open and switch: until painted, switch content: until the thread content stopped changing, slow: event duration; idle/busy p75: samples with little or much main-thread lag in the 5 s before)`;
 }
+
+export interface WriterRow {
+  writer: string;
+  n: number;
+  sharePct: number;
+  contentN: number;
+  contentP50: number | null;
+}
+
+export function lastWriter(sample: Sample): string {
+  if (sample.contentWrites === null) return "unknown";
+  return sample.contentWrites === 0 || sample.contentSource === null ? "none" : sample.contentSource;
+}
+
+export function summarizeWriters(samples: readonly Sample[]): WriterRow[] {
+  const switches = samples.filter((sample) => sample.kind === "switch");
+  const byWriter = new Map<string, Sample[]>();
+  for (const sample of switches) {
+    const writer = lastWriter(sample);
+    const list = byWriter.get(writer) ?? [];
+    list.push(sample);
+    byWriter.set(writer, list);
+  }
+  const rows = [...byWriter].map(([writer, list]) => {
+    const content = finite(list.map(contentDoneValue));
+    return {
+      writer,
+      n: list.length,
+      sharePct: Math.round((list.length / switches.length) * 1000) / 10,
+      contentN: content.length,
+      contentP50: percentile(content, 50),
+    };
+  });
+  return rows.sort((a, b) => b.n - a.n || a.writer.localeCompare(b.writer));
+}
+
+export function formatWriters(rows: readonly WriterRow[]): string[] {
+  if (rows.length === 0) return [];
+  const table = rows.map((row) => [row.writer, String(row.n), `${row.sharePct}%`, row.contentN > 0 ? `${cell(row.contentP50)} (n ${row.contentN})` : "-"]);
+  return ["", "Switch last content writer (who changed the thread last after it was ready; unknown = stored before 0.3.4)", ...textTable(["writer", "n", "share", "content p50"], table)];
+}
