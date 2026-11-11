@@ -47,7 +47,7 @@ describe("ThreadInbox", () => {
           },
         );
         await waitFor(() => expect(rendered.rpcCalls.some((call) => call.method === "getSidebarSettings")).toBe(true));
-        const active = screen.getByRole("region", { name: "Waiting" });
+        const active = screen.getByRole("region", { name: "Idle" });
         await waitFor(() =>
           expect(
             within(active)
@@ -78,7 +78,13 @@ describe("ThreadInbox", () => {
               thread({ id: "x", projectId: "api", title: "Hidden other project", updatedAt: Date.now() }),
               thread({ id: "a1", projectId: "web", parentThreadId: "a", title: "Child a" }),
               thread({ id: "a2", projectId: "web", parentThreadId: "a1", title: "Grandchild a" }),
-              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep done", indicator: "unread-success" }),
+              thread({
+                id: "a3",
+                projectId: "web",
+                parentThreadId: "a2",
+                title: "Deep done",
+                indicator: "unread-success",
+              }),
               thread({
                 id: "b1",
                 projectId: "web",
@@ -110,7 +116,7 @@ describe("ThreadInbox", () => {
             reorderInbox: (input) => input,
           },
         });
-        const active = await screen.findByRole("region", { name: "Waiting" });
+        const active = await screen.findByRole("region", { name: "Idle" });
         const rowOrder = () =>
           within(active)
             .getAllByRole("link")
@@ -141,7 +147,7 @@ describe("ThreadInbox", () => {
           input: { inboxThreadIds: [...(singleton ? ["x", "a", "b", "c"] : ["b", "x", "a", "c"]), ...childIds] },
         });
         await waitFor(() => expect(rowOrder()).toEqual(expectedVisible));
-        fireEvent.click(within(active).getByRole("button", { name: /^Waiting/, expanded: false }));
+        fireEvent.click(within(active).getByRole("button", { name: /^Idle/, expanded: false }));
         expect(within(active).getByRole("button", { name: "Web (3)" })).toBeDefined();
         expect(within(active).getByRole("link", { name: "Web c" })).toBeDefined();
         expect(rendered.rpcCalls.filter((call) => /^(pin|setThreadParent|reorderPinned)$/.test(call.method))).toEqual(
@@ -175,7 +181,7 @@ describe("ThreadInbox", () => {
             reorderInbox: (input) => input,
           },
         });
-        const active = screen.getByRole("region", { name: "Waiting" });
+        const active = screen.getByRole("region", { name: "Idle" });
         const visible = () =>
           within(active)
             .getAllByRole("link")
@@ -233,7 +239,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Waiting" });
+      const active = screen.getByRole("region", { name: "Idle" });
       await waitFor(() =>
         expect(
           within(active)
@@ -279,7 +285,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Waiting" });
+      const active = screen.getByRole("region", { name: "Idle" });
       const visible = () =>
         within(active)
           .getAllByRole("link")
@@ -346,7 +352,7 @@ describe("ThreadInbox", () => {
           },
         },
       );
-      const active = screen.getByRole("region", { name: "Waiting" });
+      const active = screen.getByRole("region", { name: "Idle" });
       const visible = () =>
         within(active)
           .getAllByRole("link")
@@ -408,7 +414,7 @@ describe("ThreadInbox", () => {
           reorderInbox: (input) => input,
         },
       });
-      const active = screen.getByRole("region", { name: "Waiting" });
+      const active = screen.getByRole("region", { name: "Idle" });
       const visible = () =>
         within(active)
           .getAllByRole("link")

@@ -36,6 +36,7 @@ const SECTION_BY_SETTING: Record<keyof SidebarSettingsValues, string> = {
   childSortDirection: "Child threads",
   childIconStyle: "Child threads",
   threadDensity: "Sidebar layout",
+  spaceHeaderDensity: "Sidebar layout",
   shelfDensities: "Sidebar layout",
   compactProjectIconOnly: "Sidebar layout",
   keepPinnedThreadsFull: "Sidebar layout",

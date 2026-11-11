@@ -6,7 +6,7 @@ import "./topics.css";
 
 const KIND_TEXT = {
   tag: { noun: "Tag", placeholder: "+ Tag", lowercase: true },
-  topic: { noun: "Thema", placeholder: "+ Thema", lowercase: false },
+  topic: { noun: "Topic", placeholder: "+ Topic", lowercase: false },
 } as const;
 
 export function TagEditor({
@@ -35,7 +35,7 @@ export function TagEditor({
           {tag}
           <button
             type="button"
-            aria-label={`${text.noun} ${tag} entfernen`}
+            aria-label={`Remove ${text.noun} ${tag}`}
             className="text-muted-foreground hover:text-foreground"
             onClick={() => onChange(tags.filter((existing) => existing !== tag))}
           >

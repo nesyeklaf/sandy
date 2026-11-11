@@ -48,8 +48,12 @@ export function renderSlot<Props extends object>(
   props: Props,
   options: RenderSlotOptions & {
     archiveThread?: (threadId: string, sdk: ReturnType<typeof useSdk>) => Promise<unknown>;
+    legacyFlowDefault?: boolean;
   } = {},
 ) {
+  if (options.legacyFlowDefault !== false && window.localStorage.getItem("sandy-sidebar:list-view:v1") === null) {
+    window.localStorage.setItem("sandy-sidebar:list-view:v1", "flow");
+  }
   const threadActionCalls: Array<{ key: string; threadId: string }> = [];
   const splitSourceCalls: Array<{ threadId: string }> = [];
   const response = async ({ threadId }: { threadId: string }) => makeThreadResponse({ id: threadId });

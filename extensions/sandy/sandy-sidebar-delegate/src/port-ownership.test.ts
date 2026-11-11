@@ -7,7 +7,12 @@ describe("listener ownership", () => {
     expect(threadIdFromEnvironment("PATH=/bin SANDY_THREAD_ID=thr_owner", "space")).toBe("thr_owner");
   });
   it("leaves missing, malformed, or ambiguous metadata unassigned", () => {
-    for (const value of ["PATH=/bin", "SANDY_THREAD_ID=", "SANDY_THREAD_ID=bad", "SANDY_THREAD_ID=thr_a SANDY_THREAD_ID=thr_b"]) {
+    for (const value of [
+      "PATH=/bin",
+      "SANDY_THREAD_ID=",
+      "SANDY_THREAD_ID=bad",
+      "SANDY_THREAD_ID=thr_a SANDY_THREAD_ID=thr_b",
+    ]) {
       expect(threadIdFromEnvironment(value, "space")).toBeUndefined();
     }
   });

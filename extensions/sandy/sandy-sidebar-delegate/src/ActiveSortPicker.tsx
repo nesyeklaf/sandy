@@ -16,12 +16,15 @@ export function ActiveSortPicker({
   onModeChange,
   groupEnvironments,
   onGroupEnvironmentsChange,
+  subject = "active threads",
 }: {
   mode: ActiveSortMode;
   onModeChange: (mode: ActiveSortMode) => void;
-  groupEnvironments: boolean;
-  onGroupEnvironmentsChange: (enabled: boolean) => void;
+  groupEnvironments?: boolean;
+  onGroupEnvironmentsChange?: (enabled: boolean) => void;
+  subject?: string;
 }) {
+  const keepsOpenOnRepo = onGroupEnvironmentsChange !== undefined;
   const [open, setOpen] = useState(false);
   const groupName = useId();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -30,8 +33,8 @@ export function ActiveSortPicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`Sort active threads: ${SORT_LABELS[mode]}`}
-          title={`Sort active threads: ${SORT_LABELS[mode]}`}
+          aria-label={`Sort ${subject}: ${SORT_LABELS[mode]}`}
+          title={`Sort ${subject}: ${SORT_LABELS[mode]}`}
           onKeyDown={(event) => {
             if (!open && ["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)) {
               event.preventDefault();
@@ -49,7 +52,7 @@ export function ActiveSortPicker({
       <PopoverContent
         ref={contentRef}
         align="end"
-        aria-label="Sort active threads"
+        aria-label={`Sort ${subject}`}
         className="min-w-48 p-1"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
@@ -67,10 +70,10 @@ export function ActiveSortPicker({
                 className="peer sr-only"
                 onChange={() => onModeChange(value)}
                 onClick={(event) => {
-                  if (event.detail > 0 && value !== "project") setOpen(false);
+                  if (event.detail > 0 && !(keepsOpenOnRepo && value === "project")) setOpen(false);
                 }}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && value !== "project") {
+                  if (event.key === "Enter" && !(keepsOpenOnRepo && value === "project")) {
                     event.preventDefault();
                     setOpen(false);
                   }
@@ -85,7 +88,7 @@ export function ActiveSortPicker({
             </label>
           ))}
         </div>
-        {mode === "project" ? (
+        {mode === "project" && onGroupEnvironmentsChange ? (
           <div className="mt-1 border-t border-border pt-1">
             <label className="block cursor-default">
               <input

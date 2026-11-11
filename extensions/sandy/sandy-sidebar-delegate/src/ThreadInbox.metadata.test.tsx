@@ -231,7 +231,9 @@ describe("card metadata", () => {
       }),
     ]);
     expect(await screen.findByLabelText("Agent is working")).toBeDefined();
-    expect(screen.getByText("Working", { selector: "[data-parent-card] *" }).className).toContain("text-[color:var(--sandy-sidebar-tone-working)]");
+    expect(screen.getByText("Working", { selector: "[data-parent-card] *" }).className).toContain(
+      "text-[color:var(--sandy-sidebar-tone-working)]",
+    );
     expect(screen.queryByText("3h")).toBeNull();
   });
 
@@ -277,7 +279,10 @@ describe("card metadata", () => {
   // A request for input is a verdict, not a stretch of work, and reads oddly
   // with a duration behind it.
   it("leaves the duration off a status that is waiting on the user", async () => {
-    window.localStorage.setItem("sandy-sidebar:working-since:v1", JSON.stringify({ thr_ask: Date.now() - 10 * 60_000 }));
+    window.localStorage.setItem(
+      "sandy-sidebar:working-since:v1",
+      JSON.stringify({ thr_ask: Date.now() - 10 * 60_000 }),
+    );
     render([
       thread({
         id: "thr_ask",

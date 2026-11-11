@@ -5,6 +5,7 @@
 - Carry the requested change through implementation, relevant verification, and fixes for failures it causes. Continue authorized, reversible local work without asking for approval at each step; ask when a missing user decision blocks progress.
 - Match verification to the change. Once relevant checks pass, broaden or repeat them only for new changes, failures, or unresolved concerns.
 - Read the linked guidance when its topic applies to the task.
+- For the `sidebar-spaces` and `space-coordination` changes only, use the owner's standalone OpenSpec specification and tasks; Holon modeling, approval, export, and READY checks are not prerequisites. Leave the existing Holon proposal unchanged. All other project rules, verification requirements, and publishing, installation, and deployment approvals still apply.
 
 ## Code And Contracts
 

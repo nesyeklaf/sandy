@@ -48,7 +48,8 @@ describe("ThreadInbox", () => {
     await waitFor(() => expect(loads).toBe(2));
     expect(screen.queryByRole("list", { name: "Child threads" })).toBeNull();
     expect(
-      JSON.parse(window.localStorage.getItem("sandy-sidebar:settings-cache:v1") ?? "{}").showRunningChildrenWhenCollapsed,
+      JSON.parse(window.localStorage.getItem("sandy-sidebar:settings-cache:v1") ?? "{}")
+        .showRunningChildrenWhenCollapsed,
     ).toBe(false);
   });
 

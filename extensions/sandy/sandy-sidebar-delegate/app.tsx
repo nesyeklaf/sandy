@@ -17,6 +17,7 @@ import { registerThreadHeaderAction } from "./src/thread-header-action";
 import { AnchorsBelow } from "./src/AnchorsBelow";
 import { useAnchorBands } from "./src/useAnchorBands";
 import { MarksTab } from "./src/MarksTab";
+import { SpaceTab, useSpaceTabVisible } from "./src/SpaceTab";
 
 export default definePluginApp((app) => {
   app.slots.settingsSection({
@@ -72,6 +73,16 @@ export default definePluginApp((app) => {
     context: { kind: "thread" },
     availability: "fixed",
     component: MarksTab,
+  });
+  app.slots.experimental_tab({
+    id: "space",
+    title: "Space",
+    icon: "Orchestrator",
+    tooltip: "Orchestrators, members, ideas and scratchpad of this session's Space",
+    context: { kind: "thread" },
+    availability: "fixed",
+    useVisible: useSpaceTabVisible,
+    component: SpaceTab,
   });
   registerBelowMetadata(app.slots, { id: "anchors", placement: "below", component: AnchorsBelow });
 

@@ -120,6 +120,7 @@ it("keeps shortcuts outside the scroller even with collapsed shelves or no threa
 });
 
 it("keeps pinning usable when storage is blocked and keyboard navigation can leave the pin button", () => {
+  localStorage.setItem("sandy-sidebar:list-view:v1", "flow");
   const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
     throw new Error("Storage blocked");
   });

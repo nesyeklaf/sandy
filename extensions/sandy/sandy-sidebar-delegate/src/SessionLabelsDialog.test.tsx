@@ -34,17 +34,17 @@ async function mountDialog(
 describe("SessionLabelsDialog", () => {
   it("offers no editors after a failed read and cannot overwrite the stored tags", async () => {
     const { writes, storedTags } = await mountDialog(() => true);
-    expect(await screen.findByRole("button", { name: "Erneut versuchen" })).toBeTruthy();
-    expect(screen.queryByRole("textbox", { name: "Tags dieser Session" })).toBeNull();
-    expect(screen.queryByRole("textbox", { name: "Themen dieser Session" })).toBeNull();
+    expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
+    expect(screen.queryByRole("textbox", { name: "Tags of this session" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Topics of this session" })).toBeNull();
     expect(writes).not.toHaveBeenCalled();
     expect(storedTags()).toEqual(["existing"]);
   });
 
   it("loads the stored labels after Retry and keeps them when the next add is saved", async () => {
     const { listTopics, storedTags } = await mountDialog((call) => call === 1);
-    fireEvent.click(await screen.findByRole("button", { name: "Erneut versuchen" }));
-    const input = await screen.findByRole("textbox", { name: "Tags dieser Session" });
+    fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
+    const input = await screen.findByRole("textbox", { name: "Tags of this session" });
     expect(screen.getByText("existing")).toBeTruthy();
     expect(listTopics).toHaveBeenCalledTimes(2);
     fireEvent.change(input, { target: { value: "new" } });
@@ -54,11 +54,11 @@ describe("SessionLabelsDialog", () => {
 
   it("keeps the loaded labels editable when a later refresh fails", async () => {
     const { rendered, listTopics, storedTags } = await mountDialog((call) => call > 1);
-    const input = await screen.findByRole("textbox", { name: "Tags dieser Session" });
+    const input = await screen.findByRole("textbox", { name: "Tags of this session" });
     expect(screen.getByText("existing")).toBeTruthy();
     await rendered.emitRealtime(TOPICS_CHANNEL, {});
     await waitFor(() => expect(listTopics.mock.calls.length).toBeGreaterThan(1));
-    expect(screen.queryByRole("button", { name: "Erneut versuchen" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
     expect(screen.getByText("existing")).toBeTruthy();
     fireEvent.change(input, { target: { value: "new" } });
     fireEvent.keyDown(input, { key: "Enter" });
@@ -70,7 +70,7 @@ describe("SessionLabelsDialog", () => {
     appRoot.textContent = "Main application";
     document.body.append(appRoot);
     await mountDialog(() => false);
-    await screen.findByRole("textbox", { name: "Tags dieser Session" });
+    await screen.findByRole("textbox", { name: "Tags of this session" });
     expect(appRoot.getAttribute("aria-hidden")).toBeNull();
     expect(appRoot.hasAttribute("inert")).toBe(false);
     expect(document.body.hasAttribute("data-scroll-locked")).toBe(false);
@@ -80,7 +80,7 @@ describe("SessionLabelsDialog", () => {
   it("closes on Escape", async () => {
     const onOpenChange = vi.fn();
     await mountDialog(() => false, onOpenChange);
-    await screen.findByRole("textbox", { name: "Tags dieser Session" });
+    await screen.findByRole("textbox", { name: "Tags of this session" });
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
@@ -88,7 +88,7 @@ describe("SessionLabelsDialog", () => {
   it("closes on a press outside the dialog", async () => {
     const onOpenChange = vi.fn();
     await mountDialog(() => false, onOpenChange);
-    await screen.findByRole("textbox", { name: "Tags dieser Session" });
+    await screen.findByRole("textbox", { name: "Tags of this session" });
     await new Promise((resolve) => setTimeout(resolve, 10));
     const outside = document.createElement("button");
     document.body.append(outside);
@@ -105,17 +105,17 @@ describe("SessionLabelsDialog", () => {
     const { listTopics } = await mountDialog(() => false);
     await waitFor(() => expect(listTopics).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(screen.queryByRole("textbox", { name: "Tags dieser Session" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Tags of this session" })).toBeNull();
     act(() => frames.splice(0).forEach((callback) => callback(0)));
-    expect(screen.queryByRole("textbox", { name: "Tags dieser Session" })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Tags of this session" })).toBeNull();
     act(() => frames.splice(0).forEach((callback) => callback(16)));
-    expect(await screen.findByRole("textbox", { name: "Tags dieser Session" })).toBeTruthy();
+    expect(await screen.findByRole("textbox", { name: "Tags of this session" })).toBeTruthy();
   });
 
   it("realizes the editors after a timeout when no animation frame arrives", async () => {
     vi.stubGlobal("requestAnimationFrame", () => 1);
     vi.stubGlobal("cancelAnimationFrame", () => undefined);
     await mountDialog(() => false);
-    expect(await screen.findByRole("textbox", { name: "Tags dieser Session" })).toBeTruthy();
+    expect(await screen.findByRole("textbox", { name: "Tags of this session" })).toBeTruthy();
   });
 });

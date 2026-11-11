@@ -61,7 +61,7 @@ it("parks through the card and resumes from Parked", async () => {
   expect(within(parked).getByText("Work a")).toBeDefined();
   fireEvent.click(within(parked).getByRole("button", { name: "Resume thread" }));
   await saved(wired, "settled_override", "active");
-  expect(within(await screen.findByRole("region", { name: "Waiting" })).getByText("Work a")).toBeDefined();
+  expect(within(await screen.findByRole("region", { name: "Idle" })).getByText("Work a")).toBeDefined();
   expect(lifecycle(wired)).toMatchObject({ parked_at: null });
 });
 
@@ -112,7 +112,7 @@ it("pins from the menu and persists a keyboard manual reorder through server and
       result: { inboxThreadIds: [] },
     }),
   );
-  expect(within(observer.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
+  expect(within(observer.getByRole("region", { name: "Idle" })).getAllByRole("listitem")[0]!.textContent).toContain(
     "Work a",
   );
   fireEvent.keyDown(sender.getByRole("link", { name: "Work a" }), { key: "ArrowDown", altKey: true });
@@ -125,22 +125,22 @@ it("pins from the menu and persists a keyboard manual reorder through server and
   await wired.flush();
   expect(JSON.parse(localStorage.getItem("sandy-sidebar:inbox-order-cache:v1")!)).toEqual(["b", "a"]);
   await waitFor(() =>
-    expect(
-      within(observer.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent,
-    ).toContain("Work b"),
+    expect(within(observer.getByRole("region", { name: "Idle" })).getAllByRole("listitem")[0]!.textContent).toContain(
+      "Work b",
+    ),
   );
   expect(receiver.rpcReplies).toContainEqual({ method: "listInboxOrder", result: { inboxThreadIds: ["b", "a"] } });
   wired.unmount(receiver);
   wired.unmount(slot);
   slot = wired.mount();
-  expect(within(screen.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
+  expect(within(screen.getByRole("region", { name: "Idle" })).getAllByRole("listitem")[0]!.textContent).toContain(
     "Work b",
   );
   wired.unmount(slot);
   localStorage.removeItem("sandy-sidebar:inbox-order-cache:v1");
   wired.mount();
   await waitFor(() =>
-    expect(within(screen.getByRole("region", { name: "Waiting" })).getAllByRole("listitem")[0]!.textContent).toContain(
+    expect(within(screen.getByRole("region", { name: "Idle" })).getAllByRole("listitem")[0]!.textContent).toContain(
       "Work b",
     ),
   );
@@ -194,7 +194,7 @@ it("child activity publishes lifecycle changes that reopen a settled parent", as
   await wired.event("thread.active", "child");
   expect(lifecycle(wired)).toBeUndefined();
   expect(lifecycle(wired, "child")).toBeUndefined();
-  await within(await screen.findByRole("region", { name: "Waiting" })).findByText("Work a");
+  await within(await screen.findByRole("region", { name: "Idle" })).findByText("Work a");
 });
 
 it("Clean uses the real preview token and renders the cleanup result shape", async () => {

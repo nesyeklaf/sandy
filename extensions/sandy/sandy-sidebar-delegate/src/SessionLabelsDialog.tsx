@@ -99,33 +99,33 @@ export function SessionLabelsDialog({
           onContextMenu={(event) => event.stopPropagation()}
           className="fixed left-1/2 top-1/2 z-50 box-border w-80 max-w-[calc(100%_-_2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg outline-none max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:translate-x-0 max-sm:w-full max-sm:max-w-full max-sm:translate-y-0 max-sm:rounded-b-none max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
         >
-          <Dialog.Title className="text-sm font-semibold leading-5">Tags & Themen</Dialog.Title>
+          <Dialog.Title className="text-sm font-semibold leading-5">Tags & Topics</Dialog.Title>
           <Dialog.Description className="truncate text-xs text-muted-foreground">{title}</Dialog.Description>
           {labels === null && loadFailed ? (
             <div role="alert" className="mt-3 flex items-center justify-between gap-2 text-xs">
-              <span className="text-muted-foreground">Tags und Themen konnten nicht geladen werden.</span>
+              <span className="text-muted-foreground">Tags and topics could not be loaded.</span>
               <button
                 type="button"
                 onClick={retry}
                 className="h-7 shrink-0 rounded-md border border-border bg-background px-2 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                Erneut versuchen
+                Try again
               </button>
             </div>
           ) : labels === null || !realized ? (
-            <p className="mt-3 text-xs text-muted-foreground">Lädt…</p>
+            <p className="mt-3 text-xs text-muted-foreground">Loading…</p>
           ) : (
             <div className="mt-3 flex flex-col gap-3 text-xs">
               <section className="flex flex-col gap-1">
                 <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Tags</h3>
-                <TagEditor tags={labels.tags} label="Tags dieser Session" onChange={(tags) => void setTags(tags)} />
+                <TagEditor tags={labels.tags} label="Tags of this session" onChange={(tags) => void setTags(tags)} />
               </section>
               <section className="flex flex-col gap-1">
-                <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Themen</h3>
+                <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">Topics</h3>
                 <TagEditor
                   kind="topic"
                   tags={labels.topics}
-                  label="Themen dieser Session"
+                  label="Topics of this session"
                   onChange={(topics) => void setTopics(topics)}
                 />
               </section>
@@ -137,7 +137,7 @@ export function SessionLabelsDialog({
                 type="button"
                 className="h-8 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                Fertig
+                Done
               </button>
             </Dialog.Close>
           </div>

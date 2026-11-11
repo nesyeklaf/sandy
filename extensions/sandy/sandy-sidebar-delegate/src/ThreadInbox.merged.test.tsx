@@ -87,10 +87,7 @@ describe("Merged shelf", () => {
     const merged = await screen.findByRole("region", { name: "Merged" });
     fireEvent.click(within(merged).getByRole("button", { name: "Archive all 2 merged threads" }));
     await waitFor(() => expect(toastMocks.error).toHaveBeenCalledWith("Could not archive 1 thread", expect.anything()));
-    const [message, options] = toastMocks.success.mock.calls.at(-1)! as [
-      string,
-      { action: { onClick: () => void } },
-    ];
+    const [message, options] = toastMocks.success.mock.calls.at(-1)! as [string, { action: { onClick: () => void } }];
     expect(message).toBe("Archived 1 thread");
     options.action.onClick();
     await waitFor(() =>

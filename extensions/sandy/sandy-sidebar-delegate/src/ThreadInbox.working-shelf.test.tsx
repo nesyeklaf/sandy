@@ -253,38 +253,35 @@ describe("parking threads", () => {
     },
   );
 
-  it.each([false, true])(
-    "keeps a dense row's working children folded until expanded (dense %s)",
-    async (dense) => {
-      renderSlot(inbox, listProps, {
-        sidebarThreads: {
-          status: "ready",
-          threads: [
-            thread({ id: "parent", title: "Parent work", indicator: "runtime" }),
-            thread({ id: "child", parentThreadId: "parent", title: "Child work", indicator: "runtime" }),
-          ],
-          projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
-        },
-        rpc: {
-          getSidebarSettings: () => ({
-            ...defaultSidebarSettings,
-            showRunningChildrenWhenCollapsed: true,
-            threadDensity: dense ? "dense" : "comfortable",
-            compactWorkingThreads: dense,
-          }),
-          listLifecycle: () => ({ rows: [] }),
-        },
-      });
-      await screen.findByRole("link", { name: "Parent work" });
-      // The full card surfaces a working child; the one-line row does not.
-      await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(dense));
+  it.each([false, true])("keeps a dense row's working children folded until expanded (dense %s)", async (dense) => {
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [
+          thread({ id: "parent", title: "Parent work", indicator: "runtime" }),
+          thread({ id: "child", parentThreadId: "parent", title: "Child work", indicator: "runtime" }),
+        ],
+        projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
+      },
+      rpc: {
+        getSidebarSettings: () => ({
+          ...defaultSidebarSettings,
+          showRunningChildrenWhenCollapsed: true,
+          threadDensity: dense ? "dense" : "comfortable",
+          compactWorkingThreads: dense,
+        }),
+        listLifecycle: () => ({ rows: [] }),
+      },
+    });
+    await screen.findByRole("link", { name: "Parent work" });
+    // The full card surfaces a working child; the one-line row does not.
+    await waitFor(() => expect(screen.queryByText("Child work") === null).toBe(dense));
 
-      if (dense) {
-        fireEvent.click(screen.getByRole("button", { name: /1 child thread/ }));
-        expect(await screen.findByText("Child work")).toBeDefined();
-      }
-    },
-  );
+    if (dense) {
+      fireEvent.click(screen.getByRole("button", { name: /1 child thread/ }));
+      expect(await screen.findByText("Child work")).toBeDefined();
+    }
+  });
 
   it("keeps a row on two lines in Auto until its children and agents are done", async () => {
     renderSlot(inbox, listProps, {
@@ -393,7 +390,7 @@ describe("parking threads", () => {
 
     await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
     expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
-    expect(titlesIn("Waiting")).toEqual(["Done work"]);
+    expect(titlesIn("Idle")).toEqual(["Done work"]);
     expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
   });
 
@@ -423,7 +420,7 @@ describe("parking threads", () => {
       },
     });
     const settled = await screen.findByRole("region", { name: "Archived" });
-    const active = screen.getByRole("region", { name: "Waiting" });
+    const active = screen.getByRole("region", { name: "Idle" });
     await waitFor(() => expect(settled.closest("[data-shelf-dock]") !== null).toBe(dockShelves));
     // Active never moves into the dock; it scrolls in the space above.
     expect(active.closest("[data-shelf-dock]")).toBeNull();

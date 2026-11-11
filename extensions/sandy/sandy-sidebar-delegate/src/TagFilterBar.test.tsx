@@ -78,7 +78,7 @@ describe("session filter bar", () => {
     renderBar();
     fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
     const sessionSection = screen.getByRole("group", { name: "Session" });
-    const areaSection = screen.getByRole("group", { name: "In Bereichen" });
+    const areaSection = screen.getByRole("group", { name: "In ranges" });
     expect(within(sessionSection).getByRole("button", { name: "gamma, not selected" }).textContent).toBe("gamma3");
     expect(within(areaSection).getByRole("button", { name: "gamma, not selected" }).textContent).toBe("gamma1");
     fireEvent.click(within(areaSection).getByRole("button", { name: "gamma, not selected" }));
@@ -103,7 +103,7 @@ describe("session filter bar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filter by tags" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "ALP" } });
     expect(screen.getByRole("group", { name: "Session" }).textContent).toBe("Sessionalpha1");
-    expect(screen.queryByRole("group", { name: "In Bereichen" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "In ranges" })).toBeNull();
     fireEvent.change(screen.getByRole("textbox", { name: "Search tags" }), { target: { value: "zzz" } });
     expect(screen.getByText("Nothing found")).toBeTruthy();
   });
@@ -112,7 +112,7 @@ describe("session filter bar", () => {
     renderBar();
     fireEvent.click(screen.getByRole("button", { name: "Filter by topics" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search topics" }), { target: { value: "bug" } });
-    const areaSection = screen.getByRole("group", { name: "In Bereichen" });
+    const areaSection = screen.getByRole("group", { name: "In ranges" });
     fireEvent.click(within(areaSection).getByRole("button", { name: "Bug hunt, not selected" }));
     expect(filterNow().topics.include).toEqual([labelKey("segment", "Bug hunt")]);
     fireEvent.click(within(screen.getByRole("group", { name: "Session" })).getByRole("button", { name: /Bug hunt/ }));

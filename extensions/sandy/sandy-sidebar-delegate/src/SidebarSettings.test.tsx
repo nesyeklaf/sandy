@@ -179,7 +179,9 @@ it("removes obsolete archive-preview cache keys before an early save", async () 
   await act(async () => {
     pending.resolve(DEFAULT_SIDEBAR_SETTINGS);
   });
-  expect(screen.getByRole("switch", { name: "Hide repo names in compact cards" }).getAttribute("aria-checked")).toBe("true");
+  expect(screen.getByRole("switch", { name: "Hide repo names in compact cards" }).getAttribute("aria-checked")).toBe(
+    "true",
+  );
   expect(JSON.parse(localStorage.getItem("sandy-sidebar:settings-cache:v1")!)).not.toHaveProperty(
     "archivedShelfEnabled",
   );

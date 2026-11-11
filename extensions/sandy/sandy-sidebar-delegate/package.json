@@ -35,6 +35,7 @@
     "!src/**/*.test.*",
     "!src/test-*",
     "app.tsx",
+    "skills",
     "tsconfig.json",
     "README.md",
     "UPSTREAM.md",
