@@ -21,6 +21,7 @@ const MEMBER_TOOL_NAMES = [
 ] as const;
 
 const SECTION_CACHE_ENTRIES_MAX = 5000;
+const SPACES_WARMED_MAX = 1000;
 
 const ORCHESTRATOR_INSTRUCTIONS = [
   "The owner made this session an orchestrator of its Space.",
@@ -57,35 +58,54 @@ export function createAgentView(ctx: ServerContext, deps: SpaceDeps, rolesServic
     sectionByThread.delete(thread.id);
   });
 
-  function reconcileInBackground(threadId: string): void {
+  function learnInBackground(threadId: string): void {
+    deps.membership.spaceOf(threadId).then(
+      (spaceId) => remember({ id: threadId, sectionId: spaceId }),
+      (error: unknown) => {
+        ctx.sandy.log.warn(`Could not look up the Space of ${threadId}: ${String(error)}`);
+      },
+    );
+  }
+
+  async function warmCache(): Promise<void> {
+    const names = await deps.membership.sectionNames();
+    assert(names.size <= SPACES_WARMED_MAX, "more Spaces than the warm-up bound");
+    for (const spaceId of names.keys()) {
+      const { threads } = await deps.membership.listMembers(spaceId);
+      for (const thread of threads) remember(thread);
+    }
+  }
+
+  warmCache().catch((error: unknown) => {
+    ctx.sandy.log.warn(`Could not warm the Space cache: ${String(error)}`);
+  });
+
+  function stillOrchestrator(threadId: string, knownSpaceId: string | null | undefined): boolean {
+    const storedSpaceId = deps.roles.orchestratorSpaceOf(threadId);
+    if (storedSpaceId === null) return false;
+    if (knownSpaceId === storedSpaceId) return true;
+    learnInBackground(threadId);
     rolesService.orchestratorSpaceOf(threadId).catch((error: unknown) => {
       ctx.sandy.log.warn(`Could not verify the orchestrator role of ${threadId}: ${String(error)}`);
     });
-  }
-
-  function stillOrchestrator(threadId: string): boolean {
-    const storedSpaceId = deps.roles.orchestratorSpaceOf(threadId);
-    if (storedSpaceId === null) return false;
-    const knownSpaceId = sectionByThread.get(threadId);
-    if (knownSpaceId === undefined || knownSpaceId === storedSpaceId) {
-      reconcileInBackground(threadId);
-      return true;
-    }
-    deps.roles.clearOrchestrator(threadId);
-    deps.publishOrchestrators();
     return false;
   }
 
   ctx.sandy.agents.configure(({ thread }) => {
     assert(thread.id.length > 0, "configured thread needs an id");
-    if (stillOrchestrator(thread.id)) {
+    const knownSpaceId = sectionByThread.get(thread.id);
+    if (stillOrchestrator(thread.id, knownSpaceId)) {
       return {
         tools: [...MEMBER_TOOL_NAMES, ...ORCHESTRATOR_TOOL_NAMES],
         skills: [],
         instructions: ORCHESTRATOR_INSTRUCTIONS,
       };
     }
-    if (sectionByThread.get(thread.id) === null) return { tools: [], skills: [] };
+    if (knownSpaceId === undefined) {
+      learnInBackground(thread.id);
+      return { tools: [], skills: [] };
+    }
+    if (knownSpaceId === null) return { tools: [], skills: [] };
     return { tools: [...MEMBER_TOOL_NAMES], skills: [], instructions: MEMBER_INSTRUCTIONS };
   });
 }
