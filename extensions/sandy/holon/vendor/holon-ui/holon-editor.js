@@ -29499,17 +29499,17 @@ var wV, TV, EV, DV, OV = E((() => {
 // src/layout.ts
 function kV(e, t, n, r) {
 	let i = fz(e, t, n);
-	return r ? kz(i) + zV.bottom : Oz(i);
+	return r ? kz(i) + VV.bottom : Oz(i);
 }
 function AV(e, t, n) {
 	for (let r = e.get(t)?.parent ?? null; r !== null; r = e.get(r)?.parent ?? null) if (r === n) return !0;
 	return !1;
 }
-async function jV(e, t, n, r = /* @__PURE__ */ new Map()) {
-	let i = new Map(e.map((e) => [e.id, e])), a = new Map(n.map((e) => [e.holon, e])), o = /* @__PURE__ */ new Map(), s = /* @__PURE__ */ new Map(), c = (e) => e.parent !== null && i.has(e.parent) ? e.parent : null, l = /* @__PURE__ */ new Map();
-	for (let t of e) l.set(c(t), [...l.get(c(t)) ?? [], t]);
-	let u = (e) => {
-		let t = l.get(e.id), n = a.get(e.id)?.w, i = n === void 0 ? void 0 : Math.max(n, pz(e, r.get(e.id)));
+async function jV(e, t, n, r = /* @__PURE__ */ new Map(), i) {
+	let a = new Map(e.map((e) => [e.id, e])), o = new Map(n.map((e) => [e.holon, e])), s = /* @__PURE__ */ new Map(), c = /* @__PURE__ */ new Map(), l = (e) => e.parent !== null && a.has(e.parent) ? e.parent : null, u = /* @__PURE__ */ new Map();
+	for (let t of e) u.set(l(t), [...u.get(l(t)) ?? [], t]);
+	let d = (e) => {
+		let t = u.get(e.id), n = o.get(e.id)?.w, i = n === void 0 ? void 0 : Math.max(n, pz(e, r.get(e.id)));
 		if (!t) {
 			let t = Math.max(i ?? Q.width, pz(e, r.get(e.id)));
 			return {
@@ -29518,24 +29518,24 @@ async function jV(e, t, n, r = /* @__PURE__ */ new Map()) {
 				height: kV(e, r.get(e.id), t, !1)
 			};
 		}
-		let c = i ?? Math.max(Az(e.title), pz(e, r.get(e.id))), d = kz(fz(e, r.get(e.id), c));
-		return o.set(e.id, d), s.set(e.id, {
-			w: c,
-			h: d + zV.bottom
+		let a = i ?? Math.max(Az(e.title), pz(e, r.get(e.id))), l = kz(fz(e, r.get(e.id), a));
+		return s.set(e.id, l), c.set(e.id, {
+			w: a,
+			h: l + VV.bottom
 		}), {
 			id: e.id,
-			children: t.map(u),
+			children: t.map(d),
 			layoutOptions: {
-				"elk.padding": `[top=${d},left=${zV.side},bottom=${zV.bottom},right=${zV.side}]`,
+				"elk.padding": `[top=${l},left=${VV.side},bottom=${VV.bottom},right=${VV.side}]`,
 				"elk.nodeSize.constraints": "[MINIMUM_SIZE]",
-				"elk.nodeSize.minimum": `(${c},${d + zV.bottom})`
+				"elk.nodeSize.minimum": `(${a},${l + VV.bottom})`
 			}
 		};
-	}, d = {
+	}, f = {
 		id: "__root",
-		children: (l.get(null) ?? []).map(u),
-		layoutOptions: BV,
-		edges: t.filter((e) => i.has(e.from) && i.has(e.to) && !AV(i, e.from, e.to) && !AV(i, e.to, e.from)).map((e) => ({
+		children: (u.get(null) ?? []).map(d),
+		layoutOptions: HV,
+		edges: t.filter((e) => a.has(e.from) && a.has(e.to) && !AV(a, e.from, e.to) && !AV(a, e.to, e.from)).map((e) => ({
 			id: e.id,
 			sources: [e.from],
 			targets: [e.to],
@@ -29546,84 +29546,198 @@ async function jV(e, t, n, r = /* @__PURE__ */ new Map()) {
 				height: n
 			}))(mz(e.label))] } : {}
 		}))
-	}, f = (e) => {
-		let t = a.get(e.id);
+	}, p = (e) => {
+		let t = o.get(e.id);
 		if ([e.x, e.y] = [t.x, t.y], !e.children) return;
-		e.children.forEach(f);
+		e.children.forEach(p);
 		let n = (e) => {
-			let t = a.get(e.id), n = i.get(e.id);
+			let t = o.get(e.id), n = a.get(e.id);
 			return {
 				w: Math.max(t.w ?? e.width, pz(n, r.get(e.id))),
 				h: t.h ?? e.height
 			};
-		}, o = s.get(e.id);
-		e.width = Math.max(o.w, ...e.children.map((e) => e.x + n(e).w + zV.side)), e.height = Math.max(o.h, ...e.children.map((e) => e.y + n(e).h + zV.bottom));
-	}, p, m = e.length > 0 && e.every((e) => a.has(e.id));
-	if (m) (d.children ?? []).forEach(f), p = d;
-	else try {
-		p = await DV(d);
-	} catch {
-		p = FV(d, o);
-	}
-	let h = /* @__PURE__ */ new Map(), g = /* @__PURE__ */ new Map([["__root", {
-		x: 0,
-		y: 0
-	}]]), _ = /* @__PURE__ */ new Map(), v = (e) => {
-		let t = g.get(e.id);
-		for (let n of e.edges ?? []) {
-			let r = g.get(n.container ?? e.id) ?? t, i = (n.sections ?? []).flatMap((e) => [
-				e.startPoint,
-				...e.bendPoints ?? [],
-				e.endPoint
-			]), a = n.labels?.[0];
-			_.set(n.id, {
-				route: i.map((e) => ({
-					x: e.x + r.x,
-					y: e.y + r.y
-				})),
-				label: a ? {
-					x: (a.x ?? 0) + r.x,
-					y: (a.y ?? 0) + r.y,
-					w: a.width,
-					h: a.height
-				} : null
-			});
-		}
-	}, y = (e, t, n) => {
-		let o = i.get(e.id);
-		if (!o) return;
-		g.set(e.id, {
-			x: n.x + (e.x ?? 0),
-			y: n.y + (e.y ?? 0)
-		});
-		let s = a.get(e.id), c = (e.children?.length ?? 0) > 0, l = Math.max(s?.w ?? e.width ?? Q.width, pz(o, r.get(e.id)));
-		h.set(e.id, {
-			id: e.id,
-			parent: t,
-			container: c,
-			box: {
-				x: s?.x ?? e.x ?? 0,
-				y: s?.y ?? e.y ?? 0,
-				w: l,
-				h: s?.h ?? e.height ?? 0
+		}, i = c.get(e.id);
+		e.width = Math.max(i.w, ...e.children.map((e) => e.x + n(e).w + VV.side)), e.height = Math.max(i.h, ...e.children.map((e) => e.y + n(e).h + VV.bottom));
+	}, m = e.length > 0 && e.every((e) => o.has(e.id)), h = (e, t) => {
+		let n = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Map([["__root", {
+			x: 0,
+			y: 0
+		}]]), s = /* @__PURE__ */ new Map(), c = (e) => {
+			let t = i.get(e.id);
+			for (let n of e.edges ?? []) {
+				let r = i.get(n.container ?? e.id) ?? t, a = (n.sections ?? []).flatMap((e) => [
+					e.startPoint,
+					...e.bendPoints ?? [],
+					e.endPoint
+				]), o = n.labels?.[0];
+				s.set(n.id, {
+					route: a.map((e) => ({
+						x: e.x + r.x,
+						y: e.y + r.y
+					})),
+					label: o ? {
+						x: (o.x ?? 0) + r.x,
+						y: (o.y ?? 0) + r.y,
+						w: o.width,
+						h: o.height
+					} : null
+				});
 			}
-		}), (e.children ?? []).forEach((t) => y(t, e.id, g.get(e.id)));
+		}, l = (e, t, s) => {
+			let c = a.get(e.id);
+			if (!c) return;
+			i.set(e.id, {
+				x: s.x + (e.x ?? 0),
+				y: s.y + (e.y ?? 0)
+			});
+			let u = o.get(e.id), d = (e.children?.length ?? 0) > 0, f = Math.max(u?.w ?? e.width ?? Q.width, pz(c, r.get(e.id)));
+			n.set(e.id, {
+				id: e.id,
+				parent: t,
+				container: d,
+				box: {
+					x: u?.x ?? e.x ?? 0,
+					y: u?.y ?? e.y ?? 0,
+					w: f,
+					h: u?.h ?? e.height ?? 0
+				}
+			}), (e.children ?? []).forEach((t) => l(t, e.id, i.get(e.id)));
+		};
+		(e.children ?? []).forEach((e) => l(e, null, {
+			x: 0,
+			y: 0
+		})), c(e);
+		let u = (e) => {
+			for (let t of e.children ?? []) c(t), u(t);
+		};
+		u(e);
+		let d = PV(n, a, r);
+		return {
+			boxes: d,
+			edges: [...n].some(([e, t]) => !o.has(e) && !JV(t.box, d.get(e).box)) || m || t ? /* @__PURE__ */ new Map() : s
+		};
 	};
-	(p.children ?? []).forEach((e) => y(e, null, {
-		x: 0,
-		y: 0
-	})), v(p);
-	let b = (e) => {
-		for (let t of e.children ?? []) v(t), b(t);
-	};
-	b(p);
-	let x = MV(h, i, r);
-	return {
-		boxes: x,
-		edges: [...h].some(([e, t]) => !a.has(e) && !UV(t.box, x.get(e).box)) || m ? /* @__PURE__ */ new Map() : _
-	};
+	if (m) return (f.children ?? []).forEach(p), h(f, !1);
+	let g;
+	try {
+		g = await DV(f);
+	} catch {
+		return h(LV(f, s), !1);
+	}
+	if (i === void 0) return h(g, !1);
+	let _ = structuredClone(g);
+	if (!NV(_, s, c, o, i, f.edges ?? [])) return h(g, !1);
+	let [v, y] = [h(_, !0), h(g, !1)];
+	return MV(v.boxes, i) > MV(y.boxes, i) ? v : y;
 }
-function MV(e, t, n = /* @__PURE__ */ new Map()) {
+function MV(e, t) {
+	let n = [...e.values()].filter((e) => e.parent === null).map((e) => e.box);
+	if (n.length === 0) return Infinity;
+	let r = Math.max(...n.map((e) => e.x + e.w)) - Math.min(...n.map((e) => e.x)), i = Math.max(...n.map((e) => e.y + e.h)) - Math.min(...n.map((e) => e.y));
+	return Math.min(t.w / r, t.h / i);
+}
+function NV(e, t, n, r, i, a) {
+	let o = (e) => e.width ?? Q.width, s = (e) => e.height ?? Q.minHeight, c = /* @__PURE__ */ new Map(), l = (e) => {
+		let t = e.children ?? [];
+		if (t.length === 0) return;
+		let n = [], r = -Infinity;
+		for (let e of [...t].sort((e, t) => (e.x ?? 0) - (t.x ?? 0) || (e.y ?? 0) - (t.y ?? 0))) n.length > 0 && (e.x ?? 0) < r ? (n.at(-1).push(e), r = Math.max(r, (e.x ?? 0) + o(e))) : (n.push([e]), r = (e.x ?? 0) + o(e));
+		c.set(e.id, n.map((e) => e.sort((e, t) => (e.y ?? 0) - (t.y ?? 0)))), t.forEach(l);
+	}, u = /* @__PURE__ */ new Map(), d = (e) => (e.children ?? []).forEach((e) => (u.set(e, {
+		x: e.x ?? 0,
+		y: e.y ?? 0,
+		w: o(e),
+		h: s(e)
+	}), d(e)));
+	d(e), l(e);
+	let f = /* @__PURE__ */ new Map(), p = (e) => (e.children ?? []).forEach((t) => (f.set(t.id, e.id), p(t)));
+	p(e);
+	let m = (e, t) => {
+		for (let n = t; n !== void 0; n = f.get(n)) if (f.get(n) === e.id) return n;
+	}, h = (e) => {
+		let t = e.children ?? [], n = new Map(t.map((e) => [e.id, e.id])), r = (e) => n.get(e) === e ? e : r(n.get(e));
+		for (let t of a) {
+			let [i, a] = [m(e, t.sources[0]), m(e, t.targets[0])];
+			i !== void 0 && a !== void 0 && n.set(r(i), r(a));
+		}
+		let i = /* @__PURE__ */ new Map();
+		for (let t of c.get(e.id).flat()) i.set(r(t.id), [...i.get(r(t.id)) ?? [], t]);
+		return [...i.values()];
+	}, g = (e, t) => {
+		let n = c.get(e.id);
+		if (t === 0) return 0;
+		let r = n[t - 1], i = Math.max(...r.map((e) => u.get(e).x + u.get(e).w));
+		return Math.max(WV, Math.min(...n[t].map((e) => u.get(e).x)) - i);
+	}, _ = (e, t) => {
+		let n = /* @__PURE__ */ new Map(), r = 0, i = 0, a = -1;
+		return c.get(e.id).forEach((c, l) => {
+			let d = c.filter((e) => t.includes(e));
+			if (d.length === 0) return;
+			a >= 0 && (r += g(e, l)), a = l;
+			let f = 0;
+			d.forEach((e, t) => {
+				if (t > 0) {
+					let n = d[t - 1], r = c[c.indexOf(n) + 1] === e;
+					f += r ? Math.max(UV, u.get(e).y - (u.get(n).y + u.get(n).h)) : UV;
+				}
+				n.set(e, {
+					x: r,
+					y: f
+				}), f += s(e);
+			}), r += Math.max(...d.map(o)), i = Math.max(i, f);
+		}), {
+			w: r,
+			h: i,
+			at: n
+		};
+	}, v = (t, n, r, i, a) => {
+		t.id !== e.id && (t.width = Math.max(a.w, ...n.map((e) => e.x + o(e) + r)), t.height = Math.max(a.h, ...n.map((e) => e.y + s(e) + i)));
+	}, y = (e, a, o, s, c) => {
+		let l = e.children ?? [], d = !1;
+		for (let e of l) e.children && (d = y(e, t.get(e.id), VV.side, VV.bottom, n.get(e.id)) || d);
+		if (l.length === 0 || l.some((e) => r.has(e.id))) return d;
+		let f = h(e).map((t) => ({
+			group: t,
+			..._(e, t)
+		})), p = f.reduce((e, t) => e + t.w, 0) + UV * (f.length - 1), m = (e, t) => Math.min(i.w / (e + 2 * o), i.h / (t + a + s)), g = () => {
+			let e = f.reduce((e, t) => e + (t.w + UV) * (t.h + UV), 0), t = Math.max(Math.max(...f.map((e) => e.w)), Math.sqrt(e * (i.w / i.h)) - UV), n = [], [r, a, o, s] = [
+				0,
+				0,
+				0,
+				0
+			];
+			for (let e of f) r > 0 && r + e.w > t && ([r, a, o] = [
+				0,
+				a + o + UV,
+				0
+			]), n.push({
+				u: e,
+				x: r,
+				y: a
+			}), r += e.w + UV, s = Math.max(s, r - UV), o = Math.max(o, e.h);
+			return {
+				placed: n,
+				w: s,
+				h: a + o
+			};
+		}, b = _(e, l), x = d ? b : (() => {
+			let [e, t] = [Math.min(...l.map((e) => u.get(e).x)), Math.min(...l.map((e) => u.get(e).y))];
+			return {
+				w: Math.max(...l.map((e) => u.get(e).x + u.get(e).w)) - e,
+				h: Math.max(...l.map((e) => u.get(e).y + u.get(e).h)) - t
+			};
+		})(), S = f.length > 1 && p > i.w ? g() : void 0;
+		if (S && m(S.w, S.h) > m(x.w, x.h)) for (let { u: e, x: t, y: n } of S.placed) for (let r of e.group) [r.x, r.y] = [o + t + e.at.get(r).x, a + n + e.at.get(r).y];
+		else if (d) for (let e of l) [e.x, e.y] = [o + b.at.get(e).x, a + b.at.get(e).y];
+		else return !1;
+		return v(e, l, o, s, c), !0;
+	};
+	return y(e, GV, GV, GV, {
+		w: 0,
+		h: 0
+	});
+}
+function PV(e, t, n = /* @__PURE__ */ new Map()) {
 	let r = new Map([...e].map(([e, t]) => [e, {
 		...t,
 		box: { ...t.box }
@@ -29635,7 +29749,7 @@ function MV(e, t, n = /* @__PURE__ */ new Map()) {
 	let a = (e) => {
 		let t = [];
 		for (let { box: n } of [...e].sort((e, t) => e.box.y - t.box.y || e.box.x - t.box.x)) {
-			for (let e = t.find((e) => HV(n, e)); e; e = t.find((e) => HV(n, e))) n.y = e.y + e.h + VV;
+			for (let e = t.find((e) => qV(n, e)); e; e = t.find((e) => qV(n, e))) n.y = e.y + e.h + KV;
 			t.push(n);
 		}
 	}, o = (e) => {
@@ -29646,16 +29760,16 @@ function MV(e, t, n = /* @__PURE__ */ new Map()) {
 			s && (c.h = Math.max(c.h, kV(s, n.get(e.id), c.w, e.container)));
 			return;
 		}
-		let l = zV.side - Math.min(...r.map((e) => e.box.x));
+		let l = VV.side - Math.min(...r.map((e) => e.box.x));
 		if (l > 0) for (let e of r) e.box.x += l;
-		c.w = Math.max(c.w, ...r.map((e) => e.box.x + e.box.w + zV.side));
+		c.w = Math.max(c.w, ...r.map((e) => e.box.x + e.box.w + VV.side));
 		let u = s ? kz(fz(s, n.get(e.id), c.w)) : Q.minHeader, d = u - Math.min(...r.map((e) => e.box.y));
 		if (d > 0) for (let e of r) e.box.y += d;
-		a(r), c.h = Math.max(c.h, u + zV.bottom, ...r.map((e) => e.box.y + e.box.h + zV.bottom));
+		a(r), c.h = Math.max(c.h, u + VV.bottom, ...r.map((e) => e.box.y + e.box.h + VV.bottom));
 	}, s = i.get(null) ?? [];
 	return s.forEach(o), a(s), r;
 }
-function NV(e, t, n = [], r = () => void 0) {
+function FV(e, t, n = [], r = () => void 0) {
 	let i = new Map([...e].map(([e, t]) => [e, {
 		...t,
 		box: { ...t.box }
@@ -29677,11 +29791,11 @@ function NV(e, t, n = [], r = () => void 0) {
 		return o(e.before, t.before) || o(t.before, e.before);
 	}, c = /* @__PURE__ */ new Map(), l = /* @__PURE__ */ new Map(), u = !1;
 	for (let [e, t] of i) c.set(e, {
-		rect: () => IV(i, e),
-		before: { ...IV(i, e) },
+		rect: () => RV(i, e),
+		before: { ...RV(i, e) },
 		container: t.container,
 		header: () => {
-			let t = IV(i, e);
+			let t = RV(i, e);
 			return {
 				...t,
 				h: Math.min(t.h, r(e, t.w) ?? t.h)
@@ -29694,7 +29808,7 @@ function NV(e, t, n = [], r = () => void 0) {
 	let d = (e, t, n) => {
 		let r = null;
 		for (let [e, a] of i) {
-			let s = IV(i, e);
+			let s = RV(i, e);
 			(a.container || !n) && o(t, s) && (!r || s.w * s.h < r.area) && (r = {
 				id: e,
 				area: s.w * s.h
@@ -29734,7 +29848,7 @@ function NV(e, t, n = [], r = () => void 0) {
 		x: e.shape.x + e.caption.x,
 		y: e.shape.y + e.caption.y
 	} : null, m = (e) => {
-		let t = e.shape, n = e.contents.map((e) => c.get(e).rect()), r = Math.max(t.w, ...n.map((e) => e.x + e.w + zV.side - t.x)), i = Math.max(t.h, ...n.map((e) => e.y + e.h + zV.bottom - t.y));
+		let t = e.shape, n = e.contents.map((e) => c.get(e).rect()), r = Math.max(t.w, ...n.map((e) => e.x + e.w + VV.side - t.x)), i = Math.max(t.h, ...n.map((e) => e.y + e.h + VV.bottom - t.y));
 		return r === t.w && i === t.h ? !1 : ([t.w, t.h] = [r, i], !0);
 	};
 	for (let e of f) {
@@ -29771,10 +29885,10 @@ function NV(e, t, n = [], r = () => void 0) {
 			for (let [r, i] of c) {
 				if (i === t || s(t, i) || t.room && i.room || (t.room?.keep ?? []).includes(r) || (i.room?.keep ?? []).includes(e)) continue;
 				let a = (t.room && i.container ? i.header?.() : void 0) ?? i.rect();
-				if (HV(n, a)) {
-					if (!i.room && (t.room || a.y >= n.y)) i.down(n.y + n.h + VV - a.y), h.push(r);
+				if (qV(n, a)) {
+					if (!i.room && (t.room || a.y >= n.y)) i.down(n.y + n.h + KV - a.y), h.push(r);
 					else {
-						t.down(a.y + a.h + VV - n.y), h.push(e);
+						t.down(a.y + a.h + KV - n.y), h.push(e);
 						break;
 					}
 				}
@@ -29784,9 +29898,9 @@ function NV(e, t, n = [], r = () => void 0) {
 		for (let [e, t] of l) {
 			let n = c.get(e).rect();
 			for (let e = t; e !== null; e = i.get(e).parent) {
-				let t = i.get(e).box, r = IV(i, e), a = Math.max(t.w, n.x + n.w + zV.side - r.x), o = Math.max(t.h, n.y + n.h + zV.bottom - r.y);
+				let t = i.get(e).box, r = RV(i, e), a = Math.max(t.w, n.x + n.w + VV.side - r.x), o = Math.max(t.h, n.y + n.h + VV.bottom - r.y);
 				if (a === t.w && o === t.h) break;
-				t.w = a, t.h = o, u = !0, h.push(e), n = IV(i, e);
+				t.w = a, t.h = o, u = !0, h.push(e), n = RV(i, e);
 			}
 		}
 	}
@@ -29800,12 +29914,12 @@ function NV(e, t, n = [], r = () => void 0) {
 		moved: u
 	};
 }
-function PV(e, t, n) {
+function IV(e, t, n) {
 	if (n === 1) return {
 		layout: e,
 		shapes: [...t]
 	};
-	let r = (e, t) => e.x >= t.x && e.y >= t.y && e.x + e.w <= t.x + t.w && e.y + e.h <= t.y + t.h, i = [...e.keys()].map((t) => IV(e, t));
+	let r = (e, t) => e.x >= t.x && e.y >= t.y && e.x + e.w <= t.x + t.w && e.y + e.h <= t.y + t.h, i = [...e.keys()].map((t) => RV(e, t));
 	return {
 		layout: new Map([...e].map(([e, t]) => {
 			let r = {
@@ -29832,37 +29946,37 @@ function PV(e, t, n) {
 		})
 	};
 }
-function FV(e, t) {
+function LV(e, t) {
 	let n = (e, r) => {
-		let i = r === null ? 0 : zV.side, a = r ?? 0, o = 0;
+		let i = r === null ? 0 : VV.side, a = r ?? 0, o = 0;
 		for (let r of e) {
 			r.children && n(r.children, t.get(r.id) ?? Q.minHeader);
-			let e = r.width ?? Math.max(...r.children.map((e) => (e.x ?? 0) + (e.width ?? 0))) + zV.side, s = r.height ?? Math.max(...r.children.map((e) => (e.y ?? 0) + (e.height ?? 0))) + zV.bottom;
+			let e = r.width ?? Math.max(...r.children.map((e) => (e.x ?? 0) + (e.width ?? 0))) + VV.side, s = r.height ?? Math.max(...r.children.map((e) => (e.y ?? 0) + (e.height ?? 0))) + VV.bottom;
 			r.width = e, r.height = s, r.x = i, r.y = a, i += e + 56, o = Math.max(o, s);
 		}
 		return o;
 	};
 	return n(e.children ?? [], null), e;
 }
-function IV(e, t) {
+function RV(e, t) {
 	let n = e.get(t);
 	if (n.parent === null) return n.box;
-	let r = IV(e, n.parent);
+	let r = RV(e, n.parent);
 	return {
 		...n.box,
 		x: r.x + n.box.x,
 		y: r.y + n.box.y
 	};
 }
-function LV(e, t, n) {
+function zV(e, t, n) {
 	for (let r = e.get(t)?.parent ?? null; r !== null; r = e.get(r)?.parent ?? null) if (r === n) return !0;
 	return !1;
 }
-function RV(e, t, n) {
+function BV(e, t, n) {
 	let r = null;
 	for (let i of e.keys()) {
-		if (i === n || n && LV(e, i, n)) continue;
-		let a = IV(e, i);
+		if (i === n || n && zV(e, i, n)) continue;
+		let a = RV(e, i);
 		if (t.x >= a.x && t.x <= a.x + a.w && t.y >= a.y && t.y <= a.y + a.h) {
 			let e = a.w * a.h;
 			(!r || e < r.area) && (r = {
@@ -29873,11 +29987,11 @@ function RV(e, t, n) {
 	}
 	return r?.id ?? null;
 }
-var zV, BV, VV, HV, UV, WV = E((() => {
-	OV(), Fz(), zV = {
+var VV, HV, UV, WV, GV, KV, qV, JV, YV = E((() => {
+	OV(), Fz(), VV = {
 		side: 24,
 		bottom: 24
-	}, BV = {
+	}, HV = {
 		"elk.algorithm": "layered",
 		"elk.direction": "RIGHT",
 		"elk.hierarchyHandling": "INCLUDE_CHILDREN",
@@ -29890,10 +30004,10 @@ var zV, BV, VV, HV, UV, WV = E((() => {
 		"elk.edgeLabels.inline": "false",
 		"elk.spacing.edgeLabel": "3",
 		"elk.padding": "[top=20,left=20,bottom=20,right=20]"
-	}, VV = 16, HV = (e, t) => e.x < t.x + t.w && t.x < e.x + e.w && e.y < t.y + t.h && t.y < e.y + e.h, UV = (e, t) => e.x === t.x && e.y === t.y && e.w === t.w && e.h === t.h;
+	}, UV = 34, WV = 64, GV = 20, KV = 16, qV = (e, t) => e.x < t.x + t.w && t.x < e.x + e.w && e.y < t.y + t.h && t.y < e.y + e.h, JV = (e, t) => e.x === t.x && e.y === t.y && e.w === t.w && e.h === t.h;
 }));
 // src/nodes.tsx
-function GV({ paths: e }) {
+function XV({ paths: e }) {
 	return /* @__PURE__ */ _(g, { children: e.map((e, t) => /* @__PURE__ */ _("path", {
 		d: e.d,
 		stroke: e.stroke,
@@ -29902,13 +30016,13 @@ function GV({ paths: e }) {
 		...e.dash ? { strokeDasharray: e.dash } : {}
 	}, t)) });
 }
-function KV({ lines: e }) {
+function ZV({ lines: e }) {
 	return /* @__PURE__ */ _(g, { children: e.map((e, t) => /* @__PURE__ */ v(n, { children: [t > 0 && " ", /* @__PURE__ */ _("span", {
 		className: "line",
 		children: e
 	})] }, t)) });
 }
-function qV({ data: e, selected: t }) {
+function QV({ data: e, selected: t }) {
 	let { holon: n, w: r, h: i, container: a, foldable: o, closed: s, parts: c, onFold: l, files: u, onDropPath: d } = e, [f, m] = h(!1), g = (e) => !!d && e.dataTransfer.types.includes("application/x-holon-path"), { palette: y, look: b } = KS(), x = n.change ?? null, S = x ? y.change[x] : t ? y.accent : n.status === "proposed" ? y.muted : y.ink, C = a ? y.containerFill : n.status === "retired" ? y.retiredFill : y.boxFill, w = n.status === "proposed", T = b === "hand" ? WB(r, i, HB(n.id), {
 		stroke: S,
 		fill: C,
@@ -29946,7 +30060,7 @@ function qV({ data: e, selected: t }) {
 				className: "rough",
 				width: r,
 				height: i,
-				children: /* @__PURE__ */ _(GV, { paths: T })
+				children: /* @__PURE__ */ _(XV, { paths: T })
 			}),
 			/* @__PURE__ */ v("div", {
 				className: "head",
@@ -29957,7 +30071,7 @@ function qV({ data: e, selected: t }) {
 						/* @__PURE__ */ _("span", {
 							className: "kind",
 							title: n.kind,
-							children: /* @__PURE__ */ _(KV, { lines: E.kind })
+							children: /* @__PURE__ */ _(ZV, { lines: E.kind })
 						}),
 						o && /* @__PURE__ */ _("button", {
 							className: "fold nodrag nopan",
@@ -29979,7 +30093,7 @@ function qV({ data: e, selected: t }) {
 				}), /* @__PURE__ */ _("strong", {
 					className: "title",
 					title: n.title,
-					children: /* @__PURE__ */ _(KV, { lines: E.title })
+					children: /* @__PURE__ */ _(ZV, { lines: E.title })
 				})]
 			}),
 			/* @__PURE__ */ _("div", {
@@ -30019,7 +30133,7 @@ function qV({ data: e, selected: t }) {
 		]
 	});
 }
-function JV({ data: e, selected: t }) {
+function $V({ data: e, selected: t }) {
 	let { shape: n } = e, r = p(() => e.text ?? _z(n), [e.text, n]), { palette: i } = KS(), a = t ? i.accent : i.ink, o = HB(n.id), s = n.type === "ellipse" ? GB(n.w, n.h, o, { stroke: a }) : n.type === "rect" ? WB(n.w, n.h, o, { stroke: a }) : n.type === "note" ? WB(n.w, n.h, o, {
 		stroke: i.noteStroke,
 		fill: i.noteFill
@@ -30036,7 +30150,7 @@ function JV({ data: e, selected: t }) {
 				className: "rough",
 				width: n.w,
 				height: Math.max(n.h, 4),
-				children: /* @__PURE__ */ _(GV, { paths: s })
+				children: /* @__PURE__ */ _(XV, { paths: s })
 			}),
 			n.type !== "arrow" && /* @__PURE__ */ _("div", {
 				className: e.caption ? "shape-text caption" : "shape-text",
@@ -30046,7 +30160,7 @@ function JV({ data: e, selected: t }) {
 					padding: Mz.pad
 				},
 				title: n.text,
-				children: /* @__PURE__ */ _(KV, { lines: r.lines })
+				children: /* @__PURE__ */ _(ZV, { lines: r.lines })
 			}),
 			/* @__PURE__ */ _(wL, {
 				type: "target",
@@ -30059,23 +30173,23 @@ function JV({ data: e, selected: t }) {
 		]
 	});
 }
-function YV(e) {
+function eH(e) {
 	let t = e[e.length - 1], n = e[e.length - 2] ?? t;
 	n.x === t.x && n.y === t.y && (n = {
 		x: t.x - 1,
 		y: t.y
 	});
-	let r = Math.hypot(t.x - n.x, t.y - n.y) || 1, i = (t.x - n.x) / r, a = (t.y - n.y) / r, o = t.x - i * QV.length, s = t.y - a * QV.length, c = -a * QV.half, l = i * QV.half;
+	let r = Math.hypot(t.x - n.x, t.y - n.y) || 1, i = (t.x - n.x) / r, a = (t.y - n.y) / r, o = t.x - i * rH.length, s = t.y - a * rH.length, c = -a * rH.half, l = i * rH.half;
 	return `M ${t.x} ${t.y} L ${o + c} ${s + l} L ${o - c} ${s - l} Z`;
 }
-function XV({ id: e, sourceX: t, sourceY: r, targetX: i, targetY: a, data: o, selected: s }) {
+function tH({ id: e, sourceX: t, sourceY: r, targetX: i, targetY: a, data: o, selected: s }) {
 	let { seam: c, points: u, label: d } = o ?? {}, f = u && u.length >= 2 ? u : [{
 		x: t,
 		y: r
 	}, {
 		x: i,
 		y: a
-	}], { palette: p, look: m } = KS(), h = l(ZV), b = c?.change ?? null, x = b ? p.change[b] : s ? p.accent : c?.drift ? p.drift : p.seam, S = {
+	}], { palette: p, look: m } = KS(), h = l(nH), b = c?.change ?? null, x = b ? p.change[b] : s ? p.accent : c?.drift ? p.drift : p.seam, S = {
 		stroke: x,
 		dashed: c?.readOnly,
 		width: c?.exclusive ? 3 : 1.6
@@ -30084,9 +30198,9 @@ function XV({ id: e, sourceX: t, sourceY: r, targetX: i, targetY: a, data: o, se
 		/* @__PURE__ */ v("g", {
 			className: `seam-edge ${b ?? ""}`,
 			"data-testid": `seam-${e}`,
-			children: [/* @__PURE__ */ _(GV, { paths: C }), /* @__PURE__ */ _("path", {
+			children: [/* @__PURE__ */ _(XV, { paths: C }), /* @__PURE__ */ _("path", {
 				className: "arrowhead",
-				d: YV(f),
+				d: eH(f),
 				fill: x,
 				stroke: x,
 				strokeWidth: 1,
@@ -30112,22 +30226,22 @@ function XV({ id: e, sourceX: t, sourceY: r, targetX: i, targetY: a, data: o, se
 			title: d.title,
 			children: d.contracts.map((e, t) => /* @__PURE__ */ v(n, { children: [t > 0 && " ", /* @__PURE__ */ _("div", {
 				className: "contract",
-				children: /* @__PURE__ */ _(KV, { lines: e })
+				children: /* @__PURE__ */ _(ZV, { lines: e })
 			})] }, t))
 		}), h)
 	] });
 }
-var ZV, QV, $V, eH, tH = E((() => {
-	zR(), XR(), Fz(), JB(), fC(), qS(), ZV = i(null), QV = {
+var nH, rH, iH, aH, oH = E((() => {
+	zR(), XR(), Fz(), JB(), fC(), qS(), nH = i(null), rH = {
 		length: 11,
 		half: 4.5
-	}, $V = {
-		holon: qV,
-		shape: JV
-	}, eH = { seam: XV };
+	}, iH = {
+		holon: QV,
+		shape: $V
+	}, aH = { seam: tH };
 }));
 // src/fitView.ts
-function nH(e, t, n, r, i, a) {
+function sH(e, t, n, r, i, a) {
 	let o = r.filter((e) => e.w > 0 && e.h > 0), s = null;
 	for (let r = 0; r < 1 << o.length; r++) {
 		let i = {
@@ -30140,8 +30254,8 @@ function nH(e, t, n, r, i, a) {
 			r >> a & 1 ? e.y + e.h / 2 < n / 2 ? i.top = Math.max(i.top, e.y + e.h) : i.bottom = Math.max(i.bottom, n - e.y) : e.x + e.w / 2 < t / 2 ? i.left = Math.max(i.left, e.x + e.w) : i.right = Math.max(i.right, t - e.x);
 		});
 		let a = {
-			x: i.left + rH,
-			y: i.top + rH,
+			x: i.left + cH,
+			y: i.top + cH,
 			w: t - i.left - i.right - 24,
 			h: n - i.top - i.bottom - 24
 		};
@@ -30164,10 +30278,10 @@ function nH(e, t, n, r, i, a) {
 		zoom: l
 	};
 }
-var rH, iH = E((() => {
-	rH = 12;
-})), aH = /* @__PURE__ */ O({ AvoidLib: () => sH }), oH, sH, cH = E((() => {
-	oH = (e) => ({
+var cH, lH = E((() => {
+	cH = 12;
+})), uH = /* @__PURE__ */ O({ AvoidLib: () => fH }), dH, fH, pH = E((() => {
+	dH = (e) => ({
 		avoidLib: void 0,
 		async load(t = void 0) {
 			if (this.avoidLib) console.log("Avoid library is already initialized");
@@ -30182,7 +30296,7 @@ var rH, iH = E((() => {
 			if (!this.avoidLib) throw Error("Avoid library should be initialized before using");
 			return this.avoidLib;
 		}
-	}), sH = oH((() => {
+	}), fH = dH((() => {
 		var e = import.meta.url;
 		return async function(t = {}) {
 			var n, r = t, i, a, o = new Promise((e, t) => {
@@ -31358,19 +31472,19 @@ ${u}`;
 	})());
 }));
 // src/avoid.ts
-function lH() {
-	return uH ??= Promise.resolve().then(() => (cH(), aH)).then(async ({ AvoidLib: e }) => {
-		let t = dH ?? ne().avoidWasm;
+function mH() {
+	return hH ??= Promise.resolve().then(() => (pH(), uH)).then(async ({ AvoidLib: e }) => {
+		let t = gH ?? ne().avoidWasm;
 		return await e.load(t === void 0 ? void 0 : N(t)), e.getInstance();
-	}), uH.catch(() => {
-		uH = null;
-	}), uH;
+	}), hH.catch(() => {
+		hH = null;
+	}), hH;
 }
-var uH, dH, fH = E((() => {
-	P(), uH = null;
+var hH, gH, _H = E((() => {
+	P(), hH = null;
 }));
 // src/routing.ts
-function pH(e, t) {
+function vH(e, t) {
 	return [
 		["left", t.x - e.x],
 		["right", e.x + e.w - (t.x + t.w)],
@@ -31378,11 +31492,11 @@ function pH(e, t) {
 		["bottom", e.y + e.h - (t.y + t.h)]
 	].sort((e, t) => e[1] - t[1])[0][0];
 }
-function mH(e, t) {
-	let n = MH(e), r = (t.x - n.x) / e.w, i = (t.y - n.y) / e.h;
+function yH(e, t) {
+	let n = LH(e), r = (t.x - n.x) / e.w, i = (t.y - n.y) / e.h;
 	return Math.abs(r) >= Math.abs(i) ? r >= 0 ? "right" : "left" : i >= 0 ? "bottom" : "top";
 }
-function hH(e, t, n) {
+function bH(e, t, n) {
 	return t === "top" ? {
 		x: e.x + e.w * n,
 		y: e.y
@@ -31397,14 +31511,14 @@ function hH(e, t, n) {
 		y: e.y + e.h * n
 	};
 }
-function gH(e, t, n) {
-	let r = Array.from({ length: NH }, (e, t) => .05 + .9 * t / 16), i = r.filter((r) => {
-		let i = hH(e, t, r);
-		return !n.some((e) => i.x > e.x - PH && i.x < e.x + e.w + PH && i.y > e.y - PH && i.y < e.y + e.h + PH);
+function xH(e, t, n) {
+	let r = Array.from({ length: RH }, (e, t) => .05 + .9 * t / 16), i = r.filter((r) => {
+		let i = bH(e, t, r);
+		return !n.some((e) => i.x > e.x - zH && i.x < e.x + e.w + zH && i.y > e.y - zH && i.y < e.y + e.h + zH);
 	});
 	return i.length > 0 ? i : r;
 }
-function _H(e) {
+function SH(e) {
 	let t = [];
 	for (let n of e) {
 		let e = t.at(-1);
@@ -31414,8 +31528,8 @@ function _H(e) {
 	}
 	return t;
 }
-async function vH(e, t, n = {}) {
-	let r = await lH(), i = new Map(e.map((e) => [e.id, e])), a = t.filter((e) => i.has(e.from) && i.has(e.to)), o = (t) => {
+async function CH(e, t, n = {}) {
+	let r = await mH(), i = new Map(e.map((e) => [e.id, e])), a = t.filter((e) => i.has(e.from) && i.has(e.to)), o = (t) => {
 		let n = [];
 		for (let r = i.get(t)?.parent ?? null; r !== null && n.length < e.length; r = i.get(r)?.parent ?? null) n.push(r);
 		return n;
@@ -31423,14 +31537,14 @@ async function vH(e, t, n = {}) {
 	for (let e of a) for (let [t, n] of [[e.from, e.to], [e.to, e.from]]) {
 		let r = i.get(t);
 		if (!r.container) continue;
-		let a = i.get(n), s = o(n).includes(t) ? pH(r, a) : mH(r, MH(a));
+		let a = i.get(n), s = o(n).includes(t) ? vH(r, a) : yH(r, LH(a));
 		c.set(`${e.id}|${t}`, s);
 		let u = `${t}|${s}`;
 		l.set(u, [...l.get(u) ?? [], `${e.id}|${t}`]);
 	}
 	for (let [t, n] of c) {
-		let r = t.slice(t.indexOf("|") + 1), a = i.get(r), c = l.get(`${r}|${n}`), u = /* @__PURE__ */ new Set([r, ...o(r)]), d = gH(a, n, e.filter((e) => !e.container || !u.has(e.id) && !o(e.id).includes(r)));
-		s.set(t, hH(a, n, d[Math.floor((c.indexOf(t) + .5) * d.length / c.length)]));
+		let r = t.slice(t.indexOf("|") + 1), a = i.get(r), c = l.get(`${r}|${n}`), u = /* @__PURE__ */ new Set([r, ...o(r)]), d = xH(a, n, e.filter((e) => !e.container || !u.has(e.id) && !o(e.id).includes(r)));
+		s.set(t, bH(a, n, d[Math.floor((c.indexOf(t) + .5) * d.length / c.length)]));
 	}
 	let u = (e) => /* @__PURE__ */ new Set([
 		e.from,
@@ -31439,30 +31553,30 @@ async function vH(e, t, n = {}) {
 		...o(e.to)
 	]), d = e.filter((e) => e.container), f = /* @__PURE__ */ new Map();
 	for (let t of a) {
-		let n = u(t), r = wH(e, n, [t]).map((e) => e.id), i = `${d.filter((e) => !n.has(e.id)).map((e) => e.id).join("|")}#${r.join("|")}`, a = f.get(i) ?? {
+		let n = u(t), r = kH(e, n, [t]).map((e) => e.id), i = `${d.filter((e) => !n.has(e.id)).map((e) => e.id).join("|")}#${r.join("|")}`, a = f.get(i) ?? {
 			passable: n,
 			edges: []
 		};
 		a.edges.push(t), f.set(i, a);
 	}
 	let p = /* @__PURE__ */ new Map(), m = /* @__PURE__ */ new Map(), h = [];
-	for (let [e, t] of f) for (let r of yH(t.edges, i, n.chunk ?? IH)) h.push({
+	for (let [e, t] of f) for (let r of wH(t.edges, i, n.chunk ?? VH)) h.push({
 		key: e,
 		passable: t.passable,
 		edges: r
 	});
 	for (let t of h) {
 		let i = t.key;
-		TH(r, e, o, s, t.passable, t.edges, p, n.crossingPenalty ?? bH(t.edges.length));
+		AH(r, e, o, s, t.passable, t.edges, p, n.crossingPenalty ?? TH(t.edges.length));
 		let a = new Set(i.slice(0, i.indexOf("#")).split("|"));
-		for (let n of t.edges) m.set(n.id, [...e.filter((e) => !e.container || a.has(e.id)), ...wH(e, t.passable, [n])]);
+		for (let n of t.edges) m.set(n.id, [...e.filter((e) => !e.container || a.has(e.id)), ...kH(e, t.passable, [n])]);
 	}
-	return (h.length > 1 || (n.keep?.size ?? 0) > 0) && SH(p, m, n.keep ?? /* @__PURE__ */ new Map()), p;
+	return (h.length > 1 || (n.keep?.size ?? 0) > 0) && DH(p, m, n.keep ?? /* @__PURE__ */ new Map()), p;
 }
-function yH(e, t, n) {
+function wH(e, t, n) {
 	if (e.length <= n) return [e];
 	let r = (e) => {
-		let n = MH(t.get(e.from)), r = MH(t.get(e.to));
+		let n = LH(t.get(e.from)), r = LH(t.get(e.to));
 		return {
 			x: (n.x + r.x) / 2,
 			y: (n.y + r.y) / 2
@@ -31471,23 +31585,23 @@ function yH(e, t, n) {
 	for (let e = 0; e < l; e++) u.push(c.slice(Math.floor(e * c.length / l), Math.floor((e + 1) * c.length / l)));
 	return u;
 }
-function bH(e) {
+function TH(e) {
 	return e <= 24 ? 200 : e <= 40 ? 20 : 0;
 }
-function xH(e, t, n, r) {
-	return e.y === t.y && n.y === r.y && Math.abs(e.y - n.y) < 1 ? LH(e.x, t.x, n.x, r.x) > 1 : e.x === t.x && n.x === r.x && Math.abs(e.x - n.x) < 1 && LH(e.y, t.y, n.y, r.y) > 1;
+function EH(e, t, n, r) {
+	return e.y === t.y && n.y === r.y && Math.abs(e.y - n.y) < 1 ? HH(e.x, t.x, n.x, r.x) > 1 : e.x === t.x && n.x === r.x && Math.abs(e.x - n.x) < 1 && HH(e.y, t.y, n.y, r.y) > 1;
 }
-function SH(e, t, n) {
-	let r = () => [...n, ...e], i = (e, t) => r().some(([n, r]) => n !== e && t.slice(1).some((e, n) => r.slice(1).some((i, a) => xH(t[n], e, r[a], i))));
+function DH(e, t, n) {
+	let r = () => [...n, ...e], i = (e, t) => r().some(([n, r]) => n !== e && t.slice(1).some((e, n) => r.slice(1).some((i, a) => EH(t[n], e, r[a], i))));
 	for (let [n, a] of [...e]) {
 		let o = t.get(n) ?? [], s = a;
 		for (let t = 1; t + 2 < s.length; t++) {
 			let a = s[t], c = s[t + 1], l = a.y === c.y;
-			if ((l || a.x === c.x) && r().some(([e, t]) => e !== n && t.slice(1).some((e, n) => xH(a, c, t[n], e)))) for (let r of [
-				FH,
-				-FH,
-				2 * FH,
-				-2 * FH
+			if ((l || a.x === c.x) && r().some(([e, t]) => e !== n && t.slice(1).some((e, n) => EH(a, c, t[n], e)))) for (let r of [
+				BH,
+				-BH,
+				2 * BH,
+				-2 * BH
 			]) {
 				let a = s.map((e, n) => n === t || n === t + 1 ? l ? {
 					x: e.x,
@@ -31496,22 +31610,22 @@ function SH(e, t, n) {
 					x: e.x + r,
 					y: e.y
 				} : e);
-				if (!(CH(a, o) || i(n, a))) {
+				if (!(OH(a, o) || i(n, a))) {
 					s = a, e.set(n, s);
 					break;
 				}
 			}
 		}
-		e.set(n, _H(s));
+		e.set(n, SH(s));
 	}
 }
-function CH(e, t) {
+function OH(e, t) {
 	return e.slice(1).some((n, r) => {
 		let i = e[r];
 		return t.some((e) => Math.max(i.x, n.x) > e.x + 1 && Math.min(i.x, n.x) < e.x + e.w - 1 && Math.max(i.y, n.y) > e.y + 1 && Math.min(i.y, n.y) < e.y + e.h - 1);
 	});
 }
-function wH(e, t, n, r = () => !1) {
+function kH(e, t, n, r = () => !1) {
 	let i = new Set(n.flatMap((e) => [e.from, e.to]));
 	return e.filter((e) => e.container && e.header && t.has(e.id) && !i.has(e.id) && !r(e)).map((e) => ({
 		...e,
@@ -31519,25 +31633,25 @@ function wH(e, t, n, r = () => !1) {
 		h: Math.min(e.h, e.header)
 	}));
 }
-function TH(e, t, n, r, i, a, o, s) {
+function AH(e, t, n, r, i, a, o, s) {
 	let c = t.filter((e) => e.container && !i.has(e.id)), l = new Set(c.map((e) => e.id)), u = (e) => n(e.id).some((e) => l.has(e)), d = [
 		...t.filter((e) => !e.container && !u(e)),
 		...c.filter((e) => !u(e)),
-		...wH(t, i, a, u)
+		...kH(t, i, a, u)
 	], f = [], p = (e) => (f.push(e), e), m = new e.Router(e.RouterFlag.OrthogonalRouting.value);
 	try {
-		for (let [t, n] of Object.entries(AH)) m.setRoutingParameter(e.RoutingParameter[t], n);
+		for (let [t, n] of Object.entries(FH)) m.setRoutingParameter(e.RoutingParameter[t], n);
 		m.setRoutingParameter(e.RoutingParameter.crossingPenalty, s);
-		for (let t of jH) m.setRoutingOption(e.RoutingOption[t], !0);
+		for (let t of IH) m.setRoutingOption(e.RoutingOption[t], !0);
 		let t = /* @__PURE__ */ new Map();
 		for (let n of d) {
 			let r = p(new e.Rectangle(p(new e.Point(n.x, n.y)), p(new e.Point(n.x + n.w, n.y + n.h)))), i = new e.ShapeRef(m, r);
-			if (!n.container) for (let [t, n, r] of kH) new e.ShapeConnectionPin(i, DH, t, n, !0, 0, OH[r]).setExclusive(!1);
+			if (!n.container) for (let [t, n, r] of PH) new e.ShapeConnectionPin(i, MH, t, n, !0, 0, NH[r]).setExclusive(!1);
 			t.set(n.id, i);
 		}
 		let n = (n, i) => {
 			let a = t.get(i);
-			if (a) return p(new e.ConnEnd(a, DH));
+			if (a) return p(new e.ConnEnd(a, MH));
 			let o = r.get(`${n.id}|${i}`);
 			return p(new e.ConnEnd(p(new e.Point(o.x, o.y))));
 		}, i = a.map((t) => new e.ConnRef(m, n(t, t.from), n(t, t.to)));
@@ -31550,7 +31664,7 @@ function TH(e, t, n, r, i, a, o, s) {
 					y: t.y
 				});
 			}
-			o.set(e.id, _H(r.map((e) => ({
+			o.set(e.id, SH(r.map((e) => ({
 				x: Math.round(e.x * 10) / 10,
 				y: Math.round(e.y * 10) / 10
 			}))));
@@ -31560,7 +31674,7 @@ function TH(e, t, n, r, i, a, o, s) {
 		m.delete();
 	}
 }
-function EH(e, t, n) {
+function jH(e, t, n) {
 	let r = new Map(e.boxes.map((e) => [e.id, e]));
 	if (r.size !== t.length || e.edges.length !== n.length) return null;
 	let i = (e) => `${e.id}|${e.from}|${e.to}`, a = new Set(e.edges.map(i));
@@ -31569,13 +31683,13 @@ function EH(e, t, n) {
 	for (let e of t) {
 		let t = r.get(e.id);
 		if (!t || t.container !== e.container || (t.parent ?? null) !== (e.parent ?? null)) return null;
-		RH(t, e) || o.push(e);
+		UH(t, e) || o.push(e);
 	}
 	if (o.length === 0) return null;
 	let s = new Set(o.map((e) => e.id)), c = /* @__PURE__ */ new Set();
 	for (let t of n) {
 		let n = e.routes.get(t.id);
-		(!n || s.has(t.from) || s.has(t.to) || o.some((e) => zH(n, e))) && c.add(t.id);
+		(!n || s.has(t.from) || s.has(t.to) || o.some((e) => WH(n, e))) && c.add(t.id);
 	}
 	let l = new Map(t.map((e) => [e.id, e]));
 	for (let e of n) if (!c.has(e.id)) for (let t of [e.from, e.to]) l.get(t)?.container && n.some((e) => c.has(e.id) && (e.from === t || e.to === t)) && c.add(e.id);
@@ -31585,13 +31699,13 @@ function EH(e, t, n) {
 		keep: new Map(u.map((t) => [t.id, e.routes.get(t.id)]))
 	};
 }
-var DH, OH, kH, AH, jH, MH, NH, PH, FH, IH, LH, RH, zH, BH = E((() => {
-	fH(), DH = 1, OH = {
+var MH, NH, PH, FH, IH, LH, RH, zH, BH, VH, HH, UH, WH, GH = E((() => {
+	_H(), MH = 1, NH = {
 		top: 1,
 		bottom: 2,
 		left: 4,
 		right: 8
-	}, kH = [
+	}, PH = [
 		[
 			.5,
 			0,
@@ -31612,28 +31726,28 @@ var DH, OH, kH, AH, jH, MH, NH, PH, FH, IH, LH, RH, zH, BH = E((() => {
 			.5,
 			"right"
 		]
-	], AH = {
+	], FH = {
 		shapeBufferDistance: 12,
 		idealNudgingDistance: 22,
 		segmentPenalty: 10
-	}, jH = [
+	}, IH = [
 		"nudgeOrthogonalSegmentsConnectedToShapes",
 		"nudgeSharedPathsWithCommonEndPoint",
 		"performUnifyingNudgingPreprocessingStep",
 		"nudgeOrthogonalTouchingColinearSegments"
-	], MH = (e) => ({
+	], LH = (e) => ({
 		x: e.x + e.w / 2,
 		y: e.y + e.h / 2
-	}), NH = 17, PH = AH.shapeBufferDistance + 1, FH = AH.idealNudgingDistance, IH = 24, LH = (e, t, n, r) => Math.min(Math.max(e, t), Math.max(n, r)) - Math.max(Math.min(e, t), Math.min(n, r)), RH = (e, t) => e.x === t.x && e.y === t.y && e.w === t.w && e.h === t.h, zH = (e, t) => e.slice(1).some((n, r) => {
+	}), RH = 17, zH = FH.shapeBufferDistance + 1, BH = FH.idealNudgingDistance, VH = 24, HH = (e, t, n, r) => Math.min(Math.max(e, t), Math.max(n, r)) - Math.max(Math.min(e, t), Math.min(n, r)), UH = (e, t) => e.x === t.x && e.y === t.y && e.w === t.w && e.h === t.h, WH = (e, t) => e.slice(1).some((n, r) => {
 		let i = e[r];
 		return Math.max(i.x, n.x) > t.x + 1 && Math.min(i.x, n.x) < t.x + t.w - 1 && Math.max(i.y, n.y) > t.y + 1 && Math.min(i.y, n.y) < t.y + t.h - 1;
 	});
 }));
 // src/routing-client.ts
-function VH(e, t = vH) {
+function KH(e, t = CH) {
 	let n = null, r = 0, i = null, a = null, o = null, s = null, c = (l) => {
 		i = l;
-		let u = !1, d = s ? EH(s, l.boxes, l.edges) : null, f = d?.edges ?? l.edges, p = (e) => {
+		let u = !1, d = s ? jH(s, l.boxes, l.edges) : null, f = d?.edges ?? l.edges, p = (e) => {
 			if (!u) {
 				if (u = !0, e instanceof Error) l.settle.forEach((t) => t.reject(e));
 				else {
@@ -31702,16 +31816,16 @@ function VH(e, t = vH) {
 		});
 	};
 }
-var HH, UH, WH = E((() => {
-	P(), BH(), HH = null, UH = (e, t) => (HH ??= (() => {
+var qH, JH, YH = E((() => {
+	P(), GH(), qH = null, JH = (e, t) => (qH ??= (() => {
 		let e = ne().routingWorker;
-		return VH(e && typeof Worker < "u" ? () => new Worker(N(e), { type: "module" }) : null);
-	})(), HH(e, t));
-})), GH = /* @__PURE__ */ O({
-	Canvas: () => JH,
-	visibleHolons: () => KH
+		return KH(e && typeof Worker < "u" ? () => new Worker(N(e), { type: "module" }) : null);
+	})(), qH(e, t));
+})), XH = /* @__PURE__ */ O({
+	Canvas: () => $H,
+	visibleHolons: () => ZH
 });
-function KH(e, t, n) {
+function ZH(e, t, n) {
 	let r = e.holons;
 	if (t?.root) {
 		let e = /* @__PURE__ */ new Set([t.root]);
@@ -31723,21 +31837,21 @@ function KH(e, t, n) {
 	} else n || (r = r.filter((e) => !YC.includes(e.kind)));
 	return r;
 }
-function qH(e, t, n) {
+function QH(e, t, n) {
 	let r = t.map((t) => {
 		let r = e.current.get(t.id);
 		return r && n(r, t) ? r : t;
 	});
 	return e.current = new Map(r.map((e) => [e.id, e])), r;
 }
-function JH({ editor: e }) {
-	return /* @__PURE__ */ _(_I, { children: /* @__PURE__ */ _(YH, { editor: e }) });
+function $H({ editor: e }) {
+	return /* @__PURE__ */ _(_I, { children: /* @__PURE__ */ _(eU, { editor: e }) });
 }
-function YH({ editor: e }) {
+function eU({ editor: e }) {
 	let { map: t, diagram: n, showPeople: r, selected: i, localBoxes: a, previewId: o } = e, s = SF(), { theme: d, palette: f, look: g } = KS(), { labels: y } = KS(), [b, x] = h(!1), [S, C] = h(null), [w, T] = h({
 		boxes: /* @__PURE__ */ new Map(),
 		edges: /* @__PURE__ */ new Map()
-	}), E = w.boxes, [D, O] = h([]), [k, A] = h(/* @__PURE__ */ new Set()), [j, M] = h(null), [N, ee] = h(null), te = JP((e) => e.domNode), ne = p(() => te?.querySelector(".react-flow__edgelabel-renderer") ?? null, [te]), P = p(() => t ? KH(t, n, r) : [], [
+	}), E = w.boxes, [D, O] = h([]), [k, A] = h(/* @__PURE__ */ new Set()), [j, M] = h(null), [N, ee] = h(null), te = JP((e) => e.domNode), ne = p(() => te?.querySelector(".react-flow__edgelabel-renderer") ?? null, [te]), P = p(() => t ? ZH(t, n, r) : [], [
 		t,
 		n,
 		r
@@ -31779,8 +31893,11 @@ function YH({ editor: e }) {
 			from: e.from,
 			to: e.to,
 			label: e.label
-		}));
-		return jV(re, t, L ?? [], F).then((t) => {
+		})), n = Fe.current, r = n && n.clientWidth > 0 && n.clientHeight > 0 ? {
+			w: n.clientWidth,
+			h: n.clientHeight
+		} : void 0;
+		return jV(re, t, L ?? [], F, r).then((t) => {
 			e && (ee(null), T(t));
 		}).catch((t) => e && ee(`The map could not be laid out: ${t instanceof Error ? t.message : String(t)}`)), () => {
 			e = !1;
@@ -31809,12 +31926,12 @@ function YH({ editor: e }) {
 				...a.get(t) ?? {}
 			}
 		});
-		let t = PV(e, n?.shapes ?? [], ce), r = MV(t.layout, I, F), i = NV(r, t.shapes, ae, (e, t) => {
+		let t = IV(e, n?.shapes ?? [], ce), r = PV(t.layout, I, F), i = FV(r, t.shapes, ae, (e, t) => {
 			let n = I.get(e);
 			return n ? kz(fz(n, F.get(e), t)) : void 0;
 		});
 		return {
-			layout: i.moved ? MV(i.layout, I, F) : r,
+			layout: i.moved ? PV(i.layout, I, F) : r,
 			shapes: i.shapes,
 			moved: i.moved || ce !== 1
 		};
@@ -31839,7 +31956,7 @@ function YH({ editor: e }) {
 		F
 	]), me = p(() => (n?.shapes ?? []).flatMap((e) => {
 		if (e.type !== "arrow" || !e.from || !e.to) return [];
-		let t = (e) => n.shapes.some((t) => t.id === e && t.type !== "arrow") ? XH + e : z.has(e) ? e : null, [r, i] = [t(e.from), t(e.to)];
+		let t = (e) => n.shapes.some((t) => t.id === e && t.type !== "arrow") ? tU + e : z.has(e) ? e : null, [r, i] = [t(e.from), t(e.to)];
 		return r && i && r !== i ? [{
 			id: "arrow:" + e.id,
 			from: r,
@@ -31848,7 +31965,7 @@ function YH({ editor: e }) {
 	}), [n, z]), he = p(() => {
 		let e = [], t = (e, t) => e.x >= t.x && e.y >= t.y && e.x + e.w <= t.x + t.w && e.y + e.h <= t.y + t.h;
 		for (let { shape: n, frame: r, caption: i } of fe.shapes) {
-			if (n.type === "arrow" || r && !i || !r && [...z.keys()].some((e) => t(IV(z, e), n))) continue;
+			if (n.type === "arrow" || r && !i || !r && [...z.keys()].some((e) => t(RV(z, e), n))) continue;
 			let a = i ?? {
 				x: n.x,
 				y: n.y,
@@ -31856,11 +31973,11 @@ function YH({ editor: e }) {
 				h: Math.max(n.h, 4)
 			}, o = null, s = Infinity;
 			for (let [e, n] of z) {
-				let r = IV(z, e);
+				let r = RV(z, e);
 				n.container && t(a, r) && r.w * r.h < s && ([o, s] = [e, r.w * r.h]);
 			}
 			e.push({
-				id: XH + n.id,
+				id: tU + n.id,
 				parent: o,
 				...a,
 				container: !1
@@ -31877,11 +31994,11 @@ function YH({ editor: e }) {
 		let t = !0, n = [...[...z].map(([e, t]) => ({
 			id: e,
 			parent: t.parent,
-			...IV(z, e),
+			...RV(z, e),
 			container: t.container,
 			header: pe.get(e)
 		})), ...he];
-		return UH(n, e.map((e) => ({
+		return JH(n, e.map((e) => ({
 			id: e.id,
 			from: e.from,
 			to: e.to
@@ -31912,7 +32029,7 @@ function YH({ editor: e }) {
 		ge
 	]), B = p(() => {
 		let e = new Map([...z].map(([e]) => {
-			let t = IV(z, e), n = pe.get(e);
+			let t = RV(z, e), n = pe.get(e);
 			return [e, n === void 0 ? t : {
 				...t,
 				h: n
@@ -31961,9 +32078,9 @@ function YH({ editor: e }) {
 		if (ge && ye !== z) return;
 		let e = [...B.values()].filter((e) => e.overText).length;
 		if (e === 0) return;
-		if (se.current >= QH || e > $H) {
-			if (ue.current >= tU) return;
-			ue.current++, se.current = 0, oe((e) => e.length === 0 ? e : []), le((e) => e * eU);
+		if (se.current >= rU || e > iU) {
+			if (ue.current >= oU) return;
+			ue.current++, se.current = 0, oe((e) => e.length === 0 ? e : []), le((e) => e * aU);
 			return;
 		}
 		let t = (e) => {
@@ -32011,7 +32128,7 @@ function YH({ editor: e }) {
 				...t.parent ? { parentId: t.parent } : {},
 				width: t.box.w,
 				height: t.box.h,
-				handles: nU(t.box.w, t.box.h),
+				handles: sU(t.box.w, t.box.h),
 				style: {
 					width: t.box.w,
 					height: t.box.h
@@ -32032,7 +32149,7 @@ function YH({ editor: e }) {
 			});
 		}
 		for (let { shape: t, text: n, caption: r } of fe.shapes) t.type === "arrow" && t.from && t.to || e.push({
-			id: XH + t.id,
+			id: tU + t.id,
 			type: "shape",
 			position: {
 				x: t.x,
@@ -32040,15 +32157,15 @@ function YH({ editor: e }) {
 			},
 			width: t.w,
 			height: Math.max(t.h, 4),
-			handles: nU(t.w, Math.max(t.h, 4)),
-			selected: XH + t.id === i,
+			handles: sU(t.w, Math.max(t.h, 4)),
+			selected: tU + t.id === i,
 			data: {
 				shape: t,
 				text: n,
 				caption: !!r
 			}
 		});
-		return qH(je, e, iU);
+		return QH(je, e, lU);
 	}, [
 		z,
 		fe,
@@ -32093,7 +32210,7 @@ function YH({ editor: e }) {
 				w: t.width,
 				h: t.height
 			};
-		}), i = nH(t, e.clientWidth, e.clientHeight, r, .2, 2);
+		}), i = sH(t, e.clientWidth, e.clientHeight, r, .2, 2);
 		s.setViewport(i, { duration: 0 });
 	}, ze = m(""), Be = m(null);
 	u(() => () => {
@@ -32122,7 +32239,7 @@ function YH({ editor: e }) {
 			clearTimeout(t), n.disconnect();
 		};
 	}, [Ne, s]);
-	let Ve = (e) => n?.shapes.some((t) => t.id === e) ? XH + e : z.has(e) ? e : null, [He, Ue] = y === "always" ? [null, null] : [j, i], We = m(/* @__PURE__ */ new Map()), Ge = p(() => {
+	let Ve = (e) => n?.shapes.some((t) => t.id === e) ? tU + e : z.has(e) ? e : null, [He, Ue] = y === "always" ? [null, null] : [j, i], We = m(/* @__PURE__ */ new Map()), Ge = p(() => {
 		let e = [], t = [He, Ue].filter((e) => e !== null);
 		for (let n of ie) {
 			if (!z.has(n.from) || !z.has(n.to)) continue;
@@ -32143,7 +32260,7 @@ function YH({ editor: e }) {
 				type: "seam",
 				data: s,
 				selected: !1,
-				zIndex: ZH
+				zIndex: nU
 			});
 		}
 		for (let t of n?.shapes ?? []) {
@@ -32158,10 +32275,10 @@ function YH({ editor: e }) {
 					arrow: !0,
 					points: xe.get("arrow:" + t.id)
 				},
-				zIndex: ZH
+				zIndex: nU
 			});
 		}
-		return qH(We, e, sU);
+		return QH(We, e, fU);
 	}, [
 		ie,
 		z,
@@ -32189,7 +32306,7 @@ function YH({ editor: e }) {
 					title: n.title,
 					kind: n.kind,
 					status: n.status,
-					box: IV(z, t.id),
+					box: RV(z, t.id),
 					container: t.container,
 					depth: e(t.id),
 					sides: n.sides,
@@ -32238,7 +32355,7 @@ function YH({ editor: e }) {
 	}, { standalone: Je } = l(Jw), Ye = () => {
 		x(!1), window.print();
 	}, Xe = (e) => {
-		let t = e.parentId && z.has(e.parentId) ? IV(z, e.parentId) : {
+		let t = e.parentId && z.has(e.parentId) ? RV(z, e.parentId) : {
 			x: 0,
 			y: 0
 		}, n = e.width ?? 0, r = e.height ?? 0;
@@ -32254,15 +32371,15 @@ function YH({ editor: e }) {
 		};
 	}, Ze = async (t, n) => {
 		if (o) return e.dismiss();
-		if (n.id.startsWith(XH)) {
+		if (n.id.startsWith(tU)) {
 			await e.updateShape(n.id.slice(6), Se(n.position));
 			return;
 		}
 		let r = z.get(n.id);
 		if (!r) return;
-		let { abs: i, centre: a } = Xe(n), s = RV(z, a, n.id);
+		let { abs: i, centre: a } = Xe(n), s = BV(z, a, n.id);
 		if (s !== r.parent) {
-			let t = s ? IV(z, s) : {
+			let t = s ? RV(z, s) : {
 				x: 0,
 				y: 0
 			};
@@ -32274,9 +32391,9 @@ function YH({ editor: e }) {
 	}, Qe = (t) => {
 		let { source: r, target: i } = t;
 		if (r !== i) {
-			if (r.startsWith(XH) || i.startsWith(XH)) {
+			if (r.startsWith(tU) || i.startsWith(tU)) {
 				if (!n) return e.dismiss();
-				let t = (e) => e.startsWith(XH) ? e.slice(6) : e, a = `arrow-${n.shapes.length + 1}-${Date.now() % 1e5}`;
+				let t = (e) => e.startsWith(tU) ? e.slice(6) : e, a = `arrow-${n.shapes.length + 1}-${Date.now() % 1e5}`;
 				e.saveDiagram({
 					...n,
 					shapes: [...n.shapes, {
@@ -32303,7 +32420,7 @@ function YH({ editor: e }) {
 			let n = s.screenToFlowPosition({
 				x: t.clientX,
 				y: t.clientY
-			}), r = RV(z, n), i = r ? IV(z, r) : {
+			}), r = BV(z, n), i = r ? RV(z, r) : {
 				x: 0,
 				y: 0
 			};
@@ -32312,13 +32429,13 @@ function YH({ editor: e }) {
 				y: n.y - i.y
 			});
 		},
-		children: /* @__PURE__ */ _(ZV.Provider, {
+		children: /* @__PURE__ */ _(nH.Provider, {
 			value: ne,
 			children: /* @__PURE__ */ v(_R, {
 				nodes: D,
 				edges: Ge,
-				nodeTypes: $V,
-				edgeTypes: eH,
+				nodeTypes: iH,
+				edgeTypes: aH,
 				onNodesChange: (e) => O((t) => uF(e, t)),
 				onNodeClick: Oe,
 				onPaneClick: () => e.select(null),
@@ -32336,7 +32453,7 @@ function YH({ editor: e }) {
 					target: e.target
 				}),
 				onBeforeDelete: async ({ nodes: t, edges: n }) => {
-					for (let n of t) n.id.startsWith(XH) ? await e.removeShape(n.id.slice(6)) : await e.deleteHolon(n.id);
+					for (let n of t) n.id.startsWith(tU) ? await e.removeShape(n.id.slice(6)) : await e.deleteHolon(n.id);
 					for (let t of n) if (t.id.startsWith("seam:")) {
 						let [n = "", r = ""] = t.id.slice(5).split(">");
 						await e.deleteSeam(n, r);
@@ -32444,8 +32561,8 @@ function YH({ editor: e }) {
 		})
 	});
 }
-var XH, ZH, QH, $H, eU, tU, nU, rU, iU, aU, oU, sU, cU = E((() => {
-	zR(), BR(), GR(), uV(), bV(), WV(), Fz(), tH(), iH(), WH(), Yw(), qS(), tw(), XH = "shape:", ZH = 10, QH = 4, $H = 8, eU = 1.3, tU = 10, nU = (e, t) => [{
+var tU, nU, rU, iU, aU, oU, sU, cU, lU, uU, dU, fU, pU = E((() => {
+	zR(), BR(), GR(), uV(), bV(), YV(), Fz(), oH(), lH(), YH(), Yw(), qS(), tw(), tU = "shape:", nU = 10, rU = 4, iU = 8, aU = 1.3, oU = 10, sU = (e, t) => [{
 		type: "target",
 		position: Z.Left,
 		x: -4,
@@ -32459,15 +32576,15 @@ var XH, ZH, QH, $H, eU, tU, nU, rU, iU, aU, oU, sU, cU = E((() => {
 		y: t / 2 - 4,
 		width: 9,
 		height: 9
-	}], rU = (e, t) => {
+	}], cU = (e, t) => {
 		let n = Object.keys(e);
 		return n.length === Object.keys(t).length && n.every((n) => Object.is(e[n], t[n]));
-	}, iU = (e, t) => e.type === t.type && e.position.x === t.position.x && e.position.y === t.position.y && e.parentId === t.parentId && e.width === t.width && e.height === t.height && e.selected === t.selected && rU(e.data, t.data), aU = (e, t) => e === t || !!e && !!t && e.length === t.length && e.every((e, n) => e.x === t[n].x && e.y === t[n].y), oU = (e, t) => e === t || !!e && !!t && e.title === t.title && e.over === t.over && e.box.x === t.box.x && e.box.y === t.box.y && e.box.w === t.box.w && e.box.h === t.box.h && JSON.stringify(e.contracts) === JSON.stringify(t.contracts), sU = (e, t) => {
+	}, lU = (e, t) => e.type === t.type && e.position.x === t.position.x && e.position.y === t.position.y && e.parentId === t.parentId && e.width === t.width && e.height === t.height && e.selected === t.selected && cU(e.data, t.data), uU = (e, t) => e === t || !!e && !!t && e.length === t.length && e.every((e, n) => e.x === t[n].x && e.y === t[n].y), dU = (e, t) => e === t || !!e && !!t && e.title === t.title && e.over === t.over && e.box.x === t.box.x && e.box.y === t.box.y && e.box.w === t.box.w && e.box.h === t.box.h && JSON.stringify(e.contracts) === JSON.stringify(t.contracts), fU = (e, t) => {
 		let [n, r] = [e.data ?? {}, t.data ?? {}];
-		return e.source === t.source && e.target === t.target && e.type === t.type && e.selected === t.selected && e.zIndex === t.zIndex && n.seam === r.seam && n.arrow === r.arrow && aU(n.points, r.points) && oU(n.label, r.label);
+		return e.source === t.source && e.target === t.target && e.type === t.type && e.selected === t.selected && e.zIndex === t.zIndex && n.seam === r.seam && n.arrow === r.arrow && uU(n.points, r.points) && dU(n.label, r.label);
 	};
-})), lU = /* @__PURE__ */ O({ MermaidDiagram: () => uU });
-function uU({ code: e }) {
+})), mU = /* @__PURE__ */ O({ MermaidDiagram: () => hU });
+function hU({ code: e }) {
 	let { theme: t } = KS(), [n, r] = h(null);
 	return u(() => {
 		let n = !0;
@@ -32482,7 +32599,7 @@ function uU({ code: e }) {
 					layout: "dagre",
 					theme: t === "dark" ? "dark" : "default"
 				}), await i.parse(e);
-				let { svg: a } = await i.render(`mermaid-${++dU}`, e);
+				let { svg: a } = await i.render(`mermaid-${++gU}`, e);
 				n && r({ svg: a });
 			} catch (e) {
 				n && r({ error: e instanceof Error ? e.message : String(e) });
@@ -32504,15 +32621,15 @@ function uU({ code: e }) {
 		dangerouslySetInnerHTML: { __html: n.svg }
 	});
 }
-var dU, fU = E((() => {
-	P(), qS(), dU = 0;
+var gU, _U = E((() => {
+	P(), qS(), gU = 0;
 }));
 // src/Markdown.tsx
-function pU(e) {
+function vU(e) {
 	return /^(https?:|mailto:)/i.test(e) ? e : /^[a-z][a-z0-9+.-]*:/i.test(e) ? null : e;
 }
-function mU({ text: e, onOpenLink: t }) {
-	let n = gU.parse(e), i = (t, n) => e.slice(t, n), a = (e, t = e.from, n = e.to) => {
+function yU({ text: e, onOpenLink: t }) {
+	let n = xU.parse(e), i = (t, n) => e.slice(t, n), a = (e, t = e.from, n = e.to) => {
 		let r = [], a = t;
 		for (let o = e.firstChild; o; o = o.nextSibling) o.to <= t || o.from >= n || (o.from > a && r.push(i(a, o.from)), r.push(c(o)), a = Math.max(a, o.to));
 		return a < n && r.push(i(a, n)), r;
@@ -32531,7 +32648,7 @@ function mU({ text: e, onOpenLink: t }) {
 		};
 	}, c = (e) => {
 		let n = `${e.name}-${e.from}`, c = e.name;
-		if (_U.has(c)) return null;
+		if (SU.has(c)) return null;
 		let l = /^(?:ATX|Setext)Heading(\d)$/.exec(c);
 		if (l) {
 			let t = `h${Math.min(6, Number(l[1]) + 1)}`;
@@ -32566,7 +32683,7 @@ function mU({ text: e, onOpenLink: t }) {
 								className: "mermaid-status",
 								children: "Drawing the diagram…"
 							}),
-							children: /* @__PURE__ */ _(hU, { code: o })
+							children: /* @__PURE__ */ _(bU, { code: o })
 						}),
 						/* @__PURE__ */ _("pre", { children: /* @__PURE__ */ _("code", { children: o }) })
 					]
@@ -32587,7 +32704,7 @@ function mU({ text: e, onOpenLink: t }) {
 			case "Escape": return i(e.from + 1, e.to);
 			case "HardBreak": return /* @__PURE__ */ _("br", {}, n);
 			case "Autolink": {
-				let t = e.getChild("URL"), r = t ? pU(i(t.from, t.to)) : null;
+				let t = e.getChild("URL"), r = t ? vU(i(t.from, t.to)) : null;
 				return r ? /* @__PURE__ */ _("a", {
 					href: r,
 					target: "_blank",
@@ -32596,7 +32713,7 @@ function mU({ text: e, onOpenLink: t }) {
 				}, n) : i(e.from, e.to);
 			}
 			case "Link": {
-				let { url: r, labelFrom: i, labelTo: o } = s(e), c = a(e, i, o), l = r ? pU(r) : null;
+				let { url: r, labelFrom: i, labelTo: o } = s(e), c = a(e, i, o), l = r ? vU(r) : null;
 				return l ? /^(https?:|mailto:)/i.test(l) ? /* @__PURE__ */ _("a", {
 					href: l,
 					target: "_blank",
@@ -32629,8 +32746,8 @@ function mU({ text: e, onOpenLink: t }) {
 		children: o(n.topNode)
 	});
 }
-var hU, gU, _U, vU = E((() => {
-	f_(), hU = o(() => Promise.resolve().then(() => (fU(), lU)).then((e) => ({ default: e.MermaidDiagram }))), gU = Jg.configure(c_), _U = /* @__PURE__ */ new Set([
+var bU, xU, SU, CU = E((() => {
+	f_(), bU = o(() => Promise.resolve().then(() => (_U(), mU)).then((e) => ({ default: e.MermaidDiagram }))), xU = Jg.configure(c_), SU = /* @__PURE__ */ new Set([
 		"HeaderMark",
 		"EmphasisMark",
 		"CodeMark",
@@ -32643,22 +32760,22 @@ var hU, gU, _U, vU = E((() => {
 		"LinkTitle",
 		"LinkLabel"
 	]);
-})), yU = /* @__PURE__ */ O({
-	HolonPreview: () => wU,
-	default: () => SU
+})), wU = /* @__PURE__ */ O({
+	HolonPreview: () => kU,
+	default: () => DU
 });
-function bU(e, t) {
+function TU(e, t) {
 	return t.kind === "holon" ? t.id : t.kind === "proof" ? null : e.map?.holons.find((e) => e.file === cC(t.path))?.id ?? null;
 }
-function xU(e) {
+function EU(e) {
 	return e.kind === "file" ? cC(e.path) : e.kind === "proof" ? `${e.side} proof of ${e.holon}` : e.id;
 }
-function SU({ editor: e, overlay: t }) {
+function DU({ editor: e, overlay: t }) {
 	let { api: n, reference: i, openReference: a, ownsKey: o, reloadKey: s, paneRefusal: l, setPaneUnsaved: d } = e, [f, p] = h(null), [g, y] = h(null), [b, x] = h(null), [S, C] = h(0), w = !!b, [T, E] = h(null), D = b?.path ?? null, O = m(!1), k = c((e) => {
 		O.current = e, d(e ? D : null);
 	}, [D, d]);
 	u(() => () => d(null), [d]);
-	let A = i ? bU(e, i) : null;
+	let A = i ? TU(e, i) : null;
 	if (u(() => {
 		if (!i || O.current) return;
 		let e = !0;
@@ -32741,12 +32858,12 @@ function SU({ editor: e, overlay: t }) {
 				children: [e.name, e.kind === "dir" ? "/" : ""]
 			}) }, e.name);
 		})]
-	})), f?.kind === "holon" && (N = /* @__PURE__ */ _(wU, {
+	})), f?.kind === "holon" && (N = /* @__PURE__ */ _(kU, {
 		editor: e,
 		source: f.source
 	})), f?.kind === "file") {
 		let { file: e } = f;
-		N = EU(e.path) ? /* @__PURE__ */ _(mU, {
+		N = jU(e.path) ? /* @__PURE__ */ _(yU, {
 			text: e.content,
 			onOpenLink: (t) => {
 				let n = oC(e.path, t);
@@ -32757,7 +32874,7 @@ function SU({ editor: e, overlay: t }) {
 				className: "loading",
 				children: "Loading…"
 			}),
-			children: /* @__PURE__ */ _(TU, {
+			children: /* @__PURE__ */ _(AU, {
 				path: e.path,
 				value: e.content,
 				readOnly: !0,
@@ -32775,7 +32892,7 @@ function SU({ editor: e, overlay: t }) {
 	let ee = async () => {
 		if (f?.kind === "file") return x(f.file);
 		try {
-			let e = await n.file(xU(i));
+			let e = await n.file(EU(i));
 			e.format === "holon-file/v0" && x(e);
 		} catch (e) {
 			E($S(e));
@@ -32791,8 +32908,8 @@ function SU({ editor: e, overlay: t }) {
 				children: [
 					/* @__PURE__ */ _("code", {
 						className: "path",
-						title: xU(i),
-						children: xU(i)
+						title: EU(i),
+						children: EU(i)
 					}),
 					/* @__PURE__ */ _("span", { className: "spacer" }),
 					M && !w && /* @__PURE__ */ _("button", {
@@ -32812,12 +32929,12 @@ function SU({ editor: e, overlay: t }) {
 				role: "alert",
 				children: l ?? T
 			}),
-			g && !w && /* @__PURE__ */ _(CU, { run: g }),
+			g && !w && /* @__PURE__ */ _(OU, { run: g }),
 			N
 		]
 	});
 }
-function CU({ run: e }) {
+function OU({ run: e }) {
 	let { view: t } = e, n = [
 		["Light", /* @__PURE__ */ _("span", {
 			className: `light-name ${t.light}`,
@@ -32840,7 +32957,7 @@ function CU({ run: e }) {
 		] }), /* @__PURE__ */ _("dl", { children: n.map(([e, t]) => /* @__PURE__ */ v("div", { children: [/* @__PURE__ */ _("dt", { children: e }), /* @__PURE__ */ _("dd", { children: t })] }, e)) })]
 	});
 }
-function wU({ editor: e, source: t }) {
+function kU({ editor: e, source: t }) {
 	let { holon: n } = t, r = e.map?.holons.find((e) => e.id === n.id)?.sides, i = (t) => e.map?.holons.find((e) => e.id === t)?.title ?? t;
 	return /* @__PURE__ */ v("div", {
 		className: "holon-preview",
@@ -32923,12 +33040,12 @@ function wU({ editor: e, source: t }) {
 		]
 	});
 }
-var TU, EU, DU = E((() => {
-	ae(), iC(), vU(), fC(), tw(), TU = o(() => Promise.resolve().then(() => (QS(), JS))), EU = (e) => /\.(md|markdown)$/i.test(e);
+var AU, jU, MU = E((() => {
+	ae(), iC(), CU(), fC(), tw(), AU = o(() => Promise.resolve().then(() => (QS(), JS))), jU = (e) => /\.(md|markdown)$/i.test(e);
 }));
 Yw(), qS();
-var OU = o(() => Promise.resolve().then(() => (cU(), GH)).then((e) => ({ default: e.Canvas }))), kU = o(() => Promise.resolve().then(() => (DU(), yU)));
-function AU(e) {
+var NU = o(() => Promise.resolve().then(() => (pU(), XH)).then((e) => ({ default: e.Canvas }))), PU = o(() => Promise.resolve().then(() => (MU(), wU)));
+function FU(e) {
 	let [t, n] = h(() => window.innerWidth), [r, i] = h(null);
 	return u(() => {
 		let t = () => n(window.innerWidth);
@@ -32942,11 +33059,11 @@ function AU(e) {
 		};
 	}, [e]), Math.min(t, r ?? Infinity) < 900;
 }
-function jU({ api: e, active: t = !0 }) {
+function IU({ api: e, active: t = !0 }) {
 	let { root: n } = l(Jw), i = qw(e, {
 		active: t,
 		root: () => n.current
-	}), a = KS(), o = a.theme === "dark", [s, c] = h("diagrams"), u = AU(n), { map: d, policy: f, selected: p, notice: m, diagram: g, previewId: y } = i, b = (d?.holons ?? []).reduce((e, t) => e + t.openQuestions, 0), x = i.changes.filter((e) => e.status === "open" || e.status === "approved").length, S = f?.agentEdits === "direct", C = p && !p.startsWith("shape:") && d?.holons.some((e) => e.id === p);
+	}), a = KS(), o = a.theme === "dark", [s, c] = h("diagrams"), u = FU(n), { map: d, policy: f, selected: p, notice: m, diagram: g, previewId: y } = i, b = (d?.holons ?? []).reduce((e, t) => e + t.openQuestions, 0), x = i.changes.filter((e) => e.status === "open" || e.status === "approved").length, S = f?.agentEdits === "direct", C = p && !p.startsWith("shape:") && d?.holons.some((e) => e.id === p);
 	return /* @__PURE__ */ v("div", {
 		className: "app",
 		children: [
@@ -33088,7 +33205,7 @@ function jU({ api: e, active: t = !0 }) {
 							className: "loading",
 							children: "Loading…"
 						}),
-						children: /* @__PURE__ */ _(OU, { editor: i })
+						children: /* @__PURE__ */ _(NU, { editor: i })
 					}) : /* @__PURE__ */ _("p", {
 						className: "loading",
 						children: "Loading…"
@@ -33107,7 +33224,7 @@ function jU({ api: e, active: t = !0 }) {
 								children: "Loading…"
 							})
 						}),
-						children: /* @__PURE__ */ _(kU, {
+						children: /* @__PURE__ */ _(PU, {
 							editor: i,
 							overlay: u
 						})
@@ -33124,7 +33241,7 @@ function jU({ api: e, active: t = !0 }) {
 	});
 }
 Yw(), qS();
-function MU({ storageKey: e, theme: t, standalone: n = !1, className: r, style: i, children: a }) {
+function LU({ storageKey: e, theme: t, standalone: n = !1, className: r, style: i, children: a }) {
 	let o = HS({
 		storageKey: e,
 		...t ? { theme: t } : {}
@@ -33149,7 +33266,7 @@ function MU({ storageKey: e, theme: t, standalone: n = !1, className: r, style: 
 		})
 	});
 }
-function NU({ api: e, storageKey: t }) {
+function RU({ api: e, storageKey: t }) {
 	let [n, r] = h(() => e.workspace ? { kind: "loading" } : { kind: "single" }), i = t === null ? null : `${t}-project`, [a, o] = h(null), [s, c] = h([]);
 	u(() => {
 		if (!e.workspace) return;
@@ -33175,7 +33292,7 @@ function NU({ api: e, storageKey: t }) {
 	});
 	if (n.kind === "single" || !l) return /* @__PURE__ */ _("div", {
 		className: "project",
-		children: /* @__PURE__ */ _(jU, { api: e })
+		children: /* @__PURE__ */ _(IU, { api: e })
 	});
 	let d = (e) => {
 		o(e), c((t) => t.includes(e) ? t : [...t, e]), VS(i, e);
@@ -33197,28 +33314,28 @@ function NU({ api: e, storageKey: t }) {
 		role: "tabpanel",
 		"aria-labelledby": `project-tab-${e}`,
 		hidden: e !== a,
-		children: /* @__PURE__ */ _(jU, {
+		children: /* @__PURE__ */ _(IU, {
 			api: l.get(e),
 			active: e === a
 		})
 	}, e))] });
 }
 P(), ae();
-var PU = "holon-editor";
-function FU({ api: e, assets: t, theme: n, storageKey: r = PU, className: i, style: a }) {
+var zU = "holon-editor";
+function BU({ api: e, assets: t, theme: n, storageKey: r = zU, className: i, style: a }) {
 	let o = m(void 0);
-	return t && o.current !== t && (M(t), o.current = t), /* @__PURE__ */ _(MU, {
+	return t && o.current !== t && (M(t), o.current = t), /* @__PURE__ */ _(LU, {
 		storageKey: r,
 		...n ? { theme: n } : {},
 		...i ? { className: i } : {},
 		...a ? { style: a } : {},
-		children: /* @__PURE__ */ _(NU, {
+		children: /* @__PURE__ */ _(RU, {
 			api: e,
 			storageKey: r
 		})
 	});
 }
-function IU(e, { mermaid: t = !0 } = {}) {
+function VU(e, { mermaid: t = !0 } = {}) {
 	return {
 		elkWorker: `${e}elk-worker.min.js`,
 		routingWorker: `${e}routing-worker.js`,
@@ -33226,4 +33343,4 @@ function IU(e, { mermaid: t = !0 } = {}) {
 		...t ? { mermaid: `${e}mermaid.js` } : {}
 	};
 }
-export { R as ApiError, PU as EDITOR_STORAGE_KEY, FU as HolonEditor, M as configureAssets, L as createHttpApi, IU as distAssets, re as isApiError };
+export { R as ApiError, zU as EDITOR_STORAGE_KEY, BU as HolonEditor, M as configureAssets, L as createHttpApi, VU as distAssets, re as isApiError };
