@@ -280,7 +280,11 @@ describe("sandy skill selection", () => {
     {
       providerId: "pi",
       displayName: "Pi",
-      support: { session: "unverified", subagents: "not-enforced" },
+      support: {
+        session: "unverified",
+        subagents: "not-enforced",
+        gaps: ["extension-skills"],
+      },
     },
   ];
 
@@ -306,6 +310,7 @@ describe("sandy skill selection", () => {
     const printed = collectLogLines(vi.mocked(console.log)).join("\n");
     expect(printed).toContain("disable: pdf, review off");
     expect(printed).toContain("unverified");
+    expect(printed).toContain("Pi: skills from extensions");
     expect(printed).toContain("thr_running");
   });
 

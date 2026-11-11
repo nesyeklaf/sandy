@@ -42,6 +42,7 @@ export default function plugin(sandy: SandyPluginApi) {
     experimental_skillSelection: {
       session: "unverified",
       subagents: "unverified",
+      gaps: ["allow-only-skills-added-after-start"],
     },
     maintenance: { health: true, usage: true, installation: true },
     capabilities: {

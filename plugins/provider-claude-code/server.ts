@@ -81,6 +81,7 @@ export default function plugin(sandy: SandyPluginApi) {
     experimental_skillSelection: {
       session: "unverified",
       subagents: "unverified",
+      gaps: ["bundled-skills", "marketplace-plugin-skills"],
     },
     maintenance: { health: true, usage: true, installation: true },
     capabilities: {

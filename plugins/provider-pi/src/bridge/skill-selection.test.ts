@@ -278,18 +278,30 @@ describe.skipIf(!realPiCommand)("Pi session started with the bridge's skill laun
       mode: "allow-only",
       names: ["native-on-fixture", "package-on-fixture", "injected-on-fixture"],
     });
-    expect(listed.filter((name) => name !== "skill:extension-off-fixture")).toEqual([
-      "skill:injected-on-fixture",
-      "skill:native-on-fixture",
-      "skill:package-on-fixture",
-    ]);
+    expect(listed).toContain("skill:injected-on-fixture");
+    expect(listed).toContain("skill:native-on-fixture");
+    expect(listed).toContain("skill:package-on-fixture");
+    expect(listed).not.toContain("skill:native-off-fixture");
+    expect(listed).not.toContain("skill:package-off-fixture");
   }, 60_000);
 
-  it("still loads a skill an extension contributes through resources_discover", async () => {
+  it.fails("known gap: hides a disabled skill an extension contributes through resources_discover", async () => {
     const listed = await listedSkills({
       mode: "disable",
       names: ["extension-off-fixture"],
     });
-    expect(listed).toContain("skill:extension-off-fixture");
+    expect(listed).not.toContain("skill:extension-off-fixture");
+  }, 60_000);
+
+  it.fails("known gap: hides an unlisted extension skill under allow-only", async () => {
+    const listed = await listedSkills({
+      mode: "allow-only",
+      names: ["native-on-fixture", "package-on-fixture", "injected-on-fixture"],
+    });
+    expect(listed).toEqual([
+      "skill:injected-on-fixture",
+      "skill:native-on-fixture",
+      "skill:package-on-fixture",
+    ]);
   }, 60_000);
 });

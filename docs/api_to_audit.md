@@ -1163,21 +1163,27 @@ through `setSkillNamesEnabled` from `@sandy/domain` for single-name changes.
 
 ## `PluginProviderDeclaration.experimental_skillSelection`
 
-`{ session, subagents }`, each `enforced`, `unverified`, `not-enforced` or
-`not-applicable`, says how far the provider's bridge applies the `selection`
-that `skills/configure` carries. Omitted means `not-enforced` on both sides.
-The host-policy validator rejects other values. The Skills page and
-`sandy skill selection` show it next to the selection. Pi declares
-`{ session: "unverified", subagents: "not-enforced" }`; Claude Code and Codex
-declare `{ session: "unverified", subagents: "unverified" }` until runs against
-the real agents prove more.
+`{ session, subagents, gaps? }`: `session` and `subagents` are each `enforced`,
+`unverified`, `not-enforced` or `not-applicable` and say how far the
+provider's bridge applies the `selection` that `skills/configure` carries.
+`gaps` lists skill categories the bridge cannot filter at all:
+`bundled-skills`, `marketplace-plugin-skills`, `extension-skills`,
+`allow-only-skills-added-after-start`; omitted means none. Omitting the whole
+field means `not-enforced` on both sides. The host-policy validator rejects
+other values. The Skills page and `sandy skill selection` show the status and
+name each gap. Pi declares `{ session: "unverified", subagents: "not-enforced",
+gaps: ["extension-skills"] }`; Claude Code declares both sides `unverified`
+with `gaps: ["bundled-skills", "marketplace-plugin-skills"]`; Codex declares
+both sides `unverified` with `gaps: ["allow-only-skills-added-after-start"]`,
+until runs against the real agents prove more.
 
 Docs: [provider-bridge-protocol.md](provider-bridge-protocol.md)
 (`skills/configure`).
 
 **Audit before stabilizing.** Decide whether a static declaration is right or
 the bridge should report enforcement per session, since it depends on the
-installed agent version; and decide what proof moves a side to `enforced`.
+installed agent version; decide what proof moves a side to `enforced`; and
+decide whether `gaps` stays a closed list or providers may name their own.
 
 ## Skill selection helpers (`experimental_isSkillNameEnabled`, `experimental_skillSelectionSchema`, `ExperimentalSkillSelection`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
 

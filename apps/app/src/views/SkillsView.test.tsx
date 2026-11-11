@@ -12,7 +12,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { focusManager } from "@tanstack/react-query";
 import type { ProviderInfo } from "@sandy/domain";
-import type { SkillSummary } from "@sandy/server-contract";
+import type {
+  SkillSelectionProvider,
+  SkillSummary,
+} from "@sandy/server-contract";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createQueryClientTestHarness } from "@/test/queryClientTestHarness";
 import { makeProviderInfo } from "@sandy/test-helpers/domain-fixtures";
@@ -24,6 +27,8 @@ import {
   skillSelectionStatusText,
 } from "../components/tools/SkillsCollection";
 import { SkillsLibrary } from "../components/tools/SkillsLibrary";
+import { appToast } from "@/components/ui/app-toast";
+import type { SkillSelection } from "@sandy/domain";
 import { focusWithKeyboard } from "@/test/keyboard-focus";
 
 afterEach(() => {
@@ -606,21 +611,25 @@ describe("SkillsOverview", () => {
 });
 
 describe("skill selection on the Skills page", () => {
-  const codex = {
+  const codex: SkillSelectionProvider = {
     providerId: "codex",
     displayName: "Codex",
-    support: { session: "enforced", subagents: "enforced" },
-  } as const;
-  const claude = {
+    support: { session: "enforced", subagents: "enforced", gaps: [] },
+  };
+  const claude: SkillSelectionProvider = {
     providerId: "claude-code",
     displayName: "Claude Code",
-    support: { session: "enforced", subagents: "unverified" },
-  } as const;
-  const legacy = {
+    support: {
+      session: "unverified",
+      subagents: "unverified",
+      gaps: ["bundled-skills", "marketplace-plugin-skills"],
+    },
+  };
+  const legacy: SkillSelectionProvider = {
     providerId: "legacy",
     displayName: "Legacy",
-    support: { session: "not-enforced", subagents: "not-enforced" },
-  } as const;
+    support: { session: "not-enforced", subagents: "not-enforced", gaps: [] },
+  };
 
   it("marks only turned-off skills with an Off chip in overview rows", () => {
     const markup = render({
@@ -648,7 +657,7 @@ describe("skill selection on the Skills page", () => {
       makeSkill({ id: `skill_${"e".repeat(64)}`, name: "kept" }),
     ];
     expect(skillSelectionStatusText(skills, [codex, claude, legacy])).toBe(
-      "1 skill is off. New Codex and Claude Code sessions start without it. Legacy still loads every skill. Subagents are not covered yet.",
+      "1 skill is off. New Codex sessions start without it. Claude Code leaves it out of new sessions, not yet proven against the real agent. Legacy still loads every skill. Not filtered: skills bundled with the agent and skills from the agent's own plugins (Claude Code). Subagents of Claude Code may still load it.",
     );
     expect(skillSelectionStatusText(skills, [codex])).toBe(
       "1 skill is off. New Codex sessions start without it.",
@@ -686,6 +695,249 @@ describe("skill selection on the Skills page", () => {
       name: "Turn off code-review for agents",
     });
     expect(toggle.hasAttribute("disabled")).toBe(true);
+  });
+
+  function renderSelectableOverview({
+    skills,
+    selection,
+    query,
+  }: {
+    skills: SkillSummary[];
+    selection: SkillSelection;
+    query?: string;
+  }) {
+    const onChange = vi.fn();
+    renderDom(
+      <SkillsOverview
+        providerRoster={DEFAULT_PROVIDER_ROSTER}
+        skills={skills}
+        isLoading={false}
+        hasError={false}
+        query={query}
+        onCreateSkill={() => {}}
+        onSelectSkill={() => {}}
+        selectionControl={{ selection, isPending: false, onChange }}
+      />,
+    );
+    return onChange;
+  }
+
+  it("turns one skill off from its overview row without opening it", () => {
+    const onSelectSkill = vi.fn();
+    const onChange = vi.fn();
+    renderDom(
+      <SkillsOverview
+        providerRoster={DEFAULT_PROVIDER_ROSTER}
+        skills={[makeSkill()]}
+        isLoading={false}
+        hasError={false}
+        onCreateSkill={() => {}}
+        onSelectSkill={onSelectSkill}
+        selectionControl={{
+          selection: { mode: "inherit" },
+          isPending: false,
+          onChange,
+        }}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("switch", { name: "Turn off code-review for agents" }),
+    );
+    expect(onChange).toHaveBeenCalledWith({
+      mode: "disable",
+      names: ["code-review"],
+    });
+    expect(onSelectSkill).not.toHaveBeenCalled();
+  });
+
+  it("shows one name-level state on every copy of a duplicated name", () => {
+    const claudeId = `skill_${"f".repeat(64)}`;
+    const claudePath = "/home/u/.claude/skills/code-review/SKILL.md";
+    const agentsId = `skill_${"9".repeat(64)}`;
+    const agentsPath = "/home/u/.agents/skills/code-review/SKILL.md";
+    const onChange = renderSelectableOverview({
+      skills: [
+        makeSkill({
+          id: claudeId,
+          filePath: claudePath,
+          selectionEnabled: false,
+          duplicates: [
+            {
+              id: agentsId,
+              scope: "provider-user",
+              provider: "codex",
+              pluginId: null,
+              filePath: agentsPath,
+              relation: "same-name",
+            },
+          ],
+        }),
+        makeSkill({
+          id: agentsId,
+          provider: "codex",
+          filePath: agentsPath,
+          selectionEnabled: false,
+          duplicates: [
+            {
+              id: claudeId,
+              scope: "provider-user",
+              provider: "claude-code",
+              pluginId: null,
+              filePath: claudePath,
+              relation: "same-name",
+            },
+          ],
+        }),
+      ],
+      selection: { mode: "disable", names: ["code-review"] },
+    });
+    const switches = screen.getAllByRole("switch", {
+      name: "Turn on code-review for agents, with 1 other copy of the same name",
+    });
+    expect(switches).toHaveLength(2);
+    expect(
+      switches.map((toggle) => toggle.getAttribute("aria-checked")),
+    ).toEqual(["false", "false"]);
+    expect(
+      screen.getByLabelText(`code-review is also found at ${claudePath}`),
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText(`code-review is also found at ${agentsPath}`),
+    ).toBeTruthy();
+    fireEvent.click(switches[1]!);
+    expect(onChange).toHaveBeenCalledWith({ mode: "disable", names: [] });
+  });
+
+  it("turns every skill off, keeps only the shown skills on, and resets from the selection menu", () => {
+    const skills = [
+      makeSkill({ id: `skill_${"1".repeat(64)}`, name: "review-diff" }),
+      makeSkill({ id: `skill_${"2".repeat(64)}`, name: "review-plan" }),
+      makeSkill({ id: `skill_${"3".repeat(64)}`, name: "deploy" }),
+    ];
+    const onChange = renderSelectableOverview({
+      skills,
+      selection: { mode: "disable", names: ["deploy"] },
+      query: "review",
+    });
+    const openMenu = () =>
+      fireEvent.pointerDown(
+        screen.getByRole("button", { name: "Skill selection" }),
+      );
+
+    openMenu();
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Turn all skills off" }),
+    );
+    expect(onChange).toHaveBeenLastCalledWith({
+      mode: "allow-only",
+      names: [],
+    });
+
+    openMenu();
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Only the 2 shown skills on" }),
+    );
+    expect(onChange).toHaveBeenLastCalledWith({
+      mode: "allow-only",
+      names: ["review-diff", "review-plan"],
+    });
+
+    openMenu();
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Turn the 2 shown skills off" }),
+    );
+    expect(onChange).toHaveBeenLastCalledWith({
+      mode: "disable",
+      names: ["deploy", "review-diff", "review-plan"],
+    });
+
+    openMenu();
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Turn every skill on" }),
+    );
+    expect(onChange).toHaveBeenLastCalledWith({ mode: "inherit" });
+    expect(onChange).toHaveBeenCalledTimes(4);
+  });
+
+  it("turns a skill back on under all-off by adding it to the allow-only list", () => {
+    const onChange = renderSelectableOverview({
+      skills: [makeSkill({ selectionEnabled: false })],
+      selection: { mode: "allow-only", names: [] },
+    });
+    fireEvent.click(
+      screen.getByRole("switch", { name: "Turn on code-review for agents" }),
+    );
+    expect(onChange).toHaveBeenCalledWith({
+      mode: "allow-only",
+      names: ["code-review"],
+    });
+  });
+
+  it("states when a change applies and that the selection is not a security boundary", () => {
+    renderSelectableOverview({
+      skills: [makeSkill()],
+      selection: { mode: "inherit" },
+    });
+    const note = screen.getByText(/applies to agent sessions that start afterwards/);
+    expect(note.textContent).toContain(
+      "a running turn finishes with the skills it had",
+    );
+    expect(note.textContent).toContain(
+      "an agent with file access can still open a skill's file",
+    );
+  });
+
+  it("offers the existing thread stop for running threads after a change", async () => {
+    const skill = makeSkill({ id: "skill_missing", name: "code-review" });
+    vi.spyOn(sdk.skills, "list").mockResolvedValue({ skills: [skill] });
+    vi.spyOn(sdk.skills, "listFiles").mockResolvedValue({
+      files: ["SKILL.md"],
+      truncated: false,
+    });
+    vi.spyOn(sdk.skills, "getContent").mockResolvedValue({
+      content: "# code-review",
+      revision: "a".repeat(64),
+      filePath: skill.filePath,
+      writable: true,
+    });
+    vi.spyOn(sdk.skills, "experimental_getSelection").mockResolvedValue({
+      selection: { mode: "inherit" },
+      providers: [codex],
+    });
+    vi.spyOn(sdk.skills, "experimental_setSelection").mockResolvedValue({
+      selection: { mode: "disable", names: ["code-review"] },
+      providers: [codex],
+      pendingThreadIds: ["thr_running"],
+    });
+    const stop = vi.spyOn(sdk.threads, "stop").mockResolvedValue({ ok: true });
+    const toast = vi
+      .spyOn(appToast, "message")
+      .mockImplementation(() => "toast");
+
+    renderLibrarySkillRoute();
+
+    const toggle = await screen.findByRole("switch", {
+      name: "Turn off code-review for agents",
+    });
+    await waitFor(() => expect(toggle.hasAttribute("disabled")).toBe(false));
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toast).toHaveBeenCalledTimes(1));
+    const [, options] = toast.mock.calls[0]!;
+    expect(options?.description).toContain(
+      "1 running thread keeps the previous skills until its turn ends.",
+    );
+    const action = options?.action;
+    expect(action?.label).toBe("Stop thread");
+    expect(stop).not.toHaveBeenCalled();
+    renderDom(
+      <button type="button" onClick={action?.onClick}>
+        {action?.label}
+      </button>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Stop thread" }));
+    await waitFor(() =>
+      expect(stop).toHaveBeenCalledWith({ threadId: "thr_running" }),
+    );
   });
 
   it("sends the shared selection mutation from the library detail switch", async () => {

@@ -5,6 +5,7 @@ import {
   sandySkillSourceIdSchema,
   PERSONAL_PROJECT_ID,
   setSkillNamesEnabled,
+  SKILL_SELECTION_GAP_LABELS,
   skillSelectionSchema,
   type SandySkillSourceId,
   type SkillSelection,
@@ -156,11 +157,21 @@ function printSkillSelection(
       ]),
     ),
   );
+  const gapLines = view.providers
+    .filter((provider) => provider.support.gaps.length > 0)
+    .map(
+      (provider) =>
+        `  ${provider.displayName}: ${provider.support.gaps.map((gap) => SKILL_SELECTION_GAP_LABELS[gap]).join("; ")}`,
+    );
+  if (gapLines.length > 0) {
+    console.log("\nNot filtered by the selection:");
+    for (const line of gapLines) console.log(line);
+  }
   if (!("pendingThreadIds" in view) || view.pendingThreadIds.length === 0) {
     return;
   }
   console.log(
-    `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until their current turn ends:`,
+    `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until the running work in their environment finishes and they start their next turn:`,
   );
   for (const threadId of view.pendingThreadIds) console.log(`  ${threadId}`);
 }

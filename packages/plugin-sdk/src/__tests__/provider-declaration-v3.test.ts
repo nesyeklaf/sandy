@@ -348,6 +348,56 @@ describe("provider declaration target-state fields", () => {
   });
 });
 
+describe("provider skill selection support", () => {
+  it("treats an undeclared provider as not enforcing the selection", () => {
+    expect(
+      validatePluginProviderDeclaration(declaration()).experimental_skillSelection,
+    ).toEqual({ session: "not-enforced", subagents: "not-enforced", gaps: [] });
+  });
+
+  it("carries declared gaps and defaults them to none", () => {
+    expect(
+      validatePluginProviderDeclaration(
+        declaration({
+          experimental_skillSelection: {
+            session: "unverified",
+            subagents: "not-enforced",
+            gaps: ["extension-skills"],
+          },
+        }),
+      ).experimental_skillSelection,
+    ).toEqual({
+      session: "unverified",
+      subagents: "not-enforced",
+      gaps: ["extension-skills"],
+    });
+    expect(
+      validatePluginProviderDeclaration(
+        declaration({
+          experimental_skillSelection: {
+            session: "enforced",
+            subagents: "enforced",
+          },
+        }),
+      ).experimental_skillSelection.gaps,
+    ).toEqual([]);
+  });
+
+  it("rejects a gap category it does not know", () => {
+    expect(() =>
+      validatePluginProviderDeclaration(
+        declaration({
+          experimental_skillSelection: {
+            session: "unverified",
+            subagents: "unverified",
+            gaps: ["every-skill" as "extension-skills"],
+          },
+        }),
+      ),
+    ).toThrow(/experimental_skillSelection\.gaps\.0/);
+  });
+});
+
 describe("provider declaration fields renamed in SDK 0.4.16", () => {
   it.each([
     ["experimental_family", "family", "my-agent"],

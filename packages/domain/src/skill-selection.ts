@@ -89,15 +89,38 @@ export type SkillSelectionEnforcement = z.infer<
   typeof skillSelectionEnforcementSchema
 >;
 
+export const SKILL_SELECTION_GAPS = [
+  "bundled-skills",
+  "marketplace-plugin-skills",
+  "extension-skills",
+  "allow-only-skills-added-after-start",
+] as const;
+export const skillSelectionGapSchema = z.enum(SKILL_SELECTION_GAPS);
+export type SkillSelectionGap = z.infer<typeof skillSelectionGapSchema>;
+
+export const SKILL_SELECTION_GAP_LABELS: Readonly<
+  Record<SkillSelectionGap, string>
+> = Object.freeze({
+  "bundled-skills": "skills bundled with the agent",
+  "marketplace-plugin-skills": "skills from the agent's own plugins",
+  "extension-skills": "skills from extensions",
+  "allow-only-skills-added-after-start":
+    "under allow-only, skills added after a session started",
+});
+
 export const providerSkillSelectionSupportSchema = z
   .object({
     session: skillSelectionEnforcementSchema,
     subagents: skillSelectionEnforcementSchema,
+    gaps: z.array(skillSelectionGapSchema).default([]),
   })
   .strict();
 export type ProviderSkillSelectionSupport = z.infer<
   typeof providerSkillSelectionSupportSchema
 >;
+export type ProviderSkillSelectionSupportDeclaration = z.input<
+  typeof providerSkillSelectionSupportSchema
+>;
 
 export const NOT_ENFORCED_SKILL_SELECTION_SUPPORT: ProviderSkillSelectionSupport =
-  Object.freeze({ session: "not-enforced", subagents: "not-enforced" });
+  Object.freeze({ session: "not-enforced", subagents: "not-enforced", gaps: [] });

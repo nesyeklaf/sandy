@@ -36,6 +36,7 @@ export function piProviderDeclaration(): PluginProviderDeclaration {
     experimental_skillSelection: {
       session: "unverified",
       subagents: "not-enforced",
+      gaps: ["extension-skills"],
     },
     composerActions: [],
   };

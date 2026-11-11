@@ -75,7 +75,10 @@ Skills (.sandy/skills/):
   native agent roots included, only in sessions sandy starts; under
   `allow-only` new skills stay off. Changes reach a thread on its next turn;
   the result lists running threads that keep the old selection for their
-  current turn. `sandy skill list --json` marks each skill `selectionEnabled`.
+  current turn. Under each agent it prints the categories that agent cannot
+  filter (for example Pi skills from extensions), which stay loaded even when
+  every skill is off. Turning a skill off never turns off the plugin that
+  ships it. `sandy skill list --json` marks each skill `selectionEnabled`.
   `sandy skill show|files <skill-id>` reads that exact skill;
   `sandy skill show <skill-id> --json` returns the revision required by `sandy skill
   update <skill-id> --revision <sha256>`, along with the real `filePath` and
