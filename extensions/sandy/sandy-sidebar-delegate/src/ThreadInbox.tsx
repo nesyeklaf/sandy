@@ -8,6 +8,7 @@ import { createDragReorderHandler } from "./drag-reorder";
 import type { InboxDragOrder, ReorderShelf } from "./drag-reorder-geometry";
 import { ThreadInboxView } from "./ThreadInboxView";
 import { useQuantizedNow } from "./useQuantizedNow";
+import { useDormancyClock } from "./useDormancyClock";
 import { useProjectIconRevision } from "./useProjectIconRevision";
 import { useRenamingShelfLocks } from "./useRenamingShelfLocks";
 import { useDragClickSuppression } from "./useDragClickSuppression";
@@ -53,7 +54,7 @@ import { activeSortCodec, shelfExpansionCodec, offByDefaultCodec, rowFieldsCodec
 import type { SlimRowKind } from "./SlimRow";
 const SETTLED_INITIAL_LIMIT = 10;
 
-const SHELF_NAMES: Record<ReorderShelf, string> = { pinned: "Pinned", needs: "Needs you", inbox: "Waiting" };
+const SHELF_NAMES: Record<ReorderShelf, string> = { pinned: "Pinned", needs: "Needs you", inbox: "Idle" };
 
 /**
  * The sidebar's scrolling list. Manual order is durable; optional views sort
@@ -103,6 +104,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const [scope, setScope] = useProjectScope({ projects, status });
   const spaces = useSpaceViews({ threads, sections, lifecycle, scope, includeArchived: showArchived });
   const now = useQuantizedNow();
+  const dormancyNow = useDormancyClock();
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
   const [expandedShelves, setExpandedShelves] = usePersistedPreference(
     STORAGE_KEYS.shelfExpansion.key,
@@ -141,6 +143,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     lifecycle,
     pullRequests,
     renamingShelfLocks,
+    now: dormancyNow,
     scope,
     threads,
   });
@@ -195,7 +198,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
   const projectGroups = useInboxProjectGroups({
     orderedInbox,
     dragOrder,
-    expanded: expandedShelves.waiting,
+    expanded: expandedShelves.idle,
     activeThreadId: activeListThreadId,
     attentionIds: attentionParentIds,
     projectNameById,
@@ -214,7 +217,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     return orderPinnedThreads(ordered, dragOrder?.shelf === "needs" ? dragOrder.ids : null);
   }, [activeSortMode, dragOrder, inboxReorder.ids, needsBase]);
   const needs = useOrderedShelf(needsOrder, null, expandedShelves.needs, activeListThreadId, attentionParentIds);
-  const { failed, orchestrators, working, review, merged } = useStatusShelves(
+  const { failed, orchestrators, working, review, merged, dormant } = useStatusShelves(
     statusBases,
     expandedShelves,
     activeListThreadId,
@@ -235,9 +238,10 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
       ...(activeSortMode === "project"
         ? inboxProjectUnits.flatMap((unit) => (unit.kind === "thread" ? [unit.thread] : unit.threads))
         : sortActiveThreads(inbox, activeSortMode)),
+      ...dormant.threads,
       ...merged.threads,
     ],
-    [activeSortMode, failed, inbox, inboxProjectUnits, merged, needs, orchestrators, pinned, review, working],
+    [activeSortMode, dormant, failed, inbox, inboxProjectUnits, merged, needs, orchestrators, pinned, review, working],
   );
   const nextThreadCandidatesRef = useRef(nextThreadCandidates);
   nextThreadCandidatesRef.current = nextThreadCandidates;
@@ -444,7 +448,8 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
           failed,
           working,
           review,
-          waiting: { threads: inbox, visibleThreads: sortedVisibleInbox },
+          idle: { threads: inbox, visibleThreads: sortedVisibleInbox },
+          dormant,
           orchestrators,
           merged,
           snoozed: { threads: snoozed, visibleThreads: visibleSnoozed },

@@ -390,7 +390,7 @@ describe("parking threads", () => {
 
     await waitFor(() => expect(titlesIn("Working")).toEqual(["Busy work", "Waiting on child"]));
     expect(titlesIn("Needs you")).toEqual(["Asking parent"]);
-    expect(titlesIn("Waiting")).toEqual(["Done work"]);
+    expect(titlesIn("Idle")).toEqual(["Done work"]);
     expect(titlesIn("Pinned")).toEqual(["Pinned busy"]);
   });
 
@@ -420,7 +420,7 @@ describe("parking threads", () => {
       },
     });
     const settled = await screen.findByRole("region", { name: "Archived" });
-    const active = screen.getByRole("region", { name: "Waiting" });
+    const active = screen.getByRole("region", { name: "Idle" });
     await waitFor(() => expect(settled.closest("[data-shelf-dock]") !== null).toBe(dockShelves));
     // Active never moves into the dock; it scrolls in the space above.
     expect(active.closest("[data-shelf-dock]")).toBeNull();

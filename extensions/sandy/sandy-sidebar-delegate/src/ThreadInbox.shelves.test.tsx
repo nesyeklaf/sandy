@@ -79,10 +79,10 @@ describe("parking threads", () => {
     };
 
     renderSlot(inbox, listProps, options);
-    let activeShelf = screen.getByRole("region", { name: "Waiting" });
+    let activeShelf = screen.getByRole("region", { name: "Idle" });
     let settledShelf = await screen.findByRole("region", { name: "Archived" });
     let snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
-    fireEvent.click(within(activeShelf).getByRole("button", { name: /^Waiting/, expanded: true }));
+    fireEvent.click(within(activeShelf).getByRole("button", { name: /^Idle/, expanded: true }));
     fireEvent.click(within(settledShelf).getByRole("button", { expanded: false }));
     fireEvent.click(within(snoozedShelf).getByRole("button"));
     expect(within(activeShelf).queryByText("Active work")).toBeNull();
@@ -91,10 +91,10 @@ describe("parking threads", () => {
 
     cleanup();
     renderSlot(inbox, listProps, options);
-    activeShelf = screen.getByRole("region", { name: "Waiting" });
+    activeShelf = screen.getByRole("region", { name: "Idle" });
     settledShelf = await screen.findByRole("region", { name: "Archived" });
     snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
-    expect(within(activeShelf).getByRole("button", { name: /^Waiting/, expanded: false })).toBeDefined();
+    expect(within(activeShelf).getByRole("button", { name: /^Idle/, expanded: false })).toBeDefined();
     expect(within(settledShelf).getByRole("button", { expanded: true })).toBeDefined();
     expect(within(snoozedShelf).getByRole("button", { expanded: true })).toBeDefined();
     expect(within(activeShelf).queryByText("Active work")).toBeNull();
@@ -102,7 +102,7 @@ describe("parking threads", () => {
     expect(within(snoozedShelf).getByText("Later work")).toBeDefined();
   });
 
-  it("does not flash settled threads as Waiting after an app restart", async () => {
+  it("does not flash settled threads as Idle after an app restart", async () => {
     const now = Date.now();
     const pendingSettings = deferred<typeof defaultSidebarSettings>();
     const pendingLifecycle = deferred<{
@@ -149,7 +149,7 @@ describe("parking threads", () => {
 
     const settledShelf = screen.getByRole("region", { name: "Archived" });
     expect(within(settledShelf).getByRole("button", { expanded: false })).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Waiting" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Idle" })).toBeNull();
     expect(screen.queryByText("Settled work")).toBeNull();
   });
 

@@ -94,13 +94,14 @@ describe("settings cache thread density", () => {
       failed: "default",
       working: "dense",
       review: "default",
-      waiting: "default",
+      idle: "default",
+      dormant: "default",
       orchestrators: "default",
       merged: "default",
     });
     expect(
       decodeSettingsCache({ ...oldSettings, shelfDensities: { active: "compact", inactive: "dense" } })?.shelfDensities,
-    ).toMatchObject({ needs: "compact", waiting: "dense" });
+    ).toMatchObject({ needs: "compact", idle: "dense" });
   });
 });
 

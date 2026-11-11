@@ -8,7 +8,8 @@ export const INBOX_SHELVES = [
   "failed",
   "working",
   "review",
-  "waiting",
+  "idle",
+  "dormant",
   "orchestrators",
   "merged",
   "snoozed",
@@ -18,7 +19,7 @@ export type InboxShelfId = (typeof INBOX_SHELVES)[number];
 export type ThreadInboxStatus = Exclude<InboxShelfId, "pinned">;
 export type LockableShelf = Extract<
   ThreadInboxStatus,
-  "needs" | "failed" | "working" | "review" | "waiting" | "orchestrators" | "merged"
+  "needs" | "failed" | "working" | "review" | "idle" | "dormant" | "orchestrators" | "merged"
 >;
 
 export interface ThreadStatusSignals {
@@ -29,6 +30,7 @@ export interface ThreadStatusSignals {
   woke: boolean;
   pullRequestState: PullRequestState | null;
   orchestrator: boolean;
+  dormant: boolean;
   lockedShelf?: LockableShelf;
 }
 
@@ -37,17 +39,18 @@ export function threadFailed(thread: Pick<PluginSidebarThread, "status" | "indic
 }
 
 export function threadInboxStatus(signals: ThreadStatusSignals): ThreadInboxStatus {
-  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, orchestrator, lockedShelf } = signals;
+  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, orchestrator, dormant, lockedShelf } =
+    signals;
   if (lifecycleShelf === "snoozed" || lifecycleShelf === "parked") return "snoozed";
   if (lifecycleShelf === "settled") return "archived";
   if (lockedShelf) return lockedShelf;
   if (asks) return "needs";
   if (failed) return "failed";
-  if (orchestrator) return "orchestrators";
   if (workingTree && !woke) return "working";
+  if (orchestrator) return "orchestrators";
   if (!woke && pullRequestState === "open") return "review";
   if (!woke && pullRequestState === "merged") return "merged";
-  return "waiting";
+  return dormant && pullRequestState === null ? "dormant" : "idle";
 }
 
 export function inboxShelfOf(status: ThreadInboxStatus, isPinned: boolean): InboxShelfId {

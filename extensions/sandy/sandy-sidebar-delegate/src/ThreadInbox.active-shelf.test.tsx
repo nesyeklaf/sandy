@@ -12,10 +12,10 @@ describe("ThreadInbox", () => {
   it("shows active threads in a collapsible Active shelf", () => {
     render([thread({ id: "a", title: "First active" }), thread({ id: "b", title: "Second active" })]);
 
-    const activeShelf = screen.getByRole("region", { name: "Waiting" });
+    const activeShelf = screen.getByRole("region", { name: "Idle" });
     expect(within(activeShelf).getByRole("button", { expanded: true })).toBeDefined();
     fireEvent.click(within(activeShelf).getByRole("button", { expanded: true }));
-    expect(within(activeShelf).getByText("Waiting (2)")).toBeDefined();
+    expect(within(activeShelf).getByText("Idle (2)")).toBeDefined();
     expect(within(activeShelf).queryByText("First active")).toBeNull();
     expect(within(activeShelf).queryByText("Second active")).toBeNull();
   });
@@ -34,7 +34,7 @@ describe("ThreadInbox", () => {
       },
     );
 
-    const activeShelf = screen.getByRole("region", { name: "Waiting" });
+    const activeShelf = screen.getByRole("region", { name: "Idle" });
     fireEvent.click(within(activeShelf).getByRole("button", { expanded: true }));
     expect(within(activeShelf).getByText("Open active")).toBeDefined();
     expect(within(activeShelf).queryByText("Other active")).toBeNull();
@@ -78,7 +78,7 @@ describe("ThreadInbox", () => {
       ],
     );
 
-    const activeShelf = screen.getByRole("region", { name: "Waiting" });
+    const activeShelf = screen.getByRole("region", { name: "Idle" });
     const sortMenu = within(activeShelf).getByRole("button", {
       name: "Sort active threads: Manual order",
     });
@@ -238,9 +238,9 @@ describe("ThreadInbox", () => {
       },
     );
 
-    const active = await screen.findByRole("region", { name: "Waiting" });
+    const active = await screen.findByRole("region", { name: "Idle" });
     expect(within(active).getByRole("button", { name: "Web (2)" })).toBeDefined();
-    fireEvent.click(within(active).getByRole("button", { name: "Waiting", expanded: true }));
+    fireEvent.click(within(active).getByRole("button", { name: "Idle", expanded: true }));
     expect(within(active).queryByRole("button", { name: "Web (2)" })).toBeNull();
     expect(
       within(active)

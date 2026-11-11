@@ -96,7 +96,7 @@ export function createInboxThreadRenderer({
     shelf: ActiveShelfKind,
     reorderable = true,
     showProject = true,
-    renameShelf: LockableShelf = "waiting",
+    renameShelf: LockableShelf = "idle",
     showEnvironment = true,
   ) => (
     <InboxThread

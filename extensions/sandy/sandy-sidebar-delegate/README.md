@@ -14,7 +14,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Manual ordering plus Recent activity, Date created, and Repo sort modes (Flow layout)
 - Subtle repo grouping for repos with multiple active threads (Flow layout)
 - Optional worktree grouping in Repo sort (Flow layout): threads that share a worktree get collapsible groups
-- Shelves by status in the Flow layout: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
+- Shelves by status in the Flow layout: Pinned, Needs you, Failed, Working, In review, Idle, Dormant (idle for a week), Orchestrators, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
 - Questions in the row: answer a single-choice question with one tap (Undo within five seconds), or Later to snooze it for an hour
 - Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents, age and last message, each one on or off. Last message starts off: it shows the thread's latest assistant text as one truncated line under the title on Comfortable and Compact rows, never on Dense ones. The plugin stores that text when a thread goes idle (the `thread.idle` event), so a thread shows a line after its next turn ends and nothing before
 - Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin, Tag or add a topic together from the bar at the bottom, each with Undo

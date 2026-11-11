@@ -129,7 +129,8 @@ const shelfDensitiesShape = {
   failed: z.enum(SHELF_DENSITIES),
   working: z.enum(SHELF_DENSITIES),
   review: z.enum(SHELF_DENSITIES),
-  waiting: z.enum(SHELF_DENSITIES),
+  idle: z.enum(SHELF_DENSITIES),
+  dormant: z.enum(SHELF_DENSITIES),
   orchestrators: z.enum(SHELF_DENSITIES),
   merged: z.enum(SHELF_DENSITIES),
 };

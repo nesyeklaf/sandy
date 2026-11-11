@@ -47,7 +47,8 @@ it("fills older shelf shapes and drops unknown keys without stricter primitive r
     failed: true,
     working: true,
     review: true,
-    waiting: true,
+    idle: true,
+    dormant: false,
     orchestrators: true,
     merged: false,
     snoozed: false,
@@ -87,4 +88,8 @@ it("uses legacy grouping only for missing or invalid sort modes without rewritin
   expect(localStorage.getItem(STORAGE_KEYS.activeGrouping.key)).toBe("true");
   localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "false");
   expect(activeSortCodec.decode(null)).toBe("manual");
+});
+
+it("reads the former Waiting shelf state as Idle", () => {
+  expect(shelfExpansionCodec.decode('{"waiting":false}')).toMatchObject({ idle: false, dormant: false });
 });

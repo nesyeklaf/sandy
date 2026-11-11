@@ -157,7 +157,7 @@ describe("ThreadInbox", () => {
   });
 
   it("keeps Waiting order on remount while the saved order reloads", async () => {
-    const shelf = "Waiting";
+    const shelf = "Idle";
     const sidebarThreads = {
       status: "ready" as const,
       threads: [

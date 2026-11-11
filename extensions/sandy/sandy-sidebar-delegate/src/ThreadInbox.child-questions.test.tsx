@@ -76,7 +76,7 @@ describe("a child waiting on the user", () => {
     const needs = await screen.findByRole("region", { name: "Needs you" });
     expect(within(needs).getByText("Old tree")).toBeDefined();
     expect(within(needs).queryByText("Old quiet")).toBeNull();
-    expect(within(screen.getByRole("region", { name: "Waiting" })).getByText("Old quiet")).toBeDefined();
+    expect(within(screen.getByRole("region", { name: "Idle" })).getByText("Old quiet")).toBeDefined();
   });
 
   it("brings a shelved parent back, and a snoozed one wakes", async () => {

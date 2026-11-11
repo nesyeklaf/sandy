@@ -96,7 +96,7 @@ describe("density", () => {
   it("overrides one shelf's density from its menu and leaves the others alone", async () => {
     const { writes } = renderInbox();
     await screen.findByRole("link", { name: "Idle work" });
-    fireEvent.click(screen.getByRole("button", { name: "Density for Waiting: Default" }));
+    fireEvent.click(screen.getByRole("button", { name: "Density for Idle: Default" }));
     fireEvent.click(await screen.findByRole("radio", { name: "Compact" }));
     await waitFor(() => expect(density("Idle work")).toBe("compact"));
     expect(density("Pinned work")).toBe("comfortable");
@@ -108,12 +108,13 @@ describe("density", () => {
           failed: "default",
           working: "default",
           review: "default",
-          waiting: "compact",
+          idle: "compact",
+          dormant: "default",
           merged: "default",
         },
       },
     ]);
-    expect(screen.getByRole("button", { name: "Density for Waiting: Compact" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Density for Idle: Compact" })).toBeDefined();
   });
 
   it("keeps pinned threads full below Comfortable when asked to", async () => {

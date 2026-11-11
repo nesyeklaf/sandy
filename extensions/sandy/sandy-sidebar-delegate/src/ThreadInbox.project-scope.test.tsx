@@ -106,8 +106,8 @@ it("keeps selection usable when session storage is unavailable", () => {
 });
 
 it("filters every shelf without changing lifecycle or order", async () => {
-  const shelves = ["Pinned", "Waiting", "Working", "Inactive", "Snoozed", "Parked", "Settled"];
-  const regions: Record<string, string> = { Inactive: "Waiting", Parked: "Snoozed", Settled: "Archived" };
+  const shelves = ["Pinned", "Idle", "Working", "Inactive", "Snoozed", "Parked", "Settled"];
+  const regions: Record<string, string> = { Inactive: "Idle", Parked: "Snoozed", Settled: "Archived" };
   const now = Date.now();
   localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
   localStorage.setItem(

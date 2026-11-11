@@ -31,8 +31,8 @@ const SPACE_DENSITY_SHELF: Record<SpaceShelf, LockableShelf | undefined> = {
   review: "review",
   merged: "merged",
   orchestrators: "orchestrators",
-  dormant: "waiting",
-  idle: "waiting",
+  dormant: "dormant",
+  idle: "idle",
   snoozed: undefined,
   archived: undefined,
 };
@@ -58,7 +58,8 @@ const SHELF_HEADERS: Record<InboxShelfId, { label: string; icon: IconName }> = {
   failed: { label: "Failed", icon: "Alert" },
   working: { label: "Working", icon: "Loading" },
   review: { label: "In review", icon: "GitPullRequest" },
-  waiting: { label: "Waiting", icon: "Hourglass" },
+  idle: { label: "Idle", icon: "Hourglass" },
+  dormant: { label: "Dormant", icon: "Clock" },
   orchestrators: { label: "Orchestrators", icon: "Orchestrator" },
   merged: { label: "Merged", icon: "GitMerge" },
   snoozed: { label: "Snoozed", icon: "Clock" },
@@ -164,7 +165,7 @@ export function ThreadInboxView({
         {children}
       </CollapsibleShelf>
     ) : null;
-  const plainShelf = (shelf: Exclude<CardShelf, "pinned" | "needs" | "waiting">, action?: ReactNode) =>
+  const plainShelf = (shelf: Exclude<CardShelf, "pinned" | "needs" | "idle">, action?: ReactNode) =>
     cardShelf(
       shelf,
       <Shelf label={null}>
@@ -268,7 +269,7 @@ export function ThreadInboxView({
                 {plainShelf("working")}
                 {plainShelf("review")}
                 {cardShelf(
-                  "waiting",
+                  "idle",
                   activeSortMode === "project" ? (
                     <ProjectGroups
                       units={inboxProjectView}
@@ -277,16 +278,17 @@ export function ThreadInboxView({
                         reorderControls(unit.key, "inbox", `${name} ${unit.environment ? "environment" : "project"}`)
                       }
                       renderThread={(thread, grouped, environmentGrouped) =>
-                        renderActiveThread(thread, "inbox", true, !grouped, "waiting", !environmentGrouped)
+                        renderActiveThread(thread, "inbox", true, !grouped, "idle", !environmentGrouped)
                       }
                     />
                   ) : (
                     <Shelf label={null}>
-                      {shelves.waiting.visibleThreads.map((thread) => renderActiveThread(thread, "inbox"))}
+                      {shelves.idle.visibleThreads.map((thread) => renderActiveThread(thread, "inbox"))}
                     </Shelf>
                   ),
                   sortPicker,
                 )}
+                {plainShelf("dormant")}
                 {cardShelfCount.length === 0 ? <ActiveEmptyState /> : null}
                 {cardShelfCount.length === 1 && cardShelfCount[0] === "working" ? <WorkingEmptyState /> : null}
               </>

@@ -67,17 +67,18 @@ const DEFAULT_SHELF_EXPANSION: ShelfExpansionState = {
   failed: true,
   working: true,
   review: true,
-  waiting: true,
+  idle: true,
+  dormant: false,
   orchestrators: true,
   merged: false,
   snoozed: false,
   archived: false,
 };
 
-const LEGACY_SHELF_KEYS: Partial<Record<keyof ShelfExpansionState, string>> = {
-  needs: "active",
-  waiting: "inactive",
-  snoozed: "parked",
+const LEGACY_SHELF_KEYS: Partial<Record<keyof ShelfExpansionState, readonly string[]>> = {
+  needs: ["active"],
+  idle: ["waiting", "inactive"],
+  snoozed: ["parked"],
 };
 
 export const shelfExpansionCodec: PreferenceCodec<ShelfExpansionState> = {
@@ -88,8 +89,8 @@ export const shelfExpansionCodec: PreferenceCodec<ShelfExpansionState> = {
     if (parsed === null) return null;
     const record = typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
     const entries = Object.entries(DEFAULT_SHELF_EXPANSION).map(([shelf, fallback]) => {
-      const legacy = LEGACY_SHELF_KEYS[shelf as keyof ShelfExpansionState];
-      const value = record[shelf] ?? (legacy ? record[legacy] : undefined);
+      const legacy = LEGACY_SHELF_KEYS[shelf as keyof ShelfExpansionState] ?? [];
+      const value = [shelf, ...legacy].map((key) => record[key]).find((entry) => entry !== undefined);
       return [shelf, typeof value === "boolean" ? value : fallback];
     });
     return Object.fromEntries(entries) as ShelfExpansionState;

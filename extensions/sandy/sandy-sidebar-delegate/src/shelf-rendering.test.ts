@@ -68,8 +68,8 @@ describe("shelf render isolation", () => {
     // An active-shelf toggle must also leave the loaded settled rows alone.
     const settledRenders = titleReads("settled-0");
     fireEvent.click(
-      within(screen.getByRole("region", { name: "Waiting" })).getByRole("button", {
-        name: /^Waiting/,
+      within(screen.getByRole("region", { name: "Idle" })).getByRole("button", {
+        name: /^Idle/,
         expanded: true,
       }),
     );

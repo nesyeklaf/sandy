@@ -19,7 +19,8 @@ export const DENSITY_SHELVES = [
   "failed",
   "working",
   "review",
-  "waiting",
+  "idle",
+  "dormant",
   "orchestrators",
   "merged",
 ] as const;
@@ -87,7 +88,8 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
     failed: "default",
     working: "default",
     review: "default",
-    waiting: "default",
+    idle: "default",
+    dormant: "default",
     orchestrators: "default",
     merged: "default",
   },
@@ -127,14 +129,19 @@ export function threadDensityOf(value: {
   return value.compactWorkingThreads === true ? "auto" : "comfortable";
 }
 
-const LEGACY_DENSITY_SHELVES: Partial<Record<DensityShelf, string>> = { needs: "active", waiting: "inactive" };
+const LEGACY_DENSITY_SHELVES: Partial<Record<DensityShelf, readonly string[]>> = {
+  needs: ["active"],
+  idle: ["waiting", "inactive"],
+};
 
 export function shelfDensitiesOf(value: unknown): ShelfDensities {
   const record = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
   return Object.fromEntries(
     DENSITY_SHELVES.map((shelf) => {
-      const legacy = LEGACY_DENSITY_SHELVES[shelf];
-      return [shelf, oneOf(SHELF_DENSITIES, record[shelf] ?? (legacy ? record[legacy] : undefined), "default")];
+      const stored = [shelf, ...(LEGACY_DENSITY_SHELVES[shelf] ?? [])]
+        .map((key) => record[key])
+        .find((entry) => entry !== undefined);
+      return [shelf, oneOf(SHELF_DENSITIES, stored, "default")];
     }),
   ) as ShelfDensities;
 }

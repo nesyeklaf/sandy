@@ -14,6 +14,7 @@ import { activeRepresentativeThreadId, sortActiveThreads } from "./inbox-layout"
 import { isWorkingTree } from "./working-tree";
 import { childSubtree, threadAsksForInput, threadsWithAskingDescendants } from "./child-status";
 import { threadPullRequestState, type PullRequestsByEnvironment } from "./in-review";
+import { DORMANT_AFTER_MS } from "./spaces-model";
 import { inboxShelfOf, threadFailed, threadInboxStatus, type InboxShelfId, type LockableShelf } from "./thread-status";
 
 interface InboxShelfThreadsOptions {
@@ -22,6 +23,7 @@ interface InboxShelfThreadsOptions {
   lifecycle: LifecycleApi;
   pullRequests: PullRequestsByEnvironment;
   renamingShelfLocks: ReadonlyMap<string, LockableShelf>;
+  now: number;
   scope: readonly string[];
   threads: readonly PluginSidebarThread[];
 }
@@ -32,6 +34,7 @@ export function useInboxShelfThreads({
   lifecycle,
   pullRequests,
   renamingShelfLocks,
+  now,
   scope,
   threads,
 }: InboxShelfThreadsOptions) {
@@ -52,7 +55,8 @@ export function useInboxShelfThreads({
       failed: [],
       working: [],
       review: [],
-      waiting: [],
+      idle: [],
+      dormant: [],
       orchestrators: [],
       merged: [],
       snoozed: [],
@@ -68,6 +72,7 @@ export function useInboxShelfThreads({
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
         orchestrator: orchestratorIds.has(thread.id),
+        dormant: isDormantTree(thread, children, childrenByParentId, now),
         lockedShelf: renamingShelfLocks.get(thread.id),
       });
       shelves[inboxShelfOf(status, thread.isPinned)].push(thread);
@@ -83,8 +88,9 @@ export function useInboxShelfThreads({
         working: sortActiveThreads(shelves.working, "activity"),
         review: sortActiveThreads(shelves.review, "activity"),
         merged: sortActiveThreads(shelves.merged, "activity"),
+        dormant: sortActiveThreads(shelves.dormant, "activity"),
       },
-      waitingBase: sortByCreatedAtDescending(shelves.waiting),
+      waitingBase: sortByCreatedAtDescending(shelves.idle),
       allPinnedBase: allSplit.pinned,
       allInboxBase: sortByCreatedAtDescending(allSplit.inbox),
       snoozed: [...shelves.snoozed].sort(
@@ -106,7 +112,22 @@ export function useInboxShelfThreads({
     orchestratorIds,
     pullRequests,
     renamingShelfLocks,
+    now,
     scope,
     threads,
   ]);
+}
+
+function isDormantTree(
+  thread: PluginSidebarThread,
+  children: readonly PluginSidebarThread[],
+  childrenByParentId: ReadonlyMap<string, readonly PluginSidebarThread[]>,
+  now: number,
+): boolean {
+  const activityAt = Math.max(
+    ...[thread, ...childSubtree(children, childrenByParentId)].map((member) =>
+      Math.max(member.latestAttentionAt, member.updatedAt),
+    ),
+  );
+  return now - activityAt >= DORMANT_AFTER_MS;
 }

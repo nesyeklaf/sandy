@@ -90,7 +90,7 @@ describe("Compact project display", () => {
     });
   });
 
-  it("limits icon-only projects to Waiting, Pinned, and Working when all cards are compact", async () => {
+  it("limits icon-only projects to Idle, Pinned, and Working when all cards are compact", async () => {
     const now = Date.now();
     localStorage.setItem(STORAGE_KEYS.showArchived.key, "true");
     renderSlot(inbox, listProps, {
@@ -129,8 +129,8 @@ describe("Compact project display", () => {
     }
     await waitFor(() => {
       for (const [shelf, title] of [
-        ["Waiting", "Active"],
-        ["Waiting", "Inactive"],
+        ["Idle", "Active"],
+        ["Idle", "Inactive"],
         ["Pinned", "Pinned"],
         ["Working", "Working"],
         ["Snoozed", "Parked"],
@@ -139,7 +139,7 @@ describe("Compact project display", () => {
       ] as const) {
         const region = screen.getByRole("region", { name: shelf });
         const row = within(region).getByText(`${title} thread`).closest("li")!;
-        const iconOnly = ["Waiting", "Pinned", "Working"].includes(shelf);
+        const iconOnly = ["Idle", "Pinned", "Working"].includes(shelf);
         expect(row.querySelector(".h-8")).not.toBeNull();
         expect(row.querySelector("[data-letter]")).not.toBeNull();
         expect(within(row).getByText("Sidebar project").classList.contains("sr-only")).toBe(iconOnly);
