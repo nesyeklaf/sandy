@@ -499,7 +499,23 @@
                       "./**/ThreadSpacesView.pr-lookup.test",
                       "./**/ThreadSpacesView.test",
                       "./**/stable-identity.test",
-                      "./**/test-spaces"
+                      "./**/test-spaces",
+                      "./**/SpaceAddOrchestrator",
+                      "../**/SpaceAddOrchestrator",
+                      "./**/SpaceIdeas",
+                      "../**/SpaceIdeas",
+                      "./**/SpaceOverview",
+                      "../**/SpaceOverview",
+                      "./**/SpaceScratchpad",
+                      "../**/SpaceScratchpad",
+                      "./**/SpaceTab.test",
+                      "../**/SpaceTab.test",
+                      "./**/SpaceTab",
+                      "../**/SpaceTab",
+                      "./**/ThreadInbox.dormant.test",
+                      "../**/ThreadInbox.dormant.test",
+                      "./**/useOrchestrators.test",
+                      "../**/useOrchestrators.test"
                     ],
                     "message": "Shared modules must not import TSX app modules."
                   },
@@ -1001,7 +1017,15 @@
                       "**/ThreadSpacesView.pr-lookup.test",
                       "**/ThreadSpacesView.test",
                       "**/stable-identity.test",
-                      "**/test-spaces"
+                      "**/test-spaces",
+                      "**/SpaceAddOrchestrator",
+                      "**/SpaceIdeas",
+                      "**/SpaceOverview",
+                      "**/SpaceScratchpad",
+                      "**/SpaceTab.test",
+                      "**/SpaceTab",
+                      "**/ThreadInbox.dormant.test",
+                      "**/useOrchestrators.test"
                     ],
                     "message": "Node runtime modules must not import TSX app modules."
                   },
