@@ -19,6 +19,8 @@ import {
   serverMoveStatusQueryKey,
   sidebarNavigationQueryKey,
   systemConfigQueryKey,
+  skillSelectionQueryKey,
+  projectSkillsQueryKey,
   systemExecutionOptionsQueryKey,
   systemProvidersQueryKey,
   threadDefaultExecutionOptionsQueryKey,
@@ -674,6 +676,24 @@ describe("createRealtimeCacheEffects", () => {
       expect(invalidated()).toEqual([]);
       effects.dispose();
     });
+  });
+
+  it("refreshes the skill selection and skill listings when config changes", () => {
+    const { effects, queryClient } = createRealtimeEffectsTestContext();
+    const selectionKey = skillSelectionQueryKey();
+    const skillsKey = projectSkillsQueryKey("project-a");
+    queryClient.setQueryData(selectionKey, {});
+    queryClient.setQueryData(skillsKey, {});
+
+    effects.handleChanged({
+      type: "changed",
+      entity: "system",
+      changes: ["config-changed"],
+    });
+
+    expect(queryClient.getQueryState(selectionKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(skillsKey)?.isInvalidated).toBe(true);
+    effects.dispose();
   });
 
   it("invalidates timelines when config changes provider event visibility", () => {

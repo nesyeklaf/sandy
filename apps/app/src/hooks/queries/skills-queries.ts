@@ -1,9 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DeleteSkillRequest, SkillSummary } from "@sandy/server-contract";
+import type {
+  DeleteSkillRequest,
+  SkillSelectionUpdateResult,
+  SkillSummary,
+} from "@sandy/server-contract";
+import type { SkillSelection } from "@sandy/domain";
 import { sdk } from "@/lib/sdk";
 import {
+  allProjectSkillsQueryKey,
   projectSkillsQueryKey,
   skillContentQueryKey,
+  skillSelectionQueryKey,
   skillFilesQueryKey,
   SKILL_CONTENT_QUERY_KEY,
   SKILL_FILES_QUERY_KEY,
@@ -18,6 +25,31 @@ export function useProjectSkills(projectId: string) {
     enabled: projectId.length > 0,
     staleTime: 0,
     refetchOnMount: "always",
+  });
+}
+
+export function useSkillSelection() {
+  return useQuery({
+    queryKey: skillSelectionQueryKey(),
+    queryFn: ({ signal }) => sdk.skills.experimental_getSelection({ signal }),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+export function useSetSkillSelection() {
+  const queryClient = useQueryClient();
+  return useMutation<SkillSelectionUpdateResult, Error, SkillSelection>({
+    mutationFn: (selection) => sdk.skills.experimental_setSelection(selection),
+    onSuccess: (result) => {
+      queryClient.setQueryData(skillSelectionQueryKey(), {
+        selection: result.selection,
+        providers: result.providers,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: allProjectSkillsQueryKey(),
+      });
+    },
   });
 }
 

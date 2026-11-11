@@ -67,6 +67,7 @@ const HOST_PROVIDER_CLI_STATUS_QUERY_KEY = "hostProviderCliStatus";
 const SYSTEM_PROVIDER_STATES_QUERY_KEY = "systemProviderStates";
 const HOST_PATH_EXISTENCE_QUERY_KEY = "hostPathExistence";
 const PROJECT_SKILLS_QUERY_KEY = "projectSkills";
+const SKILL_SELECTION_QUERY_KEY = "skillSelection";
 export const SKILL_CONTENT_QUERY_KEY = "skillContent";
 export const SKILL_FILES_QUERY_KEY = "skillFiles";
 const PLUGIN_LIST_QUERY_KEY = "plugin-list";
@@ -1052,6 +1053,10 @@ export function hostPathExistenceQueryKey(
 
 export function hostPathExistenceQueryKeyPrefix(): HostPathExistenceQueryKeyPrefix {
   return [HOST_PATH_EXISTENCE_QUERY_KEY];
+}
+
+export function skillSelectionQueryKey() {
+  return [SKILL_SELECTION_QUERY_KEY] as const;
 }
 
 export function allProjectSkillsQueryKey() {

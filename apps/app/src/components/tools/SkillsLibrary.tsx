@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import { PERSONAL_PROJECT_ID, setSkillNamesEnabled } from "@sandy/domain";
+import { appToast } from "@/components/ui/app-toast";
 import { buildSkillEditThreadPrompt } from "@sandy/shared-ui/resource-edit-prompt";
 import type { EditableSkillScope, SkillSummary } from "@sandy/server-contract";
 import { ResourceListState } from "@sandy/shared-ui/resource-list";
@@ -25,6 +26,8 @@ import {
   prefetchSkillDetail,
   useDeleteSkill,
   useProjectSkills,
+  useSetSkillSelection,
+  useSkillSelection,
   useSkillContent,
   useSkillFiles,
 } from "@/hooks/queries/skills-queries";
@@ -62,6 +65,8 @@ function SkillDetailPage({
   const previewHostId =
     primaryHost?.status === "connected" ? primaryHost.id : null;
   const deleteSkill = useDeleteSkill(projectId);
+  const selectionQuery = useSkillSelection();
+  const setSelection = useSetSkillSelection();
   const { canOpenPreferredFileTarget, openPathInPreferredFileTarget } =
     useLocalOpenTargets({ enabled: skill !== null });
 
@@ -92,7 +97,31 @@ function SkillDetailPage({
       canDelete={deletableScope !== null}
       canOpenInEditor={editableScope !== null && canOpenPreferredFileTarget}
       isDeleting={deleteSkill.isPending}
+      isSelectionPending={
+        selectionQuery.data === undefined || setSelection.isPending
+      }
       markdownLinkRouting={markdownLinkRouting}
+      onSelectionChange={(enabled) => {
+        const current = selectionQuery.data?.selection;
+        if (!skill || current === undefined) return;
+        setSelection.mutate(
+          setSkillNamesEnabled(current, [skill.name], enabled),
+          {
+            onSuccess: (result) => {
+              if (result.pendingThreadIds.length === 0) return;
+              appToast.message(
+                `${skill.name} turned ${enabled ? "on" : "off"} for new sessions`,
+                {
+                  description: `${result.pendingThreadIds.length} running ${result.pendingThreadIds.length === 1 ? "thread keeps" : "threads keep"} the previous skills until ${result.pendingThreadIds.length === 1 ? "its" : "their"} turn ends.`,
+                },
+              );
+            },
+            onError: () => {
+              appToast.error(`Couldn't update ${skill.name}`);
+            },
+          },
+        );
+      }}
       onEdit={() => {
         if (skill) onEdit(skill);
       }}
@@ -125,6 +154,7 @@ export function SkillsLibrary() {
   const { skillId: routeSkillId } = useParams<{ skillId?: string }>();
   const [libraryQuery, setLibraryQuery] = useState("");
   const skillsQuery = useProjectSkills(PERSONAL_PROJECT_ID);
+  const selectionQuery = useSkillSelection();
   const skills = skillsQuery.data?.skills ?? EMPTY_SKILLS;
   const hasError = skillsQuery.isError && skillsQuery.data === undefined;
   const isLoading =
@@ -206,6 +236,7 @@ export function SkillsLibrary() {
       ) : (
         <SkillsOverview
           skills={skills}
+          selectionProviders={selectionQuery.data?.providers}
           providerRoster={providerRoster}
           isLoading={isLoading}
           hasError={hasError}

@@ -21,6 +21,7 @@ import { SkillDetailView } from "../components/tools/SkillDetailView";
 import {
   SkillDetailDialogView,
   SkillsOverview,
+  skillSelectionStatusText,
 } from "../components/tools/SkillsCollection";
 import { SkillsLibrary } from "../components/tools/SkillsLibrary";
 import { focusWithKeyboard } from "@/test/keyboard-focus";
@@ -102,6 +103,7 @@ function render(props: Partial<Parameters<typeof SkillsOverview>[0]>): string {
       onCreateSkill={props.onCreateSkill ?? (() => {})}
       onSelectSkill={props.onSelectSkill ?? (() => {})}
       onRetry={props.onRetry}
+      selectionProviders={props.selectionProviders}
     />,
   );
 }
@@ -124,6 +126,8 @@ function renderSkillDetailDialog(
       canDelete={false}
       canOpenInEditor={false}
       isDeleting={false}
+      isSelectionPending={false}
+      onSelectionChange={() => {}}
       onEdit={() => {}}
       onRetry={() => {}}
       onDelete={() => {}}
@@ -598,6 +602,130 @@ describe("SkillsOverview", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("skill selection on the Skills page", () => {
+  const codex = {
+    providerId: "codex",
+    displayName: "Codex",
+    support: { session: "enforced", subagents: "enforced" },
+  } as const;
+  const claude = {
+    providerId: "claude-code",
+    displayName: "Claude Code",
+    support: { session: "enforced", subagents: "unverified" },
+  } as const;
+  const legacy = {
+    providerId: "legacy",
+    displayName: "Legacy",
+    support: { session: "not-enforced", subagents: "not-enforced" },
+  } as const;
+
+  it("marks only turned-off skills with an Off chip in overview rows", () => {
+    const markup = render({
+      skills: [
+        makeSkill({ id: `skill_${"b".repeat(64)}`, name: "kept" }),
+        makeSkill({
+          id: `skill_${"c".repeat(64)}`,
+          name: "dropped",
+          selectionEnabled: false,
+        }),
+      ],
+    });
+    expect(markup).toContain('aria-label="dropped is turned off for agents"');
+    expect(markup).not.toContain('aria-label="kept is turned off for agents"');
+  });
+
+  it("states which providers apply the selection and which still load every skill", () => {
+    const skills = [
+      makeSkill({ name: "dropped", selectionEnabled: false }),
+      makeSkill({
+        id: `skill_${"d".repeat(64)}`,
+        name: "dropped",
+        selectionEnabled: false,
+      }),
+      makeSkill({ id: `skill_${"e".repeat(64)}`, name: "kept" }),
+    ];
+    expect(skillSelectionStatusText(skills, [codex, claude, legacy])).toBe(
+      "1 skill is off. New Codex and Claude Code sessions start without it. Legacy still loads every skill. Subagents are not covered yet.",
+    );
+    expect(skillSelectionStatusText(skills, [codex])).toBe(
+      "1 skill is off. New Codex sessions start without it.",
+    );
+    expect(
+      skillSelectionStatusText([makeSkill({ name: "kept" })], [codex, legacy]),
+    ).toBeNull();
+  });
+
+  it("shows the selection status in the overview description", () => {
+    const markup = render({
+      skills: [makeSkill({ name: "dropped", selectionEnabled: false })],
+      selectionProviders: [legacy],
+    });
+    expect(markup).toContain("1 skill is off.");
+    expect(markup).toContain("Legacy still loads every skill.");
+  });
+
+  it("reflects the selection in the detail switch and reports the requested state", () => {
+    const onSelectionChange = vi.fn();
+    renderSkillDetailDialog(makeSkill({ selectionEnabled: false }), {
+      onSelectionChange,
+    });
+    const toggle = screen.getByRole("switch", {
+      name: "Turn on code-review for agents",
+    });
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(toggle);
+    expect(onSelectionChange).toHaveBeenCalledWith(true);
+  });
+
+  it("disables the detail switch while the selection is pending", () => {
+    renderSkillDetailDialog(makeSkill(), { isSelectionPending: true });
+    const toggle = screen.getByRole("switch", {
+      name: "Turn off code-review for agents",
+    });
+    expect(toggle.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("sends the shared selection mutation from the library detail switch", async () => {
+    const skill = makeSkill({ id: "skill_missing", name: "code-review" });
+    vi.spyOn(sdk.skills, "list").mockResolvedValue({ skills: [skill] });
+    vi.spyOn(sdk.skills, "listFiles").mockResolvedValue({
+      files: ["SKILL.md"],
+      truncated: false,
+    });
+    vi.spyOn(sdk.skills, "getContent").mockResolvedValue({
+      content: "# code-review",
+      revision: "a".repeat(64),
+      filePath: skill.filePath,
+      writable: true,
+    });
+    vi.spyOn(sdk.skills, "experimental_getSelection").mockResolvedValue({
+      selection: { mode: "disable", names: ["other-skill"] },
+      providers: [codex],
+    });
+    const setSelection = vi
+      .spyOn(sdk.skills, "experimental_setSelection")
+      .mockResolvedValue({
+        selection: { mode: "disable", names: ["code-review", "other-skill"] },
+        providers: [codex],
+        pendingThreadIds: [],
+      });
+
+    renderLibrarySkillRoute();
+
+    const toggle = await screen.findByRole("switch", {
+      name: "Turn off code-review for agents",
+    });
+    await waitFor(() => expect(toggle.hasAttribute("disabled")).toBe(false));
+    fireEvent.click(toggle);
+    await waitFor(() =>
+      expect(setSelection).toHaveBeenCalledWith({
+        mode: "disable",
+        names: ["code-review", "other-skill"],
+      }),
+    );
   });
 });
 

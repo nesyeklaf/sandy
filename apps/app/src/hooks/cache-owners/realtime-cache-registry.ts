@@ -56,6 +56,8 @@ import {
   sidebarNavigationQueryKey,
   systemAiServicesQueryKey,
   systemConfigQueryKey,
+  skillSelectionQueryKey,
+  allProjectSkillsQueryKey,
   uiPreferencesQueryKey,
   allSystemProvidersQueryKeyPrefix,
   threadDefaultExecutionOptionsQueryKey,
@@ -539,6 +541,7 @@ export const REALTIME_SYSTEM_CHANGE_REGISTRY = {
   "config-changed": {
     dirty: [
       dirtySystemConfigQueries,
+      dirtySkillSelectionQueries,
       dirtyMachineEnvironmentQueries,
       dirtyAllThreadTimelineQueries,
       dirtySystemProviderQueries,
@@ -1169,6 +1172,15 @@ function dirtySystemConfigQueries({ queryClient }: RealtimeDirtyContext): void {
       systemAiServicesQueryKey(),
       allSystemThemesQueryKeyPrefix(),
     ],
+  });
+}
+
+function dirtySkillSelectionQueries({
+  queryClient,
+}: RealtimeDirtyContext): void {
+  invalidateQueryKeysWithoutCancelingActiveFetches({
+    queryClient,
+    queryKeys: [skillSelectionQueryKey(), allProjectSkillsQueryKey()],
   });
 }
 

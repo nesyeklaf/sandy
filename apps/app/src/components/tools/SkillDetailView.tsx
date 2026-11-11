@@ -41,6 +41,7 @@ interface SkillDetailViewProps {
   pathHref?: string;
   titleBadge?: SkillDetailTitleBadge;
   headerActions?: ReactNode;
+  lifecycleControl?: ReactNode;
   overflowMenu?: ReactNode;
   files: readonly string[];
   selectedPath: string;
@@ -224,6 +225,7 @@ export function SkillDetailView({
   pathHref,
   titleBadge,
   headerActions,
+  lifecycleControl,
   overflowMenu,
   files,
   selectedPath,
@@ -251,6 +253,7 @@ export function SkillDetailView({
       metadata={<SkillPath path={directoryPath} href={pathHref} />}
       overflowMenu={overflowMenu}
       actions={headerActions}
+      lifecycleControl={lifecycleControl}
     >
       <ResourceDetailStack>
         {files.length > 1 ? (
