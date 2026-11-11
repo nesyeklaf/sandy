@@ -2,6 +2,7 @@
 import { afterEach, expect, it } from "vitest";
 import {
   activeSortCodec,
+  spaceSortCodec,
   childExpansionCodec,
   projectCollapseCodec,
   projectScopeCodec,
@@ -63,6 +64,14 @@ it("fills older shelf shapes and drops unknown keys without stricter primitive r
 it("carries an expanded or collapsed Parked shelf over to Snoozed", () => {
   expect(shelfExpansionCodec.decode('{"parked":true}')?.snoozed).toBe(true);
   expect(shelfExpansionCodec.decode('{"parked":true,"snoozed":false}')?.snoozed).toBe(false);
+});
+
+it("defaults the Spaces sort mode to recent activity and ignores the Flow legacy grouping", () => {
+  localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "true");
+  expect(spaceSortCodec.decode(null)).toBeNull();
+  expect(spaceSortCodec.decode("invalid")).toBeNull();
+  expect(spaceSortCodec.fallback()).toBe("activity");
+  expect(spaceSortCodec.decode("created")).toBe("created");
 });
 
 it("uses legacy grouping only for missing or invalid sort modes without rewriting it", () => {

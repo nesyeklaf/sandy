@@ -49,6 +49,39 @@ describe("Spaces view", () => {
     expect(within(launch).queryByText("Ideas")).toBeNull();
   });
 
+  it("sorts the sessions inside every shelf by the persisted Spaces sort mode", async () => {
+    const now = Date.now();
+    const idle = (id: string, projectId: string, createdAt: number, updatedAt: number) =>
+      thread({ id, title: id, projectId, sectionId: "sec_a", createdAt, updatedAt, latestAttentionAt: updatedAt });
+    setup({
+      threads: [
+        idle("old-busy", "proj_1", now - 3000, now - 10),
+        idle("new-quiet", "proj_2", now - 1000, now - 2000),
+        idle("mid-busy", "proj_1", now - 2000, now - 20),
+      ],
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Launch (3)" }));
+    const order = () =>
+      within(screen.getByRole("region", { name: "Launch" }))
+        .getAllByRole("link", { name: /^(old-busy|mid-busy|new-quiet)/ })
+        .map((node) => node.getAttribute("aria-label")?.split(/[ ,]/)[0]);
+    expect(screen.getByRole("button", { name: "Sort sessions in Spaces: Recent activity" })).toBeTruthy();
+    expect(order()).toEqual(["old-busy", "mid-busy", "new-quiet"]);
+
+    const pick = (name: string) => {
+      fireEvent.keyDown(screen.getByRole("button", { name: /^Sort sessions in Spaces/ }), { key: "Enter" });
+      fireEvent.click(screen.getByRole("radio", { name }), { detail: 1 });
+    };
+    pick("Date created");
+    expect(order()).toEqual(["new-quiet", "mid-busy", "old-busy"]);
+    expect(window.localStorage.getItem("sandy-sidebar:space-sort:v1")).toBe("created");
+    expect(window.localStorage.getItem("sandy-sidebar:active-sort:v1")).toBe("manual");
+    pick("Repo");
+    expect(order()).toEqual(["old-busy", "mid-busy", "new-quiet"]);
+    pick("Manual order");
+    expect(order()).toEqual(["old-busy", "new-quiet", "mid-busy"]);
+  });
+
   it("[minimal-header] shows only the urgent floor in Minimal headers", async () => {
     setup({ threads: prThreads(), settings: { spaceHeaderDensity: "minimal" } });
     const launch = await screen.findByRole("region", { name: "Launch" });

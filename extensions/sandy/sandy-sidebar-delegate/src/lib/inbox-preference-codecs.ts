@@ -107,6 +107,12 @@ export const activeSortCodec: PreferenceCodec<ActiveSortMode> = {
   encode: (value) => value,
 };
 
+export const spaceSortCodec: PreferenceCodec<ActiveSortMode> = {
+  fallback: () => "activity",
+  decode: (stored) => (stored && isActiveSortMode(stored) ? stored : null),
+  encode: (value) => value,
+};
+
 export const rowFieldsCodec: PreferenceCodec<RowFields> = {
   fallback: () => DEFAULT_ROW_FIELDS,
   decode: (stored) => {

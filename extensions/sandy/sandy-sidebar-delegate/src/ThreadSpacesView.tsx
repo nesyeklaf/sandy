@@ -4,6 +4,9 @@ import { SpaceHeader, type SpaceFilter } from "./SpaceHeader";
 import { STORAGE_KEYS } from "./lib/storage-keys";
 import { usePersistedPreference } from "./lib/use-persisted-preference";
 import { treeMigratingExpansionCodec } from "./lib/space-preferences";
+import { spaceSortCodec } from "./lib/inbox-preference-codecs";
+import { ActiveSortPicker } from "./ActiveSortPicker";
+import { sortSpaceShelfThreads } from "./space-sort";
 import type { SpaceHeaderDensity } from "./sidebar-settings-values";
 import { SPACE_SHELVES, type SpaceShelf, type SpaceSignal, type SpaceView } from "./spaces-model";
 import { Icon } from "./components/Icon";
@@ -44,6 +47,7 @@ export function ThreadSpacesView({
 }) {
   const [expansionCodec] = useState(() => treeMigratingExpansionCodec(spaces.map(spaceKey)));
   const [expanded, setExpanded] = usePersistedPreference(STORAGE_KEYS.spaceExpansion.key, expansionCodec);
+  const [sortMode, setSortMode] = usePersistedPreference(STORAGE_KEYS.spaceSort.key, spaceSortCodec);
   const [filters, setFilters] = useState<ReadonlyMap<string, SpaceSignal>>(new Map());
   const byId = useMemo(() => new Map(threads.map((thread) => [thread.id, thread])), [threads]);
   const toggle = useCallback(
@@ -65,6 +69,10 @@ export function ThreadSpacesView({
   }, []);
   return (
     <div className="flex flex-col">
+      <div className="flex items-center justify-between px-2 pb-1">
+        <span className="text-2xs font-medium text-muted-foreground">Spaces</span>
+        <ActiveSortPicker mode={sortMode} onModeChange={setSortMode} subject="sessions in Spaces" />
+      </div>
       {spaces.length === 0 ? (
         <p className="px-2 py-6 text-center text-xs text-muted-foreground">No sessions yet.</p>
       ) : null}
@@ -104,9 +112,10 @@ export function ThreadSpacesView({
                         <span className="tabular-nums">{shelfRoots.length}</span>
                       </p>
                       <ul className="ml-3.5 flex flex-col gap-px border-l border-sidebar-border/70">
-                        {shelfRoots.map((root) => {
-                          const thread = byId.get(root.rootId);
-                          if (!thread) return null;
+                        {sortSpaceShelfThreads(
+                          shelfRoots.flatMap((root) => byId.get(root.rootId) ?? []),
+                          sortMode,
+                        ).map((thread) => {
                           if (!thread.isPinned) return renderThread(thread, shelf);
                           return (
                             <li key={thread.id} data-space-pinned-row="" className="relative list-none">

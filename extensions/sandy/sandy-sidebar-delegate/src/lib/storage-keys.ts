@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   spaceExpansion: { key: "sandy-sidebar:space-expansion:v1", evictionPriority: 55 },
   // Active shelf sort mode.
   activeSort: { key: "sandy-sidebar:active-sort:v1", evictionPriority: 70 },
+  spaceSort: { key: "sandy-sidebar:space-sort:v1", evictionPriority: 70 },
   showArchived: { key: "sandy-sidebar:show-archived:v1", evictionPriority: 72 },
   rowFields: { key: "sandy-sidebar:row-fields:v1", evictionPriority: 72 },
   // Last RPC sidebar settings.
