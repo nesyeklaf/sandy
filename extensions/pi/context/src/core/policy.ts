@@ -14,32 +14,39 @@ export const PI_RESERVE = 16_384;
  * in the answer and the cache is often cold anyway; a session without a user cuts at the next turn boundary. At `hard`
  * every session cuts at the next turn boundary, also in the middle of a run. On windows too small for the deferral
  * margin both are the same.
+ *
+ * Both count the whole prompt and lie `headTokens` above the configured sizes: the system prompt and tools are in
+ * every request and no cut shrinks them, so `watermarkTokens` is the room for the conversation alone. With a head of
+ * 95k and a fixed watermark of 120k a cut left 25k of room and the next one followed seven requests later.
  */
 export interface CutThresholds {
 	readonly soft: number;
 	readonly hard: number;
 }
 
-export function cutThresholds(config: ContextConfig, contextWindow: number | undefined): CutThresholds {
+export function cutThresholds(
+	config: ContextConfig,
+	contextWindow: number | undefined,
+	headTokens = 0,
+): CutThresholds {
 	const window = contextWindow !== undefined && contextWindow > 0 ? contextWindow : Number.POSITIVE_INFINITY;
-	const hard = Math.max(
-		1,
-		Math.min(config.watermarkTokens + config.deferMarginTokens, config.hardCapTokens, window - 2 * PI_RESERVE),
-	);
-	return { soft: Math.min(config.watermarkTokens, hard), hard };
+	const head = Math.max(0, headTokens);
+	const content = Math.min(config.watermarkTokens + config.deferMarginTokens, config.hardCapTokens);
+	const hard = Math.max(1, Math.min(head + content, window - 2 * PI_RESERVE));
+	return { soft: Math.min(head + config.watermarkTokens, hard), hard };
 }
 
 /** The soft threshold; kept for callers that only need the planned cut point. */
-export function effectiveWatermark(config: ContextConfig, contextWindow: number | undefined): number {
-	return cutThresholds(config, contextWindow).soft;
+export function effectiveWatermark(config: ContextConfig, contextWindow: number | undefined, headTokens = 0): number {
+	return cutThresholds(config, contextWindow, headTokens).soft;
 }
 
 /**
  * Whether cuts can work below `watermark`: what a cut leaves in the context must stay below it, otherwise every cut is
- * followed by another. A window too small for the config gets no cuts.
+ * followed by another. A window too small for the config and the head gets no cuts.
  */
-export function watermarkHolds(config: ContextConfig, watermark: number): boolean {
-	return carriedTokens(config) < watermark;
+export function watermarkHolds(config: ContextConfig, watermark: number, headTokens = 0): boolean {
+	return Math.max(0, headTokens) + carriedTokens(config) < watermark;
 }
 
 export interface CutSize {
@@ -51,6 +58,8 @@ export interface CutSize {
 	readonly archivedTokens: number;
 	/** Estimated tokens of the cut's block. */
 	readonly blockTokens: number;
+	/** The system prompt and tools in the provider's tokens, when measured: in the prompt, but not in the estimates. */
+	readonly headTokens?: number;
 	readonly limit: number;
 }
 
@@ -59,14 +68,17 @@ export interface CutSize {
  *
  * The estimates count four characters per token, the provider counts with its tokenizer, in session 01a171b8 about
  * 1.8 times as many for code, JSON and German text. The estimated change is therefore scaled by the ratio of the
- * prompt to its estimate. The system prompt and tools are in the prompt but not in the estimate, which raises the
- * ratio; archived history, rich in tool output, counts more tokens per character than what stays, which the raised
- * ratio happens to balance. Checked against 54 cuts of October 2026: the projection missed the next prompt by -0.2k on
- * average (RMS 16k); taking the system prompt out of the ratio biased it by +9k to +15k.
+ * content to its estimate: the prompt without the measured head, which is in the prompt but not in the estimate.
+ *
+ * Without a measured head the whole prompt is scaled. With the heads of October 2026, about 25k to 48k, that raised
+ * ratio happened to balance archived history counting more tokens per character than what stays: over 54 cuts the
+ * projection missed the next prompt by -0.2k on average (RMS 16k), and by +9k to +15k without the head. With a head of
+ * 95k it no longer balances: in session 01a1c5d6 cuts projected far below the watermark landed above it.
  */
 export function projectedTokens(size: Omit<CutSize, "limit">): number {
 	const { contextTokens, visibleTokens, archivedTokens, blockTokens } = size;
-	const ratio = visibleTokens > 0 ? contextTokens / visibleTokens : 1;
+	const content = Math.max(0, contextTokens - Math.max(0, size.headTokens ?? 0));
+	const ratio = visibleTokens > 0 ? content / visibleTokens : 1;
 	return contextTokens - (archivedTokens - blockTokens) * ratio;
 }
 

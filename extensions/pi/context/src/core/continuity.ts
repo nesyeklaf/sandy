@@ -89,6 +89,21 @@ export function headParts(payload: unknown): Record<string, number> {
 	return Object.fromEntries(names.sort().map((name) => [name, hashValue(payload[name])]));
 }
 
+/**
+ * The head's share of a request in characters: everything but the message list. Times the prompt tokens the provider
+ * counted for that request it gives the size of the system prompt and tools, which no cut shrinks.
+ */
+export function headShare(payload: unknown): number | undefined {
+	if (!isRecord(payload)) return undefined;
+	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
+	if (!key) return undefined;
+	let head = 0;
+	for (const [name, value] of Object.entries(payload)) {
+		if (name !== key && !VOLATILE_KEYS.has(name)) head += stableStringify(value).length;
+	}
+	return head / (head + stableStringify(payload[key]).length);
+}
+
 export function compareShapes(previous: RequestShape | undefined, next: RequestShape): Continuity {
 	if (!previous) return { kind: "first" };
 	if (previous.head !== next.head) return { kind: "broken", at: "head" };
@@ -110,6 +125,8 @@ export interface ItemPrint {
 export interface ShapeSnapshot {
 	readonly head: Record<string, number>;
 	readonly items: readonly ItemPrint[];
+	/** The head in the provider's tokens, measured on this request; a restarted process starts from it. */
+	readonly headTokens?: number;
 }
 
 export interface ResumeDiff {

@@ -100,6 +100,17 @@ describe("cut size guard", () => {
 		assert.equal(Math.round(projectedTokens(stuck)), 127_638);
 	});
 
+	// A head of 95k in a prompt of 141k, as in session 01a1c5d6 (thr_v96wtk24d3): scaled by the whole prompt, a cut that
+	// archives a third of the content looks as if it freed half of the prompt, and it is accepted although it lands
+	// right at the limit.
+	it("scales the estimate by the content alone once the head is measured", () => {
+		const cut = { contextTokens: 141_404, visibleTokens: 30_000, archivedTokens: 18_000, blockTokens: 4_000 };
+		assert.equal(Math.round(projectedTokens(cut)), 75_415);
+		assert.equal(Math.round(projectedTokens({ ...cut, headTokens: 95_292 })), 119_885);
+		assert.equal(cutShrinks({ ...cut, headTokens: 95_292, limit: 119_000 }), false);
+		assert.equal(projectedTokens({ ...cut, headTokens: 0 }), projectedTokens(cut));
+	});
+
 	it("cuts past the hard threshold when the cut frees a quarter of the prompt, even above the limit", () => {
 		assert.equal(cutShrinks(stuck), false);
 		assert.equal(cutAccepted(stuck, 150_000), true);
