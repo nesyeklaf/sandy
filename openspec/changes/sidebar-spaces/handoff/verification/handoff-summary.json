@@ -1,4 +1,5 @@
 {
+  "historical": "OLD RUN, kept for history only. Superseded by resume-summary.json; the final delta, the 48 focused tests and the native browser results are not in this file.",
   "schema": "sidebar-spaces-handoff/1",
   "paths": "relative to the thread storage folder spaces/final-frozen unless noted; repo paths are relative to extensions/sandy/sandy-sidebar-delegate",
   "repo": { "head": "845f50245be55f4c5f793d69d5c6d3b085bdcaef", "sourceChangedFileCount": 51, "statusLineCount": 54 },

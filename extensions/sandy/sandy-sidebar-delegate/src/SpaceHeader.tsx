@@ -102,35 +102,60 @@ export function SpaceHeader({
     />
   );
   return (
-    <div data-space-header={density} className="mt-2 rounded-md bg-sidebar-accent/40 px-2 py-1">
-      <div className="flex items-center gap-1">
-        {renaming && space.id !== null ? (
-          <SpaceRenameForm spaceId={space.id} name={space.name} onDone={() => setRenaming(false)} />
-        ) : (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            aria-label={`${space.name} (${space.total})`}
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left max-md:min-h-11"
-          >
-            <Icon
-              name={expanded ? "ChevronDown" : "ChevronRight"}
-              className="size-3 shrink-0 text-muted-foreground/60"
+    <>
+      <div data-space-header={density} className="mt-2 rounded-md bg-sidebar-accent/40 px-2 py-1">
+        <div className="flex items-center gap-1">
+          {renaming && space.id !== null ? (
+            <SpaceRenameForm spaceId={space.id} name={space.name} onDone={() => setRenaming(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-expanded={expanded}
+              aria-label={`${space.name} (${space.total})`}
+              className="flex min-w-0 flex-1 items-center gap-1.5 text-left max-md:min-h-11"
+            >
+              <Icon
+                name={expanded ? "ChevronDown" : "ChevronRight"}
+                className="size-3 shrink-0 text-muted-foreground/60"
+              />
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">{space.name}</span>
+              {filtered ? <span className="text-2xs text-muted-foreground/70">filtered</span> : null}
+              <span className="text-2xs tabular-nums text-muted-foreground/60">{space.total}</span>
+            </button>
+          )}
+          {density === "minimal" && !renaming ? stats.map((stat) => statButton(stat, false)) : null}
+          {space.id !== null && !renaming ? (
+            <SpaceActions
+              name={space.name}
+              deleteRef={deleteRef}
+              onRenaming={setRenaming}
+              onDelete={() => setDeleting(true)}
             />
-            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">{space.name}</span>
-            {filtered ? <span className="text-2xs text-muted-foreground/70">filtered</span> : null}
-            <span className="text-2xs tabular-nums text-muted-foreground/60">{space.total}</span>
-          </button>
+          ) : null}
+        </div>
+        {density === "minimal" ? null : (
+          <div className="mt-1 flex flex-wrap gap-1 pl-4">
+            {stats.map((stat) => statButton(stat, density === "detailed"))}
+          </div>
         )}
-        {density === "minimal" && !renaming ? stats.map((stat) => statButton(stat, false)) : null}
-        {space.id !== null && !renaming ? (
-          <SpaceActions
-            name={space.name}
-            deleteRef={deleteRef}
-            onRenaming={setRenaming}
-            onDelete={() => setDeleting(true)}
-          />
+        {density === "detailed" ? (
+          <p className="mt-1 pl-4 text-2xs text-muted-foreground">
+            {repoLabel} · {space.ready} ready
+          </p>
+        ) : null}
+        {activeStat ? (
+          <div className="mt-1 flex items-center gap-2 pl-4 text-2xs text-muted-foreground">
+            <span>Filter: {activeStat.label}</span>
+            <button
+              type="button"
+              aria-label={`Show all in ${space.name}`}
+              onClick={() => onFilter(activeStat.signal)}
+              className="rounded px-1.5 py-0.5 underline hover:bg-sidebar-accent max-md:min-h-8"
+            >
+              Show all
+            </button>
+          </div>
         ) : null}
       </div>
       {deleting && space.id !== null ? (
@@ -144,29 +169,6 @@ export function SpaceHeader({
           }}
         />
       ) : null}
-      {density === "minimal" ? null : (
-        <div className="mt-1 flex flex-wrap gap-1 pl-4">
-          {stats.map((stat) => statButton(stat, density === "detailed"))}
-        </div>
-      )}
-      {density === "detailed" ? (
-        <p className="mt-1 pl-4 text-2xs text-muted-foreground">
-          {repoLabel} · {space.ready} ready
-        </p>
-      ) : null}
-      {activeStat ? (
-        <div className="mt-1 flex items-center gap-2 pl-4 text-2xs text-muted-foreground">
-          <span>Filter: {activeStat.label}</span>
-          <button
-            type="button"
-            aria-label={`Show all in ${space.name}`}
-            onClick={() => onFilter(activeStat.signal)}
-            className="rounded px-1.5 py-0.5 underline hover:bg-sidebar-accent max-md:min-h-8"
-          >
-            Show all
-          </button>
-        </div>
-      ) : null}
-    </div>
+    </>
   );
 }

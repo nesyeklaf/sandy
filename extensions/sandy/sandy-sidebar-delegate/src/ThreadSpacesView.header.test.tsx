@@ -104,4 +104,34 @@ describe("Space headers", () => {
     const label = launch.querySelector('[data-space-shelf="needs"] p');
     expect(label?.className).toContain("text-amber-500");
   });
+
+  it("keeps a visible Pinned marker on a pinned Space row at every row density and none on unpinned rows", async () => {
+    for (const threadDensity of ["dense", "compact", "comfortable"]) {
+      const pinned = thread({ id: "pin", title: "Pinned one", sectionId: "sec_b", isPinned: true, ...recent() });
+      const plain = thread({ id: "plain", title: "Plain one", sectionId: "sec_b", ...recent() });
+      const view = setup({ threads: [...prThreads(), pinned, plain], settings: { threadDensity } });
+      const plan = await screen.findByRole("region", { name: "Plan" });
+      const toggle = within(plan).getByRole("button", { name: /^Plan \(/ });
+      if (toggle.getAttribute("aria-expanded") === "false") fireEvent.click(toggle);
+      const marks = within(plan).getAllByRole("img", { name: "Pinned" });
+      expect(marks).toHaveLength(1);
+      expect(marks[0]?.className).not.toContain("opacity-0");
+      expect(marks[0]?.closest("[data-space-pinned-row]")?.textContent).toContain("Pinned one");
+      expect(within(plan).getByText("Plain one").closest("[data-space-pinned-row]")).toBeNull();
+      view.unmount();
+    }
+  });
+
+  it("places the delete confirmation after the whole header, outside it and inside the Space", async () => {
+    setup({ threads: prThreads(), settings: { spaceHeaderDensity: "detailed" } });
+    const plan = await screen.findByRole("region", { name: "Plan" });
+    fireEvent.click(within(plan).getByRole("button", { name: "Delete Plan" }));
+    const group = within(plan).getByRole("group", { name: "Delete Space Plan" });
+    const header = plan.querySelector("[data-space-header]") as HTMLElement;
+    expect(header.contains(group)).toBe(false);
+    expect(header.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(plan.contains(group)).toBe(true);
+    expect(within(header).getByRole("button", { name: /^Plan \(/ })).toBeTruthy();
+    expect(within(header).getByRole("button", { name: /working in Plan$/ })).toBeTruthy();
+  });
 });

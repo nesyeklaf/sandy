@@ -1,0 +1,27 @@
+{
+  "verdict": "no visible PNG blockers",
+  "findings": [],
+  "confidence": "high for visible constraints in inspected images",
+  "inspected": [
+    "../native-ui/delete-inline-390.png",
+    "../native-ui/delete-inline-390-space.png",
+    "../native-ui/delete-inline-360.png",
+    "NOT COPIED, original path not resolvable: /home/feysen/.sandy-local/data/thread-storage/thr_ukyiibje4u/spaces-final/targeted/out/shots/shelves-dense.png",
+    "NOT COPIED, original path not resolvable: /home/feysen/.sandy-local/data/thread-storage/thr_ukyiibje4u/spaces-final/targeted/out/shots/shelves-compact.png",
+    "NOT COPIED, original path not resolvable: /home/feysen/.sandy-local/data/thread-storage/thr_ukyiibje4u/spaces-final/targeted/out/shots/shelves-comfortable.png",
+    "../native-ui/pin-row-dense-rest.png",
+    "../native-ui/pin-row-compact-rest.png",
+    "../native-ui/pin-row-comfortable-rest.png"
+  ],
+  "path_note": "Requested targeted/currentout/shots absent on initial listing and one retry. Matching requested filenames found and inspected under targeted/out/shots; not assumed to be the same directory.",
+  "observations": [
+    "Pin marker visible at rest only on Atlas planning in the three complete Shelves views, also legible in each rest crop.",
+    "Native title, repository/branch, timestamp and agent/device row vocabulary retained across densities.",
+    "No visible pin/text overlap, cutoff or weak pin contrast.",
+    "Deletion confirmation visually inline below whole header in 390/360 full contexts and 390 crop; counts and toggle contiguous above, text and buttons legible."
+  ],
+  "limits": [
+    "Image-only inspection; no focus, runtime persistence or interaction inference.",
+    "No pixel matching to viewport chrome."
+  ]
+}

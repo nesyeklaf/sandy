@@ -6,6 +6,7 @@ import { usePersistedPreference } from "./lib/use-persisted-preference";
 import { treeMigratingExpansionCodec } from "./lib/space-preferences";
 import type { SpaceHeaderDensity } from "./sidebar-settings-values";
 import { SPACE_SHELVES, type SpaceShelf, type SpaceSignal, type SpaceView } from "./spaces-model";
+import { Icon } from "./components/Icon";
 import { cn } from "./lib/utils";
 import { CreateSpaceForm } from "./SpaceManagement";
 
@@ -106,7 +107,20 @@ export function ThreadSpacesView({
                       <ul className="ml-3.5 flex flex-col gap-px border-l border-sidebar-border/70">
                         {shelfRoots.map((root) => {
                           const thread = byId.get(root.rootId);
-                          return thread ? renderThread(thread, shelf) : null;
+                          if (!thread) return null;
+                          if (!thread.isPinned) return renderThread(thread, shelf);
+                          return (
+                            <li key={thread.id} data-space-pinned-row="" className="relative list-none">
+                              <span
+                                role="img"
+                                aria-label="Pinned"
+                                className="pointer-events-none absolute -left-[7px] top-2 z-10 grid size-3 place-items-center rounded-full bg-sidebar text-muted-foreground"
+                              >
+                                <Icon name="Pin" className="size-2.5" />
+                              </span>
+                              <ul className="flex flex-col">{renderThread(thread, shelf)}</ul>
+                            </li>
+                          );
                         })}
                       </ul>
                     </li>

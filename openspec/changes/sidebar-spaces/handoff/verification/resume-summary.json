@@ -1,0 +1,102 @@
+{
+  "schema": "sidebar-spaces-verification/2",
+  "note": "Authoritative current counts. handoff-summary.json is an older run kept only as history. Paths are relative to this directory unless they start with extensions/ (repo-root relative).",
+  "package": "extensions/sandy/sandy-sidebar-delegate",
+  "node": "v26.13.0",
+  "source": {
+    "frozenBeforeLastDelta": "fdccde2c9d262a354f64819f3b90a615332c07c9",
+    "lastDelta": "3 files: src/ThreadSpacesView.tsx (persistent Pinned marker on pinned Space rows), src/SpaceHeader.tsx (delete confirmation after the whole header), src/ThreadSpacesView.header.test.tsx (pin marker at all row densities, confirmation placement)",
+    "hashes": "source-delta.sha256 is the canonical identity of the 3 post-delta files (paths relative to extensions/sandy/sandy-sidebar-delegate); runner confirmed identical to the 48-test run and the build. source-before.sha256 and source-list-before.txt describe the older frozen source before the delta."
+  },
+  "unit": {
+    "fullRunBeforeLastDelta": {
+      "result": "passed",
+      "files": 180,
+      "tests": 1470,
+      "failed": 0,
+      "note": "includes working-parity 7/7, migration 2/2, pr-lookup 1/1; not rerun on the final source"
+    },
+    "focusedRunAfterLastDelta": {
+      "result": "passed",
+      "files": 5,
+      "tests": 48,
+      "failed": 0,
+      "note": "includes Flow dense and pinning cases"
+    }
+  },
+  "staticChecksAfterLastDelta": {
+    "typecheck": "exit 0",
+    "pluginBuild": "exit 0",
+    "changedFileLint": "exit 0"
+  },
+  "openspecStrict": {
+    "sidebarSpaces": "openspec validate sidebar-spaces --strict: exit 0 (final run on the docs state, before the commit)",
+    "gitDiffCheck": "git diff --check: exit 0",
+    "all": "openspec validate --all --strict not run"
+  },
+  "knownBaselineFailures": {
+    "importBoundaries": "2 errors in src/ThreadInbox.route-switch.test.tsx, present at HEAD",
+    "fileSizes": "src/ThreadCard.tsx 510 vs budget 509, present at HEAD; ThreadCard is unchanged by this work",
+    "readmeFormat": "HEAD README RPC table fails Biome format",
+    "biomeSchema": "biome.json schema 2.5.15 vs CLI 2.6.4 warning"
+  },
+  "nativeBrowser": {
+    "harness": "isolated scratch Sandy server driven by the UI harness; not the npm e2e or e2e:smoke commands",
+    "earlierBuild": {
+      "passed": 8,
+      "scope": "CRUD, assignment, statuses, focus, 27-state matrix, filters, mobile, real failed turn"
+    },
+    "currentBuild": {
+      "preferencesAndInlineDelete": "passed (inline delete at 390 and resize to 360)",
+      "pinRowRerun": "first run failed on a stale global helper that searched inside the card instead of the new wrapper; no product change; the Shelves-only rerun passed",
+      "screenshots": [
+        "native-ui/pin-row-dense-rest.png",
+        "native-ui/pin-row-compact-rest.png",
+        "native-ui/pin-row-comfortable-rest.png",
+        "native-ui/delete-inline-390.png",
+        "native-ui/delete-inline-390-space.png",
+        "native-ui/delete-inline-360.png"
+      ],
+      "extensionDistHashes": {
+        "dist/app.css": "7e1fd6f2b441f6ef62a52865db2c8abd5dd6327ac1560ef3700e5f0cd9bff6b4",
+        "dist/app.js": "f01f0b029ea27dc35db59b69428fc26fb6b47ea5a0fe2a30544d2cc229c6b6b9",
+        "note": "hashes of the sidebar extension package dist/app.css and dist/app.js, unchanged before and after the targeted runs (recorded by the UI harness). The root apps/app/dist was not fingerprinted after the runs, so no claim is made that it is unchanged."
+      }
+    }
+  },
+  "visual": {
+    "synthetic": {
+      "states": 24,
+      "blockers": 0,
+      "reports": [
+        "reviews/report-synthetic.md",
+        "reviews/findings-synthetic.json"
+      ]
+    },
+    "nativeImageOnly": {
+      "blockers": 0,
+      "reports": [
+        "reviews/report-native.md",
+        "reviews/findings-native.json"
+      ],
+      "limit": "image-only: no inference about focus, interaction or persistence"
+    }
+  },
+  "independentCodex": {
+    "probesAtFdccde2c": "R1 reload, R2 own-ask working 0 in UI and RPC, R3 201 PR keys in 200-key batches: all green",
+    "lastDeltaReview": "approve"
+  },
+  "limits": [
+    "Needs, open PR and dormant states are proven with fixtures, unit and RPC parity tests and synthetic views, never a real provider",
+    "Unit native-lifecycle parity is not live-provider proof",
+    "Native CRUD and assignment cover 2 of the 4 core mutation paths on a real server",
+    "tasks.md 6 not done: npm run check is red on baseline failures",
+    "tasks.md 7 partial: UI-harness native runs, not the exact npm e2e and e2e:smoke commands",
+    "tasks.md 8 partial: synthetic and native image critiques, no native-width capture for every state, no openspec validate --all --strict",
+    "Not installed, merged, published or deployed; no live host mutation",
+    "Unreproduced Opus notes: a status pending may count as working though native treats it as idle; a runtime status DTO gap; offset pagination duplicates and a 5000 cap with no flag",
+    "Keyboard clearing of a filter chip is unproven; native focus run presses Enter on the toggle only",
+    "Scenario 6: one shared scroll container not asserted"
+  ],
+  "acceptanceMap": "acceptance-map.md"
+}
