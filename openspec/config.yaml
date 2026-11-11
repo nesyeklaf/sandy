@@ -1,0 +1,6 @@
+schema: spec-driven
+
+context: |
+  Generated from the holon model by holon openspec export; change the .holon files through change sets, never openspec/specs or a generated change.
+  Build agents follow AGENTS.md: Turbo for builds and tests, Node 26.13.0, pnpm, no code comments, real SQLite in tests.
+  A task is done when its verify command passes on the real entry point; report observed, inferred and untested.
