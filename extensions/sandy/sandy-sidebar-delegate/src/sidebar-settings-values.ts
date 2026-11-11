@@ -33,6 +33,9 @@ const LEGACY_THREAD_DISPLAY_DENSITY: Record<string, ThreadDensity> = {
   "compact-all": "dense",
 };
 
+export const SPACE_HEADER_DENSITIES = ["minimal", "compact", "detailed"] as const;
+export type SpaceHeaderDensity = (typeof SPACE_HEADER_DENSITIES)[number];
+
 export const PROJECT_COLOR_DISPLAYS = ["all", "full", "grouped"] as const;
 export type ProjectColorDisplay = (typeof PROJECT_COLOR_DISPLAYS)[number];
 
@@ -65,6 +68,7 @@ export interface SidebarSettingsValues {
   projectColorsEnabled: boolean;
   /** Where project stripes appear; enabled project names are always colored. */
   projectColorDisplay: ProjectColorDisplay;
+  spaceHeaderDensity: SpaceHeaderDensity;
 }
 
 export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
@@ -97,6 +101,7 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
   dockShelves: false,
   projectColorsEnabled: false,
   projectColorDisplay: "all",
+  spaceHeaderDensity: "compact",
 };
 
 export function childThreadSortOf(settings: SidebarSettingsValues | null): ChildThreadSort {
@@ -138,6 +143,10 @@ export function shelfDensitiesOf(value: unknown): ShelfDensities {
 
 export function projectColorDisplayOf(value: unknown): ProjectColorDisplay {
   return oneOf(PROJECT_COLOR_DISPLAYS, value, DEFAULT_SIDEBAR_SETTINGS.projectColorDisplay);
+}
+
+export function spaceHeaderDensityOf(value: unknown): SpaceHeaderDensity {
+  return oneOf(SPACE_HEADER_DENSITIES, value, DEFAULT_SIDEBAR_SETTINGS.spaceHeaderDensity);
 }
 
 /**

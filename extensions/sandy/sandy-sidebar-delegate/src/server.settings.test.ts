@@ -22,6 +22,7 @@ describe("lifecycle RPC", () => {
       dockShelves: false,
       projectColorsEnabled: false,
       projectColorDisplay: "all",
+      spaceHeaderDensity: "compact",
     });
     await expect(
       harness.behavior.callRpc("updateSidebarSettings", {

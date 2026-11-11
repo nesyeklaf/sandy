@@ -1,6 +1,7 @@
 import type { SandyPluginApi } from "@sandy-sdk/plugin-sdk";
 import type { ServerContext } from "./server-context";
 import { sandySidebarRpcContract } from "./contract";
+import { spaceOverviewRpcContract } from "./contract-spaces";
 import { INBOX_ORDER_CHANNEL } from "./contract";
 import { createPortDiscovery } from "./port-discovery";
 import { createThreadPortActions } from "./thread-ports";
@@ -24,6 +25,7 @@ import { createServerSettleCleanup } from "./server-settle-cleanup";
 import { createServerSettleActions } from "./server-settle-actions";
 import { createServerPolicy } from "./server-policy";
 import { createServerDelegateChildren } from "./server-delegate-children";
+import { createServerSpaceOverview } from "./server-space-overview";
 import { createServerHandlers } from "./server-handlers";
 import { createServerBulkActions } from "./server-bulk-actions";
 
@@ -158,6 +160,10 @@ export default async function plugin(sandy: SandyPluginApi) {
   registerSessionRoles(ctx, ideas.marks, orchestrators.marks);
   const anchors = createServerAnchors(ctx, helper);
   const bulk = createServerBulkActions(ctx, lifecycle, cleanup);
+  const spaceOverview = createServerSpaceOverview(ctx, lifecycle, {
+    ideas: ideas.marks,
+    orchestrators: orchestrators.marks,
+  });
   const handlers = createServerHandlers(
     ctx,
     lifecycle,
@@ -168,7 +174,20 @@ export default async function plugin(sandy: SandyPluginApi) {
     getOpenPorts,
     threadPullRequests,
     regenerateTitle,
-    { icons, colors, projects, settle, delegateChildren, topics, sessionSearch, lastMessages, ideas, orchestrators, anchors, bulk },
+    {
+      icons,
+      colors,
+      projects,
+      settle,
+      delegateChildren,
+      topics,
+      sessionSearch,
+      lastMessages,
+      ideas,
+      orchestrators,
+      anchors,
+      bulk,
+    },
   );
   const { resolveProjectIcon } = icons;
   const { wakeAncestors, wakeDeferredQuestions, clearSettlingState, clear } = lifecycle;
@@ -198,6 +217,10 @@ export default async function plugin(sandy: SandyPluginApi) {
     await policy.evaluatePolicies();
   });
   ctx.sandy.rpc.register(sandySidebarRpcContract, handlers);
+  ctx.sandy.rpc.register(spaceOverviewRpcContract, spaceOverview.handlers, {
+    experimental_discoverable: true,
+    experimental_description: "Read-only Space overview: counts and representative roots per Space.",
+  });
   // New or resumed child work reopens the ancestor path, keeping its existing
   // sidebar nesting reachable. Siblings retain their own settled state.
   ctx.sandy.events.on("thread.created", async ({ thread }) => {

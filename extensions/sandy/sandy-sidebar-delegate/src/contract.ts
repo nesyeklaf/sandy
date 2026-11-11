@@ -6,6 +6,7 @@ import {
   CHILD_THREAD_SORT_DIRECTIONS,
   CHILD_THREAD_ICON_STYLES,
   PROJECT_COLOR_DISPLAYS,
+  SPACE_HEADER_DENSITIES,
   SHELF_DENSITIES,
   THREAD_DENSITIES,
 } from "./sidebar-settings-values";
@@ -162,6 +163,7 @@ export const sidebarSettingsSchema = z
     dockShelves: z.boolean(),
     projectColorsEnabled: z.boolean(),
     projectColorDisplay: z.enum(PROJECT_COLOR_DISPLAYS),
+    spaceHeaderDensity: z.enum(SPACE_HEADER_DENSITIES),
   })
   .strict();
 const uploadFilenameSchema = z

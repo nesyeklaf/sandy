@@ -10,10 +10,11 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 
 ## Features
 
-- Manual ordering plus Recent activity, Date created, and Repo sort modes
-- Subtle repo grouping for repos with multiple active threads
-- Optional worktree grouping in Repo sort: threads that share a worktree get collapsible groups
-- Shelves by status: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
+- Spaces: the default list groups sessions into the user's thread sections (Spaces), each a named cross-repo effort. Inside an open Space the sessions sit on status shelves (Needs you, Failed, Working, In review, Merged, Orchestrators, Ideas, Dormant, Ready, Snoozed, and Archived when shown) rather than under repository groups; each row is the normal thread card, which still shows its repository and a pin marker for pinned sessions, and the header shows how many repositories the Space spans. Spaces start collapsed; the header shows counts for needs you, working, open PR and dormant (plus failed when non-zero) as filter chips. Dormant means a ready tree with no activity for seven complete days and a known absence of a PR; an unknown PR state is never dormant. Settings → Sidebar layout → Space headers picks Minimal, Compact (default) or Detailed. A saved Tree layout opens as Spaces; Flow stays available in the layout switch
+- Manual ordering plus Recent activity, Date created, and Repo sort modes (Flow layout)
+- Subtle repo grouping for repos with multiple active threads (Flow layout)
+- Optional worktree grouping in Repo sort (Flow layout): threads that share a worktree get collapsible groups
+- Shelves by status in the Flow layout: Pinned, Needs you, Failed, Working, In review, Waiting, Merged, and Snoozed (parked threads included), plus settled and archived threads under View → Show archived
 - Questions in the row: answer a single-choice question with one tap (Undo within five seconds), or Later to snooze it for an hour
 - Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents, age and last message, each one on or off. Last message starts off: it shows the thread's latest assistant text as one truncated line under the title on Comfortable and Compact rows, never on Dense ones. The plugin stores that text when a thread goes idle (the `thread.idle` event), so a thread shows a line after its next turn ends and nothing before
 - Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin, Tag, add a Thema (topic) or mark them as Idee together from the bar at the bottom, each with Undo
@@ -56,10 +57,11 @@ sandy plugin rpc call sandy-sidebar-delegate addThreadTopic --input-file /tmp/to
 | `tagThreads` / `untagThreads` | `{ threadIds, tag }` | `{ tagged, atLimit }` / `{ untagged }` |
 | `setThreadTopics` | `{ threadId, topics }` | `{ topics }`, replacing the session's topics |
 | `addThreadTopic` / `removeThreadTopic` | `{ threadIds, topic }` | `{ added, atLimit }` / `{ removed }` |
+| `getSpaceOverview` | `{ projectId? }` | `{ pullRequests, spaces }`: per Space total, counts (needs, failed, working, openPr, dormant), ready, repositories and representative roots with primary shelf. Listed by `sandy plugin rpc list`. `pullRequests` is `"available"` when GitHub PR Status answered for every environment, otherwise `"unavailable"`: open and merged PRs count, an absent PR makes a root dormant-eligible, and a draft, closed, offline or missing answer stays unknown and is never dormant |
 | `listIdeas` | `{}` | `{ threadIds }` marked as ideas |
 | `setIdea` | `{ threadIds, idea: boolean }` | `{ changed }`: only the sessions whose mark changed, so passing them back with the opposite `idea` undoes the call |
 
-Tags are stored lowercase; topics keep their case. A session holds at most 20 tags and 20 topics; bulk calls report sessions at that limit in `atLimit`. Bulk calls take 1 to 500 thread ids. The methods are not listed by `sandy plugin rpc list`, because the plugin does not register them as discoverable.
+Tags are stored lowercase; topics keep their case. A session holds at most 20 tags and 20 topics; bulk calls report sessions at that limit in `atLimit`. Bulk calls take 1 to 500 thread ids. Only `getSpaceOverview` is listed by `sandy plugin rpc list`; the other methods are not registered as discoverable.
 
 ## Install
 

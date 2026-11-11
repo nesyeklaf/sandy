@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   listView: { key: "sandy-sidebar:list-view:v1", evictionPriority: 70 },
   // Collapsed section and repo headers in the Tree layout.
   treeCollapse: { key: "sandy-sidebar:tree-collapse:v1", evictionPriority: 55 },
+  spaceExpansion: { key: "sandy-sidebar:space-expansion:v1", evictionPriority: 55 },
   // Active shelf sort mode.
   activeSort: { key: "sandy-sidebar:active-sort:v1", evictionPriority: 70 },
   showArchived: { key: "sandy-sidebar:show-archived:v1", evictionPriority: 72 },

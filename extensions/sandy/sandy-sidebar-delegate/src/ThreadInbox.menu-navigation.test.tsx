@@ -50,7 +50,7 @@ describe("row context menu", () => {
     ).toEqual([
       "Open in split",
       "Parent",
-      "Move to project…",
+      "Move to Space…",
       "Repo",
       "Pin",
       "Snooze",

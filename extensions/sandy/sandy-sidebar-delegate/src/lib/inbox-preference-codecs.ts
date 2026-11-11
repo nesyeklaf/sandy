@@ -30,11 +30,11 @@ export const offByDefaultCodec: PreferenceCodec<boolean> = {
   encode: String,
 };
 
-export type ListView = "flow" | "tree";
+export type ListView = "flow" | "spaces";
 
 export const listViewCodec: PreferenceCodec<ListView> = {
-  fallback: () => "flow",
-  decode: (stored) => (stored === "flow" || stored === "tree" ? stored : null),
+  fallback: () => "spaces",
+  decode: (stored) => (stored === "flow" ? "flow" : stored === "spaces" || stored === "tree" ? "spaces" : null),
   encode: (value) => value,
 };
 

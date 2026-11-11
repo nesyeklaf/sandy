@@ -89,6 +89,7 @@ it("lets the keyboard select multiple filtered projects, toggle off the last one
 });
 
 it("keeps selection usable when session storage is unavailable", () => {
+  localStorage.setItem("sandy-sidebar:list-view:v1", "flow");
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
     throw new Error("Storage blocked");
   });

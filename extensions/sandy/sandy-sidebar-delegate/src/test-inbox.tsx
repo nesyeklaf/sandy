@@ -127,6 +127,7 @@ export const defaultSidebarSettings = {
   dockShelves: false,
   projectColorsEnabled: false,
   projectColorDisplay: "all",
+  spaceHeaderDensity: "compact",
 };
 
 let nextPinnedKey = 0;
