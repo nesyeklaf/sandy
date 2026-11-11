@@ -1,4 +1,3 @@
-import { SpaceCoordinationError } from "./space-coordination-error";
 import type { spaceCoordinationRpcShape } from "./space-coordination-contract";
 import type { ServerHandlers } from "./server-context";
 import type { ServerSpace } from "./server-space";
@@ -47,8 +46,4 @@ export function createSpaceHandlers(space: ServerSpace) {
       return space.orphans.adopt(oldSpaceId, spaceId);
     },
   } satisfies Pick<ServerHandlers, keyof typeof spaceCoordinationRpcShape>;
-}
-
-export function isSpaceCoordinationError(error: unknown): error is SpaceCoordinationError {
-  return error instanceof SpaceCoordinationError;
 }

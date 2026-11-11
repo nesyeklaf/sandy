@@ -12,7 +12,7 @@ function sendersOf(dispatch: MessageDispatchHookContext): string[] {
   return [...senders];
 }
 
-export function createManagedDispatchDecider(rolesService: SpaceRolesService) {
+function createManagedDispatchDecider(rolesService: SpaceRolesService) {
   return async (dispatch: MessageDispatchHookContext): Promise<MessageDispatchHookDecision> => {
     for (const senderThreadId of sendersOf(dispatch)) {
       const decision = await rolesService.decideManagedTarget(senderThreadId, dispatch.thread.id);

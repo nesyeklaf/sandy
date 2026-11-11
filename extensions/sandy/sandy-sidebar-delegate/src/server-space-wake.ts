@@ -3,9 +3,9 @@ import type { ServerContext } from "./server-context";
 import type { SpaceDeps } from "./server-space-deps";
 import type { SpaceRolesService } from "./server-space-roles-service";
 
-export type WakeOutcome = "failed" | "question" | "finished";
+type WakeOutcome = "failed" | "question" | "finished";
 
-export interface WakeEntry {
+interface WakeEntry {
   threadId: string;
   title: string;
   outcome: WakeOutcome;
@@ -17,13 +17,13 @@ interface PendingDigest {
   timer: ReturnType<typeof setTimeout>;
 }
 
-export function formatDigest(entries: readonly WakeEntry[], omittedCount: number): string {
+function formatDigest(entries: readonly WakeEntry[], omittedCount: number): string {
   const lines = entries.map((entry) => `- ${entry.title} (${entry.threadId}): ${entry.outcome}`);
   const omitted = omittedCount > 0 ? [`(${omittedCount} older outcomes omitted)`] : [];
   return ["Managed sessions in your Space need a look:", ...omitted, ...lines].join("\n");
 }
 
-export function createWakeDigest(deps: SpaceDeps, rolesService: SpaceRolesService) {
+function createWakeDigest(deps: SpaceDeps, rolesService: SpaceRolesService) {
   const pending = new Map<string, PendingDigest>();
 
   async function flush(spaceId: string): Promise<void> {

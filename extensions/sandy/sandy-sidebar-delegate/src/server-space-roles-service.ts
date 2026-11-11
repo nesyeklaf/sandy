@@ -3,7 +3,7 @@ import { SpaceCoordinationError } from "./space-coordination-error";
 import type { CoordinationMode } from "./space-coordination-contract";
 import type { SpaceDeps } from "./server-space-deps";
 
-export type ManagedTargetDecision = { allowed: true } | { allowed: false; reason: string };
+type ManagedTargetDecision = { allowed: true } | { allowed: false; reason: string };
 
 export function createSpaceRolesService(deps: SpaceDeps) {
   const { roles, membership } = deps;

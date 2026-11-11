@@ -5,14 +5,14 @@ import type { SpaceActor, SpaceDeps } from "./server-space-deps";
 import type { IdeaAuthor } from "./server-space-ideas-store";
 import type { SpaceRolesService } from "./server-space-roles-service";
 
-export interface IdeaCreateInput {
+interface IdeaCreateInput {
   spaceId: string;
   title: string;
   body: string;
   threadIds: readonly string[];
 }
 
-export interface IdeaUpdateInput {
+interface IdeaUpdateInput {
   ideaId: string;
   title?: string;
   body?: string;

@@ -19,7 +19,7 @@ A stable thread list for [sandy](https://github.com/nesyeklaf/sandy). Threads st
 - Row fields from View → Show on rows: diff +/−, PR number with its checks (✓ passed, ✕ failed, ● running), host, provider, subagents, age and last message, each one on or off. Last message starts off: it shows the thread's latest assistant text as one truncated line under the title on Comfortable and Compact rows, never on Dense ones. The plugin stores that text when a thread goes idle (the `thread.idle` event), so a thread shows a line after its next turn ends and nothing before
 - Select mode from View → Select threads: tick rows, then Snooze, Archive, Pin, Tag or add a topic together from the bar at the bottom, each with Undo
 - Session tags and topics: a row's ⋯ menu opens **Tags & Topics…** to edit the session's own tags and topics; on phone widths it opens as a bottom sheet. The tag and topic pickers above the list show two sections, **Session** (labels set on the session) and **In ranges** (labels of topic ranges inside it), each with counts; a label picked in one section matches only on that level
-- Ideas are kept per Space (see skills/sandy-sidebar-spaces); the per-session idea mark is gone
+- Space coordination: several sessions of a Space can be orchestrators. An orchestrator may message, stop and archive only members the owner switched to Managed, and starts flat managed sessions with `space_start_session`. Ideas and a revisioned scratchpad belong to the Space; `sandy spaces` reaches all of it (see skills/sandy-sidebar-spaces). The old per-session idea and orchestrator marks were discarded
 - Activity bell beside the View button: the last 24 hours of asked, failed and finished threads, plus threads archived in that time with Restore; the badge counts questions waiting in Needs you
 - On phone widths the search with its scope and tag/topic pickers sits at the bottom of the sidebar
 - Density from the View button: Auto, Comfortable (three lines), Compact (two lines), or Dense (one line), with a per-shelf override in each shelf's ⋯ menu and options to keep pinned or woken threads full
@@ -58,8 +58,12 @@ sandy plugin rpc call sandy-sidebar-delegate addThreadTopic --input-file /tmp/to
 | `setThreadTopics` | `{ threadId, topics }` | `{ topics }`, replacing the session's topics |
 | `addThreadTopic` / `removeThreadTopic` | `{ threadIds, topic }` | `{ added, atLimit }` / `{ removed }` |
 | `getSpaceOverview` | `{ projectId? }` | `{ pullRequests, spaces }`: per Space total, counts (needs, failed, working, openPr, dormant), ready, repositories and representative roots with primary shelf. Listed by `sandy plugin rpc list`. `pullRequests` is `"available"` when GitHub PR Status answered for every environment, otherwise `"unavailable"`: open and merged PRs count, an absent PR makes a root dormant-eligible, and a draft, closed, offline or missing answer stays unknown and is never dormant |
-| `listIdeas` | `{}` | `{ threadIds }` marked as ideas |
-| `setIdea` | `{ threadIds, idea: boolean }` | `{ changed }`: only the sessions whose mark changed, so passing them back with the opposite `idea` undoes the call |
+| `getSpaceCoordination` | `{ spaceId }` | Members (status, project, environment, branch, PR, mode), orchestrators, wake switch, ideas, scratchpad revision |
+| `listOrchestrators` / `setOrchestrator` | `{}` / `{ threadId, orchestrator }` | `{ threadIds }` / `{ changed, spaceId }`; a Space may have several orchestrators |
+| `setMemberMode` / `setSpaceWake` | `{ threadId, mode }` / `{ spaceId, enabled }` | `{ changed, mode }` / `{ wakeEnabled }`; modes are independent (default) and managed |
+| `listIdeas` / `createIdea` / `updateIdea` / `deleteIdea` | per idea | Space ideas with status, author and linked sessions |
+| `getScratchpad` / `writeScratchpad` | `{ spaceId }` / `{ spaceId, body, baseRevision }` | Revisioned Markdown; a stale write returns `{ status: "conflict", scratchpad }` |
+| `listOrphanSpaces` / `adoptOrphanSpace` | `{}` / `{ oldSpaceId, spaceId }` | Ideas and scratchpads kept after a Space was deleted, and moving them into a live Space |
 
 Tags are stored lowercase; topics keep their case. A session holds at most 20 tags and 20 topics; bulk calls report sessions at that limit in `atLimit`. Bulk calls take 1 to 500 thread ids. Only `getSpaceOverview` is listed by `sandy plugin rpc list`; the other methods are not registered as discoverable.
 

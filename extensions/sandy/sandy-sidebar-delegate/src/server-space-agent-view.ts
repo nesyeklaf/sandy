@@ -1,7 +1,7 @@
 import type { ServerContext } from "./server-context";
 import type { SpaceDeps } from "./server-space-deps";
 
-export const ORCHESTRATOR_TOOL_NAMES = [
+const ORCHESTRATOR_TOOL_NAMES = [
   "space_start_session",
   "space_message_session",
   "space_stop_session",
@@ -9,7 +9,7 @@ export const ORCHESTRATOR_TOOL_NAMES = [
   "space_idea_delete",
 ] as const;
 
-export const MEMBER_TOOL_NAMES = [
+const MEMBER_TOOL_NAMES = [
   "space_context",
   "space_ideas_list",
   "space_idea_create",
@@ -20,14 +20,14 @@ export const MEMBER_TOOL_NAMES = [
 
 const SECTION_CACHE_ENTRIES_MAX = 5000;
 
-export const ORCHESTRATOR_INSTRUCTIONS = [
+const ORCHESTRATOR_INSTRUCTIONS = [
   "The owner made this session an orchestrator of its Space.",
   "Call space_context to see the members, their status, environments and branches, the ideas and the scratchpad revision.",
   "You may start sessions with space_start_session, and message, stop or archive members the owner marked Managed. Independent members are refused: only the owner can switch a member to Managed.",
   "Keep the plan in the Space scratchpad and the work items in Space ideas. Do not start sessions or ideas the owner did not ask for.",
 ].join("\n");
 
-export const MEMBER_INSTRUCTIONS = [
+const MEMBER_INSTRUCTIONS = [
   "This session belongs to a Space shared with other sessions.",
   "space_context shows the other members and the ideas; space_ideas_list, space_idea_create and space_idea_update keep the Space's ideas; space_scratchpad_read and space_scratchpad_write share a revisioned Markdown scratchpad.",
   "Write each idea so someone without this chat can pick it up: a title, the problem and what done looks like.",

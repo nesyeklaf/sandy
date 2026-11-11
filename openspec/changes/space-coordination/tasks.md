@@ -17,8 +17,8 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 - [x] 3.3 Wake digest with interval, entry cap and per-Space switch. Verify: tests with a fake clock.
 
 ## 4. RPC, realtime and CLI
-- [ ] 4.1 RPC contract and handlers; realtime channel per Space.
-- [ ] 4.2 `sandy spaces` CLI commands with --json; update docs/cli-guide-and-skill.md surfaces and the plugin skill. Verify: CLI tests for each command and error.
+- [x] 4.1 RPC contract and handlers; realtime channel per Space.
+- [x] 4.2 `sandy spaces` CLI commands with --json; update docs/cli-guide-and-skill.md surfaces and the plugin skill. Verify: CLI tests for each command and error.
 
 ## 5. UI
 - [ ] 5.1 Shelves: remove Ideas shelf in Spaces and Flow, keep Orchestrators shelf, rename Ready to Idle.

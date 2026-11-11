@@ -1,4 +1,4 @@
-export type SpaceCoordinationErrorCode =
+type SpaceCoordinationErrorCode =
   | "space_missing"
   | "not_member"
   | "not_orchestrator"

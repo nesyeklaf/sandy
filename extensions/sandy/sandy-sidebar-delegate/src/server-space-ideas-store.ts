@@ -23,7 +23,7 @@ export interface IdeaAuthor {
   threadId: string | null;
 }
 
-export interface IdeaPatch {
+interface IdeaPatch {
   title?: string;
   body?: string;
   status?: IdeaStatus;

@@ -9,6 +9,7 @@ import { createSpaceScratchpadStore } from "./server-space-scratchpad-store";
 import type { SpaceDeps } from "./server-space-deps";
 import { createAgentView } from "./server-space-agent-view";
 import { registerSpaceEnforcement } from "./server-space-enforcement";
+import { registerSpacesCli } from "./server-cli-spaces";
 import { registerSpaceTools } from "./server-space-tools";
 import { registerWakeDigest } from "./server-space-wake";
 import { ORCHESTRATORS_CHANNEL, spaceChannel } from "./realtime-channels";
@@ -37,6 +38,7 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
   registerWakeDigest(ctx, deps, rolesService);
   createAgentView(ctx, deps);
   registerSpaceTools(ctx, space);
+  registerSpacesCli(ctx, space);
   return space;
 }
 

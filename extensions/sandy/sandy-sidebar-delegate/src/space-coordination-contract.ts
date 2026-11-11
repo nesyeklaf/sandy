@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const IDEA_TITLE_CHARS_MAX = 200;
-export const IDEA_BODY_BYTES_MAX = 16384;
+const IDEA_TITLE_CHARS_MAX = 200;
+const IDEA_BODY_BYTES_MAX = 16384;
 export const IDEAS_PER_SPACE_MAX = 500;
 export const IDEA_LINKS_MAX = 50;
 export const SCRATCHPAD_BYTES_MAX = 65536;
@@ -82,7 +82,7 @@ export const spaceCoordinationSchema = z.object({
   scratchpadRevision: z.number().int().nonnegative(),
 });
 
-export const orphanSpaceSchema = z.object({
+const orphanSpaceSchema = z.object({
   spaceId: z.string(),
   ideaCount: z.number().int().nonnegative(),
   hasScratchpad: z.boolean(),

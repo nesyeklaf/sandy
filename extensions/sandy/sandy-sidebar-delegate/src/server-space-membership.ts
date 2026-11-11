@@ -4,7 +4,7 @@ import type { ServerContext } from "./server-context";
 
 export type MemberThread = Awaited<ReturnType<ServerContext["sandy"]["sdk"]["threads"]["list"]>>[number];
 
-export interface SpaceMembers {
+interface SpaceMembers {
   threads: MemberThread[];
   truncated: boolean;
 }
