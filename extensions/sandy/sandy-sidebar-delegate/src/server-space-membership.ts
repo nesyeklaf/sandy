@@ -54,29 +54,31 @@ export function createSpaceMembership(ctx: ServerContext) {
       assert(spaceId.length > 0, "spaceId must not be empty");
       const threads: MemberThread[] = [];
       const pageCount = Math.ceil(SPACE_MEMBERS_LISTED_MAX / THREAD_IDS_PER_LOOKUP_MAX);
-      let truncated = false;
       for (let page = 0; page < pageCount; page += 1) {
+        const limit = Math.min(THREAD_IDS_PER_LOOKUP_MAX, SPACE_MEMBERS_LISTED_MAX - threads.length);
         const batch = await ctx.sandy.sdk.threads.list({
           sectionId: spaceId,
           includeHidden: true,
           archived: false,
-          limit: THREAD_IDS_PER_LOOKUP_MAX,
-          offset: page * THREAD_IDS_PER_LOOKUP_MAX,
+          limit,
+          offset: threads.length,
         });
+        assert(batch.length <= limit, "a page never exceeds the requested limit");
         threads.push(...batch);
-        if (batch.length < THREAD_IDS_PER_LOOKUP_MAX) break;
-        if (page === pageCount - 1) {
-          const probe = await ctx.sandy.sdk.threads.list({
+        if (batch.length < limit) break;
+      }
+      assert(threads.length <= SPACE_MEMBERS_LISTED_MAX, "listed members stay within the limit");
+      const truncated =
+        threads.length === SPACE_MEMBERS_LISTED_MAX &&
+        (
+          await ctx.sandy.sdk.threads.list({
             sectionId: spaceId,
             includeHidden: true,
             archived: false,
             limit: 1,
             offset: SPACE_MEMBERS_LISTED_MAX,
-          });
-          truncated = probe.length > 0;
-        }
-      }
-      assert(threads.length <= SPACE_MEMBERS_LISTED_MAX, "listed members stay within the limit");
+          })
+        ).length > 0;
       return { threads, truncated };
     },
 

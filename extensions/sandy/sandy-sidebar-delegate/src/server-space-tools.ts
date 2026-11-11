@@ -8,12 +8,34 @@ const { createIdea, updateIdea, writeScratchpad } = spaceCoordinationRpcShape;
 
 const emptyParameters = z.object({}).strict();
 const threadParameters = z.object({ threadId: z.string().trim().min(1) }).strict();
+const startEnvironmentSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("project-default") }).strict(),
+  z.object({ type: z.literal("reuse"), environmentId: z.string().trim().min(1) }).strict(),
+  z
+    .object({
+      type: z.literal("host"),
+      hostId: z.string().trim().min(1).optional(),
+      workspace: z.discriminatedUnion("type", [
+        z.object({ type: z.literal("personal") }).strict(),
+        z
+          .object({
+            type: z.literal("managed-worktree"),
+            baseBranch: z.discriminatedUnion("kind", [
+              z.object({ kind: z.literal("default") }).strict(),
+              z.object({ kind: z.literal("named"), name: z.string().trim().min(1) }).strict(),
+            ]),
+          })
+          .strict(),
+      ]),
+    })
+    .strict(),
+]);
 const startParameters = z
   .object({
     projectId: z.string().trim().min(1),
     title: z.string().trim().min(1).max(200),
     prompt: z.string().trim().min(1),
-    environmentId: z.string().trim().min(1).optional(),
+    environment: startEnvironmentSchema.default({ type: "project-default" }),
     ideaId: z.string().trim().min(1).optional(),
   })
   .strict();
@@ -128,18 +150,23 @@ function registerManagementTools(
     execute: (input, { threadId }) =>
       guarded(async () => {
         const spaceId = await rolesService.requireOrchestrator(threadId);
+        if (input.ideaId !== undefined) await notes.requireLinkableIdea(input.ideaId, spaceId);
         const spawned = await sdk.threads.spawn({
           projectId: input.projectId,
           title: input.title,
           prompt: input.prompt,
           sectionId: spaceId,
-          environment:
-            input.environmentId === undefined
-              ? { type: "project-default" }
-              : { type: "reuse", environmentId: input.environmentId },
+          environment: input.environment,
         });
-        deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
-        if (input.ideaId !== undefined) await notes.linkSessionToIdea(input.ideaId, spawned.id);
+        try {
+          deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
+          if (input.ideaId !== undefined) await notes.linkSessionToIdea(input.ideaId, spawned.id);
+        } catch (error) {
+          throw new SpaceCoordinationError(
+            "invalid_request",
+            `Session ${spawned.id} was started in the Space but could not be finished: ${String(error)}. Do not start it again; use space_context to find it.`,
+          );
+        }
         deps.publishSpace(spaceId);
         return { threadId: spawned.id, spaceId, mode: "managed" };
       }),

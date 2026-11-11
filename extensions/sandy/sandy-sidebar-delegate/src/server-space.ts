@@ -36,7 +36,7 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
   const space = { deps, rolesService, notes, contextReader, orphans };
   registerSpaceEnforcement(ctx, rolesService);
   registerWakeDigest(ctx, deps, rolesService);
-  createAgentView(ctx, deps);
+  createAgentView(ctx, deps, rolesService);
   registerSpaceTools(ctx, space);
   registerSpacesCli(ctx, space);
   return space;

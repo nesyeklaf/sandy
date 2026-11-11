@@ -23,6 +23,22 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     return kept;
   }
 
+  async function verifiedAllOrchestrators(): Promise<Array<{ threadId: string; spaceId: string }>> {
+    const threadIds = roles.allOrchestrators();
+    const spaces = await membership.spacesOf(threadIds);
+    const kept: Array<{ threadId: string; spaceId: string }> = [];
+    for (const threadId of threadIds) {
+      const stored = roles.orchestratorSpaceOf(threadId);
+      if (stored !== null && spaces.get(threadId) === stored) {
+        kept.push({ threadId, spaceId: stored });
+      } else {
+        roles.clearOrchestrator(threadId);
+        deps.publishOrchestrators();
+      }
+    }
+    return kept;
+  }
+
   async function orchestratorSpaceOf(threadId: string): Promise<string | null> {
     const spaceId = roles.orchestratorSpaceOf(threadId);
     if (spaceId === null) return null;
@@ -59,6 +75,7 @@ export function createSpaceRolesService(deps: SpaceDeps) {
   return {
     modeOf,
     verifiedOrchestrators,
+    verifiedAllOrchestrators,
     orchestratorSpaceOf,
     requireOrchestrator,
     requireMember,

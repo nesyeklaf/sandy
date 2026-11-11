@@ -1,6 +1,12 @@
 import { assert } from "./assert";
 import { SpaceCoordinationError } from "./space-coordination-error";
-import type { Idea, IdeaStatus, Scratchpad, ScratchpadWrite } from "./space-coordination-contract";
+import {
+  IDEA_LINKS_MAX,
+  type Idea,
+  type IdeaStatus,
+  type Scratchpad,
+  type ScratchpadWrite,
+} from "./space-coordination-contract";
 import type { SpaceActor, SpaceDeps } from "./server-space-deps";
 import type { IdeaAuthor } from "./server-space-ideas-store";
 import type { SpaceRolesService } from "./server-space-roles-service";
@@ -102,6 +108,19 @@ export function createSpaceNotesService(deps: SpaceDeps, rolesService: SpaceRole
       const removed = ideas.remove(ideaId);
       deps.publishSpace(current.spaceId);
       return removed;
+    },
+
+    async requireLinkableIdea(ideaId: string, spaceId: string): Promise<void> {
+      const current = await ideaOrFail(ideaId);
+      if (current.spaceId !== spaceId) {
+        throw new SpaceCoordinationError("not_member", `Idea ${ideaId} belongs to another Space.`);
+      }
+      if (current.threadIds.length >= IDEA_LINKS_MAX) {
+        throw new SpaceCoordinationError(
+          "limit_reached",
+          `Idea ${ideaId} already links the maximum of ${IDEA_LINKS_MAX} sessions.`,
+        );
+      }
     },
 
     async linkSessionToIdea(ideaId: string, threadId: string): Promise<Idea> {

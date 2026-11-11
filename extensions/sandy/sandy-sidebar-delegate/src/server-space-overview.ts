@@ -41,7 +41,7 @@ function ownAttention(thread: ListedThread): OwnAttention {
 export function createServerSpaceOverview(
   ctx: ServerContext,
   lifecycle: Pick<ReturnType<typeof createServerLifecycle>, "readAll" | "threadSignals">,
-  roles: { allOrchestrators(): string[] },
+  roles: { orchestratorSpaceOf(threadId: string): string | null },
 ) {
   async function listThreads(): Promise<ListedThread[]> {
     const threads: ListedThread[] = [];
@@ -67,7 +67,14 @@ export function createServerSpaceOverview(
       ];
       const pullRequests = await lookUpPullRequestOutcomes(ctx, environmentIds);
       const rows = new Map(lifecycle.readAll().map((row) => [row.threadId, row]));
-      const orchestrators = new Set(roles.allOrchestrators());
+      const orchestrators = new Set(
+        threads
+          .filter((thread) => {
+            const storedSpaceId = roles.orchestratorSpaceOf(thread.id);
+            return storedSpaceId !== null && storedSpaceId === thread.sectionId;
+          })
+          .map((thread) => thread.id),
+      );
       const askingParents = descendantsWhere(threads, (thread) => thread.hasPendingInteraction);
       const unblockedParents = descendantsWhere(threads, (thread) => lifecycle.threadSignals(thread).hasUnblockedWork);
       const shelfOf = (thread: ListedThread) => {

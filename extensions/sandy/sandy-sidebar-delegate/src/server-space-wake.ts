@@ -26,10 +26,7 @@ function formatDigest(entries: readonly WakeEntry[], omittedCount: number): stri
 function createWakeDigest(deps: SpaceDeps, rolesService: SpaceRolesService) {
   const pending = new Map<string, PendingDigest>();
 
-  async function flush(spaceId: string): Promise<void> {
-    const digest = pending.get(spaceId);
-    if (digest === undefined) return;
-    pending.delete(spaceId);
+  async function deliver(spaceId: string, digest: PendingDigest): Promise<void> {
     const text = formatDigest(digest.entries, digest.omittedCount);
     for (const orchestratorId of await rolesService.verifiedOrchestrators(spaceId)) {
       try {
@@ -41,6 +38,18 @@ function createWakeDigest(deps: SpaceDeps, rolesService: SpaceRolesService) {
       } catch (error) {
         deps.ctx.sandy.log.warn(`Could not send the wake digest to ${orchestratorId}: ${String(error)}`);
       }
+    }
+  }
+
+  async function flush(spaceId: string): Promise<void> {
+    const digest = pending.get(spaceId);
+    if (digest === undefined) return;
+    pending.delete(spaceId);
+    if (!deps.roles.wakeEnabled(spaceId)) return;
+    try {
+      await deliver(spaceId, digest);
+    } catch (error) {
+      deps.ctx.sandy.log.warn(`Could not deliver the wake digest of Space ${spaceId}: ${String(error)}`);
     }
   }
 

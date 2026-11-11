@@ -1,10 +1,12 @@
 import { cliCommand } from "@sandy-sdk/plugin-sdk";
-import { IDEA_STATUSES } from "./space-coordination-contract";
+import { IDEA_STATUSES, spaceCoordinationRpcShape } from "./space-coordination-contract";
 import { actorOf, attempt, JSON_OPTION, jsonResult, render, resolveSpaceId } from "./server-cli-spaces-support";
 import type { createSpaceHandlers } from "./server-space-handlers";
 import type { ServerSpace } from "./server-space";
 
 type Handlers = ReturnType<typeof createSpaceHandlers>;
+
+const { createIdea, updateIdea, writeScratchpad } = spaceCoordinationRpcShape;
 
 const SPACE_POSITIONAL = { name: "space", description: "Space id or exact name", required: true } as const;
 const IDEA_POSITIONAL = { name: "idea", description: "Idea id", required: true } as const;
@@ -43,12 +45,15 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
       run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const idea = await space.notes.createIdea(actorOf(ctx), {
-            spaceId,
-            title: input.options.title,
-            body: input.options.body ?? "",
-            threadIds: input.options.thread ?? [],
-          });
+          const idea = await space.notes.createIdea(
+            actorOf(ctx),
+            createIdea.input.parse({
+              spaceId,
+              title: input.options.title,
+              body: input.options.body ?? "",
+              threadIds: input.options.thread ?? [],
+            }),
+          );
           return render(input.options.json, idea, [`Created idea ${idea.id}.`]);
         }),
     }),
@@ -67,15 +72,18 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
       run: (input, ctx) =>
         attempt(async () => {
           const threadIds = input.options.unlink ? [] : input.options.thread;
-          const idea = await space.notes.updateIdea(actorOf(ctx), {
-            ideaId: input.positionals.idea,
-            ...(input.options.title === undefined ? {} : { title: input.options.title }),
-            ...(input.options.body === undefined ? {} : { body: input.options.body }),
-            ...(input.options.status === undefined
-              ? {}
-              : { status: input.options.status as (typeof IDEA_STATUSES)[number] }),
-            ...(threadIds === undefined || (threadIds.length === 0 && !input.options.unlink) ? {} : { threadIds }),
-          });
+          const idea = await space.notes.updateIdea(
+            actorOf(ctx),
+            updateIdea.input.parse({
+              ideaId: input.positionals.idea,
+              ...(input.options.title === undefined ? {} : { title: input.options.title }),
+              ...(input.options.body === undefined ? {} : { body: input.options.body }),
+              ...(input.options.status === undefined
+                ? {}
+                : { status: input.options.status as (typeof IDEA_STATUSES)[number] }),
+              ...(threadIds === undefined || (threadIds.length === 0 && !input.options.unlink) ? {} : { threadIds }),
+            }),
+          );
           return render(input.options.json, idea, [`Updated idea ${idea.id} [${idea.status}].`]);
         }),
     }),
@@ -123,11 +131,14 @@ function createScratchpadCommands(space: ServerSpace, handlers: Handlers) {
       run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const result = await space.notes.writeScratchpad(actorOf(ctx), {
-            spaceId,
-            body: input.options.body,
-            baseRevision: input.options["base-revision"],
-          });
+          const result = await space.notes.writeScratchpad(
+            actorOf(ctx),
+            writeScratchpad.input.parse({
+              spaceId,
+              body: input.options.body,
+              baseRevision: input.options["base-revision"],
+            }),
+          );
           if (result.status === "conflict") {
             const conflict = input.options.json
               ? jsonResult(result)

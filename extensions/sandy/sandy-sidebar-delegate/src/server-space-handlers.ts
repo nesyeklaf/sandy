@@ -10,7 +10,8 @@ export function createSpaceHandlers(space: ServerSpace) {
       return space.contextReader.read(spaceId);
     },
     async listOrchestrators() {
-      return { threadIds: space.deps.roles.allOrchestrators() };
+      const verified = await space.rolesService.verifiedAllOrchestrators();
+      return { threadIds: verified.map((entry) => entry.threadId) };
     },
     async setOrchestrator({ threadId, orchestrator }) {
       return space.rolesService.setOrchestrator(threadId, orchestrator);

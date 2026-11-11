@@ -217,6 +217,35 @@ describe("wake digest", () => {
     expect(text).not.toContain("thr_w0)");
   });
 
+  it("drops a queued digest when the Space switch is turned off before it is due", async () => {
+    const { harness, members, send } = await wakeWorld(1);
+    await harness.behavior.emitThreadEvent("thread.idle", { thread: members[0], lastAssistantText: null });
+    await call(harness, "setSpaceWake", { spaceId: "space_a", enabled: false });
+    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS * 2);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("logs a membership failure while flushing instead of rejecting", async () => {
+    const state: SpaceWorld = {
+      sections: [{ id: "space_a", name: "Alpha" }],
+      threads: [spaceThread("thr_orch", "space_a"), spaceThread("thr_w0", "space_a")],
+    };
+    let failing = false;
+    const harness = await loadSpacePlugin(state, {
+      list: async () => {
+        if (failing) throw new Error("membership backend unavailable");
+        return state.threads;
+      },
+    });
+    await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
+    await call(harness, "setMemberMode", { threadId: "thr_w0", mode: "managed" });
+    await harness.behavior.emitThreadEvent("thread.idle", { thread: state.threads[1], lastAssistantText: null });
+    failing = true;
+    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
+    const warnings = harness.inspection.logEntries.filter((entry) => entry.level === "warn");
+    expect(warnings.some((entry) => entry.message.includes("membership backend unavailable"))).toBe(true);
+  });
+
   it("sends nothing when the Space switch is off or the member is independent", async () => {
     const { harness, members, send } = await wakeWorld(2);
     await call(harness, "setSpaceWake", { spaceId: "space_a", enabled: false });

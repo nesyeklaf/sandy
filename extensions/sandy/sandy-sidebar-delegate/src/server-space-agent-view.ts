@@ -1,5 +1,7 @@
 import type { ServerContext } from "./server-context";
+import { assert } from "./assert";
 import type { SpaceDeps } from "./server-space-deps";
+import type { SpaceRolesService } from "./server-space-roles-service";
 
 const ORCHESTRATOR_TOOL_NAMES = [
   "space_start_session",
@@ -33,7 +35,7 @@ const MEMBER_INSTRUCTIONS = [
   "Write each idea so someone without this chat can pick it up: a title, the problem and what done looks like.",
 ].join("\n");
 
-export function createAgentView(ctx: ServerContext, deps: SpaceDeps) {
+export function createAgentView(ctx: ServerContext, deps: SpaceDeps, rolesService: SpaceRolesService) {
   const sectionByThread = new Map<string, string | null>();
 
   function remember(thread: { id: string; sectionId: string | null }): void {
@@ -55,8 +57,28 @@ export function createAgentView(ctx: ServerContext, deps: SpaceDeps) {
     sectionByThread.delete(thread.id);
   });
 
+  function reconcileInBackground(threadId: string): void {
+    rolesService.orchestratorSpaceOf(threadId).catch((error: unknown) => {
+      ctx.sandy.log.warn(`Could not verify the orchestrator role of ${threadId}: ${String(error)}`);
+    });
+  }
+
+  function stillOrchestrator(threadId: string): boolean {
+    const storedSpaceId = deps.roles.orchestratorSpaceOf(threadId);
+    if (storedSpaceId === null) return false;
+    const knownSpaceId = sectionByThread.get(threadId);
+    if (knownSpaceId === undefined || knownSpaceId === storedSpaceId) {
+      reconcileInBackground(threadId);
+      return true;
+    }
+    deps.roles.clearOrchestrator(threadId);
+    deps.publishOrchestrators();
+    return false;
+  }
+
   ctx.sandy.agents.configure(({ thread }) => {
-    if (deps.roles.orchestratorSpaceOf(thread.id) !== null) {
+    assert(thread.id.length > 0, "configured thread needs an id");
+    if (stillOrchestrator(thread.id)) {
       return {
         tools: [...MEMBER_TOOL_NAMES, ...ORCHESTRATOR_TOOL_NAMES],
         skills: [],

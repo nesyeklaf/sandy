@@ -137,6 +137,25 @@ describe("sandy spaces", () => {
     expect((await run(harness, "wake", "Alpha", "maybe")).exitCode).not.toBe(0);
   });
 
+  it("applies the shared idea limits to the CLI", async () => {
+    const harness = await loadSpacePlugin(world());
+    const longTitle = await run(harness, "ideas", "add", "Alpha", "--title", "x".repeat(201));
+    const longBody = await run(harness, "ideas", "add", "Alpha", "--title", "ok", "--body", "x".repeat(16385));
+    const longPad = await run(
+      harness,
+      "scratchpad",
+      "write",
+      "Alpha",
+      "--body",
+      "x".repeat(65537),
+      "--base-revision",
+      "0",
+    );
+    for (const result of [longTitle, longBody, longPad]) expect(result.exitCode).not.toBe(0);
+    const listed = parse<{ ideas: unknown[] }>((await run(harness, "ideas", "list", "Alpha", "--json")).stdout);
+    expect(listed.ideas).toHaveLength(0);
+  });
+
   describe("session callers", () => {
     const asSession = (harness: Harness, threadId: string, ...argv: string[]) =>
       harness.behavior.runCli(argv, { threadId });
