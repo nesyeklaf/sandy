@@ -430,6 +430,12 @@ export function startCollector(emit: (sample: Sample) => void, signal: AbortSign
 
   function onContentMutations(watch: ContentWatch, records: readonly MutationRecord[]) {
     if (watch.result !== null) return;
+    const now = performance.now();
+    if (watch.run.isPastCap(now)) {
+      const closed = watch.run.evaluate(now);
+      if (closed !== null) closeWatch(watch, closed);
+      return;
+    }
     const content = records.filter(isContentRecord);
     const last = content[content.length - 1];
     if (last === undefined) return;

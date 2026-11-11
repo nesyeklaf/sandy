@@ -292,7 +292,7 @@ export function lastWriter(sample: Sample): string {
 }
 
 export function summarizeWriters(samples: readonly Sample[]): WriterRow[] {
-  const switches = samples.filter((sample) => sample.kind === "switch");
+  const switches = samples.filter((sample) => sample.kind === "switch" && sample.contentDone !== null);
   const byWriter = new Map<string, Sample[]>();
   for (const sample of switches) {
     const writer = lastWriter(sample);

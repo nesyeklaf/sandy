@@ -106,6 +106,10 @@ export class ContentRun {
     return done === null || this.awaitingPaint ? this.capAt : Math.min(done + this.settleMs, this.capAt);
   }
 
+  isPastCap(now: number): boolean {
+    return now >= this.capAt;
+  }
+
   evaluate(now: number): ContentDoneResult | null {
     const done = this.doneAt();
     if (done !== null && !this.awaitingPaint && done + this.settleMs <= this.capAt && now >= done + this.settleMs) {

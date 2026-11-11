@@ -334,10 +334,10 @@ test("samples stored without a content source report under the unknown writer", 
     JSON.stringify(desktop),
     desktop.deviceId,
   );
-  record({ client: desktop, samples: [writerSwitch(now - 1000, 300, 700, "host", 1)] });
+  record({ client: desktop, samples: [writerSwitch(now - 1000, 300, 700, "host", 1), switchSample(250, now - 500)] });
   const json = JSON.parse(await report("--kind", "switch", "--json"));
   const writers = json.byDevice[0].writers.map((row: WriterRow) => [row.writer, row.n, row.contentP50]);
   assert.deepEqual(writers, [["host", 1, 700], ["unknown", 1, 453]]);
   const group = json.groups[0];
-  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50], [2, 280, 2, 453]);
+  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50], [3, 280, 2, 453]);
 });
