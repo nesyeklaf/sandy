@@ -58,4 +58,10 @@ export const SPACE_COORDINATION_MIGRATIONS = [
      set_at     INTEGER NOT NULL
    )`,
   `DROP TABLE IF EXISTS space_member_modes`,
+  `CREATE TABLE IF NOT EXISTS space_started_sessions (
+     thread_id          TEXT PRIMARY KEY,
+     space_id           TEXT NOT NULL,
+     starter_thread_id  TEXT NOT NULL,
+     started_at         INTEGER NOT NULL
+   )`,
 ];

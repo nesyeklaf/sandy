@@ -13,6 +13,7 @@ export function createSpaceRolesStore(db: Database) {
     "SELECT thread_id FROM space_orchestrators ORDER BY assigned_at, thread_id",
   );
   const selectManagedSpace = db.prepare("SELECT space_id FROM space_managed_members WHERE thread_id = ?");
+  const selectStartedSpace = db.prepare("SELECT space_id FROM space_started_sessions WHERE thread_id = ?");
   const selectWake = db.prepare("SELECT wake_enabled FROM space_settings WHERE space_id = ?");
 
   return {
@@ -55,6 +56,26 @@ export function createSpaceRolesStore(db: Database) {
     managedSpaceOf(threadId: string): string | null {
       const row = selectManagedSpace.get(threadId) as { space_id: string } | undefined;
       return row === undefined ? null : row.space_id;
+    },
+
+    startedSpaceOf(threadId: string): string | null {
+      const row = selectStartedSpace.get(threadId) as { space_id: string } | undefined;
+      return row === undefined ? null : row.space_id;
+    },
+
+    recordStarted(threadId: string, spaceId: string, starterThreadId: string, nowMs: number): void {
+      assert(
+        threadId.length > 0 && spaceId.length > 0 && starterThreadId.length > 0,
+        "started session ids must not be empty",
+      );
+      db.prepare(
+        "INSERT OR REPLACE INTO space_started_sessions (thread_id, space_id, starter_thread_id, started_at) VALUES (?, ?, ?, ?)",
+      ).run(threadId, spaceId, starterThreadId, nowMs);
+      assert(this.startedSpaceOf(threadId) === spaceId, "started row must exist after recording");
+    },
+
+    clearStarted(threadId: string): void {
+      db.prepare("DELETE FROM space_started_sessions WHERE thread_id = ?").run(threadId);
     },
 
     modeIn(threadId: string, spaceId: string | null): CoordinationMode {
@@ -103,6 +124,7 @@ export function createSpaceRolesStore(db: Database) {
     forgetThread(threadId: string): { orchestratorSpaceId: string | null } {
       const orchestratorSpaceId = this.clearOrchestrator(threadId);
       db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
+      this.clearStarted(threadId);
       db.prepare("DELETE FROM space_idea_links WHERE thread_id = ?").run(threadId);
       return { orchestratorSpaceId };
     },

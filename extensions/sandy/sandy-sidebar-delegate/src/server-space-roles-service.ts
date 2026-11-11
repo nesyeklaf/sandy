@@ -54,6 +54,16 @@ function createRoleVerifier(deps: SpaceDeps) {
     return null;
   }
 
+  async function restrictedSpaceOf(threadId: string): Promise<string | null> {
+    const orchestratorSpaceId = await orchestratorSpaceOf(threadId);
+    if (orchestratorSpaceId !== null) return orchestratorSpaceId;
+    const startedSpaceId = roles.startedSpaceOf(threadId);
+    if (startedSpaceId === null) return null;
+    if ((await membership.spaceOf(threadId)) === startedSpaceId) return startedSpaceId;
+    roles.clearStarted(threadId);
+    return null;
+  }
+
   async function requireOrchestrator(threadId: string): Promise<string> {
     const spaceId = await orchestratorSpaceOf(threadId);
     if (spaceId === null) {
@@ -62,7 +72,13 @@ function createRoleVerifier(deps: SpaceDeps) {
     return spaceId;
   }
 
-  return { verifiedOrchestrators, verifiedAllOrchestrators, orchestratorSpaceOf, requireOrchestrator };
+  return {
+    verifiedOrchestrators,
+    verifiedAllOrchestrators,
+    orchestratorSpaceOf,
+    restrictedSpaceOf,
+    requireOrchestrator,
+  };
 }
 
 function createMemberReads(deps: SpaceDeps) {
@@ -95,7 +111,7 @@ function createManagedTargetDecider(deps: SpaceDeps, verifier: RoleVerifier) {
     targetThreadId: string,
   ): Promise<ManagedTargetDecision> {
     assert(senderThreadId.length > 0 && targetThreadId.length > 0, "sender and target ids must not be empty");
-    const senderSpaceId = await verifier.orchestratorSpaceOf(senderThreadId);
+    const senderSpaceId = await verifier.restrictedSpaceOf(senderThreadId);
     if (senderSpaceId === null) return { allowed: true };
     const targetSpaceId = await membership.spaceOf(targetThreadId);
     const targetMode = roles.modeIn(targetThreadId, targetSpaceId);
@@ -103,14 +119,15 @@ function createManagedTargetDecider(deps: SpaceDeps, verifier: RoleVerifier) {
     if (targetSpaceId !== senderSpaceId) {
       return {
         allowed: false,
-        reason: "Orchestrators may only message sessions in their own Space. This session is outside it.",
+        reason:
+          "Orchestrators and the sessions they start may only message sessions in their own Space. This session is outside it.",
       };
     }
     if (targetMode !== "managed") {
       return {
         allowed: false,
         reason:
-          "This session is independent. Only the owner can switch it to managed before an orchestrator may message it.",
+          "This session is independent. Only the owner can switch it to managed before an orchestrator, or a session an orchestrator started, may message it.",
       };
     }
     return { allowed: true };

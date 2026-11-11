@@ -178,6 +178,7 @@ function registerManagementTools(
         });
         try {
           deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
+          deps.roles.recordStarted(spawned.id, spaceId, threadId, Date.now());
           if (input.ideaId !== undefined) await notes.linkSessionToIdea(input.ideaId, spawned.id);
         } catch (error) {
           throw new SpaceCoordinationError(

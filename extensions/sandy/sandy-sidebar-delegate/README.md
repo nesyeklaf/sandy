@@ -70,6 +70,10 @@ sandy plugin rpc call sandy-sidebar-delegate addThreadTopic --input-file /tmp/to
 
 Tags are stored lowercase; topics keep their case. A session holds at most 20 tags and 20 topics; bulk calls report sessions at that limit in `atLimit`. Bulk calls take 1 to 500 thread ids. Only `getSpaceOverview` is listed by `sandy plugin rpc list`; the other methods are not registered as discoverable.
 
+### Boundary
+
+The Space protection is cooperative. It binds agents that use the Space tools and the normal `sandy` CLI, including sessions an orchestrator started. A session that clears `SANDY_THREAD_ID`, spoofs a sender, or runs `sandy thread stop` or `archive` is not prevented, because the core takes caller identity from the client. A hard boundary needs an authenticated per-session identity for the CLI and HTTP plus a stop/archive hook. After a move the plugin has not observed, an orchestrator's tool list can be stale for one turn, and one dispatch can slip through a role change that lands mid-flight.
+
 ## Install
 
 ```sh

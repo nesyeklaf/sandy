@@ -60,7 +60,7 @@ Membership is not stored by the plugin: a member is any live thread whose core `
 ## Enforcement
 
 - Agent tools check the caller: `space_*` management tools run only for orchestrators of that Space; member tools run for any member of the Space. A tool call from elsewhere returns an error naming the reason.
-- A `message.dispatch` hook refuses a dispatch to thread T when `senderThreadId` is an orchestrator and T is independent or not in that orchestrator's Space. This also covers `sandy thread tell` and core send paths that carry a sender. A message without a sender (the owner typing) is never refused. Mixed senders are refused if any sender would be refused.
+- A `message.dispatch` hook refuses a dispatch to thread T when `senderThreadId` is an orchestrator, or a session an orchestrator started with `space_start_session` and that is still in that Space, and T is independent or not in that orchestrator's Space. This also covers `sandy thread tell` and core send paths that carry a sender. A message without a sender (the owner typing) is never refused. Mixed senders are refused if any sender would be refused.
 - Orchestrator instructions replace the old standing request: work only through Space members, start sessions with `space_start_session` (never as children), never message independent sessions, read the Space context before acting.
 
 ## Agent tools
@@ -100,6 +100,10 @@ All user-visible and agent-visible text in the plugin is English. A unit test sc
 
 ## Risks
 
+- **Cooperative boundary.** The protection binds agents that use the Space tools and the normal `sandy` CLI. A session that clears `SANDY_THREAD_ID`, spoofs a sender, or runs `sandy thread stop` or `sandy thread archive` is not prevented, because the core takes caller identity from the client. A hard boundary would need an authenticated per-session identity for the CLI and HTTP paths plus a stop/archive hook; both are core changes outside this plugin.
+- Proxy path: a session started with `space_start_session` is recorded with its starter and Space (`space_started_sessions`). The dispatch hook treats it like an orchestrator while it stays in that Space. The record survives the starter being archived or losing its role, is cleared on `thread.deleted` and when a read observes the session in another Space.
+- Stale tools: after a move the plugin has not observed, an orchestrator's tool list can stay stale for one turn; tool execution still checks the role and Space, so the tools refuse.
+- Race window: a dispatch is checked once. A role or mode change that lands while one dispatch is in flight can let that one dispatch through.
 - Hook coverage: a dispatch without a sender cannot be attributed. Mitigation: `space_message_session` always sets the sender; the risk is accepted for other unattributed paths.
 - Section changes outside the plugin: handled by checking membership on every read and dispatch, not by cached state alone.
 - Wake-up noise: bounded digest and per-Space switch.

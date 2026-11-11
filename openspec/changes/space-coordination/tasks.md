@@ -14,6 +14,8 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 ## 3. Enforcement and agent tools
 - [x] 3.1 Message-dispatch hook refusing orchestrator messages to independent or foreign sessions. Verify: tests for owner message, managed, independent, foreign Space, mixed senders.
 - [x] 3.2 Agent tools and per-thread tool configuration; new orchestrator and member instructions; remove session_roles and the idea instructions. Verify: tests that a non-orchestrator cannot call management tools and that space_start_session creates a flat member (sectionId set, no parent, no lifecycle owner).
+- [x] 3.4 Sessions started by an orchestrator are recorded (space_started_sessions, appended migration) and restricted by the dispatch hook like the orchestrator. Verify: tests for independent target, managed target, mixed queue, role loss, deletion cleanup, move.
+- [x] 3.5 Document the cooperative boundary in design risks, README and the Spaces skill.
 - [x] 3.3 Wake digest with interval, entry cap and per-Space switch. Verify: tests with a fake clock.
 
 ## 4. RPC, realtime and CLI

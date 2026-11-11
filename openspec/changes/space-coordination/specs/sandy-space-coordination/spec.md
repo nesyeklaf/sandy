@@ -29,7 +29,7 @@ Every member session SHALL have a coordination mode, independent by default and 
 - **THEN** every orchestrator of the Space may message, stop and archive it
 
 ### Requirement: Orchestrator messages reach managed members only
-The plugin SHALL refuse, before it reaches the provider, any message whose sender is an orchestrator and whose target is an independent session or a session outside that orchestrator's Space. Messages without a sender SHALL never be refused by this rule.
+The plugin SHALL refuse, before it reaches the provider, any message that carries a sender and whose sender is an orchestrator and whose target is an independent session or a session outside that orchestrator's Space. Messages without a sender SHALL never be refused by this rule.
 
 #### Scenario: Message to an independent member through the CLI
 - **WHEN** an orchestrator of S runs `sandy thread tell` to an independent member of S
@@ -38,6 +38,24 @@ The plugin SHALL refuse, before it reaches the provider, any message whose sende
 #### Scenario: Owner message
 - **WHEN** the owner types a message into an independent member
 - **THEN** the message is dispatched normally
+
+### Requirement: Sessions an orchestrator started are restricted like it
+The plugin SHALL record the Space of a session started with space_start_session and SHALL refuse a message from that session to an independent session or a session outside that Space exactly as it refuses one from an orchestrator. The record SHALL survive the starter being archived or losing its role, SHALL be cleared when the session is deleted, and SHALL end when the session is observed in another Space.
+
+#### Scenario: Started session messages an independent member
+- **WHEN** a session started by an orchestrator of S messages an independent member of S
+- **THEN** the dispatch is refused with a reason that names the independent mode
+
+#### Scenario: Started session messages a managed member
+- **WHEN** a session started by an orchestrator of S messages a managed member of S
+- **THEN** the dispatch proceeds
+
+### Requirement: The protection is cooperative
+The plugin SHALL document that its protection binds agents using the Space tools and the normal sandy CLI, and that clearing SANDY_THREAD_ID, spoofing a sender, or running sandy thread stop or archive is not prevented.
+
+#### Scenario: Documentation
+- **WHEN** a reader opens the design risks, the plugin README or the Spaces skill
+- **THEN** each states the cooperative boundary and what a hard boundary would need
 
 ### Requirement: Orchestrator starts flat member sessions
 An orchestrator SHALL be able to start a session in its Space through an agent tool, and the new session SHALL have the Space as its section, no parent thread and no lifecycle owner.

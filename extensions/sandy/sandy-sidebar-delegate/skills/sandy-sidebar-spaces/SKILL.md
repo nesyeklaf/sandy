@@ -24,6 +24,10 @@ Optional `{"projectId":"..."}` scopes to one repository. Per Space: `total`, `co
 - Header density (Settings → Sidebar layout → Space headers): minimal, compact (default), detailed. It does not change session row density.
 - A saved Tree layout opens as Spaces; Flow remains selectable.
 
+## Boundary
+
+The Space protection is cooperative: it binds agents using the Space tools and the normal sandy CLI, including sessions an orchestrator started. Clearing SANDY_THREAD_ID, spoofing a sender, or running sandy thread stop or archive is not prevented; a hard boundary would need an authenticated per-session identity and a stop/archive hook in the core. Do not rely on it against an agent that tries to get around it.
+
 ## Coordinate a Space
 
 `sandy spaces` takes a Space id or its exact name; every command accepts `--json`.
