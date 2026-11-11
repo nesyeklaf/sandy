@@ -66,7 +66,17 @@ Skills (.sandy/skills/):
   skill's frontmatter `metadata` map (string values only); `--duplicates`
   keeps only skills found more than once. `sandy skill sources <source> on|off`
   switches the sandy-owned sources sandy-plugins, sandy-user, sandy-project and shared
-  (Settings → General → Skill sources); native agent roots stay as they are. `sandy skill show|files <skill-id>` reads that exact skill;
+  (Settings → General → Skill sources); native agent roots stay as they are.
+  `sandy skill selection` shows the server-wide selection by skill name and, per
+  agent, whether sessions and subagents enforce it (`enforced`, `unverified`,
+  `not-enforced`). `sandy skill selection off <names...>` and `on <names...>`
+  switch single names; `disable <names...>`, `allow-only <names...>` and
+  `inherit` replace the whole selection. It applies to every copy of a name,
+  native agent roots included, only in sessions sandy starts; under
+  `allow-only` new skills stay off. Changes reach a thread on its next turn;
+  the result lists running threads that keep the old selection for their
+  current turn. `sandy skill list --json` marks each skill `selectionEnabled`.
+  `sandy skill show|files <skill-id>` reads that exact skill;
   `sandy skill show <skill-id> --json` returns the revision required by `sandy skill
   update <skill-id> --revision <sha256>`, along with the real `filePath` and
   whether the skill is `writable`. Update saves sandy, agent and shared skills

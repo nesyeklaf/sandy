@@ -10,7 +10,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveDataDirSkillsRootPath } from "@sandy/config/skill-storage-paths";
 import { getAppSettings } from "@sandy/db";
-import type { SandySkillSourceId } from "@sandy/domain";
+import {
+  isSkillNameEnabled,
+  type SandySkillSourceId,
+  type SkillSelection,
+} from "@sandy/domain";
 import { replaceFile } from "@sandy/file-transfer";
 import { isPathWithinDirectory } from "@sandy/process-utils";
 import {
@@ -41,6 +45,7 @@ import {
 import type { ProjectCommandWorkspace as CommandWorkspace } from "../projects/project-workspace.js";
 import { resolveServerOwnedSkillCatalogEntries } from "./injected-skills.js";
 import { resolveSkillCatalog } from "./skill-catalog.js";
+import { readSkillSelection } from "./skill-selection.js";
 import {
   hostPathDirname,
   resolveSharedSkills,
@@ -395,7 +400,13 @@ async function projectSkillIndex(
         contentSha256: identities.get(skill.id)?.contentSha256 ?? null,
       };
     });
-  return { registrations, entries: summarizeSkillRegistrations(registrations) };
+  return {
+    registrations,
+    entries: summarizeSkillRegistrations(
+      registrations,
+      readSkillSelection(deps),
+    ),
+  };
 }
 
 export function sandySkillSourceOf(
@@ -444,6 +455,7 @@ function toSkillDuplicate(
 
 export function summarizeSkillRegistrations(
   registrations: readonly IndexedSkillRegistration[],
+  selection: SkillSelection,
 ): SkillSummary[] {
   const groups = new Map<string, IndexedSkillRegistration[]>();
   const keysByName = new Map<string, string[]>();
@@ -483,6 +495,7 @@ export function summarizeSkillRegistrations(
         ),
         ...sameName.map((skill) => toSkillDuplicate(skill, "same-name")),
       ]),
+      selectionEnabled: isSkillNameEnabled(selection, entry.name),
     });
   }
   return summaries.sort(compareSkillSummaries);

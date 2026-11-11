@@ -1,10 +1,18 @@
-import { getSkillSelection, setSkillSelection } from "@sandy/db";
+import {
+  getSkillSelection,
+  listRunningThreads,
+  setSkillSelection,
+} from "@sandy/db";
 import {
   canonicalSkillSelection,
   isSkillNameEnabled,
+  skillSelectionKey,
   type SkillSelection,
 } from "@sandy/domain";
-import type { SkillSelectionView } from "@sandy/server-contract";
+import type {
+  SkillSelectionUpdateResult,
+  SkillSelectionView,
+} from "@sandy/server-contract";
 import type { AppDeps } from "../../types.js";
 
 type SkillSelectionReadDeps = Pick<AppDeps, "db" | "providerRegistry">;
@@ -35,10 +43,18 @@ export function readSkillSelectionView(
 export function updateSkillSelection(
   deps: SkillSelectionWriteDeps,
   selection: SkillSelection,
-): SkillSelectionView {
-  setSkillSelection(deps.db, canonicalSkillSelection(selection));
-  deps.hub.notifySystem(["config-changed"]);
-  return readSkillSelectionView(deps);
+): SkillSelectionUpdateResult {
+  const next = canonicalSkillSelection(selection);
+  const changed =
+    skillSelectionKey(readSkillSelection(deps)) !== skillSelectionKey(next);
+  setSkillSelection(deps.db, next);
+  if (changed) deps.hub.notifySystem(["config-changed"]);
+  return {
+    ...readSkillSelectionView(deps),
+    pendingThreadIds: changed
+      ? listRunningThreads(deps.db).map((thread) => thread.id)
+      : [],
+  };
 }
 
 export function filterSourcesBySkillSelection<T extends { name: string }>(

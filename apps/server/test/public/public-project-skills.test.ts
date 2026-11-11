@@ -416,6 +416,7 @@ describe("public project skills route", () => {
           ),
           providers: [],
           duplicates: [],
+          selectionEnabled: true,
         });
         expect(body.skills.map((skill) => skill.name)).not.toContain(
           "repo-sandy-skill",
@@ -527,6 +528,7 @@ describe("public project skills route", () => {
           revision: pathRevision("/data/skills/sandy-helper/SKILL.md"),
           providers: [],
           duplicates: [],
+          selectionEnabled: true,
         },
         {
           id: skillId("/cwd/.cursor/skills/impeccable/SKILL.md"),
@@ -542,6 +544,7 @@ describe("public project skills route", () => {
           revision: pathRevision("/cwd/.cursor/skills/impeccable/SKILL.md"),
           providers: ["acp-cursor"],
           duplicates: [],
+          selectionEnabled: true,
         },
         {
           id: skillId("/cwd/.claude/skills/cp/SKILL.md"),
@@ -557,6 +560,7 @@ describe("public project skills route", () => {
           revision: pathRevision("/cwd/.claude/skills/cp/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
+          selectionEnabled: true,
         },
         {
           id: skillId("/home/.claude/skills/cu/SKILL.md"),
@@ -572,6 +576,7 @@ describe("public project skills route", () => {
           revision: pathRevision("/home/.claude/skills/cu/SKILL.md"),
           providers: ["claude-code"],
           duplicates: [],
+          selectionEnabled: true,
         },
         {
           id: skillId("/home/.codex/skills/cx/SKILL.md"),
@@ -590,6 +595,7 @@ describe("public project skills route", () => {
           revision: pathRevision("/home/.codex/skills/cx/SKILL.md"),
           providers: ["codex"],
           duplicates: [],
+          selectionEnabled: true,
         },
       ]);
       const listed = stub.requests

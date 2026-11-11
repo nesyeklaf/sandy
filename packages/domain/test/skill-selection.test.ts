@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canonicalSkillSelection,
   isSkillNameEnabled,
+  setSkillNamesEnabled,
   skillSelectionKey,
   skillSelectionSchema,
 } from "../src/skill-selection.js";
@@ -58,5 +59,56 @@ describe("skillSelectionKey", () => {
     expect(skillSelectionKey({ mode: "disable", names: ["a"] })).not.toBe(
       skillSelectionKey({ mode: "allow-only", names: ["a"] }),
     );
+  });
+});
+
+describe("setSkillNamesEnabled", () => {
+  it("turns a name off under inherit by starting a disable list", () => {
+    expect(
+      setSkillNamesEnabled({ mode: "inherit" }, ["review"], false),
+    ).toEqual({ mode: "disable", names: ["review"] });
+    expect(setSkillNamesEnabled({ mode: "inherit" }, ["review"], true)).toEqual({
+      mode: "inherit",
+    });
+  });
+
+  it("adds to and removes from a disable list", () => {
+    const off = setSkillNamesEnabled(
+      { mode: "disable", names: ["pdf"] },
+      ["review", "pdf"],
+      false,
+    );
+    expect(off).toEqual({ mode: "disable", names: ["pdf", "review"] });
+    expect(setSkillNamesEnabled(off, ["pdf"], true)).toEqual({
+      mode: "disable",
+      names: ["review"],
+    });
+  });
+
+  it("adds to and removes from an allow-only list", () => {
+    const on = setSkillNamesEnabled(
+      { mode: "allow-only", names: [] },
+      ["review"],
+      true,
+    );
+    expect(on).toEqual({ mode: "allow-only", names: ["review"] });
+    expect(setSkillNamesEnabled(on, ["review"], false)).toEqual({
+      mode: "allow-only",
+      names: [],
+    });
+  });
+
+  it("matches isSkillNameEnabled after every toggle", () => {
+    for (const start of [
+      { mode: "inherit" },
+      { mode: "disable", names: ["a"] },
+      { mode: "allow-only", names: ["a"] },
+    ] as const) {
+      for (const enabled of [true, false]) {
+        const next = setSkillNamesEnabled(start, ["a", "b"], enabled);
+        expect(isSkillNameEnabled(next, "a")).toBe(enabled);
+        expect(isSkillNameEnabled(next, "b")).toBe(enabled);
+      }
+    }
   });
 });

@@ -373,6 +373,7 @@ describe("Plugin detail recipe", () => {
             revision: null,
             providers: [],
             duplicates: [],
+            selectionEnabled: true,
           },
         ],
       },

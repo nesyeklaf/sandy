@@ -1131,6 +1131,65 @@ editor ("Save as skill" for flows kept in plugin storage, and "New skill").
 3. **Identity.** The result carries the file path, not the skill id; decide
    whether to return the listing entry so callers skip a second list call.
 
+## `sandy.sdk.skills.experimental_getSelection` and `experimental_setSelection`
+
+`experimental_getSelection()` reads `GET /settings/skill-selection` and returns
+`{ selection, providers }`: the server-wide skill selection by name
+(`{ mode: "inherit" }`, `{ mode: "disable", names }` or
+`{ mode: "allow-only", names }`) and, per registered provider, how far its
+bridge enforces it (`support.session`, `support.subagents`). The read never
+writes. `experimental_setSelection(selection)` sends
+`PUT /settings/skill-selection` with the whole selection; the server stores it
+sorted and deduplicated, and returns the same view plus `pendingThreadIds`,
+the threads that were starting or running when the selection changed and keep
+the previous one for their current turn (empty when nothing changed). Mixed
+shapes such as `inherit` with names fail with 400.
+
+Docs: `docs/configuration.md` (Skills) and the agent-configuration guide
+chapter.
+
+Callers: the CLI's `sandy skill selection` and the Skills page switches, both
+through `setSkillNamesEnabled` from `@sandy/domain` for single-name changes.
+
+**Audit before stabilizing.**
+
+1. **Pending threads.** `pendingThreadIds` lists starting and active threads;
+   decide whether idle threads with a loaded agent belong there too, since the
+   daemon replaces their runtime on the next turn.
+2. **Whole-value write.** Two writers race; decide whether to accept a revision
+   or offer add/remove operations.
+3. **Scope.** The selection is server-wide by name; decide whether projects or
+   providers need their own.
+
+## `PluginProviderDeclaration.experimental_skillSelection`
+
+`{ session, subagents }`, each `enforced`, `unverified`, `not-enforced` or
+`not-applicable`, says how far the provider's bridge applies the `selection`
+that `skills/configure` carries. Omitted means `not-enforced` on both sides.
+The host-policy validator rejects other values. The Skills page and
+`sandy skill selection` show it next to the selection. Pi declares
+`{ session: "unverified", subagents: "not-enforced" }`; Claude Code and Codex
+declare `{ session: "unverified", subagents: "unverified" }` until runs against
+the real agents prove more.
+
+Docs: [provider-bridge-protocol.md](provider-bridge-protocol.md)
+(`skills/configure`).
+
+**Audit before stabilizing.** Decide whether a static declaration is right or
+the bridge should report enforcement per session, since it depends on the
+installed agent version; and decide what proof moves a side to `enforced`.
+
+## Skill selection helpers (`experimental_isSkillNameEnabled`, `experimental_skillSelectionSchema`, `ExperimentalSkillSelection`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
+
+Direct re-exports of `isSkillNameEnabled`, `skillSelectionSchema` and
+`SkillSelection` from `@sandy/domain/skill-selection`, the same code the server
+uses to filter listings and injected skills. Bridges parse `skills/configure`
+`selection` with the schema and filter names with the predicate. Callers: the
+Pi, Claude Code and Codex bridges.
+
+**Audit before stabilizing.** Decide whether bridges should get an
+already-resolved list of names instead of the policy.
+
 ## `sandy.sdk.threads.experimental_listAncestors`
 
 `POST /threads/ancestors` with `{ threadIds }` (1–200 ids) returns

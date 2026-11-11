@@ -12,6 +12,8 @@ import {
   type IndexedSkillRegistration,
 } from "../../src/services/skills/skill-listing.js";
 
+const INHERIT = { mode: "inherit" } as const;
+
 describe("mapSkillScope", () => {
   const cases: Array<{
     provider: SkillProvider;
@@ -378,7 +380,7 @@ describe("summarizeSkillRegistrations", () => {
       piPackage,
       piLinked,
       cursorLinked,
-    ]);
+    ], INHERIT);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
@@ -411,7 +413,7 @@ describe("summarizeSkillRegistrations", () => {
       filePath: "/plugins/docs/skills/pdf/SKILL.md",
     });
 
-    const result = summarizeSkillRegistrations([original, copy, other]);
+    const result = summarizeSkillRegistrations([original, copy, other], INHERIT);
 
     expect(result).toHaveLength(2);
     const byId = new Map(result.map((skill) => [skill.id, skill]));
@@ -443,11 +445,67 @@ describe("summarizeSkillRegistrations", () => {
     });
     const forPi = registration({ name: "architect", provider: "pi", filePath });
 
-    const result = summarizeSkillRegistrations([forCodex, forPi]);
+    const result = summarizeSkillRegistrations([forCodex, forPi], INHERIT);
 
     expect(result).toHaveLength(1);
     expect(result[0]?.providers).toEqual(["codex", "pi"]);
     expect(result[0]?.duplicates).toEqual([]);
+  });
+
+  it("marks every same-named copy off under a disable selection and keeps others on", () => {
+    const user = registration({
+      name: "pdf",
+      provider: "codex",
+      filePath: "/home/.codex/skills/pdf/SKILL.md",
+    });
+    const plugin = registration({
+      name: "pdf",
+      scope: "plugin",
+      pluginId: "docs",
+      filePath: "/plugins/docs/skills/pdf/SKILL.md",
+    });
+    const other = registration({
+      name: "review",
+      provider: "codex",
+      filePath: "/home/.codex/skills/review/SKILL.md",
+    });
+
+    const result = summarizeSkillRegistrations([user, plugin, other], {
+      mode: "disable",
+      names: ["pdf"],
+    });
+
+    expect(
+      result.map((skill) => [skill.filePath, skill.selectionEnabled]).sort(),
+    ).toEqual([
+      ["/home/.codex/skills/pdf/SKILL.md", false],
+      ["/home/.codex/skills/review/SKILL.md", true],
+      ["/plugins/docs/skills/pdf/SKILL.md", false],
+    ]);
+  });
+
+  it("keeps only the named skills on under allow-only, including names it has not seen before", () => {
+    const listed = registration({
+      name: "review",
+      provider: "codex",
+      filePath: "/home/.codex/skills/review/SKILL.md",
+    });
+    const added = registration({
+      name: "brand-new",
+      provider: "codex",
+      filePath: "/home/.codex/skills/brand-new/SKILL.md",
+    });
+
+    const result = summarizeSkillRegistrations([listed, added], {
+      mode: "allow-only",
+      names: ["review"],
+    });
+
+    expect(
+      Object.fromEntries(
+        result.map((skill) => [skill.name, skill.selectionEnabled]),
+      ),
+    ).toEqual({ review: true, "brand-new": false });
   });
 
   it("leaves a unique skill without duplicates", () => {
@@ -456,7 +514,7 @@ describe("summarizeSkillRegistrations", () => {
       provider: "codex",
       filePath: "/home/.codex/skills/solo/SKILL.md",
     });
-    expect(summarizeSkillRegistrations([only])).toEqual([
+    expect(summarizeSkillRegistrations([only], INHERIT)).toEqual([
       {
         id: only.id,
         name: "solo",
@@ -471,6 +529,7 @@ describe("summarizeSkillRegistrations", () => {
         revision: only.contentSha256,
         providers: ["codex"],
         duplicates: [],
+        selectionEnabled: true,
       },
     ]);
   });

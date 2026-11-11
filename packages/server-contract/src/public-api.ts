@@ -15,6 +15,7 @@ import {
   type ClientErrorReport,
   type MachineEnvironmentReplace,
   type SetAiServiceSelectionRequest,
+  type SkillSelectionUpdateResult,
   type SkillSelectionView,
   type SystemAiServicesResponse,
   type SystemProviderCatalogEntry,
@@ -1964,7 +1965,7 @@ export const publicApiRoutes = {
       path: "/settings/skill-selection",
       method: "put",
       request: jsonRequest<EmptyInput, SkillSelection>(skillSelectionSchema),
-      response: jsonResponse<SkillSelectionView>(),
+      response: jsonResponse<SkillSelectionUpdateResult>(),
     }),
     keyboardSettings: defineRoute({
       path: "/settings/keyboard",

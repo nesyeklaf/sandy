@@ -53,6 +53,25 @@ export function canonicalSkillSelection(
   };
 }
 
+export function setSkillNamesEnabled(
+  selection: SkillSelection,
+  names: readonly string[],
+  enabled: boolean,
+): SkillSelection {
+  if (selection.mode === "inherit") {
+    return enabled
+      ? INHERIT_SKILL_SELECTION
+      : canonicalSkillSelection({ mode: "disable", names: [...names] });
+  }
+  const listed = (selection.mode === "allow-only") === enabled;
+  const current = new Set(selection.names);
+  for (const name of names) {
+    if (listed) current.add(name);
+    else current.delete(name);
+  }
+  return canonicalSkillSelection({ mode: selection.mode, names: [...current] });
+}
+
 export function skillSelectionKey(selection: SkillSelection): string {
   return JSON.stringify(canonicalSkillSelection(selection));
 }

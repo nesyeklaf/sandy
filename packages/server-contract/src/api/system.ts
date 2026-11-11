@@ -301,6 +301,13 @@ export const skillSelectionViewSchema = z.object({
 });
 export type SkillSelectionView = z.infer<typeof skillSelectionViewSchema>;
 
+export const skillSelectionUpdateResultSchema = skillSelectionViewSchema.extend({
+  pendingThreadIds: z.array(z.string().min(1)),
+});
+export type SkillSelectionUpdateResult = z.infer<
+  typeof skillSelectionUpdateResultSchema
+>;
+
 export const systemAttentionResponseSchema = z.object({
   hasAttention: z.boolean(),
 });

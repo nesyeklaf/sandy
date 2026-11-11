@@ -5,6 +5,7 @@ import {
   type SkillContentResponse,
   type SkillFilesResponse,
   type SkillListResponse,
+  type SkillSelectionUpdateResult,
   type SkillSelectionView,
 } from "@sandy/server-contract";
 import type { SkillSelection } from "@sandy/domain";
@@ -79,7 +80,7 @@ export interface SkillsArea {
   ): Promise<SkillSelectionView>;
   experimental_setSelection(
     selection: SkillSelection,
-  ): Promise<SkillSelectionView>;
+  ): Promise<SkillSelectionUpdateResult>;
   experimental_write(
     args: SkillUpdateArgs,
   ): Promise<ExperimentalSkillWriteResult>;

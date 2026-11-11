@@ -4,8 +4,15 @@ import {
   SANDY_SKILL_SOURCE_IDS,
   sandySkillSourceIdSchema,
   PERSONAL_PROJECT_ID,
+  setSkillNamesEnabled,
+  skillSelectionSchema,
   type SandySkillSourceId,
+  type SkillSelection,
 } from "@sandy/domain";
+import type {
+  SkillSelectionUpdateResult,
+  SkillSelectionView,
+} from "@sandy/server-contract";
 import { action } from "../action.js";
 import { createCliSandySdk } from "../client.js";
 import { resolveMachineId, selectMachines } from "./machine.js";
@@ -76,6 +83,87 @@ const SKILL_SOURCE_DESCRIPTIONS: Readonly<Record<SandySkillSourceId, string>> = 
   "sandy-project": "Skills in the project's .sandy/skills directory",
   shared: "Skills from the sharedSkillRoots in config.json",
 };
+
+const SKILL_SELECTION_ACTIONS = [
+  "inherit",
+  "disable",
+  "allow-only",
+  "on",
+  "off",
+] as const;
+
+function nextSkillSelection(
+  current: SkillSelection,
+  actionName: string,
+  names: readonly string[],
+): SkillSelection {
+  switch (actionName) {
+    case "inherit":
+      if (names.length > 0) {
+        throw new Error("inherit takes no skill names.");
+      }
+      return { mode: "inherit" };
+    case "disable":
+    case "allow-only": {
+      const parsed = skillSelectionSchema.safeParse({
+        mode: actionName,
+        names: [...new Set(names)],
+      });
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues[0]?.message ?? "Invalid names.");
+      }
+      return parsed.data;
+    }
+    case "on":
+    case "off":
+      if (names.length === 0) {
+        throw new Error(`${actionName} needs at least one skill name.`);
+      }
+      return setSkillNamesEnabled(current, names, actionName === "on");
+    default:
+      throw new Error(
+        `Unknown action '${actionName}'. Expected one of: ${SKILL_SELECTION_ACTIONS.join(", ")}.`,
+      );
+  }
+}
+
+function describeSkillSelection(selection: SkillSelection): string {
+  switch (selection.mode) {
+    case "inherit":
+      return "inherit: every skill the agent finds stays on";
+    case "disable":
+      return `disable: ${selection.names.length > 0 ? selection.names.join(", ") : "(no names)"} off, every other skill on`;
+    case "allow-only":
+      return `allow-only: only ${selection.names.length > 0 ? selection.names.join(", ") : "(no names)"} on, every other skill off`;
+  }
+}
+
+function printSkillSelection(
+  view: SkillSelectionView | SkillSelectionUpdateResult,
+): void {
+  console.log(`Selection  ${describeSkillSelection(view.selection)}`);
+  console.log(
+    renderBorderlessTable(
+      {
+        head: ["PROVIDER", "SESSION", "SUBAGENTS"],
+        colWidths: [28, 14, 14],
+        trimTrailingWhitespace: true,
+      },
+      view.providers.map((provider) => [
+        provider.displayName,
+        provider.support.session,
+        provider.support.subagents,
+      ]),
+    ),
+  );
+  if (!("pendingThreadIds" in view) || view.pendingThreadIds.length === 0) {
+    return;
+  }
+  console.log(
+    `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until their current turn ends:`,
+  );
+  for (const threadId of view.pendingThreadIds) console.log(`  ${threadId}`);
+}
 
 function parseSkillSource(value: string): SandySkillSourceId {
   const parsed = sandySkillSourceIdSchema.safeParse(value);
@@ -346,6 +434,35 @@ export function registerSkillCommands(
               ]),
             ),
           );
+        },
+      ),
+    );
+
+  skill
+    .command("selection [action] [names...]")
+    .description(
+      "Show or change which skills, by name, agents in sandy sessions load (inherit, disable <names...>, allow-only <names...>, on <names...>, off <names...>)",
+    )
+    .option("--json", "Print machine-readable JSON output")
+    .action(
+      action(
+        async (
+          actionName: string | undefined,
+          names: string[],
+          options: JsonOutputOptions,
+        ) => {
+          const sdk = createCliSandySdk(getUrl());
+          const current = await sdk.skills.experimental_getSelection();
+          if (actionName === undefined) {
+            if (outputJson(options, current)) return;
+            printSkillSelection(current);
+            return;
+          }
+          const result = await sdk.skills.experimental_setSelection(
+            nextSkillSelection(current.selection, actionName, names),
+          );
+          if (outputJson(options, result)) return;
+          printSkillSelection(result);
         },
       ),
     );
