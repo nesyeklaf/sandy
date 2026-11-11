@@ -71,7 +71,7 @@ describe("getSpaceOverview follows the native lifecycle and working policy", () 
       stopping: "working",
       goal: "working",
       plan: "working",
-      calm: "ready",
+      calm: "idle",
     });
   });
 
@@ -107,7 +107,7 @@ describe("getSpaceOverview follows the native lifecycle and working policy", () 
           row("parked-old", { parkedAt: now - 2 * HOUR }),
         ],
       ),
-    ).toEqual({ "settled-new": "ready", "settled-old": "archived", "parked-new": "ready", "parked-old": "snoozed" });
+    ).toEqual({ "settled-new": "idle", "settled-old": "archived", "parked-new": "idle", "parked-old": "snoozed" });
   });
 
   it("wakes a snoozed root when a hidden worker asks and keeps a deferred question snoozed", async () => {
@@ -168,7 +168,7 @@ describe("getSpaceOverview follows the native lifecycle and working policy", () 
         ],
       ),
     ).toEqual({
-      "pinned-settled-auto": "ready",
+      "pinned-settled-auto": "idle",
       "pinned-settled-override": "archived",
       "pinned-snoozed": "snoozed",
       "pinned-parked": "snoozed",

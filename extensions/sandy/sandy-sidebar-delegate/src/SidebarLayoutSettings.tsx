@@ -12,7 +12,7 @@ export function SidebarLayoutSettings({ draft, update, status }: SettingsDraftSe
     <SettingsSection title="Sidebar layout" status={status}>
       <SettingRow
         title="Space headers"
-        description="How much a Space shows while it is closed: Minimal only urgent counts, Compact the key counts, Detailed adds repositories and ready work. Independent of thread density."
+        description="How much a Space shows while it is closed: Minimal only urgent counts, Compact the key counts, Detailed adds repositories and idle work. Independent of thread density."
         control={
           <SettingsSelect
             aria-label="Space headers"

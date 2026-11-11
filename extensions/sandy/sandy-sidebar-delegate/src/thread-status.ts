@@ -10,7 +10,6 @@ export const INBOX_SHELVES = [
   "review",
   "waiting",
   "orchestrators",
-  "ideas",
   "merged",
   "snoozed",
   "archived",
@@ -19,7 +18,7 @@ export type InboxShelfId = (typeof INBOX_SHELVES)[number];
 export type ThreadInboxStatus = Exclude<InboxShelfId, "pinned">;
 export type LockableShelf = Extract<
   ThreadInboxStatus,
-  "needs" | "failed" | "working" | "review" | "waiting" | "orchestrators" | "ideas" | "merged"
+  "needs" | "failed" | "working" | "review" | "waiting" | "orchestrators" | "merged"
 >;
 
 export interface ThreadStatusSignals {
@@ -29,7 +28,6 @@ export interface ThreadStatusSignals {
   workingTree: boolean;
   woke: boolean;
   pullRequestState: PullRequestState | null;
-  idea: boolean;
   orchestrator: boolean;
   lockedShelf?: LockableShelf;
 }
@@ -39,7 +37,7 @@ export function threadFailed(thread: Pick<PluginSidebarThread, "status" | "indic
 }
 
 export function threadInboxStatus(signals: ThreadStatusSignals): ThreadInboxStatus {
-  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, idea, orchestrator, lockedShelf } =
+  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, orchestrator, lockedShelf } =
     signals;
   if (lifecycleShelf === "snoozed" || lifecycleShelf === "parked") return "snoozed";
   if (lifecycleShelf === "settled") return "archived";
@@ -50,7 +48,7 @@ export function threadInboxStatus(signals: ThreadStatusSignals): ThreadInboxStat
   if (workingTree && !woke) return "working";
   if (!woke && pullRequestState === "open") return "review";
   if (!woke && pullRequestState === "merged") return "merged";
-  return idea ? "ideas" : "waiting";
+  return "waiting";
 }
 
 export function inboxShelfOf(status: ThreadInboxStatus, isPinned: boolean): InboxShelfId {

@@ -31,9 +31,8 @@ const SPACE_DENSITY_SHELF: Record<SpaceShelf, LockableShelf | undefined> = {
   review: "review",
   merged: "merged",
   orchestrators: "orchestrators",
-  ideas: "ideas",
   dormant: "waiting",
-  ready: "waiting",
+  idle: "waiting",
   snoozed: undefined,
   archived: undefined,
 };
@@ -61,7 +60,6 @@ const SHELF_HEADERS: Record<InboxShelfId, { label: string; icon: IconName }> = {
   review: { label: "In review", icon: "GitPullRequest" },
   waiting: { label: "Waiting", icon: "Hourglass" },
   orchestrators: { label: "Orchestrators", icon: "Orchestrator" },
-  ideas: { label: "Ideas", icon: "Bulb" },
   merged: { label: "Merged", icon: "GitMerge" },
   snoozed: { label: "Snoozed", icon: "Clock" },
   archived: { label: "Archived", icon: "Archive" },
@@ -289,7 +287,6 @@ export function ThreadInboxView({
                   ),
                   sortPicker,
                 )}
-                {plainShelf("ideas")}
                 {cardShelfCount.length === 0 ? <ActiveEmptyState /> : null}
                 {cardShelfCount.length === 1 && cardShelfCount[0] === "working" ? <WorkingEmptyState /> : null}
               </>

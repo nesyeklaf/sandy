@@ -54,7 +54,6 @@ export function useInboxShelfThreads({
       review: [],
       waiting: [],
       orchestrators: [],
-      ideas: [],
       merged: [],
       snoozed: [],
       archived: [],
@@ -68,7 +67,6 @@ export function useInboxShelfThreads({
         workingTree: isWorkingTree(thread, children, childrenByParentId),
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
-        idea: false,
         orchestrator: orchestratorIds.has(thread.id),
         lockedShelf: renamingShelfLocks.get(thread.id),
       });
@@ -84,7 +82,6 @@ export function useInboxShelfThreads({
         orchestrators: sortActiveThreads(shelves.orchestrators, "activity"),
         working: sortActiveThreads(shelves.working, "activity"),
         review: sortActiveThreads(shelves.review, "activity"),
-        ideas: sortByCreatedAtDescending(shelves.ideas),
         merged: sortActiveThreads(shelves.merged, "activity"),
       },
       waitingBase: sortByCreatedAtDescending(shelves.waiting),

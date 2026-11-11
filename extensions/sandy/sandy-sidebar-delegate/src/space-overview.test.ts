@@ -34,7 +34,7 @@ describe("getSpaceOverview", () => {
     );
     expect(result.pullRequests).toBe("unavailable");
     const shelves = Object.fromEntries(result.spaces[0]!.roots.map((root) => [root.rootId, root.shelf]));
-    expect(shelves).toEqual({ pr: "review", none: "dormant", lost: "ready", bare: "dormant" });
+    expect(shelves).toEqual({ pr: "review", none: "dormant", lost: "idle", bare: "dormant" });
     expect(result.spaces[0]!.counts.openPr).toBe(1);
   });
 
@@ -43,7 +43,7 @@ describe("getSpaceOverview", () => {
     expect((await overview([env], {}, { env_1: { outcome: "absent" } })).pullRequests).toBe("available");
     const failed = await overview([{ ...env, updatedAt: 0, latestAttentionAt: 0 }], {}, new Error("plugin disabled"));
     expect(failed.pullRequests).toBe("unavailable");
-    expect(failed.spaces[0]!.roots[0]!.shelf).toBe("ready");
+    expect(failed.spaces[0]!.roots[0]!.shelf).toBe("idle");
   });
 
   it("scopes to one project and rejects unknown input", async () => {

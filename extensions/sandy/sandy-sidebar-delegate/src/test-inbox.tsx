@@ -116,7 +116,6 @@ export const defaultSidebarSettings = {
     working: "default",
     review: "default",
     waiting: "default",
-    ideas: "default",
     merged: "default",
   },
   compactProjectIconOnly: false,

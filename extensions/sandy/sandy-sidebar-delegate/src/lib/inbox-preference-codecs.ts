@@ -69,7 +69,6 @@ const DEFAULT_SHELF_EXPANSION: ShelfExpansionState = {
   review: true,
   waiting: true,
   orchestrators: true,
-  ideas: true,
   merged: false,
   snoozed: false,
   archived: false,

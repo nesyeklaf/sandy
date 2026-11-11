@@ -15,9 +15,8 @@ export const SPACE_SHELVES = [
   "review",
   "merged",
   "orchestrators",
-  "ideas",
   "dormant",
-  "ready",
+  "idle",
   "snoozed",
   "archived",
 ] as const;
@@ -34,7 +33,6 @@ export interface SpaceThreadFacts {
   failed: boolean;
   working: boolean;
   pr: SpacePrState;
-  idea: boolean;
   orchestrator: boolean;
   activityAt: number;
 }
@@ -51,7 +49,7 @@ export interface SpaceView {
   name: string;
   total: number;
   counts: Readonly<Record<SpaceSignal, number>>;
-  ready: number;
+  idle: number;
   repositories: number;
   roots: SpaceRoot[];
 }
@@ -164,9 +162,8 @@ function classify(
   if (own.pr === "open") return { shelf: "review", dormant: false };
   if (own.pr === "merged") return { shelf: "merged", dormant: false };
   if (own.orchestrator) return { shelf: "orchestrators", dormant: false };
-  if (own.idea) return { shelf: "ideas", dormant: false };
   const dormant = own.pr === "none" && now - rollup.activityAt >= DORMANT_AFTER_MS;
-  return { shelf: dormant ? "dormant" : "ready", dormant };
+  return { shelf: dormant ? "dormant" : "idle", dormant };
 }
 
 function emptyCounts(): Record<SpaceSignal, number> {
@@ -197,7 +194,7 @@ export function buildSpaces<T extends SpaceThread>({
       name,
       total: 0,
       counts: emptyCounts(),
-      ready: 0,
+      idle: 0,
       repositories: 0,
       roots: [] as SpaceRoot[],
       projects: new Set<string>(),
@@ -223,7 +220,7 @@ export function buildSpaces<T extends SpaceThread>({
     };
     space.total += 1;
     space.projects.add(root.projectId);
-    if (shelf === "ready") space.ready += 1;
+    if (shelf === "idle") space.idle += 1;
     for (const signal of SPACE_SIGNALS) if (signals[signal]) space.counts[signal] += 1;
     space.roots.push({ rootId: root.id, projectId: root.projectId, shelf, signals });
   }

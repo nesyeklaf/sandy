@@ -109,7 +109,6 @@ describe("density", () => {
           working: "default",
           review: "default",
           waiting: "compact",
-          ideas: "default",
           merged: "default",
         },
       },

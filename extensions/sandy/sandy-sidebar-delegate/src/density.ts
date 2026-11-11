@@ -8,7 +8,6 @@ const AUTO_SHELF_DENSITY: Record<DensityShelf, ThreadDensity> = {
   review: "dense",
   waiting: "dense",
   orchestrators: "comfortable",
-  ideas: "dense",
   merged: "dense",
 };
 

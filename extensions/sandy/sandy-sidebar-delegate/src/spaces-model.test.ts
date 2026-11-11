@@ -28,7 +28,6 @@ function factsOf(thread: Row): SpaceThreadFacts {
     failed: false,
     working: false,
     pr: "none",
-    idea: false,
     orchestrator: false,
     activityAt: NOW,
     ...thread.facts,
@@ -130,9 +129,8 @@ describe("primary shelf", () => {
     expect(shelfOf({ working: true, pr: "merged" })).toBe("working");
     expect(shelfOf({ pr: "open", orchestrator: true })).toBe("review");
     expect(shelfOf({ pr: "merged", orchestrator: true })).toBe("merged");
-    expect(shelfOf({ orchestrator: true, idea: true })).toBe("orchestrators");
-    expect(shelfOf({ idea: true, activityAt: NOW - 30 * DAY })).toBe("ideas");
-    expect(shelfOf({})).toBe("ready");
+    expect(shelfOf({ orchestrator: true })).toBe("orchestrators");
+    expect(shelfOf({})).toBe("idle");
   });
 });
 
@@ -156,9 +154,9 @@ describe("dormancy", () => {
       row("a", {}, { activityAt: NOW - (DORMANT_AFTER_MS - 1) }),
       row("b", {}, { activityAt: NOW - DORMANT_AFTER_MS }),
     ]);
-    expect(space?.roots.map((root) => root.shelf)).toEqual(["ready", "dormant"]);
+    expect(space?.roots.map((root) => root.shelf)).toEqual(["idle", "dormant"]);
     expect(space?.counts.dormant).toBe(1);
-    expect(space?.ready).toBe(1);
+    expect(space?.idle).toBe(1);
   });
 
   it("reproduces the approved Sandy fixture counts exactly", () => {
@@ -170,7 +168,7 @@ describe("dormancy", () => {
       row("old", { projectId: "p2" }, { activityAt: NOW - 10 * DAY }),
       row("wait", { projectId: "p2" }),
     ]);
-    expect(space).toMatchObject({ total: 5, ready: 1, repositories: 2 });
+    expect(space).toMatchObject({ total: 5, idle: 1, repositories: 2 });
     expect(space?.counts).toEqual({ needs: 2, failed: 0, working: 1, openPr: 1, dormant: 1 });
   });
 
@@ -179,7 +177,7 @@ describe("dormancy", () => {
       row("root", {}, { activityAt: NOW - 10 * DAY }),
       row("child", { parentThreadId: "root", isHidden: true }, { activityAt: NOW - DAY }),
     ]);
-    expect(space?.roots[0]?.shelf).toBe("ready");
+    expect(space?.roots[0]?.shelf).toBe("idle");
   });
 });
 
@@ -187,7 +185,7 @@ describe("unknown PR", () => {
   it("[unknown-pr] is neither an open PR nor dormant", () => {
     const [space] = build([row("a", {}, { pr: "unknown", activityAt: 0 })]);
     expect(space?.counts).toMatchObject({ openPr: 0, dormant: 0 });
-    expect(space?.roots[0]?.shelf).toBe("ready");
+    expect(space?.roots[0]?.shelf).toBe("idle");
   });
 });
 
@@ -229,6 +227,6 @@ describe("archived visibility", () => {
       ["gone", "archived"],
     ]);
     expect(space?.counts.needs).toBe(1);
-    expect(space?.ready).toBe(0);
+    expect(space?.idle).toBe(0);
   });
 });

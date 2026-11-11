@@ -16,7 +16,7 @@ interface Case {
   workflow?: boolean;
   goal?: boolean;
   working: number;
-  shelf: "needs" | "failed" | "working" | "ready";
+  shelf: "needs" | "failed" | "working" | "idle";
 }
 
 const CASES: Case[] = [
@@ -33,7 +33,7 @@ const CASES: Case[] = [
   { name: "read failure with a background workflow", status: "error", workflow: true, working: 1, shelf: "failed" },
   { name: "own question on a running turn", status: "active", asks: true, working: 0, shelf: "needs" },
   { name: "plain running turn", status: "active", working: 1, shelf: "working" },
-  { name: "plain idle thread", working: 0, shelf: "ready" },
+  { name: "plain idle thread", working: 0, shelf: "idle" },
 ];
 
 function dto(id: string, spec: Case): Listed {

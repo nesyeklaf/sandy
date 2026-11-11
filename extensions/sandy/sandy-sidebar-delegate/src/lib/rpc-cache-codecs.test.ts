@@ -96,7 +96,6 @@ describe("settings cache thread density", () => {
       review: "default",
       waiting: "default",
       orchestrators: "default",
-      ideas: "default",
       merged: "default",
     });
     expect(

@@ -214,7 +214,7 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
     return orderPinnedThreads(ordered, dragOrder?.shelf === "needs" ? dragOrder.ids : null);
   }, [activeSortMode, dragOrder, inboxReorder.ids, needsBase]);
   const needs = useOrderedShelf(needsOrder, null, expandedShelves.needs, activeListThreadId, attentionParentIds);
-  const { failed, orchestrators, working, review, ideas, merged } = useStatusShelves(
+  const { failed, orchestrators, working, review, merged } = useStatusShelves(
     statusBases,
     expandedShelves,
     activeListThreadId,
@@ -235,10 +235,9 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
       ...(activeSortMode === "project"
         ? inboxProjectUnits.flatMap((unit) => (unit.kind === "thread" ? [unit.thread] : unit.threads))
         : sortActiveThreads(inbox, activeSortMode)),
-      ...ideas.threads,
       ...merged.threads,
     ],
-    [activeSortMode, failed, ideas, inbox, inboxProjectUnits, merged, needs, orchestrators, pinned, review, working],
+    [activeSortMode, failed, inbox, inboxProjectUnits, merged, needs, orchestrators, pinned, review, working],
   );
   const nextThreadCandidatesRef = useRef(nextThreadCandidates);
   nextThreadCandidatesRef.current = nextThreadCandidates;
@@ -447,7 +446,6 @@ export function ThreadInbox({ activeThreadId, onNavigate, isCompactViewport }: P
           review,
           waiting: { threads: inbox, visibleThreads: sortedVisibleInbox },
           orchestrators,
-          ideas,
           merged,
           snoozed: { threads: snoozed, visibleThreads: visibleSnoozed },
           archived: { threads: archived, visibleThreads: visibleArchived },

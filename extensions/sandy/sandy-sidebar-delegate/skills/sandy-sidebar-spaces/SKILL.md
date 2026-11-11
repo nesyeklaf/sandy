@@ -15,12 +15,12 @@ echo '{}' > /tmp/spaces.json
 sandy plugin rpc call sandy-sidebar-delegate getSpaceOverview --input-file /tmp/spaces.json
 ```
 
-Optional `{"projectId":"..."}` scopes to one repository. Per Space: `total`, `counts` (needs, failed, working, openPr, dormant), `ready`, `repositories` and `roots` with each root's primary `shelf`. `pullRequests` is `"available"` when sandy--github-pr-status answered for every environment and `"unavailable"` when the plugin is disabled, offline or returned unknown rows; unknown PR state keeps a root out of dormant.
+Optional `{"projectId":"..."}` scopes to one repository. Per Space: `total`, `counts` (needs, failed, working, openPr, dormant), `idle`, `repositories` and `roots` with each root's primary `shelf`. `pullRequests` is `"available"` when sandy--github-pr-status answered for every environment and `"unavailable"` when the plugin is disabled, offline or returned unknown rows; unknown PR state keeps a root out of dormant.
 
 ## Rules
 
 - Primary shelf precedence: needs you, failed, working, open PR, merged, orchestrator, dormant, idle.
-- Dormant: a ready root whose tree had no activity for seven complete days and whose PR is known absent. Unknown PR is not absence.
+- Dormant: an idle root whose tree had no activity for seven complete days and whose PR is known absent. Unknown PR is not absence.
 - Header density (Settings → Sidebar layout → Space headers): minimal, compact (default), detailed. It does not change session row density.
 - A saved Tree layout opens as Spaces; Flow remains selectable.
 

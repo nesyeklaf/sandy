@@ -21,7 +21,6 @@ export const DENSITY_SHELVES = [
   "review",
   "waiting",
   "orchestrators",
-  "ideas",
   "merged",
 ] as const;
 export type DensityShelf = (typeof DENSITY_SHELVES)[number];
@@ -90,7 +89,6 @@ export const DEFAULT_SIDEBAR_SETTINGS: SidebarSettingsValues = {
     review: "default",
     waiting: "default",
     orchestrators: "default",
-    ideas: "default",
     merged: "default",
   },
   compactProjectIconOnly: false,

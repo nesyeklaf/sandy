@@ -49,7 +49,7 @@ describe("Space headers", () => {
     expect(within(launch).getByText("Calm one")).toBeTruthy();
   });
 
-  it("counts a ready session once and a dormant one separately in the detailed line", async () => {
+  it("counts an idle session once and a dormant one separately in the detailed line", async () => {
     const old = { updatedAt: 0, latestAttentionAt: 0 };
     setup({
       threads: [
@@ -58,7 +58,7 @@ describe("Space headers", () => {
       ],
       settings: { spaceHeaderDensity: "detailed" },
     });
-    await waitFor(() => expect(screen.getByText("2 repositories · 1 ready")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("2 repositories · 1 idle")).toBeTruthy());
     expect(screen.getByRole("button", { name: "1 dormant in Launch" })).toBeTruthy();
   });
 

@@ -97,7 +97,6 @@ export function createServerSpaceOverview(
         failed: thread.status === "error" || thread.queuedWork === "failed",
         working: lifecycle.threadSignals(thread).isWorking && !blocksWorking(ownAttention(thread)),
         pr: thread.environmentId === null ? "none" : (pullRequests.outcomes.get(thread.environmentId) ?? "unknown"),
-        idea: false,
         orchestrator: orchestrators.has(thread.id),
         activityAt: Math.max(thread.latestAttentionAt, thread.updatedAt),
       });

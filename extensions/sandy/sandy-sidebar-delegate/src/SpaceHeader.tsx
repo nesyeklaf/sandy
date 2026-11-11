@@ -141,7 +141,7 @@ export function SpaceHeader({
         )}
         {density === "detailed" ? (
           <p className="mt-1 pl-4 text-2xs text-muted-foreground">
-            {repoLabel} · {space.ready} ready
+            {repoLabel} · {space.idle} idle
           </p>
         ) : null}
         {activeStat ? (

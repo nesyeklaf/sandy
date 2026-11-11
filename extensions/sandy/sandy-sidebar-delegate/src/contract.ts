@@ -131,7 +131,6 @@ const shelfDensitiesShape = {
   review: z.enum(SHELF_DENSITIES),
   waiting: z.enum(SHELF_DENSITIES),
   orchestrators: z.enum(SHELF_DENSITIES),
-  ideas: z.enum(SHELF_DENSITIES),
   merged: z.enum(SHELF_DENSITIES),
 };
 export const sidebarSettingsSchema = z
@@ -320,7 +319,6 @@ export const sandySidebarRpcContract = defineRpcContract({
         .object({
           ...shelfDensitiesShape,
           orchestrators: shelfDensitiesShape.orchestrators.optional(),
-          ideas: shelfDensitiesShape.ideas.optional(),
         })
         .strict()
         .optional(),

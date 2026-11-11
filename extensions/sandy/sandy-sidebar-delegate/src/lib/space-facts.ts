@@ -19,7 +19,6 @@ export function spaceFactsOf(thread: PluginSidebarThread, sources: SpaceFactSour
     failed: threadFailed(thread),
     working: isWorkingTree(thread, [], new Map()),
     pr: environmentId ? (sources.outcomes.get(environmentId) ?? "unknown") : "none",
-    idea: false,
     orchestrator: sources.orchestratorIds.has(thread.id),
     activityAt: Math.max(thread.latestAttentionAt, thread.updatedAt),
   };

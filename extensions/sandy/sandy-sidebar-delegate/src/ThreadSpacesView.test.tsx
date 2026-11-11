@@ -27,7 +27,7 @@ describe("Spaces view", () => {
     const launch = screen.getByRole("region", { name: "Launch" });
     const labels = () =>
       [...launch.querySelectorAll("[data-space-shelf]")].map((node) => node.getAttribute("data-space-shelf"));
-    expect(labels()).toEqual(["needs", "working", "ready"]);
+    expect(labels()).toEqual(["needs", "working", "idle"]);
     await waitFor(() => expect(within(launch).getByRole("button", { name: "2 open PR in Launch" })).toBeTruthy());
     fireEvent.click(within(launch).getByRole("button", { name: "2 open PR in Launch" }));
     expect(labels()).toEqual(["needs", "working"]);
@@ -37,6 +37,16 @@ describe("Spaces view", () => {
     expect(within(launch).queryByText("Calm one")).toBeNull();
     fireEvent.click(within(launch).getByRole("button", { name: "2 open PR in Launch" }));
     expect(within(launch).getByText("Calm one")).toBeTruthy();
+  });
+
+  it("labels the catch-all shelf Idle and has no Ideas shelf", async () => {
+    setup({ threads: prThreads() });
+    fireEvent.click(await screen.findByRole("button", { name: "Launch (3)" }));
+    const launch = screen.getByRole("region", { name: "Launch" });
+    expect(launch.querySelector('[data-space-shelf="idle"]')?.textContent).toContain("Idle");
+    expect(within(launch).queryByText("Ready")).toBeNull();
+    expect(launch.querySelector('[data-space-shelf="ideas"]')).toBeNull();
+    expect(within(launch).queryByText("Ideas")).toBeNull();
   });
 
   it("[minimal-header] shows only the urgent floor in Minimal headers", async () => {
@@ -93,10 +103,10 @@ describe("Spaces view", () => {
     expect(within(other).queryByRole("button", { name: /failed in Plan/ })).toBeNull();
   });
 
-  it("[detailed-header] adds ready and repository counts without session data", async () => {
+  it("[detailed-header] adds idle and repository counts without session data", async () => {
     setup({ threads: prThreads(), settings: { spaceHeaderDensity: "detailed" } });
     const launch = await screen.findByRole("region", { name: "Launch" });
-    await waitFor(() => expect(within(launch).getByText("2 repositories · 1 ready")).toBeTruthy());
+    await waitFor(() => expect(within(launch).getByText("2 repositories · 1 idle")).toBeTruthy());
     expect(within(launch).queryByText("Asks and PR")).toBeNull();
   });
 

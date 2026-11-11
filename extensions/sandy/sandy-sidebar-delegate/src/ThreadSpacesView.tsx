@@ -17,9 +17,8 @@ const SHELF_LABELS: Record<SpaceShelf, string> = {
   review: "In review",
   merged: "Merged",
   orchestrators: "Orchestrators",
-  ideas: "Ideas",
   dormant: "Dormant",
-  ready: "Ready",
+  idle: "Idle",
   snoozed: "Snoozed",
   archived: "Archived",
 };

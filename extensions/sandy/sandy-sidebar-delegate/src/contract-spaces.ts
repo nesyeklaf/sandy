@@ -23,7 +23,7 @@ const spaceOverviewSchema = z.object({
         openPr: z.number().int(),
         dormant: z.number().int(),
       }),
-      ready: z.number().int(),
+      idle: z.number().int(),
       repositories: z.number().int(),
       roots: z.array(
         z.object({
