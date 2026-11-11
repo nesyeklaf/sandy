@@ -220,6 +220,7 @@ function createTurnSubmitCommand(
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     },
     target,
@@ -274,6 +275,7 @@ function createInstallationGatedThreadStart(
     dynamicTools: [],
     contributedEnv: [],
     injectedSkillSources: [],
+    skillSelection: { mode: "inherit" },
     instructionMode: "append",
   };
 }
@@ -677,6 +679,7 @@ describe("dispatchCommand", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
     };
@@ -754,6 +757,7 @@ describe("dispatchCommand", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
       target: { mode: "start" },
@@ -1146,6 +1150,7 @@ describe("dispatchCommand", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
     };
@@ -1239,6 +1244,7 @@ describe("dispatchCommand", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
 
@@ -1308,6 +1314,7 @@ describe("dispatchCommand", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
     const providerInstallationStatus = vi.fn(async () => {
@@ -1375,6 +1382,7 @@ describe("dispatchCommand", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
     const supportedCodexStatus: ProviderCliStatus = {
@@ -1567,6 +1575,7 @@ describe("dispatchCommand", () => {
       dynamicTools: start.dynamicTools,
       contributedEnv: [],
       injectedSkillSources: start.injectedSkillSources,
+      skillSelection: start.skillSelection,
       instructionMode: start.instructionMode,
     };
 
@@ -1767,6 +1776,7 @@ describe("dispatchCommand", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [fixture.source],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
 
@@ -1849,6 +1859,7 @@ describe("dispatchCommand", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [fixture.source],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
       target: { mode: "start" },

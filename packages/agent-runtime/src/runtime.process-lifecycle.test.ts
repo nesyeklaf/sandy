@@ -172,6 +172,7 @@ describe("createAgentRuntime process lifecycle", () => {
         identityRegistry.clearThread(threadId),
       onStderr: args.onStderr,
       skillRoots: [],
+      skillSelection: { mode: "inherit" },
       workspacePath: args.workspacePath,
     });
   }
