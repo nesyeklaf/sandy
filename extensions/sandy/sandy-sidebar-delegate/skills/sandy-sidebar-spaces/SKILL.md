@@ -26,7 +26,7 @@ Optional `{"projectId":"..."}` scopes to one repository. Per Space: `total`, `co
 
 ## Boundary
 
-The Space protection is cooperative: it binds agents using the Space tools and the normal sandy CLI, including sessions an orchestrator started. Clearing SANDY_THREAD_ID, spoofing a sender, or running sandy thread stop or archive is not prevented; a hard boundary would need an authenticated per-session identity and a stop/archive hook in the core. Do not rely on it against an agent that tries to get around it.
+The Space protection is cooperative: it binds agents using the Space tools and the normal sandy CLI, including sessions an orchestrator started. Restricted are orchestrators, sessions started with space_start_session and their descendants; switching a started session to independent does not lift its own sender restriction. Clearing SANDY_THREAD_ID, spoofing a sender, running sandy thread stop or archive, creating a parentless session with sandy thread spawn, or moving itself out and back with sandy thread update --section or --clear-section is not prevented; a hard boundary would need an authenticated per-session identity and a stop/archive hook in the core. Do not rely on it against an agent that tries to get around it.
 
 ## Coordinate a Space
 

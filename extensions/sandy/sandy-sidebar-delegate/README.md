@@ -72,7 +72,7 @@ Tags are stored lowercase; topics keep their case. A session holds at most 20 ta
 
 ### Boundary
 
-The Space protection is cooperative. It binds agents that use the Space tools and the normal `sandy` CLI, including sessions an orchestrator started. A session that clears `SANDY_THREAD_ID`, spoofs a sender, or runs `sandy thread stop` or `archive` is not prevented, because the core takes caller identity from the client. A hard boundary needs an authenticated per-session identity for the CLI and HTTP plus a stop/archive hook. After a move the plugin has not observed, an orchestrator's tool list can be stale for one turn, and one dispatch can slip through a role change that lands mid-flight.
+The Space protection is cooperative. It binds agents that use the Space tools and the normal `sandy` CLI, including sessions an orchestrator started. Restricted are orchestrators, sessions started with `space_start_session` and their descendants. Switching a started session to independent does not lift its own sender restriction. A session that clears `SANDY_THREAD_ID`, spoofs a sender, runs `sandy thread stop` or `archive`, creates a session without a parent through `sandy thread spawn`, or moves itself out of its Space and back through `sandy thread update --section` or `--clear-section` is not prevented, because the core takes caller identity from the client. A hard boundary needs an authenticated per-session identity for the CLI and HTTP plus a stop/archive hook. After a move the plugin has not observed, an orchestrator's tool list can be stale for one turn, and one dispatch can slip through a role change that lands mid-flight.
 
 ## Install
 

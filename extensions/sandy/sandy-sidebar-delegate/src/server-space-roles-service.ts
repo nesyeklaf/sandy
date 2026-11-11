@@ -57,11 +57,18 @@ function createRoleVerifier(deps: SpaceDeps) {
   async function restrictedSpaceOf(threadId: string): Promise<string | null> {
     const orchestratorSpaceId = await orchestratorSpaceOf(threadId);
     if (orchestratorSpaceId !== null) return orchestratorSpaceId;
-    const startedSpaceId = roles.startedSpaceOf(threadId);
-    if (startedSpaceId === null) return null;
-    if ((await membership.spaceOf(threadId)) === startedSpaceId) return startedSpaceId;
+    const started = roles.startedOf(threadId);
+    if (started === null) return null;
+    const currentSpaceId = await membership.spaceOf(threadId);
+    if (currentSpaceId === started.spaceId || (started.descendant && currentSpaceId === null)) return started.spaceId;
     roles.clearStarted(threadId);
     return null;
+  }
+
+  async function restrictChild(childThreadId: string, parentThreadId: string): Promise<void> {
+    const spaceId = await restrictedSpaceOf(parentThreadId);
+    if (spaceId === null) return;
+    roles.recordStarted(childThreadId, spaceId, parentThreadId, Date.now(), true);
   }
 
   async function requireOrchestrator(threadId: string): Promise<string> {
@@ -77,6 +84,7 @@ function createRoleVerifier(deps: SpaceDeps) {
     verifiedAllOrchestrators,
     orchestratorSpaceOf,
     restrictedSpaceOf,
+    restrictChild,
     requireOrchestrator,
   };
 }
@@ -114,6 +122,9 @@ function createManagedTargetDecider(deps: SpaceDeps, verifier: RoleVerifier) {
     const senderSpaceId = await verifier.restrictedSpaceOf(senderThreadId);
     if (senderSpaceId === null) return { allowed: true };
     const targetSpaceId = await membership.spaceOf(targetThreadId);
+    if (targetSpaceId === senderSpaceId && (await verifier.orchestratorSpaceOf(targetThreadId)) === senderSpaceId) {
+      return { allowed: true };
+    }
     const targetMode = roles.modeIn(targetThreadId, targetSpaceId);
     if (targetMode !== "managed") roles.revokeManaged(targetThreadId);
     if (targetSpaceId !== senderSpaceId) {

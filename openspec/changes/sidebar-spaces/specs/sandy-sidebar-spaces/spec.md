@@ -283,4 +283,3 @@ The change SHALL document Spaces, the separate density settings, overlapping ses
 - **WHEN** the package check and scratch-server Spaces browser suite run
 - **THEN** they pass with no dependency-manager switch, live-host mutation or plugin relocation
 - **TEST** extensions/sandy/sandy-sidebar-delegate/e2e/spaces.spec.mjs#scratch-entry-point
-

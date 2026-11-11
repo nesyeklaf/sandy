@@ -46,6 +46,14 @@ The plugin SHALL record the Space of a session started with space_start_session 
 - **WHEN** a session started by an orchestrator of S messages an independent member of S
 - **THEN** the dispatch is refused with a reason that names the independent mode
 
+#### Scenario: Started session reports to its orchestrator
+- **WHEN** a session started by an orchestrator of S messages an orchestrator of S
+- **THEN** the dispatch proceeds
+
+#### Scenario: Descendant of a started session
+- **WHEN** a session created with a restricted session or an orchestrator as parent messages an independent member
+- **THEN** the dispatch is refused, also when the descendant is outside any Space
+
 #### Scenario: Started session messages a managed member
 - **WHEN** a session started by an orchestrator of S messages a managed member of S
 - **THEN** the dispatch proceeds

@@ -177,13 +177,19 @@ function registerManagementTools(
           environment: input.environment,
         });
         try {
-          deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
           deps.roles.recordStarted(spawned.id, spaceId, threadId, Date.now());
+          deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
           if (input.ideaId !== undefined) await notes.linkSessionToIdea(input.ideaId, spawned.id);
         } catch (error) {
+          let stopped = "It was stopped.";
+          try {
+            await sdk.threads.stop({ threadId: spawned.id });
+          } catch (stopFailure) {
+            stopped = `It could not be stopped either: ${String(stopFailure)}.`;
+          }
           throw new SpaceCoordinationError(
             "invalid_request",
-            `Session ${spawned.id} was started in the Space but could not be finished: ${String(error)}. Do not start it again; use space_context to find it.`,
+            `Session ${spawned.id} was started in the Space but could not be finished: ${String(error)}. ${stopped} Do not start it again; use space_context to find it.`,
           );
         }
         deps.publishSpace(spaceId);

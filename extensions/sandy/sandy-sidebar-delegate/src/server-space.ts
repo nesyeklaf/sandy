@@ -33,6 +33,15 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
     rolesService.forgetThread(thread.id);
   });
 
+  ctx.sandy.events.on("thread.created", async ({ thread }) => {
+    if (thread.parentThreadId === null) return;
+    try {
+      await rolesService.restrictChild(thread.id, thread.parentThreadId);
+    } catch (error) {
+      ctx.sandy.log.warn(`Could not restrict ${thread.id} as a descendant: ${String(error)}`);
+    }
+  });
+
   const space = { deps, rolesService, notes, contextReader, orphans };
   registerSpaceEnforcement(ctx, rolesService);
   registerWakeDigest(ctx, deps, rolesService);

@@ -22,19 +22,28 @@ function world(): SpaceWorld {
 
 const call = (harness: Harness, method: string, input: unknown) => harness.behavior.callRpc(method, input as never);
 
-async function prepare(state: SpaceWorld = world()) {
+async function prepare(state: SpaceWorld = world(), beforeStart: (harness: Harness) => void = () => {}) {
+  const stop = vi.fn(async () => makeThreadResponse({ id: "thr_started" }));
   const spawn = vi.fn(async (args: { title: string; sectionId: string }) =>
     makeThreadResponse({ id: "thr_started", title: args.title, sectionId: args.sectionId }),
   );
-  const harness = await loadSpacePlugin(state, { spawn });
+  const harness = await loadSpacePlugin(state, { spawn, stop });
   await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
   await call(harness, "setMemberMode", { threadId: "thr_managed", mode: "managed" });
-  await harness.behavior.callAgentTool(
+  beforeStart(harness);
+  const result = await harness.behavior.callAgentTool(
     "space_start_session",
     { projectId: "proj_1", title: "Worker", prompt: "Go" },
     { threadId: "thr_orch" },
   );
-  return harness;
+  return Object.assign(harness, { result, stop });
+}
+
+async function createChild(harness: Harness, state: SpaceWorld, id: string, parent: string, sectionId: string | null) {
+  state.threads.push(spaceThread(id, sectionId, { parentThreadId: parent }));
+  await harness.behavior.emitThreadEvent("thread.created", {
+    thread: makeThreadResponse({ id, parentThreadId: parent, sectionId }),
+  });
 }
 
 async function dispatch(
@@ -56,6 +65,66 @@ const startedRows = (harness: Harness) =>
   harness.sidebarDb.prepare("SELECT thread_id, space_id, starter_thread_id FROM space_started_sessions").all();
 
 describe("sessions an orchestrator started", () => {
+  it("lets a started session message an orchestrator of its Space but not other independent targets", async () => {
+    const harness = await prepare();
+    expect(await dispatch(harness, "thr_orch", "thr_started")).toEqual({ action: "proceed" });
+    const refused = await dispatch(harness, "thr_indep", "thr_started");
+    expect((refused as { message: string }).message).toMatch(/independent/);
+  });
+
+  it("keeps the restriction after the starter is archived", async () => {
+    const state = world();
+    const harness = await prepare(state);
+    state.threads = state.threads.map((t) => (t.id === "thr_orch" ? { ...t, archivedAt: 5 } : t));
+    expect(await dispatch(harness, "thr_indep", "thr_started")).toMatchObject({ action: "reject" });
+  });
+
+  it("restricts a child, a grandchild and a child of an orchestrator, in or outside a Space", async () => {
+    const state = world();
+    const harness = await prepare(state);
+    await createChild(harness, state, "thr_child", "thr_started", null);
+    await createChild(harness, state, "thr_grand", "thr_child", null);
+    await createChild(harness, state, "thr_orch_child", "thr_orch", "space_a");
+    await createChild(harness, state, "thr_plain_child", "thr_indep", "space_a");
+    for (const sender of ["thr_child", "thr_grand", "thr_orch_child"]) {
+      expect(await dispatch(harness, "thr_indep", sender)).toMatchObject({ action: "reject" });
+      expect(await dispatch(harness, "thr_foreign", sender)).toMatchObject({ action: "reject" });
+    }
+    expect(await dispatch(harness, "thr_managed", "thr_grand")).toEqual({ action: "proceed" });
+    expect(await dispatch(harness, "thr_indep", "thr_plain_child")).toEqual({ action: "proceed" });
+  });
+
+  it("ends a child's restriction when it is observed in another Space", async () => {
+    const state = world();
+    const harness = await prepare(state);
+    await createChild(harness, state, "thr_child", "thr_started", "space_a");
+    state.threads = state.threads.map((t) => (t.id === "thr_child" ? { ...t, sectionId: "space_b" } : t));
+    expect(await dispatch(harness, "thr_indep", "thr_child")).toEqual({ action: "proceed" });
+  });
+
+  it("stops the started session and says so when the record cannot be written", async () => {
+    const harness = await prepare(world(), (h) =>
+      h.sidebarDb.exec(
+        "CREATE TRIGGER fail_started BEFORE INSERT ON space_started_sessions BEGIN SELECT RAISE(ABORT, 'disk'); END",
+      ),
+    );
+    expect(harness.result).toMatchObject({ isError: true });
+    expect(JSON.stringify(harness.result)).toMatch(/It was stopped/);
+    expect(harness.stop).toHaveBeenCalledWith({ threadId: "thr_started" });
+  });
+
+  it("stops the started session and keeps its restriction when the managed mode cannot be written", async () => {
+    const harness = await prepare(world(), (h) =>
+      h.sidebarDb.exec(
+        "CREATE TRIGGER fail_managed BEFORE INSERT ON space_managed_members WHEN NEW.thread_id = 'thr_started' BEGIN SELECT RAISE(ABORT, 'disk'); END",
+      ),
+    );
+    expect(harness.result).toMatchObject({ isError: true });
+    expect(harness.stop).toHaveBeenCalledWith({ threadId: "thr_started" });
+    expect(startedRows(harness)).toHaveLength(1);
+    expect(await dispatch(harness, "thr_indep", "thr_started")).toMatchObject({ action: "reject" });
+  });
+
   it("records the starter and the Space", async () => {
     const harness = await prepare();
     expect(startedRows(harness)).toEqual([

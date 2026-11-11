@@ -64,4 +64,5 @@ export const SPACE_COORDINATION_MIGRATIONS = [
      starter_thread_id  TEXT NOT NULL,
      started_at         INTEGER NOT NULL
    )`,
+  `ALTER TABLE space_started_sessions ADD COLUMN descendant INTEGER NOT NULL DEFAULT 0`,
 ];
