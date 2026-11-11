@@ -119,6 +119,7 @@ describe("Spaces view", () => {
     expect(del).not.toHaveBeenCalled();
     const confirm = await screen.findByRole("group", { name: "Delete Space Plan" });
     expect(within(confirm).getByText("Delete Space “Plan”?")).toBeTruthy();
+    expect(confirm.textContent).toContain("ideas and scratchpad are kept");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.querySelector("[inert]")).toBeNull();
     expect(screen.getByRole("region", { name: "Plan" }).closest("[aria-hidden=true]")).toBeNull();

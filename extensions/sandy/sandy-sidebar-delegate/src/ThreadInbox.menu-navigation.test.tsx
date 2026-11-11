@@ -36,6 +36,28 @@ describe("row context menu", () => {
     expect(rendered.sdkCalls).toEqual([]);
   });
 
+  it("offers Orchestrator of this Space and Managed only for a Space member", async () => {
+    const setOrchestrator = vi.fn(async () => ({ changed: true, spaceId: "sec_a" }));
+    const setMemberMode = vi.fn(async () => ({ changed: true, mode: "managed" }));
+    renderSlot(inbox, listProps, {
+      sidebarThreads: {
+        status: "ready",
+        threads: [thread({ id: "in", title: "In a Space", sectionId: "sec_a" }), thread({ id: "out", title: "Loose" })],
+        projects: [],
+        sections: [{ id: "sec_a", name: "Launch", createdAt: 0, updatedAt: 0 }],
+      },
+      threadActions: () => [],
+      rpc: { setOrchestrator, setMemberMode },
+    });
+    fireEvent.contextMenu(await screen.findByText("Loose"));
+    expect(within(await screen.findByRole("menu", { name: "Thread actions" })).queryByText("Managed")).toBeNull();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+    fireEvent.contextMenu(await screen.findByText("In a Space"));
+    const menu = await screen.findByRole("menu", { name: "Thread actions" });
+    fireEvent.click(within(menu).getByText("Managed"));
+    await waitFor(() => expect(setMemberMode).toHaveBeenCalledWith({ threadId: "in", mode: "managed" }));
+  });
+
   it("offers the plugin's own thread actions on right-click", async () => {
     render([thread({ id: "thr_menu", title: "Right click me" })]);
     const row = await screen.findByText("Right click me");
@@ -60,7 +82,6 @@ describe("row context menu", () => {
       "Regenerate title",
       "Mark unread",
       "Tags & Topics…",
-      "Mark as orchestrator",
       "Copy",
       "Archive",
       "Delete",

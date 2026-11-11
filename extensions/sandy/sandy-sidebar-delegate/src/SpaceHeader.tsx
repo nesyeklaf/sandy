@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Icon, type IconName } from "./components/Icon";
+import { SpaceAddOrchestrator } from "./SpaceAddOrchestrator";
 import { SpaceActions, SpaceDeleteConfirm, SpaceRenameForm } from "./SpaceManagement";
 import { cn } from "./lib/utils";
 import type { SpaceHeaderDensity } from "./sidebar-settings-values";
@@ -86,6 +87,7 @@ export function SpaceHeader({
 }) {
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [addingOrchestrator, setAddingOrchestrator] = useState(false);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const repoLabel = space.repositories === 1 ? "1 repository" : `${space.repositories} repositories`;
   const stats = visibleStats(space.counts, density);
@@ -131,6 +133,7 @@ export function SpaceHeader({
               deleteRef={deleteRef}
               onRenaming={setRenaming}
               onDelete={() => setDeleting(true)}
+              onAddOrchestrator={() => setAddingOrchestrator(true)}
             />
           ) : null}
         </div>
@@ -158,6 +161,9 @@ export function SpaceHeader({
           </div>
         ) : null}
       </div>
+      {addingOrchestrator && space.id !== null ? (
+        <SpaceAddOrchestrator spaceId={space.id} name={space.name} onClose={() => setAddingOrchestrator(false)} />
+      ) : null}
       {deleting && space.id !== null ? (
         <SpaceDeleteConfirm
           spaceId={space.id}

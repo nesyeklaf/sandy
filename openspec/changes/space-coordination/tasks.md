@@ -21,10 +21,10 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 - [x] 4.2 `sandy spaces` CLI commands with --json; update docs/cli-guide-and-skill.md surfaces and the plugin skill. Verify: CLI tests for each command and error.
 
 ## 5. UI
-- [ ] 5.1 Shelves: remove Ideas shelf in Spaces and Flow, keep Orchestrators shelf, rename Ready to Idle.
-- [ ] 5.2 Sort-mode picker for Spaces reusing ActiveSortPicker and sortActiveThreads, persisted separately.
-- [ ] 5.3 Space side-panel tab: Overview (orchestrators, Managed switch, wake switch), Ideas, Scratchpad with conflict handling; row and Space header menu items. Verify: DOM tests for visibility, Managed switch, idea edit, scratchpad conflict.
-- [ ] 5.4 Space delete confirmation says ideas and scratchpad are kept.
+- [x] 5.1 Shelves: remove Ideas shelf in Spaces and Flow, keep Orchestrators shelf, rename Ready to Idle.
+- [x] 5.2 Sort-mode picker for Spaces reusing ActiveSortPicker and sortActiveThreads, persisted separately.
+- [x] 5.3 Space side-panel tab: Overview (orchestrators, Managed switch, wake switch), Ideas, Scratchpad with conflict handling; row and Space header menu items. Verify: DOM tests for visibility, Managed switch, idea edit, scratchpad conflict.
+- [x] 5.4 Space delete confirmation says ideas and scratchpad are kept.
 
 ## 6. Acceptance
 - [ ] 6.1 Full plugin check script and plugin build.

@@ -119,14 +119,25 @@ export function SpaceActions({
   deleteRef,
   onRenaming,
   onDelete,
+  onAddOrchestrator,
 }: {
   name: string;
   deleteRef: RefObject<HTMLButtonElement | null>;
   onRenaming: (renaming: boolean) => void;
   onDelete: () => void;
+  onAddOrchestrator: () => void;
 }) {
   return (
     <>
+      <button
+        type="button"
+        aria-label={`Add orchestrator to ${name}`}
+        title="Add orchestrator…"
+        onClick={onAddOrchestrator}
+        className="grid size-5 shrink-0 place-items-center rounded text-muted-foreground hover:bg-accent"
+      >
+        <Icon name="Orchestrator" className="size-3" />
+      </button>
       <button
         type="button"
         aria-label={`Rename ${name}`}
@@ -194,7 +205,8 @@ export function SpaceDeleteConfirm({
         {total === 0
           ? "The Space is empty."
           : `Its ${total === 1 ? "session moves" : `${total} sessions move`} to No Space.`}{" "}
-        Sessions, their workers and repositories are kept.
+        Sessions, their workers and repositories are kept. Its ideas and scratchpad are kept and can be adopted by
+        another Space with sandy spaces adopt.
       </p>
       {error ? (
         <p role="alert" className="text-2xs text-destructive">

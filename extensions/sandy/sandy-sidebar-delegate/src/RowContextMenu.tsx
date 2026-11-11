@@ -10,7 +10,7 @@ import { notifiesParent, ParentNotificationsMenu } from "./ParentNotificationsMe
 import { DeleteThreadDialog } from "./DeleteThreadDialog";
 import { SnoozePickerDialog } from "./SnoozePickerDialog";
 import { SessionLabelsDialog } from "./SessionLabelsDialog";
-import { useIsOrchestrator, useMarkOrchestrators } from "./useOrchestrators";
+import { useRowSpaceActions } from "./useRowSpaceActions";
 import { Icon, type IconName } from "./components/Icon";
 import { cn } from "./lib/utils";
 import { usePortalScopeProps } from "./lib/portal-scope";
@@ -93,14 +93,7 @@ function RowMenuContents({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pickingSnooze, setPickingSnooze] = useState(false);
   const [editingLabels, setEditingLabels] = useState(false);
-  const isOrchestrator = useIsOrchestrator(thread.id);
-  const markOrchestrators = useMarkOrchestrators();
-  const toggleOrchestrator = () =>
-    markOrchestrators([thread.id], !isOrchestrator).catch((error: unknown) => {
-      toast.error("Could not change the orchestrator mark", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    });
+  const spaceActions = useRowSpaceActions(thread);
   // Archive takes the children with it, and sandy leaves every idle one's agent
   // session loaded. Release them alongside the archive. Working children are
   // skipped, so this never interrupts a turn archive itself would not.
@@ -262,9 +255,16 @@ function RowMenuContents({
               <Item icon="Tag" onSelect={() => setEditingLabels(true)}>
                 Tags & Topics…
               </Item>
-              <Item icon="Orchestrator" onSelect={() => void toggleOrchestrator()}>
-                {isOrchestrator ? "Not an orchestrator any more" : "Mark as orchestrator"}
-              </Item>
+              {spaceActions ? (
+                <>
+                  <CheckItem checked={spaceActions.orchestrator} onSelect={spaceActions.toggleOrchestrator}>
+                    Orchestrator of this Space
+                  </CheckItem>
+                  <CheckItem checked={spaceActions.managed} onSelect={spaceActions.toggleManaged}>
+                    Managed
+                  </CheckItem>
+                </>
+              ) : null}
               <Separator />
               <CopySubmenu thread={thread} />
               <Separator />
@@ -391,6 +391,26 @@ function SnoozeSubmenu({
         </ContextMenu.SubContent>
       </ContextMenu.Portal>
     </ContextMenu.Sub>
+  );
+}
+
+function CheckItem({ checked, children, onSelect }: { checked: boolean; children: ReactNode; onSelect: () => void }) {
+  return (
+    <ContextMenu.CheckboxItem
+      checked={checked}
+      onSelect={onSelect}
+      className={cn(
+        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-[0.3125rem] text-xs outline-none",
+        "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+      )}
+    >
+      <span className="grid size-3.5 shrink-0 place-items-center" aria-hidden="true">
+        <ContextMenu.ItemIndicator>
+          <Icon name="Check" className="size-3.5 text-muted-foreground" />
+        </ContextMenu.ItemIndicator>
+      </span>
+      {children}
+    </ContextMenu.CheckboxItem>
   );
 }
 
