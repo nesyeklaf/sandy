@@ -171,7 +171,7 @@ function printSkillSelection(
     return;
   }
   console.log(
-    `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until stopped; idle threads that are still loaded keep it too:`,
+    `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until stopped; idle threads that are still loaded keep it until their idle session is retired:`,
   );
   for (const threadId of view.pendingThreadIds) console.log(`  ${threadId}`);
   console.log("Run 'sandy thread stop <thread>' to apply it on its next message.");

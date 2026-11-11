@@ -907,13 +907,18 @@ describe("skill selection on the Skills page", () => {
     const skills = [
       makeSkill({ id: `skill_${"1".repeat(64)}`, name: "review-diff" }),
       makeSkill({ id: `skill_${"2".repeat(64)}`, name: "review-plan" }),
-      makeSkill({ id: `skill_${"3".repeat(64)}`, name: "deploy" }),
+      makeSkill({
+        id: `skill_${"3".repeat(64)}`,
+        name: "deploy",
+        description: "Ship the current build.",
+      }),
     ];
     const onChange = renderSelectableOverview({
       skills,
       selection: { mode: "disable", names: ["deploy"] },
       query: "review",
     });
+    expect(screen.queryByRole("button", { name: "deploy" })).toBeNull();
     const openMenu = () =>
       fireEvent.pointerDown(
         screen.getByRole("button", { name: "Skill selection" }),
@@ -974,7 +979,7 @@ describe("skill selection on the Skills page", () => {
       skillSelectionModeText({ mode: "disable", names: ["code-review"] }),
     ).toBeNull();
     expect(skillSelectionModeText({ mode: "allow-only", names: [] })).toBe(
-      "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, named under each agent.",
+      "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, listed in the provider status.",
     );
     expect(
       skillSelectionModeText({
@@ -982,7 +987,7 @@ describe("skill selection on the Skills page", () => {
         names: ["code-review", "deploy"],
       }),
     ).toBe(
-      "Only 2 chosen skills are on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.",
+      "Only 2 chosen skills are on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, listed in the provider status.",
     );
     renderSelectableOverview({
       skills: [makeSkill()],
@@ -990,7 +995,7 @@ describe("skill selection on the Skills page", () => {
     });
     expect(
       screen.getByText(
-        "Only 1 chosen skill is on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.",
+        "Only 1 chosen skill is on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, listed in the provider status.",
       ),
     ).toBeTruthy();
   });
@@ -1002,7 +1007,7 @@ describe("skill selection on the Skills page", () => {
     });
     const note = screen.getByText(/applies to agent sessions that start afterwards/);
     expect(note.textContent).toContain(
-      "threads already loaded keep the skills they started with until you stop them",
+      "threads already loaded keep the skills they started with until stopped or their idle session is retired",
     );
     expect(note.textContent).toContain(
       "an agent with file access can still open a skill's file",

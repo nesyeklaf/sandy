@@ -114,7 +114,7 @@ The Skills page SHALL offer, without a new modal: a name-level switch on each ov
 - **THEN** the page stores `allow-only` with exactly those two names
 
 ### Requirement: Change applies to new and restarted sessions
-After a selection change, the Skills page, the CLI output and the SDK result SHALL name the threads running a turn (`pendingThreadIds`), SHALL say that loaded threads keep the old selection until stopped, and SHALL offer the existing stop (`sandy thread stop`, the toast's Stop action through `sdk.threads.stop`). They SHALL NOT stop or restart any thread themselves.
+After a selection change, the Skills page, the CLI output and the SDK result SHALL name the threads running a turn (`pendingThreadIds`), SHALL say that loaded threads keep the old selection until stopped or their idle session is retired, and SHALL offer the existing stop (`sandy thread stop`, the toast's Stop action through `sdk.threads.stop`). They SHALL NOT stop or restart any thread themselves.
 
 #### Scenario: No automatic restart
 - **WHEN** `grill-me` is disabled while two threads run a turn

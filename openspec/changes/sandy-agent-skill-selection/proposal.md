@@ -14,7 +14,7 @@ Agents that Sandy starts (Pi, Codex, Claude Code) load every skill they find. Ma
 
   A provider shows as enforced only after a test passes against its real entry point. Until then it shows as "unverified" or "not enforced", with its gaps named. That is an honest intermediate status, not a finished feature.
 - One route (`GET`/`PUT /settings/skill-selection`) behind the Skills page (row and detail switches, a Skill selection menu for all off, only the shown skills on, shown skills off and every skill on), the CLI (`sandy skill selection [inherit|disable|allow-only|on|off] [names...]`) and the SDK (`skills.experimental_getSelection`, `skills.experimental_setSelection`).
-- A change applies to sessions started afterwards; loaded threads keep the old selection until stopped. Sandy names the threads running a turn (`pendingThreadIds`) and offers the existing stop (`sandy thread stop`, the Skills page toast). It never stops or restarts on its own.
+- A change applies to sessions started afterwards; loaded threads keep the old selection until stopped or their idle session is retired. Sandy names the threads running a turn (`pendingThreadIds`) and offers the existing stop (`sandy thread stop`, the Skills page toast). It never stops or restarts on its own.
 - Not changed: provider configuration files, skill files and installed skills. Agents that the owner starts outside Sandy load exactly what they load today.
 
 ## Capabilities

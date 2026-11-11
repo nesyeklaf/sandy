@@ -76,7 +76,7 @@ describe("resolvePiSkillLaunch", () => {
         injectedSkillPaths: [],
         selection: { mode: "disable", names: ["beta"] },
         resolveSessionSkills: async (args) => {
-          seen.push(args);
+          seen.push({ ...args, launchEnv: { ...args.launchEnv } });
           return nativeSkills;
         },
       });
@@ -86,7 +86,7 @@ describe("resolvePiSkillLaunch", () => {
         injectedSkillPaths: [],
         selection: { mode: "allow-only", names: [] },
         resolveSessionSkills: async (args) => {
-          seen.push(args);
+          seen.push({ ...args, launchEnv: { ...args.launchEnv } });
           return nativeSkills;
         },
       });

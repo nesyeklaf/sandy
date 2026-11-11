@@ -337,13 +337,13 @@ export function skillSelectionModeText(
   if (selection?.mode !== "allow-only") return null;
   const count = selection.names.length;
   if (count === 0) {
-    return "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, named under each agent.";
+    return "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, listed in the provider status.";
   }
-  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.`;
+  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, listed in the provider status.`;
 }
 
 export const SKILL_SELECTION_APPLY_NOTE =
-  "Turning skills off or on applies to agent sessions that start afterwards; threads already loaded keep the skills they started with until you stop them. A name covers every copy of that skill. The selection decides what agents load, not what they can read: an agent with file access can still open a skill's file.";
+  "Turning skills off or on applies to agent sessions that start afterwards; threads already loaded keep the skills they started with until stopped or their idle session is retired. A name covers every copy of that skill. The selection decides what agents load, not what they can read: an agent with file access can still open a skill's file.";
 
 export interface SkillSelectionControl {
   selection: SkillSelection | undefined;

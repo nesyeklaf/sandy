@@ -1143,7 +1143,7 @@ writes. `experimental_setSelection(selection)` sends
 sorted and deduplicated, and returns the same view plus `pendingThreadIds`,
 the threads that were starting or running when the selection changed (empty
 when nothing changed). Every loaded thread, listed or not, keeps the previous
-selection until it is stopped. Mixed
+selection until it is stopped or its idle session is retired. Mixed
 shapes such as `inherit` with names fail with 400.
 
 Docs: `docs/configuration.md` (Skills) and the agent-configuration guide
@@ -1156,7 +1156,7 @@ through `setSkillNamesEnabled` from `@sandy/domain` for single-name changes.
 
 1. **Pending threads.** `pendingThreadIds` lists starting and active threads;
    decide whether idle threads with a loaded agent belong there too; they also
-   keep the previous selection until stopped, and listing them needs a daemon
+   keep the previous selection until stopped or retired, and listing them needs a daemon
    report of loaded threads.
 2. **Whole-value write.** Two writers race; decide whether to accept a revision
    or offer add/remove operations.
