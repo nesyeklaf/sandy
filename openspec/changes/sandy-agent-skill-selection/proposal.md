@@ -4,17 +4,17 @@ Agents that Sandy starts (Pi, Codex, Claude Code) load every skill they find. Ma
 
 ## What Changes
 
-- New Sandy setting `skillSelection`. It holds exactly one of `{mode: "inherit"}` (the default, today's behavior), `{mode: "disable", names}` or `{mode: "allow-only", names}`. It is applied after the existing `disabledSkillSources`.
-- The skill listing reports, per skill name, whether it is enabled and why. It groups duplicates by name and lists every origin, and it shows per provider whether Sandy can enforce the selection.
+- New Sandy setting `skillSelection`, one per server. It holds exactly one of `{mode: "inherit"}` (the default, today's behavior), `{mode: "disable", names}` or `{mode: "allow-only", names}`. It is applied after the existing `disabledSkillSources`.
+- The skill listing reports `selectionEnabled` per skill, computed on the server by name, and each row names its other origins. Per provider, Sandy shows how far the selection reaches (`enforced`, `unverified`, `not-enforced`, `not-applicable`, for sessions and subagents) and which skill categories it cannot filter.
 - The server leaves disabled Sandy-injected skills out of the injected roots. It sends the selection with the existing `skills/configure` bridge request to new and restored sessions, and `HOST_DAEMON_PROTOCOL_VERSION` goes up.
-- Each provider bridge maps the selection to that provider's own per-launch control. None of the three is proven yet:
-  - Pi 1.5.1: `--no-skills` plus one `--skill` per enabled skill path.
-  - Claude Agent SDK 0.3.245: `skillOverrides: off` in the SDK flag settings layer the bridge already passes.
-  - Codex 0.166.0: a `-c skills.config` override on `codex app-server` launch.
+- Each provider bridge maps the selection to that provider's own per-launch control:
+  - Pi 1.5.1: `--no-skills` plus one `--skill` per kept skill. Gap: skills Pi extensions add at runtime.
+  - Claude Agent SDK 0.3.245: `skillOverrides: off` in the SDK flag settings layer the bridge already passes, plus dropping disabled names from the injected Sandy plugin. Gaps: skills bundled with Claude Code and from its own marketplace plugins; subagents unproven.
+  - Codex 0.166.0: a `-c skills.config` override on `codex app-server` launch. Gap: under allow-only, skills added after launch.
 
-  A provider shows as enforced only after a test passes against its real entry point. Until then it shows as "not enforced". That is an honest intermediate status, not a finished feature.
-- One mutation behind the Skills page, new CLI commands (`sandy skill disable|enable|only|inherit`) and the SDK (`skills.getSelection`, `skills.setSelection`).
-- A change applies to sessions started or restarted afterwards. Sandy names the loaded threads that still run with the old selection and points to the existing restart (`sandy thread stop`, Pi Lifecycle's Restart). It never restarts on its own.
+  A provider shows as enforced only after a test passes against its real entry point. Until then it shows as "unverified" or "not enforced", with its gaps named. That is an honest intermediate status, not a finished feature.
+- One route (`GET`/`PUT /settings/skill-selection`) behind the Skills page (row and detail switches, a Skill selection menu for all off, only the shown skills on, shown skills off and every skill on), the CLI (`sandy skill selection [inherit|disable|allow-only|on|off] [names...]`) and the SDK (`skills.experimental_getSelection`, `skills.experimental_setSelection`).
+- A change applies to sessions started afterwards; an idle runtime takes it on its next turn. Sandy names the threads with running work that keep the old selection (`pendingThreadIds`) and offers the existing stop (`sandy thread stop`, the Skills page toast). It never stops or restarts on its own.
 - Not changed: provider configuration files, skill files and installed skills. Agents that the owner starts outside Sandy load exactly what they load today.
 
 ## Capabilities
@@ -29,11 +29,11 @@ None. Source-level `disabledSkillSources` keeps its behavior.
 
 ## Impact
 
-- Settings and server: `packages/domain/src/app-settings.ts`, `apps/server/src/services/skills/` (`skill-catalog.ts`, `skill-listing.ts`, `injected-skills.ts`), `apps/server/src/routes/system.ts`.
+- Settings and server: `packages/domain/src/skill-selection.ts`, `packages/db/src/data/app-settings.ts`, `apps/server/src/services/skills/` (`skill-catalog.ts`, `skill-listing.ts`, `injected-skills.ts`), `apps/server/src/routes/system.ts`.
 - Wire: `packages/provider-bridge-protocol/src/requests.ts` (`skillsConfigureParamsSchema`), `packages/agent-runtime/src/runtime-provider-process.ts`, `packages/host-daemon-contract/src/protocol.ts` (protocol version bump).
 - Bridges:
   - `plugins/provider-pi/src/bridge/` (`bridge.ts`, `rpc-session.ts`, `pi-package-skills.ts`, `native-roots.ts`)
   - `plugins/provider-claude-code/src/bridge/` (`sdk-session.ts`, `skill-plugins.ts`)
   - `plugins/provider-codex/src/bridge/` (`bridge.ts` app-server launch, `session-params.ts`)
-- Surfaces: `apps/app/src/views/SkillsView.tsx`, `apps/cli/src/commands/skill.ts`, the SDK skills client, `docs/configuration.md`, and the CLI guide surfaces listed in `docs/cli-guide-and-skill.md`.
+- Surfaces: `apps/app/src/components/tools/SkillsCollection.tsx` and `SkillsLibrary.tsx`, `apps/cli/src/commands/skill.ts`, the SDK skills client, `docs/configuration.md`, and the CLI guide surfaces listed in `docs/cli-guide-and-skill.md`.
 - No new dependencies. Not a security boundary: a model can still read a skill file by path, and skill text already in a conversation stays there.

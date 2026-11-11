@@ -312,6 +312,7 @@ describe("sandy skill selection", () => {
     expect(printed).toContain("unverified");
     expect(printed).toContain("Pi: skills from extensions");
     expect(printed).toContain("thr_running");
+    expect(printed).toContain("sandy thread stop <thread>");
   });
 
   it("reads the selection without writing it", async () => {

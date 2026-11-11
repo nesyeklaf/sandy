@@ -6,7 +6,7 @@
   - Codex sends `skills/extraRoots/set` (`plugins/provider-codex/src/bridge/bridge.ts:2555`).
   - Claude Code wraps the roots in the local plugin `sandy-global-skills` and already passes a Sandy-only SDK `settings` flag layer (`sdk-session.ts:201,217`), with `settingSources ["user","project","local"]` (`sdk-session.ts:265`).
 - **Restart.** "Restart" in Sandy means `sdk.threads.stop`: it releases the loaded runtime, and the next message starts a fresh process (`extensions/sandy/pi-lifecycle/server.ts:66-70`, `sandy thread stop`).
-- **Native per-skill controls in the installed versions.** These come from reading docs and typings. None has been observed at runtime.
+- **Native per-skill controls in the installed versions.** These come from reading docs and typings; the runner later observed the main-session controls of all three against the installed binaries without a model turn (Codex `-c skills.config` → `skills/list enabled:false`; Pi `--no-skills --skill` → `get_commands`; Claude `settings.skillOverrides` → `supportedCommands`). Subagent behavior is not observed.
   - Pi 1.5.1: `--no-skills` turns off discovery, and explicit `--skill` paths still load. Settings `skills` only adds paths. The documented RPC command `get_commands` lists skills with `sourceInfo.path`.
   - Claude Agent SDK 0.3.245 (`sdk.d.ts`):
     - `Settings.skillOverrides {name: "on"|"name-only"|"user-invocable-only"|"off"}`; `off` hides a skill from the model and from `/`.
@@ -47,24 +47,24 @@
    - Native skills have no Sandy source, so only the policy applies to them.
    - Under `inherit`, the result is exactly today's: source filtering applies, and nothing else is filtered.
    - Under `allow-only`, a newly discovered name stays off. Under `disable`, it is on.
-4. **Identity: the skill name, not the origin.** Claude Code `skillOverrides` and the Codex config address skills by name, and only Pi takes paths. Keying on the name gives the same meaning for every provider. The listing groups by name and shows each origin (provider, root kind, path, registration id, duplicate kind: same-file, same-content or same-name), so the owner can see what a toggle covers. Claude plugin skills use the name the listing already shows for them.
-5. **Delivery: extend `skills/configure` with the policy, and bump `HOST_DAEMON_PROTOCOL_VERSION`.** This reuses the request every new and restored session already receives, instead of adding a second channel.
-6. **Per-provider mapping:**
-   - Pi: when the mode is not `inherit`, launch with `--no-skills` and one `--skill` per enabled path, resolved from native roots, Pi packages and Sandy injection. Other settings and extensions are untouched.
-   - Claude Code: put `skillOverrides: off` per disabled name into the existing flag settings layer, and drop disabled names from Sandy agent definitions' `skills`. Leave `settingSources` unchanged.
-   - Codex: pass `-c skills.config=[...]` on app-server launch. Because launch config is per process, the app-server process key includes a hash of the policy.
-7. **Enforcement status:** each bridge declares `skillSelection: "enforced" | "not-enforced"`. A bridge declares `enforced` only in the commit that adds its passing real-entry test. The listing and the Skills page show this per provider. The feature is complete only when all three providers are enforced.
-8. **Apply on restart:** the mutation result lists the threads with a loaded runtime. The UI and CLI offer the existing stop/restart for them. Nothing is restarted automatically.
+4. **Identity: the skill name, not the origin.** Claude Code `skillOverrides` and the Codex config address skills by name, and only Pi takes paths. Keying on the name gives the same meaning for every provider. The listing keeps one row per distinct content; each row names its other origins (provider, scope, path, registration id, relation: same-file, same-content or same-name), and every row of a name shows the same state, so the owner can see what a toggle covers. Claude plugin skills use the name the listing already shows for them.
+5. **Delivery: extend `skills/configure` with `selection`, and bump `HOST_DAEMON_PROTOCOL_VERSION` (265 → 266).** This reuses the request every new and restored session already receives, instead of adding a second channel. The host daemon keys runtime reuse on the catalog hash and the canonical selection: a busy runtime keeps its selection, an idle one is replaced on the next turn.
+6. **Per-provider mapping (as built):**
+   - Pi: when the mode is not `inherit`, launch with `--no-skills` and one `--skill` per kept skill from Pi's own resolution of native roots, Pi packages and Sandy injection. The bridge finds Pi's package through the managed-install layout (`<agentDir>/install/current-version`). Other settings and extensions are untouched. Gap: skills an extension adds through `resources_discover` are merged after `--no-skills`; the only native filter (`ResourceLoader.skillsOverride`) exists in the SDK, not in CLI or RPC.
+   - Claude Code: only `settings.skillOverrides` set to `off` in the existing flag settings layer (`disable`: the listed names; `allow-only`: every scanned native name not listed). Overrides do not hide plugin skills, so the bridge drops disabled names from the Sandy plugin it injects. `Options.skills` is not used: the SDK turns it into the allow rule `Skill(x)` and it does not filter the listing. `settingSources` unchanged. Gaps: skills bundled with Claude Code and skills from Claude Code's own marketplace plugins; subagents unproven.
+   - Codex: `-c skills.config=[...]` on app-server launch (`disable`: per name; `allow-only`: per path from Codex's launch-time `skills/list` that the list leaves out); the app-server process key includes the selection. Gap: under `allow-only`, skills added after launch.
+7. **Enforcement status:** each bridge declares `experimental_skillSelection: {session, subagents, gaps}` with `enforced | unverified | not-enforced | not-applicable` per side. A bridge declares `enforced` only in the commit that adds its passing real-entry test; today all three declare `unverified` sessions. The Skills page and `sandy skill selection` show status and gaps. The feature is complete only when all three providers are enforced, or the owner accepts a named gap.
+8. **Surfaces:** `GET`/`PUT /settings/skill-selection`, SDK `skills.experimental_getSelection`/`experimental_setSelection`, CLI `sandy skill selection [inherit|disable|allow-only|on|off] [names...]`, all computing name toggles with `setSkillNamesEnabled`. The Skills page has a name-level switch per row and on the skill page, a Skill selection menu (all off, only the shown skills on, shown skills off, every skill on), an Off mark on every row of a disabled name, and a standing note on timing and the read boundary.
+9. **Apply on restart:** the mutation result lists `pendingThreadIds` (threads with running work). The CLI prints them with `sandy thread stop`; the Skills page toast offers Stop through `sdk.threads.stop`. Nothing is restarted automatically.
 
 ## Risks / Trade-offs
 
-- [Codex `-c skills.config` may not exist or not disable discovery] → The probe task runs first. If it fails, Codex stays "not enforced" and the owner question on the fallback stays open.
-- [Pi `--no-skills` also stops package skill discovery] → The bridge resolves package skill paths itself and passes enabled ones explicitly. The real-pi test covers a package skill.
-- [Pi `enableSkillCommands: false` hides skills from `get_commands`] → The real-pi test sets it to true in a temporary agent dir and also asserts on the launch arguments.
-- [Claude `skillOverrides` may not reach subagents] → A credentialed live test checks subagent invocation. Until it passes, Claude stays "not enforced".
-- [A name-level toggle turns off every copy of a duplicated name] → The listing shows every affected origin. A per-copy toggle is an open question.
-- [Codex app-server pooling: one process serves several sessions] → Key the process on the policy hash, so new sessions get a fresh process and running ones keep theirs until restarted.
-- [Not a security boundary] → Documented on the Skills page, in `docs/configuration.md` and in the CLI help.
+- [Pi extension skills bypass `--no-skills`] → Declared gap `extension-skills`, kept visible by an expected-failure real test. Proposal for the owner (not an approved scope reduction): (B) keep it as a documented gap with Pi below enforced, and (C) ask upstream for a skill filter over CLI or RPC. (A), stripping skills from the prompt in `before_agent_start`, is fragile and needs the owner's OK.
+- [Claude bundled and marketplace plugin skills are not reachable by overrides] → Declared gaps. `disableBundledSkills` would also remove bundled workflows; owner decision.
+- [Claude `skillOverrides` may not reach subagents] → Subagents stay `unverified`; a live probe was inconclusive.
+- [A name-level toggle turns off every copy of a duplicated name] → The listing shows every origin, and the switch label names the other copies. A per-copy toggle is an open question.
+- [Codex app-server pooling: one process serves several sessions] → The process is keyed on the selection, so new sessions get a fresh process and running ones keep theirs.
+- [Not a security boundary] → Stated on the Skills page, in `docs/configuration.md` and in the agent configuration guide.
 
 ## Migration Plan
 
@@ -72,8 +72,7 @@ There is no data migration: a missing `skillSelection` reads as `{mode: "inherit
 
 ## Open Questions
 
-These are drafts for the owner. Each names the proposed defaults until it is answered.
-- **Scope:** one server-wide selection (proposed default), or also a per-project override?
-- **Per-provider exceptions:** one selection for all three providers (proposed default), or exceptions such as a skill off only for Claude Code?
-- **Codex fallback, if the probe fails:** stay "not enforced" (proposed default), or start Codex with a Sandy-owned `CODEX_HOME` overlay that links the owner's config and login?
-- **Per-copy toggle:** name-level (proposed default), or also per origin, which only Pi could enforce?
+The owner authorized the defaults: one server-wide selection, no per-project or per-provider overrides, no Codex config-home fallback, name-level only. Still open:
+- **Pi extension skills:** B+C (documented gap plus upstream ask), or A on the owner's OK.
+- **Claude bundled and marketplace plugin skills:** keep as gaps, or turn on `disableBundledSkills` under `allow-only`.
+- **Claude subagents:** a credentialed proof run, or accept `unverified`.

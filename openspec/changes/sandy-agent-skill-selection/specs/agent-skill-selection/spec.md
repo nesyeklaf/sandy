@@ -1,111 +1,113 @@
 ## ADDED Requirements
 
 ### Requirement: Selection policy shape and default
-General settings SHALL hold `skillSelection` as exactly one of `{mode: "inherit"}`, `{mode: "disable", names}` or `{mode: "allow-only", names}`, where `names` are unique skill names. `inherit` SHALL be the default and SHALL keep today's behavior, including the existing `disabledSkillSources` filtering, in listing, injection and every provider launch. The settings route SHALL reject an unknown mode or extra keys with 400 and SHALL leave the stored policy unchanged.
+Sandy SHALL store one server-wide `skillSelection` as exactly one of `{mode: "inherit"}`, `{mode: "disable", names}` or `{mode: "allow-only", names}`, where `names` are unique skill names, in its own app settings. `inherit` SHALL be the default, and a missing or unparsable stored value SHALL read as `inherit`. `inherit` SHALL keep today's behavior, including the existing `disabledSkillSources` filtering, in listing, injection and every provider launch. `PUT /settings/skill-selection` SHALL reject an unknown mode or extra keys with 400 and SHALL leave the stored policy unchanged.
 
 #### Scenario: Missing setting keeps today's behavior
 - **WHEN** a database without `skillSelection` and with `disabledSkillSources: ["sandy-plugins"]` starts a Pi, a Codex and a Claude Code session
-- **THEN** `getAppSettings` returns `{mode: "inherit"}`, plugin skills are still left out, and the recorded `skills/configure` roots and launch arguments equal those of the same fixture without this change
+- **THEN** `GET /settings/skill-selection` returns `{mode: "inherit"}`, plugin skills are still left out, and `skills/configure` carries `selection: {mode: "inherit"}` with the same roots as before this change
 
 #### Scenario: Disable and allow-only cannot mix
-- **WHEN** PATCH general settings sends `skillSelection: {mode: "disable", names: ["a"], allow: ["b"]}`
-- **THEN** the response is 400 and `getAppSettings` returns the previous `skillSelection`
+- **WHEN** `PUT /settings/skill-selection` sends `{mode: "disable", names: ["a"], allow: ["b"]}`
+- **THEN** the response is 400 and `GET /settings/skill-selection` returns the previous selection
 
 ### Requirement: Selection lives only in Sandy
-Changing `skillSelection` through any surface SHALL write only Sandy's own settings and SHALL NOT write any file in a provider home, a skill root or a workspace, so the same agent started outside Sandy loads its skills unchanged.
+Changing `skillSelection` through any surface SHALL write only Sandy's own settings and SHALL NOT write any file in a provider home, a skill root or a workspace, so the same agent started outside Sandy loads its skills unchanged. Bridges SHALL apply the selection only through per-launch arguments or per-session SDK options, and SHALL NOT use separate provider config homes or overlays.
 
 #### Scenario: Toggle writes nothing outside Sandy
 - **WHEN** `skillSelection` is set to `{mode: "disable", names: ["grill-me"]}` with a temporary HOME holding `~/.codex`, `~/.claude`, `~/.pi` and `~/.agents/skills`
-- **THEN** every file under the temporary HOME keeps its previous bytes and mtime
+- **THEN** every file under the temporary HOME keeps its previous bytes
 
 ### Requirement: Composition with sources and new skills
-A skill SHALL be enabled exactly when its Sandy-owned source, if it has one, is not in `disabledSkillSources` and the policy enables its name. `inherit` SHALL enable every name, `disable` SHALL enable the names it does not list, and `allow-only` SHALL enable only the names it lists. A skill discovered after the policy was set SHALL therefore stay off under `allow-only` and on under `disable`.
-
-#### Scenario: Disabled source wins over allow-only
-- **WHEN** `disabledSkillSources` holds `sandy-user`, the policy is `allow-only ["review"]`, and `review` exists only in the Sandy user root
-- **THEN** `sandy skill list --json` reports `review` disabled with reason `source`
+A skill SHALL be enabled exactly when its Sandy-owned source, if it has one, is not in `disabledSkillSources` and the policy enables its name. `inherit` SHALL enable every name, `disable` SHALL enable the names it does not list, and `allow-only` SHALL enable only the names it lists. A skill discovered after the policy was set SHALL therefore stay off under `allow-only` and on under `disable`. The skill listing SHALL report `selectionEnabled` per skill, computed on the server.
 
 #### Scenario: New skill stays off under allow-only
 - **WHEN** the policy is `allow-only ["review"]` and `~/.agents/skills/lint-fix/SKILL.md` appears before the next listing
-- **THEN** `lint-fix` is listed as disabled with reason `policy`, and the next session receives it as disabled
+- **THEN** `lint-fix` is listed with `selectionEnabled: false`, and the next session receives the policy that leaves it out
 
 #### Scenario: All skills off
 - **WHEN** the policy is `allow-only` with an empty list
-- **THEN** every listed skill is disabled, and no injected skill root is sent to a new session
+- **THEN** every listed skill has `selectionEnabled: false`, and no injected skill root is sent to a new session
 
 #### Scenario: Several skills off
 - **WHEN** the policy is `disable ["grill-me", "deslop"]` while five skills are indexed
-- **THEN** the listing reports exactly `grill-me` and `deslop` as disabled
+- **THEN** the listing reports exactly `grill-me` and `deslop` with `selectionEnabled: false`
 
 ### Requirement: Duplicate names and origins
-The skill listing SHALL group skills by name and SHALL list, for each group, every origin with provider, root kind, path, registration id and duplicate kind (same-file, same-content, same-name). The selection SHALL apply to the name, so every origin of a disabled name is off for every provider, and the listing SHALL mark each affected origin.
+The selection SHALL apply to the name, so every origin of a disabled name is off for every provider. The listing SHALL keep one row per distinct content and SHALL list, for each row, the other origins with provider, scope, path, registration id and relation (same-file, same-content, same-name), so the owner can see what a name toggle covers.
 
 #### Scenario: Same name in two native roots
 - **WHEN** `grill-me` exists in `~/.agents/skills` and, with other content, in `~/.claude/skills`, and the policy disables `grill-me`
-- **THEN** `sandy skill list --json` shows one `grill-me` group with two same-name origins, both disabled with reason `policy`, and the Pi launch arguments contain neither path
+- **THEN** `sandy skill list --json` shows both rows with `selectionEnabled: false`, each naming the other as a `same-name` duplicate
 
 ### Requirement: New and restored sessions receive the selection
-When Sandy starts or restores a provider session, the server SHALL leave disabled Sandy-injected skills out of the injected roots and SHALL send the policy with the `skills/configure` bridge request. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
+When Sandy starts or restores a provider session, the server SHALL leave disabled Sandy-injected skills out of the injected roots and SHALL send the policy as `selection` with the `skills/configure` bridge request. The host daemon SHALL reuse a runtime only when both its skill catalog and its canonical selection match the request. A busy runtime SHALL keep running with the selection it has, and an idle one SHALL be replaced on its next turn. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
 
 #### Scenario: Restored session gets the selection
 - **WHEN** a thread whose runtime was stopped is resumed after `grill-me` was disabled
 - **THEN** the recorded `skills/configure` request carries `{mode: "disable", names: ["grill-me"]}`, and the injected roots do not contain `grill-me`
 
-#### Scenario: New session gets the selection
-- **WHEN** a new Codex thread starts with the policy `allow-only ["review"]`
-- **THEN** the recorded `skills/configure` request carries that policy before the first turn
+#### Scenario: Selection change reaches an idle runtime only
+- **WHEN** the selection changes while a runtime runs a turn, and the runtime later becomes idle
+- **THEN** the busy runtime is not shut down, and the next ensure after it is idle starts a new runtime with the new selection, while a reordered but equal selection reuses it
+
+### Requirement: Per-provider enforcement status
+Each provider declaration SHALL state `experimental_skillSelection` as `{session, subagents, gaps}`, where `session` and `subagents` are each `enforced`, `unverified`, `not-enforced` or `not-applicable`, and `gaps` names the skill categories the bridge cannot filter (`bundled-skills`, `marketplace-plugin-skills`, `extension-skills`, `allow-only-skills-added-after-start`). A missing declaration SHALL read as `not-enforced` on both sides with no gaps. A bridge SHALL declare `enforced` only in the commit that adds its passing real-entry test. Sandy SHALL show the status and the gaps on the Skills page and in `sandy skill selection`.
+
+#### Scenario: Unproven provider is shown honestly
+- **WHEN** a provider declares `session: "unverified"` with gap `extension-skills` and the policy disables `grill-me`
+- **THEN** the Skills page and `sandy skill selection` say that provider leaves the skill out but is not yet proven, and name skills from extensions as not filtered
 
 ### Requirement: Pi loads only enabled skills
-When the policy is not `inherit`, the Pi bridge SHALL start pi with `--no-skills` and one `--skill` per enabled skill path from Pi's native roots, Pi packages and Sandy injection, keeping every other setting and extension. The Pi bridge SHALL declare skill selection as `enforced` only once the real-pi scenario passes in CI, and as `not-enforced` before that.
+When the policy is not `inherit`, the Pi bridge SHALL start pi with `--no-skills` and one `--skill` per enabled skill, resolved from Pi's own native roots, Pi packages and Sandy injection, keeping every other setting and extension. Skills that a Pi extension adds through `resources_discover` are merged after `--no-skills` and SHALL be declared as the gap `extension-skills`. Pi session support SHALL stay below `enforced` while that gap exists.
 
-#### Scenario: Pi launch leaves out a disabled native skill
-- **WHEN** `~/.pi/agent/skills` holds `grill-me` and `review`, and `grill-me` is disabled
-- **THEN** the pi launch arguments contain `--no-skills` and `--skill` for `review`, and contain no path of `grill-me`
+#### Scenario: Real pi does not list a disabled native or package skill
+- **WHEN** the installed pi starts in RPC mode with the bridge's launch arguments, a temporary agent dir with native skills, a local Pi package with a skill and an extension skill, and Sandy-injected skills, and the native and package skills `*-off-fixture` are disabled
+- **THEN** `get_commands` lists the enabled native, package and injected skills and none of the disabled native or package skills
 
-#### Scenario: Real pi does not discover a disabled skill
-- **WHEN** the installed pi 1.5.1 starts through the Pi bridge in RPC mode, without credentials or network, with a temporary agent dir holding skills `grill-me` and `review`, a package skill `pkg-skill`, `enableSkillCommands: true` and `grill-me` disabled
-- **THEN** the RPC `get_commands` result lists skill commands for `review` and `pkg-skill`, none for `grill-me`, and no `sourceInfo.path` inside the `grill-me` folder
+#### Scenario: Extension skill gap stays visible
+- **WHEN** the same launch disables `extension-off-fixture`
+- **THEN** the test that expects it hidden runs and is marked as an expected failure, so it turns red once the gap is closed
 
 ### Requirement: Claude Code loads only enabled skills
-The Claude Code bridge SHALL write `skillOverrides: off` for each disabled name into the SDK flag settings layer it already passes. It SHALL drop disabled names from the `skills` of Sandy agent definitions, and SHALL NOT change `settingSources`, user files or plugin files. It SHALL declare skill selection as `enforced` only once the main-session and subagent scenarios against the real SDK pass in CI.
+The Claude Code bridge SHALL apply the selection only through `settings.skillOverrides` set to `off` in the SDK flag settings layer it already passes. Under `disable` the listed names are off; under `allow-only` every scanned native skill name (`~/.claude/skills` and `.claude/skills` up to the repository root) that the list does not name is off. Because overrides do not hide plugin skills, the bridge SHALL leave disabled names out of the Sandy plugin it injects. It SHALL NOT use `Options.skills`, which the SDK turns into an auto-approve rule, and SHALL NOT change `settingSources`, user files or plugin files. Skills bundled with Claude Code and skills from Claude Code's own marketplace plugins SHALL be declared as gaps. Subagents SHALL stay `unverified` until a credentialed test proves them.
 
 #### Scenario: Claude override is a flag layer only
 - **WHEN** `grill-me` is disabled and a Claude Code session starts
-- **THEN** the SDK options carry `settings.skillOverrides["grill-me"] = "off"`, `settingSources` stays `["user","project","local"]`, and `~/.claude/settings.json` is unchanged
+- **THEN** the SDK options carry `settings.skillOverrides["grill-me"] = "off"`, `settingSources` is unchanged, and `~/.claude/settings.json` is unchanged
 
-#### Scenario: Real Claude main session hides the skill
-- **WHEN** the installed Claude Agent SDK 0.3.245 starts a query through the bridge, without a model turn, with a temporary config dir holding skills `grill-me` and `review` and `grill-me` disabled
-- **THEN** `supportedCommands()` contains `review` and does not contain `grill-me`
+#### Scenario: Real Claude main session hides native and injected skills
+- **WHEN** the installed Claude Agent SDK starts a query through the bridge without a model turn, with a temporary config dir holding native skills and Sandy-injected skills, under `disable` and under `allow-only`
+- **THEN** `supportedCommands()` lists exactly the enabled native and injected skills
 
-#### Scenario: Real Claude subagent cannot use the skill
-- **WHEN** a credentialed CI job runs a main turn that starts a subagent which asks the Skill tool for `grill-me` while `grill-me` is disabled
-- **THEN** the Skill tool call for `grill-me` is refused, and the subagent transcript contains no text from the `grill-me` skill
+### Requirement: Codex loads only enabled skills
+The Codex bridge SHALL pass `-c skills.config=[...]` on `codex app-server` launch: under `disable` one entry per listed name with `enabled = false`, under `allow-only` one entry with `enabled = false` per path in Codex's own launch-time `skills/list` that the list does not name. The app-server process SHALL be keyed on the selection. The bridge SHALL NOT call `skills/config/write`. Skills that appear after launch under `allow-only` SHALL be declared as the gap `allow-only-skills-added-after-start`.
 
-### Requirement: Codex is enforced only after a probe
-The Codex bridge SHALL pass disabled names as a `-c skills.config` override on `codex app-server` launch only after the probe scenario shows that codex 0.166.0 then reports the skill as disabled in `skills/list`. Until the probe passes, the listing and the Skills page SHALL mark Codex as not enforced. The bridge SHALL NOT call `skills/config/write`.
-
-#### Scenario: Codex probe against the real binary
-- **WHEN** `codex app-server` starts, without credentials, with `-c skills.config=[{name="grill-me",enabled=false}]` and a temporary `CODEX_HOME` holding `skills/grill-me/SKILL.md`
-- **THEN** `skills/list` reports `grill-me` with `enabled: false`, and the temporary `config.toml` is unchanged
-
-#### Scenario: Unproven provider is shown honestly
-- **WHEN** a provider bridge declares skill selection as `not-enforced` and the policy disables `grill-me`
-- **THEN** `sandy skill list --json` and the Skills page show that provider as not enforced for `grill-me`
+#### Scenario: Codex disables a skill without writing config
+- **WHEN** `codex app-server` starts through the bridge, without credentials, with a temporary `CODEX_HOME` holding skills and the selection disables one of them
+- **THEN** `skills/list` reports that skill with `enabled: false` and the others enabled, and no `config.toml` is created or changed
 
 ### Requirement: UI, CLI and SDK share one mutation
-The mutating actions, namely Skills page toggles, the CLI commands `sandy skill disable <name...>`, `sandy skill disable --all`, `sandy skill enable <name...>`, `sandy skill only <name...>` and `sandy skill inherit`, and the SDK method `skills.setSelection`, SHALL all go through the one server mutation behind PATCH general settings. The same input on each surface SHALL store the same `skillSelection` and return the same result. The SDK method `skills.getSelection` and the read views SHALL use one common read model and SHALL NOT write anything.
+The Skills page, the CLI command `sandy skill selection [inherit|disable|allow-only|on|off] [names...]` and the SDK method `skills.experimental_setSelection` SHALL all go through `PUT /settings/skill-selection`, and SHALL compute name toggles with the one domain helper `setSkillNamesEnabled`. `skills.experimental_getSelection` and `sandy skill selection` without arguments SHALL read through `GET /settings/skill-selection` and SHALL NOT write anything. The result SHALL carry the stored selection, the provider status and `pendingThreadIds`.
 
-#### Scenario: One contract table across surfaces
-- **WHEN** each row of one table (disable one, disable many, disable all, allow-only, inherit) runs through the route, the CLI and the SDK against a migrated database
-- **THEN** all three surfaces store byte-equal `skillSelection` JSON per row and return equal affected-thread lists
+#### Scenario: CLI and SDK store the same selection
+- **WHEN** `sandy skill selection off grill-me` runs from `inherit`
+- **THEN** the stored selection is `{mode: "disable", names: ["grill-me"]}`, the same value `skills.experimental_setSelection` stores for that input
 
-#### Scenario: Skills page uses the same mutation
-- **WHEN** the owner switches off `grill-me` on the Skills page
-- **THEN** the page sends PATCH general settings with `{mode: "disable", names: ["grill-me"]}`
+### Requirement: Skills page controls
+The Skills page SHALL offer, without a new modal: a name-level switch on each overview row and on the skill page; a Skill selection menu with all skills off (`allow-only []`), only the shown skills on (`allow-only` of the names left by search and filters), the shown skills off, and every skill on (`inherit`); an Off mark on every row of a disabled name; and a standing note that a change applies to sessions that start afterwards, that a name covers every copy, and that the selection decides what agents load, not what they can read.
+
+#### Scenario: All off and only selected on
+- **WHEN** the owner picks Turn all skills off and then switches on `review`
+- **THEN** the page stores `{mode: "allow-only", names: []}` and then `{mode: "allow-only", names: ["review"]}`
+
+#### Scenario: Only the shown skills on
+- **WHEN** the owner searches `review`, two skills remain, and the owner picks Only the 2 shown skills on
+- **THEN** the page stores `allow-only` with exactly those two names
 
 ### Requirement: Change applies to new and restarted sessions
-After a selection change, the Skills page, the `sandy skill` CLI output and the SDK result SHALL say that the change applies to sessions started or restarted afterwards. They SHALL name the loaded threads that still run with the old selection and offer the existing restart (`sandy thread stop`, Pi Lifecycle's Restart), and they SHALL NOT restart any thread themselves.
+After a selection change, the Skills page, the CLI output and the SDK result SHALL name the running threads that keep the old selection until their running work ends (`pendingThreadIds`) and SHALL offer the existing stop (`sandy thread stop`, the toast's Stop action through `sdk.threads.stop`). They SHALL NOT stop or restart any thread themselves.
 
 #### Scenario: No automatic restart
-- **WHEN** `grill-me` is disabled while two threads have a loaded runtime
-- **THEN** both runtimes keep running, and the CLI output names both threads and the `sandy thread stop` command
+- **WHEN** `grill-me` is disabled while two threads run a turn
+- **THEN** both runtimes keep running, the CLI output lists both thread ids, and the Skills page toast offers Stop 2 threads without stopping either

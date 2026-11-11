@@ -174,6 +174,7 @@ function printSkillSelection(
     `\n${view.pendingThreadIds.length} running thread(s) keep the previous selection until the running work in their environment finishes and they start their next turn:`,
   );
   for (const threadId of view.pendingThreadIds) console.log(`  ${threadId}`);
+  console.log("Run 'sandy thread stop <thread>' to apply it on its next message.");
 }
 
 function parseSkillSource(value: string): SandySkillSourceId {
