@@ -9,7 +9,6 @@ import { useSelection } from "./SelectionHost";
 import { SnoozeSelect } from "./SnoozeSelect";
 import { useBulkActions } from "./useBulkActions";
 import { useBulkArchive } from "./useBulkArchive";
-import { useIdeaIds } from "./useIdeas";
 import { useOrchestratorIds } from "./useOrchestrators";
 
 const BAR_BUTTON =
@@ -91,7 +90,6 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const { snoozePresets } = useInboxEnvironment();
   const archive = useBulkArchive();
   const bulk = useBulkActions();
-  const ideaIds = useIdeaIds();
   const orchestratorIds = useOrchestratorIds();
   const selected = useMemo(
     () => threads.filter((thread) => selection.selectedIds.has(thread.id)),
@@ -100,7 +98,6 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   if (!selection.active) return null;
   const none = selected.length === 0;
   const allPinned = !none && selected.every((thread) => thread.isPinned);
-  const allIdeas = !none && selected.every((thread) => ideaIds.has(thread.id));
   const allOrchestrators = !none && selected.every((thread) => orchestratorIds.has(thread.id));
   const finish = () => selection.exit();
   return (
@@ -154,15 +151,6 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
         onSubmit={(topic) => {
           finish();
           void bulk.topic(selected, topic);
-        }}
-      />
-      <BarButton
-        icon="Bulb"
-        label={allIdeas ? "Not an idea any more" : "Mark as idea"}
-        disabled={none}
-        onClick={() => {
-          finish();
-          void bulk.idea(selected, !allIdeas);
         }}
       />
       <BarButton

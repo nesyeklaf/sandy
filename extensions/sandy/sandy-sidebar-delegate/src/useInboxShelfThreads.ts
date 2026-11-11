@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import type { LifecycleApi } from "./useLifecycle";
-import { useIdeaIds } from "./useIdeas";
 import { useOrchestratorIds } from "./useOrchestrators";
 import {
   filterByProjects,
@@ -36,7 +35,6 @@ export function useInboxShelfThreads({
   scope,
   threads,
 }: InboxShelfThreadsOptions) {
-  const ideaIds = useIdeaIds();
   const orchestratorIds = useOrchestratorIds();
   return useMemo(() => {
     const allVisible = visibleInboxThreads(threads);
@@ -70,7 +68,7 @@ export function useInboxShelfThreads({
         workingTree: isWorkingTree(thread, children, childrenByParentId),
         woke: lifecycle.wokeFor(thread),
         pullRequestState: threadPullRequestState(thread, pullRequests),
-        idea: ideaIds.has(thread.id),
+        idea: false,
         orchestrator: orchestratorIds.has(thread.id),
         lockedShelf: renamingShelfLocks.get(thread.id),
       });
@@ -107,7 +105,6 @@ export function useInboxShelfThreads({
   }, [
     activeThreadId,
     childrenByParentId,
-    ideaIds,
     lifecycle,
     orchestratorIds,
     pullRequests,

@@ -10,7 +10,6 @@ import { notifiesParent, ParentNotificationsMenu } from "./ParentNotificationsMe
 import { DeleteThreadDialog } from "./DeleteThreadDialog";
 import { SnoozePickerDialog } from "./SnoozePickerDialog";
 import { SessionLabelsDialog } from "./SessionLabelsDialog";
-import { useIsIdea, useMarkIdeas } from "./useIdeas";
 import { useIsOrchestrator, useMarkOrchestrators } from "./useOrchestrators";
 import { Icon, type IconName } from "./components/Icon";
 import { cn } from "./lib/utils";
@@ -94,19 +93,11 @@ function RowMenuContents({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [pickingSnooze, setPickingSnooze] = useState(false);
   const [editingLabels, setEditingLabels] = useState(false);
-  const isIdea = useIsIdea(thread.id);
-  const markIdeas = useMarkIdeas();
   const isOrchestrator = useIsOrchestrator(thread.id);
   const markOrchestrators = useMarkOrchestrators();
   const toggleOrchestrator = () =>
     markOrchestrators([thread.id], !isOrchestrator).catch((error: unknown) => {
       toast.error("Could not change the orchestrator mark", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    });
-  const toggleIdea = () =>
-    markIdeas([thread.id], !isIdea).catch((error: unknown) => {
-      toast.error("Could not change the idea mark", {
         description: error instanceof Error ? error.message : undefined,
       });
     });
@@ -270,9 +261,6 @@ function RowMenuContents({
               <Separator />
               <Item icon="Tag" onSelect={() => setEditingLabels(true)}>
                 Tags & Topics…
-              </Item>
-              <Item icon="Bulb" onSelect={() => void toggleIdea()}>
-                {isIdea ? "Not an idea any more" : "Mark as idea"}
               </Item>
               <Item icon="Orchestrator" onSelect={() => void toggleOrchestrator()}>
                 {isOrchestrator ? "Not an orchestrator any more" : "Mark as orchestrator"}

@@ -122,7 +122,6 @@ function browserOverview(id: string, spec: Case) {
       spaceFactsOf(thread, {
         lifecycle: { shelfFor: () => "active" },
         outcomes: new Map(),
-        ideaIds: new Set(),
         orchestratorIds: new Set(),
       }),
     now: NOW,

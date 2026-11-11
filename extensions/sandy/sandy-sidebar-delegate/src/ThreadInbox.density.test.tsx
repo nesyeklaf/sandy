@@ -18,7 +18,7 @@ const threads = [
   thread({ id: "child", title: "Child work", parentThreadId: "parent", hasPendingInteraction: true }),
 ];
 
-function renderInbox(initial: Partial<typeof defaultSidebarSettings> = {}, ideas: string[] = []) {
+function renderInbox(initial: Partial<typeof defaultSidebarSettings> = {}) {
   let saved = { ...defaultSidebarSettings, ...initial };
   const writes: unknown[] = [];
   renderSlot(inbox, listProps, {
@@ -35,7 +35,6 @@ function renderInbox(initial: Partial<typeof defaultSidebarSettings> = {}, ideas
         return saved;
       },
       listLifecycle: () => ({ rows: [] }),
-      listIdeas: () => ({ threadIds: ideas }),
     },
   });
   return { writes };
@@ -56,20 +55,6 @@ describe("density", () => {
     expect(density("Asking work")).toBe(expected.asking);
     expect(density("Idle work")).toBe(expected.idle);
   });
-
-  it.each(["comfortable", "compact", "dense"] as const)(
-    "shows the idea lightbulb at %s density and only on ideas",
-    async (threadDensity) => {
-      renderInbox({ threadDensity }, ["idle", "pinned"]);
-      const mark = (title: string) =>
-        screen.getByRole("link", { name: title }).closest("[data-parent-card]")?.querySelector("[data-idea-mark]");
-      await waitFor(() => expect(density("Idle work")).toBe(threadDensity));
-      await waitFor(() => expect(mark("Idle work")).toBeTruthy());
-      expect(mark("Idle work")?.getAttribute("class")).toContain("--sandy-sidebar-tone-draft");
-      expect(mark("Pinned work")).toBeTruthy();
-      expect(mark("Busy work")).toBeFalsy();
-    },
-  );
 
   it("draws Needs you and Failed Comfortable, Working Compact and the rest Dense on Auto", async () => {
     renderInbox({ threadDensity: "auto" });

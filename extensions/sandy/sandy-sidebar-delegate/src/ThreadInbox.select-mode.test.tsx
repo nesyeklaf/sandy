@@ -74,7 +74,6 @@ describe("select mode", () => {
       "Pin",
       "Tag",
       "Topic",
-      "Mark as idea",
       "Mark as orchestrator",
       "Leave select mode",
     ]);

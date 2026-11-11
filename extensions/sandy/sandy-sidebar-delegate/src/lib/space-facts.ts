@@ -8,7 +8,6 @@ import type { SpacePrState, SpaceThreadFacts } from "../spaces-model";
 interface SpaceFactSources {
   lifecycle: Pick<LifecycleApi, "shelfFor">;
   outcomes: ReadonlyMap<string, SpacePrState>;
-  ideaIds: ReadonlySet<string>;
   orchestratorIds: ReadonlySet<string>;
 }
 
@@ -20,7 +19,7 @@ export function spaceFactsOf(thread: PluginSidebarThread, sources: SpaceFactSour
     failed: threadFailed(thread),
     working: isWorkingTree(thread, [], new Map()),
     pr: environmentId ? (sources.outcomes.get(environmentId) ?? "unknown") : "none",
-    idea: sources.ideaIds.has(thread.id),
+    idea: false,
     orchestrator: sources.orchestratorIds.has(thread.id),
     activityAt: Math.max(thread.latestAttentionAt, thread.updatedAt),
   };

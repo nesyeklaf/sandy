@@ -17,9 +17,9 @@ import { createServerSessionSearch } from "./server-session-search";
 import { createServerTopics, SESSION_TOPICS_MIGRATIONS, TOPICS_MIGRATIONS } from "./server-topics";
 import { createServerAnchors, ANCHORS_MIGRATIONS } from "./server-anchors";
 import { createServerLastMessages, LAST_MESSAGES_MIGRATIONS } from "./server-last-messages";
-import { createServerIdeas, IDEAS_MIGRATIONS } from "./server-ideas";
-import { createServerOrchestrators, ORCHESTRATORS_MIGRATIONS } from "./server-orchestrators";
-import { registerSessionRoles } from "./server-session-roles";
+import { LEGACY_ROLE_MIGRATIONS, SPACE_COORDINATION_MIGRATIONS } from "./server-space-migrations";
+import { createServerSpace } from "./server-space";
+import { createSpaceHandlers } from "./server-space-handlers";
 import { createServerProjectManagement } from "./server-project-management";
 import { createServerSettleCleanup } from "./server-settle-cleanup";
 import { createServerSettleActions } from "./server-settle-actions";
@@ -127,8 +127,8 @@ const migrations = [
   `ALTER TABLE thread_lifecycle ADD COLUMN deferred_interaction_id TEXT`,
   ...LAST_MESSAGES_MIGRATIONS,
   ...SESSION_TOPICS_MIGRATIONS,
-  ...IDEAS_MIGRATIONS,
-  ...ORCHESTRATORS_MIGRATIONS,
+  ...LEGACY_ROLE_MIGRATIONS,
+  ...SPACE_COORDINATION_MIGRATIONS,
 ];
 
 export default async function plugin(sandy: SandyPluginApi) {
@@ -155,15 +155,10 @@ export default async function plugin(sandy: SandyPluginApi) {
   const topics = createServerTopics(ctx, helper);
   const sessionSearch = createServerSessionSearch(ctx);
   const lastMessages = createServerLastMessages(ctx);
-  const ideas = createServerIdeas(ctx);
-  const orchestrators = createServerOrchestrators(ctx);
-  registerSessionRoles(ctx, ideas.marks, orchestrators.marks);
+  const space = createServerSpace(ctx);
   const anchors = createServerAnchors(ctx, helper);
   const bulk = createServerBulkActions(ctx, lifecycle, cleanup);
-  const spaceOverview = createServerSpaceOverview(ctx, lifecycle, {
-    ideas: ideas.marks,
-    orchestrators: orchestrators.marks,
-  });
+  const spaceOverview = createServerSpaceOverview(ctx, lifecycle, space.deps.roles);
   const handlers = createServerHandlers(
     ctx,
     lifecycle,
@@ -183,8 +178,7 @@ export default async function plugin(sandy: SandyPluginApi) {
       topics,
       sessionSearch,
       lastMessages,
-      ideas,
-      orchestrators,
+      space: createSpaceHandlers(space),
       anchors,
       bulk,
     },

@@ -41,7 +41,7 @@ function ownAttention(thread: ListedThread): OwnAttention {
 export function createServerSpaceOverview(
   ctx: ServerContext,
   lifecycle: Pick<ReturnType<typeof createServerLifecycle>, "readAll" | "threadSignals">,
-  marks: { ideas: { list(): string[] }; orchestrators: { list(): string[] } },
+  roles: { allOrchestrators(): string[] },
 ) {
   async function listThreads(): Promise<ListedThread[]> {
     const threads: ListedThread[] = [];
@@ -67,8 +67,7 @@ export function createServerSpaceOverview(
       ];
       const pullRequests = await lookUpPullRequestOutcomes(ctx, environmentIds);
       const rows = new Map(lifecycle.readAll().map((row) => [row.threadId, row]));
-      const ideas = new Set(marks.ideas.list());
-      const orchestrators = new Set(marks.orchestrators.list());
+      const orchestrators = new Set(roles.allOrchestrators());
       const askingParents = descendantsWhere(threads, (thread) => thread.hasPendingInteraction);
       const unblockedParents = descendantsWhere(threads, (thread) => lifecycle.threadSignals(thread).hasUnblockedWork);
       const shelfOf = (thread: ListedThread) => {
@@ -98,7 +97,7 @@ export function createServerSpaceOverview(
         failed: thread.status === "error" || thread.queuedWork === "failed",
         working: lifecycle.threadSignals(thread).isWorking && !blocksWorking(ownAttention(thread)),
         pr: thread.environmentId === null ? "none" : (pullRequests.outcomes.get(thread.environmentId) ?? "unknown"),
-        idea: ideas.has(thread.id),
+        idea: false,
         orchestrator: orchestrators.has(thread.id),
         activityAt: Math.max(thread.latestAttentionAt, thread.updatedAt),
       });

@@ -24,7 +24,11 @@ export function useMarkOrchestrators(): (threadIds: readonly string[], orchestra
   const rpc = useRpc<typeof sandySidebarRpcContract>();
   return useCallback(
     async (threadIds, orchestrator) => {
-      const { changed } = await rpc.call("setOrchestrator", { threadIds: [...threadIds], orchestrator });
+      const changed: string[] = [];
+      for (const threadId of threadIds) {
+        const result = await rpc.call("setOrchestrator", { threadId, orchestrator });
+        if (result.changed) changed.push(threadId);
+      }
       if (changed.length > 0) {
         const next = new Set(store.getState());
         for (const threadId of changed) {

@@ -7,9 +7,9 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 - [x] 1.2 Add the English-only guard test. Verify: the test fails on a planted German word, passes on the tree.
 
 ## 2. Storage and domain
-- [ ] 2.1 Migrations for space_orchestrators, space_member_modes, space_ideas, space_idea_links, space_scratchpads; limits as named constants; assert helper.
-- [ ] 2.2 Domain module: orchestrator assignment, coordination mode, ideas CRUD with links, scratchpad read/write with revision check; cleanup on thread.deleted; membership check against core sectionId. Verify: real-SQLite tests for each rule, limit and conflict.
-- [ ] 2.3 Migration that drops thread_orchestrators and thread_ideas; orphan listing and adopt. Verify: real-SQLite tests for drop, orphans after Space deletion and adopt.
+- [x] 2.1 Migrations for space_orchestrators, space_member_modes, space_ideas, space_idea_links, space_scratchpads; limits as named constants; assert helper.
+- [x] 2.2 Domain module: orchestrator assignment, coordination mode, ideas CRUD with links, scratchpad read/write with revision check; cleanup on thread.deleted; membership check against core sectionId. Verify: real-SQLite tests for each rule, limit and conflict.
+- [x] 2.3 Migration that drops thread_orchestrators and thread_ideas; orphan listing and adopt. Verify: real-SQLite tests for drop, orphans after Space deletion and adopt.
 
 ## 3. Enforcement and agent tools
 - [ ] 3.1 Message-dispatch hook refusing orchestrator messages to independent or foreign sessions. Verify: tests for owner message, managed, independent, foreign Space, mixed senders.

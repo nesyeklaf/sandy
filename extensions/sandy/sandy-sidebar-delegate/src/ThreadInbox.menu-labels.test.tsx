@@ -45,26 +45,4 @@ describe("row menu labels", () => {
       expect(setThreadTopics).toHaveBeenLastCalledWith({ threadId: "thr_1", topics: ["Sidebar Polish"] }),
     );
   });
-
-  it("marks a session as an idea and takes the mark back", async () => {
-    let ideas: string[] = [];
-    const setIdea = vi.fn((raw: unknown) => {
-      const input = raw as { threadIds: string[]; idea: boolean };
-      ideas = input.idea ? input.threadIds : [];
-      return { changed: input.threadIds };
-    });
-    renderSlot(inbox, listProps, {
-      sidebarThreads: threads,
-      rpc: { listLifecycle: () => ({ rows: [] }), listIdeas: () => ({ threadIds: ideas }), setIdea },
-    });
-    fireEvent.contextMenu(await screen.findByText("Login bug"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Mark as idea" }));
-    await waitFor(() => expect(setIdea).toHaveBeenCalledWith({ threadIds: ["thr_1"], idea: true }));
-    const shelf = await screen.findByRole("region", { name: "Ideas" });
-    expect(within(shelf).getByText("Login bug")).toBeDefined();
-    fireEvent.contextMenu(within(shelf).getByText("Login bug"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Not an idea any more" }));
-    await waitFor(() => expect(setIdea).toHaveBeenLastCalledWith({ threadIds: ["thr_1"], idea: false }));
-    await waitFor(() => expect(screen.queryByRole("region", { name: "Ideas" })).toBeNull());
-  });
 });

@@ -60,7 +60,6 @@ describe("row context menu", () => {
       "Regenerate title",
       "Mark unread",
       "Tags & Topics…",
-      "Mark as idea",
       "Mark as orchestrator",
       "Copy",
       "Archive",
