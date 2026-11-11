@@ -2,7 +2,7 @@
 
 ## Context and accepted reference
 
-Approved interactive prototype: [spaces-prototype.html](/home/feysen/.sandy-local/data/thread-storage/thr_s5du8y8bfn/spaces-prototype.html).
+Approved interactive prototype: [approved-prototype.html](handoff/approved-prototype.html).
 
 The source checkout inspected for this draft is `/home/feysen/projects/private/gh/sandy` at `40b0835fb6c9deed0f8a11f9a51a9cd68a33cca7`. Its working tree was clean. Installed Delegate source is `extensions/sandy/sandy-sidebar-delegate`.
 

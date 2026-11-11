@@ -18,9 +18,10 @@ Named cross-repo effort groups ("Spaces") in the sidebar delegate extension (`ex
 Evidence is in `handoff/verification/` (handoff-summary.json, source-before.sha256, source-list-before.txt); hashes are relative to `extensions/sandy/sandy-sidebar-delegate`.
 - Passed on the final frozen source (Node 26.13.0): full unit run 1470/1470 tests in 180 files, exit 0 (includes the R2 working-parity file); plugin build exit 0.
 - NOT rerun after the final fix: tsc --noEmit, changed-file lint, file sizes, import boundaries, `openspec validate sidebar-spaces --strict`, source snapshot after the run. The last tsc run predates the final fix.
+- The parent verified after the run that the plugin source sha256 fingerprints match the recorded ones (quiet, exit 0).
 - Baseline failures that also fail at HEAD: README RPC table format check; biome.json schema warning (CLI 2.6.4 vs 2.5.15); `ThreadInbox.route-switch.test.tsx` import-boundaries (inline import() types).
 - Not done: real browser and visual verification of the Spaces UI (desktop and mobile); not installed into a running Sandy; hidden-subagent attention check in Space rows.
-- Read-only review notes, NOT reproduced and NOT fix requests: a hidden-worker case that may count as working where native is idle; a runtime status DTO gap; offset pagination duplicates and a 5000 cap with no flag. Check them before relying on those paths.
+- Read-only review notes, NOT reproduced and NOT fix requests: a status "pending" that may count as working though native treats it as idle; a runtime status DTO gap; offset pagination duplicates and a 5000 cap with no flag. Check them before relying on those paths.
 
 ## First safe next action
 In the package dir run, via Turbo on Node 26.13.0: typecheck, lint, then the focused tests above, then the full test and build. Fix only failures. Then do the browser/visual pass in an isolated dev app (verify-sandy skill). Do not merge or install before that.
