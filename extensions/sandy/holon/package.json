@@ -7,7 +7,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "build": "sandy plugin build"
+    "build": "sandy plugin build",
+    "sync:holon-ui": "node scripts/sync-holon-ui.mjs"
   },
   "engines": {
     "sandy": ">=0.45",

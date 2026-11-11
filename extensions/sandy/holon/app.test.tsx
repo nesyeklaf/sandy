@@ -44,6 +44,7 @@ const map: MapOutput = {
   commit: "0123456789abcdef",
 };
 const mapReply = () => ({ ok: true as const, root: "/work", map });
+const noForward = () => ({ ok: false as const, error: "not forwarded in this test" });
 const source = { kind: "workspace" as const, threadId: "thr_1", environmentId: "env_1", projectId: null };
 
 const mounted: Array<() => void> = [];
@@ -68,7 +69,7 @@ describe("Holon file opener", () => {
     const slot = renderSlot<PluginFileOpenerProps, typeof rpcContract>(
       app.fileOpeners[0]!,
       { path: "apps/account/password-reset.holon", source, Original: () => <div>Raw file</div> },
-      { rpc: { view: (input) => ({ ok: true as const, root: "/work", view: views[input.id ?? "password-reset"]! }), map: mapReply } },
+      { rpc: { forward: noForward, view: (input) => ({ ok: true as const, root: "/work", view: views[input.id ?? "password-reset"]! }), map: mapReply } },
     );
     await waitFor(() => expect(slot.getByRole("heading", { level: 2 }).textContent).toContain("Password reset"));
     await waitFor(() => expect(slot.getByRole("button", { name: /^Password reset, component/ }).getAttribute("aria-pressed")).toBe("true"));
@@ -92,7 +93,7 @@ describe("Holon file opener", () => {
     const slot = renderSlot<PluginFileOpenerProps, typeof rpcContract>(
       app.fileOpeners[0]!,
       { path: "apps/account/password-reset.holon", source, Original: () => <div>Raw file</div> },
-      { rpc: { view: (input) => ({ ok: true as const, root: "/work", view: views[input.id ?? "password-reset"]! }), map: mapReply } },
+      { rpc: { forward: noForward, view: (input) => ({ ok: true as const, root: "/work", view: views[input.id ?? "password-reset"]! }), map: mapReply } },
     );
     const account = await slot.findByRole("button", { name: /^Account, component/ });
     fireEvent.click(account);
@@ -105,6 +106,7 @@ describe("Holon file opener", () => {
       { path: "apps/account/password-reset.holon", source, Original: () => <div>Raw file</div> },
       {
         rpc: {
+          forward: noForward,
           view: (input) => ({ ok: true as const, root: "/work", view: views[input.id ?? "password-reset"]! }),
           map: () => ({ ok: false as const, error: "map failed" }),
         },
@@ -118,7 +120,7 @@ describe("Holon file opener", () => {
     const slot = renderSlot<PluginFileOpenerProps, typeof rpcContract>(
       app.fileOpeners[0]!,
       { path: "broken.holon", source, Original: () => <div>Raw file</div> },
-      { rpc: { view: () => ({ ok: false as const, error: "broken.holon: not valid JSON" }), map: mapReply } },
+      { rpc: { forward: noForward, view: () => ({ ok: false as const, error: "broken.holon: not valid JSON" }), map: mapReply } },
     );
     await waitFor(() => expect(slot.getByRole("alert").textContent).toBe("broken.holon: not valid JSON"));
     expect(slot.getByText("Raw file")).toBeTruthy();

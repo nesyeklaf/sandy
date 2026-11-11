@@ -13,6 +13,12 @@ description: Check holon files in Git, list drift, view one holon, record eviden
 - `evidence record` sends the whole file as one request; `holon serve` accepts at most 64 MB per request and the plugin does not split files. A larger file fails with `body_too_large`: import it with the standalone `holon evidence import --file <path>`.
 - Recording one run from flags (`--holon`, `--side`, `--result`, …) and `--replace` have no `holon serve` route yet and fail with `unsupported_option`. Use `--file`, `--jsonl` or the `holon` CLI.
 
+## Holons thread tab
+
+- Every thread has a Holons tab: the holon editor from holon-ui on the thread environment's directory, served by the same `holon serve` process as the CLI. Edits in the tab write `.holon` files and `.holons/` policy in that directory.
+- The tab works only for an environment on the sandy server's own host; a thread without an environment shows a notice, one on another host fails with `remote_workspace`.
+- The editor is vendored in `vendor/holon-ui` with the holons commit in `VERSION`. Refresh it with `pnpm sync:holon-ui <holons checkout>`, which runs holon-ui's `pnpm build:lib` and copies the editor, its CSS, the routing and layout workers and `libavoid.wasm`.
+
 ## The holon binary
 
 - The plugin runs the binary in `HOLON_BIN` (absolute path), else `holon` on PATH. Set `HOLON_BIN` in the environment of the sandy server (`npx sandy-app env set HOLON_BIN /path/to/holon`) and restart it.
