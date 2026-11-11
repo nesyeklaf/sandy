@@ -41,6 +41,40 @@ async function startHarness(state: SpaceWorld) {
 const START = { projectId: "p", title: "t", prompt: "go" };
 
 describe("space_start_session", () => {
+  describe("reusing an environment", () => {
+    function envWorld(): SpaceWorld {
+      return {
+        sections: [
+          { id: "space_a", name: "Alpha" },
+          { id: "space_b", name: "Beta" },
+        ],
+        threads: [
+          spaceThread("thr_orch", "space_a", { environmentId: "env_orch" }),
+          spaceThread("thr_managed", "space_a", { environmentId: "env_managed" }),
+          spaceThread("thr_indep", "space_a", { environmentId: "env_indep" }),
+          spaceThread("thr_foreign", "space_b", { environmentId: "env_foreign" }),
+        ],
+      };
+    }
+    const reuse = (environmentId: string) => ({ ...START, environment: { type: "reuse", environmentId } });
+
+    it("allows the caller's own and a managed member's environment", async () => {
+      const { harness, spawned } = await startHarness(envWorld());
+      await call(harness, "setMemberMode", { threadId: "thr_managed", mode: "managed" });
+      expect(await tool(harness, "space_start_session", reuse("env_orch"))).not.toMatchObject({ isError: true });
+      expect(await tool(harness, "space_start_session", reuse("env_managed"))).not.toMatchObject({ isError: true });
+      expect(spawned).toHaveLength(2);
+    });
+
+    it.each(["env_indep", "env_foreign", "env_unknown"])("refuses %s before it spawns", async (environmentId) => {
+      const { harness, spawned } = await startHarness(envWorld());
+      await call(harness, "setMemberMode", { threadId: "thr_managed", mode: "managed" });
+      const result = await tool(harness, "space_start_session", reuse(environmentId));
+      expect(result).toMatchObject({ isError: true });
+      expect(spawned).toHaveLength(0);
+    });
+  });
+
   it("refuses an unknown idea before it starts anything", async () => {
     const { harness, spawned } = await startHarness(world());
     const result = await tool(harness, "space_start_session", { ...START, ideaId: "missing" });
@@ -72,7 +106,9 @@ describe("space_start_session", () => {
     [{ type: "host", hostId: "host_1", workspace: { type: "managed-worktree", baseBranch: { kind: "default" } } }],
     [{ type: "host", workspace: { type: "personal" } }],
   ])("passes the environment selector %j to the SDK and keeps the session flat", async (environment) => {
-    const { harness, spawned } = await startHarness(world());
+    const state = world();
+    state.threads[0] = spaceThread("thr_orch", "space_a", { environmentId: "env_1" });
+    const { harness, spawned } = await startHarness(state);
     const result = await tool(harness, "space_start_session", { ...START, environment });
     expect(JSON.stringify(result)).toContain("thr_new1");
     expect(spawned[0]).toMatchObject({ environment, sectionId: "space_a" });

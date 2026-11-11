@@ -142,6 +142,21 @@ function registerManagementTools(
   const sdk = ctx.sandy.sdk;
   const agents = ctx.sandy.agents;
 
+  async function requireReusableEnvironment(callerId: string, spaceId: string, environmentId: string): Promise<void> {
+    const caller = (await deps.membership.threadsById([callerId])).get(callerId);
+    if (caller?.environmentId === environmentId) return;
+    const { threads } = await deps.membership.listMembers(spaceId);
+    const managedOwner = threads.find(
+      (member) => member.environmentId === environmentId && deps.roles.modeIn(member.id, spaceId) === "managed",
+    );
+    if (managedOwner === undefined) {
+      throw new SpaceCoordinationError(
+        "independent_member",
+        "That environment belongs to a session that is not a managed member of this Space. Reuse your own environment or one of a managed member, or start with a new environment.",
+      );
+    }
+  }
+
   agents.registerTool({
     name: "space_start_session",
     description:
@@ -151,6 +166,9 @@ function registerManagementTools(
       guarded(async () => {
         const spaceId = await rolesService.requireOrchestrator(threadId);
         if (input.ideaId !== undefined) await notes.requireLinkableIdea(input.ideaId, spaceId);
+        if (input.environment.type === "reuse") {
+          await requireReusableEnvironment(threadId, spaceId, input.environment.environmentId);
+        }
         const spawned = await sdk.threads.spawn({
           projectId: input.projectId,
           title: input.title,
