@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const PLUGIN_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SCANNED_ENTRIES = ["src", "app.tsx", "README.md", "skills"];
+const SCANNED_ENTRIES = ["src", "app.tsx", "README.md", "CHANGELOG.md", "skills"];
 const SCANNED_EXTENSIONS = [".ts", ".tsx", ".md", ".css", ".json"];
 const FILES_SCANNED_MAX = 5000;
 const DIRECTORIES_SCANNED_MAX = 1000;

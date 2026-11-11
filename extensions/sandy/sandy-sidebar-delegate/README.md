@@ -42,7 +42,9 @@ Use **Parent** in a thread's context menu to search threads in the same repo, ch
 
 ## CLI
 
-The plugin adds no `sandy` commands of its own. Its RPC methods are callable with `sandy plugin rpc call`, which validates the input against the plugin's schema on the server. The input is a JSON file:
+The plugin adds the `sandy spaces` command tree for Space coordination: `show`, `orchestrator add|remove`, `member mode`, `wake`, `orphans`, `adopt`, `ideas list|add|update|remove` and `scratchpad show|write`. Each Space argument is an id or an exact name. A session that runs them may use only `show`, `ideas` and `scratchpad` for its own Space; changing orchestrators, member modes or the wake digest, and adopting orphans, is refused for sessions and stays with the owner. Run `sandy spaces --help` for flags.
+
+Every other feature is reached through RPC methods, callable with `sandy plugin rpc call`, which validates the input against the plugin's schema on the server. The input is a JSON file:
 
 ```sh
 echo '{"threadIds":["thr_abc123"],"topic":"Release"}' > /tmp/topic.json
@@ -60,6 +62,7 @@ sandy plugin rpc call sandy-sidebar-delegate addThreadTopic --input-file /tmp/to
 | `getSpaceOverview` | `{ projectId? }` | `{ pullRequests, spaces }`: per Space total, counts (needs, failed, working, openPr, dormant), idle, repositories and representative roots with primary shelf. Listed by `sandy plugin rpc list`. `pullRequests` is `"available"` when GitHub PR Status answered for every environment, otherwise `"unavailable"`: open and merged PRs count, an absent PR makes a root dormant-eligible, and a draft, closed, offline or missing answer stays unknown and is never dormant |
 | `getSpaceCoordination` | `{ spaceId }` | Members (status, project, environment, branch, PR, mode), orchestrators, wake switch, ideas, scratchpad revision |
 | `listOrchestrators` / `setOrchestrator` | `{}` / `{ threadId, orchestrator }` | `{ threadIds }` / `{ changed, spaceId }`; a Space may have several orchestrators |
+| `setOrchestrators` | `{ threadIds, orchestrator }` | `{ changed }`; checks every session first and changes none when one is outside a Space |
 | `setMemberMode` / `setSpaceWake` | `{ threadId, mode }` / `{ spaceId, enabled }` | `{ changed, mode }` / `{ wakeEnabled }`; modes are independent (default) and managed |
 | `listIdeas` / `createIdea` / `updateIdea` / `deleteIdea` | per idea | Space ideas with status, author and linked sessions |
 | `getScratchpad` / `writeScratchpad` | `{ spaceId }` / `{ spaceId, body, baseRevision }` | Revisioned Markdown; a stale write returns `{ status: "conflict", scratchpad }` |

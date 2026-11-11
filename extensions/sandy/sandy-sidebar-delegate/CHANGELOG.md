@@ -4,9 +4,9 @@
 
 - Topics: new Topics tab per session. Drag over turns to mark a range, or let the AI suggest topics and tags (accept singly or all). Each topic has a color, a title, tags, user/agent counts and lines/words/tokens. Step between topics, open them in the chat. Session tags too. Stored in the plugin's server database. All UI text is English.
 - Sidebar: tag chips and a topic/tag search narrow the session list.
-- Topics (Themen) on a whole session, next to its tags. **Tags & Themen…** in a row's ⋯ menu edits both, as a bottom sheet on phone widths. The tag and topic pickers split into **Session** and **In Bereichen** sections with counts, and a pick in one section matches only on that level.
-- **Als Idee markieren** / **Keine Idee mehr** in a row's ⋯ menu and in the select-mode bar, with Undo. Idle ideas sit on a new **Ideen** shelf after Waiting, with its own density override, and idea rows show a lightbulb at every density.
-- Select mode adds **Thema** (add a topic to the picked sessions) and the idea toggle, each with Undo.
+- Topics on a whole session, next to its tags. **Tags & Topics…** in a row's ⋯ menu edits both, as a bottom sheet on phone widths. The tag and topic pickers split into **Session** and **In ranges** sections with counts, and a pick in one section matches only on that level.
+- **Mark as idea** / **Not an idea** in a row's ⋯ menu and in the select-mode bar, with Undo. Idle ideas sit on a new **Ideas** shelf after Waiting, with its own density override, and idea rows show a lightbulb at every density.
+- Select mode adds **Topic** (add a topic to the picked sessions) and the idea toggle, each with Undo.
 - RPC methods for topics and ideas (`setThreadTopics`, `addThreadTopic`, `removeThreadTopic`, `listIdeas`, `setIdea`; `listAllTags` and `listTopics` return `threadTopics`), callable with `sandy plugin rpc call`; see README → CLI.
 
 ### Added
