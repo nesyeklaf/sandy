@@ -1,0 +1,186 @@
+{
+  "format": "holon-change/v0",
+  "id": "sandy-thread-switch-fast",
+  "title": "A thread switch is really done fast",
+  "why": "Owner target: a thread switch, first visit and revisit, is really done (field-latency contentDone) in a median of 100 ms. Field p50 revisit today: painted 204-536 ms, really done 715-1651 ms per device. Sandy has no holons for the parts this touches yet; this change set adds them and the requirement the first change must meet.",
+  "by": "agent:orchestrator",
+  "createdAt": "2026-11-11",
+  "status": "approved",
+  "ops": [
+    {
+      "op": "holon.create",
+      "holon": {
+        "format": "holon/v0",
+        "id": "sandy",
+        "kind": "context",
+        "partOf": null,
+        "title": "Sandy",
+        "status": "proposed",
+        "why": "The owner runs coding agents in threads from one place and wants it to feel like a fast local tool on every device he uses.",
+        "contract": "Sandy shows projects, threads and their agents in a browser or desktop app served by a server and host daemons.",
+        "carriedBy": [
+          "nesyeklaf"
+        ],
+        "code": [
+          "apps/",
+          "extensions/sandy/"
+        ],
+        "seams": [],
+        "proofs": {}
+      },
+      "path": "sandy.holon"
+    },
+    {
+      "op": "holon.create",
+      "holon": {
+        "format": "holon/v0",
+        "id": "sandy-app",
+        "kind": "container",
+        "partOf": "sandy",
+        "title": "Sandy app",
+        "status": "proposed",
+        "why": "People read and steer their threads in the browser, on the desktop and on the phone.",
+        "contract": "The web client renders the sidebar, the thread view and plugin slots from server data and switches threads without a page load.",
+        "carriedBy": [
+          "nesyeklaf"
+        ],
+        "code": [
+          "apps/app/"
+        ],
+        "seams": [],
+        "proofs": {
+          "It": {
+            "kind": "ci",
+            "source": "apps/app/vitest.config.ts"
+          }
+        }
+      },
+      "path": "apps/app/sandy-app.holon"
+    },
+    {
+      "op": "holon.create",
+      "holon": {
+        "format": "holon/v0",
+        "id": "sandy-thread-view",
+        "kind": "component",
+        "partOf": "sandy-app",
+        "title": "Thread view",
+        "status": "proposed",
+        "why": "Switching between threads is what the owner does most; a slow or still-changing view after a switch is the lag he feels.",
+        "contract": "Shows a thread's timeline, composer and status for the thread in the route, and after a switch shows its content without later changes.",
+        "carriedBy": [
+          "nesyeklaf"
+        ],
+        "code": [
+          "apps/app/src/components/thread/"
+        ],
+        "seams": [],
+        "proofs": {
+          "It": {
+            "kind": "ci",
+            "source": "apps/app/src/components/thread/timeline/ThreadTimelineRows.presentation.test.tsx"
+          }
+        }
+      },
+      "path": "apps/app/src/components/thread/sandy-thread-view.holon"
+    },
+    {
+      "op": "holon.create",
+      "holon": {
+        "format": "holon/v0",
+        "id": "field-latency",
+        "kind": "component",
+        "partOf": "sandy",
+        "title": "Field latency",
+        "status": "proposed",
+        "why": "Lab numbers differ from what the owner feels; only samples from his own browsers per device show whether a change helps.",
+        "contract": "Records menu, dialog and thread-switch latency in the owner's browsers per device, including when the thread view stopped changing after a switch, and reports percentiles per device and release.",
+        "carriedBy": [
+          "nesyeklaf"
+        ],
+        "code": [
+          "extensions/sandy/field-latency/"
+        ],
+        "seams": [
+          {
+            "to": "sandy-thread-view",
+            "contract": "Times a switch until the thread view is painted and until its content stopped changing",
+            "readOnly": true
+          }
+        ],
+        "proofs": {
+          "It": {
+            "kind": "ci",
+            "source": "extensions/sandy/field-latency/contentdone.test.ts"
+          }
+        }
+      },
+      "path": "extensions/sandy/field-latency/field-latency.holon"
+    },
+    {
+      "op": "requirement.put",
+      "holon": "field-latency",
+      "requirement": {
+        "id": "content-last-writer",
+        "title": "Last content writer is named",
+        "shall": "For each thread switch with a content-done mark, the collector SHALL record which plugin made the last content change after the ready paint, named by the data-sandy-plugin of its nearest plugin root, or host when no plugin root encloses it, and how many content changes followed the ready paint, and the report SHALL show per device each last writer's share of switches and content p50, so the field gap between painted and really done is attributed.",
+        "scenarios": [
+          {
+            "id": "plugin-writes-last",
+            "title": "Plugin writes last",
+            "when": "a switch is ready and 300 ms later a content change happens inside a plugin root of the plugin genui, after a host change at 100 ms",
+            "then": "the sample's contentSource is genui and its contentWrites is 2",
+            "test": "ci extensions/sandy/field-latency/collector.test.ts::the plugin that writes last after ready is the sample's content source"
+          },
+          {
+            "id": "host-ticker-capped",
+            "title": "Host ticker capped",
+            "when": "after the ready paint a host element in the content changes every 900 ms until the 5 s cap",
+            "then": "the sample has contentDone capped, contentSource host and contentWrites of at least 4",
+            "test": "ci extensions/sandy/field-latency/collector.test.ts::a host ticker after ready is named as the content source of a capped switch"
+          },
+          {
+            "id": "nothing-after-ready",
+            "title": "Nothing after ready",
+            "when": "a switch is ready and no content change follows before it settles",
+            "then": "the sample has contentSource null and contentWrites 0",
+            "test": "ci extensions/sandy/field-latency/collector.test.ts::a switch with no content change after ready has no content source"
+          },
+          {
+            "id": "report-per-writer",
+            "title": "Report per writer",
+            "when": "the report runs over switch samples of two devices whose last writers are genui, host and none",
+            "then": "each device lists every last writer with its share of that device's switches and its content p50, none for samples without a writer",
+            "test": "ci extensions/sandy/field-latency/server.test.ts::the switch report shows per device the share and content p50 of each last writer"
+          },
+          {
+            "id": "old-samples-unknown",
+            "title": "Old samples unknown",
+            "when": "the report runs over switch samples stored before contentSource existed",
+            "then": "they report under the writer unknown and their ready and content numbers are unchanged",
+            "test": "ci extensions/sandy/field-latency/server.test.ts::samples stored without a content source report under the unknown writer"
+          }
+        ]
+      }
+    },
+    {
+      "op": "question.put",
+      "holon": "field-latency",
+      "question": {
+        "id": "ship-attribution-first",
+        "text": "The lab explains only 7-54 ms of the 0.5-1.1 s field gap between painted and really done. Ship this attribution and collect a day of field data per device before the first speed change to the thread view?"
+      }
+    },
+    {
+      "op": "question.put",
+      "holon": "field-latency",
+      "question": {
+        "id": "ship-attribution-first",
+        "text": "The lab explains only 7-54 ms of the 0.5-1.1 s field gap between painted and really done. Ship this attribution and collect a day of field data per device before the first speed change to the thread view?",
+        "answer": "Ja, erst messen, wer bremst.",
+        "answeredBy": "nesyeklaf",
+        "answeredAt": "2026-11-11"
+      }
+    }
+  ]
+}
