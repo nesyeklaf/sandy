@@ -15,6 +15,7 @@ export const COORDINATION_MODES = ["independent", "managed"] as const;
 
 const spaceIdSchema = z.string().trim().min(1);
 const threadIdSchema = z.string().trim().min(1);
+const BULK_ORCHESTRATOR_MAX = 200;
 const ideaIdSchema = z.string().trim().min(1);
 const ideaStatusSchema = z.enum(IDEA_STATUSES);
 const coordinationModeSchema = z.enum(COORDINATION_MODES);
@@ -110,6 +111,12 @@ export const spaceCoordinationRpcShape = {
   setOrchestrator: {
     input: z.object({ threadId: threadIdSchema, orchestrator: z.boolean() }).strict(),
     output: z.object({ changed: z.boolean(), spaceId: z.string().nullable() }),
+  },
+  setOrchestrators: {
+    input: z
+      .object({ threadIds: z.array(threadIdSchema).min(1).max(BULK_ORCHESTRATOR_MAX), orchestrator: z.boolean() })
+      .strict(),
+    output: z.object({ changed: z.array(z.string()) }),
   },
   setMemberMode: {
     input: z.object({ threadId: threadIdSchema, mode: coordinationModeSchema }).strict(),

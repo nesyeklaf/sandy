@@ -107,6 +107,26 @@ export function createSpaceRolesService(deps: SpaceDeps) {
       return { changed, spaceId };
     },
 
+    async setOrchestrators(threadIds: readonly string[], orchestrator: boolean): Promise<{ changed: string[] }> {
+      assert(threadIds.length > 0, "a bulk orchestrator change needs at least one session");
+      if (orchestrator) {
+        const spaces = await membership.spacesOf([...threadIds]);
+        const unassigned = threadIds.find((threadId) => (spaces.get(threadId) ?? null) === null);
+        if (unassigned !== undefined) {
+          throw new SpaceCoordinationError(
+            "space_missing",
+            `Session ${unassigned} is not in a Space. Move it into a Space before making it an orchestrator. No session was changed.`,
+          );
+        }
+      }
+      const changed: string[] = [];
+      for (const threadId of new Set(threadIds)) {
+        const result = await this.setOrchestrator(threadId, orchestrator);
+        if (result.changed) changed.push(threadId);
+      }
+      return { changed };
+    },
+
     async setMemberMode(
       threadId: string,
       mode: CoordinationMode,

@@ -16,6 +16,9 @@ export function createSpaceHandlers(space: ServerSpace) {
     async setOrchestrator({ threadId, orchestrator }) {
       return space.rolesService.setOrchestrator(threadId, orchestrator);
     },
+    async setOrchestrators({ threadIds, orchestrator }) {
+      return space.rolesService.setOrchestrators(threadIds, orchestrator);
+    },
     async setMemberMode({ threadId, mode }) {
       return space.rolesService.setMemberMode(threadId, mode);
     },
