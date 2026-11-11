@@ -135,9 +135,6 @@ function buildInternalSessionParams(
     ...(args.options.skillFilter?.skillOverrides
       ? { skillOverrides: args.options.skillFilter.skillOverrides }
       : {}),
-    ...(args.options.skillFilter?.skills
-      ? { skills: args.options.skillFilter.skills }
-      : {}),
     ...(config ? { config } : {}),
     ...(args.options.model ? { model: args.options.model } : {}),
     ...(args.options.reasoningLevel

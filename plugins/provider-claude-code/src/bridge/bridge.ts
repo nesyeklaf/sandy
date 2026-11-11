@@ -105,6 +105,7 @@ import {
   createClaudeSkillPluginsRoot,
   ensureClaudeSkillPlugin,
   filterClaudeSkillRoots,
+  scanClaudeNativeSkills,
   claudeSkillsConfigDirectory,
 } from "./skill-plugins.js";
 import { buildClaudeSkillFilter } from "./skill-selection.js";
@@ -394,7 +395,7 @@ let bridgeTempDir: string | null = null;
 
 function assembleSkillPlugins(
   roots: readonly { id: string; path: string }[],
-): { roots: ClaudeCodeSkillRoot[]; pluginNames: string[] } {
+): ClaudeCodeSkillRoot[] {
   const takenNames = new Map<string, string>();
   const assembled: ClaudeCodeSkillRoot[] = [];
   for (const root of roots) {
@@ -413,7 +414,7 @@ function assembleSkillPlugins(
       );
     }
   }
-  return { roots: assembled, pluginNames: [...takenNames.keys()] };
+  return assembled;
 }
 
 function requireSkillPluginsRoot(): string {
@@ -1073,7 +1074,6 @@ function toSessionConstructionConfig(
       ...(params.skillOverrides
         ? { skillOverrides: params.skillOverrides }
         : {}),
-      ...(params.skills ? { skills: params.skills } : {}),
     },
   };
 }
@@ -2532,15 +2532,23 @@ async function handleThreadFork(
 async function toClaudeSessionParams(
   params: z.infer<typeof canonicalThreadStartParamsSchema>,
 ): Promise<Record<string, unknown>> {
-  const assembled =
+  const native =
+    configuredSkillRoots === null &&
+    configuredSkillSelection.mode !== "allow-only"
+      ? []
+      : await scanClaudeNativeSkills({
+          cwd: params.cwd,
+          claudeDir: claudeSkillsConfigDirectory(),
+        });
+  const roots =
     configuredSkillRoots === null
       ? undefined
       : assembleSkillPlugins(
           await filterClaudeSkillRoots({
             roots: configuredSkillRoots,
-            cwd: params.cwd,
+            native,
             pluginsRoot: requireSkillPluginsRoot(),
-            claudeDir: claudeSkillsConfigDirectory(),
+            selection: configuredSkillSelection,
           }),
         );
   return buildClaudeSessionParams({
@@ -2549,10 +2557,10 @@ async function toClaudeSessionParams(
     options: params.options,
     instructionMode: params.instructionMode,
     dynamicTools: params.dynamicTools,
-    skillRoots: assembled?.roots,
+    skillRoots: roots,
     skillFilter: buildClaudeSkillFilter({
       selection: configuredSkillSelection,
-      injectedPluginNames: assembled?.pluginNames ?? [],
+      nativeSkillNames: native.map((skill) => skill.name),
     }),
   });
 }

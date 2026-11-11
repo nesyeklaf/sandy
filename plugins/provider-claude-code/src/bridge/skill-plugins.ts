@@ -8,7 +8,11 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { experimental_scanSkillFiles as scanSkillFiles } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import {
+  experimental_isSkillNameEnabled as isSkillNameEnabled,
+  experimental_scanSkillFiles as scanSkillFiles,
+  type ExperimentalSkillSelection as SkillSelection,
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { access } from "node:fs/promises";
 import { tmpdir, homedir } from "node:os";
 import { join, dirname, resolve } from "node:path";
@@ -105,12 +109,14 @@ export function createClaudeSkillPluginsRoot(baseDir = tmpdir()): string {
   return mkdtempSync(join(baseDir, "sandy-claude-skill-plugins-"));
 }
 
-export async function filterClaudeSkillRoots(args: {
-  roots: readonly ClaudeSkillPluginRoot[];
+export type ClaudeNativeSkill = Awaited<
+  ReturnType<typeof scanSkillFiles>
+>[number];
+
+export async function scanClaudeNativeSkills(args: {
   cwd: string;
-  pluginsRoot: string;
   claudeDir: string;
-}): Promise<ClaudeSkillPluginRoot[]> {
+}): Promise<ClaudeNativeSkill[]> {
   const nativeRoots = [join(args.claudeDir, "skills")];
   let directory = args.cwd;
   while (true) {
@@ -126,7 +132,7 @@ export async function filterClaudeSkillRoots(args: {
     if (parent === directory) break;
     directory = parent;
   }
-  const native = (
+  return (
     await Promise.all(
       nativeRoots.map((root) =>
         scanSkillFiles({
@@ -138,9 +144,17 @@ export async function filterClaudeSkillRoots(args: {
       ),
     )
   ).flat();
+}
+
+export async function filterClaudeSkillRoots(args: {
+  roots: readonly ClaudeSkillPluginRoot[];
+  native: readonly ClaudeNativeSkill[];
+  pluginsRoot: string;
+  selection: SkillSelection;
+}): Promise<ClaudeSkillPluginRoot[]> {
   const identity = (file: { name: string; contentSha256: string }) =>
     `${file.name}\0${file.contentSha256}`;
-  const seen = new Set(native.map(identity));
+  const seen = new Set(args.native.map(identity));
   const filtered: ClaudeSkillPluginRoot[] = [];
   for (const root of args.roots) {
     const files = await scanSkillFiles({
@@ -149,6 +163,7 @@ export async function filterClaudeSkillRoots(args: {
       boundaryPath: null,
     });
     const retained = files.filter((file) => {
+      if (!isSkillNameEnabled(args.selection, file.name)) return false;
       if (seen.has(identity(file))) return false;
       seen.add(identity(file));
       return true;

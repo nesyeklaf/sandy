@@ -45,7 +45,6 @@ export const claudeThreadStartParamsSchema = z.object({
   additionalWorkspaceWriteRoots: bridgeAdditionalWorkspaceWriteRootsSchema,
   plugins: bridgeClaudePluginsSchema,
   skillOverrides: z.record(z.string(), z.literal("off")).optional(),
-  skills: z.array(z.string()).optional(),
   permissionMode: claudePermissionModeSchema,
   approvedPlanPermissionMode: claudePermissionModeSchema,
   permissionScope: bridgePermissionScopeSchema,

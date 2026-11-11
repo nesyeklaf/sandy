@@ -25,7 +25,6 @@ export interface BuildSessionOptionsArgs {
   permissionScope: RuntimePermissionScope;
   plugins?: Options["plugins"];
   skillOverrides?: Record<string, "off">;
-  skills?: string[];
   reasoningLevel?: ReasoningLevel;
   serviceTier: ServiceTier;
   workflowsEnabled: boolean;
@@ -266,7 +265,6 @@ export function buildSessionOptions(
     ...(extraArgs ? { extraArgs } : {}),
     ...(pathToClaudeCodeExecutable ? { pathToClaudeCodeExecutable } : {}),
     ...(params.plugins ? { plugins: params.plugins } : {}),
-    ...(params.skills ? { skills: [...params.skills] } : {}),
     ...(sandbox ? { sandbox } : {}),
     ...(additionalDirectories.length > 0
       ? { additionalDirectories: [...additionalDirectories] }
