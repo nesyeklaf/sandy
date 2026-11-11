@@ -171,4 +171,32 @@ describe("Space tab", () => {
     expect((await screen.findByLabelText("Current scratchpad")).textContent).toBe("theirs");
     expect((screen.getByLabelText("Scratchpad") as HTMLTextAreaElement).value).toBe("mine");
   });
+
+  async function conflictOnRevision5() {
+    writeStatus = "conflict";
+    render(<SpaceTab threadId="t1" />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Scratchpad" }));
+    const editor = await screen.findByLabelText("Scratchpad");
+    await waitFor(() => expect((editor as HTMLTextAreaElement).value).toBe("notes"));
+    expect(screen.getByText("Revision 3")).toBeTruthy();
+    fireEvent.change(editor, { target: { value: "mine" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByLabelText("Current scratchpad");
+  }
+
+  it("shows the current revision beside the conflicting text and keeps it after using that text", async () => {
+    await conflictOnRevision5();
+    expect(screen.getByText("Revision 5")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Use current text" }));
+    expect(screen.getByText("Revision 5")).toBeTruthy();
+    expect((screen.getByLabelText("Scratchpad") as HTMLTextAreaElement).value).toBe("theirs");
+  });
+
+  it("shows the saved revision after overwriting from a conflict", async () => {
+    await conflictOnRevision5();
+    writeStatus = "written";
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite with my draft" }));
+    expect(await screen.findByText("Revision 4")).toBeTruthy();
+    expect(screen.queryByLabelText("Current scratchpad")).toBeNull();
+  });
 });

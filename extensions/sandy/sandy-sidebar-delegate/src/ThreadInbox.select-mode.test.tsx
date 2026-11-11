@@ -79,6 +79,22 @@ describe("select mode", () => {
     ]);
   });
 
+  it("disables Mark as orchestrator and says why when a picked session is outside a Space", async () => {
+    renderThreads([
+      thread({ id: "thr_a", title: "First", sectionId: "space_a" }),
+      thread({ id: "thr_b", title: "Second", sectionId: null }),
+    ]);
+    await enterSelectMode();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Select First" }));
+    const bar = screen.getByRole("toolbar", { name: "Selected threads" });
+    const markButton = () => within(bar).getByRole("button", { name: "Mark as orchestrator" }) as HTMLButtonElement;
+    expect(markButton().disabled).toBe(false);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select Second" }));
+    expect(markButton().disabled).toBe(true);
+    fireEvent.focus(markButton().parentElement!);
+    expect((await screen.findAllByText("Only sessions in a Space can be orchestrators")).length).toBeGreaterThan(0);
+  });
+
   it("leaves select mode without acting", async () => {
     const rendered = renderThreads([thread({ id: "thr_a", title: "First" })]);
     await enterSelectMode();

@@ -18,20 +18,30 @@ function BarButton({
   icon,
   label,
   disabled,
+  reason,
   onClick,
 }: {
   icon: IconName;
   label: string;
   disabled: boolean;
+  reason?: string;
   onClick: () => void;
 }) {
-  return (
-    <Tooltip label={label}>
-      <button type="button" aria-label={label} className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
-        <Icon name={icon} className="size-3.5" aria-hidden />
-      </button>
-    </Tooltip>
+  const button = (
+    <button type="button" aria-label={label} className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
+      <Icon name={icon} className="size-3.5" aria-hidden />
+    </button>
   );
+  if (disabled && reason !== undefined) {
+    return (
+      <Tooltip label={reason}>
+        <span tabIndex={0} className="inline-flex rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          {button}
+        </span>
+      </Tooltip>
+    );
+  }
+  return <Tooltip label={label}>{button}</Tooltip>;
 }
 
 const LABEL_KINDS = {
@@ -99,6 +109,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const none = selected.length === 0;
   const allPinned = !none && selected.every((thread) => thread.isPinned);
   const allOrchestrators = !none && selected.every((thread) => orchestratorIds.has(thread.id));
+  const outsideSpace = !allOrchestrators && selected.some((thread) => thread.sectionId === null);
   const finish = () => selection.exit();
   return (
     <div
@@ -156,7 +167,8 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
       <BarButton
         icon="Orchestrator"
         label={allOrchestrators ? "Not an orchestrator any more" : "Mark as orchestrator"}
-        disabled={none}
+        disabled={none || outsideSpace}
+        reason={outsideSpace ? "Only sessions in a Space can be orchestrators" : undefined}
         onClick={() => {
           finish();
           void bulk.orchestrator(selected, !allOrchestrators);

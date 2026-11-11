@@ -125,7 +125,7 @@ export function SpaceScratchpad({ spaceId, state }: { spaceId: string; state: Sp
         >
           Save
         </button>
-        <span className="text-2xs text-muted-foreground">Revision {saved.revision}</span>
+        <span className="text-2xs text-muted-foreground">Revision {(conflict ?? saved).revision}</span>
       </div>
     </div>
   );

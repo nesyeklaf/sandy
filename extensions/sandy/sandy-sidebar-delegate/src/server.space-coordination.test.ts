@@ -23,6 +23,19 @@ type Harness = Awaited<ReturnType<typeof loadSpacePlugin>>;
 const call = (harness: Harness, method: string, input: unknown) => harness.behavior.callRpc(method, input as never);
 
 describe("orchestrators", () => {
+  it("refuses a bulk mark that includes a session outside a Space as invalid input and changes nothing", async () => {
+    const harness = await loadSpacePlugin(world());
+    const outcome = await call(harness, "setOrchestrators", {
+      threadIds: ["thr_o1", "thr_free"],
+      orchestrator: true,
+    }).then(
+      () => null,
+      (error: unknown) => error,
+    );
+    expect(outcome).toMatchObject({ code: "invalid", message: expect.stringMatching(/thr_free is not in a Space/) });
+    expect(((await call(harness, "listOrchestrators", {})) as { threadIds: string[] }).threadIds).toEqual([]);
+  });
+
   it("lets several members of a Space be orchestrators", async () => {
     const harness = await loadSpacePlugin(world());
     await call(harness, "setOrchestrator", { threadId: "thr_o1", orchestrator: true });

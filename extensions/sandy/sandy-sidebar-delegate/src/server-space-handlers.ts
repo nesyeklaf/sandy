@@ -1,8 +1,21 @@
+import { experimental_PluginRpcRefusal } from "@sandy-sdk/plugin-sdk";
+import { SpaceCoordinationError } from "./space-coordination-error";
 import type { spaceCoordinationRpcShape } from "./space-coordination-contract";
 import type { ServerHandlers } from "./server-context";
 import type { ServerSpace } from "./server-space";
 
 const OWNER = { kind: "owner" } as const;
+
+async function refusing<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof SpaceCoordinationError) {
+      throw new experimental_PluginRpcRefusal({ code: "invalid", message: error.message });
+    }
+    throw error;
+  }
+}
 
 export function createSpaceHandlers(space: ServerSpace) {
   return {
@@ -14,10 +27,10 @@ export function createSpaceHandlers(space: ServerSpace) {
       return { threadIds: verified.map((entry) => entry.threadId) };
     },
     async setOrchestrator({ threadId, orchestrator }) {
-      return space.rolesService.setOrchestrator(threadId, orchestrator);
+      return refusing(() => space.rolesService.setOrchestrator(threadId, orchestrator));
     },
     async setOrchestrators({ threadIds, orchestrator }) {
-      return space.rolesService.setOrchestrators(threadIds, orchestrator);
+      return refusing(() => space.rolesService.setOrchestrators(threadIds, orchestrator));
     },
     async setMemberMode({ threadId, mode }) {
       return space.rolesService.setMemberMode(threadId, mode);
