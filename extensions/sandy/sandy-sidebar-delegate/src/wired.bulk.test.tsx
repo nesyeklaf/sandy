@@ -82,8 +82,8 @@ it("files the picked sessions under a topic and Undo removes it only where it wa
   await wired.call("setThreadTopics", { threadId: "a", topics: ["Release"] });
   wired.mount();
   const bar = await select("Work a", "Work b");
-  fireEvent.click(within(bar).getByRole("button", { name: "Thema" }));
-  const input = await screen.findByRole("textbox", { name: "Thema" });
+  fireEvent.click(within(bar).getByRole("button", { name: "Topic" }));
+  const input = await screen.findByRole("textbox", { name: "Topic" });
   fireEvent.change(input, { target: { value: "Release" } });
   fireEvent.submit(input.closest("form")!);
   await waitFor(() => expect(topicsOf(wired, "b")).toEqual(["Release"]));
@@ -98,7 +98,7 @@ it("marks the picked sessions as ideas and Undo unmarks only the ones it marked"
   await wired.call("setIdea", { threadIds: ["a"], idea: true });
   wired.mount();
   const bar = await select("Work a", "Work b");
-  fireEvent.click(within(bar).getByRole("button", { name: "Als Idee markieren" }));
+  fireEvent.click(within(bar).getByRole("button", { name: "Mark as idea" }));
   await waitFor(() => expect(ideas(wired)).toEqual(["a", "b"]));
   expect(toastMocks.success.mock.calls.at(-1)?.[0]).toBe("Marked 1 thread as idea");
   lastUndo()();
@@ -110,7 +110,7 @@ it("takes the idea mark off when every picked session is already an idea", async
   await wired.call("setIdea", { threadIds: ["a", "b"], idea: true });
   wired.mount();
   const bar = await select("Work a", "Work b");
-  fireEvent.click(await within(bar).findByRole("button", { name: "Keine Idee mehr" }));
+  fireEvent.click(await within(bar).findByRole("button", { name: "Not an idea any more" }));
   await waitFor(() => expect(ideas(wired)).toEqual([]));
   lastUndo()();
   await waitFor(() => expect(ideas(wired)).toEqual(["a", "b"]));

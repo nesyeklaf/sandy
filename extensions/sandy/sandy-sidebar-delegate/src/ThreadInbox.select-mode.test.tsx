@@ -73,9 +73,9 @@ describe("select mode", () => {
       "Archive",
       "Pin",
       "Tag",
-      "Thema",
-      "Als Idee markieren",
-      "Als Orchestrator markieren",
+      "Topic",
+      "Mark as idea",
+      "Mark as orchestrator",
       "Leave select mode",
     ]);
   });

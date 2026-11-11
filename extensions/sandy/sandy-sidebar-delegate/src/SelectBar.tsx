@@ -37,7 +37,7 @@ function BarButton({
 
 const LABEL_KINDS = {
   tag: { label: "Tag", icon: "Tag", popover: "Tag selected threads", field: "Tag name" },
-  topic: { label: "Thema", icon: "Bookmark", popover: "Add selected threads to a topic", field: "Thema" },
+  topic: { label: "Topic", icon: "Bookmark", popover: "Add selected threads to a topic", field: "Topic" },
 } as const;
 
 function LabelButton({
@@ -158,7 +158,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
       />
       <BarButton
         icon="Bulb"
-        label={allIdeas ? "Keine Idee mehr" : "Als Idee markieren"}
+        label={allIdeas ? "Not an idea any more" : "Mark as idea"}
         disabled={none}
         onClick={() => {
           finish();
@@ -167,7 +167,7 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
       />
       <BarButton
         icon="Orchestrator"
-        label={allOrchestrators ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
+        label={allOrchestrators ? "Not an orchestrator any more" : "Mark as orchestrator"}
         disabled={none}
         onClick={() => {
           finish();

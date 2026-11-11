@@ -315,7 +315,7 @@ describe("B4 shelf classification", () => {
     expect(within(needs).getByRole("link", { name: "Root" })).toBeDefined();
     expect(screen.queryByRole("region", { name: "Failed" })).toBeNull();
   });
-  it("puts an idea on the Ideen shelf right after Waiting", async () => {
+  it("puts an idea on the Ideas shelf right after Waiting", async () => {
     renderSlot(inbox, listProps, {
       sidebarThreads: {
         status: "ready",
@@ -324,12 +324,12 @@ describe("B4 shelf classification", () => {
       },
       rpc: { listLifecycle: () => ({ rows: [] }), listIdeas: () => ({ threadIds: ["thr_idea"] }) },
     });
-    const ideas = await screen.findByRole("region", { name: "Ideen" });
+    const ideas = await screen.findByRole("region", { name: "Ideas" });
     expect(within(ideas).getByRole("link", { name: "Someday" })).toBeDefined();
     const waiting = screen.getByRole("region", { name: "Waiting" });
     expect(within(waiting).queryByRole("link", { name: "Someday" })).toBeNull();
     expect(within(waiting).getByRole("link", { name: "Plain" })).toBeDefined();
     const regions = screen.getAllByRole("region").map((region) => region.getAttribute("aria-label"));
-    expect(regions.indexOf("Ideen")).toBe(regions.indexOf("Waiting") + 1);
+    expect(regions.indexOf("Ideas")).toBe(regions.indexOf("Waiting") + 1);
   });
 });

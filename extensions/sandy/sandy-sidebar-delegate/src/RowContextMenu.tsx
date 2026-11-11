@@ -269,13 +269,13 @@ function RowMenuContents({
               <Item onSelect={() => void run("read")}>{thread.isUnread ? "Mark read" : "Mark unread"}</Item>
               <Separator />
               <Item icon="Tag" onSelect={() => setEditingLabels(true)}>
-                Tags & Themen…
+                Tags & Topics…
               </Item>
               <Item icon="Bulb" onSelect={() => void toggleIdea()}>
-                {isIdea ? "Keine Idee mehr" : "Als Idee markieren"}
+                {isIdea ? "Not an idea any more" : "Mark as idea"}
               </Item>
               <Item icon="Orchestrator" onSelect={() => void toggleOrchestrator()}>
-                {isOrchestrator ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
+                {isOrchestrator ? "Not an orchestrator any more" : "Mark as orchestrator"}
               </Item>
               <Separator />
               <CopySubmenu thread={thread} />

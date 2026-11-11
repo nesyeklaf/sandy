@@ -1,5 +1,5 @@
 /*
- * Themen tab. Every topic has a hue (--h) from its title; rows, map segments
+ * Topics tab. Every topic has a hue (--h) from its title; rows, map segments
  * and chips take their color from it. A suggestion from the model is drawn
  * dashed until it is accepted. Motion only for users who accept motion.
  */

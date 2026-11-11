@@ -3,8 +3,8 @@
 Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-sandy-sidebar-delegate` (or the package's check script equivalents for lint, format, knip, file sizes, import boundaries), green on Node 26.13.0, plus the slice's own verify command. Report observed, inferred and untested.
 
 ## 1. English only
-- [ ] 1.1 Replace every German UI string, tool description, README and skill text with English (Orchestratoren, Ideen, Lädt…, Als Idee markieren, Keine Idee mehr, and any others found).
-- [ ] 1.2 Add the English-only guard test. Verify: the test fails on a planted German word, passes on the tree.
+- [x] 1.1 Replace every German UI string, tool description, README and skill text with English (Orchestratoren, Ideen, Lädt…, Als Idee markieren, Keine Idee mehr, and any others found).
+- [x] 1.2 Add the English-only guard test. Verify: the test fails on a planted German word, passes on the tree.
 
 ## 2. Storage and domain
 - [ ] 2.1 Migrations for space_orchestrators, space_member_modes, space_ideas, space_idea_links, space_scratchpads; limits as named constants; assert helper.
