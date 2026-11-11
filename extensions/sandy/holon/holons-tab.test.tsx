@@ -33,11 +33,7 @@ function serve(replies: (input: ForwardInput) => ForwardResult) {
 
 function render(props: ExperimentalThreadTabProps, forward: (input: ForwardInput) => ForwardResult) {
   const slot = renderSlot<ExperimentalThreadTabProps, typeof rpcContract>(threadTab(), props, {
-    rpc: {
-      forward,
-      view: () => ({ ok: false as const, error: "unused" }),
-      map: () => ({ ok: false as const, error: "unused" }),
-    },
+    rpc: { forward },
   });
   unmounts.push(() => slot.unmount());
   return slot;

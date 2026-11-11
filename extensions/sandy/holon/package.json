@@ -16,7 +16,7 @@
   },
   "sandy": {
     "name": "Holons",
-    "description": "Checks holon files, computes lights and drift, records evidence and opens .holon files as a map.",
+    "description": "Checks holon files, computes lights and drift, records evidence and edits holons in a thread's Holons tab.",
     "branding": {
       "icon": "Hierarchy"
     },
@@ -24,7 +24,6 @@
     "app": "./app.tsx"
   },
   "dependencies": {
-    "elkjs": "^0.12.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

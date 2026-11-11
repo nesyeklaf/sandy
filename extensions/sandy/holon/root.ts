@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { HolonError } from "./error.ts";
 
 function isDirectory(path: string): boolean {
@@ -11,7 +11,7 @@ function isDirectory(path: string): boolean {
   }
 }
 
-export function gitTopLevel(cwd: string): string | null {
+function gitTopLevel(cwd: string): string | null {
   try {
     const output = execFileSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
     return output.trim() || null;
@@ -28,17 +28,4 @@ export function resolveRoot(root: string | undefined, cwd: string | undefined): 
     return absolute;
   }
   return gitTopLevel(base) ?? resolve(base);
-}
-
-export function modelRootOf(file: string, bound: string): string {
-  const top = resolve(bound);
-  let dir = dirname(resolve(file));
-  if (relative(top, dir).startsWith("..")) return dir;
-  while (dir !== top) {
-    if (isDirectory(join(dir, ".holons"))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return top;
 }

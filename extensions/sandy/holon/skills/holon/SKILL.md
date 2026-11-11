@@ -16,6 +16,7 @@ description: Check holon files in Git, list drift, view one holon, record eviden
 ## Holons thread tab
 
 - Every thread has a Holons tab: the holon editor from holon-ui on the thread environment's directory, served by the same `holon serve` process as the CLI. Edits in the tab write `.holon` files and `.holons/` policy in that directory.
+- The plugin has no file opener: a `.holon` file opens in sandy's default viewer as JSON. Use the Holons tab for the map and editor.
 - The tab works only for an environment on the sandy server's own host; a thread without an environment shows a notice, one on another host fails with `remote_workspace`.
 - The editor is vendored in `vendor/holon-ui` with the holons commit in `VERSION`. Refresh it with `pnpm sync:holon-ui <holons checkout>`, which runs holon-ui's `pnpm build:lib` and copies the editor, its CSS, the routing and layout workers and `libavoid.wasm`.
 
