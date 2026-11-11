@@ -283,3 +283,61 @@ test("new client fields and per-sample load are stored, the sample row carries i
   assert.deepEqual([stored.screen, stored.refreshMs, stored.gpu], ["2560x1440", 6.9, "Mesa Radeon"]);
   assert.ok(await report());
 });
+
+function writerSwitch(at: number, readyMs: number, contentDoneMs: number, source: string | null, writes: number): Sample {
+  return sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs, at, contentDone: "settled", contentDoneMs, contentSource: source, contentWrites: writes });
+}
+
+type WriterRow = { writer: string; n: number; sharePct: number; contentP50: number | null };
+
+test("the switch report shows per device the share and content p50 of each last writer", async () => {
+  const { record, report } = setup();
+  const now = Date.now();
+  record({
+    client: desktop,
+    samples: [
+      writerSwitch(now - 5000, 100, 400, "genui", 3),
+      writerSwitch(now - 4000, 110, 600, "genui", 1),
+      writerSwitch(now - 3000, 120, 900, "host", 2),
+      writerSwitch(now - 2000, 130, 130, null, 0),
+    ],
+  });
+  record({ client: laptop, samples: [writerSwitch(now - 1000, 500, 1500, "genui", 2), writerSwitch(now - 500, 520, 520, null, 0)] });
+  const json = JSON.parse(await report("--kind", "switch", "--json"));
+  const [first, second] = json.byDevice;
+  assert.deepEqual(
+    first.writers.map((row: WriterRow) => [row.writer, row.n, row.sharePct, row.contentP50]),
+    [["genui", 2, 50, 500], ["host", 1, 25, 900], ["none", 1, 25, 130]],
+  );
+  assert.deepEqual(
+    second.writers.map((row: WriterRow) => [row.writer, row.n, row.sharePct, row.contentP50]),
+    [["genui", 1, 50, 1500], ["none", 1, 50, 520]],
+  );
+  const text = await report("--kind", "switch");
+  assert.match(text, /writers+ns+shares+content p50/);
+  assert.match(text, /genuis+2s+50%s+500/);
+  assert.match(text, /hosts+1s+25%s+900/);
+  assert.match(text, /nones+1s+25%s+130/);
+});
+
+test("samples stored without a content source report under the unknown writer", async () => {
+  const { db, record, report } = setup();
+  const now = Date.now();
+  const legacy = Object.fromEntries(
+    Object.entries(sample({ kind: "switch", label: "sidebar thread", visit: "revisit", readyMs: 280, contentDone: "settled", contentDoneMs: 453, at: now - 3000 })).filter(
+      ([key]) => key !== "contentSource" && key !== "contentWrites",
+    ),
+  );
+  db.prepare("INSERT INTO samples (at, kind, label, sample, client, release, device) VALUES (?, 'switch', 'sidebar thread', ?, ?, NULL, ?)").run(
+    now - 3000,
+    JSON.stringify(legacy),
+    JSON.stringify(desktop),
+    desktop.deviceId,
+  );
+  record({ client: desktop, samples: [writerSwitch(now - 1000, 300, 700, "host", 1)] });
+  const json = JSON.parse(await report("--kind", "switch", "--json"));
+  const writers = json.byDevice[0].writers.map((row: WriterRow) => [row.writer, row.n, row.contentP50]);
+  assert.deepEqual(writers, [["host", 1, 700], ["unknown", 1, 453]]);
+  const group = json.groups[0];
+  assert.deepEqual([group.n, group.p50, group.contentN, group.contentP50], [2, 290, 2, 576.5]);
+});

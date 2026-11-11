@@ -33,3 +33,14 @@ test("samples without a content mark are sent without the new fields so an older
   assert.equal(withMark.contentDone, "aborted");
   assert.equal(sampleSchema.parse(withMark).contentDoneMs, null);
 });
+
+test("the content source fields are sent only with a content mark and parse to null when absent", () => {
+  const marked = toWire(sample({ kind: "switch", contentDone: "settled", contentDoneMs: 450, contentSource: "genui", contentWrites: 2 }));
+  assert.equal(marked.contentSource, "genui");
+  assert.equal(marked.contentWrites, 2);
+  const bare = toWire(sample({ kind: "open" }));
+  assert.equal("contentSource" in bare, false);
+  assert.equal("contentWrites" in bare, false);
+  const parsed = sampleSchema.parse(bare);
+  assert.deepEqual([parsed.contentSource, parsed.contentWrites], [null, null]);
+});

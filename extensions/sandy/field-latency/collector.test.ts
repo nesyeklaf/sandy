@@ -5,7 +5,7 @@ import type { Load, Sample } from "./contract.ts";
 import type { LoadProbe } from "./load.ts";
 
 type Listener = (event: unknown) => void;
-type Region = "main" | "sidebar" | "toc";
+type Region = "main" | "sidebar" | "toc" | "genui";
 
 class FakeElement {
   region: Region;
@@ -26,8 +26,9 @@ class FakeElement {
     return this.attrs[name] ?? null;
   }
   closest(selector: string) {
-    if (selector === '[data-sidebar="inset"]') return this.region === "main" || this.region === "toc" ? this : null;
+    if (selector === '[data-sidebar="inset"]') return this.region === "main" || this.region === "toc" || this.region === "genui" ? this : null;
     if (selector === "[data-thread-toc]") return this.region === "toc" ? this : null;
+    if (selector === "[data-sandy-plugin-root]") return this.attrs["data-sandy-plugin"] === undefined ? null : this;
     if (selector === "[data-sidebar-thread-id]") return this.attrs["data-sidebar-thread-id"] === undefined ? null : this;
     if (selector.startsWith("button, a")) return this.trigger ? this : null;
     return null;
@@ -122,6 +123,7 @@ function install(probe: LoadProbe | null = null): Lab {
   const main = new FakeElement("main");
   const sidebar = new FakeElement("sidebar");
   const toc = new FakeElement("toc");
+  const genui = new FakeElement("genui", { "data-sandy-plugin": "genui" });
   const samples: Sample[] = [];
   controller = new AbortController();
   collector = startCollector((sample) => samples.push(sample), controller.signal, probe);
@@ -156,7 +158,7 @@ function install(probe: LoadProbe | null = null): Lab {
       this.mutate("main");
     },
     mutate(region) {
-      const target = region === "main" ? main : region === "toc" ? toc : sidebar;
+      const target = region === "main" ? main : region === "toc" ? toc : region === "genui" ? genui : sidebar;
       for (const observer of FakeMutationObserver.all) {
         if (observer.observing) observer.callback([{ target, addedNodes: [] }]);
       }
@@ -424,4 +426,48 @@ test("without a probe the sample has no load", () => {
   lab.ready("thr_a");
   lab.advance(6000);
   assert.equal(onlySwitch(lab, 0).load, null);
+});
+
+test("the plugin that writes last after ready is the sample's content source", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(150);
+  lab.mutate("main");
+  lab.advance(200);
+  lab.mutate("genui");
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.contentDone, "settled");
+  assert.equal(sample.contentSource, "genui");
+  assert.equal(sample.contentWrites, 2);
+});
+
+test("a host ticker after ready is named as the content source of a capped switch", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  for (let step = 0; step < 8; step += 1) {
+    lab.advance(900);
+    lab.mutate("main");
+  }
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.contentDone, "capped");
+  assert.equal(sample.contentSource, "host");
+  assert.ok(sample.contentWrites !== null && sample.contentWrites >= 4, String(sample.contentWrites));
+});
+
+test("a switch with no content change after ready has no content source", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.contentDone, "settled");
+  assert.equal(sample.contentSource, null);
+  assert.equal(sample.contentWrites, 0);
 });

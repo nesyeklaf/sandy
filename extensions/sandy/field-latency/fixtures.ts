@@ -14,6 +14,8 @@ export function sample(overrides: Partial<Sample>): Sample {
     settledMs: null,
     contentDoneMs: null,
     contentDone: null,
+    contentSource: null,
+    contentWrites: null,
     timedOut: false,
     eventMs: 24,
     inputDelayMs: 1,
