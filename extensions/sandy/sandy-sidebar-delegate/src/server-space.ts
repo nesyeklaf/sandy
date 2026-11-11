@@ -2,14 +2,18 @@ import { createSpaceContextReader, createSpaceOrphans } from "./server-space-con
 import type { ServerContext } from "./server-context";
 import { createSpaceIdeasStore } from "./server-space-ideas-store";
 import { createSpaceMembership } from "./server-space-membership";
-import { createSpaceNotesService } from "./server-space-notes-service";
-import { createSpaceRolesService } from "./server-space-roles-service";
+import { createSpaceNotesService, type SpaceNotesService } from "./server-space-notes-service";
+import { createSpaceRolesService, type SpaceRolesService } from "./server-space-roles-service";
 import { createSpaceRolesStore } from "./server-space-roles-store";
 import { createSpaceScratchpadStore } from "./server-space-scratchpad-store";
 import type { SpaceDeps } from "./server-space-deps";
+import { createAgentView } from "./server-space-agent-view";
+import { registerSpaceEnforcement } from "./server-space-enforcement";
+import { registerSpaceTools } from "./server-space-tools";
+import { registerWakeDigest } from "./server-space-wake";
 import { ORCHESTRATORS_CHANNEL, spaceChannel } from "./realtime-channels";
 
-export function createServerSpace(ctx: ServerContext) {
+export function createServerSpace(ctx: ServerContext): ServerSpace {
   const deps: SpaceDeps = {
     ctx,
     roles: createSpaceRolesStore(ctx.db),
@@ -28,7 +32,18 @@ export function createServerSpace(ctx: ServerContext) {
     rolesService.forgetThread(thread.id);
   });
 
-  return { deps, rolesService, notes, contextReader, orphans };
+  const space = { deps, rolesService, notes, contextReader, orphans };
+  registerSpaceEnforcement(ctx, rolesService);
+  registerWakeDigest(ctx, deps, rolesService);
+  createAgentView(ctx, deps);
+  registerSpaceTools(ctx, space);
+  return space;
 }
 
-export type ServerSpace = ReturnType<typeof createServerSpace>;
+export interface ServerSpace {
+  deps: SpaceDeps;
+  rolesService: SpaceRolesService;
+  notes: SpaceNotesService;
+  contextReader: ReturnType<typeof createSpaceContextReader>;
+  orphans: ReturnType<typeof createSpaceOrphans>;
+}

@@ -12,9 +12,9 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 - [x] 2.3 Migration that drops thread_orchestrators and thread_ideas; orphan listing and adopt. Verify: real-SQLite tests for drop, orphans after Space deletion and adopt.
 
 ## 3. Enforcement and agent tools
-- [ ] 3.1 Message-dispatch hook refusing orchestrator messages to independent or foreign sessions. Verify: tests for owner message, managed, independent, foreign Space, mixed senders.
-- [ ] 3.2 Agent tools and per-thread tool configuration; new orchestrator and member instructions; remove session_roles and the idea instructions. Verify: tests that a non-orchestrator cannot call management tools and that space_start_session creates a flat member (sectionId set, no parent, no lifecycle owner).
-- [ ] 3.3 Wake digest with interval, entry cap and per-Space switch. Verify: tests with a fake clock.
+- [x] 3.1 Message-dispatch hook refusing orchestrator messages to independent or foreign sessions. Verify: tests for owner message, managed, independent, foreign Space, mixed senders.
+- [x] 3.2 Agent tools and per-thread tool configuration; new orchestrator and member instructions; remove session_roles and the idea instructions. Verify: tests that a non-orchestrator cannot call management tools and that space_start_session creates a flat member (sectionId set, no parent, no lifecycle owner).
+- [x] 3.3 Wake digest with interval, entry cap and per-Space switch. Verify: tests with a fake clock.
 
 ## 4. RPC, realtime and CLI
 - [ ] 4.1 RPC contract and handlers; realtime channel per Space.
