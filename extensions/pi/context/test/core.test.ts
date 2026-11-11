@@ -111,6 +111,21 @@ describe("policy", () => {
 		assert.equal(boundaryCut(undefined, big, false), false);
 	});
 
+	it("measures the watermark above the head, so the system prompt and tools take none of its room", () => {
+		assert.deepEqual(cutThresholds(DEFAULT_CONFIG, 1_000_000, 0), cutThresholds(DEFAULT_CONFIG, 1_000_000));
+		assert.deepEqual(cutThresholds(DEFAULT_CONFIG, 1_000_000, 95_000), { soft: 215_000, hard: 245_000 });
+		assert.equal(effectiveWatermark(DEFAULT_CONFIG, 1_000_000, 95_000), 215_000);
+		assert.deepEqual(
+			cutThresholds({ ...DEFAULT_CONFIG, hardCapTokens: 130_000 }, 1_000_000, 95_000),
+			{ soft: 215_000, hard: 225_000 },
+			"the hard cap bounds the content too",
+		);
+		assert.deepEqual(cutThresholds(DEFAULT_CONFIG, 272_000, 95_000), { soft: 215_000, hard: 272_000 - 32_768 });
+		assert.deepEqual(cutThresholds(DEFAULT_CONFIG, 200_000, 95_000), { soft: 167_232, hard: 167_232 }, "the window still wins");
+		assert.equal(watermarkHolds(DEFAULT_CONFIG, 133_238, 95_000), true);
+		assert.equal(watermarkHolds(DEFAULT_CONFIG, 133_237, 95_000), false, "the head leaves no room for what a cut carries");
+	});
+
 	it("allows cuts only below a watermark that holds what a cut leaves", () => {
 		// The default config leaves at most 16k kept and 22.2k carried (with the skills section and the notebook), 38,237
 		// provider tokens in all.

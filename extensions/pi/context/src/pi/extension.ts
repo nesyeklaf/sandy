@@ -3,7 +3,15 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { dirname, join } from "node:path";
 import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
 import { type ContextConfig, type ContextConfigInput, carriedTokens, resolveConfig } from "../core/config.ts";
-import { diffSnapshots, headParts, requestShape, type ShapeSnapshot, hash53, snapshotOf } from "../core/continuity.ts";
+import {
+	diffSnapshots,
+	hash53,
+	headParts,
+	headShare,
+	requestShape,
+	type ShapeSnapshot,
+	snapshotOf,
+} from "../core/continuity.ts";
 import { type CutPlan, planCut } from "../core/cut.ts";
 import {
 	CUT_REQUEST_CHANNEL,
@@ -129,6 +137,9 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		let requestHead: Record<string, number> = {};
 		let requestSnapshot: ShapeSnapshot | undefined;
 		let resumeFrom: ShapeSnapshot | undefined;
+		/** The head's share of the request under way, and the head in the provider's tokens as last measured. */
+		let requestHeadShare: number | undefined;
+		let headTokens = 0;
 		let requests = new RequestTracker();
 		/** Reason for the cache break the next request will show. */
 		let pendingCut: string | undefined;
@@ -153,7 +164,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		});
 		/** Whether a finished task asks for a cut at this chance; the request is used up either way. */
 		const taskCut = (tokens: number | undefined): boolean => {
-			const due = taskDone && tokens !== undefined && tokens >= config.taskCutMinTokens;
+			const due = taskDone && tokens !== undefined && tokens >= headTokens + config.taskCutMinTokens;
 			taskDone = false;
 			return due;
 		};
@@ -166,7 +177,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		const tier = (): CacheTier => (process.env.PI_CACHE_RETENTION === "long" ? "long" : "short");
 
 		const branchOf = (ctx: ExtensionContext): BranchState => readBranch(ctx.sessionManager.getBranch());
-		const thresholdsFor = (ctx: ExtensionContext): CutThresholds => cutThresholds(config, ctx.model?.contextWindow);
+		const thresholdsFor = (ctx: ExtensionContext): CutThresholds => cutThresholds(config, ctx.model?.contextWindow, headTokens);
 		const planFrom = (state: BranchState, reason: string): CutPlan | undefined =>
 			planCut({
 				entries: state.entries,
@@ -217,6 +228,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				visibleTokens: state.visibleTokens,
 				archivedTokens,
 				blockTokens: plan.details.blockTokens,
+				headTokens,
 				limit,
 			};
 			if (cutAccepted(size, hard)) return plan;
@@ -305,7 +317,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 		 */
 		function scheduleHistorian(ctx: ExtensionContext): void {
 			const tokens = ctx.getContextUsage()?.tokens ?? 0;
-			if (tokens < config.historian.startTokens) {
+			if (tokens < headTokens + config.historian.startTokens) {
 				const state = branchOf(ctx);
 				if (!state.summary && state.cuts === 0) return;
 			}
@@ -336,7 +348,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				: 0;
 			const notebookBytes = Buffer.byteLength(state.notebook ?? "", "utf8");
 			return [
-				`Prompt: ${tokens == null ? "unknown until the next response" : `~${tokens.toLocaleString("en-US")}`} tokens; cut before the next prompt from ${thresholdsFor(ctx).soft.toLocaleString("en-US")}, mid-run from ${thresholdsFor(ctx).hard.toLocaleString("en-US")}, or on a cold cache above ${config.coldCutMinTokens.toLocaleString("en-US")}`,
+				`Prompt: ${tokens == null ? "unknown until the next response" : `~${tokens.toLocaleString("en-US")}`} tokens, ${headTokens > 0 ? `~${headTokens.toLocaleString("en-US")}` : "not yet measured how many"} of them system prompt and tools; cut before the next prompt from ${thresholdsFor(ctx).soft.toLocaleString("en-US")}, mid-run from ${thresholdsFor(ctx).hard.toLocaleString("en-US")}, or on a cold cache above ${(headTokens + config.coldCutMinTokens).toLocaleString("en-US")}`,
 				`Cuts on this branch: ${state.cuts}; summary ${state.summary ? `through #${state.summary.coveredThroughId}, ${summaryItems} items` : "not started"}; notebook ${notebookBytes} bytes`,
 				`Historian: ${historian.stats.runs} runs, ${historian.stats.condensed} condensations, ${historian.stats.failures} failures${historian.stats.lastError ? ` (last: ${historian.stats.lastError})` : ""}${historian.running > 0 ? ", running" : ""}`,
 				signalLine(signals.snapshot()),
@@ -368,6 +380,8 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 					? undefined
 					: (options.ledgerFile ?? join(getAgentDir(), "sandy-context", "ledger.jsonl"));
 			resumeFrom = readSnapshot();
+			requestHeadShare = undefined;
+			headTokens = typeof resumeFrom?.headTokens === "number" && resumeFrom.headTokens > 0 ? resumeFrom.headTokens : 0;
 			scheduleHistorian(ctx);
 			idleContext = ctx;
 			startKeepWarm();
@@ -413,8 +427,8 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				ttlMs: cacheTtlMs(config, ctx.model, tier()),
 				until,
 				contextTokens: tokens,
-				minTokens: config.coldCutMinTokens,
-				carriedTokens: carriedTokens(config),
+				minTokens: headTokens + config.coldCutMinTokens,
+				carriedTokens: headTokens + carriedTokens(config),
 				cacheReadCost: costs.read,
 				cacheWriteCost: costs.write,
 			});
@@ -438,6 +452,9 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			const signal = signals.request();
 			if (planned) signals.cut();
 			const prompt = promptTokens(usage);
+			if (judged.requestClass !== "rejected" && requestHeadShare !== undefined && prompt > 0) {
+				headTokens = Math.round(prompt * requestHeadShare);
+			}
 			const soft = thresholdsFor(ctx).soft;
 			if (planned && prompt >= soft) {
 				reportSize(
@@ -452,7 +469,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				judged.continuity.kind === "first" && resumeFrom && accepted ? diffSnapshots(resumeFrom, accepted) : undefined;
 			if (accepted) {
 				resumeFrom = undefined;
-				writeSnapshot(accepted);
+				writeSnapshot(headTokens > 0 ? { ...accepted, headTokens } : accepted);
 			}
 			writeLedger({
 				t: new Date(now()).toISOString(),
@@ -463,6 +480,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				...(judged.continuity.kind === "broken" ? { at: judged.continuity.at } : {}),
 				items: judged.items,
 				head: requestHead,
+				...(headTokens > 0 ? { headTokens } : {}),
 				...(resume ? { resume: { ...resume, ...(reason !== undefined ? { pendingCut: reason } : {}) } } : {}),
 				model: judged.model,
 				prompt,
@@ -510,6 +528,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 			if (!shape) return undefined;
 			requestHead = headParts(event.payload);
 			requestSnapshot = snapshotOf(event.payload);
+			requestHeadShare = headShare(event.payload);
 			requests.begin(shape, ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined);
 			return undefined;
 		});
@@ -613,7 +632,7 @@ export function createContextExtension(options: ContextExtensionOptions = {}): (
 				ttlMs: cacheTtlMs(config, ctx.model, tier()),
 				modelKey: ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined,
 				lastModelKey: state.lastModelKey,
-				minTokens: config.coldCutMinTokens,
+				minTokens: headTokens + config.coldCutMinTokens,
 				soft,
 			});
 			const task = taskCut(tokens);

@@ -98,14 +98,18 @@ The index sees, for every entry, the call a tool result answers (so `report-4` f
 |---|---|---|
 | Before a new user prompt (interactive) | prompt ≥ soft threshold | `watermark` |
 | Between two requests of a run | interactive: prompt ≥ hard threshold; headless, worker or a queued message: prompt ≥ soft threshold | `watermark` |
-| Before a new user prompt | prompt ≥ `coldCutMinTokens` and the model changed | `model` |
-| Before a new user prompt | prompt ≥ `coldCutMinTokens` and the cache is older than its lifetime | `cold` |
-| Next request of a run, or next prompt | another extension reported a finished task on `sandy-context.cut-request`, and prompt ≥ `taskCutMinTokens` | `task` |
+| Before a new user prompt | prompt ≥ head + `coldCutMinTokens` and the model changed | `model` |
+| Before a new user prompt | prompt ≥ head + `coldCutMinTokens` and the cache is older than its lifetime | `cold` |
+| Next request of a run, or next prompt | another extension reported a finished task on `sandy-context.cut-request`, and prompt ≥ head + `taskCutMinTokens` | `task` |
 | Host compaction (pi only) | pi's threshold, overflow or `/compact` | pi's reason, or `manual` |
 
-There are two thresholds (`cutThresholds` in `core/policy.ts`). The soft one is the watermark: the smallest of `watermarkTokens`, `hardCapTokens` and the model window minus 32,768. The hard one is the soft one plus `deferMarginTokens`, capped at the same window and ceiling. In an interactive session the routine cut waits for the next user prompt: the run's knowledge is already condensed in the answer, the turn stays whole, the notebook is current, and the cut often meets a cache that went cold during the user's pause anyway. Mid-run the hard threshold is only an emergency brake for one long run. A headless run, a worker or a run with queued messages has no user prompt to wait for, so it cuts at the soft threshold between requests as before. Keep-warm pings stop once the prompt reached the soft threshold, because the next prompt cuts anyway. The margin of 30k is an estimate, not a measured optimum; the ledger records where each cut happened (`position`) so it can be tuned.
+There are two thresholds (`cutThresholds` in `core/policy.ts`), both for the whole prompt. The soft one is the watermark: the head plus `watermarkTokens`. The hard one is the head plus `watermarkTokens + deferMarginTokens`, at most the head plus `hardCapTokens`. Neither exceeds the model window minus 32,768.
 
-A cut that would not bring the prompt below its threshold is refused (`cutAccepted`), because it would be followed by another at the next chance. This happens when the watermark is too low for what a cut carries, or on a small model window. Once the prompt has reached the hard threshold, a cut is made anyway when it frees at least a quarter of the prompt (`HARD_CUT_MIN_SHARE`): refusing it would let the prompt grow until pi compacts near the model window, at over 900k tokens on a 1M window. A cut right after such a cut archives too little to qualify, so these cuts do not follow each other either. The projection (`projectedTokens`) scales the estimated change by the measured ratio of prompt to estimate; on 54 cuts of October 2026 it missed the next prompt by -0.2k on average (RMS 16k). A refused cut writes a `cut-refused` ledger line with the projected size; a planned cut whose next prompt is still at or above the watermark is reported too. Each kind is shown once per session (a notification, or stderr without a UI), and the latest one in `/sandy-context`.
+The head is the system prompt, the tool declarations and the request settings. It is in every request and no cut shrinks it, so the configured sizes are room for the conversation alone. The extension measures it on every answered request: the head's share of the request payload in characters (`headShare` in `core/continuity.ts`) times the prompt tokens the provider counted. The value is kept with the session's shape snapshot, because SANDY starts pi for every message, and written to the ledger as `headTokens`. Until the first answer it counts as zero. Before the head was measured, the watermark was a fixed prompt size of 120k: in November 2026 SANDY sessions had a head of about 95k, a cut left 25k of room, and the next cut followed after seven to ten requests.
+
+In an interactive session the routine cut waits for the next user prompt: the run's knowledge is already condensed in the answer, the turn stays whole, the notebook is current, and the cut often meets a cache that went cold during the user's pause anyway. Mid-run the hard threshold is only an emergency brake for one long run. A headless run, a worker or a run with queued messages has no user prompt to wait for, so it cuts at the soft threshold between requests as before. Keep-warm pings stop once the prompt reached the soft threshold, because the next prompt cuts anyway. The margin of 30k is an estimate, not a measured optimum; the ledger records where each cut happened (`position`) so it can be tuned.
+
+A cut that would not bring the prompt below its threshold is refused (`cutAccepted`), because it would be followed by another at the next chance. This happens when the watermark is too low for what a cut carries, or on a small model window. Once the prompt has reached the hard threshold, a cut is made anyway when it frees at least a quarter of the prompt (`HARD_CUT_MIN_SHARE`): refusing it would let the prompt grow until pi compacts near the model window, at over 900k tokens on a 1M window. A cut right after such a cut archives too little to qualify, so these cuts do not follow each other either. The projection (`projectedTokens`) scales the estimated change by the measured ratio of the prompt without the head to its estimate. Before the head was measured it scaled by the whole prompt; on 54 cuts of October 2026, with heads of 25k to 48k, that missed the next prompt by -0.2k on average (RMS 16k), but with a head of 95k it projected cuts far below a watermark they then landed above. A refused cut writes a `cut-refused` ledger line with the projected size; a planned cut whose next prompt is still at or above the watermark is reported too. Each kind is shown once per session (a notification, or stderr without a UI), and the latest one in `/sandy-context`.
 
 The minimum for cold and model cuts avoids cutting small prompts that would barely shrink. A task cut breaks a warm cache, so its minimum sits closer to the watermark, where a cut comes soon anyway; it moves that cut to the boundary between two tasks. A reported task is used by the next cut chance, whether it cuts or not, so a request never fires in the middle of a later task. Any extension can report one with `pi.events.emit("sandy-context.cut-request", {})`. The request is also written to the log as `sandy-context.task-done`, so a process started for the next prompt still honours it; SANDY starts pi for every message. Cache lifetime is measured from the end of the last response, which slightly overestimates warmth; the error goes toward skipping a free cut, never toward an extra break.
 
@@ -115,16 +119,16 @@ The extension reads these settings from its config file (see *Configuration* bel
 
 | Setting | Default | Meaning |
 |---|---:|---|
-| `watermarkTokens` | 120,000 | Soft threshold: cut at the next prompt (or between requests when headless) once the prompt reaches this size |
+| `watermarkTokens` | 120,000 | Soft threshold: cut at the next prompt (or between requests when headless) once the prompt without the head reaches this size |
 | `deferMarginTokens` | 30,000 | How far an interactive run may grow past the soft threshold before it cuts mid-run |
-| `hardCapTokens` | 200,000 | Ceiling whatever the model window allows |
+| `hardCapTokens` | 200,000 | Ceiling for the prompt without the head, whatever the model window allows |
 | `keepRecentTokens` | 16,000 | Recent history kept verbatim after a cut |
 | `maskedTokens` | 6,000 | Budget for the masked tier |
 | `pinnedUserTokens` | 4,000 | Budget for earlier user messages |
 | `summaryTokens` | 8,000 | Budget for the anchored summary |
 | `filesListed` | 25 | Files listed per category |
-| `coldCutMinTokens` | 60,000 | Minimum prompt for cold and model cuts |
-| `taskCutMinTokens` | 80,000 | Minimum prompt for a cut after a finished task |
+| `coldCutMinTokens` | 60,000 | Minimum prompt without the head for cold and model cuts |
+| `taskCutMinTokens` | 80,000 | Minimum prompt without the head for a cut after a finished task |
 | `notebookMaxBytes` | 8,192 | Notebook size limit |
 | `fallbackCacheTtlSeconds` | 300 | Cache lifetime when the model declares none |
 | `cacheTtlSeconds` | `openai-codex` never expires, `anthropic` 300/3600 (short/long) | Measured cache lifetimes per `provider/model` or `provider`; merged per key |
@@ -134,11 +138,11 @@ The extension reads these settings from its config file (see *Configuration* bel
 | `historian.chunkMinTokens` | 12,000 | Minimum stretch to summarize |
 | `historian.chunkMaxTokens` | 40,000 | Maximum stretch per call |
 | `historian.maxOutputTokens` | 4,096 | Output limit of a summary call |
-| `historian.startTokens` | 60,000 | The historian runs only once the prompt reaches this size, so short sessions pay nothing for it |
+| `historian.startTokens` | 60,000 | The historian runs only once the prompt without the head reaches this size, so short sessions pay nothing for it |
 
 The token budgets are in the provider's tokens, the unit of the watermark and of the prompt size pi reports. The cut measures text in estimated tokens (four characters each) and converts each budget by dividing it by 1.6 (`PROVIDER_TOKENS_PER_ESTIMATE`, fitted on Opus sessions, where code, JSON and German text count 1.3 to 1.8 provider tokens per estimated one). A model with a leaner tokenizer keeps somewhat less than its budget.
 
-Validation rejects settings that cannot work. In particular, `keepRecent + masked + pinnedUser + summary` plus the skills section's 600 tokens and the notebook (`notebookMaxBytes / 4`), both scaled by 1.6, must stay below the watermark, otherwise every cut would be followed immediately by another. The system prompt and tools come on top: about 48k tokens in a SANDY pi session with its many tools (fitted on 86 cuts of October 2026). This floor decides most of what a cut leaves: the prompt after a cut was about 48k plus 1.3 times the estimated tokens the cut kept and carried, 86k in the median with the old budgets (25k, 12k, 6k and 8k estimated tokens, a 16 KB notebook).
+Validation rejects settings that cannot work. In particular, `keepRecent + masked + pinnedUser + summary` plus the skills section's 600 tokens and the notebook (`notebookMaxBytes / 4`), both scaled by 1.6, must stay below the watermark, otherwise every cut would be followed immediately by another. The system prompt and tools come on top and are measured per session (see *the head* above): about 48k tokens in a SANDY pi session of October 2026 (fitted on 86 cuts), about 95k in November. This floor decides most of what a cut leaves: the prompt after a cut was about 48k plus 1.3 times the estimated tokens the cut kept and carried, 86k in the median with the old budgets (25k, 12k, 6k and 8k estimated tokens, a 16 KB notebook).
 
 Why 120,000 and not 200,000: a cut costs one uncached prompt of roughly the carried size; every turn before it reads the whole prompt from cache. Under assumed workloads (40k tokens carried after a cut, 3k new tokens per turn) the cost-optimal watermark comes out around 95k to 117k depending on the cache read price. That is a calculation under assumptions, not a measurement. 200k is treated as a hard ceiling, not a target.
 
@@ -199,7 +203,7 @@ Requirements: pi 1.1.0 or later on a runtime that runs TypeScript directly (Node
 | `message_end` | Judges the request once the provider answered, updates the ledger, adds usage |
 | `session_shutdown` | Aborts a running historian call |
 
-The watermark the extension uses is the smallest of `watermarkTokens`, `hardCapTokens` and the model's context window minus 32,768 tokens (twice pi's 16,384 reserve), so pi's own threshold compaction never fires first.
+The watermark the extension uses is the measured head plus `watermarkTokens`, at most the model's context window minus 32,768 tokens (twice pi's 16,384 reserve), so pi's own threshold compaction never fires first.
 
 The cache lifetime for the tier (short, or long when `PI_CACHE_RETENTION=long`) comes from the first source that names it: `cacheTtlSeconds` for `provider/model`, then for `provider`, then the model's declared `promptCache`, falling back to `fallbackCacheTtlSeconds` (or one hour for the long tier). The table holds measurements, because a provider's real lifetime can differ from its catalogue: on 2026-10-20 a Codex (`gpt-6-astra`) cache still hit after a 20-minute pause without the long tier and was cold after 40; a Claude Haiku cache hit after 20 minutes with `PI_CACHE_RETENTION=long` and was cold without it. The ChatGPT subscription backend now keeps a Codex cache without expiry, so `openai-codex` has an infinite lifetime in both tiers (`Number.POSITIVE_INFINITY` in code; a JSON config that wants expiry back sets a number of seconds): a Codex session is never pinged and never cut for a cold cache, only at the watermark and on a model change. The API (`openai`) is not affected and still takes the model's declared lifetime.
 
@@ -230,7 +234,7 @@ Results list `#id · kind · time`, a snippet and the opening user message of th
 
 **`notebook`**: called without `text`, returns the notebook; with `text`, replaces it; an empty string clears it. Texts above `notebookMaxBytes` are rejected with an error that tells the agent to shorten it.
 
-**`/sandy-context`** shows the status: prompt size and watermark, cuts on the branch, summary coverage, notebook size, historian runs and failures, archived entries and the request classes of this process.
+**`/sandy-context`** shows the status: prompt size, head size and watermark, cuts on the branch, summary coverage, notebook size, historian runs and failures, archived entries and the request classes of this process.
 
 ### What the extension stores
 
@@ -259,6 +263,7 @@ One JSON line per request is appended to `<agent dir>/sandy-context/ledger.jsonl
 | Field | Meaning |
 |---|---|
 | `prompt`, `usage` | Prompt tokens and the answer's `input`, `output`, `cacheRead`, `cacheWrite` and `cost` |
+| `headTokens` | The system prompt, tools and settings in provider tokens, as measured on this request; the thresholds lie this far above the configured sizes |
 | `position` | For a planned cut: `run` (between two requests), `prompt` (before a user prompt) or `pi` (pi's own compaction) |
 | `signals.toolTokens`, `signals.runToolTokens` | Tool output that entered the prompt since the previous request and since the run started; calls made inside another tool count 0, their result never reaches the prompt |
 | `signals.delegations` | Agents started through sandy in this run: a sandy workflow tool, or `sandy workflows run` / `sandy thread new` in a shell |

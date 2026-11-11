@@ -5,6 +5,7 @@ import {
 	diffSnapshots,
 	hash53,
 	headParts,
+	headShare,
 	requestShape,
 	type RequestShape,
 	snapshotOf,
@@ -225,6 +226,19 @@ describe("head parts", () => {
 		assert.equal(before.model, after.model);
 		assert.equal(before.tools, after.tools);
 		assert.notEqual(before.system, after.system);
+	});
+});
+
+describe("head share", () => {
+	it("measures how much of a request is system prompt, tools and settings, in characters", () => {
+		assert.equal(headShare({ system: "s".repeat(98), messages: ["m".repeat(98)] }), 100 / 202);
+		assert.equal(headShare({ instructions: "s".repeat(98), tools: [], input: ["m".repeat(98)] }), 102 / 204);
+		assert.equal(
+			headShare({ system: "s".repeat(98), stream: true, max_tokens: 100, messages: ["m".repeat(98)] }),
+			100 / 202,
+			"volatile fields carry no prompt",
+		);
+		assert.equal(headShare({ system: "s" }), undefined, "no message list");
 	});
 });
 
