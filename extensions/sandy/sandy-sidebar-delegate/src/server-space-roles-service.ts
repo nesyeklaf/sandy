@@ -5,7 +5,7 @@ import type { SpaceDeps } from "./server-space-deps";
 
 type ManagedTargetDecision = { allowed: true } | { allowed: false; reason: string };
 
-export const ORCHESTRATORS_VERIFIED_MAX = 1_000;
+const ORCHESTRATORS_VERIFIED_MAX = 1_000;
 const BULK_SESSIONS_MAX = 200;
 
 function createRoleVerifier(deps: SpaceDeps) {

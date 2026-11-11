@@ -83,7 +83,7 @@ export function createSpaceContextReader(deps: SpaceDeps, rolesService: SpaceRol
   };
 }
 
-export const ORPHAN_SPACES_LISTED_MAX = 1_000;
+const ORPHAN_SPACES_LISTED_MAX = 1_000;
 
 export function createSpaceOrphans(deps: SpaceDeps) {
   return {
