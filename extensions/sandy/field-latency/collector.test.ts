@@ -63,6 +63,7 @@ interface Lab {
   samples: Sample[];
   now: () => number;
   advance(ms: number): void;
+  jump(ms: number): void;
   click(threadId: string): void;
   ready(threadId: string): void;
   mutate(region: Region): void;
@@ -143,6 +144,9 @@ function install(probe: LoadProbe | null = null): Lab {
         due.run();
       }
       now = target;
+    },
+    jump(ms) {
+      now += ms;
     },
     click(threadId) {
       let item = sidebarItems.get(threadId);
@@ -470,4 +474,20 @@ test("a switch with no content change after ready has no content source", () => 
   assert.equal(sample.contentDone, "settled");
   assert.equal(sample.contentSource, null);
   assert.equal(sample.contentWrites, 0);
+});
+
+test("a write after the cap does not change the content source when the closing timer runs late", () => {
+  const lab = install();
+  lab.click("thr_a");
+  lab.advance(100);
+  lab.ready("thr_a");
+  lab.advance(150);
+  lab.mutate("main");
+  lab.jump(5100);
+  lab.mutate("genui");
+  lab.advance(6000);
+  const sample = onlySwitch(lab, 0);
+  assert.equal(sample.contentDone, "capped");
+  assert.equal(sample.contentSource, "host");
+  assert.equal(sample.contentWrites, 1);
 });
