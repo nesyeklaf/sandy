@@ -5,11 +5,15 @@ import type { SpaceDeps } from "./server-space-deps";
 
 type ManagedTargetDecision = { allowed: true } | { allowed: false; reason: string };
 
-export function createSpaceRolesService(deps: SpaceDeps) {
+export const ORCHESTRATORS_VERIFIED_MAX = 1_000;
+const BULK_SESSIONS_MAX = 200;
+
+function createRoleVerifier(deps: SpaceDeps) {
   const { roles, membership } = deps;
 
   async function verifiedOrchestrators(spaceId: string): Promise<string[]> {
     const threadIds = roles.orchestratorsOf(spaceId);
+    assert(threadIds.length <= ORCHESTRATORS_VERIFIED_MAX, "orchestrators of one Space exceed the verification bound");
     const spaces = await membership.spacesOf(threadIds);
     const kept: string[] = [];
     for (const threadId of threadIds) {
@@ -25,6 +29,7 @@ export function createSpaceRolesService(deps: SpaceDeps) {
 
   async function verifiedAllOrchestrators(): Promise<Array<{ threadId: string; spaceId: string }>> {
     const threadIds = roles.allOrchestrators();
+    assert(threadIds.length <= ORCHESTRATORS_VERIFIED_MAX, "orchestrators exceed the verification bound");
     const spaces = await membership.spacesOf(threadIds);
     const kept: Array<{ threadId: string; spaceId: string }> = [];
     for (const threadId of threadIds) {
@@ -57,6 +62,12 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     return spaceId;
   }
 
+  return { verifiedOrchestrators, verifiedAllOrchestrators, orchestratorSpaceOf, requireOrchestrator };
+}
+
+function createMemberReads(deps: SpaceDeps) {
+  const { roles, membership } = deps;
+
   async function requireMember(threadId: string): Promise<string> {
     const spaceId = await membership.spaceOf(threadId);
     if (spaceId === null) {
@@ -72,61 +83,96 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     return mode;
   }
 
-  return {
-    modeOf,
-    verifiedOrchestrators,
-    verifiedAllOrchestrators,
-    orchestratorSpaceOf,
-    requireOrchestrator,
-    requireMember,
+  return { requireMember, modeOf };
+}
 
-    async setOrchestrator(
-      threadId: string,
-      orchestrator: boolean,
-    ): Promise<{ changed: boolean; spaceId: string | null }> {
-      if (!orchestrator) {
-        const clearedSpaceId = roles.clearOrchestrator(threadId);
-        if (clearedSpaceId !== null) {
-          deps.publishSpace(clearedSpaceId);
-          deps.publishOrchestrators();
-        }
-        return { changed: clearedSpaceId !== null, spaceId: clearedSpaceId };
-      }
-      const spaceId = await membership.spaceOf(threadId);
-      if (spaceId === null) {
-        throw new SpaceCoordinationError(
-          "space_missing",
-          `Session ${threadId} is not in a Space. Move it into a Space before making it an orchestrator.`,
-        );
-      }
-      const changed = roles.assignOrchestrator(threadId, spaceId, Date.now());
-      if (changed) {
-        deps.publishSpace(spaceId);
+type RoleVerifier = ReturnType<typeof createRoleVerifier>;
+
+function createManagedTargetDecider(deps: SpaceDeps, verifier: RoleVerifier) {
+  const { roles, membership } = deps;
+  return async function decideManagedTarget(
+    senderThreadId: string,
+    targetThreadId: string,
+  ): Promise<ManagedTargetDecision> {
+    assert(senderThreadId.length > 0 && targetThreadId.length > 0, "sender and target ids must not be empty");
+    const senderSpaceId = await verifier.orchestratorSpaceOf(senderThreadId);
+    if (senderSpaceId === null) return { allowed: true };
+    const targetSpaceId = await membership.spaceOf(targetThreadId);
+    const targetMode = roles.modeIn(targetThreadId, targetSpaceId);
+    if (targetMode !== "managed") roles.revokeManaged(targetThreadId);
+    if (targetSpaceId !== senderSpaceId) {
+      return {
+        allowed: false,
+        reason: "Orchestrators may only message sessions in their own Space. This session is outside it.",
+      };
+    }
+    if (targetMode !== "managed") {
+      return {
+        allowed: false,
+        reason:
+          "This session is independent. Only the owner can switch it to managed before an orchestrator may message it.",
+      };
+    }
+    return { allowed: true };
+  };
+}
+
+function createOrchestratorMutations(deps: SpaceDeps) {
+  const { roles, membership } = deps;
+
+  async function setOrchestrator(
+    threadId: string,
+    orchestrator: boolean,
+  ): Promise<{ changed: boolean; spaceId: string | null }> {
+    if (!orchestrator) {
+      const clearedSpaceId = roles.clearOrchestrator(threadId);
+      if (clearedSpaceId !== null) {
+        deps.publishSpace(clearedSpaceId);
         deps.publishOrchestrators();
       }
-      return { changed, spaceId };
-    },
+      return { changed: clearedSpaceId !== null, spaceId: clearedSpaceId };
+    }
+    const spaceId = await membership.spaceOf(threadId);
+    if (spaceId === null) {
+      throw new SpaceCoordinationError(
+        "space_missing",
+        `Session ${threadId} is not in a Space. Move it into a Space before making it an orchestrator.`,
+      );
+    }
+    const changed = roles.assignOrchestrator(threadId, spaceId, Date.now());
+    if (changed) {
+      deps.publishSpace(spaceId);
+      deps.publishOrchestrators();
+    }
+    return { changed, spaceId };
+  }
 
-    async setOrchestrators(threadIds: readonly string[], orchestrator: boolean): Promise<{ changed: string[] }> {
-      assert(threadIds.length > 0, "a bulk orchestrator change needs at least one session");
-      if (orchestrator) {
-        const spaces = await membership.spacesOf([...threadIds]);
-        const unassigned = threadIds.find((threadId) => (spaces.get(threadId) ?? null) === null);
-        if (unassigned !== undefined) {
-          throw new SpaceCoordinationError(
-            "space_missing",
-            `Session ${unassigned} is not in a Space. Move it into a Space before making it an orchestrator. No session was changed.`,
-          );
-        }
+  async function setOrchestrators(threadIds: readonly string[], orchestrator: boolean): Promise<{ changed: string[] }> {
+    assert(threadIds.length > 0 && threadIds.length <= BULK_SESSIONS_MAX, "a bulk orchestrator change is bounded");
+    if (orchestrator) {
+      const spaces = await membership.spacesOf([...threadIds]);
+      const unassigned = threadIds.find((threadId) => (spaces.get(threadId) ?? null) === null);
+      if (unassigned !== undefined) {
+        throw new SpaceCoordinationError(
+          "space_missing",
+          `Session ${unassigned} is not in a Space. Move it into a Space before making it an orchestrator. No session was changed.`,
+        );
       }
-      const changed: string[] = [];
-      for (const threadId of new Set(threadIds)) {
-        const result = await this.setOrchestrator(threadId, orchestrator);
-        if (result.changed) changed.push(threadId);
-      }
-      return { changed };
-    },
+    }
+    const changed: string[] = [];
+    for (const threadId of new Set(threadIds)) {
+      const result = await setOrchestrator(threadId, orchestrator);
+      if (result.changed) changed.push(threadId);
+    }
+    return { changed };
+  }
 
+  return { setOrchestrator, setOrchestrators };
+}
+
+function createModeAndWakeMutations(deps: SpaceDeps) {
+  const { roles, membership } = deps;
+  return {
     async setMemberMode(
       threadId: string,
       mode: CoordinationMode,
@@ -141,32 +187,9 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     },
 
     setWake(spaceId: string, enabled: boolean): { wakeEnabled: boolean } {
-      deps.roles.setWake(spaceId, enabled);
+      roles.setWake(spaceId, enabled);
       deps.publishSpace(spaceId);
       return { wakeEnabled: enabled };
-    },
-
-    async decideManagedTarget(senderThreadId: string, targetThreadId: string): Promise<ManagedTargetDecision> {
-      assert(senderThreadId.length > 0 && targetThreadId.length > 0, "sender and target ids must not be empty");
-      const senderSpaceId = await orchestratorSpaceOf(senderThreadId);
-      if (senderSpaceId === null) return { allowed: true };
-      const targetSpaceId = await membership.spaceOf(targetThreadId);
-      const targetMode = roles.modeIn(targetThreadId, targetSpaceId);
-      if (targetMode !== "managed") roles.revokeManaged(targetThreadId);
-      if (targetSpaceId !== senderSpaceId) {
-        return {
-          allowed: false,
-          reason: "Orchestrators may only message sessions in their own Space. This session is outside it.",
-        };
-      }
-      if (targetMode !== "managed") {
-        return {
-          allowed: false,
-          reason:
-            "This session is independent. Only the owner can switch it to managed before an orchestrator may message it.",
-        };
-      }
-      return { allowed: true };
     },
 
     forgetThread(threadId: string): void {
@@ -176,6 +199,17 @@ export function createSpaceRolesService(deps: SpaceDeps) {
         deps.publishOrchestrators();
       }
     },
+  };
+}
+
+export function createSpaceRolesService(deps: SpaceDeps) {
+  const verifier = createRoleVerifier(deps);
+  return {
+    ...verifier,
+    ...createMemberReads(deps),
+    ...createOrchestratorMutations(deps),
+    ...createModeAndWakeMutations(deps),
+    decideManagedTarget: createManagedTargetDecider(deps, verifier),
   };
 }
 

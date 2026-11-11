@@ -6,6 +6,45 @@ function titleOf(space: SpaceCoordination, threadId: string): string {
   return space.members.find((member) => member.threadId === threadId)?.title || threadId;
 }
 
+function LinkedSessions({
+  space,
+  links,
+  onToggle,
+}: {
+  space: SpaceCoordination;
+  links: readonly string[];
+  onToggle: (threadId: string) => void;
+}) {
+  return (
+    <fieldset className="flex flex-col gap-0.5">
+      <legend className="text-2xs text-muted-foreground">Linked sessions</legend>
+      {space.members.map((member) => (
+        <label key={member.threadId} className="flex items-center gap-1.5">
+          <input type="checkbox" checked={links.includes(member.threadId)} onChange={() => onToggle(member.threadId)} />
+          <span className="truncate">{member.title || member.threadId}</span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function EditorActions({ onCancel }: { onCancel: () => void }) {
+  return (
+    <div className="flex gap-2">
+      <button type="submit" className="rounded bg-primary px-3 py-1 font-medium text-primary-foreground max-md:min-h-9">
+        Save idea
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="rounded border border-border px-3 py-1 hover:bg-accent max-md:min-h-9"
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 function IdeaEditor({
   idea,
   space,
@@ -64,30 +103,8 @@ function IdeaEditor({
           </option>
         ))}
       </select>
-      <fieldset className="flex flex-col gap-0.5">
-        <legend className="text-2xs text-muted-foreground">Linked sessions</legend>
-        {space.members.map((member) => (
-          <label key={member.threadId} className="flex items-center gap-1.5">
-            <input type="checkbox" checked={links.includes(member.threadId)} onChange={() => toggle(member.threadId)} />
-            <span className="truncate">{member.title || member.threadId}</span>
-          </label>
-        ))}
-      </fieldset>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="rounded bg-primary px-3 py-1 font-medium text-primary-foreground max-md:min-h-9"
-        >
-          Save idea
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded border border-border px-3 py-1 hover:bg-accent max-md:min-h-9"
-        >
-          Cancel
-        </button>
-      </div>
+      <LinkedSessions space={space} links={links} onToggle={toggle} />
+      <EditorActions onCancel={onDone} />
     </form>
   );
 }

@@ -83,6 +83,8 @@ export function createSpaceContextReader(deps: SpaceDeps, rolesService: SpaceRol
   };
 }
 
+export const ORPHAN_SPACES_LISTED_MAX = 1_000;
+
 export function createSpaceOrphans(deps: SpaceDeps) {
   return {
     async list(): Promise<Array<{ spaceId: string; ideaCount: number; hasScratchpad: boolean }>> {
@@ -90,6 +92,7 @@ export function createSpaceOrphans(deps: SpaceDeps) {
       const counts = new Map(deps.ideas.spaceIdsWithIdeas().map((entry) => [entry.spaceId, entry.ideaCount]));
       const scratchpadSpaceIds = new Set(deps.scratchpads.spaceIdsWithScratchpads());
       const spaceIds = [...new Set([...counts.keys(), ...scratchpadSpaceIds])].filter((spaceId) => !names.has(spaceId));
+      assert(spaceIds.length <= ORPHAN_SPACES_LISTED_MAX, "orphan Spaces exceed the listing bound");
       return spaceIds.sort().map((spaceId) => ({
         spaceId,
         ideaCount: counts.get(spaceId) ?? 0,

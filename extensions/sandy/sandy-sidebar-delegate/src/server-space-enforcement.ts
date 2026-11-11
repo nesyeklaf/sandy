@@ -1,6 +1,9 @@
 import type { MessageDispatchHookContext, MessageDispatchHookDecision } from "@sandy-sdk/plugin-sdk";
+import { assert } from "./assert";
 import type { ServerContext } from "./server-context";
 import type { SpaceRolesService } from "./server-space-roles-service";
+
+const SENDERS_PER_DISPATCH_MAX = 200;
 
 function sendersOf(dispatch: MessageDispatchHookContext): string[] {
   if (dispatch.senderThreadId === null) return [];
@@ -9,6 +12,7 @@ function sendersOf(dispatch: MessageDispatchHookContext): string[] {
   for (const queued of dispatch.queuedMessages) {
     if (queued.senderThreadId !== null) senders.add(queued.senderThreadId);
   }
+  assert(senders.size <= SENDERS_PER_DISPATCH_MAX, "a dispatch carries more senders than the bound");
   return [...senders];
 }
 
