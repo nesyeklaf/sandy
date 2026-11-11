@@ -4,7 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import type { AgentRuntime, AgentRuntimeOptions } from "@sandy/agent-runtime";
-import { type ThreadEvent, threadScope, turnScope } from "@sandy/domain";
+import {
+  type SkillSelection,
+  type ThreadEvent,
+  threadScope,
+  turnScope,
+} from "@sandy/domain";
 import type { HostDaemonInjectedSkillSource } from "@sandy/host-daemon-contract";
 import type { HostWatcher } from "@sandy/host-watcher";
 import {
@@ -673,6 +678,72 @@ describe("RuntimeManager", () => {
     expect(idleEntry.skillCatalogHash).not.toBe(firstCatalogHash);
     expect(createRuntime).toHaveBeenCalledTimes(2);
     expect(firstEntry.runtime.shutdown).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a busy runtime on a skill selection change and replaces it once idle", async () => {
+    const dataDir = await makeTempDir("sandy-runtime-manager-skill-selection-");
+    const source = await writeInjectedSkillSource({
+      dataDir,
+      name: "release-notes",
+      token: "first-token",
+    });
+    const provisionWorkspace = createProvisionWorkspaceMock("/tmp/env-1");
+    const runtimes: ReturnType<typeof createFakeRuntime>[] = [];
+    const createRuntime = vi.fn(() => {
+      const runtime = createFakeRuntime();
+      runtimes.push(runtime);
+      return runtime;
+    });
+    const manager = new RuntimeManager({
+      dataDir,
+      provisionWorkspace,
+      createRuntime,
+    });
+    const ensure = (skillSelection: SkillSelection) =>
+      manager.ensureEnvironment({
+        environmentId: "env-skills",
+        injectedSkillSources: [source],
+        skillSelection,
+        targetThreadId: "thread-1",
+        workspacePath: "/tmp/env-1",
+      });
+
+    const firstEntry = await ensure({ mode: "inherit" });
+    expect(await ensure({ mode: "inherit" })).toBe(firstEntry);
+
+    runtimes[0]?.setActiveTurn("thread-1", "turn-1");
+    const busyEntry = await ensure({
+      mode: "disable",
+      names: ["release-notes", "deploy"],
+    });
+    expect(busyEntry.runtime).toBe(firstEntry.runtime);
+    expect(busyEntry.skillSelection).toEqual({
+      mode: "disable",
+      names: ["release-notes", "deploy"],
+    });
+    expect(firstEntry.runtime.shutdown).not.toHaveBeenCalled();
+    expect(createRuntime).toHaveBeenCalledTimes(1);
+
+    runtimes[0]?.endActiveTurn("thread-1");
+    const idleEntry = await ensure({
+      mode: "disable",
+      names: ["release-notes", "deploy"],
+    });
+    expect(idleEntry.runtime).not.toBe(firstEntry.runtime);
+    expect(idleEntry.skillSelection).toEqual({
+      mode: "disable",
+      names: ["release-notes", "deploy"],
+    });
+    expect(idleEntry.skillCatalogHash).toBe(firstEntry.skillCatalogHash);
+    expect(firstEntry.runtime.shutdown).toHaveBeenCalledTimes(1);
+    expect(createRuntime).toHaveBeenCalledTimes(2);
+
+    const reordered = await ensure({
+      mode: "disable",
+      names: ["deploy", "release-notes"],
+    });
+    expect(reordered.runtime).toBe(idleEntry.runtime);
+    expect(createRuntime).toHaveBeenCalledTimes(2);
   });
 
   it("replaces an idle runtime that hosts the target thread and keeps the new staged catalog", async () => {
