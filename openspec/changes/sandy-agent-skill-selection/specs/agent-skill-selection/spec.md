@@ -27,7 +27,7 @@ A skill SHALL be enabled exactly when its Sandy-owned source, if it has one, is 
 
 #### Scenario: All skills off
 - **WHEN** the policy is `allow-only` with an empty list
-- **THEN** every listed skill has `selectionEnabled: false`, and no injected skill root is sent to a new session
+- **THEN** every listed skill has `selectionEnabled: false`, and a new session loads none of the native or injected skills outside its provider's declared gaps
 
 #### Scenario: Several skills off
 - **WHEN** the policy is `disable ["grill-me", "deslop"]` while five skills are indexed
@@ -41,11 +41,19 @@ The selection SHALL apply to the name, so every origin of a disabled name is off
 - **THEN** `sandy skill list --json` shows both rows with `selectionEnabled: false`, each naming the other as a `same-name` duplicate
 
 ### Requirement: New and restored sessions receive the selection
-When Sandy starts or restores a provider session, the server SHALL leave disabled Sandy-injected skills out of the injected roots and SHALL send the policy as `selection` with the `skills/configure` bridge request. A selection change alone SHALL NOT shut down a runtime, busy or idle: the host daemon SHALL keep the runtime, start new sessions in it with the new selection, and leave every loaded thread on the selection it started with until that thread is stopped or the runtime is retired. A change of the injected catalog keeps its existing replacement behavior. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
+When Sandy starts or restores a provider session, the server SHALL send every injected root its skill sources enable, independent of the policy, and SHALL send the policy as `selection` with the `skills/configure` bridge request; each bridge SHALL leave disabled names out of native and injected skills alike. A selection change alone SHALL NOT change the injected catalog and SHALL NOT shut down a runtime, busy or idle: the host daemon SHALL keep the runtime, start new sessions in it with the new selection, and leave every loaded thread, native and injected skills alike, on the selection it started with until that thread is stopped or the runtime is retired. A change of skill sources or skill files keeps the existing catalog replacement behavior. Under `disable` or `allow-only`, a bridge that cannot enumerate its provider's skills SHALL refuse to start the session with an error instead of dropping skills left on or turning skills switched off back on. `HOST_DAEMON_PROTOCOL_VERSION` SHALL be incremented for the new field.
 
 #### Scenario: Restored session gets the selection
 - **WHEN** a thread whose runtime was stopped is resumed after `grill-me` was disabled
-- **THEN** the recorded `skills/configure` request carries `{mode: "disable", names: ["grill-me"]}`, and the injected roots do not contain `grill-me`
+- **THEN** the recorded `skills/configure` request carries `{mode: "disable", names: ["grill-me"]}`, and the bridge leaves `grill-me` out of the session's skills
+
+#### Scenario: Policy-only change keeps the injected catalog
+- **WHEN** a Sandy-injected skill is switched off and nothing else changes
+- **THEN** the injected catalog and its hash stay the same, so no idle runtime is replaced
+
+#### Scenario: Bridge cannot list skills
+- **WHEN** the selection is `disable` or `allow-only` and the bridge's skill listing fails (Codex `skills/list`, Pi's own resolution)
+- **THEN** the session does not start and the error says the selection could not be applied
 
 #### Scenario: Selection change keeps loaded runtimes
 - **WHEN** the selection changes while a runtime runs a turn, and again after it becomes idle

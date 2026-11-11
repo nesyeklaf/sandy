@@ -5,7 +5,6 @@ import {
 } from "@sandy/db";
 import {
   canonicalSkillSelection,
-  isSkillNameEnabled,
   skillSelectionKey,
   type SkillSelection,
 } from "@sandy/domain";
@@ -57,11 +56,3 @@ export function updateSkillSelection(
   };
 }
 
-export function filterSourcesBySkillSelection<T extends { name: string }>(
-  selection: SkillSelection,
-  sources: readonly T[],
-): T[] {
-  return sources.filter((source) =>
-    isSkillNameEnabled(selection, source.name),
-  );
-}

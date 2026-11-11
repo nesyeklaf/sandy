@@ -35,7 +35,9 @@ import { pathToFileURL } from "node:url";
 const [pkgDir, agentDir, workspace, extraPathsJson] = process.argv.slice(1);
 const m = await import(pathToFileURL(join(pkgDir, "dist/index.js")).href);
 const storedTrust = new m.ProjectTrustStore(agentDir).get(workspace);
-const projectTrusted = typeof storedTrust === "boolean" ? storedTrust : !m.hasTrustRequiringProjectResources(workspace);
+const globalSettings = m.SettingsManager.create(workspace, agentDir, { projectTrusted: false });
+const defaultProjectTrust = typeof globalSettings.getDefaultProjectTrust === "function" ? globalSettings.getDefaultProjectTrust() : "ask";
+const projectTrusted = typeof storedTrust === "boolean" ? storedTrust : !m.hasTrustRequiringProjectResources(workspace) || defaultProjectTrust === "always";
 const settingsManager = m.SettingsManager.create(workspace, agentDir, { projectTrusted });
 const packageManager = new m.DefaultPackageManager({ cwd: workspace, agentDir, settingsManager });
 const resolved = await packageManager.resolve(async () => "skip");
@@ -58,13 +60,14 @@ export interface PiSessionSkillsArgs {
   cwd: string;
   agentDir: string;
   env: NodeJS.ProcessEnv;
+  launchEnv: NodeJS.ProcessEnv;
   extraSkillPaths: readonly string[];
 }
 
 export async function resolvePiSessionSkills(
   args: PiSessionSkillsArgs,
 ): Promise<PiSessionSkill[]> {
-  const packageDir = locatePiPackageDir(args.env, args.cwd);
+  const packageDir = locatePiPackageDir(args.launchEnv, args.cwd);
   const node =
     hostToolchain.resolve("node", { env: args.env, cwd: args.cwd }) ?? "node";
   const { stdout } = await execHostFile(

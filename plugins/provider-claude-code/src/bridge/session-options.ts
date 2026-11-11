@@ -4,6 +4,7 @@ import {
   type ReasoningLevel,
   type ServiceTier,
   type RuntimePermissionScope,
+  withoutBridgeRuntimeEnv,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { accessSync, constants, statSync } from "node:fs";
 import { join } from "node:path";
@@ -88,6 +89,18 @@ function buildFlagSettings(params: BuildSessionOptionsArgs): Settings {
     fastMode: params.serviceTier === "fast",
     ...(params.skillOverrides ? { skillOverrides: params.skillOverrides } : {}),
   };
+}
+
+export function buildSessionEnv(
+  envOverrides: Record<string, string>,
+): NodeJS.ProcessEnv {
+  const sessionEnv: NodeJS.ProcessEnv = {
+    ...withoutBridgeRuntimeEnv(process.env),
+    ...envOverrides,
+    CLAUDE_CODE_ENTRYPOINT: "cli",
+  };
+  delete sessionEnv.CLAUDE_AGENT_SDK_CLIENT_APP;
+  return sessionEnv;
 }
 
 export function buildClaudeFeatureEnv(

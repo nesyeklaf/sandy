@@ -29,7 +29,6 @@ import {
 } from "../plugins/plugin-agent-contributions.js";
 import { resolveSkillCatalog } from "../skills/skill-catalog.js";
 import {
-  filterSourcesBySkillSelection,
   readSkillSelection,
 } from "../skills/skill-selection.js";
 import { discoverPluginSkillIds } from "../skills/injected-skills.js";
@@ -208,17 +207,13 @@ export async function resolveThreadRuntimeCommandConfig(
   );
   markTurnTraceSpan("runtimeConfig.env");
   const skillSelection = readSkillSelection(deps);
-  const injectedSkillSources = filterSourcesBySkillSelection(
-    skillSelection,
-    (
-      await resolveSkillCatalog(deps, {
-        projectSkillSources: workspaceAgentContext.projectSkillSources,
-        sharedSkillSources: workspaceAgentContext.sharedSkills.runtimeSources,
-        pluginSkillSelections:
-          conditionalConfiguration.selectedSkillIdsByPlugin,
-      })
-    ).map((entry) => entry.runtimeSource),
-  );
+  const injectedSkillSources = (
+    await resolveSkillCatalog(deps, {
+      projectSkillSources: workspaceAgentContext.projectSkillSources,
+      sharedSkillSources: workspaceAgentContext.sharedSkills.runtimeSources,
+      pluginSkillSelections: conditionalConfiguration.selectedSkillIdsByPlugin,
+    })
+  ).map((entry) => entry.runtimeSource);
   const dataDirAgentInstructions = readDataDirAgentInstructions(
     deps.logger,
     deps.config.dataDir,

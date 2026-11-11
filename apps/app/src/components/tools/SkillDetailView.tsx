@@ -43,6 +43,7 @@ interface SkillDetailViewProps {
   headerActions?: ReactNode;
   lifecycleControl?: ReactNode;
   overflowMenu?: ReactNode;
+  otherCopies?: ReactNode;
   files: readonly string[];
   selectedPath: string;
   onSelectFile: (path: string) => void;
@@ -227,6 +228,7 @@ export function SkillDetailView({
   headerActions,
   lifecycleControl,
   overflowMenu,
+  otherCopies,
   files,
   selectedPath,
   onSelectFile,
@@ -256,6 +258,11 @@ export function SkillDetailView({
       lifecycleControl={lifecycleControl}
     >
       <ResourceDetailStack>
+        {otherCopies === undefined ? null : (
+          <ResourceDetailIncludesSection label="Other copies">
+            <div className="text-sm text-muted-foreground">{otherCopies}</div>
+          </ResourceDetailIncludesSection>
+        )}
         {files.length > 1 ? (
           <ResourceDetailIncludesSection label="Files">
             <SkillFileList

@@ -8,6 +8,7 @@ import {
   resolvePiSessionSkills,
   type PiSessionSkill,
 } from "../pi-package-skills.js";
+import { buildPiChildEnv } from "./rpc-child.js";
 
 export interface PiSkillLaunch {
   noSkills: boolean;
@@ -16,11 +17,10 @@ export interface PiSkillLaunch {
 
 export interface ResolvePiSkillLaunchArgs {
   cwd: string;
-  env: NodeJS.ProcessEnv;
+  shellEnvOverrides: Record<string, string>;
   injectedSkillPaths: readonly string[];
   selection: SkillSelection;
   resolveSessionSkills?: typeof resolvePiSessionSkills;
-  onResolveError?: (error: unknown) => void;
 }
 
 export function selectPiSessionSkillPaths(
@@ -40,14 +40,16 @@ export async function resolvePiSkillLaunch(
   }
   const resolveSessionSkills =
     args.resolveSessionSkills ?? resolvePiSessionSkills;
+  const sessionEnv = buildPiChildEnv(args.shellEnvOverrides);
   try {
     const skills = await resolveSessionSkills({
       cwd: args.cwd,
       agentDir: resolvePiAgentDir({
-        homeDir: args.env.HOME?.trim() || homedir(),
-        env: args.env,
+        homeDir: sessionEnv.HOME?.trim() || homedir(),
+        env: sessionEnv,
       }),
-      env: args.env,
+      env: sessionEnv,
+      launchEnv: process.env,
       extraSkillPaths: args.injectedSkillPaths,
     });
     return {
@@ -55,7 +57,10 @@ export async function resolvePiSkillLaunch(
       skillPaths: selectPiSessionSkillPaths(skills, args.selection),
     };
   } catch (error) {
-    args.onResolveError?.(error);
-    return { noSkills: true, skillPaths: [...args.injectedSkillPaths] };
+    throw new Error(
+      "sandy could not list Pi skills, so the skill selection cannot be applied without dropping skills you left on; the session was not started: " +
+        (error instanceof Error ? error.message : String(error)),
+      { cause: error },
+    );
   }
 }

@@ -51,7 +51,8 @@ describe("resolvePiSessionSkills", () => {
     const skills = await resolvePiSessionSkills({
       cwd: work,
       agentDir,
-      env: { ...process.env, SANDY_PI_BRIDGE_COMMAND: launcher },
+      env: { ...process.env, SANDY_PI_BRIDGE_COMMAND: "" },
+      launchEnv: { ...process.env, SANDY_PI_BRIDGE_COMMAND: launcher },
       extraSkillPaths: ["/staged/skill"],
     });
     expect(skills).toEqual([{ name: "managed-fixture", filePath: "/staged/skill" }]);

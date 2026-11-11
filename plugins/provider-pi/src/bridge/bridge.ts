@@ -701,14 +701,9 @@ async function buildSessionOptions(args: {
 }): Promise<PiRpcSessionOptions> {
   const skillLaunch = await resolvePiSkillLaunch({
     cwd: args.params.cwd,
-    env: process.env,
+    shellEnvOverrides: args.params.shellEnvOverrides,
     injectedSkillPaths: args.params.additionalSkillPaths ?? [],
     selection: args.params.skillSelection ?? { mode: "inherit" },
-    onResolveError: (error) => {
-      process.stderr.write(
-        `[pi-bridge] skill selection could not resolve Pi skills; starting with Sandy skills only: ${error instanceof Error ? error.message : String(error)}\n`,
-      );
-    },
   });
   return {
     cwd: args.params.cwd,

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
@@ -23,10 +23,19 @@ describe("codexSkillConfigEntries", () => {
     expect(codexSkillConfigEntries({ mode: "inherit" }, listed)).toEqual([]);
   });
 
-  it("disables by name without a listing", () => {
+  it("disables by name and keeps the skills the user turned off", () => {
+    expect(
+      codexSkillConfigEntries({ mode: "disable", names: ["alpha"] }, listed),
+    ).toEqual([
+      { name: "alpha", enabled: false },
+      { path: "/skills/gamma/SKILL.md", enabled: false },
+    ]);
+  });
+
+  it("cannot build a disable filter without a listing, since it would turn the user's own off entries back on", () => {
     expect(
       codexSkillConfigEntries({ mode: "disable", names: ["alpha"] }, null),
-    ).toEqual([{ name: "alpha", enabled: false }]);
+    ).toBeNull();
   });
 
   it("disables every same-named copy and every non-allowed skill under allow-only", () => {
@@ -80,10 +89,12 @@ describe.skipIf(process.env.SANDY_TEST_REAL_CODEX !== "1")(
       for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
     });
 
-    function fixtureHome(): string {
+    function fixtureHome(
+      names: readonly string[] = ["enabled-fixture", "disabled-fixture"],
+    ): string {
       const home = mkdtempSync(join(tmpdir(), "sandy-codex-skill-selection-"));
       dirs.push(home);
-      for (const name of ["enabled-fixture", "disabled-fixture"]) {
+      for (const name of names) {
         const dir = join(home, "skills", name);
         mkdirSync(dir, { recursive: true });
         writeFileSync(
@@ -97,6 +108,7 @@ describe.skipIf(process.env.SANDY_TEST_REAL_CODEX !== "1")(
     async function listFixtures(
       home: string,
       configArgs: readonly string[],
+      extraRoots: readonly string[] = [],
     ): Promise<CodexListedSkill[]> {
       const child = spawn(
         process.env.SANDY_TEST_CODEX_COMMAND ?? "codex",
@@ -124,6 +136,9 @@ describe.skipIf(process.env.SANDY_TEST_REAL_CODEX !== "1")(
           capabilities: {},
         });
         child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "initialized", params: {} })}\n`);
+        if (extraRoots.length > 0) {
+          await request(3, "skills/extraRoots/set", { extraRoots });
+        }
         const result = z
           .object({
             data: z.array(
@@ -146,10 +161,14 @@ describe.skipIf(process.env.SANDY_TEST_REAL_CODEX !== "1")(
 
     it("disables by name", async () => {
       const home = fixtureHome();
+      const unfiltered = await listFixtures(home, []);
       const skills = await listFixtures(
         home,
         codexSkillConfigArgs(
-          codexSkillConfigEntries({ mode: "disable", names: ["disabled-fixture"] }, null) ?? [],
+          codexSkillConfigEntries(
+            { mode: "disable", names: ["disabled-fixture"] },
+            unfiltered,
+          ) ?? [],
         ),
       );
       expect(skills.map((skill) => [skill.name, skill.enabled])).toEqual([
@@ -157,6 +176,68 @@ describe.skipIf(process.env.SANDY_TEST_REAL_CODEX !== "1")(
         ["enabled-fixture", true],
       ]);
     }, 60_000);
+
+    it("keeps a skill the user turned off in config.toml off under disable", async () => {
+      const home = fixtureHome(["enabled-fixture", "disabled-fixture", "user-off-fixture"]);
+      const userOff = (await listFixtures(home, [])).find(
+        (skill) => skill.name === "user-off-fixture",
+      );
+      if (!userOff) throw new Error("user-off-fixture was not listed");
+      appendFileSync(
+        join(home, "config.toml"),
+        `[[skills.config]]\npath = ${JSON.stringify(userOff.path)}\nenabled = false\n`,
+      );
+      const listed = await listFixtures(home, []);
+      expect(listed.find((skill) => skill.name === "user-off-fixture")?.enabled).toBe(false);
+      const skills = await listFixtures(
+        home,
+        codexSkillConfigArgs(
+          codexSkillConfigEntries(
+            { mode: "disable", names: ["disabled-fixture"] },
+            listed,
+          ) ?? [],
+        ),
+      );
+      expect(skills.map((skill) => [skill.name, skill.enabled])).toEqual([
+        ["disabled-fixture", false],
+        ["enabled-fixture", true],
+        ["user-off-fixture", false],
+      ]);
+    }, 60_000);
+
+    it.each([
+      { mode: "disable", names: ["injected-off-fixture"] },
+      { mode: "allow-only", names: ["enabled-fixture", "disabled-fixture", "injected-on-fixture"] },
+    ] satisfies Parameters<typeof codexSkillConfigEntries>[0][])(
+      "filters Sandy-injected extra roots by name under $mode",
+      async (selection) => {
+        const home = fixtureHome();
+        const injected = join(home, "injected");
+        for (const name of ["injected-on-fixture", "injected-off-fixture"]) {
+          mkdirSync(join(injected, name), { recursive: true });
+          writeFileSync(
+            join(injected, name, "SKILL.md"),
+            "---\nname: " + name + "\ndescription: probe fixture " + name + "\n---\nbody\n",
+          );
+        }
+        const unfiltered = await listFixtures(home, [], [injected]);
+        expect(unfiltered.map((skill) => skill.name)).toContain("injected-off-fixture");
+        const skills = await listFixtures(
+          home,
+          codexSkillConfigArgs(codexSkillConfigEntries(selection, unfiltered) ?? []),
+          [injected],
+        );
+        expect(
+          skills
+            .filter((skill) => skill.name.startsWith("injected-"))
+            .map((skill) => [skill.name, skill.enabled]),
+        ).toEqual([
+          ["injected-off-fixture", false],
+          ["injected-on-fixture", true],
+        ]);
+      },
+      60_000,
+    );
 
     it("disables everything outside allow-only by path", async () => {
       const home = fixtureHome();

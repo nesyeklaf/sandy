@@ -489,7 +489,11 @@ async function handleRequest(message) {
       }
       return;
     case "skills/list":
-      respond(id, script?.skillsList ?? { data: [] });
+      if (script?.skillsListError) {
+        respondError(id, -32603, "skills/list unavailable");
+      } else {
+        respond(id, script?.skillsList ?? { data: [] });
+      }
       return;
     case "skills/extraRoots/set":
       respond(id, {});

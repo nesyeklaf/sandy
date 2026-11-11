@@ -633,6 +633,8 @@ Codex's own listing that the selection leaves out (`allow-only`). Claude Code
 gets `settings.skillOverrides` set to `off` per name, and sandy leaves the
 dropped skills out of the plugin it injects. Pi starts with `--no-skills` and
 an explicit `--skill` for each skill it keeps from Pi's own resolved list.
+If a bridge cannot list its agent's skills under `disable` or `allow-only`,
+the session does not start rather than load the wrong skills.
 Each provider declares how far this reaches (`enforced`, `unverified`,
 `not-enforced`) for sessions and for subagents, plus the categories it
 cannot filter, which stay loaded even when every skill is off: Claude Code
@@ -647,9 +649,9 @@ already loaded, running or idle, keeps the selection it started with until it
 is stopped or its runtime is retired; `sandy thread stop` releases one so its
 next message starts a session with the new selection. The change result
 (`pendingThreadIds`) lists the threads running a turn; loaded idle threads are
-not listed. Turning a sandy-injected skill off also changes the injected
-catalog, and an idle environment then reloads on its next turn as it does for
-any catalog change. Nothing is stopped for you.
+not listed. This holds for sandy-injected skills too: sandy injects the same
+skills under every selection and the bridge leaves the disabled names out, so
+a selection change never reloads an environment. Nothing is stopped for you.
 
 Each listed skill carries `providers`, the agents that load it, and
 `duplicates`, the other registrations of the same skill: `same-file` (the

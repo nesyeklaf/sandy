@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import type { RuntimePermissionPolicy } from "@sandy-sdk/plugin-sdk/provider-bridge";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildClaudeSessionParams } from "../../session-params.js";
 import { claudeThreadStartParamsSchema } from "../commands.js";
 import { buildSessionOptions } from "../session-options.js";
@@ -12,6 +12,7 @@ import {
   CLAUDE_SKILL_PLUGIN_NAME,
   ensureClaudeSkillPlugin,
   filterClaudeSkillRoots,
+  resolveClaudeSessionSkills,
   scanClaudeNativeSkills,
 } from "../skill-plugins.js";
 
@@ -97,6 +98,63 @@ describe("buildClaudeSkillFilter", () => {
       }),
     );
     expect(options.settings).toMatchObject({ skillOverrides: { alpha: "off" } });
+  });
+});
+
+describe("resolveClaudeSessionSkills", () => {
+  const dirs: string[] = [];
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+  });
+
+  function writeSkill(root: string, name: string): void {
+    const dir = join(root, name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "SKILL.md"),
+      `---\nname: ${name}\ndescription: fixture ${name}\n---\nbody\n`,
+    );
+  }
+
+  function fixture() {
+    const root = mkdtempSync(join(tmpdir(), "sandy-claude-session-env-"));
+    dirs.push(root);
+    const cwd = join(root, "cwd");
+    mkdirSync(join(cwd, ".git"), { recursive: true });
+    return { root, cwd };
+  }
+
+  it("scans the thread's CLAUDE_CONFIG_DIR, not the bridge's", async () => {
+    const { root, cwd } = fixture();
+    writeSkill(join(root, "host-claude", "skills"), "host-only");
+    writeSkill(join(root, "thread-claude", "skills"), "beta");
+    vi.stubEnv("CLAUDE_CONFIG_DIR", join(root, "host-claude"));
+    const skills = await resolveClaudeSessionSkills({
+      cwd,
+      envOverrides: { CLAUDE_CONFIG_DIR: join(root, "thread-claude") },
+      roots: null,
+      pluginsRoot: () => join(root, "plugins"),
+      selection: { mode: "allow-only", names: [] },
+    });
+    expect(skills).toEqual({ roots: null, skillFilter: { skillOverrides: { beta: "off" } } });
+  });
+
+  it("scans the thread's HOME when no config dir is set", async () => {
+    const { root, cwd } = fixture();
+    writeSkill(join(root, "host-home", ".claude", "skills"), "host-only");
+    writeSkill(join(root, "thread-home", ".claude", "skills"), "gamma");
+    vi.stubEnv("CLAUDE_CONFIG_DIR", "");
+    vi.stubEnv("HOME", join(root, "host-home"));
+    const skills = await resolveClaudeSessionSkills({
+      cwd,
+      envOverrides: { HOME: join(root, "thread-home") },
+      roots: null,
+      pluginsRoot: () => join(root, "plugins"),
+      selection: { mode: "allow-only", names: ["kept"] },
+    });
+    expect(skills.skillFilter).toEqual({ skillOverrides: { gamma: "off" } });
   });
 });
 

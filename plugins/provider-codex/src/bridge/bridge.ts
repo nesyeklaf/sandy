@@ -2004,7 +2004,7 @@ async function resolveSkillConfigLaunchArgs(
   );
   if (entries === null) {
     throw new Error(
-      "sandy could not list Codex skills, so the allow-only skill selection cannot be applied and the session was not started.",
+      "sandy could not list Codex skills, so the skill selection cannot be applied without turning skills you switched off back on; the session was not started.",
     );
   }
   return codexSkillConfigArgs(entries);

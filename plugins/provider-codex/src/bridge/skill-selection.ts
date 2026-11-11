@@ -31,7 +31,8 @@ export function codexSkillConfigEntries(
     case "inherit":
       return [];
     case "disable": {
-      const userDisabled = (listed ?? [])
+      if (listed === null) return null;
+      const userDisabled = listed
         .filter((skill) => !skill.enabled)
         .map((skill) => ({ path: skill.path, enabled: false as const }));
       return [

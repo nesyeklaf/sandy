@@ -1141,8 +1141,9 @@ bridge enforces it (`support.session`, `support.subagents`). The read never
 writes. `experimental_setSelection(selection)` sends
 `PUT /settings/skill-selection` with the whole selection; the server stores it
 sorted and deduplicated, and returns the same view plus `pendingThreadIds`,
-the threads that were starting or running when the selection changed and keep
-the previous one for their current turn (empty when nothing changed). Mixed
+the threads that were starting or running when the selection changed (empty
+when nothing changed). Every loaded thread, listed or not, keeps the previous
+selection until it is stopped. Mixed
 shapes such as `inherit` with names fail with 400.
 
 Docs: `docs/configuration.md` (Skills) and the agent-configuration guide
@@ -1154,8 +1155,9 @@ through `setSkillNamesEnabled` from `@sandy/domain` for single-name changes.
 **Audit before stabilizing.**
 
 1. **Pending threads.** `pendingThreadIds` lists starting and active threads;
-   decide whether idle threads with a loaded agent belong there too, since the
-   daemon replaces their runtime on the next turn.
+   decide whether idle threads with a loaded agent belong there too; they also
+   keep the previous selection until stopped, and listing them needs a daemon
+   report of loaded threads.
 2. **Whole-value write.** Two writers race; decide whether to accept a revision
    or offer add/remove operations.
 3. **Scope.** The selection is server-wide by name; decide whether projects or
@@ -1189,7 +1191,7 @@ decide whether `gaps` stays a closed list or providers may name their own.
 
 Direct re-exports of `isSkillNameEnabled`, `skillSelectionSchema` and
 `SkillSelection` from `@sandy/domain/skill-selection`, the same code the server
-uses to filter listings and injected skills. Bridges parse `skills/configure`
+uses to compute `selectionEnabled` in listings. Bridges parse `skills/configure`
 `selection` with the schema and filter names with the predicate. Callers: the
 Pi, Claude Code and Codex bridges.
 

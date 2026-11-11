@@ -17,9 +17,13 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-async function launchArgsFor(selection: SkillSelection): Promise<{
+async function launchArgsFor(
+  selection: SkillSelection,
+  options: { listError?: boolean } = {},
+): Promise<{
   launches: string[][];
   paths: Record<"allowed" | "other" | "userOff", string>;
+  startError: unknown;
 }> {
   const cwd = mkdtempSync(join(tmpdir(), "sandy-codex-skill-selection-"));
   dirs.push(cwd);
@@ -34,6 +38,7 @@ async function launchArgsFor(selection: SkillSelection): Promise<{
     script,
     JSON.stringify({
       launchLogPath,
+      ...(options.listError ? { skillsListError: true } : {}),
       skillsList: {
         data: [
           {
@@ -60,14 +65,15 @@ async function launchArgsFor(selection: SkillSelection): Promise<{
       instructionMode: "append",
       options: FULL_ACCESS_SESSION_OPTIONS,
     });
-    expect((await harness.waitForResponse(2)).error).toBeUndefined();
+    const startError = (await harness.waitForResponse(2)).error;
+    if (!options.listError) expect(startError).toBeUndefined();
     const launches = readFileSync(launchLogPath, "utf8")
       .trim()
       .split("\n")
       .map((line) =>
         z.object({ args: z.array(z.string()) }).parse(JSON.parse(line)).args,
       );
-    return { launches, paths };
+    return { launches, paths, startError };
   } finally {
     harness.sendRequest(3, "thread/stop", {
       threadId,
@@ -119,3 +125,19 @@ it("disables every listed skill outside the allow-only names", async () => {
     `skills.config=[{path=${JSON.stringify(paths.other)},enabled=false},{path=${JSON.stringify(paths.userOff)},enabled=false}]`,
   );
 });
+
+it.each([
+  { mode: "disable", names: ["other"] },
+  { mode: "allow-only", names: ["allowed"] },
+] satisfies SkillSelection[])(
+  "refuses to start a $mode session when Codex cannot list its skills",
+  async (selection) => {
+    const { launches, startError } = await launchArgsFor(selection, {
+      listError: true,
+    });
+    expect(startError).toMatchObject({
+      message: expect.stringContaining("could not list Codex skills"),
+    });
+    expect(launches).toHaveLength(1);
+  },
+);

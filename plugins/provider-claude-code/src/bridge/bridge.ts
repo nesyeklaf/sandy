@@ -27,7 +27,7 @@ import {
   decodeBridgeJsonRpcResponse,
   runBridgeRequest,
   shouldAutoDenyInteractiveRequest,
-  withoutBridgeRuntimeEnv,
+  buildShellEnvOverrides,
   type BridgeToolCallRequest,
   type ExperimentalSkillSelection as SkillSelection,
   experimental_defineProviderBridge,
@@ -100,15 +100,13 @@ import {
   toSdkEffort,
   type BuildSessionOptionsArgs,
   type PermissionEscalationWorkContext,
+  buildSessionEnv,
 } from "./session-options.js";
 import {
   createClaudeSkillPluginsRoot,
   ensureClaudeSkillPlugin,
-  filterClaudeSkillRoots,
-  scanClaudeNativeSkills,
-  claudeSkillsConfigDirectory,
+  resolveClaudeSessionSkills,
 } from "./skill-plugins.js";
-import { buildClaudeSkillFilter } from "./skill-selection.js";
 import {
   buildBridgeMcpServer,
   getAllowedToolNames,
@@ -1778,18 +1776,6 @@ async function closeClaudeThreadSession(
   }
 }
 
-function buildSessionEnv(
-  envOverrides: Record<string, string>,
-): NodeJS.ProcessEnv {
-  const sessionEnv: NodeJS.ProcessEnv = {
-    ...withoutBridgeRuntimeEnv(process.env),
-    ...envOverrides,
-    CLAUDE_CODE_ENTRYPOINT: "cli",
-  };
-  delete sessionEnv.CLAUDE_AGENT_SDK_CLIENT_APP;
-  return sessionEnv;
-}
-
 const sessionConfigEnvVarsSchema = z.record(z.string(), z.string());
 
 function readConfigEnvOverrides(
@@ -2532,36 +2518,22 @@ async function handleThreadFork(
 async function toClaudeSessionParams(
   params: z.infer<typeof canonicalThreadStartParamsSchema>,
 ): Promise<Record<string, unknown>> {
-  const native =
-    configuredSkillRoots === null &&
-    configuredSkillSelection.mode !== "allow-only"
-      ? []
-      : await scanClaudeNativeSkills({
-          cwd: params.cwd,
-          claudeDir: claudeSkillsConfigDirectory(),
-        });
-  const roots =
-    configuredSkillRoots === null
-      ? undefined
-      : assembleSkillPlugins(
-          await filterClaudeSkillRoots({
-            roots: configuredSkillRoots,
-            native,
-            pluginsRoot: requireSkillPluginsRoot(),
-            selection: configuredSkillSelection,
-          }),
-        );
+  const skills = await resolveClaudeSessionSkills({
+    cwd: params.cwd,
+    envOverrides: buildShellEnvOverrides(params.options.envVars ?? {}),
+    roots: configuredSkillRoots,
+    pluginsRoot: requireSkillPluginsRoot,
+    selection: configuredSkillSelection,
+  });
   return buildClaudeSessionParams({
     threadId: params.threadId,
     cwd: params.cwd,
     options: params.options,
     instructionMode: params.instructionMode,
     dynamicTools: params.dynamicTools,
-    skillRoots: roots,
-    skillFilter: buildClaudeSkillFilter({
-      selection: configuredSkillSelection,
-      nativeSkillNames: native.map((skill) => skill.name),
-    }),
+    skillRoots:
+      skills.roots === null ? undefined : assembleSkillPlugins(skills.roots),
+    skillFilter: skills.skillFilter,
   });
 }
 

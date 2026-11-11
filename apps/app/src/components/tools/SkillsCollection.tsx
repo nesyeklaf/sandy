@@ -83,27 +83,18 @@ const DUPLICATE_RELATION_LABELS: Readonly<
   "same-name": "Same name",
 };
 
-function SkillDuplicatesTooltip({
-  skill,
-  providerRoster,
-}: {
-  skill: SkillSummary;
-  providerRoster: ProviderRoster;
-}) {
+function SkillDuplicateOrigins({ skill }: { skill: SkillSummary }) {
   return (
-    <div className="flex max-w-md flex-col gap-1">
+    <ul className="flex max-w-md flex-col gap-1" data-skill-duplicate-origins="">
       {skill.duplicates.map((duplicate) => (
-        <div key={duplicate.id} className="flex flex-col">
+        <li key={duplicate.id} className="flex flex-col">
           <span className="font-medium">
-            {DUPLICATE_RELATION_LABELS[duplicate.relation]} ·{" "}
-            {providerLabel(duplicate.provider, providerRoster)}
+            {DUPLICATE_RELATION_LABELS[duplicate.relation]}
           </span>
-          <span className="break-all text-muted-foreground">
-            {duplicate.filePath}
-          </span>
-        </div>
+          <span className="break-all font-mono">{duplicate.filePath}</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -346,9 +337,9 @@ export function skillSelectionModeText(
   if (selection?.mode !== "allow-only") return null;
   const count = selection.names.length;
   if (count === 0) {
-    return "All skills are off for agents, including skills added later.";
+    return "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, named under each agent.";
   }
-  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on.`;
+  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.`;
 }
 
 export const SKILL_SELECTION_APPLY_NOTE =
@@ -465,17 +456,12 @@ function SkillRow({
           skill.duplicates.length === 0 ? (
             (skillProvenancePill(skill, providerRoster) ?? undefined)
           ) : (
-            <span className="inline-flex items-baseline gap-1">
+            <span className="inline-flex min-w-0 max-w-full items-baseline gap-1">
               {skillProvenancePill(skill, providerRoster)}
               {skill.duplicates.length === 0 ? null : (
               <ProvenancePill
                 label={`${skill.duplicates.length} ${skill.duplicates.length === 1 ? "duplicate" : "duplicates"}`}
-                tooltip={
-                  <SkillDuplicatesTooltip
-                    skill={skill}
-                    providerRoster={providerRoster}
-                  />
-                }
+                tooltip={<SkillDuplicateOrigins skill={skill} />}
                 accessibleLabel={`${skill.name} is also found at ${skill.duplicates.map((duplicate) => duplicate.filePath).join(", ")}`}
               />
               )}
@@ -991,6 +977,11 @@ export function SkillDetailDialogView({
                   accessibleLabel: `${skill.name} is imported from ${providerLabel(skill.provider, providerRoster)}`,
                 }
               : undefined
+      }
+      otherCopies={
+        skill.duplicates.length === 0 ? undefined : (
+          <SkillDuplicateOrigins skill={skill} />
+        )
       }
       files={files.length > 0 ? files : ["SKILL.md"]}
       markdownLinkRouting={markdownLinkRouting}

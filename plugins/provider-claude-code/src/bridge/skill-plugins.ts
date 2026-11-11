@@ -14,8 +14,14 @@ import {
   type ExperimentalSkillSelection as SkillSelection,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { access } from "node:fs/promises";
-import { tmpdir, homedir } from "node:os";
-import { join, dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { claudeConfigDirectory } from "./session-fork.js";
+import { buildSessionEnv } from "./session-options.js";
+import {
+  buildClaudeSkillFilter,
+  type ClaudeSkillFilter,
+} from "./skill-selection.js";
 
 export interface ClaudeSkillPluginRoot {
   id: string;
@@ -206,8 +212,36 @@ export async function filterClaudeSkillRoots(args: {
   return filtered;
 }
 
-export function claudeSkillsConfigDirectory(): string {
-  return process.env.CLAUDE_CONFIG_DIR
-    ? resolve(process.env.CLAUDE_CONFIG_DIR)
-    : join(homedir(), ".claude");
+export async function resolveClaudeSessionSkills(args: {
+  cwd: string;
+  envOverrides: Record<string, string>;
+  roots: readonly ClaudeSkillPluginRoot[] | null;
+  pluginsRoot: () => string;
+  selection: SkillSelection;
+}): Promise<{
+  roots: ClaudeSkillPluginRoot[] | null;
+  skillFilter: ClaudeSkillFilter;
+}> {
+  const native =
+    args.roots === null && args.selection.mode !== "allow-only"
+      ? []
+      : await scanClaudeNativeSkills({
+          cwd: args.cwd,
+          claudeDir: claudeConfigDirectory(buildSessionEnv(args.envOverrides)),
+        });
+  return {
+    roots:
+      args.roots === null
+        ? null
+        : await filterClaudeSkillRoots({
+            roots: args.roots,
+            native,
+            pluginsRoot: args.pluginsRoot(),
+            selection: args.selection,
+          }),
+    skillFilter: buildClaudeSkillFilter({
+      selection: args.selection,
+      nativeSkillNames: native.map((skill) => skill.name),
+    }),
+  };
 }

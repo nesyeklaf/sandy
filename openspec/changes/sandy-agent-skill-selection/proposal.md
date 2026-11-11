@@ -6,7 +6,7 @@ Agents that Sandy starts (Pi, Codex, Claude Code) load every skill they find. Ma
 
 - New Sandy setting `skillSelection`, one per server. It holds exactly one of `{mode: "inherit"}` (the default, today's behavior), `{mode: "disable", names}` or `{mode: "allow-only", names}`. It is applied after the existing `disabledSkillSources`.
 - The skill listing reports `selectionEnabled` per skill, computed on the server by name, and each row names its other origins. Per provider, Sandy shows how far the selection reaches (`enforced`, `unverified`, `not-enforced`, `not-applicable`, for sessions and subagents) and which skill categories it cannot filter.
-- The server leaves disabled Sandy-injected skills out of the injected roots. It sends the selection with the existing `skills/configure` bridge request to new and restored sessions, and `HOST_DAEMON_PROTOCOL_VERSION` goes up.
+- The server sends the injected roots its skill sources enable, independent of the selection, and sends the selection with the existing `skills/configure` bridge request to new and restored sessions; each bridge leaves disabled names out of native and injected skills. `HOST_DAEMON_PROTOCOL_VERSION` goes up.
 - Each provider bridge maps the selection to that provider's own per-launch control:
   - Pi 1.5.1: `--no-skills` plus one `--skill` per kept skill. Gap: skills Pi extensions add at runtime.
   - Claude Agent SDK 0.3.245: `skillOverrides: off` in the SDK flag settings layer the bridge already passes, plus dropping disabled names from the injected Sandy plugin. Gaps: skills bundled with Claude Code and from its own marketplace plugins; subagents unproven.

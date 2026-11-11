@@ -717,6 +717,73 @@ describe("skill selection on the Skills page", () => {
     expect(onSelectionChange).toHaveBeenCalledWith(true);
   });
 
+  it("lists the other copies of a name on the skill page by their literal paths", () => {
+    const cursorPath = "/home/u/.claude/skills/code-review/SKILL.md";
+    const piPath = "/home/u/.pi/agent/skills/code-review/SKILL.md";
+    renderSkillDetailDialog(
+      makeSkill({
+        filePath: "/home/u/.agents/skills/code-review/SKILL.md",
+        duplicates: [
+          {
+            id: "skill_" + "1".repeat(64),
+            scope: "provider-user",
+            provider: "acp-cursor",
+            pluginId: null,
+            filePath: cursorPath,
+            relation: "same-name",
+          },
+          {
+            id: "skill_" + "2".repeat(64),
+            scope: "provider-user",
+            provider: "omp",
+            pluginId: null,
+            filePath: piPath,
+            relation: "same-content",
+          },
+        ],
+      }),
+    );
+    expect(screen.getByRole("heading", { name: "Other copies" })).toBeTruthy();
+    const origins = document.querySelector("[data-skill-duplicate-origins]");
+    expect(origins?.textContent).toBe(
+      "Same name" + cursorPath + "Same content" + piPath,
+    );
+  });
+
+  it("lets the provenance and duplicate pills shrink inside a narrow title", () => {
+    const container = document.createElement("div");
+    container.innerHTML = render({
+      skills: [
+        makeSkill({
+          name: "claude-code-provider",
+          scope: "plugin",
+          selectionEnabled: false,
+          duplicates: [
+            {
+              id: "skill_" + "3".repeat(64),
+              scope: "provider-user",
+              provider: "codex",
+              pluginId: null,
+              filePath: "/home/u/.agents/skills/claude-code-provider/SKILL.md",
+              relation: "same-name",
+            },
+          ],
+        }),
+      ],
+    });
+    const pills = [
+      container.querySelector('[aria-label^="claude-code-provider is included with"]'),
+      container.querySelector('[aria-label^="claude-code-provider is also found at"]'),
+    ];
+    for (const pill of pills) {
+      expect(pill?.classList.contains("min-w-0")).toBe(true);
+      expect(pill?.classList.contains("max-w-full")).toBe(true);
+    }
+    expect(
+      pills[0]?.parentElement?.classList.contains("min-w-0"),
+    ).toBe(true);
+  });
+
   it("disables the detail switch while the selection is pending", () => {
     renderSkillDetailDialog(makeSkill(), { isSelectionPending: true });
     const toggle = screen.getByRole("switch", {
@@ -907,7 +974,7 @@ describe("skill selection on the Skills page", () => {
       skillSelectionModeText({ mode: "disable", names: ["code-review"] }),
     ).toBeNull();
     expect(skillSelectionModeText({ mode: "allow-only", names: [] })).toBe(
-      "All skills are off for agents, including skills added later.",
+      "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, named under each agent.",
     );
     expect(
       skillSelectionModeText({
@@ -915,7 +982,7 @@ describe("skill selection on the Skills page", () => {
         names: ["code-review", "deploy"],
       }),
     ).toBe(
-      "Only 2 chosen skills are on for agents. Every other skill, including skills added later, stays off until you turn it on.",
+      "Only 2 chosen skills are on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.",
     );
     renderSelectableOverview({
       skills: [makeSkill()],
@@ -923,7 +990,7 @@ describe("skill selection on the Skills page", () => {
     });
     expect(
       screen.getByText(
-        "Only 1 chosen skill is on for agents. Every other skill, including skills added later, stays off until you turn it on.",
+        "Only 1 chosen skill is on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, named under each agent.",
       ),
     ).toBeTruthy();
   });
