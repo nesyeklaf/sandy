@@ -91,7 +91,8 @@ function addOwner(owners: Owners, value: string, threadId: string): void {
 
 function sessionOwners(labels: Record<string, string[]>): Owners {
   const owners: Owners = new Map();
-  for (const [threadId, values] of Object.entries(labels)) for (const value of values) addOwner(owners, value, threadId);
+  for (const [threadId, values] of Object.entries(labels))
+    for (const value of values) addOwner(owners, value, threadId);
   return owners;
 }
 
@@ -134,10 +135,7 @@ function passes(selection: Selection, have: readonly string[]): boolean {
 }
 
 function levelKeys(session: readonly string[], segment: readonly string[]): string[] {
-  return [
-    ...session.map((value) => labelKey("session", value)),
-    ...segment.map((value) => labelKey("segment", value)),
-  ];
+  return [...session.map((value) => labelKey("session", value)), ...segment.map((value) => labelKey("segment", value))];
 }
 
 function matchesLabels(index: TagIndex, filter: TagFilter, threadId: string): boolean {

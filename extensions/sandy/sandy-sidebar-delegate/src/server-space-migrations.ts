@@ -20,11 +20,12 @@ export const SPACE_COORDINATION_MIGRATIONS = [
      space_id      TEXT PRIMARY KEY,
      wake_enabled  INTEGER NOT NULL
    )`,
-  `CREATE TABLE IF NOT EXISTS space_member_modes (
+  `CREATE TABLE IF NOT EXISTS space_managed_members (
      thread_id  TEXT PRIMARY KEY,
-     mode       TEXT NOT NULL CHECK (mode IN ('managed')),
+     space_id   TEXT NOT NULL,
      set_at     INTEGER NOT NULL
    )`,
+  `DROP TABLE IF EXISTS space_member_modes`,
   `CREATE TABLE IF NOT EXISTS space_ideas (
      id                TEXT PRIMARY KEY,
      space_id          TEXT NOT NULL,

@@ -64,7 +64,7 @@ function createWakeDigest(deps: SpaceDeps, rolesService: SpaceRolesService) {
 
   function recordOutcome(thread: { id: string; title: string | null; sectionId: string | null }, outcome: WakeOutcome) {
     if (thread.sectionId === null) return;
-    if (deps.roles.modeOf(thread.id) !== "managed") return;
+    if (deps.roles.modeIn(thread.id, thread.sectionId) !== "managed") return;
     if (deps.roles.orchestratorSpaceOf(thread.id) !== null) return;
     record(thread.sectionId, { threadId: thread.id, title: thread.title ?? thread.id, outcome });
   }

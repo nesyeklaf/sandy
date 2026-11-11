@@ -63,7 +63,7 @@ describe("orchestrators", () => {
     const count = (table: string) =>
       (harness.sidebarDb.prepare(`SELECT COUNT(*) AS total FROM ${table}`).get() as { total: number }).total;
     expect(count("space_orchestrators")).toBe(0);
-    expect(count("space_member_modes")).toBe(0);
+    expect(count("space_managed_members")).toBe(0);
   });
 
   it("reports unchanged assignment and signals the Space channel only on change", async () => {

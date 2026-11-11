@@ -136,4 +136,66 @@ describe("sandy spaces", () => {
     expect(parse((await run(harness, "wake", "Alpha", "off", "--json")).stdout)).toEqual({ wakeEnabled: false });
     expect((await run(harness, "wake", "Alpha", "maybe")).exitCode).not.toBe(0);
   });
+
+  describe("session callers", () => {
+    const asSession = (harness: Harness, threadId: string, ...argv: string[]) =>
+      harness.behavior.runCli(argv, { threadId });
+
+    it("refuses owner-only commands and changes nothing", async () => {
+      const harness = await loadSpacePlugin(world());
+      await run(harness, "orchestrator", "add", "thr_o");
+      const attempts = [
+        ["member", "mode", "thr_m", "managed"],
+        ["orchestrator", "add", "thr_m"],
+        ["orchestrator", "remove", "thr_o"],
+        ["wake", "Alpha", "off"],
+        ["orphans"],
+        ["adopt", "gone", "Alpha"],
+      ];
+      for (const argv of attempts) {
+        const result = await asSession(harness, "thr_o", ...argv);
+        expect(result.exitCode, argv.join(" ")).not.toBe(0);
+        expect(result.stderr).toMatch(/owner/);
+      }
+      const shown = parse<{
+        members: Array<{ threadId: string; mode: string }>;
+        orchestratorThreadIds: string[];
+        wakeEnabled: boolean;
+      }>((await run(harness, "show", "Alpha", "--json")).stdout);
+      expect(shown.members.find((member) => member.threadId === "thr_m")?.mode).toBe("independent");
+      expect(shown.orchestratorThreadIds).toEqual(["thr_o"]);
+      expect(shown.wakeEnabled).toBe(true);
+    });
+
+    it("lets a member read and write its own Space but not another", async () => {
+      const harness = await loadSpacePlugin(world());
+      expect((await asSession(harness, "thr_m", "show", "Alpha")).exitCode).toBe(0);
+      expect((await asSession(harness, "thr_m", "ideas", "add", "Alpha", "--title", "x")).exitCode).toBe(0);
+      expect((await asSession(harness, "thr_m", "scratchpad", "show", "Alpha")).exitCode).toBe(0);
+      for (const argv of [
+        ["show", "Beta"],
+        ["ideas", "list", "Beta"],
+        ["ideas", "add", "Beta", "--title", "x"],
+        ["scratchpad", "show", "Beta"],
+      ]) {
+        const result = await asSession(harness, "thr_m", ...argv);
+        expect(result.exitCode, argv.join(" ")).not.toBe(0);
+      }
+    });
+
+    it("refuses a session outside every Space", async () => {
+      const harness = await loadSpacePlugin(world());
+      expect((await asSession(harness, "thr_free", "ideas", "list", "Alpha")).exitCode).not.toBe(0);
+    });
+
+    it("only an orchestrator of the Space may delete an idea", async () => {
+      const harness = await loadSpacePlugin(world());
+      await run(harness, "orchestrator", "add", "thr_o");
+      const idea = parse<{ id: string }>(
+        (await run(harness, "ideas", "add", "Alpha", "--title", "x", "--json")).stdout,
+      );
+      expect((await asSession(harness, "thr_m", "ideas", "remove", idea.id)).exitCode).not.toBe(0);
+      expect((await asSession(harness, "thr_o", "ideas", "remove", idea.id)).exitCode).toBe(0);
+    });
+  });
 });

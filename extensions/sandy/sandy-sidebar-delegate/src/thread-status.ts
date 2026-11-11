@@ -37,8 +37,7 @@ export function threadFailed(thread: Pick<PluginSidebarThread, "status" | "indic
 }
 
 export function threadInboxStatus(signals: ThreadStatusSignals): ThreadInboxStatus {
-  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, orchestrator, lockedShelf } =
-    signals;
+  const { lifecycleShelf, asks, failed, workingTree, woke, pullRequestState, orchestrator, lockedShelf } = signals;
   if (lifecycleShelf === "snoozed" || lifecycleShelf === "parked") return "snoozed";
   if (lifecycleShelf === "settled") return "archived";
   if (lockedShelf) return lockedShelf;

@@ -12,7 +12,7 @@ export function createSpaceRolesStore(db: Database) {
   const selectAllOrchestrators = db.prepare(
     "SELECT thread_id FROM space_orchestrators ORDER BY assigned_at, thread_id",
   );
-  const selectMode = db.prepare("SELECT mode FROM space_member_modes WHERE thread_id = ?");
+  const selectManagedSpace = db.prepare("SELECT space_id FROM space_managed_members WHERE thread_id = ?");
   const selectWake = db.prepare("SELECT wake_enabled FROM space_settings WHERE space_id = ?");
 
   return {
@@ -52,24 +52,38 @@ export function createSpaceRolesStore(db: Database) {
       return existing;
     },
 
-    modeOf(threadId: string): CoordinationMode {
-      return selectMode.get(threadId) === undefined ? "independent" : "managed";
+    managedSpaceOf(threadId: string): string | null {
+      const row = selectManagedSpace.get(threadId) as { space_id: string } | undefined;
+      return row === undefined ? null : row.space_id;
     },
 
-    setMode(threadId: string, mode: CoordinationMode, nowMs: number): boolean {
-      assert(threadId.length > 0, "threadId must not be empty");
-      const before = this.modeOf(threadId);
-      if (before === mode) return false;
+    modeIn(threadId: string, spaceId: string | null): CoordinationMode {
+      return spaceId !== null && this.managedSpaceOf(threadId) === spaceId ? "managed" : "independent";
+    },
+
+    setMode(threadId: string, spaceId: string, mode: CoordinationMode, nowMs: number): boolean {
+      assert(threadId.length > 0 && spaceId.length > 0, "thread and Space ids must not be empty");
+      const before = this.modeIn(threadId, spaceId);
       if (mode === "managed") {
-        db.prepare("INSERT OR REPLACE INTO space_member_modes (thread_id, mode, set_at) VALUES (?, 'managed', ?)").run(
+        if (before === "managed") return false;
+        db.prepare("INSERT OR REPLACE INTO space_managed_members (thread_id, space_id, set_at) VALUES (?, ?, ?)").run(
           threadId,
+          spaceId,
           nowMs,
         );
+      } else if (this.managedSpaceOf(threadId) === null) {
+        return false;
       } else {
-        db.prepare("DELETE FROM space_member_modes WHERE thread_id = ?").run(threadId);
+        db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
       }
-      assert(this.modeOf(threadId) === mode, "mode must match after write");
+      assert(this.modeIn(threadId, spaceId) === mode, "mode must match after write");
       return true;
+    },
+
+    revokeManaged(threadId: string): boolean {
+      const hadRow = this.managedSpaceOf(threadId) !== null;
+      if (hadRow) db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
+      return hadRow;
     },
 
     wakeEnabled(spaceId: string): boolean {
@@ -88,7 +102,7 @@ export function createSpaceRolesStore(db: Database) {
 
     forgetThread(threadId: string): { orchestratorSpaceId: string | null } {
       const orchestratorSpaceId = this.clearOrchestrator(threadId);
-      db.prepare("DELETE FROM space_member_modes WHERE thread_id = ?").run(threadId);
+      db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
       db.prepare("DELETE FROM space_idea_links WHERE thread_id = ?").run(threadId);
       return { orchestratorSpaceId };
     },

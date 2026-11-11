@@ -29,7 +29,7 @@ function toMember(
     hasPendingQuestion: thread.hasPendingInteraction,
     latestAttentionAt: thread.latestAttentionAt,
     updatedAt: thread.updatedAt,
-    mode: deps.roles.modeOf(thread.id),
+    mode: deps.roles.modeIn(thread.id, thread.sectionId ?? null),
     isOrchestrator: orchestratorIds.has(thread.id),
   };
 }

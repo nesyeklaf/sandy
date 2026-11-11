@@ -236,4 +236,32 @@ describe("wake digest", () => {
     await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
     expect(send).toHaveBeenCalledTimes(2);
   });
+
+  it("drops managed mode when the member moves to another Space and does not restore it on return", async () => {
+    const state = world();
+    state.threads.push(spaceThread("thr_orch_b", "space_b"));
+    const harness = await loadSpacePlugin(state);
+    await call(harness, "setOrchestrator", { threadId: "thr_orch_b", orchestrator: true });
+    await call(harness, "setMemberMode", { threadId: "thr_managed", mode: "managed" });
+    state.threads = state.threads.map((t) => (t.id === "thr_managed" ? { ...t, sectionId: "space_b" } : t));
+    expect(await dispatch(harness, "thr_managed", "thr_orch_b")).toMatchObject({ action: "reject" });
+    const moved = (await call(harness, "getSpaceCoordination", { spaceId: "space_b" })) as {
+      members: Array<{ threadId: string; mode: string }>;
+    };
+    expect(moved.members.find((member) => member.threadId === "thr_managed")?.mode).toBe("independent");
+    state.threads = state.threads.map((t) => (t.id === "thr_managed" ? { ...t, sectionId: "space_a" } : t));
+    await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
+    expect(await dispatch(harness, "thr_managed", "thr_orch")).toMatchObject({ action: "reject" });
+  });
+
+  it("drops managed mode once a dispatch observes the member outside every Space", async () => {
+    const state = world();
+    const harness = await loadSpacePlugin(state);
+    await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
+    await call(harness, "setMemberMode", { threadId: "thr_managed", mode: "managed" });
+    state.threads = state.threads.map((t) => (t.id === "thr_managed" ? { ...t, sectionId: null } : t));
+    expect(await dispatch(harness, "thr_managed", "thr_orch")).toMatchObject({ action: "reject" });
+    state.threads = state.threads.map((t) => (t.id === "thr_managed" ? { ...t, sectionId: "space_a" } : t));
+    expect(await dispatch(harness, "thr_managed", "thr_orch")).toMatchObject({ action: "reject" });
+  });
 });

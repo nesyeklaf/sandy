@@ -13,8 +13,7 @@ describe("ThreadInbox", () => {
   it("drops against the inbox order the host pushed mid-drag", async () => {
     const storedSettings = {
       ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-      },
+      ...{},
     };
     localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
 

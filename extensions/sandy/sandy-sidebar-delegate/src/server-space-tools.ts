@@ -138,7 +138,7 @@ function registerManagementTools(
               ? { type: "project-default" }
               : { type: "reuse", environmentId: input.environmentId },
         });
-        deps.roles.setMode(spawned.id, "managed", Date.now());
+        deps.roles.setMode(spawned.id, spaceId, "managed", Date.now());
         if (input.ideaId !== undefined) await notes.linkSessionToIdea(input.ideaId, spawned.id);
         deps.publishSpace(spaceId);
         return { threadId: spawned.id, spaceId, mode: "managed" };

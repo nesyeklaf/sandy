@@ -1,9 +1,21 @@
 import { PluginCliError, type PluginCliResult } from "@sandy-sdk/plugin-sdk";
 import { ZodError } from "zod";
 import { SpaceCoordinationError } from "./space-coordination-error";
+import type { PluginCliContext } from "@sandy-sdk/plugin-sdk";
+import type { SpaceActor } from "./server-space-deps";
 import type { ServerSpace } from "./server-space";
 
 export const JSON_OPTION = { type: "boolean", description: "Emit machine-readable JSON" } as const;
+
+export function actorOf(ctx: PluginCliContext): SpaceActor {
+  return ctx.threadId === undefined ? { kind: "owner" } : { kind: "session", threadId: ctx.threadId };
+}
+
+export function requireOwner(ctx: PluginCliContext): void {
+  if (ctx.threadId !== undefined) {
+    throw new PluginCliError("This command is for the owner. Sessions cannot run it.", { code: "owner_only" });
+  }
+}
 
 export function jsonResult(value: unknown): PluginCliResult {
   return { exitCode: 0, stdout: `${JSON.stringify(value, null, 2)}\n` };

@@ -78,7 +78,13 @@ describe("ThreadInbox", () => {
               thread({ id: "x", projectId: "api", title: "Hidden other project", updatedAt: Date.now() }),
               thread({ id: "a1", projectId: "web", parentThreadId: "a", title: "Child a" }),
               thread({ id: "a2", projectId: "web", parentThreadId: "a1", title: "Grandchild a" }),
-              thread({ id: "a3", projectId: "web", parentThreadId: "a2", title: "Deep done", indicator: "unread-success" }),
+              thread({
+                id: "a3",
+                projectId: "web",
+                parentThreadId: "a2",
+                title: "Deep done",
+                indicator: "unread-success",
+              }),
               thread({
                 id: "b1",
                 projectId: "web",

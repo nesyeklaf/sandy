@@ -71,7 +71,11 @@ describe("Compact project display", () => {
         ],
       },
       rpc: {
-        getSidebarSettings: () => ({ ...defaultSidebarSettings, threadDensity: "dense", compactProjectIconOnly: false }),
+        getSidebarSettings: () => ({
+          ...defaultSidebarSettings,
+          threadDensity: "dense",
+          compactProjectIconOnly: false,
+        }),
         listLifecycle: () => ({ rows: [] }),
       },
     });

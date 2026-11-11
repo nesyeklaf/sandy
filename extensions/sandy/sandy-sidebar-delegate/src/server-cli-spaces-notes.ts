@@ -1,6 +1,6 @@
 import { cliCommand } from "@sandy-sdk/plugin-sdk";
 import { IDEA_STATUSES } from "./space-coordination-contract";
-import { attempt, JSON_OPTION, jsonResult, render, resolveSpaceId } from "./server-cli-spaces-support";
+import { actorOf, attempt, JSON_OPTION, jsonResult, render, resolveSpaceId } from "./server-cli-spaces-support";
 import type { createSpaceHandlers } from "./server-space-handlers";
 import type { ServerSpace } from "./server-space";
 
@@ -22,10 +22,11 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
       summary: "List the ideas of a Space",
       positionals: [SPACE_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const result = await handlers.listIdeas({ spaceId });
+          await space.notes.authorize(actorOf(ctx), spaceId);
+          const result = { ideas: space.notes.listIdeas(spaceId) };
           const lines = result.ideas.map((idea) => `${idea.id} [${idea.status}] ${idea.title}`);
           return render(input.options.json, result, lines.length === 0 ? ["No ideas."] : lines);
         }),
@@ -39,10 +40,10 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
         thread: THREADS_OPTION,
         json: JSON_OPTION,
       },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const idea = await handlers.createIdea({
+          const idea = await space.notes.createIdea(actorOf(ctx), {
             spaceId,
             title: input.options.title,
             body: input.options.body ?? "",
@@ -63,10 +64,10 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
         json: JSON_OPTION,
       },
       constraints: [{ kind: "at-most-one", options: ["thread", "unlink"] }],
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const threadIds = input.options.unlink ? [] : input.options.thread;
-          const idea = await handlers.updateIdea({
+          const idea = await space.notes.updateIdea(actorOf(ctx), {
             ideaId: input.positionals.idea,
             ...(input.options.title === undefined ? {} : { title: input.options.title }),
             ...(input.options.body === undefined ? {} : { body: input.options.body }),
@@ -82,10 +83,10 @@ export function createSpaceIdeaCommands(space: ServerSpace, handlers: Handlers) 
       summary: "Delete an idea",
       positionals: [IDEA_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
-          const result = await handlers.deleteIdea({ ideaId: input.positionals.idea });
-          return render(input.options.json, result, [result.deleted ? "Idea deleted." : "No such idea."]);
+          const deleted = await space.notes.deleteIdea(actorOf(ctx), input.positionals.idea);
+          return render(input.options.json, { deleted }, [deleted ? "Idea deleted." : "No such idea."]);
         }),
     }),
     ...createScratchpadCommands(space, handlers),
@@ -98,10 +99,10 @@ function createScratchpadCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Print the scratchpad of a Space",
       positionals: [SPACE_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const pad = await handlers.getScratchpad({ spaceId });
+          const pad = await space.notes.readScratchpad(actorOf(ctx), spaceId);
           return render(input.options.json, pad, [`Revision ${pad.revision}`, pad.body]);
         }),
     }),
@@ -119,10 +120,10 @@ function createScratchpadCommands(space: ServerSpace, handlers: Handlers) {
         },
         json: JSON_OPTION,
       },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
-          const result = await handlers.writeScratchpad({
+          const result = await space.notes.writeScratchpad(actorOf(ctx), {
             spaceId,
             body: input.options.body,
             baseRevision: input.options["base-revision"],

@@ -49,7 +49,15 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     return spaceId;
   }
 
+  async function modeOf(threadId: string): Promise<CoordinationMode> {
+    const spaceId = await membership.spaceOf(threadId);
+    const mode = roles.modeIn(threadId, spaceId);
+    if (mode === "independent" && roles.revokeManaged(threadId) && spaceId !== null) deps.publishSpace(spaceId);
+    return mode;
+  }
+
   return {
+    modeOf,
     verifiedOrchestrators,
     orchestratorSpaceOf,
     requireOrchestrator,
@@ -90,7 +98,7 @@ export function createSpaceRolesService(deps: SpaceDeps) {
       if (spaceId === null) {
         throw new SpaceCoordinationError("space_missing", `Session ${threadId} is not in a Space.`);
       }
-      const changed = roles.setMode(threadId, mode, Date.now());
+      const changed = roles.setMode(threadId, spaceId, mode, Date.now());
       if (changed) deps.publishSpace(spaceId);
       return { changed, mode };
     },
@@ -106,13 +114,15 @@ export function createSpaceRolesService(deps: SpaceDeps) {
       const senderSpaceId = await orchestratorSpaceOf(senderThreadId);
       if (senderSpaceId === null) return { allowed: true };
       const targetSpaceId = await membership.spaceOf(targetThreadId);
+      const targetMode = roles.modeIn(targetThreadId, targetSpaceId);
+      if (targetMode !== "managed") roles.revokeManaged(targetThreadId);
       if (targetSpaceId !== senderSpaceId) {
         return {
           allowed: false,
           reason: "Orchestrators may only message sessions in their own Space. This session is outside it.",
         };
       }
-      if (roles.modeOf(targetThreadId) !== "managed") {
+      if (targetMode !== "managed") {
         return {
           allowed: false,
           reason:

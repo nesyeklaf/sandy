@@ -69,6 +69,10 @@ export function createSpaceNotesService(deps: SpaceDeps, rolesService: SpaceRole
       return ideas.list(spaceId);
     },
 
+    async authorize(actor: SpaceActor, spaceId: string): Promise<void> {
+      await requireAccess(actor, spaceId);
+    },
+
     async createIdea(actor: SpaceActor, input: IdeaCreateInput): Promise<Idea> {
       await requireAccess(actor, input.spaceId);
       await requireLiveSpace(input.spaceId);

@@ -1,6 +1,6 @@
 import { cliCommand, defineCli, PluginCliError } from "@sandy-sdk/plugin-sdk";
 import { COORDINATION_MODES } from "./space-coordination-contract";
-import { attempt, JSON_OPTION, render, resolveSpaceId } from "./server-cli-spaces-support";
+import { actorOf, attempt, JSON_OPTION, render, requireOwner, resolveSpaceId } from "./server-cli-spaces-support";
 import { createSpaceHandlers } from "./server-space-handlers";
 import type { ServerContext } from "./server-context";
 import type { ServerSpace } from "./server-space";
@@ -31,9 +31,10 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Show members, orchestrators, ideas and the scratchpad revision of a Space",
       positionals: [SPACE_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
           const spaceId = await resolveSpaceId(space, input.positionals.space);
+          await space.notes.authorize(actorOf(ctx), spaceId);
           const context = await handlers.getSpaceCoordination({ spaceId });
           const lines = [
             `${context.spaceName} (${context.spaceId}) wake-ups ${context.wakeEnabled ? "on" : "off"}`,
@@ -49,8 +50,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Make a member session an orchestrator of its Space",
       positionals: [THREAD_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           const result = await handlers.setOrchestrator({ threadId: input.positionals.thread, orchestrator: true });
           return render(input.options.json, result, [
             result.changed ? "Orchestrator added." : "Already an orchestrator.",
@@ -61,8 +63,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Take the orchestrator role from a session",
       positionals: [THREAD_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           const result = await handlers.setOrchestrator({ threadId: input.positionals.thread, orchestrator: false });
           return render(input.options.json, result, [
             result.changed ? "Orchestrator removed." : "Not an orchestrator.",
@@ -73,8 +76,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Set a member's coordination mode: independent (default) or managed",
       positionals: [THREAD_POSITIONAL, { name: "mode", description: COORDINATION_MODES.join(" or "), required: true }],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           const mode = COORDINATION_MODES.find((candidate) => candidate === input.positionals.mode);
           if (mode === undefined) {
             throw new PluginCliError(`Mode must be ${COORDINATION_MODES.join(" or ")}.`, { code: "invalid_value" });
@@ -87,8 +91,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Switch the wake digest of a Space on or off",
       positionals: [SPACE_POSITIONAL, { name: "state", description: "on or off", required: true }],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           if (input.positionals.state !== "on" && input.positionals.state !== "off") {
             throw new PluginCliError("State must be on or off.", { code: "invalid_value" });
           }
@@ -100,8 +105,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
     orphans: cliCommand({
       summary: "List ideas and scratchpads whose Space was deleted",
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           const result = await handlers.listOrphanSpaces();
           const lines = result.orphans.map(
             (orphan) => `${orphan.spaceId} ideas=${orphan.ideaCount} scratchpad=${orphan.hasScratchpad ? "yes" : "no"}`,
@@ -113,8 +119,9 @@ function createSpaceRoleCommands(space: ServerSpace, handlers: Handlers) {
       summary: "Move the ideas and scratchpad of a deleted Space into a live Space",
       positionals: [{ name: "old-space", description: "Id of the deleted Space", required: true }, SPACE_POSITIONAL],
       options: { json: JSON_OPTION },
-      run: (input) =>
+      run: (input, ctx) =>
         attempt(async () => {
+          requireOwner(ctx);
           const spaceId = await resolveSpaceId(space, input.positionals.space);
           const result = await handlers.adoptOrphanSpace({ oldSpaceId: input.positionals["old-space"], spaceId });
           return render(input.options.json, result, [

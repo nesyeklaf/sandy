@@ -18,11 +18,14 @@ describe("release lifecycle safety", () => {
     harness.inspection.sdk.stub("projects.list", async () =>
       projectsWith(threads.filter((t) => t.visibility === "visible")),
     );
-    harness.inspection.sdk.stub("threads.list", async (args: Parameters<SandyPluginApi["sdk"]["threads"]["list"]>[0]) => {
-      const { offset = 0, limit = 100, threadIds } = args ?? {};
-      const matching = threadIds ? threads.filter((t) => threadIds.includes(t.id)) : threads;
-      return matching.slice(offset, offset + limit);
-    });
+    harness.inspection.sdk.stub(
+      "threads.list",
+      async (args: Parameters<SandyPluginApi["sdk"]["threads"]["list"]>[0]) => {
+        const { offset = 0, limit = 100, threadIds } = args ?? {};
+        const matching = threadIds ? threads.filter((t) => threadIds.includes(t.id)) : threads;
+        return matching.slice(offset, offset + limit);
+      },
+    );
     harness.inspection.sdk.stub("threads.get", async ({ threadId }) =>
       makeThreadResponse(threads.find((t) => t.id === threadId)!),
     );

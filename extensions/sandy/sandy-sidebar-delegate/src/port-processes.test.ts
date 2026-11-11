@@ -26,7 +26,9 @@ describe("SANDY internal port filtering", () => {
 
   it("reads commands containing spaces without losing the executable path", () => {
     expect(
-      parseProcessCommands("  123 /Applications/sandy Nightly.app/Contents/MacOS/sandy Nightly\n  456 node server.js\n"),
+      parseProcessCommands(
+        "  123 /Applications/sandy Nightly.app/Contents/MacOS/sandy Nightly\n  456 node server.js\n",
+      ),
     ).toEqual(
       new Map([
         [123, "/Applications/sandy Nightly.app/Contents/MacOS/sandy Nightly"],
