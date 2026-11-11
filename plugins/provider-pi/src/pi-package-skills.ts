@@ -29,6 +29,65 @@ process.stdout.write(JSON.stringify(resolved.skills.map((skill) => ({
 }))));
 `;
 
+const SESSION_SKILLS_SCRIPT = `
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+const [pkgDir, agentDir, workspace, extraPathsJson] = process.argv.slice(1);
+const m = await import(pathToFileURL(join(pkgDir, "dist/index.js")).href);
+const storedTrust = new m.ProjectTrustStore(agentDir).get(workspace);
+const projectTrusted = typeof storedTrust === "boolean" ? storedTrust : !m.hasTrustRequiringProjectResources(workspace);
+const settingsManager = m.SettingsManager.create(workspace, agentDir, { projectTrusted });
+const packageManager = new m.DefaultPackageManager({ cwd: workspace, agentDir, settingsManager });
+const resolved = await packageManager.resolve(async () => "skip");
+const enabled = resolved.skills.filter((skill) => skill.enabled).map((skill) => skill.path);
+const extra = JSON.parse(extraPathsJson);
+const loaded = m.loadSkills({ cwd: workspace, agentDir, skillPaths: [...extra, ...enabled], includeDefaults: false });
+process.stdout.write(JSON.stringify(loaded.skills.map((skill) => ({ name: skill.name, filePath: skill.filePath }))));
+`;
+
+const sessionSkillsSchema = z.array(
+  z.object({ name: z.string().min(1), filePath: z.string().min(1) }),
+);
+
+export interface PiSessionSkill {
+  name: string;
+  filePath: string;
+}
+
+export interface PiSessionSkillsArgs {
+  cwd: string;
+  agentDir: string;
+  env: NodeJS.ProcessEnv;
+  extraSkillPaths: readonly string[];
+}
+
+export async function resolvePiSessionSkills(
+  args: PiSessionSkillsArgs,
+): Promise<PiSessionSkill[]> {
+  const packageDir = locatePiPackageDir(args.env, args.cwd);
+  const node =
+    hostToolchain.resolve("node", { env: args.env, cwd: args.cwd }) ?? "node";
+  const { stdout } = await execHostFile(
+    node,
+    [
+      "--input-type=module",
+      "-e",
+      SESSION_SKILLS_SCRIPT,
+      packageDir,
+      args.agentDir,
+      args.cwd,
+      JSON.stringify(args.extraSkillPaths),
+    ],
+    {
+      env: args.env,
+      cwd: args.cwd,
+      timeout: RESOLVE_TIMEOUT_MS,
+      maxBuffer: RESOLVE_MAX_BUFFER,
+    },
+  );
+  return sessionSkillsSchema.parse(JSON.parse(stdout));
+}
+
 const resolvedSkillsSchema = z.array(
   z.object({
     path: z.string().min(1),

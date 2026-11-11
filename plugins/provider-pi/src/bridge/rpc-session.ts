@@ -17,6 +17,7 @@ export interface PiRpcSessionOptions {
   model?: { provider: string; id: string };
   thinkingLevel?: string;
   additionalSkillPaths?: readonly string[];
+  noSkills?: boolean;
   shellEnvOverrides?: Record<string, string>;
   dynamicTools?: readonly DynamicToolDefinition[];
   sessionFilePath: string;
@@ -301,6 +302,9 @@ export class PiRpcSession {
       this.options.extensionPath,
       ...promptFiles.args,
     );
+    if (this.options.noSkills) {
+      args.push("--no-skills");
+    }
     for (const skillPath of this.options.additionalSkillPaths ?? []) {
       args.push("--skill", skillPath);
     }

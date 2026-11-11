@@ -1,6 +1,7 @@
 import {
   buildShellEnvOverrides,
   type DynamicTool,
+  type ExperimentalSkillSelection as SkillSelection,
   type InstructionMode,
   type ReasoningLevel,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
@@ -38,6 +39,7 @@ interface BuildPiSessionParamsArgs {
   instructionMode: InstructionMode;
   dynamicTools?: readonly DynamicTool[] | undefined;
   additionalSkillPaths?: readonly string[] | undefined;
+  skillSelection?: SkillSelection | undefined;
 }
 
 export interface PiSessionParams {
@@ -48,6 +50,7 @@ export interface PiSessionParams {
   dynamicTools?: readonly DynamicTool[];
   model?: string;
   shellEnvOverrides: Record<string, string>;
+  skillSelection?: SkillSelection;
   thinkingLevel?: PiReasoningLevel;
 }
 
@@ -86,6 +89,9 @@ export function buildPiSessionParams(
       : {}),
     ...(args.additionalSkillPaths && args.additionalSkillPaths.length > 0
       ? { additionalSkillPaths: [...args.additionalSkillPaths] }
+      : {}),
+    ...(args.skillSelection && args.skillSelection.mode !== "inherit"
+      ? { skillSelection: args.skillSelection }
       : {}),
   };
 }

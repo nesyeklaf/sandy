@@ -29,6 +29,7 @@ import {
   shouldAutoDenyInteractiveRequest,
   withoutBridgeRuntimeEnv,
   type BridgeToolCallRequest,
+  type ExperimentalSkillSelection as SkillSelection,
   experimental_defineProviderBridge,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { randomUUID } from "node:crypto";
@@ -106,6 +107,7 @@ import {
   filterClaudeSkillRoots,
   claudeSkillsConfigDirectory,
 } from "./skill-plugins.js";
+import { buildClaudeSkillFilter } from "./skill-selection.js";
 import {
   buildBridgeMcpServer,
   getAllowedToolNames,
@@ -386,12 +388,13 @@ function nextInteractiveRequestId(): string {
   return `interaction-${interactiveRequestIdCounter}`;
 }
 let configuredSkillRoots: { id: string; path: string }[] | null = null;
+let configuredSkillSelection: SkillSelection = { mode: "inherit" };
 let skillPluginsRoot: string | null = null;
 let bridgeTempDir: string | null = null;
 
 function assembleSkillPlugins(
   roots: readonly { id: string; path: string }[],
-): ClaudeCodeSkillRoot[] {
+): { roots: ClaudeCodeSkillRoot[]; pluginNames: string[] } {
   const takenNames = new Map<string, string>();
   const assembled: ClaudeCodeSkillRoot[] = [];
   for (const root of roots) {
@@ -410,7 +413,7 @@ function assembleSkillPlugins(
       );
     }
   }
-  return assembled;
+  return { roots: assembled, pluginNames: [...takenNames.keys()] };
 }
 
 function requireSkillPluginsRoot(): string {
@@ -1067,6 +1070,10 @@ function toSessionConstructionConfig(
       permissionScope: params.permissionScope,
       plugins: params.plugins,
       sandboxEnabled: params.sandboxEnabled,
+      ...(params.skillOverrides
+        ? { skillOverrides: params.skillOverrides }
+        : {}),
+      ...(params.skills ? { skills: params.skills } : {}),
     },
   };
 }
@@ -2362,6 +2369,7 @@ async function handleRequest(request: ClaudeCodeJsonRpcRequest): Promise<void> {
       break;
     case "skills/configure":
       configuredSkillRoots = request.params.roots;
+      configuredSkillSelection = request.params.selection;
       sendResult(request.id, { ok: true });
       break;
   }
@@ -2524,7 +2532,7 @@ async function handleThreadFork(
 async function toClaudeSessionParams(
   params: z.infer<typeof canonicalThreadStartParamsSchema>,
 ): Promise<Record<string, unknown>> {
-  const roots =
+  const assembled =
     configuredSkillRoots === null
       ? undefined
       : assembleSkillPlugins(
@@ -2541,7 +2549,11 @@ async function toClaudeSessionParams(
     options: params.options,
     instructionMode: params.instructionMode,
     dynamicTools: params.dynamicTools,
-    skillRoots: roots,
+    skillRoots: assembled?.roots,
+    skillFilter: buildClaudeSkillFilter({
+      selection: configuredSkillSelection,
+      injectedPluginNames: assembled?.pluginNames ?? [],
+    }),
   });
 }
 

@@ -14,6 +14,7 @@ import {
   toClaudePermissionMode,
   type ClaudePermissionMode,
 } from "./interactive-contract.js";
+import type { ClaudeSkillFilter } from "./bridge/skill-selection.js";
 
 interface AdditionalWorkspaceWriteRootsParams {
   additionalWorkspaceWriteRoots: string[];
@@ -82,6 +83,7 @@ export type ClaudeSessionExecutionOptions = RuntimePermissionPolicy & {
   memoryEnabled?: boolean | undefined;
   providerSubagentsEnabled?: boolean | undefined;
   skillRoots?: readonly ClaudeCodeSkillRoot[] | undefined;
+  skillFilter?: ClaudeSkillFilter | undefined;
 };
 
 function resolveClaudeSessionPermissionMode(
@@ -130,6 +132,12 @@ function buildInternalSessionParams(
       ? additionalWorkspaceWriteRootsParams
       : {}),
     ...(skillConfig ? skillConfig : {}),
+    ...(args.options.skillFilter?.skillOverrides
+      ? { skillOverrides: args.options.skillFilter.skillOverrides }
+      : {}),
+    ...(args.options.skillFilter?.skills
+      ? { skills: args.options.skillFilter.skills }
+      : {}),
     ...(config ? { config } : {}),
     ...(args.options.model ? { model: args.options.model } : {}),
     ...(args.options.reasoningLevel
@@ -179,6 +187,7 @@ interface BuildClaudeSessionParamsArgs {
   instructionMode: InstructionMode;
   dynamicTools?: readonly DynamicTool[] | undefined;
   skillRoots?: readonly ClaudeCodeSkillRoot[] | undefined;
+  skillFilter?: ClaudeSkillFilter | undefined;
 }
 
 export function buildClaudeSessionParams(
@@ -198,6 +207,7 @@ export function buildClaudeSessionParams(
     options: {
       ...args.options,
       skillRoots: args.skillRoots,
+      skillFilter: args.skillFilter,
       claudeCodePermissionMode: providerOptions.claudeCodePermissionMode,
       workflowsEnabled: providerOptions.workflowsEnabled ?? false,
       chromeEnabled: providerOptions.chromeEnabled ?? false,

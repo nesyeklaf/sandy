@@ -33,6 +33,10 @@ export function piProviderDeclaration(): PluginProviderDeclaration {
       { id: "max", label: "Max" },
     ],
     ...PI_NATIVE_ROOTS_DECLARATION,
+    experimental_skillSelection: {
+      session: "unverified",
+      subagents: "not-enforced",
+    },
     composerActions: [],
   };
 }

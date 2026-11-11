@@ -412,3 +412,9 @@ export {
   type SkillScanRoot as ExperimentalSkillScanRoot,
   type IndexedSkillFile as ExperimentalIndexedSkillFile,
 } from "@sandy/skill-index";
+
+export {
+  isSkillNameEnabled as experimental_isSkillNameEnabled,
+  skillSelectionSchema as experimental_skillSelectionSchema,
+  type SkillSelection as ExperimentalSkillSelection,
+} from "@sandy/domain/skill-selection";

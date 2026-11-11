@@ -41,6 +41,7 @@ export interface SdkSessionOptions {
   env?: NodeJS.ProcessEnv;
   pathToClaudeCodeExecutable?: Options["pathToClaudeCodeExecutable"];
   plugins?: Options["plugins"];
+  skills?: Options["skills"];
   thinking?: Options["thinking"];
   settings?: Options["settings"];
   extraArgs?: Options["extraArgs"];
@@ -295,6 +296,7 @@ export class SdkSession {
           }
         : {}),
       ...(this.options.plugins ? { plugins: this.options.plugins } : {}),
+      ...(this.options.skills ? { skills: this.options.skills } : {}),
       ...(this.options.thinking ? { thinking: this.options.thinking } : {}),
       ...(this.options.settings ? { settings: this.options.settings } : {}),
       extraArgs: {

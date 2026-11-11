@@ -24,6 +24,8 @@ export interface BuildSessionOptionsArgs {
   permissionMode: ClaudePermissionMode;
   permissionScope: RuntimePermissionScope;
   plugins?: Options["plugins"];
+  skillOverrides?: Record<string, "off">;
+  skills?: string[];
   reasoningLevel?: ReasoningLevel;
   serviceTier: ServiceTier;
   workflowsEnabled: boolean;
@@ -85,6 +87,7 @@ function buildFlagSettings(params: BuildSessionOptionsArgs): Settings {
     enableWorkflows: params.workflowsEnabled,
     ultracode: params.reasoningLevel === "ultracode",
     fastMode: params.serviceTier === "fast",
+    ...(params.skillOverrides ? { skillOverrides: params.skillOverrides } : {}),
   };
 }
 
@@ -263,6 +266,7 @@ export function buildSessionOptions(
     ...(extraArgs ? { extraArgs } : {}),
     ...(pathToClaudeCodeExecutable ? { pathToClaudeCodeExecutable } : {}),
     ...(params.plugins ? { plugins: params.plugins } : {}),
+    ...(params.skills ? { skills: [...params.skills] } : {}),
     ...(sandbox ? { sandbox } : {}),
     ...(additionalDirectories.length > 0
       ? { additionalDirectories: [...additionalDirectories] }

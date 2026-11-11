@@ -34,6 +34,7 @@ import {
   turnStartParamsSchema,
   turnSteerParamsSchema,
   type BridgeToolCallRequest,
+  type ExperimentalSkillSelection as SkillSelection,
   type InitializeResult,
   type ThreadDelta,
   type ThreadEventContextWindowUsage,
@@ -73,6 +74,7 @@ import {
   resolvePiSessionFilePath,
 } from "./session-paths.js";
 import { extractPiPromptInput } from "./turn-input.js";
+import { resolvePiSkillLaunch } from "./skill-selection.js";
 
 const piCommandSchema = z.discriminatedUnion("method", [
   z.object({
@@ -209,6 +211,7 @@ const extensionUi: ExtensionUiCoordinator = createExtensionUiCoordinator({
 });
 
 let configuredSkillPaths: string[] | null = null;
+let configuredSkillSelection: SkillSelection = { mode: "inherit" };
 
 let scratchDir: string | null = null;
 let scratchDirIsPrivate = false;
@@ -567,6 +570,7 @@ async function handleRequest(
       break;
     case "skills/configure":
       configuredSkillPaths = request.params.roots.map((root) => root.path);
+      configuredSkillSelection = request.params.selection;
       sendResult(request.id, { ok: true });
       break;
   }
@@ -588,6 +592,7 @@ function toPiSessionParams(
     instructionMode: params.instructionMode,
     dynamicTools: params.dynamicTools,
     additionalSkillPaths: configuredSkillPaths ?? undefined,
+    skillSelection: configuredSkillSelection,
   });
 }
 
@@ -694,6 +699,17 @@ async function buildSessionOptions(args: {
   threadId: string;
   sessionSerial: number;
 }): Promise<PiRpcSessionOptions> {
+  const skillLaunch = await resolvePiSkillLaunch({
+    cwd: args.params.cwd,
+    env: process.env,
+    injectedSkillPaths: args.params.additionalSkillPaths ?? [],
+    selection: args.params.skillSelection ?? { mode: "inherit" },
+    onResolveError: (error) => {
+      process.stderr.write(
+        `[pi-bridge] skill selection could not resolve Pi skills; starting with Sandy skills only: ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+    },
+  });
   return {
     cwd: args.params.cwd,
     ...(args.params.model
@@ -707,8 +723,9 @@ async function buildSessionOptions(args: {
     systemPrompt: args.params.baseInstructions,
     appendSystemPrompt: args.params.appendSystemPrompt,
     shellEnvOverrides: args.params.shellEnvOverrides,
-    ...(args.params.additionalSkillPaths
-      ? { additionalSkillPaths: [...args.params.additionalSkillPaths] }
+    ...(skillLaunch.noSkills ? { noSkills: true } : {}),
+    ...(skillLaunch.skillPaths.length > 0
+      ? { additionalSkillPaths: skillLaunch.skillPaths }
       : {}),
     ...(args.params.thinkingLevel
       ? { thinkingLevel: args.params.thinkingLevel }
