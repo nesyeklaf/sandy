@@ -34,7 +34,6 @@ const runtime: UiRuntime = {
   readText: null,
   loadAudio: null,
   loadAsset: null,
-  superseded: false,
   threadId: null,
   blockKey: null,
 };

@@ -122,10 +122,10 @@ The internals behind [the README](../README.md): how agents learn the language, 
      Threads, Environments) can't know their length before SANDY answers, so
      on a first view they grow once. An Image is laid out at the natural
      size its picture last decoded at (kept in `localStorage`; not for SVGs,
-     which lay themselves out) before the picture arrives, and a reply seen
-     answered folds its choices on the first frame instead of when SANDY's
-     outline is read again (`ui/useSuperseded.ts`); until the outline says,
-     the block remembers no height. Height glides (`useSmoothHeight`) only
+     which lay themselves out) before the picture arrives. Until SANDY's
+     outline says whether a later user message follows the reply
+     (`ui/useSuperseded.ts`), a reply not seen answered before remembers no
+     height. Height glides (`useSmoothHeight`) only
      follow the user's own input; anything else snaps. `scripts/scroll-jitter.mjs`
      measures it. Both paths mark mounts with `data-genui-fence` and
      `data-genui-renderer="slot" | "overlay"`; the script reports mount
@@ -257,14 +257,20 @@ The internals behind [the README](../README.md): how agents learn the language, 
    every staged answer becomes its block's sent answer (several per block,
    kept as `<stateKey>:answers`; a block's single `:answer` from before
    reads as one): a choice folds into one "sent" line, a Form turns
-   read-only with "Sent". Once the thread has a user message after the
-   reply (typed, or sent from anywhere), its open choices go away.
-   `ui/useSuperseded.ts` reads that from SANDY's conversation outline and
-   re-reads it only on thread events that can add a user message, so it
-   holds for blocks SANDY has scrolled out of its timeline. A user row whose
-   sequence is below one already listed doesn't count: SANDY's outline can put
-   an old rejected steer at its end (`ui/supersession.ts`). Copy and link
-   buttons stay.
+   read-only with "Sent". Sending is the only thing that closes a question,
+   and the sent line has a Change button (`Answers.reopen`) that opens it
+   again: the choices come back and a new pick goes into the message. Later
+   messages in the thread close nothing, whoever wrote them (the user, a
+   plugin, another thread, the agent), so an older reply stays usable: its
+   inputs, buttons and Forms work and their answers are sent like the
+   latest reply's. A later user message only settles answers an emptied
+   draft left staged as sent (`sheet.supersede`, for composers that report
+   no submissions). `ui/useSuperseded.ts` reads that from SANDY's
+   conversation outline and re-reads it only on thread events that can add
+   a user message, so it holds for blocks SANDY has scrolled out of its
+   timeline. A user row whose sequence is below one already listed doesn't
+   count: SANDY's outline can put an old rejected steer at its end
+   (`ui/supersession.ts`).
 7. A state declared with the wrong but losslessly convertible type
    (`$picked = ""` for a Checklist, `$n = "12"` for a Slider) is read as the
    type the input needs, with a warning instead of a failed block. The
