@@ -77,9 +77,9 @@ Skills (.sandy/skills/):
   thread keeps the old selection until `sandy thread stop` releases it or its
   idle session is retired, and the result lists the threads running a turn. Under each agent it prints the categories that agent cannot
   filter (for example Claude Code's bundled skills), which stay loaded even when
-  every skill is off. Pi uses the installed Pi 1.5.1 SDK loader, including extension
-  contributions; incompatible filtered starts are refused, while older supported
-  versions retain native `inherit` behavior. Pi's full-thread acceptance remains
+  every skill is off. Pi uses the installed Pi SDK loader (Pi 1.5.1 or later, no exact version
+  pin), including extension contributions; a filtered start is refused when that
+  SDK lacks the API the adapter uses, while older versions keep native `inherit`. Pi's full-thread acceptance remains
   unverified, and its subagents are not enforced. Turning a skill off never turns off the plugin that
   ships it. `sandy skill list --json` marks each skill `selectionEnabled`.
   `sandy skill show|files <skill-id>` reads that exact skill;

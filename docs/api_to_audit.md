@@ -1174,9 +1174,10 @@ provider's bridge applies the `selection` that `skills/configure` carries.
 field means `not-enforced` on both sides. The host-policy validator rejects
 other values. The Skills page and `sandy skill selection` show the status and
 name each gap. Pi declares `{ session: "unverified", subagents: "not-enforced",
-gaps: [] }`: the installed-Pi 1.5.1 SDK worker filters extension contributions,
-but full-thread acceptance and subagent enforcement remain open. Filtered
-starts on incompatible SDK versions are refused. Claude Code declares both sides `unverified`
+gaps: [] }`: the installed-Pi SDK worker filters extension contributions,
+but full-thread acceptance and subagent enforcement remain open. It needs Pi
+1.5.1 or later, pins no exact version, and refuses filtered starts when the
+installed SDK lacks the API the worker uses. Claude Code declares both sides `unverified`
 with `gaps: ["bundled-skills", "marketplace-plugin-skills"]`; Codex declares
 both sides `unverified` with `gaps: ["allow-only-skills-added-after-start"]`,
 until runs against the real agents prove more.

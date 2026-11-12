@@ -102,11 +102,11 @@ it.each([
   { mode: "disable", names: ["fixture"] },
   { mode: "allow-only", names: [] },
 ] satisfies SkillSelection[])(
-  "refuses an unsupported filtered $mode start without CLI fallback",
+  "refuses a filtered $mode start on Pi older than 1.5.1 without CLI fallback",
   async (selection) => {
     const f = fixture("0.84.0", selection);
     await expect(f.session.start()).rejects.toThrow(
-      "requires the tested Pi 1.5.1 SDK adapter",
+      "requires Pi 1.5.1 or later; installed: 0.84.0",
     );
     expect(existsSync(f.marker)).toBe(false);
     expect(readdirSync(f.scratchDir)).toEqual([]);
@@ -179,11 +179,14 @@ it("removes scratch files when spawning throws synchronously", async () => {
   expect(readdirSync(f.scratchDir)).toEqual([]);
 });
 
-it("refuses a broken matching SDK without CLI fallback and cleans the failed worker", async () => {
-  const f = fixture("1.5.1", { mode: "allow-only", names: [] });
-  await expect(f.session.start()).rejects.toThrow(
-    "missing DefaultResourceLoader",
-  );
-  expect(existsSync(f.marker)).toBe(false);
-  await vi.waitFor(() => expect(readdirSync(f.scratchDir)).toEqual([]));
-});
+it.each(["1.5.1", "1.5.2", "2.0.0"])(
+  "uses the SDK worker for Pi %s and refuses it when the SDK lacks the adapter API",
+  async (version) => {
+    const f = fixture(version, { mode: "allow-only", names: [] });
+    await expect(f.session.start()).rejects.toThrow(
+      "missing DefaultResourceLoader",
+    );
+    expect(existsSync(f.marker)).toBe(false);
+    await vi.waitFor(() => expect(readdirSync(f.scratchDir)).toEqual([]));
+  },
+);
