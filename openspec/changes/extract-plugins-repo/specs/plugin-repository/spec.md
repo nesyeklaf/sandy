@@ -2,43 +2,77 @@
 
 ## ADDED Requirements
 
-### Requirement: Separate plugin repository
-The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one repository outside sandy whose root replaces `extensions/`, so that every relative path inside the tree stays unchanged.
+### Requirement: Separate private plugin repository
+The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one new private repository outside sandy, whose root replaces `extensions/` so that every relative path inside the tree stays unchanged. The archived `nesyeklaf/plugins` SHALL NOT be changed.
 
 #### Scenario: Relative imports survive
 - **GIVEN** `pi/work/delegate/gate.ts` imports `../../../sandy/work/delegate/shared/policy.ts`
 - **WHEN** the plugin repository is checked out
-- **THEN** the import resolves without edits and `npm test` in `pi/work` passes
+- **THEN** the import resolves without edits and the tests of `pi/work` pass
 
 #### Scenario: Builtins stay in sandy
 - **GIVEN** a plugin under sandy's `plugins/` is bundled into `sandy-app`
 - **WHEN** the extraction is complete
 - **THEN** it remains in sandy, and the plugin repository contains only units that came from `extensions/` plus `packages/skill-dialect`
 
-### Requirement: No link into the sandy tree
-No `package.json` in the plugin repository SHALL reference sandy's tree through `file:`, `link:` or `workspace:`; the Plugin SDK and `sandy-app` SHALL be declared by version range.
+### Requirement: pnpm workspace
+All units SHALL be managed by one pnpm workspace at the repository root with a single `pnpm-lock.yaml`; the repository SHALL contain no `package-lock.json`, and CI SHALL install with `pnpm install --frozen-lockfile`.
 
-#### Scenario: Clean clone installs
-- **GIVEN** a clone of the plugin repository with no sandy checkout next to it
-- **WHEN** `npm ci` runs in any unit
-- **THEN** it succeeds, and `grep -rE '"(file|link|workspace):' --include=package.json` outside `node_modules` finds only paths inside the plugin repository
+#### Scenario: No npm lockfile
+- **WHEN** `git ls-files '**/package-lock.json' 'package-lock.json'` runs in the plugin repository
+- **THEN** it prints nothing, and `pnpm install --frozen-lockfile` at the root succeeds
 
-#### Scenario: SDK not yet on npm
-- **GIVEN** `@sandy-sdk/plugin-sdk` is not published on npm
-- **WHEN** a unit's tests run
-- **THEN** `scripts/sdk.sh <sandy-ref>` installs an SDK packed from that sandy release, and the unit's `package.json` is unchanged afterwards
+#### Scenario: Different toolchains coexist
+- **GIVEN** two units pin different majors of the same dev tool
+- **WHEN** the workspace is installed
+- **THEN** each unit's tests run with its own pinned version
 
-#### Scenario: Git install needs no dev dependency
-- **GIVEN** a unit is installed through a sandy git source, which runs `npm install --omit=dev --omit=optional` without `.npmrc`
-- **WHEN** sandy builds its bundles
-- **THEN** every runtime dependency resolves from npm or from inside the plugin repository checkout
+### Requirement: Dependencies a sandy git install can resolve
+A unit's `dependencies` and `devDependencies` SHALL be public npm registry ranges only, with no `workspace:`, `file:` or `link:` protocol and no private registry. The Plugin SDK SHALL be an optional peer of each unit, provided in development by the workspace root. Internal shared code SHALL be imported by relative source path.
+
+#### Scenario: Git install simulation passes
+- **GIVEN** a clean clone of the plugin repository
+- **WHEN** `scripts/check-git-install.mjs <unit>` deletes `.npmrc`, runs `npm install --ignore-scripts --omit=dev --omit=optional` in the unit's directory, and runs `sandy plugin build`
+- **THEN** both commands succeed for every unit
+
+#### Scenario: Only the new SDK name
+- **WHEN** `git grep -n -F "@sandy-sdk/plugin-sdk"` runs in the plugin repository outside history
+- **THEN** it finds nothing
+
+#### Scenario: No link into sandy's tree
+- **WHEN** `grep -rE '"(file|link|workspace):' --include=package.json` runs outside `node_modules`
+- **THEN** it finds matches only in the workspace root `package.json`, and none point outside the repository
+
+### Requirement: Private SDK from GitHub Packages
+The plugin repository SHALL import the Plugin SDK as `@<org>/plugin-sdk`, a private GitHub Packages package owned by the same organization as sandy and the plugin repository. Only the owner and GitHub Actions SHALL be able to install it. A workflow in the plugin repository SHALL publish it with `GITHUB_TOKEN`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
+
+#### Scenario: Bridge before the first publish
+- **GIVEN** no registry has the SDK
+- **WHEN** `scripts/sdk.sh <sandy-tag> --local` runs and the workspace is installed
+- **THEN** the units' tests and builds use the SDK packed from that sandy tag, and no unit's `package.json` changes
+
+#### Scenario: Private from the first version
+- **WHEN** `publish-sdk.yml` has published the first version
+- **THEN** the package is private and linked to the plugin repository, an unauthenticated `npm view @<org>/plugin-sdk --registry=https://npm.pkg.github.com` fails, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
+
+#### Scenario: Git installs need no token
+- **GIVEN** a host without any GitHub Packages token
+- **WHEN** a unit is installed from a git source
+- **THEN** the install succeeds, because the SDK is an optional peer that sandy's install does not fetch
+
+### Requirement: CI on boat runners
+The plugin repository's workflows SHALL run on boat runner labels (`boat-small`, `boat`, `boat-large`) as listed in design.md, and SHALL use only GitHub Actions secrets and `GITHUB_TOKEN`.
+
+#### Scenario: Unit job on boat
+- **WHEN** a pull request changes one unit
+- **THEN** its `unit` job runs with `runs-on: boat` and installs the SDK with `GITHUB_TOKEN`
 
 ### Requirement: Recorded compatibility with sandy releases
 Each unit SHALL declare `engines.sandy` and `engines.sandyPluginSdk`, and every unit release SHALL record in `compat.json` the sandy tag and SDK version it was tested against.
 
 #### Scenario: Release records its test target
 - **WHEN** `scripts/release.mjs genui` creates `genui-v0.3.2`
-- **THEN** `compat.json` holds an entry for genui 0.3.2 with the sandy tag and SDK version whose tests and `sandy plugin build` passed
+- **THEN** `compat.json` holds an entry for genui 0.3.2 with the sandy tag and SDK version whose tests, git install simulation and `sandy plugin build` passed
 
 #### Scenario: SDK change in sandy main is reported early
 - **GIVEN** sandy `main` changes an SDK export a unit uses
@@ -58,19 +92,26 @@ Each sandy plugin SHALL be versioned on its own and released as an annotated tag
 - **THEN** `work-v*` and `pi-v*` point at the same commit, and both release notes name the pair
 
 ### Requirement: CI per changed unit
-The plugin repository SHALL run, for each changed unit, install, packed-SDK setup, tests and `sandy plugin build`, and SHALL run all units when shared scripts, `packages/` or `compat.json` change.
+The plugin repository SHALL run, for each changed unit, the workspace install, tests, the git install simulation and `sandy plugin build`. It SHALL run all units when shared scripts, `packages/`, the root manifest, the lockfile or `compat.json` change.
 
 #### Scenario: One unit changed
 - **WHEN** a pull request changes only `sandy/thread-namer/`
-- **THEN** CI runs thread-namer only and reports its test and build results
+- **THEN** CI runs thread-namer only and reports its results
 
 ### Requirement: Install and update from the plugin repository
-After migration, no installed sandy plugin or pi extension on the owner's hosts SHALL load code from a sandy checkout. Sandy plugins SHALL be installed from a checkout of the plugin repository (phase 1) or from `git:<repo>@<range> --subdirectory sandy/<unit> --tag-prefix <unit>-v` (phase 2). pi SHALL load the pi extensions through pi-setup from the same repository.
+After migration, no installed sandy plugin or pi extension on the owner's hosts SHALL load code from a sandy checkout. This includes the disabled installs whose sources point at `/home/aemon/...`.
+- Sandy plugins SHALL first be installed from a checkout of the plugin repository (phase 1), then from `git:<repo>@<range> --subdirectory sandy/<unit> --tag-prefix <unit>-v` (phase 2).
+- pi SHALL load the pi extensions through pi-setup from the same repository.
 
 #### Scenario: Phase 1 move keeps configuration
 - **GIVEN** a plugin is installed from `path:~/projects/private/gh/sandy/extensions/sandy/<unit>` with settings
 - **WHEN** `sandy plugin install path:<plugin checkout>/sandy/<unit>` runs
-- **THEN** `sandy plugin source <id>` shows the new path, the plugin is `running`, and its settings, secrets and schedules are unchanged
+- **THEN** `sandy plugin source <id>` shows the new path, the plugin keeps its enabled state, and its settings, secrets and schedules are unchanged
+
+#### Scenario: Disabled aemon install re-pointed
+- **GIVEN** bookmarks is disabled and installed from `path:/home/aemon/projects/sandy/extensions/sandy/bookmarks`
+- **WHEN** it is re-pointed to the plugin repository
+- **THEN** `sandy plugin list --json` shows its source in the plugin repository, and it is still disabled
 
 #### Scenario: Phase 2 update
 - **GIVEN** a unit is installed from a git source with a semver range and a tag prefix
@@ -82,12 +123,12 @@ After migration, no installed sandy plugin or pi extension on the owner's hosts 
 - **THEN** a new pi session registers the same tools as before the switch, and no path under `~/.pi/agent` resolves into a sandy checkout
 
 ### Requirement: Migration keeps installed plugins working
-The migration SHALL proceed in the order given in the design, with `extensions/` removed from sandy last. After every step, each enabled plugin SHALL be `running`. Each step SHALL have a rollback that restores the previous source without losing plugin state.
+The migration SHALL proceed in the order given in design.md, with `extensions/` removed from sandy last. After every step, each enabled plugin SHALL be `running`. Each step SHALL have a rollback that restores the previous source without losing plugin state.
 
 #### Scenario: Roll back one plugin
-- **GIVEN** a plugin moved to the plugin checkout fails to start
-- **WHEN** `sandy plugin install path:~/projects/private/gh/sandy/extensions/sandy/<unit>` runs
-- **THEN** the plugin runs from sandy again with its settings intact
+- **GIVEN** a plugin moved to the plugin repository fails to start
+- **WHEN** its previous source is restored with a path move or `--replace-source`
+- **THEN** the plugin runs from the previous source with its settings intact
 
 #### Scenario: Removal waits for every source
 - **GIVEN** any installed plugin source or pi path still points into `extensions/` of a sandy checkout
@@ -95,14 +136,21 @@ The migration SHALL proceed in the order given in the design, with `extensions/`
 - **THEN** it is not merged
 
 ### Requirement: History preserved
-The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, joined to the pre-move history of `nesyeklaf/plugins` when that repository is revived, and sandy references `#N` SHALL point to `nesyeklaf/sandy#N`.
+The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, and sandy references `#N` SHALL point to `<org>/sandy#N`.
 
 #### Scenario: History is complete
 - **WHEN** the filtered history is built
-- **THEN** its commit count equals `git log --oneline -- extensions packages/skill-dialect | wc -l` in sandy, its HEAD tree equals sandy's trees for those paths, and `git log --follow sandy/genui/package.json` reaches commits from before 2026-10-31
+- **THEN** its commit count equals `git log --oneline -- extensions packages/skill-dialect | wc -l` in sandy at the import point, and its tree at that commit equals sandy's trees for those paths
+
+### Requirement: Holons move with their code
+The holons of genui, holon and field-latency SHALL move with their code into the plugin repository's own Holon root, and their exported OpenSpec specs SHALL move with them. Sandy SHALL keep `holons`, `sandy` and its other holons and SHALL drop `extensions/sandy/` from `sandy.holon`.
+
+#### Scenario: Both models check
+- **WHEN** the holon move is complete
+- **THEN** `holon check` passes in the plugin repository and in sandy, and no `partOf` points to a holon in the other repository
 
 ### Requirement: Sandy keeps the plugin platform
-Sandy SHALL keep the Plugin SDK, `@sandy/plugin-build`, the plugin registry, the Plugin Guide (`plugins/plugin-api-docs`), `docs/forkable-plugins.md`, the SDK publish job, and the install and update machinery. The plugin repository SHALL link to the Plugin Guide instead of documenting the plugin API.
+Sandy SHALL keep the Plugin SDK, `@sandy/plugin-build`, the plugin registry, the Plugin Guide (`plugins/plugin-api-docs`), `docs/forkable-plugins.md`, the SDK publish job and the install and update machinery. The plugin repository SHALL link to the Plugin Guide instead of documenting the plugin API.
 
 #### Scenario: No plugin API documentation copied
 - **WHEN** the plugin repository's README and AGENTS.md are written
