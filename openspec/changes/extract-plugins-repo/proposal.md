@@ -10,15 +10,15 @@ Sandy already installs plugins from `git:<url>@<semver-range>` with `--subdirect
 
 ## What Changes
 
-- A new public repository `sandy-sdk/sandy-plugins` (checkout `~/projects/private/gh/sandy-plugins`), holds `sandy/<unit>`, `pi/<unit>`, `scripts/` and `packages/skill-dialect`. The repository root takes the place of `extensions/`, so relative paths inside the tree do not change. The archived `nesyeklaf/plugins` stays untouched.
+- A new public repository `sandyhq/sandy-plugins` (checkout `~/projects/private/gh/sandy-plugins`), holds `sandy/<unit>`, `pi/<unit>`, `scripts/` and `packages/skill-dialect`. The repository root takes the place of `extensions/`, so relative paths inside the tree do not change. The archived `nesyeklaf/plugins` stays untouched.
 - Shape: one monorepo of plugins with per-unit release tags (`<unit>-v<semver>`) and one pi release train (`pi-v<semver>`). The alternative, one repository per plugin, is weighed in design.md (Decision 2).
 - All units use pnpm: one pnpm workspace at the repository root, one `pnpm-lock.yaml`, no `package-lock.json`.
 - Units stop linking into the sandy tree.
-  - The Plugin SDK keeps its name `@sandy-sdk/plugin-sdk`, which matches the npm organization `sandy-sdk` the owner creates, and the GitHub organization is named `sandy-sdk` (design.md, Decision 10).
-  - Sandy publishes the SDK publicly to npmjs with its existing `publish-plugin-sdk` job and npm Trusted Publishing, after the owner creates the npm organization `sandy-sdk` and publishes the first version by hand (Decision 3).
-  - Sandy, the plugin repository and the package belong to the GitHub organization `sandy-sdk`. `sandy-sdk/sandy` is a new public repository that gets sandy's full history pushed into it: no transfer, no fork detach (Decision 9).
+  - The Plugin SDK is renamed from `@sandy-sdk/plugin-sdk` to `@sandyhq/plugin-sdk`, the scope of the npm and GitHub organization `sandyhq`. A codemod in the cutover change rewrites sandy and the units; the old name stays a legacy specifier so installed plugins keep loading (design.md, Decision 10).
+  - Sandy publishes the SDK publicly to npmjs with its existing `publish-plugin-sdk` job and npm Trusted Publishing, after the owner publishes the first version by hand (Decision 3). The owner already created the npm organization `sandyhq`.
+  - Sandy, the plugin repository and the package belong to the GitHub organization `sandyhq`. `sandyhq/sandy` is a new public repository that gets sandy's full history pushed into it: no transfer, no fork detach (Decision 9).
   - CI runs on GitHub-hosted runners by default. boat runs a job only for the owner's own content, from the repository itself, never for forks or `pull_request_target`, in both repositories (Decision 11).
-- `nesyeklaf/sandy` is kept, not archived and never deleted, so the URLs installed versions call keep working. A cutover change points the guards, runtime URLs and the plugin registry URL at `sandy-sdk/sandy`. Issues and pull requests do not move (Decision 12).
+- `nesyeklaf/sandy` is kept, not archived and never deleted, so the URLs installed versions call keep working. A cutover change points the guards, runtime URLs and the plugin registry URL at `sandyhq/sandy`. Issues and pull requests do not move (Decision 12).
   - Until the first publish, a packed SDK from a pinned sandy release bridges the gap.
   - Nothing is published without the owner's explicit OK.
 - Per-unit semver, a release script, CI per changed unit, and `compat.json` with the sandy releases each unit release was tested against.
@@ -37,7 +37,7 @@ Sandy already installs plugins from `git:<url>@<semver-range>` with `--subdirect
 
 ### New Capabilities
 - `plugin-repository`: where the owner's sandy plugins and pi extensions live, how they are built (pnpm), versioned, tested against sandy releases, released, installed and updated, and how they are migrated out of the sandy repository without breaking installed plugins.
-- `sandy-repository-cutover`: sandy moves to `sandy-sdk/sandy` with its history while the old repository's URLs keep working, and CI uses boat only for the owner's own content.
+- `sandy-repository-cutover`: sandy moves to `sandyhq/sandy` with its history while the old repository's URLs keep working, and CI uses boat only for the owner's own content.
 - `plugin-source-replacement`: replacing the source of an installed plugin while keeping its state, through the API, SDK, CLI and UI.
 
 ### Modified Capabilities
@@ -49,7 +49,7 @@ This change adds only `openspec/changes/extract-plugins-repo/` and one line in A
 - the new repository;
 - pi-setup (`links.tsv` and `settings/base.json`);
 - the owner's installed plugin sources;
-- sandy, for the cutover to `sandy-sdk/sandy`: the 8 `github.repository` workflow guards, runtime URLs, the plugin registry URL in templates and `components.json`, package metadata, `runs-on` routing in its workflows, and the SDK's `publishConfig`;
+- sandy, for the cutover to `sandyhq/sandy`: the 8 `github.repository` workflow guards, runtime URLs, the plugin registry URL in templates and `components.json`, package metadata, `runs-on` routing in its workflows, and the SDK's `publishConfig`;
 - sandy core, for `--replace-source`: server install route and service, server contract, SDK client, CLI, guide template, Settings UI and tests;
 - finally the removal of `extensions/` and `packages/skill-dialect` from sandy.
 
@@ -72,17 +72,20 @@ The core change touches only the server and its clients. It does not change any 
   - **Visibility:** private, then changed to public (see Repositories).
   - **SDK:** publish `@sandy-sdk/plugin-sdk` to a registry.
   - **SDK registry (later the same day):** GitHub Packages, private; superseded by npmjs (below).
-  - **Organization (later):** `sandy-sdk`. The package scope follows it, so the SDK keeps the name `@sandy-sdk/plugin-sdk`, and the planned rename is dropped. Only the switch from npmjs to GitHub Packages remains.
-  - **Repositories (last version):** both new and public in `sandy-sdk`: `sandy-sdk/sandy` with sandy's full history pushed into a fresh, non-fork repository, and `sandy-sdk/sandy-plugins`. No transfer, no fork detach, sandy not private (the earlier plans are dropped). `nesyeklaf/sandy` is kept and later archived; issues and pull requests stay there; open pull requests are merged there first. `pi-setup` and `forge-skills` stay under `nesyeklaf`.
+  - **Organization (an earlier answer):** `sandy-sdk`, with the SDK keeping its name; superseded by `sandyhq` (below).
+  - **Repositories (last version):** both new and public in `sandyhq`: `sandyhq/sandy` with sandy's full history pushed into a fresh, non-fork repository, and `sandyhq/sandy-plugins`. No transfer, no fork detach, sandy not private (the earlier plans are dropped). `nesyeklaf/sandy` is kept; issues and pull requests stay there. `pi-setup` and `forge-skills` stay under `nesyeklaf`.
   - **pi/fabric:** moves to pnpm completely.
   - **Renames:** nothing else; `sandy-app` and `@sandy/*` stay.
   - **CI (last version):** GitHub-hosted runners by default; boat (`runs-on: boat*`, app on the organization, paid plan, Linux x86-64) only when the owner pushed or started the job from the repository itself, enforced by a `runs-on` expression and boat's allow-list. Desktop macOS and Windows stay on GitHub runners. Both repositories.
-  - **SDK (last version):** public on npmjs, not GitHub Packages: "Wir pushen doch zu NPM direkt." The owner creates the npm organization `sandy-sdk`.
+  - **SDK (last version):** public on npmjs, not GitHub Packages: "Wir pushen doch zu NPM direkt." The owner creates the npm organization `sandyhq`.
   - **Old repository:** `nesyeklaf/sandy` is kept, not archived; the `desktop-v*` releases stay there.
   - **Phase 2:** core `--replace-source` is part of this spec.
   - **The four disabled `/home/aemon/...` installs:** re-point them to the new repository.
   - **Holons:** the plugin holons move with their code.
   - **Package manager (new rule):** all plugins use pnpm (no `package-lock.json`, a pnpm workspace in the new repository).
   - **Blacksmith:** replaced by GitHub-hosted runners ("dann github runners"), free on public repositories.
+  - **Organization (final):** `sandyhq`, replacing `sandy-sdk` everywhere. The owner created it (free plan) with the empty, public, non-fork repositories `sandyhq/sandy` and `sandyhq/sandy-plugins`, the npm organization `sandyhq`, `gh` scopes `admin:org`, `workflow`, `repo`, and approved boat as runner on it.
+  - **SDK name (final):** the npm scope follows the organization: `@sandyhq/plugin-sdk`, a real rename in the cutover change (Decision 10).
+  - **Old pull requests:** #37, #29, #23 and #2 are closed on `nesyeklaf/sandy`; their branches stay there and are pushed to `sandyhq/sandy` with `main` and all tags.
 - No owner question is open.
 - This change authorizes writing the spec only. Creating an organization or a repository, pushing, changing visibility, installing apps, publishing, installing, changing pi-setup and deploying each need the owner's explicit OK.

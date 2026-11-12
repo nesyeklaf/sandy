@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Separate public plugin repository
-The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one new public repository `sandy-sdk/sandy-plugins` outside sandy, whose root replaces `extensions/` so that every relative path inside the tree stays unchanged. The archived `nesyeklaf/plugins` SHALL NOT be changed.
+The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one new public repository `sandyhq/sandy-plugins` outside sandy, whose root replaces `extensions/` so that every relative path inside the tree stays unchanged. The archived `nesyeklaf/plugins` SHALL NOT be changed.
 
 #### Scenario: Relative imports survive
 - **GIVEN** `pi/work/delegate/gate.ts` imports `../../../sandy/work/delegate/shared/policy.ts`
@@ -40,7 +40,7 @@ A unit's `dependencies` and `devDependencies` SHALL be public npm registry range
 - **THEN** it finds matches only in the workspace root `package.json`, and none point outside the repository
 
 ### Requirement: Public SDK from npmjs
-The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a public npmjs package that sandy publishes with npm Trusted Publishing. The plugin repository SHALL need no registry token or registry `.npmrc`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
+The plugin repository SHALL import the Plugin SDK only as `@sandyhq/plugin-sdk`, a public npmjs package that sandy publishes with npm Trusted Publishing. The plugin repository SHALL need no registry token or registry `.npmrc`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
 
 #### Scenario: Bridge before the first publish
 - **GIVEN** no registry has the SDK
