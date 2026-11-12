@@ -46,6 +46,17 @@ Never deploy with a hand-written script, `nohup` or `setsid`, least of all from 
 6. installs the tarball into the npm prefix, restoring the old package if npm fails,
 7. sets `SANDY_APP_URL` to the tailnet URL and starts the server.
 
+A server on the machine you are on, such as `sandy-local.service` on a laptop, deploys without ssh. Run `remote.sh` as the same kind of transient unit, with the unit's Node on `PATH` so native modules match it:
+
+```sh
+systemd-run --user --unit=sandy-fork-deploy --collect \
+  --setenv=SANDY_UNIT=sandy-local.service --setenv=SANDY_DEPLOY_APP_URL=http://127.0.0.1:38886 \
+  --setenv=SANDY_DEPLOY_SELF_THREAD="$SANDY_THREAD_ID" --setenv=PATH="<node-bin-of-the-unit>:/usr/bin:/bin" \
+  bash "$PWD/scripts/fork/remote.sh" deploy <tgz>
+```
+
+`remote.sh` installs into the unit's `SANDY_APP_NPM_PREFIX` when it sets one, else `<data-dir>/npm`.
+
 The upgrade test also runs on its own, with the live server untouched:
 
 ```sh
