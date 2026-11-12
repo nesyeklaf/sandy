@@ -2,8 +2,8 @@
 
 ## ADDED Requirements
 
-### Requirement: Separate private plugin repository
-The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one new private repository outside sandy, whose root replaces `extensions/` so that every relative path inside the tree stays unchanged. The archived `nesyeklaf/plugins` SHALL NOT be changed.
+### Requirement: Separate public plugin repository
+The owner's sandy plugins (`extensions/sandy/*`), pi extensions (`extensions/pi/*`), their scripts and `packages/skill-dialect` SHALL live in one new public repository `sandy-sdk/sandy-plugins` outside sandy, whose root replaces `extensions/` so that every relative path inside the tree stays unchanged. The archived `nesyeklaf/plugins` SHALL NOT be changed.
 
 #### Scenario: Relative imports survive
 - **GIVEN** `pi/work/delegate/gate.ts` imports `../../../sandy/work/delegate/shared/policy.ts`
@@ -39,29 +39,38 @@ A unit's `dependencies` and `devDependencies` SHALL be public npm registry range
 - **WHEN** `grep -rE '"(file|link|workspace):' --include=package.json` runs outside `node_modules`
 - **THEN** it finds matches only in the workspace root `package.json`, and none point outside the repository
 
-### Requirement: Private SDK from GitHub Packages
-The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a private GitHub Packages package owned by the organization `sandy-sdk`, which also owns sandy and the plugin repository. Only the owner and GitHub Actions SHALL be able to install it. A workflow in the plugin repository SHALL publish it with `GITHUB_TOKEN`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
+### Requirement: SDK from GitHub Packages
+The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a GitHub Packages package owned by the organization `sandy-sdk`, which also owns sandy and the plugin repository. Sandy SHALL publish it with `GITHUB_TOKEN`; its visibility SHALL be the one the owner chose, and a private package SHALL exist before any workflow publishes to it. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
 
 #### Scenario: Bridge before the first publish
 - **GIVEN** no registry has the SDK
 - **WHEN** `scripts/sdk.sh <sandy-tag> --local` runs and the workspace is installed
 - **THEN** the units' tests and builds use the SDK packed from that sandy tag, and no unit's `package.json` changes
 
-#### Scenario: Private from the first version
-- **WHEN** `publish-sdk.yml` has published the first version
-- **THEN** the package is private and linked to the plugin repository, an unauthenticated `npm view @sandy-sdk/plugin-sdk --registry=https://npm.pkg.github.com` fails, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
+#### Scenario: CI installs with GITHUB_TOKEN
+- **WHEN** the first version is published
+- **THEN** the package page shows the visibility the owner chose, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
+
+#### Scenario: A private package is never created public
+- **GIVEN** the owner chose a private package and no version exists yet
+- **WHEN** sandy's publish job runs
+- **THEN** it refuses to publish, because a package created by a public repository's `GITHUB_TOKEN` would be public for good
 
 #### Scenario: Git installs need no token
 - **GIVEN** a host without any GitHub Packages token
 - **WHEN** a unit is installed from a git source
 - **THEN** the install succeeds, because the SDK is an optional peer that sandy's install does not fetch
 
-### Requirement: CI on boat runners
-The plugin repository's workflows SHALL run on boat runner labels (`boat-small`, `boat`, `boat-large`) as listed in design.md, and SHALL use only GitHub Actions secrets and `GITHUB_TOKEN`.
+### Requirement: boat only for the owner's own content
+The plugin repository's workflows SHALL run on GitHub-hosted runners, except that a job SHALL run on a boat label when the owner `nesyeklaf` pushed or started it from the repository itself. No workflow SHALL use `pull_request_target`. Workflows SHALL use only GitHub Actions secrets and `GITHUB_TOKEN`.
 
-#### Scenario: Unit job on boat
-- **WHEN** a pull request changes one unit
-- **THEN** its `unit` job runs with `runs-on: boat` and installs the SDK with `GITHUB_TOKEN`
+#### Scenario: Owner's pull request
+- **WHEN** the owner opens a pull request from a branch of the repository that changes one unit
+- **THEN** its `unit` job runs on `boat` and installs the SDK with `GITHUB_TOKEN`
+
+#### Scenario: Pull request from a fork
+- **WHEN** anyone, including the owner, opens a pull request from a fork
+- **THEN** every job runs on a GitHub-hosted runner
 
 ### Requirement: Recorded compatibility with sandy releases
 Each unit SHALL declare `engines.sandy` and `engines.sandyPluginSdk`, and every unit release SHALL record in `compat.json` the sandy tag and SDK version it was tested against.
@@ -132,7 +141,7 @@ The migration SHALL proceed in the order given in design.md, with `extensions/` 
 - **THEN** it is not merged
 
 ### Requirement: History preserved
-The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, and sandy references `#N` SHALL point to `sandy-sdk/sandy#N`.
+The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, and sandy references `#N` SHALL point to `nesyeklaf/sandy#N`, where those issues and pull requests stay.
 
 #### Scenario: History is complete
 - **WHEN** the filtered history is built
