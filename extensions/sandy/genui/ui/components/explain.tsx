@@ -37,7 +37,7 @@ import {
   type Month,
   type WalkthroughStep,
 } from "./explain-logic";
-import { ActionHint, CAPTION, FOCUS_RING, InMessageLine } from "./inputs";
+import { ActionHint, CAPTION, FOCUS_RING, InMessageLine, ReopenButton } from "./inputs";
 import { FADE, RISE, SMOOTH_HEIGHT_CLASS, useEntrance, useSmoothHeight } from "./motion";
 
 /** Outline buttons sit on the page color, as inputs.tsx's quiet buttons do. */
@@ -281,7 +281,7 @@ function ListValue({ value }: { value: ListRow["value"] }): ReactNode {
 interface RowChoice {
   readonly pressed: boolean;
   readonly sent: boolean;
-  /** The question is closed: sent, or the thread moved on. */
+  /** The question is closed: its answer was sent. */
   readonly closed: boolean;
   pick(text: string): void;
 }
@@ -294,7 +294,7 @@ function ListItem({ row, leading, choice }: { row: ListRow; leading: Leading; ch
   const toneName = row.tone ?? "neutral";
   const sends = sentTexts(row.actions);
   const others = row.actions.filter((action) => action.type !== "send");
-  // A row that replies is a choice: once its List was answered, or the thread moved on, it is no longer a question.
+  // A row that replies is a choice: once its List was answered it is no longer a question, until the user changes the answer.
   const replies = sends.length > 0;
   const closed = replies && choice.closed;
   const pressed = replies && choice.pressed;
@@ -381,7 +381,6 @@ function ListItem({ row, leading, choice }: { row: ListRow; leading: Leading; ch
 
 /** Rows; the rows that reply (a Send) are one question, a single-select whose pick goes into the user's message. */
 export function List({ props }: { props: Props }) {
-  const { superseded } = useUiRuntime();
   const { staged, sent, stage } = useAnswers();
   const question = useContext(NodeKeyContext);
   const rows = parseListRows(props.items);
@@ -395,7 +394,7 @@ export function List({ props }: { props: Props }) {
       ? "dot"
       : null;
   const replying = rows.some((row) => sentTexts(row.actions).length > 0);
-  const closed = questionClosed(sent, question, superseded);
+  const closed = questionClosed(sent, question);
   const answered = sentFor(sent, question, (text) => rows.some((row) => sentTexts(row.actions).includes(text)));
   const picked = staged.get(question)?.selection ?? null;
   return (
@@ -416,7 +415,7 @@ export function List({ props }: { props: Props }) {
           />
         ))}
       </ul>
-      {picked !== null && !closed ? <InMessageLine /> : null}
+      {picked !== null && !closed ? <InMessageLine /> : replying && closed ? <ReopenButton question={question} /> : null}
     </div>
   );
 }

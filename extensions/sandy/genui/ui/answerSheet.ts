@@ -146,7 +146,7 @@ export class AnswerSheet {
   /**
    * The draft emptied with the block in it, and SANDY wasn't (yet) seen
    * submitting: the answers stay staged until the send is confirmed
-   * (`onSubmitted`, or the reply superseded) or the user writes on, which
+   * (`onSubmitted`, or a user message after the reply) or the user writes on, which
    * makes it a deletion.
    */
   private sending = false;
@@ -218,6 +218,16 @@ export class AnswerSheet {
     }
     this.entries = this.entries.filter((item) => keyOf(item) !== key);
     this.commit([...blocks, block]);
+  }
+
+  reopen(block: string, question: string): void {
+    const previous = this.sent.has(block) ? this.sent.get(block) : this.storageKey === null ? null : readSent(block);
+    if (previous === null || previous === undefined) return;
+    const next = previous.filter((answer) => answer.question !== question && answer.question !== null);
+    if (next.length === previous.length) return;
+    this.sent.set(block, next);
+    if (this.storageKey !== null) writeItem(`${block}:answers`, next);
+    this.commit([block]);
   }
 
   /** Records an answer sent without the composer (no composer for the thread). */

@@ -22,8 +22,9 @@ const TYPING_PAUSE_MS = 300;
  * Fields stacked like a Stack, and one question: the user's first edit of
  * any field stages the whole Form in their message (a `Label: answer` line
  * per field, core/form.ts), and every later edit keeps it in step. There is
- * no submit: the user sends with the composer. Once sent, or once the thread
- * moved on, the fields stay visible read-only ("Sent" when it was sent).
+ * no submit: the user sends with the composer. Once sent, the fields stay
+ * visible read-only beside "Sent" and a Change button that opens them again;
+ * later messages in the thread leave the Form open.
  * Without a thread composer the Form keeps a Send button that posts it.
  * A Form that comes with answers already in it (a preset) shows "Send as is"
  * until something is staged: the user agrees without having to edit a field.
@@ -34,7 +35,7 @@ export function Form({ props }: { props: Props }) {
   const question = useContext(NodeKeyContext);
   const fields = formFields({ kind: "node", type: "Form", key: question, props });
   const message = fields.map((field) => field.line).join("\n");
-  const closed = questionClosed(sent, question, runtime.superseded);
+  const closed = questionClosed(sent, question);
   const answered = sentFor(sent, question) !== null;
   const entry = staged.get(question);
   const [sending, setSending] = useState(false);
@@ -99,7 +100,7 @@ export function Form({ props }: { props: Props }) {
         <RenderNodes nodes={nodes(props.children)} />
       </UiRuntimeContext>
       {answered ? (
-        <SentLine text={null} />
+        <SentLine text={null} question={question} />
       ) : closed ? null : target === "direct" ? (
         // The hint quotes the answers the button posts: one line per field.
         <ActionHint hint={actionIntent([{ kind: "action", type: "send", text: message }], { send: "send" }).hint}>

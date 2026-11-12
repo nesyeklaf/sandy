@@ -86,11 +86,6 @@ export interface UiRuntime {
    */
   loadAsset: ((src: string) => Promise<AssetBytes>) | null;
   /**
-   * True once the thread has a user message after the reply holding this
-   * block (typed, or sent from any UI): its choices are no longer the question.
-   */
-  superseded: boolean;
-  /**
    * The thread whose reply holds this UI: what components that read SANDY's own
    * state (the checkout's changes, subthreads) read it for. Null where there
    * is no thread (the gallery without `?thread=`).
@@ -129,6 +124,7 @@ export interface Answers {
   readonly target: "composer" | "gallery" | "direct";
   /** Stages `answer` as the answer to `question`, or withdraws it (null). With target "direct", sends it; resolves once sent (failures are shown, never thrown). */
   stage(question: string, answer: { readonly text: string; readonly selection: Selection } | null): Promise<void>;
+  reopen(question: string): void;
 }
 
 export const AnswersContext = createContext<Answers | null>(null);
@@ -159,12 +155,12 @@ export function sentFor(
 }
 
 /**
- * Whether `question` is no longer open: it was answered, the block sent an
- * answer before answers were staged (one closed every choice), or the thread
- * moved on.
+ * Whether `question` is no longer open: the user sent its answer, or the
+ * block sent an answer before answers were staged (one closed every choice).
+ * Later messages in the thread never close it; `Answers.reopen` opens it again.
  */
-export function questionClosed(sent: readonly SentAnswer[] | null, question: string, superseded: boolean): boolean {
-  return superseded || (sent?.some((answer) => answer.question === question || answer.question === null) ?? false);
+export function questionClosed(sent: readonly SentAnswer[] | null, question: string): boolean {
+  return sent?.some((answer) => answer.question === question || answer.question === null) ?? false;
 }
 
 /**

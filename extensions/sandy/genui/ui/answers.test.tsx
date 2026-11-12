@@ -117,12 +117,24 @@ function fakeComposer(threadId: string, reports = true): FakeComposer {
   };
 }
 
-const sandy = vi.hoisted(() => ({
-  composers: null as null | FakeComposer,
-  send: vi.fn(async () => ({})),
-  superseded: false,
-  supersededListeners: new Set<() => void>(),
-}));
+const sandy = vi.hoisted(() => {
+  const outlines = new Map<string, { id: string; role: "assistant" | "user" }[]>();
+  const changed = new Map<string, Set<(change: { changes: string[]; metadata: { eventTypes: string[] } }) => void>>();
+  const sdk = {
+    threads: {
+      send: vi.fn(async () => ({})),
+      conversationOutline: async ({ threadId }: { threadId: string }) => ({ items: [...(outlines.get(threadId) ?? [])] }),
+    },
+    subscribe(options: { event: string; threadId?: string; callback: (change: { changes: string[]; metadata: { eventTypes: string[] } }) => void }) {
+      if (options.event !== "thread:changed" || options.threadId === undefined) return () => undefined;
+      const listeners = changed.get(options.threadId) ?? new Set();
+      changed.set(options.threadId, listeners);
+      listeners.add(options.callback);
+      return () => listeners.delete(options.callback);
+    },
+  };
+  return { composers: null as null | FakeComposer, send: sdk.threads.send, sdk, outlines, changed };
+});
 
 vi.mock("@sandy-sdk/plugin-sdk/app", async (importOriginal) => ({
   ...(await importOriginal<typeof PluginSdkApp>()),
@@ -131,31 +143,22 @@ vi.mock("@sandy-sdk/plugin-sdk/app", async (importOriginal) => ({
     useSyncExternalStore(fake?.subscribe ?? (() => () => undefined), () => fake?.version() ?? 0);
     return fake === null ? [] : [fake.composer];
   },
-  useSdk: () => ({ threads: { send: sandy.send } }),
+  useSdk: () => sandy.sdk,
   useSandyNavigate: () => ({}),
   useRpc: () => ({ call: vi.fn() }),
   useSettings: () => ({ values: { animations: false }, isLoading: false }),
   Markdown: ({ content }: { content: string }) => <p>{content}</p>,
   experimental_Icon: () => <span aria-hidden="true" />,
 }));
-vi.mock("./useSuperseded", () => ({
-  useSuperseded: () =>
-    useSyncExternalStore(
-      (listener) => {
-        sandy.supersededListeners.add(listener);
-        return () => sandy.supersededListeners.delete(listener);
-      },
-      () => sandy.superseded,
-    ),
-  useReplyIndex: () => 4,
-}));
 
-/** A user message lands after the reply. */
-function supersede() {
+/** A message the owner did not type lands after the reply (a plugin's digest, another thread's tell), and the agent answers it. */
+async function laterMessages(threadId = `thr_${thread}`) {
+  const items = sandy.outlines.get(threadId) ?? [];
+  sandy.outlines.set(threadId, [...items, { id: `${threadId}:user-seed:20`, role: "user" }, { id: `${threadId}:assistant:21`, role: "assistant" }]);
   act(() => {
-    sandy.superseded = true;
-    for (const listener of [...sandy.supersededListeners]) listener();
+    for (const listener of [...(sandy.changed.get(threadId) ?? [])]) listener({ changes: ["events-appended"], metadata: { eventTypes: ["client/turn/requested"] } });
   });
+  await wait(250);
 }
 
 const CHOICE = `Card("Which plan?", [Button("Basic"), Button("Pro")])`;
@@ -174,6 +177,7 @@ let block2: HTMLElement;
 /** Mounts the reply's two blocks as SANDY does: one root per fence. */
 function mountReply(threadId: string, Fence: typeof SlotFence = SlotFence) {
   const message = { id: `${threadId}:assistant:7`, threadId, turnId: "turn", projectId: "project" };
+  if (!sandy.outlines.has(threadId)) sandy.outlines.set(threadId, [{ id: `${threadId}:user-seed:1`, role: "user" }, { id: message.id, role: "assistant" }]);
   const original = () => <pre />;
   block1 = render(<Fence language="ui" status="closed" code={CHOICE} index={0} message={message} Original={original} />).container;
   block2 = render(<Fence language="ui" status="closed" code={FORM} index={1} message={message} Original={original} />).container;
@@ -206,7 +210,6 @@ beforeEach(() => {
   fake = fakeComposer(`thr_${thread}`);
   sandy.composers = fake;
   sandy.send.mockClear();
-  sandy.superseded = false;
   mountReply(`thr_${thread}`);
 });
 
@@ -214,6 +217,54 @@ afterEach(() => {
   cleanup();
   sandy.composers = null;
   vi.unstubAllGlobals();
+});
+
+describe("later messages", () => {
+  it("leave an older block usable: a plugin's message and the agent's reply lock nothing, and the owner's Form answer is still sent", async () => {
+    await wait(50);
+    await laterMessages();
+    const csv = within(block2).getByRole<HTMLInputElement>("checkbox", { name: "CSV" });
+    expect(csv.matches(":disabled")).toBe(false);
+    fireEvent.click(csv);
+    fireEvent.click(within(block1).getByRole("button", { name: "Pro" }));
+    expect(pressed(block1, "Pro")).toBe("true");
+    expect(fake.composer.draft.text).toBe("Pro\nProject name: —\nWhich formats? CSV (not: JSON, XLSX)");
+    act(() => fake.send());
+    expect(fake.sent.map((draft) => draft.text)).toEqual(["Pro\nProject name: —\nWhich formats? CSV (not: JSON, XLSX)"]);
+    await wait(250);
+    expect(within(block2).getByText("Sent")).toBeTruthy();
+    expect(within(block1).getByRole("status").textContent).toContain("Pro");
+  });
+});
+
+describe("a sent answer", () => {
+  it("opens again with Change, so the owner can answer the same question anew", async () => {
+    fireEvent.click(within(block2).getByRole("checkbox", { name: "CSV" }));
+    act(() => fake.send());
+    await wait(250);
+    expect(within(block2).getByRole("checkbox", { name: "JSON" }).matches(":disabled")).toBe(true);
+    fireEvent.click(within(block2).getByRole("button", { name: "Change" }));
+    expect(within(block2).queryByText("Sent")).toBeNull();
+    const json = within(block2).getByRole("checkbox", { name: "JSON" });
+    expect(json.matches(":disabled")).toBe(false);
+    fireEvent.click(json);
+    expect(fake.composer.draft.text).toBe("Project name: —\nWhich formats? CSV, JSON (not: XLSX)");
+    act(() => fake.send());
+    await wait(250);
+    expect(fake.sent.map((draft) => draft.text)).toEqual(["Project name: —\nWhich formats? CSV (not: JSON, XLSX)", "Project name: —\nWhich formats? CSV, JSON (not: XLSX)"]);
+    expect(within(block2).getByText("Sent")).toBeTruthy();
+  });
+
+  it("brings a choice's buttons back with Change", async () => {
+    fireEvent.click(within(block1).getByRole("button", { name: "Pro" }));
+    act(() => fake.send());
+    await wait(250);
+    expect(within(block1).queryByRole("button", { name: "Basic" })).toBeNull();
+    fireEvent.click(within(block1).getByRole("button", { name: "Change" }));
+    await wait(50);
+    fireEvent.click(within(block1).getByRole("button", { name: "Basic" }));
+    expect(fake.composer.draft.text).toBe("Basic");
+  });
 });
 
 describe("the composer is the answer sheet", () => {
@@ -384,8 +435,7 @@ describe("the composer is the answer sheet", () => {
     act(() => fake.send());
     // The draft cleared on send is not a deletion: the picks wait for the send to show.
     expect(pressed(block1, "Pro")).toBe("true");
-    supersede();
-    await wait(250);
+    await laterMessages();
     expect(within(block1).getByRole("status").textContent).toContain("Pro");
     expect(within(block2).getByText("Sent")).toBeTruthy();
   });
