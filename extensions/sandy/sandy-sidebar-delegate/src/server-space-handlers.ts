@@ -35,8 +35,8 @@ export function createSpaceHandlers(space: ServerSpace) {
     async setMemberMode({ threadId, mode }) {
       return space.rolesService.setMemberMode(threadId, mode);
     },
-    async setSpaceWake({ spaceId, enabled }) {
-      return space.rolesService.setWake(spaceId, enabled);
+    async setSpaceCoordinationSettings({ spaceId, ...change }) {
+      return refusing(() => space.rolesService.setSettings(spaceId, change));
     },
     async listIdeas({ spaceId }) {
       return { ideas: space.notes.listIdeas(spaceId) };

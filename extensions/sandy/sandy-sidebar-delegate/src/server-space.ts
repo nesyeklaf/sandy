@@ -11,7 +11,11 @@ import { createAgentView } from "./server-space-agent-view";
 import { registerSpaceEnforcement } from "./server-space-enforcement";
 import { registerSpacesCli } from "./server-cli-spaces";
 import { registerSpaceTools } from "./server-space-tools";
-import { registerWakeDigest } from "./server-space-wake";
+import { registerFailureFallback } from "./server-space-fallback";
+import { registerCheckIn } from "./server-space-check-in";
+import { createActivityTracker } from "./server-space-activity";
+import { createSpaceReportsStore } from "./server-space-reports-store";
+import { createSpaceReportsService, type SpaceReportsService } from "./server-space-reports-service";
 import { ORCHESTRATORS_CHANNEL, spaceChannel } from "./realtime-channels";
 
 export function createServerSpace(ctx: ServerContext): ServerSpace {
@@ -20,6 +24,7 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
     roles: createSpaceRolesStore(ctx.db),
     ideas: createSpaceIdeasStore(ctx.db),
     scratchpads: createSpaceScratchpadStore(ctx.db),
+    reports: createSpaceReportsStore(ctx.db),
     membership: createSpaceMembership(ctx),
     publishSpace: (spaceId) => ctx.sandy.realtime.publish(spaceChannel(spaceId), {}),
     publishOrchestrators: () => ctx.sandy.realtime.publish(ORCHESTRATORS_CHANNEL, {}),
@@ -28,6 +33,8 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
   const notes = createSpaceNotesService(deps, rolesService);
   const contextReader = createSpaceContextReader(deps, rolesService);
   const orphans = createSpaceOrphans(deps);
+  const reportsService = createSpaceReportsService(deps, rolesService);
+  const activity = createActivityTracker(ctx);
 
   ctx.sandy.events.on("thread.deleted", ({ thread }) => {
     rolesService.forgetThread(thread.id);
@@ -42,9 +49,10 @@ export function createServerSpace(ctx: ServerContext): ServerSpace {
     }
   });
 
-  const space = { deps, rolesService, notes, contextReader, orphans };
+  const space = { deps, rolesService, notes, contextReader, orphans, reportsService };
   registerSpaceEnforcement(ctx, rolesService);
-  registerWakeDigest(ctx, deps, rolesService);
+  registerFailureFallback(ctx, deps, rolesService);
+  registerCheckIn(ctx, deps, rolesService, activity);
   createAgentView(ctx, deps, rolesService);
   registerSpaceTools(ctx, space);
   registerSpacesCli(ctx, space);
@@ -57,4 +65,5 @@ export interface ServerSpace {
   notes: SpaceNotesService;
   contextReader: ReturnType<typeof createSpaceContextReader>;
   orphans: ReturnType<typeof createSpaceOrphans>;
+  reportsService: SpaceReportsService;
 }
