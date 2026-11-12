@@ -5,9 +5,9 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
-  rmSync,
   writeFileSync,
 } from "node:fs";
+import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
@@ -23,7 +23,12 @@ afterEach(async () => {
   for (const session of sessions.splice(0)) await session.closeGracefully(1000);
   vi.unstubAllEnvs();
   for (const dir of dirs.splice(0))
-    rmSync(dir, { recursive: true, force: true });
+    await rm(dir, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
 });
 
 function fixture(
@@ -144,9 +149,7 @@ it.skipIf(process.platform !== "win32")(
     const shim = join(f.root, "pi.cmd");
     writeFileSync(
       shim,
-      npmNodeShim(
-        "node_modules\\@earendil-works\\pi-coding-agent\\cli.js",
-      ),
+      npmNodeShim("node_modules\\@earendil-works\\pi-coding-agent\\cli.js"),
     );
     copyFileSync(process.execPath, join(f.root, "node.exe"));
     vi.stubEnv(PI_BRIDGE_COMMAND_ENV, shim);

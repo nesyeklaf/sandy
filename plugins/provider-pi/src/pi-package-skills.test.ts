@@ -32,9 +32,18 @@ describe("resolvePiPackageSkillRoots", () => {
     const root = mkdtempSync(join(tmpdir(), "sandy-pi-managed-install-"));
     dirs.push(root);
     const agentDir = join(root, ".pi", "agent");
-    const launcher = join(agentDir, "bin", "pi");
+    const launcher = join(
+      agentDir,
+      "bin",
+      process.platform === "win32" ? "pi.cmd" : "pi",
+    );
     mkdirSync(join(agentDir, "bin"), { recursive: true });
-    writeFileSync(launcher, '#!/bin/sh\nexec "$pi_release_bin" "$@"\n');
+    writeFileSync(
+      launcher,
+      process.platform === "win32"
+        ? "@echo off\r\nexit /b 1\r\n"
+        : '#!/bin/sh\nexec "$pi_release_bin" "$@"\n',
+    );
     chmodSync(launcher, 0o755);
     mkdirSync(join(agentDir, "install"), { recursive: true });
     writeFileSync(join(agentDir, "install", "current-version"), "9.9.9\n");

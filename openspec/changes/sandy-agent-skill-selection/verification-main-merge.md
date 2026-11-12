@@ -13,6 +13,34 @@ Checks ran serially on Node `v26.13.0`, at nice level 10, with `VITEST_MAX_WORKE
 
 Raw JSON reports, command logs and exit files are saved under `/home/feysen/.sandy-local/data/thread-storage/thr_m8k92wkhv2/land-skill-selection/`. CI results are recorded on the pull request, not inferred from these local checks.
 
+## PR CI follow-up
+
+PR #68 exposed additional integration checks. The SDK version is now 0.6.107.
+Skill-selection mutation writes now use the existing skills cache owner; the
+unchanged registry test and SkillsView/realtime consumers pass together
+(127 tests), followed by a fresh app typecheck. No ownership-test exception
+was added.
+
+The unchanged plugin-authoring contract reproduced the missing provider-bridge
+symbol documentation, then passed all 19 tests after adding the three exports
+to the symbol index. Their existing API audit and Plugin Guide entries were
+checked and clarified with behavior, stabilization criteria and shared core
+callers. Plugin Guide tests pass (75), as do its typecheck and lint.
+
+The unchanged CLI JSON-shape contract reproduced the missing `selectionEnabled`
+field in the guide. Updating the guide makes it and the skill output tests pass
+(11). Windows CI also found two fixture portability defects: a Unix-only
+managed-install launcher filename and synchronous removal while a child was
+still exiting. The fixture now uses `pi.cmd` on Windows, and teardown uses the
+same bounded asynchronous removal retries as other Pi tests. Local affected Pi
+tests pass (eight, one Windows-only skip), plus typecheck and lint. Windows
+verification is delegated to PR CI, not inferred from Linux.
+
+Raw follow-up reports use `cache-owner-*`, `authoring-docs-*`, `guide-*`,
+`json-guide-*` and `windows-fixtures-*` in the evidence directory above.
+CI must be fully green before the authorized merge; these local results do not
+replace that gate.
+
 The complete feature changes the host-daemon protocol from 265 to 266; server and enrolled daemons must therefore be updated together through the supported installation path. Design A itself adds no further wire change. Installing only provider-pi does not install the core UI, API, selection storage, SDK or CLI.
 
 The [SDK-worker verification](verification-pi-sdk-a.md) still defines the proof limits. OpenSpec 5.2 and 6.1 remain open; Pi full-thread/subagent acceptance is not claimed. Claude Code and Codex gaps remain unverified, not accepted: **Owner: später**. No browser, production configuration change, installation or deployment was performed during this integration run.
