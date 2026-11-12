@@ -9,6 +9,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - **Holon.** `Holon(Load("view.json"))` draws a holon-view/v0 view from the holon extension as a card: Why, Contract, the four sides (I, It, We, They) with a light each, the holon's own drift, its parent, its parts and the seams to its neighbours, with a text fallback for clients that cannot draw it. A view of another format or shape shows one plain error line. Gallery examples: Holon, Card-holon, Card-seam, Card-drift.
 
+### Changed
+- **Older replies stay usable.** A later message in the thread no longer locks a reply's blocks, whoever sent it: you, a plugin (such as the Space's wake digest), another thread or the agent. Inputs, buttons, Plans, Decisions, Lists and Forms of older replies keep working, and what you pick there goes into your message as usual. Before, any user row after a reply made its choices leave and its Forms read-only.
+- A sent answer shows **Change** beside *Sent*: it opens the question again, so you can pick or fill in a new answer and send it.
+
 ## [0.3.1] - 2026-10-22
 
 ### Fixed

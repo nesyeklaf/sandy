@@ -56,7 +56,22 @@ const SHIPPED_SPACE_MIGRATIONS = [
    )`,
   `DROP TABLE IF EXISTS thread_orchestrators`,
   `DROP TABLE IF EXISTS thread_ideas`,
+  `CREATE TABLE IF NOT EXISTS space_managed_members (
+     thread_id  TEXT PRIMARY KEY,
+     space_id   TEXT NOT NULL,
+     set_at     INTEGER NOT NULL
+   )`,
+  `DROP TABLE IF EXISTS space_member_modes`,
+  `CREATE TABLE IF NOT EXISTS space_started_sessions (
+     thread_id          TEXT PRIMARY KEY,
+     space_id           TEXT NOT NULL,
+     starter_thread_id  TEXT NOT NULL,
+     started_at         INTEGER NOT NULL
+   )`,
+  `ALTER TABLE space_started_sessions ADD COLUMN descendant INTEGER NOT NULL DEFAULT 0`,
 ];
+
+const SHIPPED_BEFORE_MANAGED_MEMBERS = SHIPPED_SPACE_MIGRATIONS.slice(0, 11);
 
 function tableNames(db: { prepare(sql: string): { all(): unknown[] } }): string[] {
   return (db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Array<{ name: string }>).map(
@@ -68,7 +83,7 @@ describe("space coordination migrations", () => {
   it("upgrades a database that already ran the shipped statements", () => {
     const { sandy } = createFakePluginHost({ pluginId: "sandy-sidebar", sdk: {} });
     const db = sandy.storage.database();
-    sandy.storage.migrate(db, [...SHIPPED_LEGACY_ROLE_MIGRATIONS, ...SHIPPED_SPACE_MIGRATIONS]);
+    sandy.storage.migrate(db, [...SHIPPED_LEGACY_ROLE_MIGRATIONS, ...SHIPPED_BEFORE_MANAGED_MEMBERS]);
     expect(tableNames(db)).toContain("space_member_modes");
     expect(() =>
       sandy.storage.migrate(db, [...LEGACY_ROLE_MIGRATIONS, ...SPACE_COORDINATION_MIGRATIONS]),
@@ -76,6 +91,20 @@ describe("space coordination migrations", () => {
     const tables = tableNames(db);
     expect(tables).toContain("space_managed_members");
     expect(tables).not.toContain("space_member_modes");
+  });
+
+  it("maps a Space with wake-ups off to check-ins and fallback off, and keeps defaults elsewhere", () => {
+    const { sandy } = createFakePluginHost({ pluginId: "sandy-sidebar", sdk: {} });
+    const db = sandy.storage.database();
+    sandy.storage.migrate(db, [...SHIPPED_LEGACY_ROLE_MIGRATIONS, ...SHIPPED_SPACE_MIGRATIONS]);
+    db.prepare("INSERT INTO space_settings (space_id, wake_enabled) VALUES ('quiet', 0), ('loud', 1)").run();
+    sandy.storage.migrate(db, [...LEGACY_ROLE_MIGRATIONS, ...SPACE_COORDINATION_MIGRATIONS]);
+    const rows = db.prepare("SELECT * FROM space_settings ORDER BY space_id").all() as Array<Record<string, unknown>>;
+    expect(rows).toEqual([
+      { space_id: "loud", self_reports: 1, check_in_minutes: 10, failure_fallback: 1 },
+      { space_id: "quiet", self_reports: 1, check_in_minutes: 0, failure_fallback: 0 },
+    ]);
+    expect(tableNames(db)).toContain("space_member_reports");
   });
 
   it("keeps every shipped statement at its index", () => {

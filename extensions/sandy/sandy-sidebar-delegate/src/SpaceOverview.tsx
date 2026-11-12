@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Switch } from "./settings-ui";
-import type { SpaceCoordination, SpaceMember } from "./space-coordination-contract";
+import type { CoordinationSettings, SpaceCoordination, SpaceMember } from "./space-coordination-contract";
 import type { SpaceCoordinationState } from "./useSpaceCoordination";
 
 function MemberRow({ member, state }: { member: SpaceMember; state: SpaceCoordinationState }) {
@@ -10,6 +10,11 @@ function MemberRow({ member, state }: { member: SpaceMember; state: SpaceCoordin
       <span className="min-w-0 flex-1 truncate" title={member.title}>
         {member.title || member.threadId}
       </span>
+      {member.latestReport === null ? null : (
+        <span className="text-2xs text-muted-foreground" title={member.latestReport.summary}>
+          reported {member.latestReport.outcome}
+        </span>
+      )}
       <span className="text-2xs text-muted-foreground">{member.status}</span>
       <Switch
         label={`Managed: ${member.title || member.threadId}`}
@@ -79,22 +84,64 @@ function OrchestratorList({ space, state }: { space: SpaceCoordination; state: S
   );
 }
 
+const CHECK_IN_CHOICES_MINUTES = [0, 5, 10, 15, 30, 60, 120] as const;
+
+function checkInLabel(minutes: number): string {
+  return minutes === 0 ? "Off" : `Every ${minutes} min`;
+}
+
+function CoordinationSettingsSection({ space, state }: { space: SpaceCoordination; state: SpaceCoordinationState }) {
+  const change = (next: Partial<CoordinationSettings>) =>
+    void state.act("Could not change the settings", () =>
+      state.rpc.call("setSpaceCoordinationSettings", { spaceId: space.spaceId, ...next }),
+    );
+  const minutes = space.settings.checkInMinutes;
+  const choices = CHECK_IN_CHOICES_MINUTES.some((choice) => choice === minutes)
+    ? [...CHECK_IN_CHOICES_MINUTES]
+    : [...CHECK_IN_CHOICES_MINUTES, minutes].sort((left, right) => left - right);
+  return (
+    <section aria-label="Orchestrator updates" className="flex flex-col gap-1">
+      <h3 className="font-semibold">Orchestrator updates</h3>
+      <div className="flex items-center gap-2">
+        <span className="flex-1">Managed members report when done or blocked</span>
+        <Switch
+          label="Self-reports"
+          checked={space.settings.selfReports}
+          onChange={(selfReports) => change({ selfReports })}
+        />
+      </div>
+      <label className="flex items-center gap-2">
+        <span className="flex-1">Check in on managed members</span>
+        <select
+          aria-label="Check-in interval"
+          value={minutes}
+          onChange={(event) => change({ checkInMinutes: Number(event.target.value) })}
+          className="h-7 rounded border border-border bg-background px-1 text-xs max-md:h-9"
+        >
+          {choices.map((choice) => (
+            <option key={choice} value={choice}>
+              {checkInLabel(choice)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="flex items-center gap-2">
+        <span className="flex-1">Tell orchestrators about failures and questions</span>
+        <Switch
+          label="Failure fallback"
+          checked={space.settings.failureFallback}
+          onChange={(failureFallback) => change({ failureFallback })}
+        />
+      </div>
+    </section>
+  );
+}
+
 export function SpaceOverview({ space, state }: { space: SpaceCoordination; state: SpaceCoordinationState }) {
   return (
     <div className="flex flex-col gap-3 overflow-y-auto">
       <OrchestratorList space={space} state={state} />
-      <section aria-label="Wake" className="flex items-center gap-2">
-        <span className="flex-1">Wake orchestrators when members need attention</span>
-        <Switch
-          label="Wake orchestrators"
-          checked={space.wakeEnabled}
-          onChange={(enabled) =>
-            void state.act("Could not change wake", () =>
-              state.rpc.call("setSpaceWake", { spaceId: space.spaceId, enabled }),
-            )
-          }
-        />
-      </section>
+      <CoordinationSettingsSection space={space} state={state} />
       <section aria-label="Members" className="flex flex-col gap-1">
         <h3 className="font-semibold">Members</h3>
         <p className="text-2xs text-muted-foreground">

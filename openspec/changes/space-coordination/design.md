@@ -34,7 +34,11 @@ Operational principle: a session dropped into a Space is visible to its orchestr
 
 1. Several orchestrators per Space. Each must be a member of that Space; moving it out or deleting it clears its role. Unassigned sessions cannot be orchestrators. Orchestrators of one Space coordinate through the scratchpad and ideas; the plugin does not split members between them.
 2. The coordination mode defaults to independent for every member, including existing sessions. The owner switches a session to managed. Sessions an orchestrator starts are created managed. A managed member may be managed by any orchestrator of its Space.
-3. Wake digest: when a managed member's turn ends failed, with a pending question, or finished, the plugin queues a digest to every orchestrator of the Space. At most one digest per orchestrator per 60 s, at most 50 entries, oldest dropped and counted. The owner can turn wake-ups off per Space.
+3. Waking orchestrators (revised by the owner, 2026-11-12, replacing the wake digest that sent "finished" on every idle event, listed one member several times and arrived as owner text):
+   - Self-reports: a managed member reports to the orchestrators of its Space itself when it is done, blocked or needs a decision, with a short summary (`space_report`, `sandy spaces report`). Its instructions say so. The report is a message from the member, which the dispatch hook already allows toward an orchestrator of its own Space.
+   - Check-ins: every N minutes (default 10, 0 = off) each orchestrator gets one check-in listing managed members that changed or look stuck (working without activity for the interval, idle without a report since their turn ended, failed, asking). Nothing qualifies, nothing is sent; an orchestrator with an untaken check-in gets no second one.
+   - Failure fallback: failed members and pending questions are still pushed, merged per member (latest outcome), at most once per 60 s per Space and 50 members, each rechecked against the member's current state right before sending. A plain turn end is never pushed.
+   - All three are per-Space settings. A Space whose wake switch was off migrates to check-ins 0 and fallback off.
 4. Start fresh: the old global orchestrator and idea marks are discarded. A migration drops the thread_orchestrators and thread_ideas tables; no Space gets an orchestrator or ideas from them.
 5. Shelves: Needs you, Failed, Working, In review, Merged, Orchestrators, Idle, Dormant, Snoozed, Archived. The Orchestrators shelf stays, with today's priority (after Needs you, Failed and Working). The Ideas shelf is removed because ideas are entries. "Ready" is renamed "Idle": nothing else matched, it is not "done". Flow keeps its Orchestrators shelf and drops its Ideas shelf.
 6. Deleting a Space keeps its ideas and scratchpad, keyed by the deleted Space id. They are readable through RPC and `sandy spaces orphans`, and `sandy spaces adopt <old-space-id> <space>` moves them into a live Space (scratchpads are appended under a heading, ideas keep their links). The Space panel shows only live Spaces.
@@ -45,7 +49,8 @@ Operational principle: a session dropped into a Space is visible to its orchestr
 Plugin SQLite tables (migrations, real SQLite in tests):
 
 - `space_orchestrators(thread_id TEXT PRIMARY KEY, space_id TEXT NOT NULL, assigned_at INTEGER NOT NULL)` with index on space_id
-- `space_settings(space_id TEXT PRIMARY KEY, wake_enabled INTEGER NOT NULL)`
+- `space_settings(space_id TEXT PRIMARY KEY, self_reports INTEGER NOT NULL DEFAULT 1, check_in_minutes INTEGER NOT NULL DEFAULT 10, failure_fallback INTEGER NOT NULL DEFAULT 1)`; appended migrations add the three columns, set `check_in_minutes = 0, failure_fallback = 0` where `wake_enabled = 0`, then drop `wake_enabled`. A Space without a row uses the defaults.
+- `space_member_reports(thread_id TEXT PRIMARY KEY, space_id TEXT NOT NULL, outcome TEXT NOT NULL CHECK (outcome IN ('done','blocked','question','progress')), summary TEXT NOT NULL, reported_at INTEGER NOT NULL)` with index on space_id; latest report per member, cleared on `thread.deleted` and when the member is seen in another Space.
 - `space_member_modes(thread_id TEXT PRIMARY KEY, mode TEXT NOT NULL CHECK (mode IN ('managed')), set_at INTEGER NOT NULL)` — absence means independent, so a moved or new session is independent without a write.
 - `space_ideas(id TEXT PRIMARY KEY, space_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL, author_kind TEXT NOT NULL, author_thread_id TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)` with index on space_id.
 - `space_idea_links(idea_id TEXT NOT NULL, thread_id TEXT NOT NULL, PRIMARY KEY (idea_id, thread_id))`
@@ -53,7 +58,7 @@ Plugin SQLite tables (migrations, real SQLite in tests):
 
 Idea status: open, planned, in-progress, done, dropped.
 
-Limits, named with units last: `IDEA_TITLE_CHARS_MAX = 200`, `IDEA_BODY_BYTES_MAX = 16384`, `IDEAS_PER_SPACE_MAX = 500`, `IDEA_LINKS_MAX = 50`, `SCRATCHPAD_BYTES_MAX = 65536`, `SPACE_MEMBERS_LISTED_MAX = 500`, `WAKE_DIGEST_ENTRIES_MAX = 50`, `WAKE_DIGEST_INTERVAL_MS = 60000`. Reads page core lists in batches of at most 200 ids.
+Limits, named with units last: `IDEA_TITLE_CHARS_MAX = 200`, `IDEA_BODY_BYTES_MAX = 16384`, `IDEAS_PER_SPACE_MAX = 500`, `IDEA_LINKS_MAX = 50`, `SCRATCHPAD_BYTES_MAX = 65536`, `SPACE_MEMBERS_LISTED_MAX = 500`, `REPORT_SUMMARY_CHARS_MAX = 2000`, `CHECK_IN_MINUTES_DEFAULT = 10`, `CHECK_IN_MINUTES_MAX = 1440`, `CHECK_IN_ENTRIES_MAX = 50`, `CHECK_IN_TICK_MS = 60000` (one timer checks which Spaces are due), `FALLBACK_INTERVAL_MS = 60000`, `FALLBACK_ENTRIES_MAX = 50`. Check-in state (last snapshot per Space, untaken check-in per orchestrator) lives in memory; after a restart the first check-in lists only members that look stuck, failed or ask. Reads page core lists in batches of at most 200 ids.
 
 Membership is not stored by the plugin: a member is any live thread whose core `sectionId` is the Space id. Deleted threads are removed from orchestrator, mode and link tables on `thread.deleted`. Section moves are observed on thread update events and on every read: an orchestrator row whose thread is no longer in that Space is cleared on read.
 
@@ -66,7 +71,9 @@ Membership is not stored by the plugin: a member is any live thread whose core `
 ## Agent tools
 
 Orchestrator: `space_context`, `space_start_session({ projectId, environment, title, prompt, ideaId? })`, `space_message_session({ threadId, text })`, `space_stop_session({ threadId })`, `space_archive_session({ threadId })`, plus all member tools.
-Member (any session in a Space): `space_context`, `space_ideas_list`, `space_idea_create`, `space_idea_update`, `space_scratchpad_read`, `space_scratchpad_write({ body, baseRevision })`. Orchestrator alone: `space_idea_delete`.
+Member (any session in a Space): `space_context`, `space_ideas_list`, `space_idea_create`, `space_idea_update`, `space_scratchpad_read`, `space_scratchpad_write({ body, baseRevision })`. Orchestrator alone: `space_idea_delete`. Managed member while self-reports are on: `space_report({ outcome: done|blocked|question|progress, summary })`, with instructions to report when done, blocked or in need of a decision, and not for every small step. Orchestrator instructions say that reports, check-ins and fallback messages arrive as messages and that the orchestrator reads `space_context` before acting on them.
+
+Checking a member's current state before a fallback message: `threads.get` for status (`error` still failed) and the thread's pending interactions (question still open); the member's latest report time against the event time.
 
 `space_context` returns per member: id, title, status, activity facts used by shelves, project id and name, environment host, path, isWorktree, branchName, PR state, coordination mode, whether it is an orchestrator; plus ideas (id, title, status, links) and the scratchpad revision.
 
@@ -74,11 +81,11 @@ Member (any session in a Space): `space_context`, `space_ideas_list`, `space_ide
 
 ## Surfaces
 
-- Thread side panel: fixed tab "Space" (`app.slots.experimental_tab`, context thread, availability fixed, `useVisible` true only when the thread's section is a Space). Sections: Overview (orchestrators with add/remove, members with a "Managed" switch, wake-up switch), Ideas (list, create, edit, status, links, delete), Scratchpad (Markdown editor; save sends baseRevision; a conflict shows the current text and keeps the draft).
+- Thread side panel: fixed tab "Space" (`app.slots.experimental_tab`, context thread, availability fixed, `useVisible` true only when the thread's section is a Space). Sections: Overview (orchestrators with add/remove, members with a "Managed" switch and their latest report, the self-report switch, the check-in interval and the failure fallback switch), Ideas (list, create, edit, status, links, delete), Scratchpad (Markdown editor; save sends baseRevision; a conflict shows the current text and keeps the draft).
 - Space header menu: "Add orchestrator…".
 - Row menu: "Orchestrator of this Space" toggle and "Managed" toggle; the old idea and global orchestrator menu items are removed.
-- RPC: `getSpaceCoordination`, `setOrchestrator`, `setMemberMode`, `setSpaceWake`, `listIdeas`/`createIdea`/`updateIdea`/`deleteIdea`, `getScratchpad`/`writeScratchpad`. Realtime channel per Space id.
-- CLI: `sandy spaces show <space>`, `sandy spaces orchestrator add|remove <thread>`, `sandy spaces orphans`, `sandy spaces adopt <old-space-id> <space>`, `sandy spaces member mode <thread> managed|independent`, `sandy spaces ideas list|add|update|remove`, `sandy spaces scratchpad show|write [--base-revision N] [--file -]`. JSON output with `--json`. The CLI guide and the plugin skill document them.
+- RPC: `getSpaceCoordination`, `setOrchestrator`, `setMemberMode`, `setSpaceCoordinationSettings` (replaces `setSpaceWake`), `listIdeas`/`createIdea`/`updateIdea`/`deleteIdea`, `getScratchpad`/`writeScratchpad`. Realtime channel per Space id.
+- CLI: `sandy spaces show <space>`, `sandy spaces orchestrator add|remove <thread>`, `sandy spaces orphans`, `sandy spaces adopt <old-space-id> <space>`, `sandy spaces member mode <thread> managed|independent`, `sandy spaces settings <space> [--self-reports on|off] [--check-in-minutes N] [--failure-fallback on|off]` (replaces `sandy spaces wake`), `sandy spaces report <done|blocked|question|progress> [--summary text | --file -]` (run by a session; the caller is `SANDY_THREAD_ID`, so it is cooperative like the rest), `sandy spaces ideas list|add|update|remove`, `sandy spaces scratchpad show|write [--base-revision N] [--file -]`. JSON output with `--json`. The CLI guide and the plugin skill document them.
 
 ## Code style: tiger-style, adapted
 
@@ -106,4 +113,6 @@ All user-visible and agent-visible text in the plugin is English. A unit test sc
 - Race window: a dispatch is checked once. A role or mode change that lands while one dispatch is in flight can let that one dispatch through.
 - Hook coverage: a dispatch without a sender cannot be attributed. Mitigation: `space_message_session` always sets the sender; the risk is accepted for other unattributed paths.
 - Section changes outside the plugin: handled by checking membership on every read and dispatch, not by cached state alone.
-- Wake-up noise: bounded digest and per-Space switch.
+- Wake-up noise: reports come from the member that knows it is done; check-ins send nothing when nothing changed and never stack; the fallback is limited to failures and questions, merged per member, rechecked before sending, and every part can be turned off per Space.
+- Members that do not report: a member that ends without calling `space_report` shows up in the next check-in as idle without a report, so it is noticed within one interval.
+- Message rendering: plugin messages carry `originPluginId`; how the app renders them, and the genui lock that owner-attributed digests caused, is fixed in core separately (thr_bmheyakitz). The plugin sends no genui blocks.

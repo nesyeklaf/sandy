@@ -39,6 +39,7 @@ function toMember(
     updatedAt: thread.updatedAt,
     mode: deps.roles.modeIn(thread.id, thread.sectionId ?? null),
     isOrchestrator: orchestratorIds.has(thread.id),
+    latestReport: thread.sectionId === null ? null : deps.reports.latestIn(thread.id, thread.sectionId),
   };
 }
 
@@ -65,7 +66,7 @@ export function createSpaceContextReader(deps: SpaceDeps, rolesService: SpaceRol
       const context: SpaceCoordination = {
         spaceId,
         spaceName,
-        wakeEnabled: deps.roles.wakeEnabled(spaceId),
+        settings: deps.roles.settingsOf(spaceId),
         orchestratorThreadIds,
         members: members.threads.map((thread) =>
           toMember(thread, projectNames, lookup.outcomes, deps, orchestratorIds),

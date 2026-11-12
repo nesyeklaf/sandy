@@ -131,10 +131,37 @@ describe("sandy spaces", () => {
     expect((await run(harness, "adopt", "space_a", "Alpha")).exitCode).not.toBe(0);
   });
 
-  it("switches the wake digest", async () => {
+  it("shows and changes the coordination settings", async () => {
     const harness = await loadSpacePlugin(world());
-    expect(parse((await run(harness, "wake", "Alpha", "off", "--json")).stdout)).toEqual({ wakeEnabled: false });
-    expect((await run(harness, "wake", "Alpha", "maybe")).exitCode).not.toBe(0);
+    expect(parse((await run(harness, "settings", "Alpha", "--json")).stdout)).toEqual({
+      selfReports: true,
+      checkInMinutes: 10,
+      failureFallback: true,
+    });
+    const changed = await run(
+      harness,
+      "settings",
+      "Alpha",
+      "--check-in-minutes",
+      "0",
+      "--failure-fallback",
+      "off",
+      "--json",
+    );
+    expect(parse(changed.stdout)).toEqual({ selfReports: true, checkInMinutes: 0, failureFallback: false });
+    for (const argv of [
+      ["settings", "Alpha", "--check-in-minutes", "1441"],
+      ["settings", "Alpha", "--check-in-minutes", "-1"],
+      ["settings", "Alpha", "--self-reports", "maybe"],
+    ]) {
+      expect((await run(harness, ...argv)).exitCode, argv.join(" ")).not.toBe(0);
+    }
+    expect((await run(harness, "settings", "Alpha", "--check-in-minutes", "1441")).stderr).toMatch(
+      /between 0 and 1440/,
+    );
+    expect((await run(harness, "show", "Alpha")).stdout).toContain(
+      "self-reports on, check-in off, failure fallback off",
+    );
   });
 
   it("applies the shared idea limits to the CLI", async () => {
@@ -167,7 +194,7 @@ describe("sandy spaces", () => {
         ["member", "mode", "thr_m", "managed"],
         ["orchestrator", "add", "thr_m"],
         ["orchestrator", "remove", "thr_o"],
-        ["wake", "Alpha", "off"],
+        ["settings", "Alpha", "--check-in-minutes", "0"],
         ["orphans"],
         ["adopt", "gone", "Alpha"],
       ];
@@ -179,11 +206,11 @@ describe("sandy spaces", () => {
       const shown = parse<{
         members: Array<{ threadId: string; mode: string }>;
         orchestratorThreadIds: string[];
-        wakeEnabled: boolean;
+        settings: { checkInMinutes: number };
       }>((await run(harness, "show", "Alpha", "--json")).stdout);
       expect(shown.members.find((member) => member.threadId === "thr_m")?.mode).toBe("independent");
       expect(shown.orchestratorThreadIds).toEqual(["thr_o"]);
-      expect(shown.wakeEnabled).toBe(true);
+      expect(shown.settings.checkInMinutes).toBe(10);
     });
 
     it("lets a member read and write its own Space but not another", async () => {

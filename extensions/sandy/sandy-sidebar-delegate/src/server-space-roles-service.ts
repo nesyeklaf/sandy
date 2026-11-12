@@ -1,6 +1,6 @@
 import { assert } from "./assert";
 import { SpaceCoordinationError } from "./space-coordination-error";
-import type { CoordinationMode } from "./space-coordination-contract";
+import { CHECK_IN_MINUTES_MAX, type CoordinationMode, type CoordinationSettings } from "./space-coordination-contract";
 import type { SpaceDeps } from "./server-space-deps";
 
 type ManagedTargetDecision = { allowed: true } | { allowed: false; reason: string };
@@ -95,6 +95,7 @@ function createMemberReads(deps: SpaceDeps) {
   async function requireMember(threadId: string): Promise<string> {
     const spaceId = await membership.spaceOf(threadId);
     if (spaceId === null) {
+      roles.revokeManaged(threadId);
       throw new SpaceCoordinationError("not_member", "This session is not in a Space.");
     }
     return spaceId;
@@ -198,7 +199,7 @@ function createOrchestratorMutations(deps: SpaceDeps) {
   return { setOrchestrator, setOrchestrators };
 }
 
-function createModeAndWakeMutations(deps: SpaceDeps) {
+function createModeAndSettingsMutations(deps: SpaceDeps) {
   const { roles, membership } = deps;
   return {
     async setMemberMode(
@@ -214,10 +215,29 @@ function createModeAndWakeMutations(deps: SpaceDeps) {
       return { changed, mode };
     },
 
-    setWake(spaceId: string, enabled: boolean): { wakeEnabled: boolean } {
-      roles.setWake(spaceId, enabled);
+    async setSettings(spaceId: string, change: Partial<CoordinationSettings>): Promise<CoordinationSettings> {
+      const minutes = change.checkInMinutes;
+      const minutesInRange =
+        minutes === undefined || (Number.isInteger(minutes) && minutes >= 0 && minutes <= CHECK_IN_MINUTES_MAX);
+      if (!minutesInRange) {
+        throw new SpaceCoordinationError(
+          "invalid_request",
+          `Check-in interval must be 0 to ${CHECK_IN_MINUTES_MAX} minutes.`,
+        );
+      }
+      const names = await membership.sectionNames();
+      if (!names.has(spaceId)) {
+        throw new SpaceCoordinationError("space_missing", `Space ${spaceId} does not exist.`);
+      }
+      const current = roles.settingsOf(spaceId);
+      const next: CoordinationSettings = {
+        selfReports: change.selfReports ?? current.selfReports,
+        checkInMinutes: minutes ?? current.checkInMinutes,
+        failureFallback: change.failureFallback ?? current.failureFallback,
+      };
+      roles.setSettings(spaceId, next);
       deps.publishSpace(spaceId);
-      return { wakeEnabled: enabled };
+      return next;
     },
 
     forgetThread(threadId: string): void {
@@ -236,7 +256,7 @@ export function createSpaceRolesService(deps: SpaceDeps) {
     ...verifier,
     ...createMemberReads(deps),
     ...createOrchestratorMutations(deps),
-    ...createModeAndWakeMutations(deps),
+    ...createModeAndSettingsMutations(deps),
     decideManagedTarget: createManagedTargetDecider(deps, verifier),
   };
 }

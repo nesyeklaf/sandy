@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { makeThreadResponse } from "@sandy-sdk/plugin-sdk/testing";
-import { WAKE_DIGEST_ENTRIES_MAX, WAKE_DIGEST_INTERVAL_MS } from "./space-coordination-contract";
 import { loadSpacePlugin, spaceThread, type SpaceWorld } from "./test-space-server";
 
 type Harness = Awaited<ReturnType<typeof loadSpacePlugin>>;
@@ -186,86 +185,7 @@ describe("agent tools", () => {
   });
 });
 
-describe("wake digest", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
-
-  async function wakeWorld(managedCount: number) {
-    const members = Array.from({ length: managedCount }, (_, index) => spaceThread(`thr_w${index}`, "space_a"));
-    const state: SpaceWorld = {
-      sections: [{ id: "space_a", name: "Alpha" }],
-      threads: [spaceThread("thr_orch", "space_a"), ...members],
-    };
-    const send = vi.fn(async () => ({ ok: true, delivery: "sent" }));
-    const harness = await loadSpacePlugin(state, { send });
-    await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
-    for (const member of members) await call(harness, "setMemberMode", { threadId: member.id, mode: "managed" });
-    return { harness, members, send };
-  }
-
-  it("sends one capped digest per interval with the omitted count", async () => {
-    const { harness, members, send } = await wakeWorld(70);
-    for (const member of members)
-      await harness.behavior.emitThreadEvent("thread.idle", { thread: member, lastAssistantText: null });
-    expect(send).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
-    expect(send).toHaveBeenCalledTimes(1);
-    const text = (send.mock.calls[0] as unknown as [{ input: Array<{ text: string }> }])[0].input[0]?.text ?? "";
-    expect(text).toContain("(20 older outcomes omitted)");
-    expect(text.split("\n").filter((line) => line.startsWith("- "))).toHaveLength(WAKE_DIGEST_ENTRIES_MAX);
-    expect(text).toContain("thr_w69");
-    expect(text).not.toContain("thr_w0)");
-  });
-
-  it("drops a queued digest when the Space switch is turned off before it is due", async () => {
-    const { harness, members, send } = await wakeWorld(1);
-    await harness.behavior.emitThreadEvent("thread.idle", { thread: members[0], lastAssistantText: null });
-    await call(harness, "setSpaceWake", { spaceId: "space_a", enabled: false });
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS * 2);
-    expect(send).not.toHaveBeenCalled();
-  });
-
-  it("logs a membership failure while flushing instead of rejecting", async () => {
-    const state: SpaceWorld = {
-      sections: [{ id: "space_a", name: "Alpha" }],
-      threads: [spaceThread("thr_orch", "space_a"), spaceThread("thr_w0", "space_a")],
-    };
-    let failing = false;
-    const harness = await loadSpacePlugin(state, {
-      list: async () => {
-        if (failing) throw new Error("membership backend unavailable");
-        return state.threads;
-      },
-    });
-    await call(harness, "setOrchestrator", { threadId: "thr_orch", orchestrator: true });
-    await call(harness, "setMemberMode", { threadId: "thr_w0", mode: "managed" });
-    await harness.behavior.emitThreadEvent("thread.idle", { thread: state.threads[1], lastAssistantText: null });
-    failing = true;
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
-    const warnings = harness.inspection.logEntries.filter((entry) => entry.level === "warn");
-    expect(warnings.some((entry) => entry.message.includes("membership backend unavailable"))).toBe(true);
-  });
-
-  it("sends nothing when the Space switch is off or the member is independent", async () => {
-    const { harness, members, send } = await wakeWorld(2);
-    await call(harness, "setSpaceWake", { spaceId: "space_a", enabled: false });
-    await harness.behavior.emitThreadEvent("thread.failed", { thread: members[0], error: null });
-    await call(harness, "setSpaceWake", { spaceId: "space_a", enabled: true });
-    await call(harness, "setMemberMode", { threadId: members[1]?.id, mode: "independent" });
-    await harness.behavior.emitThreadEvent("thread.failed", { thread: members[1], error: null });
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS * 2);
-    expect(send).not.toHaveBeenCalled();
-  });
-
-  it("starts a new window after a digest", async () => {
-    const { harness, members, send } = await wakeWorld(2);
-    await harness.behavior.emitThreadEvent("thread.failed", { thread: members[0], error: null });
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
-    await harness.behavior.emitThreadEvent("thread.idle", { thread: members[1], lastAssistantText: null });
-    await vi.advanceTimersByTimeAsync(WAKE_DIGEST_INTERVAL_MS);
-    expect(send).toHaveBeenCalledTimes(2);
-  });
-
+describe("managed mode after moves", () => {
   it("drops managed mode when the member moves to another Space and does not restore it on return", async () => {
     const state = world();
     state.threads.push(spaceThread("thr_orch_b", "space_b"));

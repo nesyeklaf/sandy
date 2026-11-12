@@ -14,6 +14,7 @@ const binaryExtensions = new Set([
   ".glb",
   ".wav",
   ".sqlite",
+  ".wasm",
 ]);
 const { stdout } = await promisify(execFile)("git", ["ls-files", "-z"], {
   maxBuffer: 16 * 1024 * 1024,

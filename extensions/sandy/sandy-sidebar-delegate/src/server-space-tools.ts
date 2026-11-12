@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { SpaceCoordinationError } from "./space-coordination-error";
-import { spaceCoordinationRpcShape } from "./space-coordination-contract";
+import { reportOutcomeSchema, reportSummarySchema, spaceCoordinationRpcShape } from "./space-coordination-contract";
 import type { ServerContext } from "./server-context";
 import type { ServerSpace } from "./server-space";
 
@@ -41,6 +41,7 @@ const startParameters = z
   .strict();
 const messageParameters = z.object({ threadId: z.string().trim().min(1), text: z.string().trim().min(1) }).strict();
 const scratchpadWriteParameters = writeScratchpad.input.omit({ spaceId: true });
+const reportParameters = z.object({ outcome: reportOutcomeSchema, summary: reportSummarySchema }).strict();
 
 type ToolResult = string | { content: Array<{ type: "text"; text: string }>; isError: true };
 
@@ -129,6 +130,14 @@ export function registerSpaceTools(ctx: ServerContext, space: ServerSpace): void
         const spaceId = await rolesService.requireMember(threadId);
         return notes.writeScratchpad(actorOf(threadId), { ...input, spaceId });
       }),
+  });
+  agents.registerTool({
+    name: "space_report",
+    description:
+      "Report to the orchestrators of this Space when you are done, blocked or need a decision: an outcome (done, blocked, question, progress) and a short summary. Managed members only.",
+    parameters: reportParameters,
+    execute: ({ outcome, summary }, { threadId }) =>
+      guarded(async () => space.reportsService.report(threadId, outcome, summary)),
   });
   registerManagementTools(ctx, space, requireManagedTarget);
 }

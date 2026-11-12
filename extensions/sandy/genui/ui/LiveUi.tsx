@@ -95,8 +95,9 @@ export function LiveUi({
   loadAudio: UiRuntime["loadAudio"];
   loadAsset: UiRuntime["loadAsset"];
   /**
-   * A later user message exists in the thread (see UiRuntime.superseded);
-   * null while that isn't known yet, when the block remembers no height.
+   * A later user message exists in the thread: it settles answers left
+   * staged by an emptied draft as sent. Null while that isn't known yet,
+   * when the block remembers no height.
    */
   superseded?: boolean | null;
   threadId: UiRuntime["threadId"];
@@ -185,7 +186,6 @@ export function LiveUi({
       readText,
       loadAudio,
       loadAsset,
-      superseded: superseded === true,
       threadId,
       blockKey,
       async run(actions) {
@@ -196,7 +196,7 @@ export function LiveUi({
         }
       },
     }),
-    [setValue, openFile, loadImage, holdHeight, readText, loadAudio, loadAsset, superseded, threadId, blockKey, runAction],
+    [setValue, openFile, loadImage, holdHeight, readText, loadAudio, loadAsset, threadId, blockKey, runAction],
   );
 
   const blockRoot = useRef<HTMLDivElement | null>(null);
@@ -318,9 +318,10 @@ export function useBlockAnswerTarget(
     },
     [sheet, stateKey, mode, target, position],
   );
+  const reopen = useCallback((question: string) => sheet.reopen(stateKey, question), [sheet, stateKey]);
   return useMemo<Answers>(
-    () => ({ staged: block.staged, sent: block.sent, target: mode, stage }),
-    [block.staged, block.sent, mode, stage],
+    () => ({ staged: block.staged, sent: block.sent, target: mode, stage, reopen }),
+    [block.staged, block.sent, mode, stage, reopen],
   );
 }
 
