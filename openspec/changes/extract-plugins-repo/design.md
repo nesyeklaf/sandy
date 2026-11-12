@@ -19,7 +19,7 @@
 | `extensions/` arrived in sandy on 2026-10-31 as a "files only" move from `nesyeklaf/plugins` (0ca6e2122), and has 139 commits since | `git log -- extensions` |
 | `nesyeklaf/plugins` is private and **archived** (last push 2026-11-01, last commit 2026-10-31). It holds `bb/*` and `pi/*`, including units since dropped (`bb/ideas`, `bb/workflows-plus`) and the forks' kept history | `gh api repos/nesyeklaf/plugins` |
 | `nesyeklaf/sandy` is public | `gh api` |
-| 19 sandy units carry a `package-lock.json`; `sandy/holon` is already a standalone pnpm project with its own `pnpm-workspace.yaml` | `ls extensions/sandy/*/package-lock.json` |
+| 18 of the 19 sandy units carry a `package-lock.json`; `sandy/holon` is already a standalone pnpm project with its own `pnpm-workspace.yaml` | `ls extensions/sandy/*/package-lock.json` |
 | Holon tree: `field-latency` is `partOf: sandy`; `holon-genui` (with card, markdown, view-reader) and `holon-extension` (with cli, engine) are `partOf: holons` (`docs/designs/holons/holons.holon`, stays in sandy). Exported specs that belong to them: `openspec/specs/holon-{cli,engine,extension,genui,genui-card,genui-markdown,genui-view-reader}`; `openspec/specs/holons` stays | `.holon` files |
 | The only `@sandy-sdk/*` package is `@sandy-sdk/plugin-sdk` 0.6.106, in 1549 tracked files. The npm scope `sandy-sdk` does not exist yet (registry: "Scope not found"), and the GitHub name `sandy-sdk` is free | `git grep -l -F @sandy-sdk/plugin-sdk`; `registry.npmjs.org/-/org/sandy-sdk/package`; orchestrator check |
 | `nesyeklaf/sandy` is a fork whose parent is not visible: `fork: true`, 0 forks, 0 stars, about 202 MB (`size` 207195 KB), 6 open pull requests, 30 open issues, 6 releases, no Pages, no wiki, one active ruleset "Protecc", one environment `npm-release` | `gh api repos/nesyeklaf/sandy`, `/rulesets`, `/environments`, `gh pr list`, `gh issue list`, 2026-11-12 |
@@ -152,6 +152,7 @@ Nothing is published without the owner's explicit OK.
   5. creates an annotated tag.
   The push and the GitHub release are separate steps that need the owner.
 - CI on pull requests selects changed units (a change to `scripts/`, `packages/`, the root manifest, the lockfile or `compat.json` selects all). Per unit: `pnpm install --frozen-lockfile`, tests (`VITEST_MAX_WORKERS=1`), `check-git-install.mjs`, `sandy plugin build`. The Holon check runs on changed `.holon` files.
+- Repository-wide checks copied from sandy and run on every pull request: `check-source-nul.mjs` with sandy's binary-extension list, which includes `.wasm` since sandy main 5ae82b7f6 (#67), because `sandy/holon/vendor/holon-ui/libavoid.wasm` moves along.
 
 ## Decision 5: install and update afterwards
 
