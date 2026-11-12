@@ -1423,6 +1423,7 @@ export const SURFACE_GROUPS: SurfaceGroup[] = [
           "Test it against sandy's conformance suite and recorded sessions, without a running sandy",
         ],
         reference: [
+          "Use experimental_skillSelectionSchema to validate skills/configure selection, ExperimentalSkillSelection for its type, and experimental_isSkillNameEnabled to apply inherit, disable or allow-only by exact, case-sensitive skill name. These are re-exports of the domain policy used by core skill listings and command typeahead, not proof that a native agent enforces it. The Pi, Claude Code and Codex bridges use the same policy.",
           "Use @sandy-sdk/plugin-sdk/process for hostToolchain executable and environment discovery, or spawnHostProcess, forkHostProcess and execHostFile (all experimental_ exports). Core uses these same launch paths; ENOENT or exit 127 starts a background discovery refresh without replaying side effects, and launches never wait for discovery. Explicit cwd and env are preserved, Windows shims are quoted, and workers recover a replaced Node runtime only when its native-module ABI matches. Node launches that carry --use-env-proxy keep it only when the child's HTTP(S)_PROXY values are http(s) URLs, and then bypass the proxy for loopback.",
         ],
         apiSymbols: [

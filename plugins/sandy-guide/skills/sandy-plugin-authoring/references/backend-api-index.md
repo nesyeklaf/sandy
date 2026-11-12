@@ -371,6 +371,12 @@ Read the installed declarations for exact current signatures.
 - `ThreadChatProps`
 - `UrlLinkProps`
 
+## `@sandy-sdk/plugin-sdk/provider-bridge`
+
+- `experimental_isSkillNameEnabled`
+- `experimental_skillSelectionSchema`
+- `ExperimentalSkillSelection`
+
 ## `@sandy-sdk/plugin-sdk/environment-provider`
 
 - `PluginEnvironmentProviderAvailabilityContext`

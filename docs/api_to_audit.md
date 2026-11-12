@@ -1192,13 +1192,24 @@ decide whether `gaps` stays a closed list or providers may name their own.
 ## Skill selection helpers (`experimental_isSkillNameEnabled`, `experimental_skillSelectionSchema`, `ExperimentalSkillSelection`) (`@sandy-sdk/plugin-sdk/provider-bridge`)
 
 Direct re-exports of `isSkillNameEnabled`, `skillSelectionSchema` and
-`SkillSelection` from `@sandy/domain/skill-selection`, the same code the server
-uses to compute `selectionEnabled` in listings. Bridges parse `skills/configure`
-`selection` with the schema and filter names with the predicate. Callers: the
-Pi, Claude Code and Codex bridges.
+`SkillSelection` from `@sandy/domain/skill-selection`. The schema validates the
+strict `inherit`, `disable` and `allow-only` shapes; the predicate matches names
+exactly and case-sensitively. `inherit` enables every name, `disable` excludes
+listed names, and `allow-only` includes only listed names. These helpers do not
+establish that an agent actually enforces the policy.
+
+Core callers on the same path: `apps/server/src/services/skills/skill-listing.ts`
+computes `selectionEnabled` and
+`apps/server/src/services/threads/provider-command-typeahead.ts` filters skill
+commands with the domain predicate. Server settings and bridge configuration
+validate against the same domain schema. The Pi, Claude Code and Codex bridges
+consume these SDK re-exports; no parallel plugin policy is maintained.
 
 **Audit before stabilizing.** Decide whether bridges should get an
-already-resolved list of names instead of the policy.
+already-resolved list of names instead of the policy. Pin schema rejection and
+case-sensitive name matching with shared core/bridge contract tests, and verify
+real-agent discovery and restart behavior before treating the helpers as an
+enforcement guarantee.
 
 ## `sandy.sdk.threads.experimental_listAncestors`
 
