@@ -293,7 +293,7 @@ Repository settings the owner sets again, since a push does not carry them:
 - environment `npm-release` with its protection rules, and the Actions secrets and variables. The read without admin rights listed none, so the owner reads them in the old repository's settings;
 - the ruleset "Protecc" (rulesets are available on public repositories in the Free plan);
 - "Require approval for all outside collaborators" for workflow runs from forks;
-- apps: boat (Decision 11), CodeRabbit, SlopCop, Blacksmith if kept (Decision 11), Expo/EAS if it is connected;
+- apps: boat (Decision 11), CodeRabbit, SlopCop, Expo/EAS if it is connected; not Blacksmith (Decision 11);
 - npm trusted publishers for `sandy-app` and `@sandy-sdk/plugin-sdk` on `sandy-sdk/sandy` (Decision 3).
 
 ## Decision 10: the SDK keeps its name (owner decided)
@@ -368,7 +368,7 @@ Sandy `sandy-sdk/sandy`. This change does not edit sandy's workflows; the cutove
 - Blacksmith: 3,000 free 2-vCPU-equivalent Linux minutes a month per organization, shared by all runner types. Then $0.004/min Linux 2 vCPU, $0.008 Windows 2 vCPU, $0.08 macOS M4 6 vCPU, and a 4-vCPU runner uses twice the rate. There is no free tier for public repositories, only an open-source program by application. Source: [Blacksmith pricing](https://www.blacksmith.sh/pricing), [instance types](https://docs.blacksmith.sh/blacksmith-runners/overview).
 - Sandy uses Blacksmith for speed and size, not price: `blacksmith-6vcpu-macos-15/27` (M4, 6 vCPU) against GitHub's 3-vCPU M1, and Windows host-package suites tuned to the Blacksmith image (`docs/windows-ci.md`, `docs/ci-performance.md:364`). The repository records no other reason.
 
-**Recommendation: GitHub-hosted labels** for all Blacksmith jobs, since both repositories are public and pay nothing there. The owner's own Linux jobs go to boat anyway. What it costs: slower macOS desktop builds and iOS e2e on 3 vCPU and 7 GB, a check that the Windows suites and the `diskpart` step run on `windows-2025`, and a new perf baseline. Keeping Blacksmith means installing it on `sandy-sdk` and paying beyond the free quota; the macOS jobs alone use 150 free minutes. The owner decides.
+**Owner decision (2026-11-12): GitHub-hosted labels** for all Blacksmith jobs ("dann github runners"), since both repositories are public and pay nothing there. Blacksmith is not installed on `sandy-sdk`. The owner's own Linux jobs go to boat anyway. What it costs: slower macOS desktop builds and iOS e2e on 3 vCPU and 7 GB, a check that the Windows suites and the `diskpart` step run on `windows-2025`, and a new perf baseline.
 
 ## Decision 12: cutover from `nesyeklaf/sandy` to `sandy-sdk/sandy` (owner decided)
 
@@ -408,7 +408,7 @@ Only the owner does these. The agent creates no organization, repository, app in
 1. Merge or close the 6 open pull requests on `nesyeklaf/sandy`; freeze `main` (step 0a).
 2. Create the free GitHub organization `sandy-sdk` and an empty public `sandy-sdk/sandy`, not a fork (step 0b).
 3. Push `main` and all tags from a fresh bare clone (Decision 9, step 0c).
-4. Re-create the settings a push does not carry: environment `npm-release`, secrets and variables, the ruleset "Protecc", fork-PR approval, apps (CodeRabbit, SlopCop, Expo/EAS, Blacksmith only if kept) (Decision 9).
+4. Re-create the settings a push does not carry: environment `npm-release`, secrets and variables, the ruleset "Protecc", fork-PR approval, apps (CodeRabbit, SlopCop, Expo/EAS; not Blacksmith) (Decision 9).
 5. Start the boat $20 plan, install the boat CI app on `sandy-sdk` (`boat ci connect --org sandy-sdk`), and run `boat ci public sandy-sdk on --users nesyeklaf` (Decision 11).
 6. Create the npm organization `sandy-sdk` (free, public packages).
 7. After the cutover change: publish `@sandy-sdk/plugin-sdk` once by hand with `--access public`, then add the trusted publishers for it and for `sandy-app` on `sandy-sdk/sandy` (Decision 3).
@@ -417,7 +417,6 @@ Only the owner does these. The agent creates no organization, repository, app in
 
 ## Open questions for the owner
 
-Answered on 2026-11-12, last version: organization `sandy-sdk` with the scope following it (no rename); `sandy-sdk/sandy` and `sandy-sdk/sandy-plugins` both new and public; `nesyeklaf/sandy` kept, not archived; issues, pull requests and the `desktop-v*` releases stay there; GitHub-hosted runners by default, boat only for the owner's own content; desktop macOS and Windows on GitHub runners; the SDK public on npmjs; pi/fabric to pnpm; nothing else renamed. Dropped: transfer, fork detach, private sandy, GitHub Packages.
+Answered on 2026-11-12, last version: organization `sandy-sdk` with the scope following it (no rename); `sandy-sdk/sandy` and `sandy-sdk/sandy-plugins` both new and public; `nesyeklaf/sandy` kept, not archived; issues, pull requests and the `desktop-v*` releases stay there; GitHub-hosted runners by default, boat only for the owner's own content; desktop macOS and Windows on GitHub runners; the SDK public on npmjs; pi/fabric to pnpm; nothing else renamed; Blacksmith replaced by GitHub-hosted labels. Dropped: transfer, fork detach, private sandy, GitHub Packages.
 
-Still open:
-1. Blacksmith: GitHub-hosted labels (recommended, free on public repositories) or keep Blacksmith on `sandy-sdk` for faster macOS and Windows jobs at a cost beyond 3,000 free minutes (Decision 11)?
+No questions are open.

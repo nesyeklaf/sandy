@@ -83,5 +83,6 @@ The core change touches only the server and its clients. It does not change any 
   - **The four disabled `/home/aemon/...` installs:** re-point them to the new repository.
   - **Holons:** the plugin holons move with their code.
   - **Package manager (new rule):** all plugins use pnpm (no `package-lock.json`, a pnpm workspace in the new repository).
-- Still open (design.md, Open questions): Blacksmith kept or replaced by GitHub-hosted runners (recommended).
+  - **Blacksmith:** replaced by GitHub-hosted runners ("dann github runners"), free on public repositories.
+- No owner question is open.
 - This change authorizes writing the spec only. Creating an organization or a repository, pushing, changing visibility, installing apps, publishing, installing, changing pi-setup and deploying each need the owner's explicit OK.
