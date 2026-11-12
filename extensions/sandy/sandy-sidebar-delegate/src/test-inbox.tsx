@@ -115,8 +115,8 @@ export const defaultSidebarSettings = {
     failed: "default",
     working: "default",
     review: "default",
-    waiting: "default",
-    ideas: "default",
+    idle: "default",
+    dormant: "default",
     merged: "default",
   },
   compactProjectIconOnly: false,
@@ -127,6 +127,7 @@ export const defaultSidebarSettings = {
   dockShelves: false,
   projectColorsEnabled: false,
   projectColorDisplay: "all",
+  spaceHeaderDensity: "compact",
 };
 
 let nextPinnedKey = 0;

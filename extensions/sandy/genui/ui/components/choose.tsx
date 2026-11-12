@@ -386,7 +386,7 @@ function SwatchChip({
  * Suggested next questions as quiet rows, and one question: a tap puts the
  * prompt in the user's message (single-select: tap again to take it out,
  * another to switch). Like a ButtonGroup's choices, they fold away once sent
- * (leaving a "sent" line) or once the thread moved on.
+ * (leaving a "sent" line with Change).
  */
 export function FollowUps({ props }: { props: Props }) {
   const { staged, sent, target, stage } = useAnswers();
@@ -394,7 +394,7 @@ export function FollowUps({ props }: { props: Props }) {
   const { closed, gone } = useClosedChoices(question);
   const prompts = followUpPrompts(props.prompts);
   const answered = sentFor(sent, question, (text) => prompts.includes(text));
-  if (gone) return answered === null ? null : <SentLine text={answered.text} />;
+  if (gone) return answered === null ? null : <SentLine text={answered.text} question={question} />;
   if (prompts.length === 0) return null;
   const picked = staged.get(question)?.selection ?? null;
   return (

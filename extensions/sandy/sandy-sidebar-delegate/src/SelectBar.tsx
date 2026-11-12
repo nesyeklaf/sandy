@@ -9,7 +9,6 @@ import { useSelection } from "./SelectionHost";
 import { SnoozeSelect } from "./SnoozeSelect";
 import { useBulkActions } from "./useBulkActions";
 import { useBulkArchive } from "./useBulkArchive";
-import { useIdeaIds } from "./useIdeas";
 import { useOrchestratorIds } from "./useOrchestrators";
 
 const BAR_BUTTON =
@@ -19,25 +18,35 @@ function BarButton({
   icon,
   label,
   disabled,
+  reason,
   onClick,
 }: {
   icon: IconName;
   label: string;
   disabled: boolean;
+  reason?: string;
   onClick: () => void;
 }) {
-  return (
-    <Tooltip label={label}>
-      <button type="button" aria-label={label} className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
-        <Icon name={icon} className="size-3.5" aria-hidden />
-      </button>
-    </Tooltip>
+  const button = (
+    <button type="button" aria-label={label} className={BAR_BUTTON} disabled={disabled} onClick={onClick}>
+      <Icon name={icon} className="size-3.5" aria-hidden />
+    </button>
   );
+  if (disabled && reason !== undefined) {
+    return (
+      <Tooltip label={reason}>
+        <span tabIndex={0} className="inline-flex rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          {button}
+        </span>
+      </Tooltip>
+    );
+  }
+  return <Tooltip label={label}>{button}</Tooltip>;
 }
 
 const LABEL_KINDS = {
   tag: { label: "Tag", icon: "Tag", popover: "Tag selected threads", field: "Tag name" },
-  topic: { label: "Thema", icon: "Bookmark", popover: "Add selected threads to a topic", field: "Thema" },
+  topic: { label: "Topic", icon: "Bookmark", popover: "Add selected threads to a topic", field: "Topic" },
 } as const;
 
 function LabelButton({
@@ -91,7 +100,6 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   const { snoozePresets } = useInboxEnvironment();
   const archive = useBulkArchive();
   const bulk = useBulkActions();
-  const ideaIds = useIdeaIds();
   const orchestratorIds = useOrchestratorIds();
   const selected = useMemo(
     () => threads.filter((thread) => selection.selectedIds.has(thread.id)),
@@ -100,8 +108,8 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
   if (!selection.active) return null;
   const none = selected.length === 0;
   const allPinned = !none && selected.every((thread) => thread.isPinned);
-  const allIdeas = !none && selected.every((thread) => ideaIds.has(thread.id));
   const allOrchestrators = !none && selected.every((thread) => orchestratorIds.has(thread.id));
+  const outsideSpace = !allOrchestrators && selected.some((thread) => thread.sectionId === null);
   const finish = () => selection.exit();
   return (
     <div
@@ -157,18 +165,10 @@ export function SelectBar({ threads }: { threads: readonly PluginSidebarThread[]
         }}
       />
       <BarButton
-        icon="Bulb"
-        label={allIdeas ? "Keine Idee mehr" : "Als Idee markieren"}
-        disabled={none}
-        onClick={() => {
-          finish();
-          void bulk.idea(selected, !allIdeas);
-        }}
-      />
-      <BarButton
         icon="Orchestrator"
-        label={allOrchestrators ? "Kein Orchestrator mehr" : "Als Orchestrator markieren"}
-        disabled={none}
+        label={allOrchestrators ? "Not an orchestrator any more" : "Mark as orchestrator"}
+        disabled={none || outsideSpace}
+        reason={outsideSpace ? "Only sessions in a Space can be orchestrators" : undefined}
         onClick={() => {
           finish();
           void bulk.orchestrator(selected, !allOrchestrators);

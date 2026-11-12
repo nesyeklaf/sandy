@@ -1,4 +1,6 @@
-import { beforeAll } from "vitest";
+import { beforeAll, vi } from "vitest";
+
+vi.mock("./useDormancyClock", () => ({ useDormancyClock: vi.fn(() => 0) }));
 
 class TestResizeObserver implements ResizeObserver {
   observe(): void {}

@@ -87,10 +87,14 @@ export async function reset(request) {
   await rpc(request, "reorderInbox", { inboxThreadIds: fixture.threads.map(({ id }) => id) });
 }
 
-export async function open(page, { theme = "light", width = 320, empty = false } = {}) {
+export async function open(page, { theme = "light", width = 320, empty = false, listView = "flow" } = {}) {
   const storeWidth = (stored) =>
     page.addInitScript((value) => localStorage.setItem("sandy.sidebar.width", String(value)), stored);
   await page.addInitScript((theme) => localStorage.setItem("sandy.theme", theme), theme);
+  await page.addInitScript((view) => {
+    if (view && localStorage.getItem("sandy-sidebar:list-view:v1") === null)
+      localStorage.setItem("sandy-sidebar:list-view:v1", view);
+  }, listView);
   const railReserve = 49;
   await storeWidth(width + railReserve);
   await page.goto(fixture.url);
@@ -108,8 +112,10 @@ export async function open(page, { theme = "light", width = 320, empty = false }
   }
   if (empty) {
     await expect(page.getByText("All clear. Time to touch some grass.")).toBeVisible();
-  } else {
+  } else if (listView === "flow") {
     await expect(shelf(page, "Waiting")).toBeVisible();
+  } else {
+    await expect(page.getByRole("radiogroup", { name: "List layout" })).toBeVisible();
   }
 }
 

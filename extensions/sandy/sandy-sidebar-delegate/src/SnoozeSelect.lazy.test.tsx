@@ -13,9 +13,7 @@ describe("SnoozeSelect while closed", () => {
   it("formats no dates and resolves no presets until the menu opens", () => {
     const construct = countDateTimeFormats();
     try {
-      render(
-        <SnoozeSelect label="Snooze thread" snoozePresets={presets} triggerClassName="" onSnooze={() => {}} />,
-      );
+      render(<SnoozeSelect label="Snooze thread" snoozePresets={presets} triggerClassName="" onSnooze={() => {}} />);
       expect(construct.count()).toBe(0);
       expect(screen.queryByRole("option")).toBeNull();
 

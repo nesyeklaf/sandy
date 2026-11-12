@@ -2,6 +2,7 @@
 import { afterEach, expect, it } from "vitest";
 import {
   activeSortCodec,
+  spaceSortCodec,
   childExpansionCodec,
   projectCollapseCodec,
   projectScopeCodec,
@@ -38,15 +39,17 @@ it("caps child expansion before deduplication on read and only on storage prune"
 });
 
 it("fills older shelf shapes and drops unknown keys without stricter primitive rejection", () => {
-  expect(shelfExpansionCodec.decode('{"settled":true,"active":false,"inactive":true,"merged":false,"unknown":true}')).toEqual({
+  expect(
+    shelfExpansionCodec.decode('{"settled":true,"active":false,"inactive":true,"merged":false,"unknown":true}'),
+  ).toEqual({
     pinned: true,
     needs: false,
     failed: true,
     working: true,
     review: true,
-    waiting: true,
+    idle: true,
+    dormant: false,
     orchestrators: true,
-    ideas: true,
     merged: false,
     snoozed: false,
     archived: false,
@@ -66,6 +69,14 @@ it("carries an expanded or collapsed Parked shelf over to Snoozed", () => {
   expect(shelfExpansionCodec.decode('{"parked":true,"snoozed":false}')?.snoozed).toBe(false);
 });
 
+it("defaults the Spaces sort mode to recent activity and ignores the Flow legacy grouping", () => {
+  localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "true");
+  expect(spaceSortCodec.decode(null)).toBeNull();
+  expect(spaceSortCodec.decode("invalid")).toBeNull();
+  expect(spaceSortCodec.fallback()).toBe("activity");
+  expect(spaceSortCodec.decode("created")).toBe("created");
+});
+
 it("uses legacy grouping only for missing or invalid sort modes without rewriting it", () => {
   localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "true");
   expect(activeSortCodec.decode(null)).toBe("project");
@@ -77,4 +88,8 @@ it("uses legacy grouping only for missing or invalid sort modes without rewritin
   expect(localStorage.getItem(STORAGE_KEYS.activeGrouping.key)).toBe("true");
   localStorage.setItem(STORAGE_KEYS.activeGrouping.key, "false");
   expect(activeSortCodec.decode(null)).toBe("manual");
+});
+
+it("reads the former Waiting shelf state as Idle", () => {
+  expect(shelfExpansionCodec.decode('{"waiting":false}')).toMatchObject({ idle: false, dormant: false });
 });

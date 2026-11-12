@@ -3,7 +3,6 @@ import { useRpc, type PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import type { sandySidebarRpcContract } from "./contract";
 import { formatSnoozeWakeTime } from "./lifecycle";
 import { toast } from "./lib/toast";
-import { useMarkIdeas } from "./useIdeas";
 import { useMarkOrchestrators } from "./useOrchestrators";
 
 type Target = Pick<PluginSidebarThread, "id">;
@@ -25,7 +24,6 @@ async function bulkChange(failure: string, run: () => Promise<BulkChange>): Prom
 
 export function useBulkActions() {
   const rpc = useRpc<typeof sandySidebarRpcContract>();
-  const markIdeas = useMarkIdeas();
   const markOrchestrators = useMarkOrchestrators();
 
   const undo = useCallback(
@@ -136,35 +134,6 @@ export function useBulkActions() {
     [rpc],
   );
 
-  const idea = useCallback(
-    async (threads: readonly Target[], idea: boolean) => {
-      const threadIds = threads.map((thread) => thread.id);
-      if (threadIds.length === 0) return;
-      let changed: string[];
-      try {
-        changed = await markIdeas(threadIds, idea);
-      } catch {
-        toast.error(`Could not change the idea mark of ${threadCount(threadIds.length)}`);
-        return;
-      }
-      if (changed.length === 0) return;
-      toast.success(
-        idea
-          ? `Marked ${threadCount(changed.length)} as idea`
-          : `Removed the idea mark from ${threadCount(changed.length)}`,
-        {
-          action: {
-            label: "Undo",
-            onClick: () => {
-              void markIdeas(changed, !idea).catch(() => toast.error("Could not undo this change"));
-            },
-          },
-        },
-      );
-    },
-    [markIdeas],
-  );
-
   const orchestrator = useCallback(
     async (threads: readonly Target[], orchestrator: boolean) => {
       const threadIds = threads.map((thread) => thread.id);
@@ -194,5 +163,5 @@ export function useBulkActions() {
     [markOrchestrators],
   );
 
-  return { snooze, pin, tag, topic, idea, orchestrator };
+  return { snooze, pin, tag, topic, orchestrator };
 }

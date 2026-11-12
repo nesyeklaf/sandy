@@ -50,7 +50,7 @@ describe("ThreadInbox", () => {
     );
   });
 
-  it.each(["Waiting", "Settled", "Snoozed", "Parked"])(
+  it.each(["Idle", "Settled", "Snoozed", "Parked"])(
     "pins a thread from %s through the lifecycle RPC",
     async (shelf) => {
       const now = Date.now();
@@ -63,7 +63,7 @@ describe("ThreadInbox", () => {
         rpc: {
           listLifecycle: () => ({
             rows:
-              shelf === "Waiting"
+              shelf === "Idle"
                 ? []
                 : [
                     {
@@ -82,7 +82,7 @@ describe("ThreadInbox", () => {
       const section = await screen.findByRole("region", {
         name: shelf === "Parked" ? "Snoozed" : shelf === "Settled" ? "Archived" : shelf,
       });
-      if (shelf !== "Waiting") {
+      if (shelf !== "Idle") {
         fireEvent.click(within(section).getByRole("button", { expanded: false }));
       }
       fireEvent.contextMenu(within(section).getByText("Pin this thread"));

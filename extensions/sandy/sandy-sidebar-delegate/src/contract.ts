@@ -6,6 +6,7 @@ import {
   CHILD_THREAD_SORT_DIRECTIONS,
   CHILD_THREAD_ICON_STYLES,
   PROJECT_COLOR_DISPLAYS,
+  SPACE_HEADER_DENSITIES,
   SHELF_DENSITIES,
   THREAD_DENSITIES,
 } from "./sidebar-settings-values";
@@ -20,8 +21,7 @@ export {
 } from "./realtime-channels";
 import { searchRpcShape } from "./search-contract";
 import { lastMessageRpcShape } from "./last-message-contract";
-import { ideasRpcShape } from "./ideas-contract";
-import { orchestratorsRpcShape } from "./orchestrators-contract";
+import { spaceCoordinationRpcShape } from "./space-coordination-contract";
 import { topicsRpcShape } from "./topics-contract";
 import { anchorsRpcShape } from "./anchors-contract";
 import { bulkRpcShape, orderedThreadIdsSchema, threadIdsSchema } from "./bulk-contract";
@@ -129,9 +129,9 @@ const shelfDensitiesShape = {
   failed: z.enum(SHELF_DENSITIES),
   working: z.enum(SHELF_DENSITIES),
   review: z.enum(SHELF_DENSITIES),
-  waiting: z.enum(SHELF_DENSITIES),
+  idle: z.enum(SHELF_DENSITIES),
+  dormant: z.enum(SHELF_DENSITIES),
   orchestrators: z.enum(SHELF_DENSITIES),
-  ideas: z.enum(SHELF_DENSITIES),
   merged: z.enum(SHELF_DENSITIES),
 };
 export const sidebarSettingsSchema = z
@@ -162,6 +162,7 @@ export const sidebarSettingsSchema = z
     dockShelves: z.boolean(),
     projectColorsEnabled: z.boolean(),
     projectColorDisplay: z.enum(PROJECT_COLOR_DISPLAYS),
+    spaceHeaderDensity: z.enum(SPACE_HEADER_DENSITIES),
   })
   .strict();
 const uploadFilenameSchema = z
@@ -234,8 +235,7 @@ export const sandySidebarRpcContract = defineRpcContract({
   ...anchorsRpcShape,
   ...bulkRpcShape,
   ...lastMessageRpcShape,
-  ...ideasRpcShape,
-  ...orchestratorsRpcShape,
+  ...spaceCoordinationRpcShape,
   listDelegateChildren: {
     input: z.object({}).strict(),
     output: z.object({ children: z.array(delegateChildSchema) }),
@@ -320,7 +320,6 @@ export const sandySidebarRpcContract = defineRpcContract({
         .object({
           ...shelfDensitiesShape,
           orchestrators: shelfDensitiesShape.orchestrators.optional(),
-          ideas: shelfDensitiesShape.ideas.optional(),
         })
         .strict()
         .optional(),

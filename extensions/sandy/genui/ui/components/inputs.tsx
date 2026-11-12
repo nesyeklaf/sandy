@@ -469,25 +469,36 @@ export function ActionHint({
 }
 
 /** A quiet confirmation of what this UI sent; `text` null reads just "Sent". */
-export function SentLine({ text }: { text: string | null }) {
-  const ref = useEntrance<HTMLParagraphElement>(SENT_ENTRANCE);
+export function SentLine({ text, question }: { text: string | null; question?: string }) {
+  const ref = useEntrance<HTMLDivElement>(SENT_ENTRANCE);
   return (
-    <p
-      ref={ref}
-      role="status"
-      title={text ?? undefined}
-      className="m-0 flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-muted-foreground"
+    <div ref={ref} className="flex min-w-0 items-center gap-2">
+      <p role="status" title={text ?? undefined} className="m-0 flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-muted-foreground">
+        <Icon name="Check" aria-hidden className="size-3.5 shrink-0" />
+        {text === null ? (
+          "Sent"
+        ) : (
+          <>
+            <span className="sr-only">You sent: </span>
+            <span className="min-w-0 truncate">{text}</span>
+          </>
+        )}
+      </p>
+      {question === undefined ? null : <ReopenButton question={question} />}
+    </div>
+  );
+}
+
+export function ReopenButton({ question }: { question: string }) {
+  const { reopen } = useAnswers();
+  return (
+    <button
+      type="button"
+      onClick={() => reopen(question)}
+      className={cn("shrink-0 rounded-sm text-xs leading-4 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline", FOCUS_RING)}
     >
-      <Icon name="Check" aria-hidden className="size-3.5 shrink-0" />
-      {text === null ? (
-        "Sent"
-      ) : (
-        <>
-          <span className="sr-only">You sent: </span>
-          <span className="min-w-0 truncate">{text}</span>
-        </>
-      )}
-    </p>
+      Change
+    </button>
   );
 }
 
@@ -511,14 +522,13 @@ const SENT_ENTRANCE: Entrance = { keyframes: [{ opacity: 0 }, { opacity: 1 }], d
 const CHOICE_FADE_MS = 200;
 
 /**
- * Whether `question` is closed (its answer was sent, or the thread moved on)
+ * Whether `question` is closed (its answer was sent)
  * and, once its fade has run, gone. Choices closed before they mounted are
  * gone at once; ones closed on screen fade first.
  */
 export function useClosedChoices(question: string): { closed: boolean; gone: boolean } {
-  const { superseded } = useUiRuntime();
   const { sent } = useAnswers();
-  const closed = questionClosed(sent, question, superseded);
+  const closed = questionClosed(sent, question);
   const [gone, setGone] = useState(closed);
   useEffect(() => {
     if (!closed) {
@@ -549,7 +559,7 @@ function answerTexts(props: Props): string[] {
  * choice buttons (Send, or no action) are a multi-select toggle: a pick
  * stages its answer in the user's message (useAnswers), picking it again
  * withdraws it, a sibling adds to it (answers in button order). Once the answer is sent they fold into
- * one line showing it, and once the thread moved on without one they leave.
+ * one line showing it, with Change to bring them back; later messages leave them open.
  * Other buttons (links, copies, local state) run at once and stay.
  * `question` names it where the buttons' keys are not node keys.
  */
@@ -580,7 +590,7 @@ export function ButtonGroup({ buttons, question: given }: { buttons: readonly Gr
   if (!sentHere && !shown) return null;
   return (
     <div data-button-group="" data-genui-question={choice.some(Boolean) ? question : undefined} className="flex min-w-0 flex-col gap-2">
-      {sentHere ? <SentLine text={answered.text} /> : null}
+      {sentHere ? <SentLine text={answered.text} question={question} /> : null}
       {shown ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           {buttons.map((button, index) => {

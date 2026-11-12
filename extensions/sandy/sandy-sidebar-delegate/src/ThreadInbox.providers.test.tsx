@@ -64,9 +64,7 @@ describe("ThreadInbox", () => {
 
       await waitFor(() => {
         const row = screen.getByRole("link", { name: "Pi thread" }).closest("[data-parent-card]")!;
-        expect(row.getAttribute("data-row-density")).toBe(
-          display,
-        );
+        expect(row.getAttribute("data-row-density")).toBe(display);
       });
       const region = screen.getByRole("region", { name: "Working" });
       const glyph = within(region).getByRole("img", { name: "Pi" });

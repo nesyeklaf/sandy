@@ -38,7 +38,7 @@ export function SectionAssignMenu({ thread }: { thread: PluginSidebarThread }) {
       const section = await sdk.threadSections.create({ name: trimmed });
       await sdk.threads.update({ threadId: thread.id, sectionId: section.id });
     } catch (error) {
-      toast.error("Failed to create project", {
+      toast.error("Failed to create Space", {
         description: error instanceof Error ? error.message.replace(/^HTTP \d+: /, "") : undefined,
       });
     }
@@ -46,18 +46,18 @@ export function SectionAssignMenu({ thread }: { thread: PluginSidebarThread }) {
   const current = thread.sectionId ?? null;
   const choices: { id: string | null; name: string }[] = [
     ...sections.map((section) => ({ id: section.id, name: section.name })),
-    { id: null, name: "No project" },
+    { id: null, name: "No Space" },
   ];
   return (
     <ContextMenu.Sub>
       <ContextMenu.SubTrigger className="flex cursor-pointer items-center rounded-md px-2 py-[0.3125rem] text-xs outline-none data-[state=open]:bg-accent data-[highlighted]:bg-accent">
-        Move to project…
+        Move to Space…
         <Icon name="ChevronRight" className="ml-auto size-4 opacity-60" />
       </ContextMenu.SubTrigger>
       <ContextMenu.Portal>
         <ContextMenu.SubContent
           {...portalScope}
-          aria-label="Move to project"
+          aria-label="Move to Space"
           sideOffset={4}
           className="z-50 max-h-72 min-w-44 overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
         >
@@ -71,8 +71,8 @@ export function SectionAssignMenu({ thread }: { thread: PluginSidebarThread }) {
           ))}
           <div className="mt-1 border-t border-border px-2 py-1.5">
             <input
-              aria-label="New project"
-              placeholder="New project…"
+              aria-label="New Space"
+              placeholder="New Space…"
               value={name}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {

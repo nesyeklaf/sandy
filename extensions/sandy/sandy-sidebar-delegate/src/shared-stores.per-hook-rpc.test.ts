@@ -2,11 +2,11 @@
 import { cleanup, waitFor } from "@testing-library/react";
 import { createElement, Fragment } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DELEGATE_CHILDREN_CHANNEL, IDEAS_CHANNEL } from "./realtime-channels";
+import { DELEGATE_CHILDREN_CHANNEL, ORCHESTRATORS_CHANNEL } from "./realtime-channels";
 import { deferred } from "./test-fixtures";
 import { giveEachHookItsOwnRpcClient, renderSlot } from "./test-slot";
 import { useDelegateChildren } from "./useDelegateChildren";
-import { useIsIdea } from "./useIdeas";
+import { useIsOrchestrator } from "./useOrchestrators";
 import { useLifecycle } from "./useLifecycle";
 
 const MOUNTED = 25;
@@ -55,10 +55,10 @@ describe("stores shared between components with a client per hook, as in core", 
     await waitFor(() => expect(answers).toHaveLength(3));
   });
 
-  it("reads the ideas once for all readers and coalesces a realtime burst", async () => {
+  it("reads the orchestrators once for all readers and coalesces a realtime burst", async () => {
     const answers: Array<ReturnType<typeof deferred<{ threadIds: string[] }>>> = [];
     const Probe = () => {
-      useIsIdea("thr_1");
+      useIsOrchestrator("thr_1");
       return null;
     };
     const rendered = renderSlot(
@@ -66,7 +66,7 @@ describe("stores shared between components with a client per hook, as in core", 
       {},
       {
         rpc: {
-          listIdeas: () => {
+          listOrchestrators: () => {
             const pending = deferred<{ threadIds: string[] }>();
             answers.push(pending);
             return pending.promise;
@@ -75,12 +75,12 @@ describe("stores shared between components with a client per hook, as in core", 
       },
     );
     await waitFor(() => expect(answers).toHaveLength(1));
-    for (let burst = 0; burst < 10; burst += 1) await rendered.emitRealtime(IDEAS_CHANNEL, {});
+    for (let burst = 0; burst < 10; burst += 1) await rendered.emitRealtime(ORCHESTRATORS_CHANNEL, {});
     expect(answers).toHaveLength(1);
     answers[0]!.resolve({ threadIds: [] });
     await waitFor(() => expect(answers).toHaveLength(2));
     answers[1]!.resolve({ threadIds: [] });
-    await rendered.emitRealtime(IDEAS_CHANNEL, {});
+    await rendered.emitRealtime(ORCHESTRATORS_CHANNEL, {});
     await waitFor(() => expect(answers).toHaveLength(3));
   });
 

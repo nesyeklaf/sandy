@@ -2,6 +2,7 @@ import type { PluginSidebarThread } from "@sandy-sdk/plugin-sdk/app";
 import { childStatusKind, childSubtree, threadAsksForInput } from "./child-status";
 import { isThreadWorking } from "./lifecycle";
 import { threadShortStatus } from "./StatusSlot";
+import { blocksWorking } from "./working-fact";
 
 /**
  * Whether a thread, or anything under it, still has work running: its own
@@ -22,10 +23,12 @@ export function isWorkingTree(
   childrenByParent: ReadonlyMap<string, readonly PluginSidebarThread[]>,
 ): boolean {
   if (
-    thread.hasPendingInteraction ||
-    thread.indicator === "waiting-for-input" ||
-    thread.indicator === "unread-error" ||
-    thread.queuedWork === "failed"
+    blocksWorking({
+      hasPendingInteraction: thread.hasPendingInteraction,
+      waitingForInput: thread.indicator === "waiting-for-input",
+      unreadError: thread.indicator === "unread-error",
+      queuedWork: thread.queuedWork,
+    })
   ) {
     return false;
   }

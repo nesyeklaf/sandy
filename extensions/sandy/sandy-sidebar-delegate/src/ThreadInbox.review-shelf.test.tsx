@@ -57,8 +57,8 @@ describe("In review shelf", () => {
     expect(within(shelf).getByText("Work env_a")).toBeDefined();
     expect(within(shelf).queryByText("Work env_b")).toBeNull();
     // A draft is still the author's work, so it stays in Active.
-    expect(within(screen.getByRole("region", { name: "Waiting" })).getByText("Work env_b")).toBeDefined();
-    expect(within(screen.getByRole("region", { name: "Waiting" })).queryByText("Work env_a")).toBeNull();
+    expect(within(screen.getByRole("region", { name: "Idle" })).getByText("Work env_b")).toBeDefined();
+    expect(within(screen.getByRole("region", { name: "Idle" })).queryByText("Work env_a")).toBeNull();
   });
 
   it("shows no shelf when no pull request is open", async () => {

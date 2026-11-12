@@ -305,7 +305,7 @@ it.each(snapshots)(
     expect(screen.getByText("Golden expanded-child")).toBeDefined();
     expect(screen.getAllByRole("list", { name: "Child threads" })).toHaveLength(2);
     expect(within(screen.getByRole("region", { name: "Archived" })).getByText("Golden child")).toBeDefined();
-    const active = screen.getByRole("region", { name: "Waiting" });
+    const active = screen.getByRole("region", { name: "Idle" });
     expect(
       within(active)
         .getAllByRole("listitem")

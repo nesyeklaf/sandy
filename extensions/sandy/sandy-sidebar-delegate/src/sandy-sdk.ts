@@ -14,10 +14,10 @@ import { mergeDelegateChildren } from "./delegate-children";
 import { useDelegateChildren } from "./useDelegateChildren";
 import {
   GITHUB_PR_STATUS_PLUGIN_ID,
-  MAX_PULL_REQUEST_KEYS,
   type EnvironmentPullRequest,
   type EnvironmentPullRequestRow,
 } from "./github-pr-status";
+import { spacePrOfRow, type SpacePrState } from "./spaces-model";
 import { diffStatOf, GIT_PLUGIN_ID, type DiffStat, type GitStatusRow } from "./git-status";
 
 export {
@@ -88,7 +88,7 @@ const githubPrStatusContract = {
  * that are absent or unavailable are left out, like in the single-id hook.
  */
 function useEnvironmentPullRequests(environmentIds: readonly string[]): ReadonlyMap<string, EnvironmentPullRequest> {
-  const keys = useMemo(() => [...new Set(environmentIds)].sort().slice(0, MAX_PULL_REQUEST_KEYS), [environmentIds]);
+  const keys = useMemo(() => [...new Set(environmentIds)].sort(), [environmentIds]);
   const { data } = experimental_useRpcKeyedQuery({
     pluginId: GITHUB_PR_STATUS_PLUGIN_ID,
     contract: githubPrStatusContract,
@@ -102,6 +102,28 @@ function useEnvironmentPullRequests(environmentIds: readonly string[]): Readonly
       if (row?.outcome === "available") byEnvironment.set(key, row.pullRequest);
     }
     return byEnvironment;
+  }, [data, keys]);
+}
+
+export function useThreadPullRequestOutcomes(
+  threads: readonly Pick<PluginSidebarThread, "environment">[],
+): ReadonlyMap<string, SpacePrState> {
+  const keys = useMemo(
+    () => [...new Set(threads.flatMap((thread) => (thread.environment?.id ? [thread.environment.id] : [])))].sort(),
+    [threads],
+  );
+  const { data } = experimental_useRpcKeyedQuery({
+    pluginId: GITHUB_PR_STATUS_PLUGIN_ID,
+    contract: githubPrStatusContract,
+    method: "pullRequests",
+    keys,
+  });
+  return useMemo(() => {
+    const outcomes = new Map<string, SpacePrState>();
+    for (const key of keys) {
+      outcomes.set(key, spacePrOfRow(data?.[key]));
+    }
+    return outcomes;
   }, [data, keys]);
 }
 

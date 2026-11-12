@@ -6,9 +6,9 @@ const AUTO_SHELF_DENSITY: Record<DensityShelf, ThreadDensity> = {
   failed: "comfortable",
   working: "compact",
   review: "dense",
-  waiting: "dense",
+  idle: "dense",
+  dormant: "dense",
   orchestrators: "comfortable",
-  ideas: "dense",
   merged: "dense",
 };
 

@@ -13,8 +13,7 @@ describe("ThreadInbox", () => {
   it("drops against the inbox order the host pushed mid-drag", async () => {
     const storedSettings = {
       ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-      },
+      ...{},
     };
     localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
 
@@ -158,7 +157,7 @@ describe("ThreadInbox", () => {
   });
 
   it("keeps Waiting order on remount while the saved order reloads", async () => {
-    const shelf = "Waiting";
+    const shelf = "Idle";
     const sidebarThreads = {
       status: "ready" as const,
       threads: [

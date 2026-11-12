@@ -27,7 +27,7 @@ const STATE_TEXT: Record<ItemState, string> = {
 
 const LEVEL_TEXT: Record<LabelLevel, string> = {
   session: "Session",
-  segment: "In Bereichen",
+  segment: "In ranges",
 };
 
 const MATCH_MODES: ReadonlyArray<{ mode: MatchMode; text: string; hint: string }> = [

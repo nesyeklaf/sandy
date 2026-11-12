@@ -25,7 +25,7 @@ export function useOrderedShelf(
 
 type Shelf = readonly PluginSidebarThread[];
 
-type StatusShelf = "failed" | "orchestrators" | "working" | "review" | "ideas" | "merged";
+type StatusShelf = "failed" | "orchestrators" | "working" | "review" | "merged" | "dormant";
 
 export function useStatusShelves(
   bases: Readonly<Record<StatusShelf, Shelf>>,
@@ -44,8 +44,8 @@ export function useStatusShelves(
     ),
     working: useOrderedShelf(bases.working, null, expanded.working, activeThreadId, attentionParentIds),
     review: useOrderedShelf(bases.review, null, expanded.review, activeThreadId, attentionParentIds),
-    ideas: useOrderedShelf(bases.ideas, null, expanded.ideas, activeThreadId, attentionParentIds),
     merged: useOrderedShelf(bases.merged, null, expanded.merged, activeThreadId, attentionParentIds),
+    dormant: useOrderedShelf(bases.dormant, null, expanded.dormant, activeThreadId, attentionParentIds),
   };
 }
 

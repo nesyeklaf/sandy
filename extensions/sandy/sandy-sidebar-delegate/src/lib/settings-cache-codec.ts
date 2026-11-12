@@ -4,6 +4,7 @@ import {
   DEFAULT_SIDEBAR_SETTINGS,
   projectColorDisplayOf,
   shelfDensitiesOf,
+  spaceHeaderDensityOf,
   threadDensityOf,
   type SidebarSettingsValues,
 } from "../sidebar-settings-values";
@@ -47,6 +48,7 @@ export function decodeSettingsCache(input: unknown): SidebarSettingsValues | nul
     dockShelves: value.dockShelves === true,
     projectColorsEnabled: value.projectColorsEnabled === true,
     projectColorDisplay: projectColorDisplayOf(value.projectColorDisplay),
+    spaceHeaderDensity: spaceHeaderDensityOf(value.spaceHeaderDensity),
   } as SidebarSettingsValues);
 }
 

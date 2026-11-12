@@ -1,5 +1,5 @@
-// Whether the user has moved on from the reply holding a block: the thread
-// has a user message after it. Every block of a thread shares one outline
+// Whether the thread has a user message after the reply holding a block,
+// which settles answers an emptied draft left staged; it never closes a question. Every block of a thread shares one outline
 // read and one realtime subscription; the outline is read again only when a
 // thread event can add or drop a user message, so a streaming reply costs
 // nothing. Works for blocks scrolled out of SANDY's virtualized timeline too,

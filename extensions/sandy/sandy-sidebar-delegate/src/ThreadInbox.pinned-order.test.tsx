@@ -12,7 +12,7 @@ describe("ThreadInbox", () => {
   it("keeps a separate collapsible Pinned shelf above Active", () => {
     render([thread({ id: "a", title: "Plain" }), thread({ id: "b", title: "Stuck", isPinned: true })]);
 
-    const active = screen.getByRole("region", { name: "Waiting" });
+    const active = screen.getByRole("region", { name: "Idle" });
     const pinned = screen.getByRole("region", { name: "Pinned" });
     expect(pinned.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(active).queryByText("Inbox")).toBeNull();

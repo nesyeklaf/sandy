@@ -1,0 +1,23 @@
+{
+  "historical": "OLD RUN, kept for history only. Superseded by resume-summary.json; the final delta, the 48 focused tests and the native browser results are not in this file.",
+  "schema": "sidebar-spaces-handoff/1",
+  "paths": "relative to the thread storage folder spaces/final-frozen unless noted; repo paths are relative to extensions/sandy/sandy-sidebar-delegate",
+  "repo": { "head": "845f50245be55f4c5f793d69d5c6d3b085bdcaef", "sourceChangedFileCount": 51, "statusLineCount": 54 },
+  "checksRunAfterFinalFix": [
+    { "name": "snapshot-before", "status": "done", "artifacts": ["source-list-before.txt", "source-before.sha256", "status-before.txt"] },
+    { "name": "full-unit", "status": "passed", "exit": 0, "files": 180, "tests": 1470, "artifacts": ["full-unit.json", "full-unit.log", "full-unit.exit"] },
+    { "name": "plugin-build", "status": "passed", "exit": 0, "artifacts": ["build.log", "build.exit", "build-done-at.txt"] }
+  ],
+  "checksNotRunAfterFinalFix": ["tsc --noEmit", "changed-file lint", "file sizes", "import boundaries", "openspec validate sidebar-spaces --strict", "source snapshot after run"],
+  "lastTscRunBeforeFinalFix": "pre-fix run only, not valid for the final source",
+  "keySourceHashes": {
+    "src/server-space-overview.ts": "8ffcfd2ee0545f2c9039c4f367ba87ef8b3019df6991e19fbb7d10fc7201da03",
+    "src/space-overview.working-parity.test.ts": "a8c16a7f0ef05b706997be557a788fc32bb8be7754b2a06e39b6634d0ce53c66",
+    "src/ThreadSpacesView.migration.test.tsx": "5b18cdbc85ef33fce5096bc58b7860cad4a30330cd55b77ae8ba169c95785aec",
+    "src/ThreadSpacesView.pr-lookup.test.tsx": "868682da005a06ec46b4ce8ca61a448506f7a27161961e436c71db153e65f9da"
+  },
+  "readmeFormat": "baseline: HEAD README fails the Biome table format check too; known, not to be redone",
+  "rootDist": "not touched",
+  "ownedBackgroundProcesses": "none running at handoff (pgrep matched only the shell wrapper)",
+  "openNotes": ["R2 working-parity 6/6 ran before the final server fix; re-run needed on final code", "R1 LIVE_ASKING_PARITY gap (RPC working 1, UI 0) not re-verified after fix"]
+}

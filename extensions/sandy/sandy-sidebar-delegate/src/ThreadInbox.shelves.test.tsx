@@ -46,8 +46,7 @@ describe("parking threads", () => {
   it("persists each shelf's expanded state across remounts", async () => {
     const storedSettings = {
       ...DEFAULT_SIDEBAR_SETTINGS,
-      ...{
-      },
+      ...{},
     };
     localStorage.setItem("sandy-sidebar:settings-cache:v1", JSON.stringify(storedSettings));
 
@@ -80,10 +79,10 @@ describe("parking threads", () => {
     };
 
     renderSlot(inbox, listProps, options);
-    let activeShelf = screen.getByRole("region", { name: "Waiting" });
+    let activeShelf = screen.getByRole("region", { name: "Idle" });
     let settledShelf = await screen.findByRole("region", { name: "Archived" });
     let snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
-    fireEvent.click(within(activeShelf).getByRole("button", { name: /^Waiting/, expanded: true }));
+    fireEvent.click(within(activeShelf).getByRole("button", { name: /^Idle/, expanded: true }));
     fireEvent.click(within(settledShelf).getByRole("button", { expanded: false }));
     fireEvent.click(within(snoozedShelf).getByRole("button"));
     expect(within(activeShelf).queryByText("Active work")).toBeNull();
@@ -92,10 +91,10 @@ describe("parking threads", () => {
 
     cleanup();
     renderSlot(inbox, listProps, options);
-    activeShelf = screen.getByRole("region", { name: "Waiting" });
+    activeShelf = screen.getByRole("region", { name: "Idle" });
     settledShelf = await screen.findByRole("region", { name: "Archived" });
     snoozedShelf = await screen.findByRole("region", { name: "Snoozed" });
-    expect(within(activeShelf).getByRole("button", { name: /^Waiting/, expanded: false })).toBeDefined();
+    expect(within(activeShelf).getByRole("button", { name: /^Idle/, expanded: false })).toBeDefined();
     expect(within(settledShelf).getByRole("button", { expanded: true })).toBeDefined();
     expect(within(snoozedShelf).getByRole("button", { expanded: true })).toBeDefined();
     expect(within(activeShelf).queryByText("Active work")).toBeNull();
@@ -103,7 +102,7 @@ describe("parking threads", () => {
     expect(within(snoozedShelf).getByText("Later work")).toBeDefined();
   });
 
-  it("does not flash settled threads as Waiting after an app restart", async () => {
+  it("does not flash settled threads as Idle after an app restart", async () => {
     const now = Date.now();
     const pendingSettings = deferred<typeof defaultSidebarSettings>();
     const pendingLifecycle = deferred<{
@@ -117,9 +116,7 @@ describe("parking threads", () => {
     const props = { ...listProps };
     const sidebarThreads = {
       status: "ready" as const,
-      threads: [
-        thread({ id: "settled", title: "Settled work" }),
-      ],
+      threads: [thread({ id: "settled", title: "Settled work" })],
       projects: [{ id: "proj_1", name: "sandy", isPersonal: false, href: "", settingsHref: "" }],
     };
     renderSlot(inbox, props, {
@@ -152,7 +149,7 @@ describe("parking threads", () => {
 
     const settledShelf = screen.getByRole("region", { name: "Archived" });
     expect(within(settledShelf).getByRole("button", { expanded: false })).toBeDefined();
-    expect(screen.queryByRole("region", { name: "Waiting" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Idle" })).toBeNull();
     expect(screen.queryByText("Settled work")).toBeNull();
   });
 
@@ -282,7 +279,13 @@ describe("B4 shelf classification", () => {
         status: "ready",
         threads: [
           thread({ id: "parent", title: "Root" }),
-          thread({ id: "child", title: "Broken", parentThreadId: "parent", status: "error", indicator: "unread-error" }),
+          thread({
+            id: "child",
+            title: "Broken",
+            parentThreadId: "parent",
+            status: "error",
+            indicator: "unread-error",
+          }),
         ],
         projects,
       },
@@ -298,7 +301,13 @@ describe("B4 shelf classification", () => {
         status: "ready",
         threads: [
           thread({ id: "parent", title: "Root" }),
-          thread({ id: "broken", title: "Broken", parentThreadId: "parent", status: "error", indicator: "unread-error" }),
+          thread({
+            id: "broken",
+            title: "Broken",
+            parentThreadId: "parent",
+            status: "error",
+            indicator: "unread-error",
+          }),
           thread({
             id: "asking",
             title: "Asking",
@@ -314,22 +323,5 @@ describe("B4 shelf classification", () => {
     const needs = await screen.findByRole("region", { name: "Needs you" });
     expect(within(needs).getByRole("link", { name: "Root" })).toBeDefined();
     expect(screen.queryByRole("region", { name: "Failed" })).toBeNull();
-  });
-  it("puts an idea on the Ideen shelf right after Waiting", async () => {
-    renderSlot(inbox, listProps, {
-      sidebarThreads: {
-        status: "ready",
-        threads: [thread({ id: "thr_idea", title: "Someday" }), thread({ id: "thr_wait", title: "Plain" })],
-        projects,
-      },
-      rpc: { listLifecycle: () => ({ rows: [] }), listIdeas: () => ({ threadIds: ["thr_idea"] }) },
-    });
-    const ideas = await screen.findByRole("region", { name: "Ideen" });
-    expect(within(ideas).getByRole("link", { name: "Someday" })).toBeDefined();
-    const waiting = screen.getByRole("region", { name: "Waiting" });
-    expect(within(waiting).queryByRole("link", { name: "Someday" })).toBeNull();
-    expect(within(waiting).getByRole("link", { name: "Plain" })).toBeDefined();
-    const regions = screen.getAllByRole("region").map((region) => region.getAttribute("aria-label"));
-    expect(regions.indexOf("Ideen")).toBe(regions.indexOf("Waiting") + 1);
   });
 });

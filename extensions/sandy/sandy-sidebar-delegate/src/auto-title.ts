@@ -11,7 +11,10 @@ export const AUTO_TITLE_RECOVERY_MIGRATION = `CREATE TABLE IF NOT EXISTS title_r
 )`;
 
 /** Recover a missing title once, without tying naming to sidebar mounts. */
-export function createAutoTitleRecovery(sandy: SandyPluginApi, regenerateTitle: ReturnType<typeof createTitleRegenerator>) {
+export function createAutoTitleRecovery(
+  sandy: SandyPluginApi,
+  regenerateTitle: ReturnType<typeof createTitleRegenerator>,
+) {
   const db = sandy.storage.database();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const queued = new Set<string>();

@@ -75,7 +75,9 @@ describe("automatic title recovery", () => {
     await state.active();
     await vi.advanceTimersByTimeAsync(10_000);
     expect(state.regenerate).toHaveBeenCalledTimes(1);
-    const replacement = await state.harness.lifecycle.reload((sandy) => createAutoTitleRecovery(sandy, state.regenerate));
+    const replacement = await state.harness.lifecycle.reload((sandy) =>
+      createAutoTitleRecovery(sandy, state.regenerate),
+    );
     disposers.push(() => replacement.harness.lifecycle.dispose());
     await replacement.harness.behavior.emitThreadEvent("thread.active", {
       thread: makeThreadResponse({ id: "target", title: null, visibility: "visible" }),
