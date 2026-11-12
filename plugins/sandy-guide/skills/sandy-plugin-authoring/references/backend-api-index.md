@@ -1,7 +1,6 @@
 # Backend API symbol index
 
-Use this index to check backend, host, AI-service, and test imports. Read the detailed backend references for behavior, fields, and examples.
-Read the installed declarations for exact current signatures.
+Use this index to check backend, host, AI-service, and test imports. Read the detailed backend references for behavior, fields, and examples; the installed declarations give exact current signatures.
 
 ## `@sandy-sdk/plugin-sdk`
 
@@ -19,12 +18,8 @@ Read the installed declarations for exact current signatures.
 - `ComposerPlusMenuItem`
 - `ComposerSendMenuItem`
 - `ComposerRichTextSpec`
-- `ComposerDraft`
-- `ComposerMention`
-- `ComposerInsertPart`
-- `ComposerInsertOptions`
-- `DiffProps`
-- `DiffViewMode`
+- `ComposerDraft`, `ComposerMention`, `ComposerInsertPart`, `ComposerInsertOptions`
+- `DiffProps`, `DiffViewMode`
 - `ExperimentalTabRegistration`
 - `ExperimentalTabContext`
 - `ExperimentalTabReference`
@@ -76,8 +71,7 @@ Read the installed declarations for exact current signatures.
 - `ExperimentalProviderModelPickerRouting`
 - `ExperimentalProviderModelPickerValue`
 - `ExperimentalVoiceInputTextareaProps`
-- `JsonValue`
-- `ReadonlyJsonValue`
+- `JsonValue`, `ReadonlyJsonValue`
 - `MarkdownProps`
 - `NewThreadComposerProps`
 - `NewThreadRequest`
@@ -370,6 +364,12 @@ Read the installed declarations for exact current signatures.
 - `ThreadChatMessageReference`
 - `ThreadChatProps`
 - `UrlLinkProps`
+
+## `@sandy-sdk/plugin-sdk/provider-bridge`
+
+- `experimental_isSkillNameEnabled`
+- `experimental_skillSelectionSchema`
+- `ExperimentalSkillSelection`
 
 ## `@sandy-sdk/plugin-sdk/environment-provider`
 

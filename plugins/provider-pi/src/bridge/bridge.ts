@@ -34,6 +34,7 @@ import {
   turnStartParamsSchema,
   turnSteerParamsSchema,
   type BridgeToolCallRequest,
+  type ExperimentalSkillSelection as SkillSelection,
   type InitializeResult,
   type ThreadDelta,
   type ThreadEventContextWindowUsage,
@@ -209,6 +210,7 @@ const extensionUi: ExtensionUiCoordinator = createExtensionUiCoordinator({
 });
 
 let configuredSkillPaths: string[] | null = null;
+let configuredSkillSelection: SkillSelection = { mode: "inherit" };
 
 let scratchDir: string | null = null;
 let scratchDirIsPrivate = false;
@@ -567,6 +569,7 @@ async function handleRequest(
       break;
     case "skills/configure":
       configuredSkillPaths = request.params.roots.map((root) => root.path);
+      configuredSkillSelection = request.params.selection;
       sendResult(request.id, { ok: true });
       break;
   }
@@ -588,6 +591,7 @@ function toPiSessionParams(
     instructionMode: params.instructionMode,
     dynamicTools: params.dynamicTools,
     additionalSkillPaths: configuredSkillPaths ?? undefined,
+    skillSelection: configuredSkillSelection,
   });
 }
 
@@ -707,9 +711,8 @@ async function buildSessionOptions(args: {
     systemPrompt: args.params.baseInstructions,
     appendSystemPrompt: args.params.appendSystemPrompt,
     shellEnvOverrides: args.params.shellEnvOverrides,
-    ...(args.params.additionalSkillPaths
-      ? { additionalSkillPaths: [...args.params.additionalSkillPaths] }
-      : {}),
+    skillSelection: args.params.skillSelection ?? { mode: "inherit" },
+    additionalSkillPaths: args.params.additionalSkillPaths ?? [],
     ...(args.params.thinkingLevel
       ? { thinkingLevel: args.params.thinkingLevel }
       : {}),
@@ -984,7 +987,10 @@ async function reconcileTurnOptions(
   const construction = threadSession.construction;
   const shellEnvOverrides =
     options.envVars && Object.keys(options.envVars).length > 0
-      ? { SANDY_THREAD_ID: threadId, ...buildShellEnvOverrides(options.envVars) }
+      ? {
+          SANDY_THREAD_ID: threadId,
+          ...buildShellEnvOverrides(options.envVars),
+        }
       : undefined;
   const environmentChanged =
     shellEnvOverrides !== undefined &&

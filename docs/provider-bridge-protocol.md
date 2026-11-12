@@ -313,6 +313,16 @@ with `METHOD_NOT_FOUND` still starts threads. The runtime never probes.
 Conformance rule `skills/configure-declared` pins both directions: declared →
 the request must succeed; undeclared → the request must be refused.
 
+`skills/configure` also carries `selection`, sandy's server-wide skill
+selection by name: `{ mode: "inherit" }`, `{ mode: "disable", names }` or
+`{ mode: "allow-only", names }`. It is sent when there are roots or the
+selection is not `inherit`; a missing `selection` means `inherit`. Injected
+roots arrive already filtered. The bridge applies the selection to its agent's
+native skills too (every copy of a name), and only for sessions it starts, never
+by writing the agent's own config files. Declare how far that reaches with
+`experimental_skillSelection` on the provider declaration. A selection change
+reaches a new provider process; running work keeps the process it has.
+
 ### Command catalog
 
 `commands/list { cwd }` returns `{ commands: [{ name, description, inputHint? }] }`,

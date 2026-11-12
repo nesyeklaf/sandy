@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SkillProvider, SkillSummary } from "@sandy/server-contract";
+import type {
+  SkillProvider,
+  SkillSelectionProvider,
+  SkillSummary,
+} from "@sandy/server-contract";
 import {
   ResourceInfiniteScrollSentinel,
   useResourceInfiniteItems,
@@ -24,10 +28,18 @@ import {
 } from "@sandy/shared-ui/confirm-delete-dialog";
 import { CreateWithTemplatesButton } from "@/components/create-via-prompt-examples";
 import { ProvenancePill } from "@/components/tools/ProvenancePill";
+import { Switch } from "@sandy/shared-ui/switch";
 import { SkillDetailView } from "@/components/tools/SkillDetailView";
 import { TOOLS_PAGE_BAND_CLASSES } from "@/components/tools/tools-navigation";
 import { skillScopeLabel } from "@/components/tools/skill-taxonomy";
-import type { ProviderInfo } from "@sandy/domain";
+import {
+  INHERIT_SKILL_SELECTION,
+  SKILL_SELECTION_GAP_LABELS,
+  canonicalSkillSelection,
+  setSkillNamesEnabled,
+  type ProviderInfo,
+  type SkillSelection,
+} from "@sandy/domain";
 import { ProviderIconMark } from "@/components/settings/ProviderIconMark";
 import { getProviderIconInfo } from "@/lib/provider-icon";
 import type { MarkdownLinkRouting } from "@/components/ui/markdown-link-routing";
@@ -71,27 +83,18 @@ const DUPLICATE_RELATION_LABELS: Readonly<
   "same-name": "Same name",
 };
 
-function SkillDuplicatesTooltip({
-  skill,
-  providerRoster,
-}: {
-  skill: SkillSummary;
-  providerRoster: ProviderRoster;
-}) {
+function SkillDuplicateOrigins({ skill }: { skill: SkillSummary }) {
   return (
-    <div className="flex max-w-md flex-col gap-1">
+    <ul className="flex max-w-md flex-col gap-1" data-skill-duplicate-origins="">
       {skill.duplicates.map((duplicate) => (
-        <div key={duplicate.id} className="flex flex-col">
+        <li key={duplicate.id} className="flex flex-col">
           <span className="font-medium">
-            {DUPLICATE_RELATION_LABELS[duplicate.relation]} ·{" "}
-            {providerLabel(duplicate.provider, providerRoster)}
+            {DUPLICATE_RELATION_LABELS[duplicate.relation]}
           </span>
-          <span className="break-all text-muted-foreground">
-            {duplicate.filePath}
-          </span>
-        </div>
+          <span className="break-all font-mono">{duplicate.filePath}</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -261,17 +264,169 @@ const SKILLS_LIBRARY_DESCRIPTION =
 
 const PREFETCH_HOVER_INTENT_MS = 150;
 
+const NO_SELECTION_PROVIDERS: readonly SkillSelectionProvider[] = [];
+
+function joinNames(names: readonly string[]): string {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+export function skillSelectionStatusText(
+  skills: readonly SkillSummary[],
+  providers: readonly SkillSelectionProvider[],
+): string | null {
+  const offNames = new Set(
+    skills.filter((skill) => !skill.selectionEnabled).map((skill) => skill.name),
+  );
+  if (offNames.size === 0) return null;
+  const names = (session: SkillSelectionProvider["support"]["session"]) =>
+    providers
+      .filter((provider) => provider.support.session === session)
+      .map((provider) => provider.displayName);
+  const pronoun = offNames.size === 1 ? "it" : "them";
+  const enforced = names("enforced");
+  const unverified = names("unverified");
+  const notEnforced = names("not-enforced");
+  const applying = providers.filter(
+    (provider) =>
+      provider.support.session === "enforced" ||
+      provider.support.session === "unverified",
+  );
+  const parts = [
+    `${offNames.size} ${offNames.size === 1 ? "skill is" : "skills are"} off.`,
+  ];
+  if (enforced.length > 0) {
+    parts.push(`New ${joinNames(enforced)} sessions start without ${pronoun}.`);
+  }
+  if (unverified.length > 0) {
+    parts.push(
+      `${joinNames(unverified)} ${unverified.length === 1 ? "leaves" : "leave"} ${pronoun} out of new sessions, not yet proven against the real ${unverified.length === 1 ? "agent" : "agents"}.`,
+    );
+  }
+  if (notEnforced.length > 0) {
+    parts.push(
+      `${joinNames(notEnforced)} still ${notEnforced.length === 1 ? "loads" : "load"} every skill.`,
+    );
+  }
+  const gaps = applying
+    .filter((provider) => provider.support.gaps.length > 0)
+    .map(
+      (provider) =>
+        `${joinNames(provider.support.gaps.map((gap) => SKILL_SELECTION_GAP_LABELS[gap]))} (${provider.displayName})`,
+    );
+  if (gaps.length > 0) parts.push(`Not filtered: ${gaps.join("; ")}.`);
+  const subagents = applying
+    .filter(
+      (provider) =>
+        provider.support.subagents === "not-enforced" ||
+        provider.support.subagents === "unverified",
+    )
+    .map((provider) => provider.displayName);
+  if (subagents.length > 0) {
+    parts.push(`Subagents of ${joinNames(subagents)} may still load ${pronoun}.`);
+  }
+  return parts.join(" ");
+}
+
+const SKILL_OFF_TOOLTIP =
+  "Turned off in the skill selection. New agent sessions start without it.";
+
+export function skillSelectionModeText(
+  selection: SkillSelection | undefined,
+): string | null {
+  if (selection?.mode !== "allow-only") return null;
+  const count = selection.names.length;
+  if (count === 0) {
+    return "The selection turns every skill off for agents, including skills added later. Agents still load the skills they cannot filter, listed in the provider status.";
+  }
+  return `Only ${count === 1 ? "1 chosen skill is" : `${count} chosen skills are`} on for agents. Every other skill, including skills added later, stays off until you turn it on. Agents still load the skills they cannot filter, listed in the provider status.`;
+}
+
+export const SKILL_SELECTION_APPLY_NOTE =
+  "Turning skills off or on applies to agent sessions that start afterwards; threads already loaded keep the skills they started with until stopped or their idle session is retired. A name covers every copy of that skill. The selection decides what agents load, not what they can read: an agent with file access can still open a skill's file.";
+
+export interface SkillSelectionControl {
+  selection: SkillSelection | undefined;
+  isPending: boolean;
+  onChange: (next: SkillSelection) => void;
+}
+
+function skillSelectionSwitchLabel(skill: SkillSummary): string {
+  const action = skill.selectionEnabled ? "Turn off" : "Turn on";
+  const copies = skill.duplicates.filter(
+    (duplicate) => duplicate.relation === "same-name",
+  ).length;
+  return copies === 0
+    ? `${action} ${skill.name} for agents`
+    : `${action} ${skill.name} for agents, with ${copies} other ${copies === 1 ? "copy" : "copies"} of the same name`;
+}
+
+function SkillSelectionMenu({
+  control,
+  shownNames,
+}: {
+  control: SkillSelectionControl;
+  shownNames: readonly string[];
+}) {
+  const { selection, isPending, onChange } = control;
+  const count = shownNames.length;
+  const shown = `${count} shown ${count === 1 ? "skill" : "skills"}`;
+  const allOff =
+    selection?.mode === "allow-only" && selection.names.length === 0;
+  return (
+    <ResourceOverflowMenu
+      label="Skill selection"
+      disabled={selection === undefined || isPending}
+      items={[
+        {
+          label: "Turn all skills off",
+          disabled: allOff,
+          onSelect: () => onChange({ mode: "allow-only", names: [] }),
+        },
+        {
+          label: `Only the ${shown} on`,
+          disabled: count === 0,
+          onSelect: () =>
+            onChange(
+              canonicalSkillSelection({
+                mode: "allow-only",
+                names: [...shownNames],
+              }),
+            ),
+        },
+        {
+          label: `Turn the ${shown} off`,
+          disabled: count === 0,
+          onSelect: () => {
+            if (selection === undefined) return;
+            onChange(setSkillNamesEnabled(selection, shownNames, false));
+          },
+        },
+        { kind: "separator" },
+        {
+          label: "Turn every skill on",
+          disabled: selection?.mode === "inherit",
+          onSelect: () => onChange(INHERIT_SKILL_SELECTION),
+        },
+      ]}
+    />
+  );
+}
+
 function SkillRow({
   skill,
   providerRoster,
+  selectionControl,
   onSelect,
   onPrefetch,
 }: {
   skill: SkillSummary;
   providerRoster: ProviderRoster;
+  selectionControl?: SkillSelectionControl;
   onSelect: () => void;
   onPrefetch?: (skill: SkillSummary) => void;
 }) {
+  const selection = selectionControl?.selection;
   const description = skillDescription(skill, providerRoster);
   const prefetchTimer = useRef<number | null>(null);
   const cancelScheduledPrefetch = () => {
@@ -301,22 +456,45 @@ function SkillRow({
           skill.duplicates.length === 0 ? (
             (skillProvenancePill(skill, providerRoster) ?? undefined)
           ) : (
-            <span className="inline-flex items-baseline gap-1">
+            <span className="inline-flex min-w-0 max-w-full items-baseline gap-1">
               {skillProvenancePill(skill, providerRoster)}
+              {skill.duplicates.length === 0 ? null : (
               <ProvenancePill
                 label={`${skill.duplicates.length} ${skill.duplicates.length === 1 ? "duplicate" : "duplicates"}`}
-                tooltip={
-                  <SkillDuplicatesTooltip
-                    skill={skill}
-                    providerRoster={providerRoster}
-                  />
-                }
+                tooltip={<SkillDuplicateOrigins skill={skill} />}
                 accessibleLabel={`${skill.name} is also found at ${skill.duplicates.map((duplicate) => duplicate.filePath).join(", ")}`}
+              />
+              )}
+            </span>
+          )
+        }
+        state={
+          skill.selectionEnabled ? undefined : (
+            <span className="shrink-0" data-skill-selection-off="">
+              <ProvenancePill
+                label="Off"
+                tooltip={SKILL_OFF_TOOLTIP}
+                accessibleLabel={`${skill.name} is turned off for agents`}
               />
             </span>
           )
         }
         description={description}
+        persistentActions={
+          selectionControl === undefined ? undefined : (
+            <Switch
+              checked={skill.selectionEnabled}
+              disabled={selection === undefined || selectionControl.isPending}
+              aria-label={skillSelectionSwitchLabel(skill)}
+              onCheckedChange={(enabled) => {
+                if (selection === undefined) return;
+                selectionControl.onChange(
+                  setSkillNamesEnabled(selection, [skill.name], enabled),
+                );
+              }}
+            />
+          )
+        }
         onOpen={onSelect}
         trailingVisual={<ResourceRowDetailChevron />}
       />
@@ -361,10 +539,14 @@ interface SkillsOverviewProps {
   onPrefetchSkill?: (skill: SkillSummary) => void;
   onQueryChange?: (query: string) => void;
   onRetry?: () => void;
+  selectionProviders?: readonly SkillSelectionProvider[];
+  selectionControl?: SkillSelectionControl;
 }
 
 export function SkillsOverview({
   skills,
+  selectionProviders = NO_SELECTION_PROVIDERS,
+  selectionControl,
   providerRoster,
   isLoading,
   hasError,
@@ -387,6 +569,11 @@ export function SkillsOverview({
   const [libraryViewport, setLibraryViewport] = useState<HTMLDivElement | null>(
     null,
   );
+  const selectionStatus = useMemo(
+    () => skillSelectionStatusText(skills, selectionProviders),
+    [skills, selectionProviders],
+  );
+  const selectionMode = skillSelectionModeText(selectionControl?.selection);
   const normalizedQuery = query.trim().toLowerCase();
   const libraryResetKey = [
     normalizedQuery,
@@ -494,6 +681,10 @@ export function SkillsOverview({
     sortMode,
     sourceFilters,
   ]);
+  const shownSkillNames = useMemo(
+    () => [...new Set(visibleSkills.map((skill) => skill.name))],
+    [visibleSkills],
+  );
   const libraryList = useResourceInfiniteItems(visibleSkills, {
     pageSize: libraryPageSize,
     resetKey: libraryResetKey,
@@ -540,6 +731,7 @@ export function SkillsOverview({
             key={`${skill.scope}-${skill.provider ?? "sandy"}-${skill.name}-${skill.filePath}`}
             skill={skill}
             providerRoster={providerRoster}
+            selectionControl={selectionControl}
             onSelect={() => onSelectSkill(skill)}
             onPrefetch={onPrefetchSkill}
           />
@@ -556,7 +748,23 @@ export function SkillsOverview({
   return (
     <ResourceCollectionPage
       id="skills-collection"
-      description={SKILLS_LIBRARY_DESCRIPTION}
+      description={
+        <>
+          <span className="block">
+            {selectionStatus === null
+              ? SKILLS_LIBRARY_DESCRIPTION
+              : `${SKILLS_LIBRARY_DESCRIPTION} ${selectionStatus}`}
+          </span>
+          {selectionMode === null ? null : (
+            <span className="mt-1 block" data-skill-selection-mode="">
+              {selectionMode}
+            </span>
+          )}
+          {selectionControl === undefined ? null : (
+            <span className="mt-1 block">{SKILL_SELECTION_APPLY_NOTE}</span>
+          )}
+        </>
+      }
       bandClassName={TOOLS_PAGE_BAND_CLASSES}
     >
       <ResourceCollectionViewport
@@ -616,6 +824,12 @@ export function SkillsOverview({
                   ]}
                   onChange={handleSortChange}
                 />
+                {selectionControl === undefined ? null : (
+                  <SkillSelectionMenu
+                    control={selectionControl}
+                    shownNames={shownSkillNames}
+                  />
+                )}
               </>
             }
           />
@@ -640,7 +854,9 @@ interface SkillDetailDialogViewProps {
   canDelete: boolean;
   canOpenInEditor: boolean;
   isDeleting: boolean;
+  isSelectionPending: boolean;
   markdownLinkRouting?: MarkdownLinkRouting;
+  onSelectionChange: (enabled: boolean) => void;
   onEdit: () => void;
   onRetry: () => void;
   onDelete: () => void;
@@ -660,7 +876,9 @@ export function SkillDetailDialogView({
   canDelete,
   canOpenInEditor,
   isDeleting,
+  isSelectionPending,
   markdownLinkRouting,
+  onSelectionChange,
   onEdit,
   onRetry,
   onDelete,
@@ -760,6 +978,11 @@ export function SkillDetailDialogView({
                 }
               : undefined
       }
+      otherCopies={
+        skill.duplicates.length === 0 ? undefined : (
+          <SkillDuplicateOrigins skill={skill} />
+        )
+      }
       files={files.length > 0 ? files : ["SKILL.md"]}
       markdownLinkRouting={markdownLinkRouting}
       selectedPath={selectedPath}
@@ -776,6 +999,14 @@ export function SkillDetailDialogView({
             : { kind: "ready", content }
       }
       overflowMenu={headerActions}
+      lifecycleControl={
+        <Switch
+          checked={skill.selectionEnabled}
+          disabled={isSelectionPending}
+          aria-label={`${skill.selectionEnabled ? "Turn off" : "Turn on"} ${skill.name} for agents`}
+          onCheckedChange={onSelectionChange}
+        />
+      }
       footer={
         <ConfirmDeleteDialog
           open={confirmingDelete}

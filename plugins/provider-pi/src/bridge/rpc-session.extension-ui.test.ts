@@ -34,6 +34,7 @@ it("auto-cancels extension dialogs in a helper session without a UI handler", as
   const session = new PiRpcSession(
     {
       cwd: dir,
+      skillSelection: { mode: "inherit" },
       sessionFilePath: join(dir, "session.jsonl"),
       sessionDir: dir,
       scratchDir: dir,

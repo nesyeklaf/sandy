@@ -14,6 +14,7 @@ import {
   createClaudeSkillPluginsRoot,
   ensureClaudeSkillPlugin,
   filterClaudeSkillRoots,
+  scanClaudeNativeSkills,
 } from "../skill-plugins.js";
 
 describe("claude skill plugins", () => {
@@ -48,18 +49,46 @@ describe("claude skill plugins", () => {
       join(native, "SKILL.md"),
       readFileSync(join(staged, "demo", "SKILL.md")),
     );
-    const args = {
-      roots: [{ id: "r", path: staged }],
-      cwd,
-      claudeDir,
-      pluginsRoot: createClaudeSkillPluginsRoot(baseDir),
-    };
-    expect(await filterClaudeSkillRoots(args)).toEqual([]);
+    const roots = [{ id: "r", path: staged }];
+    const pluginsRoot = createClaudeSkillPluginsRoot(baseDir);
+    const filter = async () =>
+      filterClaudeSkillRoots({
+        roots,
+        native: await scanClaudeNativeSkills({ cwd, claudeDir }),
+        pluginsRoot,
+        selection: { mode: "inherit" },
+      });
+    expect(await filter()).toEqual([]);
     writeFileSync(
       join(native, "SKILL.md"),
       "---\nname: demo\ndescription: Different instructions\n---\n",
     );
-    expect(await filterClaudeSkillRoots(args)).toEqual(args.roots);
+    expect(await filter()).toEqual(roots);
+  });
+
+  it("drops skills the selection turns off from an injected root", async () => {
+    const staged = stageSkills("selection");
+    mkdirSync(join(staged, "other"), { recursive: true });
+    writeFileSync(
+      join(staged, "other", "SKILL.md"),
+      "---\nname: other\ndescription: other\n---\n",
+    );
+    const pluginsRoot = createClaudeSkillPluginsRoot(baseDir);
+    const filter = (selection: Parameters<typeof filterClaudeSkillRoots>[0]["selection"]) =>
+      filterClaudeSkillRoots({
+        roots: [{ id: "r", path: staged }],
+        native: [],
+        pluginsRoot,
+        selection,
+      });
+    const [disabled] = await filter({ mode: "disable", names: ["demo"] });
+    expect(disabled?.path).not.toBe(staged);
+    expect(readlinkSync(join(disabled!.path, "other"))).toBe(join(staged, "other"));
+    expect(() => readlinkSync(join(disabled!.path, "demo"))).toThrow();
+    expect(await filter({ mode: "allow-only", names: [] })).toEqual([]);
+    expect(await filter({ mode: "allow-only", names: ["demo", "other"] })).toEqual([
+      { id: "r", path: staged },
+    ]);
   });
 
   it("is idempotent for a root and re-points the link when the root moves", () => {

@@ -94,6 +94,7 @@ import {
 } from "./branch-list-query.js";
 import { parseFileListLimit } from "./file-list-query.js";
 import { resolveSkillCatalog } from "../services/skills/skill-catalog.js";
+import { readSkillSelection } from "../services/skills/skill-selection.js";
 import {
   readWorkspaceAgentContext,
   type WorkspaceAgentContext,
@@ -778,6 +779,7 @@ export function registerProjectRoutes(app: Hono, deps: AppDeps): void {
           query.provider,
         ),
         skillCatalog,
+        skillSelection: readSkillSelection(deps),
       }),
     );
   });

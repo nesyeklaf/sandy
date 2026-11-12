@@ -75,6 +75,10 @@ import {
   setProviderEnabled,
 } from "../services/system/provider-management.js";
 import { getProviderStates } from "../services/system/provider-states.js";
+import {
+  readSkillSelectionView,
+  updateSkillSelection,
+} from "../services/skills/skill-selection.js";
 import { getProviderUsageLimits } from "../services/system/usage-limits.js";
 import {
   customThemeExists,
@@ -320,6 +324,14 @@ export function registerSystemRoutes(
     deps.hub.notifySystem(["config-changed"]);
     return context.json(compatibleGeneralSettings());
   });
+
+  get(routes.skillSelection, (context) =>
+    context.json(readSkillSelectionView(deps)),
+  );
+
+  put(routes.setSkillSelection, (context, payload) =>
+    context.json(updateSkillSelection(deps, payload)),
+  );
 
   put(routes.keyboardSettings, (context, payload) => {
     setAppKeybindingOverrides(deps.db, payload);

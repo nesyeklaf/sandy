@@ -9,6 +9,7 @@ import type {
   RuntimePermissionPolicy,
   ServiceTier,
   SessionOptionSelections,
+  SkillSelection,
 } from "@sandy/domain";
 import type {
   AgentRuntimeBridgeLaunch,
@@ -38,6 +39,7 @@ export type AdapterCommand =
   | {
       type: "skills/configure";
       skillRoots: readonly AgentRuntimeSkillRoot[];
+      skillSelection: SkillSelection;
     }
   | {
       type: "model/list";

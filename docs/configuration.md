@@ -609,6 +609,56 @@ stops sandy from injecting and listing that source, and Settings → General →
 sources has the same switches. They do not change what an agent loads from its
 own native roots.
 
+**Skill selection.** One server-wide selection decides, by skill name, what
+agents in sessions sandy starts load: `inherit` (the default; every skill the
+agent finds, with the skill sources above still applied), `disable` (the listed
+names off), or `allow-only` (only the listed names on; an empty list turns every
+skill off, and skills that appear later stay off). Change it with the switch on
+a skill's page, `sandy skill selection on|off <names...>`,
+`sandy skill selection disable|allow-only <names...>` or `inherit`, or SDK
+`skills.experimental_getSelection` and `skills.experimental_setSelection`;
+reading never writes. sandy stores it in its own database and hands it to each
+provider bridge when a session starts, so it writes no agent config file and
+running `claude`, `codex` or `pi` yourself is unaffected.
+
+A name covers every registration with that name: native roots, sandy user,
+project and shared skills, and skills bundled with sandy plugins. Turning a
+plugin's skill off does not turn off the plugin; its tools, MCP servers and
+other skills stay on. To drop everything one plugin brings, turn off the
+plugin; to drop every plugin skill, turn off the `sandy-plugins` source.
+
+The bridges apply it with each agent's own controls. Codex gets per-launch
+`-c skills.config` entries that disable names (`disable`) or the paths in
+Codex's own listing that the selection leaves out (`allow-only`). Claude Code
+gets `settings.skillOverrides` set to `off` per name, and sandy leaves the
+dropped skills out of the plugin it injects. Pi uses an isolated worker with
+the installed Pi SDK's `ResourceLoader.skillsOverride`, retaining native RPC,
+project-trust decisions and non-skill resources. The filter also runs after
+extensions contribute skills and after reload or session changes. The current
+adapter is tested against Pi 1.5.1; a filtered start on another version is
+refused. `inherit` keeps the native launcher on older supported versions.
+If a bridge cannot safely apply `disable` or `allow-only`, the session does
+not start rather than load the wrong skills.
+Each provider declares how far this reaches (`enforced`, `unverified`,
+`not-enforced`) for sessions and for subagents, plus the categories it
+cannot filter, which stay loaded even when every skill is off: Claude Code
+skills bundled with Claude Code and skills from Claude Code's own plugins,
+and under `allow-only` Codex skills added after a session started. Pi's
+extension-skill listing and prompt checks pass through the SDK worker; its
+session status remains `unverified` until the broader thread acceptance check,
+and its subagents remain `not-enforced`. The Skills page and `sandy skill selection`
+show both. The selection controls what an agent loads; an agent with file
+access can still read a skill's file by path.
+
+A change applies to sessions that start afterwards. A thread whose session is
+already loaded, running or idle, keeps the selection it started with until it
+is stopped or its runtime is retired; `sandy thread stop` releases one so its
+next message starts a session with the new selection. The change result
+(`pendingThreadIds`) lists the threads running a turn; loaded idle threads are
+not listed. This holds for sandy-injected skills too: sandy injects the same
+skills under every selection and the bridge leaves the disabled names out, so
+a selection change never reloads an environment. Nothing is stopped for you.
+
 Each listed skill carries `providers`, the agents that load it, and
 `duplicates`, the other registrations of the same skill: `same-file` (the
 same real file, for example through a symlink), `same-content` (identical

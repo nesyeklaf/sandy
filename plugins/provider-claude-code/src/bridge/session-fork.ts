@@ -14,7 +14,7 @@ const transcriptEntrySchema = z.looseObject({ type: z.string() });
 export function claudeConfigDirectory(env: NodeJS.ProcessEnv): string {
   return env.CLAUDE_CONFIG_DIR
     ? resolve(env.CLAUDE_CONFIG_DIR)
-    : join(homedir(), ".claude");
+    : join(env.HOME?.trim() || homedir(), ".claude");
 }
 
 export async function forkClaudeSession(args: {

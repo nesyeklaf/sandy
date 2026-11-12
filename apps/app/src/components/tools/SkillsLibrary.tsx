@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { PERSONAL_PROJECT_ID } from "@sandy/domain";
+import {
+  PERSONAL_PROJECT_ID,
+  setSkillNamesEnabled,
+  type SkillSelection,
+} from "@sandy/domain";
+import { appToast } from "@/components/ui/app-toast";
 import { buildSkillEditThreadPrompt } from "@sandy/shared-ui/resource-edit-prompt";
 import type { EditableSkillScope, SkillSummary } from "@sandy/server-contract";
 import { ResourceListState } from "@sandy/shared-ui/resource-list";
@@ -10,7 +15,9 @@ import {
   SkillDetailDialogView,
   SkillsOverview,
   type ProviderRoster,
+  type SkillSelectionControl,
 } from "@/components/tools/SkillsCollection";
+import { useStopThread } from "@/hooks/mutations/thread-runtime-mutations";
 import { useSystemProviders } from "@/hooks/queries/system-queries";
 import { isSkillEditable } from "@/components/tools/skill-taxonomy";
 import { CREATE_SKILL_PROMPT } from "@sandy/client-core";
@@ -25,12 +32,56 @@ import {
   prefetchSkillDetail,
   useDeleteSkill,
   useProjectSkills,
+  useSetSkillSelection,
+  useSkillSelection,
   useSkillContent,
   useSkillFiles,
 } from "@/hooks/queries/skills-queries";
 import { useLocalOpenTargets } from "@/hooks/useLocalOpenTargets";
 
 const EMPTY_SKILLS: readonly SkillSummary[] = [];
+
+function useSkillSelectionControl(options?: {
+  enabled: boolean;
+}): SkillSelectionControl {
+  const selectionQuery = useSkillSelection(options);
+  const setSelection = useSetSkillSelection();
+  const { mutate: stopThread } = useStopThread();
+  const selection = selectionQuery.data?.selection;
+  const { mutate } = setSelection;
+  const onChange = useCallback(
+    (next: SkillSelection) => {
+      mutate(next, {
+        onSuccess: (result) => {
+          const pending = result.pendingThreadIds;
+          if (pending.length === 0) return;
+          const one = pending.length === 1;
+          appToast.message("Skill selection saved for new sessions", {
+            description: `${pending.length} running ${one ? "thread keeps" : "threads keep"} the previous skills until stopped. Stop ${one ? "it" : "them"} to apply the change on the next message.`,
+            action: {
+              label: one ? "Stop thread" : `Stop ${pending.length} threads`,
+              onClick: () => {
+                for (const threadId of pending) stopThread(threadId);
+              },
+            },
+          });
+        },
+        onError: () => {
+          appToast.error("Couldn't update the skill selection");
+        },
+      });
+    },
+    [mutate, stopThread],
+  );
+  return useMemo(
+    () => ({
+      selection,
+      isPending: selection === undefined || setSelection.isPending,
+      onChange,
+    }),
+    [onChange, selection, setSelection.isPending],
+  );
+}
 
 function useProviderRoster(): ProviderRoster {
   const providers = useSystemProviders().data;
@@ -62,6 +113,7 @@ function SkillDetailPage({
   const previewHostId =
     primaryHost?.status === "connected" ? primaryHost.id : null;
   const deleteSkill = useDeleteSkill(projectId);
+  const selectionControl = useSkillSelectionControl();
   const { canOpenPreferredFileTarget, openPathInPreferredFileTarget } =
     useLocalOpenTargets({ enabled: skill !== null });
 
@@ -92,7 +144,15 @@ function SkillDetailPage({
       canDelete={deletableScope !== null}
       canOpenInEditor={editableScope !== null && canOpenPreferredFileTarget}
       isDeleting={deleteSkill.isPending}
+      isSelectionPending={selectionControl.isPending}
       markdownLinkRouting={markdownLinkRouting}
+      onSelectionChange={(enabled) => {
+        const current = selectionControl.selection;
+        if (!skill || current === undefined) return;
+        selectionControl.onChange(
+          setSkillNamesEnabled(current, [skill.name], enabled),
+        );
+      }}
       onEdit={() => {
         if (skill) onEdit(skill);
       }}
@@ -125,6 +185,11 @@ export function SkillsLibrary() {
   const { skillId: routeSkillId } = useParams<{ skillId?: string }>();
   const [libraryQuery, setLibraryQuery] = useState("");
   const skillsQuery = useProjectSkills(PERSONAL_PROJECT_ID);
+  const showsOverview = routeSkillId === undefined;
+  const selectionQuery = useSkillSelection({ enabled: showsOverview });
+  const selectionControl = useSkillSelectionControl({
+    enabled: showsOverview,
+  });
   const skills = skillsQuery.data?.skills ?? EMPTY_SKILLS;
   const hasError = skillsQuery.isError && skillsQuery.data === undefined;
   const isLoading =
@@ -206,6 +271,8 @@ export function SkillsLibrary() {
       ) : (
         <SkillsOverview
           skills={skills}
+          selectionProviders={selectionQuery.data?.providers}
+          selectionControl={selectionControl}
           providerRoster={providerRoster}
           isLoading={isLoading}
           hasError={hasError}

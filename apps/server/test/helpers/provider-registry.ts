@@ -13,6 +13,7 @@ import {
 } from "@sandy-sdk/plugin-sdk/internal/host-policy";
 import {
   EMPTY_PROVIDER_NATIVE_ROOTS,
+  NOT_ENFORCED_SKILL_SELECTION_SUPPORT,
   EMPTY_PROVIDER_RESOLVED_NATIVE_ROOTS,
   type JsonValue,
   parseNamespacedGlyph,
@@ -154,6 +155,7 @@ export function minimalProviderRegistration(args: {
     nativeSkillRoots: EMPTY_PROVIDER_NATIVE_ROOTS,
     nativeCommandRoots: EMPTY_PROVIDER_NATIVE_ROOTS,
     resolvesNativeRoots: false,
+    skillSelectionSupport: NOT_ENFORCED_SKILL_SELECTION_SUPPORT,
     deriveProviderOptions: () => ({}),
     iconNames: new Set<string>(),
   };

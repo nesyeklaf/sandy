@@ -6,6 +6,7 @@ import type {
   PermissionMode,
   ProviderFork,
   ProviderInfo,
+  ProviderSkillSelectionSupport,
   ReasoningLevel,
 } from "@sandy/domain";
 import { parseExtensionKind } from "@sandy/domain";
@@ -47,6 +48,7 @@ export interface ProviderRegistration {
   nativeSkillRoots: ProviderNativeRoots;
   nativeCommandRoots: ProviderNativeRoots;
   resolvesNativeRoots: boolean;
+  skillSelectionSupport: ProviderSkillSelectionSupport;
   deriveProviderOptions: (
     context: Omit<PluginProviderOptionsContext, "settings">,
   ) => Readonly<Record<string, JsonValue>>;

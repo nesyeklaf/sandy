@@ -20,12 +20,12 @@ export function ProvenancePill({
     <span
       aria-label={accessibleLabel}
       tabIndex={tooltip === undefined ? undefined : 0}
-      className="inline-flex"
+      className="inline-flex min-w-0 max-w-full"
     >
       <Pill
         variant="outline"
         size="sm"
-        className="rounded-md border-border/40 bg-surface-recessed/45 px-2 py-1 text-2xs font-medium leading-none text-subtle-foreground shadow-none"
+        className="min-w-0 max-w-full rounded-md border-border/40 bg-surface-recessed/45 px-2 py-1 text-2xs font-medium leading-none text-subtle-foreground shadow-none"
       >
         {label}
       </Pill>

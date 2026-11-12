@@ -40,7 +40,9 @@ export interface ResolvePiNativeRootsArgs {
   cwd: string | null;
 }
 
-function resolvePiAgentDir(args: ResolvePiNativeRootsArgs): string {
+export function resolvePiAgentDir(
+  args: Pick<ResolvePiNativeRootsArgs, "homeDir" | "env">,
+): string {
   const configured = args.env.PI_CODING_AGENT_DIR?.trim();
   return configured
     ? resolveStoredPath(args.homeDir, configured, args.homeDir)

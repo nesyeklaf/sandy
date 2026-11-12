@@ -8,10 +8,20 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { experimental_scanSkillFiles as scanSkillFiles } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import {
+  experimental_isSkillNameEnabled as isSkillNameEnabled,
+  experimental_scanSkillFiles as scanSkillFiles,
+  type ExperimentalSkillSelection as SkillSelection,
+} from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { access } from "node:fs/promises";
-import { tmpdir, homedir } from "node:os";
-import { join, dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { claudeConfigDirectory } from "./session-fork.js";
+import { buildSessionEnv } from "./session-options.js";
+import {
+  buildClaudeSkillFilter,
+  type ClaudeSkillFilter,
+} from "./skill-selection.js";
 
 export interface ClaudeSkillPluginRoot {
   id: string;
@@ -105,12 +115,14 @@ export function createClaudeSkillPluginsRoot(baseDir = tmpdir()): string {
   return mkdtempSync(join(baseDir, "sandy-claude-skill-plugins-"));
 }
 
-export async function filterClaudeSkillRoots(args: {
-  roots: readonly ClaudeSkillPluginRoot[];
+export type ClaudeNativeSkill = Awaited<
+  ReturnType<typeof scanSkillFiles>
+>[number];
+
+export async function scanClaudeNativeSkills(args: {
   cwd: string;
-  pluginsRoot: string;
   claudeDir: string;
-}): Promise<ClaudeSkillPluginRoot[]> {
+}): Promise<ClaudeNativeSkill[]> {
   const nativeRoots = [join(args.claudeDir, "skills")];
   let directory = args.cwd;
   while (true) {
@@ -126,7 +138,7 @@ export async function filterClaudeSkillRoots(args: {
     if (parent === directory) break;
     directory = parent;
   }
-  const native = (
+  return (
     await Promise.all(
       nativeRoots.map((root) =>
         scanSkillFiles({
@@ -138,9 +150,17 @@ export async function filterClaudeSkillRoots(args: {
       ),
     )
   ).flat();
+}
+
+export async function filterClaudeSkillRoots(args: {
+  roots: readonly ClaudeSkillPluginRoot[];
+  native: readonly ClaudeNativeSkill[];
+  pluginsRoot: string;
+  selection: SkillSelection;
+}): Promise<ClaudeSkillPluginRoot[]> {
   const identity = (file: { name: string; contentSha256: string }) =>
     `${file.name}\0${file.contentSha256}`;
-  const seen = new Set(native.map(identity));
+  const seen = new Set(args.native.map(identity));
   const filtered: ClaudeSkillPluginRoot[] = [];
   for (const root of args.roots) {
     const files = await scanSkillFiles({
@@ -149,6 +169,7 @@ export async function filterClaudeSkillRoots(args: {
       boundaryPath: null,
     });
     const retained = files.filter((file) => {
+      if (!isSkillNameEnabled(args.selection, file.name)) return false;
       if (seen.has(identity(file))) return false;
       seen.add(identity(file));
       return true;
@@ -191,8 +212,36 @@ export async function filterClaudeSkillRoots(args: {
   return filtered;
 }
 
-export function claudeSkillsConfigDirectory(): string {
-  return process.env.CLAUDE_CONFIG_DIR
-    ? resolve(process.env.CLAUDE_CONFIG_DIR)
-    : join(homedir(), ".claude");
+export async function resolveClaudeSessionSkills(args: {
+  cwd: string;
+  envOverrides: Record<string, string>;
+  roots: readonly ClaudeSkillPluginRoot[] | null;
+  pluginsRoot: () => string;
+  selection: SkillSelection;
+}): Promise<{
+  roots: ClaudeSkillPluginRoot[] | null;
+  skillFilter: ClaudeSkillFilter;
+}> {
+  const native =
+    args.roots === null && args.selection.mode !== "allow-only"
+      ? []
+      : await scanClaudeNativeSkills({
+          cwd: args.cwd,
+          claudeDir: claudeConfigDirectory(buildSessionEnv(args.envOverrides)),
+        });
+  return {
+    roots:
+      args.roots === null
+        ? null
+        : await filterClaudeSkillRoots({
+            roots: args.roots,
+            native,
+            pluginsRoot: args.pluginsRoot(),
+            selection: args.selection,
+          }),
+    skillFilter: buildClaudeSkillFilter({
+      selection: args.selection,
+      nativeSkillNames: native.map((skill) => skill.name),
+    }),
+  };
 }

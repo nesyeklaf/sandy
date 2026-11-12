@@ -129,6 +129,7 @@ function createTurnSubmitCommand(
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     },
     target: { mode: "start" },
@@ -162,6 +163,7 @@ function createThreadStartCommand(): ThreadStartCommand {
     dynamicTools: [],
     contributedEnv: [],
     injectedSkillSources: [],
+    skillSelection: { mode: "inherit" },
     instructionMode: "append",
   };
 }

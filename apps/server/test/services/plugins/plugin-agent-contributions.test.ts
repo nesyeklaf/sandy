@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type DbConnection } from "@sandy/db";
+import { type DbConnection, setSkillSelection } from "@sandy/db";
 import { createMigratedConnection } from "@sandy/db/testing";
 import { encodeClientTurnRequestIdNumber } from "@sandy/domain";
 import type { Logger } from "@sandy/logger";
@@ -318,6 +318,16 @@ describe("plugin agent contributions reach thread runtime config", () => {
         entryPath: "SKILL.md",
       }),
     );
+    setSkillSelection(harness.deps.db, { mode: "disable", names: ["ctx-skill"] });
+    const selectionChanged = await buildCommand(3);
+    expect(selectionChanged.injectedSkillSources).toEqual(
+      command.injectedSkillSources,
+    );
+    expect(selectionChanged.skillSelection).toEqual({
+      mode: "disable",
+      names: ["ctx-skill"],
+    });
+    setSkillSelection(harness.deps.db, { mode: "inherit" });
     await writeSkill(join(rootDir, "skills"), "late-skill");
     await harness.pluginService.reload("ctxdemo");
     const reloaded = await buildCommand(2);

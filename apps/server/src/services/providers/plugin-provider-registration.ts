@@ -233,6 +233,7 @@ export function buildPluginProviderRegistration(args: {
       declaration.experimental_nativeCommandRoots ??
       EMPTY_PROVIDER_NATIVE_ROOTS,
     resolvesNativeRoots: declaration.experimental_resolvesNativeRoots,
+    skillSelectionSupport: declaration.experimental_skillSelection,
     deriveProviderOptions: (context) =>
       deriveValidatedProviderOptions({
         declaration,

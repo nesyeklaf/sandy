@@ -335,6 +335,7 @@ export async function buildThreadStartCommand(
     dynamicTools: runtimeContext.dynamicTools,
     contributedEnv: runtimeContext.contributedEnv,
     injectedSkillSources: runtimeContext.injectedSkillSources,
+    skillSelection: runtimeContext.skillSelection,
     instructionMode: runtimeContext.instructionMode,
     threadStoragePath: runtimeContext.threadStoragePath,
     ...(args.fork ? { fork: args.fork } : {}),
@@ -377,6 +378,7 @@ function buildPreparedTurnSubmitCommandPayload(
       dynamicTools: args.runtimeContext.dynamicTools,
       contributedEnv: args.runtimeContext.contributedEnv,
       injectedSkillSources: args.runtimeContext.injectedSkillSources,
+      skillSelection: args.runtimeContext.skillSelection,
       instructionMode: args.runtimeContext.instructionMode,
     },
   };

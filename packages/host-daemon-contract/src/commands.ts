@@ -33,6 +33,7 @@ import {
   gitBranchNameSchema,
   gitBranchOptionsSchema,
   gitSourceInspectionSchema,
+  skillSelectionSchema,
 } from "@sandy/domain";
 import { z } from "zod";
 import {
@@ -186,6 +187,7 @@ const hostDaemonThreadRuntimeContextSchema = z
     dynamicTools: z.array(dynamicToolSchema),
     contributedEnv: z.array(hostDaemonContributedEnvEntrySchema).default([]),
     injectedSkillSources: z.array(hostDaemonInjectedSkillSourceSchema),
+    skillSelection: skillSelectionSchema,
     instructionMode: instructionModeSchema,
   })
   .strict();

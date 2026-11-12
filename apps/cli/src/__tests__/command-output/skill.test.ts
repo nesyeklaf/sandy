@@ -36,6 +36,7 @@ describe("sandy skill commands", () => {
           writable: true,
           providers: ["codex"],
           duplicates: [],
+          selectionEnabled: true,
         },
       ],
     }));
@@ -260,6 +261,93 @@ describe("sandy skill commands", () => {
 
     await expect(
       runCommand(["skill", "sources", "pi", "off"], register),
+    ).rejects.toThrow("process.exit:1");
+    expect(put).not.toHaveBeenCalled();
+  });
+});
+
+describe("sandy skill selection", () => {
+  setupCommandOutputTestEnvironment();
+
+  const register: CommandRegistrar = (program) =>
+    registerSkillCommands(
+      program,
+      () => "http://server",
+      () => ({ projectId: "project-context", serverUrl: "http://server" }),
+    );
+
+  const providers = [
+    {
+      providerId: "pi",
+      displayName: "Pi",
+      support: {
+        session: "unverified",
+        subagents: "not-enforced",
+        gaps: ["extension-skills"],
+      },
+    },
+  ];
+
+  it("turns one name off on top of the stored disable list and prints pending threads", async () => {
+    const put = vi.fn(async ({ json }) => ({
+      selection: json,
+      providers,
+      pendingThreadIds: ["thr_running"],
+    }));
+    stubServerApi({
+      "v1.settings.skill-selection.$get": vi.fn(async () => ({
+        selection: { mode: "disable", names: ["pdf"] },
+        providers,
+      })),
+      "v1.settings.skill-selection.$put": put,
+    });
+
+    await runCommand(["skill", "selection", "off", "review"], register);
+
+    expect(put).toHaveBeenCalledWith({
+      json: { mode: "disable", names: ["pdf", "review"] },
+    });
+    const printed = collectLogLines(vi.mocked(console.log)).join("\n");
+    expect(printed).toContain("disable: pdf, review off");
+    expect(printed).toContain("unverified");
+    expect(printed).toContain("Pi: skills from extensions");
+    expect(printed).toContain("thr_running");
+    expect(printed).toContain("sandy thread stop <thread>");
+  });
+
+  it("reads the selection without writing it", async () => {
+    const put = vi.fn();
+    stubServerApi({
+      "v1.settings.skill-selection.$get": vi.fn(async () => ({
+        selection: { mode: "inherit" },
+        providers,
+      })),
+      "v1.settings.skill-selection.$put": put,
+    });
+
+    await runCommand(["skill", "selection", "--json"], register);
+
+    expect(put).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(collectLogLines(vi.mocked(console.log)).join("\n")),
+    ).toEqual({ selection: { mode: "inherit" }, providers });
+  });
+
+  it("rejects names after inherit and an unknown action without writing", async () => {
+    const put = vi.fn();
+    stubServerApi({
+      "v1.settings.skill-selection.$get": vi.fn(async () => ({
+        selection: { mode: "inherit" },
+        providers,
+      })),
+      "v1.settings.skill-selection.$put": put,
+    });
+
+    await expect(
+      runCommand(["skill", "selection", "inherit", "review"], register),
+    ).rejects.toThrow("process.exit:1");
+    await expect(
+      runCommand(["skill", "selection", "only", "review"], register),
     ).rejects.toThrow("process.exit:1");
     expect(put).not.toHaveBeenCalled();
   });

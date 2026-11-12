@@ -41,7 +41,9 @@ interface SkillDetailViewProps {
   pathHref?: string;
   titleBadge?: SkillDetailTitleBadge;
   headerActions?: ReactNode;
+  lifecycleControl?: ReactNode;
   overflowMenu?: ReactNode;
+  otherCopies?: ReactNode;
   files: readonly string[];
   selectedPath: string;
   onSelectFile: (path: string) => void;
@@ -224,7 +226,9 @@ export function SkillDetailView({
   pathHref,
   titleBadge,
   headerActions,
+  lifecycleControl,
   overflowMenu,
+  otherCopies,
   files,
   selectedPath,
   onSelectFile,
@@ -251,8 +255,14 @@ export function SkillDetailView({
       metadata={<SkillPath path={directoryPath} href={pathHref} />}
       overflowMenu={overflowMenu}
       actions={headerActions}
+      lifecycleControl={lifecycleControl}
     >
       <ResourceDetailStack>
+        {otherCopies === undefined ? null : (
+          <ResourceDetailIncludesSection label="Other copies">
+            <div className="text-sm text-muted-foreground">{otherCopies}</div>
+          </ResourceDetailIncludesSection>
+        )}
         {files.length > 1 ? (
           <ResourceDetailIncludesSection label="Files">
             <SkillFileList

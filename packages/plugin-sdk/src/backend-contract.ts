@@ -10,6 +10,7 @@ import type {
   ProviderNativeRootInput,
   ProviderNativeRootsInputLike,
   ProviderRateLimitState,
+  ProviderSkillSelectionSupportDeclaration,
   ReasoningLevel,
   ServiceTier,
   ThreadCreateOrigin,
@@ -1636,6 +1637,19 @@ export interface PluginProviderDeclaration {
    * project-scoped entries, which a global declaration cannot carry.
    */
   experimental_resolvesNativeRoots?: boolean;
+  /**
+   * How far this provider's bridge enforces sandy's skill selection (the
+   * `selection` of `skills/configure`). `session` covers the agent session
+   * sandy starts; `subagents` covers agents that session starts itself.
+   * Each side is `enforced` (proven against the real agent),
+   * `unverified` (applied, not yet proven), `not-enforced` or
+   * `not-applicable`. `gaps` names the skill categories the bridge cannot
+   * filter even where a side is enforced (for example skills an extension
+   * contributes at runtime); omitted means none. Omitted entirely means
+   * `not-enforced` on both sides, so the Skills page and
+   * `sandy skill selection` say the selection does not reach this provider.
+   */
+  experimental_skillSelection?: ProviderSkillSelectionSupportDeclaration;
   /**
    * Derive this provider's opaque per-command options. Called synchronously
    * by the server for every session and turn command on a thread of this

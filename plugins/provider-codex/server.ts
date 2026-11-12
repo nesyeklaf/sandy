@@ -39,6 +39,11 @@ export default function plugin(sandy: SandyPluginApi) {
     },
     models: { scope: "host" },
     ...CODEX_NATIVE_ROOTS_DECLARATION,
+    experimental_skillSelection: {
+      session: "unverified",
+      subagents: "unverified",
+      gaps: ["allow-only-skills-added-after-start"],
+    },
     maintenance: { health: true, usage: true, installation: true },
     capabilities: {
       supportsServiceTier: true,

@@ -94,6 +94,37 @@ function findPackageDirInWrapperScript(file: string): string | null {
   return null;
 }
 
+const MANAGED_VERSION_PATTERN = /^[0-9A-Za-z._+-]+$/u;
+
+function managedInstallPackageDir(launcher: string): string | null {
+  const binDir = path.dirname(launcher);
+  if (path.basename(binDir) !== "bin") return null;
+  const installRoot = path.join(path.dirname(binDir), "install");
+  let version: string;
+  try {
+    version = readFileSync(path.join(installRoot, "current-version"), "utf8")
+      .split(/\r?\n/u)[0]!
+      .trim();
+  } catch {
+    return null;
+  }
+  if (
+    !MANAGED_VERSION_PATTERN.test(version) ||
+    version === "." ||
+    version === ".."
+  ) {
+    return null;
+  }
+  const candidate = path.join(
+    installRoot,
+    "releases",
+    version,
+    "node_modules",
+    ...PI_PACKAGE_NAME.split("/"),
+  );
+  return readPackageName(candidate) === PI_PACKAGE_NAME ? candidate : null;
+}
+
 function windowsShimPackageDir(executable: string): string | null {
   if (path.basename(executable).toLowerCase() !== "pi.cmd") return null;
   const prefix = path.dirname(executable);
@@ -106,7 +137,7 @@ function windowsShimPackageDir(executable: string): string | null {
   return readPackageName(candidate) === PI_PACKAGE_NAME ? candidate : null;
 }
 
-function locatePiPackageDir(
+export function locatePiPackageDir(
   env: NodeJS.ProcessEnv,
   cwd: string | undefined,
 ): string {
@@ -121,7 +152,9 @@ function locatePiPackageDir(
     if (shimDir !== null) return realpathSync(shimDir);
     const real = realpathSync(candidate);
     const found =
-      findPackageDirFrom(real) ?? findPackageDirInWrapperScript(real);
+      findPackageDirFrom(real) ??
+      managedInstallPackageDir(real) ??
+      findPackageDirInWrapperScript(real);
     if (found !== null) return realpathSync(found);
   }
   throw new Error(

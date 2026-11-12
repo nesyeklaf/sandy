@@ -11,6 +11,7 @@ import type {
   ProviderFork,
   ProviderRecoveryKind,
   RuntimeThreadExecutionOptions,
+  SkillSelection,
   ThreadEvent,
   ToolCallRequest,
   ToolCallResponse,
@@ -72,6 +73,8 @@ export interface AgentRuntimeOptions {
 
   skillRoots?: readonly AgentRuntimeSkillRoot[];
 
+  skillSelection?: SkillSelection;
+
   onEvent: (event: ThreadEvent) => void;
 
   onToolCall: (
@@ -117,12 +120,14 @@ export interface AgentRuntimeBridgeLaunch {
 export interface EnsureProviderArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   providerId: string;
 }
 
 export interface StartThreadArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   environmentId: string;
   threadId: string;
   projectId: string;
@@ -147,6 +152,7 @@ export interface StartThreadResult {
 interface PrepareThreadRewindArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   environmentId: string;
   threadId: string;
   leaseId: string;
@@ -172,6 +178,7 @@ interface DiscardThreadRewindArgs {
 export interface ResumeThreadArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   environmentId: string;
   threadId: string;
   projectId?: string;

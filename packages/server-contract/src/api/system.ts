@@ -18,6 +18,8 @@ import {
   jsonValueSchema,
   permissionModeSchema,
   pluginThemeMetaSchema,
+  providerSkillSelectionSupportSchema,
+  skillSelectionSchema,
   providerInfoSchema,
   themeKitInputSchema,
 } from "@sandy/domain";
@@ -283,6 +285,28 @@ export const systemConfigResponseSchema = z.object({
   dataDir: z.string(),
 });
 export type SystemConfigResponse = z.infer<typeof systemConfigResponseSchema>;
+
+export const skillSelectionProviderSchema = z.object({
+  providerId: z.string().min(1),
+  displayName: z.string(),
+  support: providerSkillSelectionSupportSchema,
+});
+export type SkillSelectionProvider = z.infer<
+  typeof skillSelectionProviderSchema
+>;
+
+export const skillSelectionViewSchema = z.object({
+  selection: skillSelectionSchema,
+  providers: z.array(skillSelectionProviderSchema),
+});
+export type SkillSelectionView = z.infer<typeof skillSelectionViewSchema>;
+
+export const skillSelectionUpdateResultSchema = skillSelectionViewSchema.extend({
+  pendingThreadIds: z.array(z.string().min(1)),
+});
+export type SkillSelectionUpdateResult = z.infer<
+  typeof skillSelectionUpdateResultSchema
+>;
 
 export const systemAttentionResponseSchema = z.object({
   hasAttention: z.boolean(),

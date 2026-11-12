@@ -130,6 +130,7 @@ export {
   getDisabledPluginProviderCatalog,
   getDisabledProviderIds,
   getPluginSafeMode,
+  getSkillSelection,
   hasAppSettingsMarker,
   setAiServiceSelection,
   setAppKeybindingOverrides,
@@ -138,6 +139,7 @@ export {
   setDisabledPluginProviderCatalog,
   setDisabledProviderIds,
   setPluginSafeMode,
+  setSkillSelection,
 } from "./app-settings.js";
 export { getStoredThreadTabs, replaceStoredThreadTabs } from "./thread-tabs.js";
 export {

@@ -78,6 +78,11 @@ export default function plugin(sandy: SandyPluginApi) {
       iconTint: { light: "#D97757", dark: "#D97757" },
     },
     ...CLAUDE_NATIVE_ROOTS_DECLARATION,
+    experimental_skillSelection: {
+      session: "unverified",
+      subagents: "unverified",
+      gaps: ["bundled-skills", "marketplace-plugin-skills"],
+    },
     maintenance: { health: true, usage: true, installation: true },
     capabilities: {
       supportsServiceTier: true,

@@ -1034,7 +1034,7 @@ describe("host-daemon command schemas", () => {
   });
 
   it("uses the current host-daemon protocol version", () => {
-    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(265);
+    expect(HOST_DAEMON_PROTOCOL_VERSION).toBe(266);
     expect(HOST_ARTIFACT_MAX_BYTES).toBe(256 * 1024 * 1024);
   });
 
@@ -1059,7 +1059,8 @@ describe("host-daemon command schemas", () => {
     expect(contract.isCompatibleHostDaemonProtocolVersion(262)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(263)).toBe(false);
     expect(contract.isCompatibleHostDaemonProtocolVersion(264)).toBe(false);
-    expect(contract.isCompatibleHostDaemonProtocolVersion(265)).toBe(true);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(265)).toBe(false);
+    expect(contract.isCompatibleHostDaemonProtocolVersion(266)).toBe(true);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(247)).toBe(false);
     expect(contract.hostDaemonSupportsDesktopBrokerProof(248)).toBe(true);
   });
@@ -1691,6 +1692,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
         requestId: CLIENT_REQUEST_ID,
         input: [{ type: "text", text: "hello", mentions: [] }],
@@ -1726,6 +1728,7 @@ describe("host-daemon command schemas", () => {
           dynamicTools: [],
           contributedEnv: [],
           injectedSkillSources: [],
+          skillSelection: { mode: "inherit" },
           instructionMode: "append",
         },
         target: { mode: "start" },
@@ -1783,6 +1786,7 @@ describe("host-daemon command schemas", () => {
         ],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "replace",
       }),
     ).toMatchObject({
@@ -1847,6 +1851,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append" as const,
       };
 
@@ -1890,6 +1895,7 @@ describe("host-daemon command schemas", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "replace",
     };
 
@@ -1934,6 +1940,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
       target: { mode: "start" },
@@ -1996,6 +2003,7 @@ describe("host-daemon command schemas", () => {
       dynamicTools: [],
       contributedEnv: CONTRIBUTED_ENV,
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
     const threadStartRoundTrip = JSON.parse(JSON.stringify(threadStartCommand));
@@ -2033,6 +2041,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: CONTRIBUTED_ENV,
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
       target: { mode: "start" },
@@ -2111,6 +2120,7 @@ describe("host-daemon command schemas", () => {
       dynamicTools: [],
       contributedEnv: [],
       injectedSkillSources: [],
+      skillSelection: { mode: "inherit" },
       instructionMode: "append",
     };
     expect(
@@ -2135,6 +2145,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       },
     };
@@ -2277,6 +2288,7 @@ describe("host-daemon command schemas", () => {
           dynamicTools: [],
           contributedEnv: [],
           injectedSkillSources: [],
+          skillSelection: { mode: "inherit" },
           instructionMode: "append",
         },
         target: { mode: "start" },
@@ -2323,6 +2335,7 @@ describe("host-daemon command schemas", () => {
           dynamicTools: [],
           contributedEnv: [],
           injectedSkillSources: [],
+          skillSelection: { mode: "inherit" },
           instructionMode: "append",
         },
         target: { mode: "auto", expectedTurnId: "turn_123" },
@@ -2423,6 +2436,7 @@ describe("host-daemon command schemas", () => {
         dynamicTools: [],
         contributedEnv: [],
         injectedSkillSources: [],
+        skillSelection: { mode: "inherit" },
         instructionMode: "append",
       }),
     ).toThrow();
@@ -2458,6 +2472,7 @@ describe("host-daemon command schemas", () => {
           dynamicTools: [],
           contributedEnv: [],
           injectedSkillSources: [],
+          skillSelection: { mode: "inherit" },
           instructionMode: "append",
         },
         target: { mode: "start" },

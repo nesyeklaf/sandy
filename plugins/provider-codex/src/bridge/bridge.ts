@@ -45,6 +45,7 @@ import {
   type PreparedProviderCommandDispatch,
   type ProviderRuntimeEvent,
   experimental_defineProviderBridge,
+  type ExperimentalSkillSelection as SkillSelection,
   type ProviderRecoveryHint,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { z } from "zod";
@@ -105,6 +106,11 @@ import {
   getCodexProviderInstallationStatus,
   getCodexProviderUsage,
 } from "./provider-maintenance.js";
+import {
+  codexSkillConfigArgs,
+  codexSkillConfigEntries,
+  type CodexListedSkill,
+} from "./skill-selection.js";
 
 type SandyThreadResumeParams = ThreadResumeParams & { excludeTurns: boolean };
 
@@ -494,6 +500,7 @@ const sessionsBySandyThreadId = new Map<string, CodexBridgeSession>();
 const maintenanceConnections = new Set<CodexAppServerConnection>();
 let sessionSerialCounter = 0;
 let configuredSkillExtraRoots: string[] | null = null;
+let configuredSkillSelection: SkillSelection = { mode: "inherit" };
 
 const LEGACY_BRIDGE_MINTED_ID_PATTERN = /^bt[0-9a-f]{8}-\d+-/;
 
@@ -978,6 +985,7 @@ function handleChildExit(
 
 function spawnChildConnection(callbacks: {
   envVars?: Readonly<Record<string, string>>;
+  skillConfigArgs?: readonly string[];
   recordThreadId: string | null;
   onNotification: (method: string, params: unknown) => void;
   onRequest: (
@@ -989,10 +997,14 @@ function spawnChildConnection(callbacks: {
 }): CodexAppServerConnection {
   const env = buildAppServerEnv(callbacks.envVars);
   const launch = resolveAppServerLaunch(appServerLaunchEnv(callbacks.envVars));
-  const { envVars: _envVars, ...connectionCallbacks } = callbacks;
+  const {
+    envVars: _envVars,
+    skillConfigArgs = [],
+    ...connectionCallbacks
+  } = callbacks;
   return createCodexAppServerConnection({
     command: launch.command,
-    args: launch.args,
+    args: [...launch.args, ...skillConfigArgs],
     cwd: process.cwd(),
     env,
     ...connectionCallbacks,
@@ -1225,6 +1237,10 @@ async function constructThreadSession(
     })),
   );
   const launchEnv = appServerLaunchEnv(decoded.sessionOptions.envVars);
+  const skillConfigArgs = await resolveSkillConfigLaunchArgs(
+    args.cwd,
+    decoded.sessionOptions.envVars,
+  );
   const session: CodexBridgeSession = {
     sandyThreadId: args.threadId,
     codexThreadId:
@@ -1291,6 +1307,7 @@ async function constructThreadSession(
   let notifications = Promise.resolve();
   const connection = spawnChildConnection({
     envVars: decoded.sessionOptions.envVars,
+    skillConfigArgs,
     recordThreadId: args.threadId,
     onNotification: (method, params) => {
       notifications = notifications
@@ -1953,6 +1970,46 @@ const skillListSchema = z.object({
   ),
 });
 
+async function listSkillsForSelection(
+  cwd: string,
+  envVars: Readonly<Record<string, string>> | undefined,
+): Promise<CodexListedSkill[] | null> {
+  try {
+    return await withMaintenanceChild(async (connection) => {
+      const result = await connection.request({
+        method: "skills/list",
+        params: { cwds: [cwd], forceReload: true },
+        resultSchema: skillListSchema,
+        timeoutMs: CHILD_REQUEST_TIMEOUT_MS,
+      });
+      return result.data.flatMap((entry) => entry.skills);
+    }, envVars);
+  } catch (error) {
+    process.stderr.write(
+      `codex skills/list for the skill selection failed: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+    return null;
+  }
+}
+
+async function resolveSkillConfigLaunchArgs(
+  cwd: string,
+  envVars: Readonly<Record<string, string>> | undefined,
+): Promise<string[]> {
+  const selection = configuredSkillSelection;
+  if (selection.mode === "inherit") return [];
+  const entries = codexSkillConfigEntries(
+    selection,
+    await listSkillsForSelection(cwd, envVars),
+  );
+  if (entries === null) {
+    throw new Error(
+      "sandy could not list Codex skills, so the skill selection cannot be applied without turning skills you switched off back on; the session was not started.",
+    );
+  }
+  return codexSkillConfigArgs(entries);
+}
+
 async function resolveCodexSkillInput(
   session: CodexBridgeSession,
   input: PromptInput[],
@@ -2557,6 +2614,7 @@ async function handleSkillsConfigure(
   params: z.infer<typeof skillsConfigureParamsSchema>,
 ): Promise<void> {
   configuredSkillExtraRoots = params.roots.map((root) => root.path);
+  configuredSkillSelection = params.selection;
   try {
     for (const session of sessionsBySandyThreadId.values()) {
       if (

@@ -293,6 +293,7 @@ Use `--selected-model <model-id>` to discover its reasoning choices and include 
 - `sandy skill create`
 - `sandy skill delete`
 - `sandy skill sources`
+- `sandy skill selection`
 - `sandy skill cli-skills-status`
 - `sandy skill install-cli-skills`
 

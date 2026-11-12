@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@sandy/domain";
+import type { SkillSelection, ThreadEvent } from "@sandy/domain";
 import type { ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -72,12 +72,14 @@ interface RuntimeProviderProcessManagerArgs {
   onProviderThreadDetached: (threadId: string) => void;
   onStderr: AgentRuntimeOptions["onStderr"];
   skillRoots: readonly AgentRuntimeSkillRoot[];
+  skillSelection: SkillSelection;
   workspacePath: string;
 }
 
 interface EnsureRuntimeProviderArgs {
   bridgeLaunch: AgentRuntimeBridgeLaunch;
   skillRoots?: readonly AgentRuntimeSkillRoot[];
+  skillSelection?: SkillSelection;
   processKey: string;
   providerId: string;
 }
@@ -212,10 +214,13 @@ export class RuntimeProviderProcessManager {
         }
 
         const skillRoots = args.skillRoots ?? this.args.skillRoots;
-        if (skillRoots.length > 0) {
+        const skillSelection =
+          args.skillSelection ?? this.args.skillSelection;
+        if (skillRoots.length > 0 || skillSelection.mode !== "inherit") {
           const skillRootsCmd = adapter.buildCommandPlan({
             type: "skills/configure",
             skillRoots,
+            skillSelection,
           });
           if (skillRootsCmd.kind === "request") {
             await sendJsonRpcRequest({

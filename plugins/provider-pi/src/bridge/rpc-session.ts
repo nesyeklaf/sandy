@@ -4,6 +4,8 @@ import { runSettlementError } from "./run-settlement.js";
 import { experimental_buildBridgeToolCallContent as buildBridgeToolCallContent } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import type { ImageContent } from "@earendil-works/pi-ai";
 import { z } from "zod";
+import type { ExperimentalSkillSelection as SkillSelection } from "@sandy-sdk/plugin-sdk/provider-bridge";
+import { preparePiSdkRpcLaunch } from "./skill-selection.js";
 import {
   NO_REQUEST_TIMEOUT,
   PiRpcChild,
@@ -17,6 +19,7 @@ export interface PiRpcSessionOptions {
   model?: { provider: string; id: string };
   thinkingLevel?: string;
   additionalSkillPaths?: readonly string[];
+  skillSelection: SkillSelection;
   shellEnvOverrides?: Record<string, string>;
   dynamicTools?: readonly DynamicToolDefinition[];
   sessionFilePath: string;
@@ -316,32 +319,55 @@ export class PiRpcSession {
       args.push("--thinking", this.options.thinkingLevel);
     }
 
+    const env = buildPiChildEnv({
+      ...(this.options.shellEnvOverrides ?? {}),
+      PI_SANDY_TOOLS_FILE: toolsFilePath,
+    });
+    let launch;
+    try {
+      launch = preparePiSdkRpcLaunch({
+        cwd: this.options.cwd,
+        env,
+        launchEnv: process.env,
+        cliArgs: args,
+        selection: this.options.skillSelection,
+        scratchPrefix: toolsFilePath + ".sdk",
+      });
+      scratchFiles.push(...(launch?.files ?? []));
+    } catch (error) {
+      for (const file of scratchFiles) rmSync(file, { force: true });
+      throw error;
+    }
     this.ready = createDeferred();
     const onExtensionUiRequest = this.options.onExtensionUiRequest;
-    const child = new PiRpcChild({
-      cwd: this.options.cwd,
-      env: buildPiChildEnv({
-        ...(this.options.shellEnvOverrides ?? {}),
-        PI_SANDY_TOOLS_FILE: toolsFilePath,
-      }),
-      args,
-      onEvent: (event) => {
-        if (child === this.child) this.handleEvent(event);
-      },
-      onChannelMessage: (message) => {
-        if (child === this.child) this.handleChannelMessage(message);
-      },
-      onExit: (info) => {
-        for (const file of scratchFiles) rmSync(file, { force: true });
-        if (child === this.child) this.handleExit(info);
-      },
-      recordThreadId: this.options.recordThreadId,
-      onExtensionUiRequest: onExtensionUiRequest
-        ? (request) => {
-            if (child === this.child) onExtensionUiRequest(request);
-          }
-        : undefined,
-    });
+    let child: PiRpcChild;
+    try {
+      child = new PiRpcChild({
+        cwd: this.options.cwd,
+        env: launch?.env ?? env,
+        args,
+        ...(launch ? { launch } : {}),
+        onEvent: (event) => {
+          if (child === this.child) this.handleEvent(event);
+        },
+        onChannelMessage: (message) => {
+          if (child === this.child) this.handleChannelMessage(message);
+        },
+        onExit: (info) => {
+          for (const file of scratchFiles) rmSync(file, { force: true });
+          if (child === this.child) this.handleExit(info);
+        },
+        recordThreadId: this.options.recordThreadId,
+        onExtensionUiRequest: onExtensionUiRequest
+          ? (request) => {
+              if (child === this.child) onExtensionUiRequest(request);
+            }
+          : undefined,
+      });
+    } catch (error) {
+      for (const file of scratchFiles) rmSync(file, { force: true });
+      throw error;
+    }
     this.child = child;
 
     const state = await this.getState(CHANNEL_REQUEST_TIMEOUT_MS);
@@ -552,6 +578,7 @@ export class PiRpcSession {
     const session = new PiRpcSession(
       {
         cwd: args.cwd,
+        skillSelection: { mode: "inherit" },
         sessionFilePath: args.sourceFile,
         sessionDir: args.sessionDir,
         scratchDir: args.scratchDir,

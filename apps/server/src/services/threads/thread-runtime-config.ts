@@ -7,6 +7,7 @@ import type {
   DynamicTool,
   InstructionMode,
   PermissionEscalation,
+  SkillSelection,
   Thread,
   ThreadTurnInitiator,
   EnvironmentStatus,
@@ -27,6 +28,9 @@ import {
   resolvePluginProviderEnv,
 } from "../plugins/plugin-agent-contributions.js";
 import { resolveSkillCatalog } from "../skills/skill-catalog.js";
+import {
+  readSkillSelection,
+} from "../skills/skill-selection.js";
 import { discoverPluginSkillIds } from "../skills/injected-skills.js";
 import { UPDATE_ENVIRONMENT_DIRECTORY_TOOL } from "./thread-environment-directory.js";
 import {
@@ -64,6 +68,7 @@ export interface ResolvedThreadRuntimeCommandConfig {
   contributedEnv: HostDaemonContributedEnvEntry[];
   dynamicTools: DynamicTool[];
   injectedSkillSources: HostDaemonInjectedSkillSource[];
+  skillSelection: SkillSelection;
   instructionMode: InstructionMode;
   instructions: string;
   projectId: string;
@@ -201,6 +206,7 @@ export async function resolveThreadRuntimeCommandConfig(
     }),
   );
   markTurnTraceSpan("runtimeConfig.env");
+  const skillSelection = readSkillSelection(deps);
   const injectedSkillSources = (
     await resolveSkillCatalog(deps, {
       projectSkillSources: workspaceAgentContext.projectSkillSources,
@@ -285,6 +291,7 @@ export async function resolveThreadRuntimeCommandConfig(
     contributedEnv,
     dynamicTools,
     injectedSkillSources,
+    skillSelection,
     instructionMode: "append",
     instructions,
     projectId: args.thread.projectId,

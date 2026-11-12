@@ -4,6 +4,7 @@ import {
   type ReasoningLevel,
   type ServiceTier,
   type RuntimePermissionScope,
+  withoutBridgeRuntimeEnv,
 } from "@sandy-sdk/plugin-sdk/provider-bridge";
 import { accessSync, constants, statSync } from "node:fs";
 import { join } from "node:path";
@@ -24,6 +25,7 @@ export interface BuildSessionOptionsArgs {
   permissionMode: ClaudePermissionMode;
   permissionScope: RuntimePermissionScope;
   plugins?: Options["plugins"];
+  skillOverrides?: Record<string, "off">;
   reasoningLevel?: ReasoningLevel;
   serviceTier: ServiceTier;
   workflowsEnabled: boolean;
@@ -85,7 +87,20 @@ function buildFlagSettings(params: BuildSessionOptionsArgs): Settings {
     enableWorkflows: params.workflowsEnabled,
     ultracode: params.reasoningLevel === "ultracode",
     fastMode: params.serviceTier === "fast",
+    ...(params.skillOverrides ? { skillOverrides: params.skillOverrides } : {}),
   };
+}
+
+export function buildSessionEnv(
+  envOverrides: Record<string, string>,
+): NodeJS.ProcessEnv {
+  const sessionEnv: NodeJS.ProcessEnv = {
+    ...withoutBridgeRuntimeEnv(process.env),
+    ...envOverrides,
+    CLAUDE_CODE_ENTRYPOINT: "cli",
+  };
+  delete sessionEnv.CLAUDE_AGENT_SDK_CLIENT_APP;
+  return sessionEnv;
 }
 
 export function buildClaudeFeatureEnv(

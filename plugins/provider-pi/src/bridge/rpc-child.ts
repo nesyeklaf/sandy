@@ -42,6 +42,7 @@ export interface SpawnPiRpcChildArgs {
   cwd: string;
   env: NodeJS.ProcessEnv;
   args: readonly string[];
+  launch?: { command: string; args: string[] };
   onEvent: (event: Record<string, unknown>) => void;
   onChannelMessage: (message: Record<string, unknown>) => void;
   onExit: (info: PiRpcChildExitInfo) => void;
@@ -129,10 +130,11 @@ export class PiRpcChild {
     this.settledExit = new Promise((resolve) => {
       resolveSettledExit = resolve;
     });
-    const launch = resolvePiProcessLaunch(process.env, args.env, args.cwd);
+    const launch =
+      args.launch ?? resolvePiProcessLaunch(process.env, args.env, args.cwd);
     this.child = experimental_spawnPortableProcess({
       command: launch.command,
-      args: [...launch.args, ...args.args],
+      args: args.launch ? launch.args : [...launch.args, ...args.args],
       cwd: args.cwd,
       env: args.env,
       stdio: ["pipe", "pipe", "pipe", "pipe", "pipe"],

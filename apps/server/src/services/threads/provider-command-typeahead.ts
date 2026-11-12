@@ -3,7 +3,11 @@ import {
   type CommandListResponse,
   type ProviderCommand,
 } from "@sandy/server-contract";
-import type { ThreadProviderCommand } from "@sandy/domain";
+import {
+  isSkillNameEnabled,
+  type SkillSelection,
+  type ThreadProviderCommand,
+} from "@sandy/domain";
 import type { HostProviderCommand } from "@sandy/host-daemon-contract";
 import type { ProviderRegistration } from "../providers/provider-registry.js";
 import type { ResolvedSkillCatalogEntry } from "../skills/injected-skills.js";
@@ -106,6 +110,7 @@ interface BuildCommandListResponseArgs {
   liveCommands: readonly ThreadProviderCommand[];
   includeBuiltinCompact: boolean;
   skillCatalog: readonly ResolvedSkillCatalogEntry[];
+  skillSelection: SkillSelection;
 }
 
 export function buildCommandListResponse(
@@ -121,7 +126,11 @@ export function buildCommandListResponse(
   const scannedNames = new Set(scanned.map((command) => command.name));
   return {
     commands: [
-      ...scanned,
+      ...scanned.filter(
+        (command) =>
+          command.source !== "skill" ||
+          isSkillNameEnabled(args.skillSelection, command.name),
+      ),
       ...args.liveCommands
         .filter((command) => !scannedNames.has(command.name))
         .map(toLiveCommand),

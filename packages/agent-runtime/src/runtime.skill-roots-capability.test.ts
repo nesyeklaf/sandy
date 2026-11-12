@@ -105,6 +105,47 @@ describe("skills/configure handshake capability", () => {
     ).toThrow(/must use an absolute path: staged\/skills/);
   });
 
+  it("configures a non-inherit skill selection without roots in its own bridge", async () => {
+    const record = createScriptedEchoRequestRecord();
+    const runtime = withBridgeLaunch(
+      createAgentRuntime({
+        workspacePath,
+        env: record.env,
+        onEvent: () => {},
+        onToolCall: async () => ({ contentItems: [], success: true }),
+      }),
+      createScriptedEchoLaunch({ scripted: { identifyProcess: true } }),
+    );
+    runtimes.push(runtime);
+    const startArgs = {
+      environmentId: "env-1",
+      projectId: "p1",
+      providerId: "fake",
+      options: fullRuntimeOptions,
+    };
+    const inherited = await runtime.startThread({
+      ...startArgs,
+      threadId: "inherited",
+    });
+    const selected = await runtime.startThread({
+      ...startArgs,
+      threadId: "selected",
+      skillSelection: { mode: "disable", names: ["review"] },
+    });
+
+    expect(
+      record
+        .read()
+        .filter((entry) => entry.method === "skills/configure")
+        .map((entry) => entry.params),
+    ).toEqual([
+      { roots: [], selection: { mode: "disable", names: ["review"] } },
+    ]);
+    expect(selected.providerThreadId.split("-")[1]).not.toBe(
+      inherited.providerThreadId.split("-")[1],
+    );
+  });
+
   it("selects a bridge by the session's skill snapshot without replacing sibling sessions", async () => {
     const events: ThreadEvent[] = [];
     const record = createScriptedEchoRequestRecord();
@@ -155,7 +196,10 @@ describe("skills/configure handshake capability", () => {
         .read()
         .filter((entry) => entry.method === "skills/configure")
         .map((entry) => entry.params),
-    ).toEqual([{ roots: originalRoots }, { roots: currentRoots }]);
+    ).toEqual([
+      { roots: originalRoots, selection: { mode: "inherit" } },
+      { roots: currentRoots, selection: { mode: "inherit" } },
+    ]);
     expect(current.providerThreadId.split("-")[1]).not.toBe(
       original.providerThreadId.split("-")[1],
     );

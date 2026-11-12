@@ -38,6 +38,7 @@ function harness(settlement = true) {
   const session = new PiRpcSession(
     {
       cwd: ".",
+      skillSelection: { mode: "inherit" },
       sessionFilePath: "unused",
       sessionDir: ".",
       scratchDir: ".",
@@ -379,7 +380,10 @@ it.each(["sandy-first", "sandy-last"])(
     });
     const sessionManager = SessionManager.inMemory(dir);
     const wireOrder: string[] = [];
-    const source = SANDY_PI_EXTENSION_SOURCE.replace(/^import .*;$/gm, "").replace(
+    const source = SANDY_PI_EXTENSION_SOURCE.replace(
+      /^import .*;$/gm,
+      "",
+    ).replace(
       "export default function sandyExtension",
       "function sandyExtension",
     );
@@ -438,7 +442,9 @@ it.each(["sandy-first", "sandy-last"])(
       noThemes: true,
       agentsFilesOverride: () => ({ agentsFiles: [] }),
       extensionFactories:
-        order === "sandy-first" ? [sandyFactory, startB] : [startB, sandyFactory],
+        order === "sandy-first"
+          ? [sandyFactory, startB]
+          : [startB, sandyFactory],
     });
     let session:
       | Awaited<ReturnType<typeof createAgentSession>>["session"]

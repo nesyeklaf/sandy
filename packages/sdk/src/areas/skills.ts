@@ -5,7 +5,10 @@ import {
   type SkillContentResponse,
   type SkillFilesResponse,
   type SkillListResponse,
+  type SkillSelectionUpdateResult,
+  type SkillSelectionView,
 } from "@sandy/server-contract";
+import type { SkillSelection } from "@sandy/domain";
 import { z } from "zod";
 import { SandyHttpError } from "../response.js";
 import { signalRequestArgs, type CreateSdkAreaArgs } from "./common.js";
@@ -44,6 +47,10 @@ export interface SkillDeleteArgs extends SkillWorkspaceArgs {
   skillId: string;
 }
 
+export interface SkillSelectionReadArgs {
+  signal?: AbortSignal;
+}
+
 export type ExperimentalSkillWriteResult =
   | { outcome: "written"; filePath: string; revision: string }
   | { outcome: "conflict"; currentRevision: string | null };
@@ -68,6 +75,12 @@ export interface SkillsArea {
     args: SkillCreateArgs,
   ): Promise<ExperimentalSkillWriteResult>;
   experimental_read(args: SkillIdentityArgs): Promise<SkillContentResponse>;
+  experimental_getSelection(
+    args?: SkillSelectionReadArgs,
+  ): Promise<SkillSelectionView>;
+  experimental_setSelection(
+    selection: SkillSelection,
+  ): Promise<SkillSelectionUpdateResult>;
   experimental_write(
     args: SkillUpdateArgs,
   ): Promise<ExperimentalSkillWriteResult>;
@@ -158,6 +171,19 @@ export function createSkillsArea(args: CreateSdkAreaArgs): SkillsArea {
       return getContent({ ...input, path: "SKILL.md" });
     },
     experimental_write: write,
+    async experimental_getSelection(input) {
+      return transport.readJson(
+        transport.api.v1.settings["skill-selection"].$get(
+          {},
+          ...signalRequestArgs(input?.signal),
+        ),
+      );
+    },
+    async experimental_setSelection(selection) {
+      return transport.readJson(
+        transport.api.v1.settings["skill-selection"].$put({ json: selection }),
+      );
+    },
     async getContent(input) {
       return getContent(input);
     },

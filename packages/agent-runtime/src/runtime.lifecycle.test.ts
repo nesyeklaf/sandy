@@ -601,6 +601,7 @@ describe("createAgentRuntime lifecycle", () => {
             skills: [{ name: "sandy-cli", description: "Use the sandy CLI." }],
           },
         ],
+        selection: { mode: "inherit" },
       });
       const methods = recordedMethods(record);
       expect(methods.indexOf("skills/configure")).toBeGreaterThan(-1);

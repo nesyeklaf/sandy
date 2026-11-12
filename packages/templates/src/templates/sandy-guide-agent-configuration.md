@@ -66,7 +66,23 @@ Skills (.sandy/skills/):
   skill's frontmatter `metadata` map (string values only); `--duplicates`
   keeps only skills found more than once. `sandy skill sources <source> on|off`
   switches the sandy-owned sources sandy-plugins, sandy-user, sandy-project and shared
-  (Settings → General → Skill sources); native agent roots stay as they are. `sandy skill show|files <skill-id>` reads that exact skill;
+  (Settings → General → Skill sources); native agent roots stay as they are.
+  `sandy skill selection` shows the server-wide selection by skill name and, per
+  agent, whether sessions and subagents enforce it (`enforced`, `unverified`,
+  `not-enforced`). `sandy skill selection off <names...>` and `on <names...>`
+  switch single names; `disable <names...>`, `allow-only <names...>` and
+  `inherit` replace the whole selection. It applies to every copy of a name,
+  native agent roots included, only in sessions sandy starts; under
+  `allow-only` new skills stay off. Changes reach new sessions; a loaded
+  thread keeps the old selection until `sandy thread stop` releases it or its
+  idle session is retired, and the result lists the threads running a turn. Under each agent it prints the categories that agent cannot
+  filter (for example Claude Code's bundled skills), which stay loaded even when
+  every skill is off. Pi uses the installed Pi 1.5.1 SDK loader, including extension
+  contributions; incompatible filtered starts are refused, while older supported
+  versions retain native `inherit` behavior. Pi's full-thread acceptance remains
+  unverified, and its subagents are not enforced. Turning a skill off never turns off the plugin that
+  ships it. `sandy skill list --json` marks each skill `selectionEnabled`.
+  `sandy skill show|files <skill-id>` reads that exact skill;
   `sandy skill show <skill-id> --json` returns the revision required by `sandy skill
   update <skill-id> --revision <sha256>`, along with the real `filePath` and
   whether the skill is `writable`. Update saves sandy, agent and shared skills
