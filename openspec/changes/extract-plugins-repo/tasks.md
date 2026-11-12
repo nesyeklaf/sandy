@@ -3,18 +3,18 @@
 The spec is all this change delivers. Every task that creates or changes a repository, pushes, publishes, deploys, or changes installed plugins or pi-setup needs the owner's explicit OK first. Run tests and builds serially (`VITEST_MAX_WORKERS=1`, `--concurrency=1`).
 
 ## 1. Decisions
-- [x] 1.1 Owner answers: standalone OpenSpec, new repository (visibility later changed to public), publish the SDK, registry GitHub Packages, core `--replace-source` in scope, re-point the aemon installs, holons move, pnpm for all plugins.
-- [x] 1.2 Owner answers (last version): organization `sandy-sdk` with the scope following it (no rename); `sandy-sdk/sandy` and `sandy-sdk/sandy-plugins` both new and public; `nesyeklaf/sandy` kept and archived; boat only for the owner's own content; pi/fabric to pnpm.
-- [ ] 1.2b Owner answers design.md open questions 1–4 (SDK visibility first); record them in proposal.md Approval State.
+- [x] 1.1 Owner answers: standalone OpenSpec, new repository (visibility later changed to public), publish the SDK (registry later changed to npmjs), core `--replace-source` in scope, re-point the aemon installs, holons move, pnpm for all plugins.
+- [x] 1.2 Owner answers (last version): organization `sandy-sdk` with the scope following it (no rename); `sandy-sdk/sandy` and `sandy-sdk/sandy-plugins` both new and public; `nesyeklaf/sandy` kept, not archived, `desktop-v*` releases stay there; SDK public on npmjs; boat only for the owner's own content; pi/fabric to pnpm.
+- [ ] 1.2b Owner decides Blacksmith (design.md, Decision 11); record it in proposal.md Approval State.
 - [ ] 1.3 Freeze: `sidebar-spaces` and `space-coordination` finished or merged; no open branch touches `extensions/`; verify with `git branch -r --no-merged main` and `git diff --stat main...<branch> -- extensions` per branch.
 
 ## 1b. Organization, new sandy repository, cutover
 - [ ] 1.4 Owner: merge or close the 6 open pull requests on `nesyeklaf/sandy` and freeze `main`; verify `gh pr list -R nesyeklaf/sandy --state open` is empty.
 - [ ] 1.5 Owner: create `sandy-sdk` and an empty public `sandy-sdk/sandy`; push `main` and all tags from a fresh bare clone (design.md, Decision 9); verify `gh api repos/sandy-sdk/sandy --jq .fork` is `false` and `git ls-remote` shows the same `main` sha and tags on both repositories.
 - [ ] 1.6 Owner: re-create environment `npm-release`, secrets, variables, ruleset, fork-PR approval, apps and the npm trusted publisher; boat plan, `boat ci connect --org sandy-sdk`, `boat ci public sandy-sdk on --users nesyeklaf`; verify a `workflow_dispatch` of `ci-health` by the owner runs.
-- [ ] 1.7 Sandy cutover change on `sandy-sdk/sandy` (Decision 12): guards, runtime URLs, `plugin-scaffold.ts` registry URL, package metadata, `check-egress-hosts.sh`, `runs-on` routing plus `scripts/check-runs-on.mjs` (Decision 11), Blacksmith labels replaced, SDK publish target (Decision 3). Verify the Decision 12 checks, the template tests via turbo serially, `check-runs-on.mjs`, one owner push running on boat, and one pull request from a test fork running only on GitHub-hosted runners.
+- [ ] 1.7 Sandy cutover change on `sandy-sdk/sandy` (Decision 12): guards, runtime URLs, `plugin-scaffold.ts` registry URL, package metadata, `check-egress-hosts.sh`, `runs-on` routing plus `scripts/check-runs-on.mjs` (Decision 11), Blacksmith labels per the owner's answer, SDK package metadata (Decision 3). Verify the Decision 12 checks, the template tests via turbo serially, `check-runs-on.mjs`, one owner push running on boat, and one pull request from a test fork running only on GitHub-hosted runners.
 - [ ] 1.8 Owner: switch `~/projects/sandy`, `~/projects/private/gh/sandy` and the managed worktrees to the new remote; verify `scripts/fork/deploy.sh` deploys from it.
-- [ ] 1.9 Owner, after the soak: disable Actions on `nesyeklaf/sandy`, add the "moved" note, archive; verify no new workflow runs there, and an old `nesyeklaf/sandy` registry URL still returns 200.
+- [ ] 1.9 Owner: disable Actions on `nesyeklaf/sandy` and add the "moved" note; keep the repository unarchived; verify no new workflow runs there, and an old `nesyeklaf/sandy` registry URL still returns 200.
 
 ## 2. Spikes (staging instance, serial; ask the orchestrator for the slot)
 - [ ] 2.1 Install one unit from a test tag with `--subdirectory sandy/<unit> --tag-prefix <unit>-v` and a semver range; verify `sandy plugin source <id>` shows the resolved tag and `sandy plugin outdated` sees a newer test tag.
@@ -42,8 +42,7 @@ The spec is all this change delivers. Every task that creates or changes a repos
   Verify `pnpm install --frozen-lockfile`, then every unit's tests, `check-git-install.mjs` and `sandy plugin build`, serially.
 - [ ] 4.3 Holon move: `sandy-plugins.holon`, re-parented plugin holons, `openspec/specs/holon-*` re-exported; verify `holon check` and `openspec validate --all --strict` in the scratch clone.
 - [ ] 4.4 Owner OK: create the public repository with fork-PR approval on, push, CI green (`check-runs-on.mjs` included), tag the current versions of all units and the pi train.
-- [ ] 4.5 Owner OK: publish the SDK in the chosen variant (design.md, Decision 3). S1: sandy's `publish-plugin-sdk` job with `GITHUB_TOKEN`. S2: the owner publishes the first version by hand with a classic PAT, grants Actions access (sandy Write, sandy-plugins Read), and only then the job runs. Verify the package page shows the chosen visibility, and the plugin repository's CI installs with `GITHUB_TOKEN` only; then switch the root devDependency from the bridge to the registry range.
-- [ ] 4.6 Owner: classic PAT `read:packages` in `~/.npmrc` on each dev host (needed for both variants); verify `pnpm install --frozen-lockfile` in a fresh local clone.
+- [ ] 4.5 Owner OK: create the npm organization `sandy-sdk`, publish `@sandy-sdk/plugin-sdk` once by hand with `--access public` from `sandy-sdk/sandy` after the cutover, add the trusted publisher (`sandy-sdk/sandy`, `publish-sandy-app.yml`, environment `npm-release`); verify `npm view @sandy-sdk/plugin-sdk` works without login, the next release publishes with provenance from `sandy-sdk/sandy`, and the plugin repository's CI installs it with no secret; then switch the root devDependency from the bridge to the npm range.
 
 ## 5. Switch sources (live host, one unit at a time)
 - [ ] 5.1 Check out `sandy-plugins` on the server host and build with `scripts/build.sh`.

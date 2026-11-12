@@ -39,34 +39,29 @@ A unit's `dependencies` and `devDependencies` SHALL be public npm registry range
 - **WHEN** `grep -rE '"(file|link|workspace):' --include=package.json` runs outside `node_modules`
 - **THEN** it finds matches only in the workspace root `package.json`, and none point outside the repository
 
-### Requirement: SDK from GitHub Packages
-The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a GitHub Packages package owned by the organization `sandy-sdk`, which also owns sandy and the plugin repository. Sandy SHALL publish it with `GITHUB_TOKEN`; its visibility SHALL be the one the owner chose, and a private package SHALL exist before any workflow publishes to it. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
+### Requirement: Public SDK from npmjs
+The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a public npmjs package that sandy publishes with npm Trusted Publishing. The plugin repository SHALL need no registry token or registry `.npmrc`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
 
 #### Scenario: Bridge before the first publish
 - **GIVEN** no registry has the SDK
 - **WHEN** `scripts/sdk.sh <sandy-tag> --local` runs and the workspace is installed
 - **THEN** the units' tests and builds use the SDK packed from that sandy tag, and no unit's `package.json` changes
 
-#### Scenario: CI installs with GITHUB_TOKEN
-- **WHEN** the first version is published
-- **THEN** the package page shows the visibility the owner chose, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
-
-#### Scenario: A private package is never created public
-- **GIVEN** the owner chose a private package and no version exists yet
-- **WHEN** sandy's publish job runs
-- **THEN** it refuses to publish, because a package created by a public repository's `GITHUB_TOKEN` would be public for good
+#### Scenario: Anonymous install
+- **WHEN** the plugin repository's CI or a fresh clone without any npm login runs `pnpm install --frozen-lockfile`
+- **THEN** the SDK installs from registry.npmjs.org without a token
 
 #### Scenario: Git installs need no token
-- **GIVEN** a host without any GitHub Packages token
+- **GIVEN** a host without any npm login
 - **WHEN** a unit is installed from a git source
 - **THEN** the install succeeds, because the SDK is an optional peer that sandy's install does not fetch
 
 ### Requirement: boat only for the owner's own content
-The plugin repository's workflows SHALL run on GitHub-hosted runners, except that a job SHALL run on a boat label when the owner `nesyeklaf` pushed or started it from the repository itself. No workflow SHALL use `pull_request_target`. Workflows SHALL use only GitHub Actions secrets and `GITHUB_TOKEN`.
+The plugin repository's workflows SHALL run on GitHub-hosted runners, except that a job SHALL run on a boat label when the owner `nesyeklaf` pushed or started it from the repository itself. No workflow SHALL use `pull_request_target`.
 
 #### Scenario: Owner's pull request
 - **WHEN** the owner opens a pull request from a branch of the repository that changes one unit
-- **THEN** its `unit` job runs on `boat` and installs the SDK with `GITHUB_TOKEN`
+- **THEN** its `unit` job runs on `boat`
 
 #### Scenario: Pull request from a fork
 - **WHEN** anyone, including the owner, opens a pull request from a fork

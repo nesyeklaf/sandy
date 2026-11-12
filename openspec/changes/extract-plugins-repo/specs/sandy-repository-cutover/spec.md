@@ -10,11 +10,11 @@
 - **THEN** `gh api repos/sandy-sdk/sandy --jq .fork` is `false`, and `git ls-remote` shows the same `main` sha and the same tags on both repositories
 
 ### Requirement: Old URLs keep working
-`nesyeklaf/sandy` SHALL be kept, archived after the soak, and never deleted, so the URLs installed versions call stay reachable.
+`nesyeklaf/sandy` SHALL be kept and never deleted, so the URLs installed versions call stay reachable.
 
 #### Scenario: Scaffolded plugin from before the cutover
 - **GIVEN** a plugin whose `components.json` points at `raw.githubusercontent.com/nesyeklaf/sandy/<tag>/packages/plugin-registry/r/{name}.json`
-- **WHEN** a registry component is added after `nesyeklaf/sandy` was archived
+- **WHEN** a registry component is added after the cutover
 - **THEN** the request returns the component
 
 ### Requirement: Sandy points at the new repository
@@ -29,7 +29,7 @@ After the cutover change, sandy's workflow guards, runtime URLs, the plugin regi
 - **THEN** its `components.json` registry URL names `sandy-sdk/sandy` at a tag that exists there, and fetching one item needs no token
 
 #### Scenario: Old repository goes quiet
-- **WHEN** Actions are disabled on `nesyeklaf/sandy` and it is archived
+- **WHEN** Actions are disabled on `nesyeklaf/sandy`
 - **THEN** no workflow runs there afterwards
 
 ### Requirement: boat only for the owner's own content
