@@ -9,7 +9,9 @@
 #             restores sandy.db (drops everything written since that deploy)
 #   serve     publish the server tailnet-only through Tailscale Serve (needs sudo)
 #   status    unit state, installed version, local and tailnet health
-# Overrides: SANDY_UNIT (systemd user unit), SANDY_PORT (default 38886).
+# Overrides: SANDY_UNIT (systemd user unit), SANDY_PORT (default 38886),
+#   SANDY_DEPLOY_APP_URL (SANDY_APP_URL to set on deploy; default the tailnet URL).
+# The npm prefix is the unit's SANDY_APP_NPM_PREFIX, else <data-dir>/npm.
 set -euo pipefail
 
 case "${1:-}" in
@@ -28,9 +30,11 @@ find_unit() {
   echo "$units"
 }
 unit=$(find_unit)
-data_dir=$(systemctl --user show -p Environment "$unit" | tr ' ' '\n' | sed -n 's/^SANDY_DATA_DIR=//p')
+data_dir=$(systemctl --user show -p Environment --value "$unit" | tr ' ' '\n' | sed -n 's/^SANDY_DATA_DIR=//p')
 [ -d "$data_dir" ] || { echo "No SANDY_DATA_DIR in $unit" >&2; exit 1; }
-sandy_app="$data_dir/npm/bin/sandy-app"
+npm_prefix=$(systemctl --user show -p Environment --value "$unit" | tr ' ' '\n' | sed -n 's/^SANDY_APP_NPM_PREFIX=//p')
+npm_prefix="${npm_prefix:-$data_dir/npm}"
+sandy_app="$npm_prefix/bin/sandy-app"
 
 tailnet_url() {
   local name
@@ -39,7 +43,7 @@ tailnet_url() {
 }
 
 sandy_cli() {
-  SANDY_SERVER_URL="http://127.0.0.1:$port" "$data_dir/npm/bin/sandy" "$@"
+  SANDY_SERVER_URL="http://127.0.0.1:$port" "$npm_prefix/bin/sandy" "$@"
 }
 
 active_threads() {
@@ -136,19 +140,19 @@ deploy() {
   for f in sandy.db sandy.db-wal sandy.db-shm config.json; do
     [ -e "$data_dir/$f" ] && cp -a "$data_dir/$f" "$backup/"
   done
-  cp -a "$data_dir/npm" "$backup/npm"
+  cp -a "$npm_prefix" "$backup/npm"
   echo "$backup" > "$last_backup_file"
   echo "backup: $backup"
 
   # Same native-module allowlist as the official machine installer.
   if ! npm install -g --allow-scripts=better-sqlite3,node-pty,@parcel/watcher \
-      --prefix "$data_dir/npm" "$tgz"; then
+      --prefix "$npm_prefix" "$tgz"; then
     echo "npm install failed; restoring the previous package"
-    rm -rf "$data_dir/npm"; cp -a "$backup/npm" "$data_dir/npm"
+    rm -rf "$npm_prefix"; cp -a "$backup/npm" "$npm_prefix"
     systemctl --user start "$unit"
     exit 1
   fi
-  SANDY_DATA_DIR="$data_dir" "$sandy_app" config set SANDY_APP_URL "$(tailnet_url)"
+  SANDY_DATA_DIR="$data_dir" "$sandy_app" config set SANDY_APP_URL "${SANDY_DEPLOY_APP_URL:-$(tailnet_url)}"
   systemctl --user start "$unit"
   echo "=== $(date -Is) deploy done"
 }
@@ -159,7 +163,7 @@ rollback() {
   test -d "$backup/npm"
   echo "=== $(date -Is) rollback from $backup $*"
   systemctl --user stop "$unit"
-  rm -rf "$data_dir/npm"; cp -a "$backup/npm" "$data_dir/npm"
+  rm -rf "$npm_prefix"; cp -a "$backup/npm" "$npm_prefix"
   [ -e "$backup/config.json" ] && cp -a "$backup/config.json" "$data_dir/config.json"
   if [ "${1:-}" = --with-db ]; then
     rm -f "$data_dir/sandy.db-wal" "$data_dir/sandy.db-shm"
@@ -180,7 +184,7 @@ serve() {
 
 status() {
   echo "unit:     $unit $(systemctl --user is-active "$unit")"
-  echo "version:  $(node -p "require('$data_dir/npm/lib/node_modules/sandy-app/package.json').version")"
+  echo "version:  $(node -p "require('$npm_prefix/lib/node_modules/sandy-app/package.json').version")"
   echo "app url:  $(node -p "(require('$data_dir/config.json').config||{}).SANDY_APP_URL||'unset'")"
   echo "local:    $(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/")"
   echo "tailnet:  $(curl -s -o /dev/null -w '%{http_code}' "$(tailnet_url)/")"
