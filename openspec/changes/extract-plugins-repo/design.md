@@ -21,7 +21,7 @@
 | `nesyeklaf/sandy` is public | `gh api` |
 | 18 of the 19 sandy units carry a `package-lock.json`; `sandy/holon` is already a standalone pnpm project with its own `pnpm-workspace.yaml` | `ls extensions/sandy/*/package-lock.json` |
 | Holon tree: `field-latency` is `partOf: sandy`; `holon-genui` (with card, markdown, view-reader) and `holon-extension` (with cli, engine) are `partOf: holons` (`docs/designs/holons/holons.holon`, stays in sandy). Exported specs that belong to them: `openspec/specs/holon-{cli,engine,extension,genui,genui-card,genui-markdown,genui-view-reader}`; `openspec/specs/holons` stays | `.holon` files |
-| The only `@sandy-sdk/*` package is `@sandy-sdk/plugin-sdk` 0.6.106, in 1550 tracked files (80 `package.json`, 469 under `extensions/`). It was never published. The GitHub organization `sandyhq` (free plan) with the empty, public, non-fork repositories `sandyhq/sandy` and `sandyhq/sandy-plugins`, and the npm organization `sandyhq`, exist (owner, 2026-11-12) | `git grep -l -F @sandy-sdk/plugin-sdk`; orchestrator message |
+| The only `@sandy-sdk/*` package is `@sandy-sdk/plugin-sdk` 0.6.106, in about 1550 tracked files (80 `package.json`, 469 under `extensions/`). It was never published. The GitHub organization `sandyhq` (free plan) with the empty, public, non-fork repositories `sandyhq/sandy` and `sandyhq/sandy-plugins`, and the npm organization `sandyhq`, exist (owner, 2026-11-12) | `git grep -l -F @sandy-sdk/plugin-sdk`; orchestrator message |
 | `nesyeklaf/sandy` is a fork whose parent is not visible: `fork: true`, 0 forks, 0 stars, about 202 MB (`size` 207195 KB), 6 open pull requests, 30 open issues, 6 releases, no Pages, no wiki, one active ruleset "Protecc", one environment `npm-release` | `gh api repos/nesyeklaf/sandy`, `/rulesets`, `/environments`, `gh pr list`, `gh issue list`, 2026-11-12 |
 | Workflows guard on the repository name: `if: github.repository == 'nesyeklaf/sandy'` in `ci-cache-maintenance.yml:20`, `ci-health.yml:14`, `ci.yml:583`, `close-stale-prs.yml:18`, `mobile-android-e2e.yml:27`, `mobile-e2e.yml:60`, `publish-sandy-app.yml:58, 384` | `git grep github.repository -- .github` |
 | Desktop update feeds are published as `desktop-version*.json` and `latest-mac.yml` assets on the moving releases `desktop-latest` and `desktop-nightly` of `nesyeklaf/sandy` (`build-desktop.yml:383, 492-495`, `publish-sandy-app.yml:968, 1049-1051`). No tracked source in `apps/desktop/src` reads them, and `scripts/fork/check-egress-hosts.sh:11` forbids `nesyeklaf/sandy/releases` in code; whether an installed build reads them (electron-updater defaults) is unverified | source |
@@ -301,7 +301,7 @@ The npm scope follows the organization `sandyhq`. The rename is real, with no np
 
 Scope:
 - The package `packages/plugin-sdk`: `name`, `repository`/`homepage`/`bugs` (Decision 3).
-- Every import specifier, including subpaths (`/app`, `/host`, `/internal/*`, `/provider-bridge*`, `/environment-provider`, `/machine-provider`), in 1550 tracked files, 469 of them under `extensions/`.
+- Every import specifier, including subpaths (`/app`, `/host`, `/internal/*`, `/provider-bridge*`, `/environment-provider`, `/machine-provider`), in about 1550 tracked files, 469 of them under `extensions/`.
 - The 80 `package.json` files (including the `file:` links of the 19 units) and turbo filters (`--filter=@sandy-sdk/plugin-sdk` in `ci.yml`, version lockstep).
 - Constants: `PLUGIN_SDK_PACKAGE_NAME` (`packages/plugin-build/src/plugin-sdk-install.ts:5`), the server's runtime specifiers (`apps/server/src/services/plugins/plugin-runtime.ts`), `packages/plugin-build/src/build-plugin-server.ts` and `build-plugin-app.ts`.
 - Scripts: `packages/plugin-sdk/scripts/check-npm-version-guard.mjs` (`PACKAGE_NAME`, `REGISTRY_URL` `https://registry.npmjs.org/@sandyhq%2Fplugin-sdk`), `bump-plugin-sdk.mjs`, `check-plugin-forks.mjs`, `lib/plugin-fork.mjs`, `check-provider-literal-ratchet.mjs`, `oxlint-plugin.mjs`, `scripts/perf/fixtures/*`.
@@ -433,47 +433,5 @@ Sandy `sandyhq/sandy`. This change does not edit sandy's workflows; the cutover 
 
 The cutover change, landed on `sandyhq/sandy` as its first commit after the push (step 0d):
 - the 8 `github.repository == 'nesyeklaf/sandy'` guards to `sandyhq/sandy`, so scheduled jobs and `ci.yml:583` run on the new repository and never again on the old one;
-- runtime URLs (`CommunitySettingsSection.tsx:11`, `AppSidebar.tsx:77`, `SettingsView.tsx:117`, `apps/desktop/src/menu.ts:20`), `plugin-scaffold.ts:740, 1420`, `build-bundled-dts.mjs:146`, and `repository`/`homepage`/`bugs` in `packages/plugin-sdk` and `packages/sandy-app`. npm's provenance check needs `repository.url` to match the building repository (npm docs, not re-read today);
-- the feed URLs printed in job summaries, and docs; `check-egress-hosts.sh:11` forbids both `nesyeklaf/sandy/releases` and `sandyhq/sandy/releases`;
-- the `runs-on` routing and `check-runs-on.mjs` (Decision 11), and Blacksmith labels replaced;
-- the SDK rename to `@sandyhq/plugin-sdk` (Decision 10) and its publish metadata (Decision 3);
-- the `components.json` of units still in `extensions/sandy`; the moved copies change in the plugin repository.
 
-Left unchanged: history, archived OpenSpec and holon records, `scripts/rename-sandy.mjs` (a one-time migration), fixtures, stories, and `nesyeklaf` as a person (holon `owners`, `answeredBy`). Contributor gates (`pr-gate`, `approve-contributor`, `APPROVED_CONTRIBUTORS`, the `add-contributor` skill) stay, because the repository is public.
-
-On the old repository, once the new one runs:
-1. Disable Actions on `nesyeklaf/sandy`. Its `main` still has the old guards, so its scheduled jobs would otherwise keep running.
-2. Commit a "moved to sandyhq/sandy" note to its README and description.
-3. Leave it unarchived. Archiving stays possible later without breaking any URL above.
-
-Checks:
-- `git grep -n nesyeklaf/sandy` on `sandyhq/sandy` shows only the items left unchanged above.
-- `sandy plugin new demo` writes a registry URL on `sandyhq/sandy` at an existing tag, and `curl -sf` of one registry item there succeeds without a token.
-- An already scaffolded plugin still resolves its old `nesyeklaf/sandy` registry URL.
-- After step 0e, the old repository shows no workflow runs, and `scripts/fork/deploy.sh` deploys from the new remote.
-
-## Owner steps (org, repositories, registry, CI)
-
-Only the owner does these. The agent creates no organization, repository, app installation or token, pushes nothing to `sandyhq`, and publishes nothing.
-
-Done by the owner (2026-11-12):
-- the GitHub organization `sandyhq` (free plan) and the empty public repositories `sandyhq/sandy` and `sandyhq/sandy-plugins`, not forks;
-- the npm organization `sandyhq`;
-- `gh` token scopes `admin:org`, `workflow`, `repo`;
-- boat approved as runner on the organization;
-- closing the pull requests #37, #29, #23 and #2 on `nesyeklaf/sandy`.
-
-Left:
-1. Merge or close any other open pull request on `nesyeklaf/sandy`; freeze `main` (step 0a).
-2. Push `main`, all tags and the four pull-request branches from a fresh bare clone (Decision 9, step 0c).
-3. Re-create the settings a push does not carry: environment `npm-release`, secrets and variables, the ruleset "Protecc", fork-PR approval, apps (CodeRabbit, SlopCop, Expo/EAS; not Blacksmith) (Decision 9).
-4. Check the boat allow-list: `boat ci public sandyhq on --users nesyeklaf` (Decision 11).
-5. After the cutover change: publish `@sandyhq/plugin-sdk` once by hand with `--access public`, then add the trusted publishers for it and for `sandy-app` on `sandyhq/sandy` (Decision 3).
-6. Switch local remotes and the deploy host to `sandyhq/sandy`; disable Actions on `nesyeklaf/sandy` and add the "moved" note; keep the repository (step 0e).
-7. Turn on fork-PR approval on `sandyhq/sandy-plugins` and push the filtered repository (task 4.4).
-
-## Open questions for the owner
-
-Answered on 2026-11-12, last version: organization `sandyhq` with the npm scope following it, so the SDK is renamed to `@sandyhq/plugin-sdk` (Decision 10); `sandyhq/sandy` and `sandyhq/sandy-plugins` both new and public; `nesyeklaf/sandy` kept, not archived; issues, pull requests and the `desktop-v*` releases stay there; GitHub-hosted runners by default, boat only for the owner's own content; desktop macOS and Windows on GitHub runners; the SDK public on npmjs; pi/fabric to pnpm; nothing else renamed; Blacksmith replaced by GitHub-hosted labels. Dropped: transfer, fork detach, private sandy, GitHub Packages, the organization name `sandy-sdk`.
-
-No questions are open.
+[Showing lines 1-435 of 480 (50.0KB limit). Use offset=436 to continue.]
