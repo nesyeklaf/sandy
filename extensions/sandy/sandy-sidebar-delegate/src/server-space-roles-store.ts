@@ -1,5 +1,10 @@
 import { assert } from "./assert";
-import type { CoordinationMode } from "./space-coordination-contract";
+import {
+  CHECK_IN_MINUTES_DEFAULT,
+  CHECK_IN_MINUTES_MAX,
+  type CoordinationMode,
+  type CoordinationSettings,
+} from "./space-coordination-contract";
 import type { ServerContext } from "./server-context";
 
 type Database = ServerContext["db"];
@@ -14,7 +19,12 @@ export function createSpaceRolesStore(db: Database) {
   );
   const selectManagedSpace = db.prepare("SELECT space_id FROM space_managed_members WHERE thread_id = ?");
   const selectStarted = db.prepare("SELECT space_id, descendant FROM space_started_sessions WHERE thread_id = ?");
-  const selectWake = db.prepare("SELECT wake_enabled FROM space_settings WHERE space_id = ?");
+  const selectSettings = db.prepare(
+    "SELECT self_reports, check_in_minutes, failure_fallback FROM space_settings WHERE space_id = ?",
+  );
+  const upsertSettings = db.prepare(
+    "INSERT INTO space_settings (space_id, self_reports, check_in_minutes, failure_fallback) VALUES (?, ?, ?, ?) ON CONFLICT (space_id) DO UPDATE SET self_reports = excluded.self_reports, check_in_minutes = excluded.check_in_minutes, failure_fallback = excluded.failure_fallback",
+  );
 
   return {
     orchestratorSpaceOf(threadId: string): string | null {
@@ -113,18 +123,46 @@ export function createSpaceRolesStore(db: Database) {
       return hadRow;
     },
 
-    wakeEnabled(spaceId: string): boolean {
-      const row = selectWake.get(spaceId) as { wake_enabled: number } | undefined;
-      return row === undefined ? true : row.wake_enabled === 1;
+    settingsOf(spaceId: string): CoordinationSettings {
+      assert(spaceId.length > 0, "spaceId must not be empty");
+      const row = selectSettings.get(spaceId) as
+        | { self_reports: number; check_in_minutes: number; failure_fallback: number }
+        | undefined;
+      if (row === undefined) {
+        return { selfReports: true, checkInMinutes: CHECK_IN_MINUTES_DEFAULT, failureFallback: true };
+      }
+      assert(
+        row.check_in_minutes >= 0 && row.check_in_minutes <= CHECK_IN_MINUTES_MAX,
+        "stored check-in interval is within range",
+      );
+      return {
+        selfReports: row.self_reports === 1,
+        checkInMinutes: row.check_in_minutes,
+        failureFallback: row.failure_fallback === 1,
+      };
     },
 
-    setWake(spaceId: string, enabled: boolean): void {
+    setSettings(spaceId: string, settings: CoordinationSettings): void {
       assert(spaceId.length > 0, "spaceId must not be empty");
-      db.prepare("INSERT OR REPLACE INTO space_settings (space_id, wake_enabled) VALUES (?, ?)").run(
-        spaceId,
-        enabled ? 1 : 0,
+      assert(
+        Number.isInteger(settings.checkInMinutes) &&
+          settings.checkInMinutes >= 0 &&
+          settings.checkInMinutes <= CHECK_IN_MINUTES_MAX,
+        "check-in interval must be within range before writing",
       );
-      assert(this.wakeEnabled(spaceId) === enabled, "wake switch must match after write");
+      upsertSettings.run(
+        spaceId,
+        settings.selfReports ? 1 : 0,
+        settings.checkInMinutes,
+        settings.failureFallback ? 1 : 0,
+      );
+      const stored = this.settingsOf(spaceId);
+      assert(
+        stored.selfReports === settings.selfReports &&
+          stored.checkInMinutes === settings.checkInMinutes &&
+          stored.failureFallback === settings.failureFallback,
+        "settings must match after write",
+      );
     },
 
     forgetThread(threadId: string): { orchestratorSpaceId: string | null } {
@@ -132,6 +170,7 @@ export function createSpaceRolesStore(db: Database) {
       db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
       this.clearStarted(threadId);
       db.prepare("DELETE FROM space_idea_links WHERE thread_id = ?").run(threadId);
+      db.prepare("DELETE FROM space_member_reports WHERE thread_id = ?").run(threadId);
       return { orchestratorSpaceId };
     },
   };

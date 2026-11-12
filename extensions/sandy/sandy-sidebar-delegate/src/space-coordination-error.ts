@@ -5,7 +5,9 @@ type SpaceCoordinationErrorCode =
   | "not_found"
   | "limit_reached"
   | "independent_member"
-  | "invalid_request";
+  | "invalid_request"
+  | "not_managed"
+  | "self_reports_off";
 
 export class SpaceCoordinationError extends Error {
   readonly code: SpaceCoordinationErrorCode;

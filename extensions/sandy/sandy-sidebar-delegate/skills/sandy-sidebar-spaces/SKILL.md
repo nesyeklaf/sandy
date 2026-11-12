@@ -37,7 +37,9 @@ sandy spaces show Alpha --json
 sandy spaces orchestrator add <thread>          # one or more per Space
 sandy spaces orchestrator remove <thread>
 sandy spaces member mode <thread> managed       # independent (default) or managed; owner only
-sandy spaces wake Alpha off                     # wake digest per Space
+sandy spaces settings Alpha                     # self-reports, check-in minutes, failure fallback
+sandy spaces settings Alpha --check-in-minutes 0 --failure-fallback off   # owner only
+sandy spaces report done --summary "Fixed the queue"   # managed member to its orchestrators
 sandy spaces ideas list Alpha
 sandy spaces ideas add Alpha --title "Cache" --body "Problem and done criteria" --thread <thread>
 sandy spaces ideas update <idea> --status in-progress
@@ -52,5 +54,8 @@ sandy spaces adopt <deleted-space-id> Alpha
 - A scratchpad write succeeds only when `--base-revision` equals the current revision; otherwise the command exits 1 and prints the current revision and text.
 - Limits: 500 ideas per Space, title 200 characters, body 16384 bytes, scratchpad 65536 bytes, 50 linked sessions per idea.
 - Orchestrator sessions get the tools space_start_session, space_message_session, space_stop_session, space_archive_session and space_idea_delete; every member gets space_context, space_ideas_list, space_idea_create, space_idea_update, space_scratchpad_read and space_scratchpad_write.
-- With wake-ups on, an orchestrator receives at most one digest per minute (newest 50 entries plus an omitted count) when a managed member fails, asks or finishes.
+- A managed member reports to the orchestrators of its Space with space_report or `sandy spaces report <done|blocked|question|progress> --summary <text>` (at most 2000 characters) when it finishes, is blocked, needs a decision, or has an interim result. Only managed members may report, and only while self-reports are on.
+- Every check-in interval (default 10 minutes, 0 is off) an orchestrator gets one check-in listing the managed members that changed since the last one or look stuck: working without activity for one interval, or idle with no report since their last turn. A check-in where nothing changed is not sent, and none follows while the previous one is still queued.
+- With the failure fallback on, an orchestrator gets at most one message per minute (one line per member, newest 50 plus an omitted count) when a managed member fails or waits on a question and has not reported. Each entry is checked again before sending. A turn that only ended is never reported.
+- Reports, check-ins and fallback messages start with `[Space <name>]` and come from the plugin, not from the owner.
 - Deleting a Space keeps its ideas and scratchpad; `orphans` lists them and `adopt` moves them.

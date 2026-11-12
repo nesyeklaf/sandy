@@ -20,6 +20,8 @@ const MEMBER_TOOL_NAMES = [
   "space_scratchpad_write",
 ] as const;
 
+const REPORT_TOOL_NAME = "space_report";
+
 const SECTION_CACHE_ENTRIES_MAX = 5000;
 const SPACES_WARMED_MAX = 1000;
 
@@ -28,6 +30,12 @@ const ORCHESTRATOR_INSTRUCTIONS = [
   "Call space_context to see the members, their status, environments and branches, the ideas and the scratchpad revision.",
   "You may start sessions with space_start_session, and message, stop or archive members the owner marked Managed. Independent members are refused: only the owner can switch a member to Managed.",
   "Keep the plan in the Space scratchpad and the work items in Space ideas. Do not start sessions or ideas the owner did not ask for.",
+  "Managed members report to you with messages that start with [Space <name>] Report. Check-ins and failure notices from the Space also arrive as messages; read space_context before acting on them.",
+].join("\n");
+
+const REPORT_INSTRUCTIONS = [
+  "The owner made this session a managed member: the orchestrators of its Space coordinate it.",
+  "When you finish the task you were given, are blocked, or need a decision, call space_report once with the outcome (done, blocked, question or progress) and a short summary of the result or what you need. Do not report every small step.",
 ].join("\n");
 
 const MEMBER_INSTRUCTIONS = [
@@ -106,6 +114,15 @@ export function createAgentView(ctx: ServerContext, deps: SpaceDeps, rolesServic
       return { tools: [], skills: [] };
     }
     if (knownSpaceId === null) return { tools: [], skills: [] };
+    const reports =
+      deps.roles.modeIn(thread.id, knownSpaceId) === "managed" && deps.roles.settingsOf(knownSpaceId).selfReports;
+    if (reports) {
+      return {
+        tools: [...MEMBER_TOOL_NAMES, REPORT_TOOL_NAME],
+        skills: [],
+        instructions: `${MEMBER_INSTRUCTIONS}\n${REPORT_INSTRUCTIONS}`,
+      };
+    }
     return { tools: [...MEMBER_TOOL_NAMES], skills: [], instructions: MEMBER_INSTRUCTIONS };
   });
 }

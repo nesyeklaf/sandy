@@ -6,12 +6,18 @@ export const IDEAS_PER_SPACE_MAX = 500;
 export const IDEA_LINKS_MAX = 50;
 export const SCRATCHPAD_BYTES_MAX = 65536;
 export const SPACE_MEMBERS_LISTED_MAX = 500;
-export const WAKE_DIGEST_ENTRIES_MAX = 50;
-export const WAKE_DIGEST_INTERVAL_MS = 60000;
+export const REPORT_SUMMARY_CHARS_MAX = 2000;
+export const CHECK_IN_MINUTES_DEFAULT = 10;
+export const CHECK_IN_MINUTES_MAX = 1440;
+export const CHECK_IN_ENTRIES_MAX = 50;
+export const CHECK_IN_TICK_MS = 60000;
+export const FALLBACK_INTERVAL_MS = 60000;
+export const FALLBACK_ENTRIES_MAX = 50;
 export const THREAD_IDS_PER_LOOKUP_MAX = 200;
 
 export const IDEA_STATUSES = ["open", "planned", "in-progress", "done", "dropped"] as const;
 export const COORDINATION_MODES = ["independent", "managed"] as const;
+export const REPORT_OUTCOMES = ["done", "blocked", "question", "progress"] as const;
 
 const spaceIdSchema = z.string().trim().min(1);
 const threadIdSchema = z.string().trim().min(1);
@@ -19,6 +25,29 @@ const BULK_ORCHESTRATOR_MAX = 200;
 const ideaIdSchema = z.string().trim().min(1);
 const ideaStatusSchema = z.enum(IDEA_STATUSES);
 const coordinationModeSchema = z.enum(COORDINATION_MODES);
+export const reportOutcomeSchema = z.enum(REPORT_OUTCOMES);
+export const reportSummarySchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(REPORT_SUMMARY_CHARS_MAX, { message: `Report summary is over ${REPORT_SUMMARY_CHARS_MAX} characters` });
+const checkInMinutesSchema = z
+  .number()
+  .int()
+  .min(0, { message: `Check-in interval must be 0 to ${CHECK_IN_MINUTES_MAX} minutes` })
+  .max(CHECK_IN_MINUTES_MAX, { message: `Check-in interval must be 0 to ${CHECK_IN_MINUTES_MAX} minutes` });
+
+export const coordinationSettingsSchema = z.object({
+  selfReports: z.boolean(),
+  checkInMinutes: checkInMinutesSchema,
+  failureFallback: z.boolean(),
+});
+
+export const memberReportSchema = z.object({
+  outcome: reportOutcomeSchema,
+  summary: z.string(),
+  reportedAt: z.number().int(),
+});
 const ideaTitleSchema = z.string().trim().min(1).max(IDEA_TITLE_CHARS_MAX);
 const ideaBodySchema = z.string().refine((value) => new TextEncoder().encode(value).length <= IDEA_BODY_BYTES_MAX, {
   message: `Idea body is over ${IDEA_BODY_BYTES_MAX} bytes`,
@@ -78,12 +107,13 @@ const memberSchema = z.object({
   updatedAt: z.number().int(),
   mode: coordinationModeSchema,
   isOrchestrator: z.boolean(),
+  latestReport: memberReportSchema.nullable(),
 });
 
 export const spaceCoordinationSchema = z.object({
   spaceId: z.string(),
   spaceName: z.string(),
-  wakeEnabled: z.boolean(),
+  settings: coordinationSettingsSchema,
   orchestratorThreadIds: z.array(z.string()),
   members: z.array(memberSchema),
   membersTruncated: z.boolean(),
@@ -122,9 +152,16 @@ export const spaceCoordinationRpcShape = {
     input: z.object({ threadId: threadIdSchema, mode: coordinationModeSchema }).strict(),
     output: z.object({ changed: z.boolean(), mode: coordinationModeSchema }),
   },
-  setSpaceWake: {
-    input: z.object({ ...spaceInput, enabled: z.boolean() }).strict(),
-    output: z.object({ wakeEnabled: z.boolean() }),
+  setSpaceCoordinationSettings: {
+    input: z
+      .object({
+        ...spaceInput,
+        selfReports: z.boolean().optional(),
+        checkInMinutes: checkInMinutesSchema.optional(),
+        failureFallback: z.boolean().optional(),
+      })
+      .strict(),
+    output: coordinationSettingsSchema,
   },
   listIdeas: {
     input: z.object(spaceInput).strict(),
@@ -186,6 +223,9 @@ export const spaceCoordinationRpcShape = {
 export type Idea = z.infer<typeof ideaSchema>;
 export type IdeaStatus = (typeof IDEA_STATUSES)[number];
 export type CoordinationMode = (typeof COORDINATION_MODES)[number];
+export type ReportOutcome = (typeof REPORT_OUTCOMES)[number];
+export type CoordinationSettings = z.infer<typeof coordinationSettingsSchema>;
+export type MemberReport = z.infer<typeof memberReportSchema>;
 export type Scratchpad = z.infer<typeof scratchpadSchema>;
 export type ScratchpadWrite = z.infer<typeof scratchpadWriteSchema>;
 export type SpaceCoordination = z.infer<typeof spaceCoordinationSchema>;

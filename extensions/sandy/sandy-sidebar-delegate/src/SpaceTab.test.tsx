@@ -60,6 +60,7 @@ function member(threadId: string, mode: "independent" | "managed" = "independent
     updatedAt: 0,
     mode,
     isOrchestrator: false,
+    latestReport: null,
   };
 }
 
@@ -77,7 +78,7 @@ beforeEach(() => {
   space = {
     spaceId: "sec_a",
     spaceName: "Launch",
-    wakeEnabled: false,
+    settings: { selfReports: true, checkInMinutes: 10, failureFallback: true },
     orchestratorThreadIds: [],
     members: [member("t1"), member("t2")],
     membersTruncated: false,
@@ -121,6 +122,29 @@ describe("Space tab", () => {
     expect(toggle.getAttribute("aria-checked")).toBe("false");
     fireEvent.click(toggle);
     await waitFor(() => expect(call).toHaveBeenCalledWith("setMemberMode", { threadId: "t2", mode: "managed" }));
+  });
+
+  it("changes the orchestrator update settings through the RPC", async () => {
+    render(<SpaceTab threadId="t1" />);
+    fireEvent.change(await screen.findByLabelText("Check-in interval"), { target: { value: "0" } });
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("setSpaceCoordinationSettings", { spaceId: "sec_a", checkInMinutes: 0 }),
+    );
+    fireEvent.click(screen.getByRole("switch", { name: "Self-reports" }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("setSpaceCoordinationSettings", { spaceId: "sec_a", selfReports: false }),
+    );
+    fireEvent.click(screen.getByRole("switch", { name: "Failure fallback" }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("setSpaceCoordinationSettings", { spaceId: "sec_a", failureFallback: false }),
+    );
+  });
+
+  it("shows a member's latest report", async () => {
+    space.members = [{ ...member("t2"), latestReport: { outcome: "done", summary: "Shipped the fix", reportedAt: 5 } }];
+    render(<SpaceTab threadId="t1" />);
+    const label = await screen.findByText("reported done");
+    expect(label.getAttribute("title")).toBe("Shipped the fix");
   });
 
   it("adds and removes orchestrators", async () => {
