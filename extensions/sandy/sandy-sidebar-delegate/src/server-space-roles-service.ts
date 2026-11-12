@@ -95,6 +95,7 @@ function createMemberReads(deps: SpaceDeps) {
   async function requireMember(threadId: string): Promise<string> {
     const spaceId = await membership.spaceOf(threadId);
     if (spaceId === null) {
+      roles.revokeManaged(threadId);
       throw new SpaceCoordinationError("not_member", "This session is not in a Space.");
     }
     return spaceId;

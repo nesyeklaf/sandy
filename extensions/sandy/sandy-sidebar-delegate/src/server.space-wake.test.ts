@@ -132,6 +132,47 @@ describe("self-reports", () => {
     expect(context.members.find((member) => member.threadId === "thr_m0")?.latestReport).toBeNull();
   });
 
+  it("drops the report with managed mode once the member is seen outside every Space", async () => {
+    const { harness, update } = await load(1);
+    await tool(harness, "space_report", { outcome: "done", summary: "old task" }, "thr_m0");
+    update("thr_m0", { sectionId: null });
+    await tool(harness, "space_context", {}, "thr_m0");
+    update("thr_m0", { sectionId: "space_a" });
+    const context = (await call(harness, "getSpaceCoordination", { spaceId: "space_a" })) as {
+      members: Array<{ threadId: string; mode: string; latestReport: unknown }>;
+    };
+    expect(context.members.find((member) => member.threadId === "thr_m0")).toMatchObject({
+      mode: "independent",
+      latestReport: null,
+    });
+  });
+
+  it("drops the report when the owner switches the member to independent", async () => {
+    const { harness } = await load(1);
+    await tool(harness, "space_report", { outcome: "done", summary: "old task" }, "thr_m0");
+    await call(harness, "setMemberMode", { threadId: "thr_m0", mode: "independent" });
+    await call(harness, "setMemberMode", { threadId: "thr_m0", mode: "managed" });
+    const context = (await call(harness, "getSpaceCoordination", { spaceId: "space_a" })) as {
+      members: Array<{ threadId: string; latestReport: unknown }>;
+    };
+    expect(context.members.find((member) => member.threadId === "thr_m0")?.latestReport).toBeNull();
+  });
+
+  it("lets a managed orchestrator report to the other orchestrators only", async () => {
+    const { harness, send } = await load(0, "sent", 2);
+    await call(harness, "setMemberMode", { threadId: "thr_orch0", mode: "managed" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const configuration = await harness.behavior.resolveAgentConfiguration({
+      thread: { id: "thr_orch0", title: null, parentThreadId: null, sourceThreadId: null },
+      project: { id: "p" },
+    } as never);
+    const names = configuration.tools.map((entry: { name: string }) => entry.name);
+    expect(names).toEqual(expect.arrayContaining(["space_start_session", "space_report"]));
+    expect(configuration.instructions).toContain("call space_report");
+    await tool(harness, "space_report", { outcome: "done", summary: "ok" }, "thr_orch0");
+    expect(send.mock.calls.map(([input]) => input.threadId)).toEqual(["thr_orch1"]);
+  });
+
   it("forgets the report when the member is deleted", async () => {
     const { harness, update } = await load(1);
     await tool(harness, "space_report", { outcome: "done", summary: "ok" }, "thr_m0");
@@ -243,6 +284,17 @@ describe("periodic check-in", () => {
     expect(texts()[0]).not.toContain("thr_m1");
     await vi.advanceTimersByTimeAsync(20 * MINUTE_MS);
     expect(texts()).toHaveLength(1);
+  });
+
+  it("does not call a member stuck while its thread keeps producing events", async () => {
+    const { harness, update, send } = await silent();
+    const member = update("thr_m0", { status: "active" });
+    await harness.behavior.emitThreadEvent("thread.active", { thread: member });
+    for (let sequence = 1; sequence <= 12; sequence += 1) {
+      await vi.advanceTimersByTimeAsync(59_000);
+      await harness.behavior.emitThreadEvent("experimental_thread.events", { thread: member, sequence });
+    }
+    expect(send).not.toHaveBeenCalled();
   });
 
   it("lists a member idle after a turn without a report, but not one that reported", async () => {

@@ -111,7 +111,7 @@ export function createSpaceRolesStore(db: Database) {
       } else if (this.managedSpaceOf(threadId) === null) {
         return false;
       } else {
-        db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
+        this.revokeManaged(threadId);
       }
       assert(this.modeIn(threadId, spaceId) === mode, "mode must match after write");
       return true;
@@ -120,6 +120,7 @@ export function createSpaceRolesStore(db: Database) {
     revokeManaged(threadId: string): boolean {
       const hadRow = this.managedSpaceOf(threadId) !== null;
       if (hadRow) db.prepare("DELETE FROM space_managed_members WHERE thread_id = ?").run(threadId);
+      db.prepare("DELETE FROM space_member_reports WHERE thread_id = ?").run(threadId);
       return hadRow;
     },
 

@@ -28,6 +28,7 @@ export function createActivityTracker(ctx: ServerContext) {
   ctx.sandy.events.on("thread.idle", seen);
   ctx.sandy.events.on("thread.failed", seen);
   ctx.sandy.events.on("interaction.pending", seen);
+  ctx.sandy.events.on("experimental_thread.events", seen);
   ctx.sandy.events.on("thread.active", ({ thread }) => {
     const nowMs = Date.now();
     rememberBounded(lastEventAt, thread.id, nowMs);

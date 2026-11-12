@@ -134,6 +134,7 @@ function createCheckIn(deps: SpaceDeps, rolesService: SpaceRolesService, activit
     for (const threadId of [...untaken]) if (!known.has(threadId)) untaken.delete(threadId);
     for (const threadId of [...listedByOrchestrator.keys()])
       if (!known.has(threadId)) listedByOrchestrator.delete(threadId);
+    for (const spaceId of [...lastRunAtBySpace.keys()]) if (!bySpace.has(spaceId)) lastRunAtBySpace.delete(spaceId);
     const due = new Map<string, string[]>();
     for (const [spaceId, orchestratorIds] of bySpace) {
       const intervalMs = deps.roles.settingsOf(spaceId).checkInMinutes * MS_PER_MINUTE;

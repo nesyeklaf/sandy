@@ -102,11 +102,15 @@ export function createAgentView(ctx: ServerContext, deps: SpaceDeps, rolesServic
   ctx.sandy.agents.configure(({ thread }) => {
     assert(thread.id.length > 0, "configured thread needs an id");
     const knownSpaceId = sectionByThread.get(thread.id);
+    const reports =
+      typeof knownSpaceId === "string" &&
+      deps.roles.modeIn(thread.id, knownSpaceId) === "managed" &&
+      deps.roles.settingsOf(knownSpaceId).selfReports;
     if (stillOrchestrator(thread.id, knownSpaceId)) {
       return {
-        tools: [...MEMBER_TOOL_NAMES, ...ORCHESTRATOR_TOOL_NAMES],
+        tools: [...MEMBER_TOOL_NAMES, ...ORCHESTRATOR_TOOL_NAMES, ...(reports ? [REPORT_TOOL_NAME] : [])],
         skills: [],
-        instructions: ORCHESTRATOR_INSTRUCTIONS,
+        instructions: reports ? `${ORCHESTRATOR_INSTRUCTIONS}\n${REPORT_INSTRUCTIONS}` : ORCHESTRATOR_INSTRUCTIONS,
       };
     }
     if (knownSpaceId === undefined) {
@@ -114,8 +118,6 @@ export function createAgentView(ctx: ServerContext, deps: SpaceDeps, rolesServic
       return { tools: [], skills: [] };
     }
     if (knownSpaceId === null) return { tools: [], skills: [] };
-    const reports =
-      deps.roles.modeIn(thread.id, knownSpaceId) === "managed" && deps.roles.settingsOf(knownSpaceId).selfReports;
     if (reports) {
       return {
         tools: [...MEMBER_TOOL_NAMES, REPORT_TOOL_NAME],
