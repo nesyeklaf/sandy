@@ -74,7 +74,6 @@ import {
   resolvePiSessionFilePath,
 } from "./session-paths.js";
 import { extractPiPromptInput } from "./turn-input.js";
-import { resolvePiSkillLaunch } from "./skill-selection.js";
 
 const piCommandSchema = z.discriminatedUnion("method", [
   z.object({
@@ -699,12 +698,6 @@ async function buildSessionOptions(args: {
   threadId: string;
   sessionSerial: number;
 }): Promise<PiRpcSessionOptions> {
-  const skillLaunch = await resolvePiSkillLaunch({
-    cwd: args.params.cwd,
-    shellEnvOverrides: args.params.shellEnvOverrides,
-    injectedSkillPaths: args.params.additionalSkillPaths ?? [],
-    selection: args.params.skillSelection ?? { mode: "inherit" },
-  });
   return {
     cwd: args.params.cwd,
     ...(args.params.model
@@ -718,10 +711,8 @@ async function buildSessionOptions(args: {
     systemPrompt: args.params.baseInstructions,
     appendSystemPrompt: args.params.appendSystemPrompt,
     shellEnvOverrides: args.params.shellEnvOverrides,
-    ...(skillLaunch.noSkills ? { noSkills: true } : {}),
-    ...(skillLaunch.skillPaths.length > 0
-      ? { additionalSkillPaths: skillLaunch.skillPaths }
-      : {}),
+    skillSelection: args.params.skillSelection ?? { mode: "inherit" },
+    additionalSkillPaths: args.params.additionalSkillPaths ?? [],
     ...(args.params.thinkingLevel
       ? { thinkingLevel: args.params.thinkingLevel }
       : {}),
@@ -996,7 +987,10 @@ async function reconcileTurnOptions(
   const construction = threadSession.construction;
   const shellEnvOverrides =
     options.envVars && Object.keys(options.envVars).length > 0
-      ? { SANDY_THREAD_ID: threadId, ...buildShellEnvOverrides(options.envVars) }
+      ? {
+          SANDY_THREAD_ID: threadId,
+          ...buildShellEnvOverrides(options.envVars),
+        }
       : undefined;
   const environmentChanged =
     shellEnvOverrides !== undefined &&

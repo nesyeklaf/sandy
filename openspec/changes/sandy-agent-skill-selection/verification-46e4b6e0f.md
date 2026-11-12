@@ -1,5 +1,7 @@
 # Bounded verification at 46e4b6e0f
 
+Historical snapshot. The subsequent [Pi SDK worker verification](verification-pi-sdk-a.md) supersedes its Pi gap findings only; it does not upgrade the earlier UI or full-thread evidence.
+
 ## Scope and result
 
 All requested bounded checks passed against code snapshot `46e4b6e0f5604f39e63459a09271e909cf6ff380`. No product code or tests were changed during this run. Only verification documents were updated afterwards. This is not full feature acceptance: OpenSpec 4.1 and 6.1 remain open, and no provider is upgraded to `enforced`.
@@ -24,9 +26,9 @@ Node: `v26.13.0` (matches `.nvmrc`). Installed Pi: `1.5.1`. Checks ran serially 
 
 ## Still open
 
-- **Pi:** the two expected failures retain the `resources_discover` extension-skill gap. The previously reported dynamic `project_trust` mismatch remains unresolved; it was not newly probed.
-- **Claude Code:** bundled and Marketplace-plugin skills, and unproven subagent behavior. No additional Claude run was performed.
-- **Codex:** skills added after process start under `allow-only`. No additional Codex run was performed.
+- **Pi:** the two expected failures retain the `resources_discover` extension-skill gap. The previously reported dynamic `project_trust` mismatch remains unresolved; it was not newly probed. At this snapshot, the owner requested an SDK bridge using `ResourceLoader.skillsOverride`. The owner subsequently chose [design A](design.md#pi-sdk-bridge-selected-design-a); its later runtime results are recorded separately above, not retroactively attributed to this run.
+- **Claude Code:** bundled and Marketplace-plugin skills, and unproven subagent behavior. **Owner: später**; gaps remain open and `unverified`, not accepted. No additional Claude run was performed.
+- **Codex:** skills added after process start under `allow-only`. **Owner: später**; the gap remains open and `unverified`, not accepted. No additional Codex run was performed.
 - **Lifecycle and UI:** no native full-thread/server end-to-end run and no new browser or screenreader/device verification. Earlier scripted-bridge and browser evidence is recorded in the handoff, not upgraded by these checks.
 - Every named gap still needs a proven integration or explicit owner acceptance. None was silently accepted.
 

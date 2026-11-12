@@ -1,24 +1,31 @@
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { resolvePiSessionSkills } from "./pi-package-skills.js";
+import { resolvePiPackageSkillRoots } from "./pi-package-skills.js";
 
 const STUB_INDEX = `
-export class ProjectTrustStore { get() { return true; } }
-export function hasTrustRequiringProjectResources() { return false; }
 export const SettingsManager = { create: () => ({}) };
-export class DefaultPackageManager { async resolve() { return { skills: [] }; } }
-export function loadSkills({ skillPaths }) {
-  return { skills: [{ name: "managed-fixture", filePath: skillPaths[0] ?? "none" }] };
+export class DefaultPackageManager {
+  async resolve() {
+    return { skills: [{ path: "/managed/skill/SKILL.md", enabled: true,
+      metadata: { scope: "user", origin: "package", source: "managed-fixture" } }] };
+  }
 }
 `;
 
-describe("resolvePiSessionSkills", () => {
+describe("resolvePiPackageSkillRoots", () => {
   const dirs: string[] = [];
 
   afterEach(() => {
-    for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+    for (const dir of dirs.splice(0))
+      rmSync(dir, { recursive: true, force: true });
   });
 
   it("finds the Pi package behind the managed-install launcher", async () => {
@@ -43,18 +50,20 @@ describe("resolvePiSessionSkills", () => {
     mkdirSync(join(packageDir, "dist"), { recursive: true });
     writeFileSync(
       join(packageDir, "package.json"),
-      JSON.stringify({ name: "@earendil-works/pi-coding-agent", type: "module" }),
+      JSON.stringify({
+        name: "@earendil-works/pi-coding-agent",
+        type: "module",
+      }),
     );
     writeFileSync(join(packageDir, "dist", "index.js"), STUB_INDEX);
     const work = join(root, "work");
     mkdirSync(work, { recursive: true });
-    const skills = await resolvePiSessionSkills({
+    const skills = await resolvePiPackageSkillRoots({
       cwd: work,
+      homeDir: root,
       agentDir,
-      env: { ...process.env, SANDY_PI_BRIDGE_COMMAND: "" },
-      launchEnv: { ...process.env, SANDY_PI_BRIDGE_COMMAND: launcher },
-      extraSkillPaths: ["/staged/skill"],
+      env: { ...process.env, SANDY_PI_BRIDGE_COMMAND: launcher },
     });
-    expect(skills).toEqual([{ name: "managed-fixture", filePath: "/staged/skill" }]);
+    expect(skills).toEqual([{ path: "/managed/skill", origin: "user" }]);
   });
 });

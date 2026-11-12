@@ -51,8 +51,8 @@ When Sandy starts or restores a provider session, the server SHALL send every in
 - **WHEN** a Sandy-injected skill is switched off and nothing else changes
 - **THEN** the injected catalog and its hash stay the same, so no idle runtime is replaced
 
-#### Scenario: Bridge cannot list skills
-- **WHEN** the selection is `disable` or `allow-only` and the bridge's skill listing fails (Codex `skills/list`, Pi's own resolution)
+#### Scenario: Bridge cannot apply selection
+- **WHEN** the selection is `disable` or `allow-only` and the bridge cannot apply it (for example a failed Codex `skills/list` or an incompatible Pi SDK)
 - **THEN** the session does not start and the error says the selection could not be applied
 
 #### Scenario: Selection change keeps loaded runtimes
@@ -63,19 +63,31 @@ When Sandy starts or restores a provider session, the server SHALL send every in
 Each provider declaration SHALL state `experimental_skillSelection` as `{session, subagents, gaps}`, where `session` and `subagents` are each `enforced`, `unverified`, `not-enforced` or `not-applicable`, and `gaps` names the skill categories the bridge cannot filter (`bundled-skills`, `marketplace-plugin-skills`, `extension-skills`, `allow-only-skills-added-after-start`). A missing declaration SHALL read as `not-enforced` on both sides with no gaps. A bridge SHALL declare `enforced` only in the commit that adds its passing real-entry test. Sandy SHALL show the status and the gaps on the Skills page and in `sandy skill selection`.
 
 #### Scenario: Unproven provider is shown honestly
-- **WHEN** a provider declares `session: "unverified"` with gap `extension-skills` and the policy disables `grill-me`
-- **THEN** the Skills page and `sandy skill selection` say that provider leaves the skill out but is not yet proven, and name skills from extensions as not filtered
+- **WHEN** a provider declares `session: "unverified"` with gap `bundled-skills` and the policy disables `grill-me`
+- **THEN** the Skills page and `sandy skill selection` say that provider leaves the skill out but is not yet proven, and name bundled skills as not filtered
 
 ### Requirement: Pi loads only enabled skills
-When the policy is not `inherit`, the Pi bridge SHALL start pi with `--no-skills` and one `--skill` per enabled skill, resolved from Pi's own native roots, Pi packages and Sandy injection, keeping every other setting and extension. Skills that a Pi extension adds through `resources_discover` are merged after `--no-skills` and SHALL be declared as the gap `extension-skills`. Pi session support SHALL stay below `enforced` while that gap exists.
+The Pi bridge SHALL apply the shared name selection through the installed Pi SDK's `ResourceLoader.skillsOverride`, including after extensions contribute skills through `resources_discover`, reloads and session replacements. The isolated SDK worker SHALL retain native Pi RPC, project-trust decisions and non-skill resources. It SHALL preserve each loaded session's captured selection across recovery; a changed Sandy selection applies only to subsequently loaded sessions. The version-bound adapter SHALL refuse incompatible filtered starts rather than fall back to CLI pre-scan filtering or auto-trust. Unsupported SDK versions SHALL retain the native unfiltered launcher under `inherit`. Ordinary Pi CLI starts SHALL remain outside this worker. Pi session support SHALL stay `unverified` until full-thread acceptance; subagents SHALL remain `not-enforced` until independently proven.
 
-#### Scenario: Real pi does not list a disabled native or package skill
-- **WHEN** the installed pi starts in RPC mode with the bridge's launch arguments, a temporary agent dir with native skills, a local Pi package with a skill and an extension skill, and Sandy-injected skills, and the native and package skills `*-off-fixture` are disabled
-- **THEN** `get_commands` lists the enabled native, package and injected skills and none of the disabled native or package skills
+#### Scenario: Real Pi lists only selected skills from every supported source
+- **WHEN** the installed Pi starts through the production worker with temporary native, package, project, extension and Sandy-injected skills under `disable` or `allow-only`
+- **THEN** `get_commands` and the effective system prompt omit every excluded name, including extension contributions, while enabled skill metadata and non-skill resources remain intact
 
-#### Scenario: Extension skill gap stays visible
-- **WHEN** the same launch disables `extension-off-fixture`
-- **THEN** the test that expects it hidden runs and is marked as an expected failure, so it turns red once the gap is closed
+#### Scenario: Project trust remains native
+- **WHEN** an extension returns yes, no or undecided from `project_trust`, or a saved decision or default determines trust
+- **THEN** native Pi and the worker agree on whether project resources load, and the worker filters only the resulting skills without bypassing that decision
+
+#### Scenario: Reload and recovery retain the loaded selection
+- **WHEN** a loaded worker reloads resources, switches session or cwd, or is recovered after failure while Sandy's current selection has changed
+- **THEN** the loaded session's captured policy still filters every discovery; only a subsequently loaded session receives the changed selection
+
+#### Scenario: Incompatible filtered start refuses safely
+- **WHEN** a filtered start cannot use the tested installed SDK or preserve its configured runtime
+- **THEN** it fails with an actionable error and removes temporary launch files instead of starting unfiltered
+
+#### Scenario: Native RPC bootstrap parity
+- **WHEN** SDK-supported `inherit` starts with native offline flags, legacy Pi layout, configured CLI arguments or a restored session whose cwd is missing
+- **THEN** it retains native RPC behavior, including native migrations and argument rejection, without rewriting configuration to implement skill selection
 
 ### Requirement: Claude Code loads only enabled skills
 The Claude Code bridge SHALL apply the selection only through `settings.skillOverrides` set to `off` in the SDK flag settings layer it already passes. Under `disable` the listed names are off; under `allow-only` every scanned native skill name (`~/.claude/skills` and `.claude/skills` up to the repository root) that the list does not name is off. Because overrides do not hide plugin skills, the bridge SHALL leave disabled names out of the Sandy plugin it injects. It SHALL NOT use `Options.skills`, which the SDK turns into an auto-approve rule, and SHALL NOT change `settingSources`, user files or plugin files. Skills bundled with Claude Code and skills from Claude Code's own marketplace plugins SHALL be declared as gaps. Subagents SHALL stay `unverified` until a credentialed test proves them.

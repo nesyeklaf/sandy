@@ -1,5 +1,7 @@
 # Fortsetzungsprompt: Sandy-only Skill-Auswahl
 
+Historische Übergabe vor der Pi-SDK-Entscheidung. Für den aktuellen Stand gelten [tasks.md](tasks.md) und die [Pi-SDK-Verifikation](verification-pi-sdk-a.md); insbesondere ist Design A inzwischen gewählt und lokal implementiert. Claude/Codex bleiben offen (Owner: später). Daraus folgt keine Freigabe für Push, Installation oder Deploy.
+
 Übernimm die angefangene Implementierung im Repository `git@github.com:nesyeklaf/sandy.git`, Branch `openspec-proposal-sandy-only-agent-skill-selecti-thr_fgq63pyp84`. Arbeite vom gepushten WIP dieses Branches weiter, nicht von `main`. Lies zuerst `AGENTS.md`, `README.md` und die Dateien in `openspec/changes/sandy-agent-skill-selection/`, insbesondere `proposal.md`, `design.md`, `specs/agent-skill-selection/spec.md`, `tasks.md` und `verification-5d8b7af20.md`. Prüfe Branch, HEAD und Working Tree, ohne fremde Änderungen zu überschreiben. Die Checklisten sind kein Nachweis vollständiger Durchsetzung.
 
 ## Auftrag und Entscheidungen des Owners

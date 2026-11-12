@@ -8,14 +8,14 @@ Agents that Sandy starts (Pi, Codex, Claude Code) load every skill they find. Ma
 - The skill listing reports `selectionEnabled` per skill, computed on the server by name, and each row names its other origins. Per provider, Sandy shows how far the selection reaches (`enforced`, `unverified`, `not-enforced`, `not-applicable`, for sessions and subagents) and which skill categories it cannot filter.
 - The server sends the injected roots its skill sources enable, independent of the selection, and sends the selection with the existing `skills/configure` bridge request to new and restored sessions; each bridge leaves disabled names out of native and injected skills. `HOST_DAEMON_PROTOCOL_VERSION` goes up.
 - Each provider bridge maps the selection to that provider's own per-launch control:
-  - Pi 1.5.1: `--no-skills` plus one `--skill` per kept skill. Gap: skills Pi extensions add at runtime.
+  - Pi: [design A](design.md#pi-sdk-bridge-selected-design-a), an isolated installed-SDK worker using `ResourceLoader.skillsOverride` and native Pi RPC/trust. Extension contributions are filtered at their loading point; incompatible filtered starts are refused. The current adapter is tested against Pi 1.5.1; full-thread and subagent acceptance remain open.
   - Claude Agent SDK 0.3.245: `skillOverrides: off` in the SDK flag settings layer the bridge already passes, plus dropping disabled names from the injected Sandy plugin. Gaps: skills bundled with Claude Code and from its own marketplace plugins; subagents unproven.
   - Codex 0.166.0: a `-c skills.config` override on `codex app-server` launch. Gap: under allow-only, skills added after launch.
 
   A provider shows as enforced only after a test passes against its real entry point. Until then it shows as "unverified" or "not enforced", with its gaps named. That is an honest intermediate status, not a finished feature.
 - One route (`GET`/`PUT /settings/skill-selection`) behind the Skills page (row and detail switches, a Skill selection menu for all off, only the shown skills on, shown skills off and every skill on), the CLI (`sandy skill selection [inherit|disable|allow-only|on|off] [names...]`) and the SDK (`skills.experimental_getSelection`, `skills.experimental_setSelection`).
 - A change applies to sessions started afterwards; loaded threads keep the old selection until stopped or their idle session is retired. Sandy names the threads running a turn (`pendingThreadIds`) and offers the existing stop (`sandy thread stop`, the Skills page toast). It never stops or restarts on its own.
-- Not changed: provider configuration files, skill files and installed skills. Agents that the owner starts outside Sandy load exactly what they load today.
+- The selection does not rewrite provider configuration, skill files or installed skills. The Pi worker retains native Pi startup migrations, which can update Pi's own legacy layout just as ordinary Pi does. Agents that the owner starts outside Sandy load exactly what they load today.
 
 ## Capabilities
 

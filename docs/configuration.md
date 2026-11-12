@@ -631,16 +631,22 @@ The bridges apply it with each agent's own controls. Codex gets per-launch
 `-c skills.config` entries that disable names (`disable`) or the paths in
 Codex's own listing that the selection leaves out (`allow-only`). Claude Code
 gets `settings.skillOverrides` set to `off` per name, and sandy leaves the
-dropped skills out of the plugin it injects. Pi starts with `--no-skills` and
-an explicit `--skill` for each skill it keeps from Pi's own resolved list.
-If a bridge cannot list its agent's skills under `disable` or `allow-only`,
-the session does not start rather than load the wrong skills.
+dropped skills out of the plugin it injects. Pi uses an isolated worker with
+the installed Pi SDK's `ResourceLoader.skillsOverride`, retaining native RPC,
+project-trust decisions and non-skill resources. The filter also runs after
+extensions contribute skills and after reload or session changes. The current
+adapter is tested against Pi 1.5.1; a filtered start on another version is
+refused. `inherit` keeps the native launcher on older supported versions.
+If a bridge cannot safely apply `disable` or `allow-only`, the session does
+not start rather than load the wrong skills.
 Each provider declares how far this reaches (`enforced`, `unverified`,
 `not-enforced`) for sessions and for subagents, plus the categories it
 cannot filter, which stay loaded even when every skill is off: Claude Code
 skills bundled with Claude Code and skills from Claude Code's own plugins,
-Pi skills that extensions add at runtime, and under `allow-only` Codex skills
-added after a session started. The Skills page and `sandy skill selection`
+and under `allow-only` Codex skills added after a session started. Pi's
+extension-skill listing and prompt checks pass through the SDK worker; its
+session status remains `unverified` until the broader thread acceptance check,
+and its subagents remain `not-enforced`. The Skills page and `sandy skill selection`
 show both. The selection controls what an agent loads; an agent with file
 access can still read a skill's file by path.
 
