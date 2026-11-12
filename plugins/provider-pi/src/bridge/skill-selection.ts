@@ -26,6 +26,21 @@ import { PI_SDK_RPC_WORKER_SOURCE } from "./sdk-rpc-worker.js";
 
 const manifestSchema = z.object({ version: z.string() });
 
+const MINIMUM_PI_SDK_VERSION = "1.5.1";
+
+function isAtLeastMinimumPiSdk(version: string): boolean {
+  const parse = (value: string) =>
+    /^(\d+)\.(\d+)\.(\d+)/u.exec(value)?.slice(1, 4).map(Number) ?? null;
+  const installed = parse(version);
+  const minimum = parse(MINIMUM_PI_SDK_VERSION);
+  if (installed === null || minimum === null) return false;
+  for (let index = 0; index < 3; index += 1) {
+    if (installed[index] !== minimum[index])
+      return installed[index] > minimum[index];
+  }
+  return true;
+}
+
 function packageContains(packageDir: string, file: string): boolean {
   try {
     const path = relative(packageDir, realpathSync(file));
@@ -113,7 +128,7 @@ function resolveSdkRuntime(
     (Number(match[1]) === 22 && Number(match[2]) < 19)
   ) {
     throw new Error(
-      "The Pi 1.5.1 SDK worker requires a runtime compatible with Node >=22.19.0; found " +
+      "The Pi SDK worker requires a runtime compatible with Node >=22.19.0; found " +
         version,
     );
   }
@@ -141,9 +156,12 @@ export function preparePiSdkRpcLaunch(args: {
     const { version } = manifestSchema.parse(
       JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8")),
     );
-    if (version !== "1.5.1") {
+    if (!isAtLeastMinimumPiSdk(version)) {
       throw new Error(
-        "requires the tested Pi 1.5.1 SDK adapter; installed: " + version,
+        "requires Pi " +
+          MINIMUM_PI_SDK_VERSION +
+          " or later; installed: " +
+          version,
       );
     }
     runtime = resolveSdkRuntime(args.launchEnv, args.env, args.cwd, packageDir);

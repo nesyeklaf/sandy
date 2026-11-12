@@ -634,9 +634,10 @@ gets `settings.skillOverrides` set to `off` per name, and sandy leaves the
 dropped skills out of the plugin it injects. Pi uses an isolated worker with
 the installed Pi SDK's `ResourceLoader.skillsOverride`, retaining native RPC,
 project-trust decisions and non-skill resources. The filter also runs after
-extensions contribute skills and after reload or session changes. The current
-adapter is tested against Pi 1.5.1; a filtered start on another version is
-refused. `inherit` keeps the native launcher on older supported versions.
+extensions contribute skills and after reload or session changes. The adapter
+pins no exact Pi version: it needs Pi 1.5.1 or later and an SDK that exposes
+the API it uses, and refuses a filtered start otherwise. `inherit` keeps the
+native launcher on older versions.
 If a bridge cannot safely apply `disable` or `allow-only`, the session does
 not start rather than load the wrong skills.
 Each provider declares how far this reaches (`enforced`, `unverified`,

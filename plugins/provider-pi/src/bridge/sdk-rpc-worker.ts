@@ -20,8 +20,8 @@ const { packageDir, args, selection } = bootstrap;
 Object.freeze(selection.names);
 Object.freeze(selection);
 const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-if (manifest.name !== "@earendil-works/pi-coding-agent" || manifest.version !== "1.5.1") {
-  throw new Error("Sandy Pi skill selection requires the tested Pi 1.5.1 SDK adapter");
+if (manifest.name !== "@earendil-works/pi-coding-agent") {
+  throw new Error("Sandy Pi skill selection requires the @earendil-works/pi-coding-agent SDK");
 }
 const load = relative => import(pathToFileURL(join(packageDir, "dist", relative)).href);
 const sdk = await load("index.js");
