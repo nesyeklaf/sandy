@@ -21,9 +21,12 @@
 | `nesyeklaf/sandy` is public | `gh api` |
 | 19 sandy units carry a `package-lock.json`; `sandy/holon` is already a standalone pnpm project with its own `pnpm-workspace.yaml` | `ls extensions/sandy/*/package-lock.json` |
 | Holon tree: `field-latency` is `partOf: sandy`; `holon-genui` (with card, markdown, view-reader) and `holon-extension` (with cli, engine) are `partOf: holons` (`docs/designs/holons/holons.holon`, stays in sandy). Exported specs that belong to them: `openspec/specs/holon-{cli,engine,extension,genui,genui-card,genui-markdown,genui-view-reader}`; `openspec/specs/holons` stays | `.holon` files |
-| GitHub Packages' npm registry only accepts a scope equal to the owning account [G1]. The only `@sandy-sdk/*` package is `@sandy-sdk/plugin-sdk` 0.6.106. It appears in 1549 tracked files, 80 of them `package.json` (468 under `extensions/sandy`, 195 `apps/app`, 88 `apps/server`) | `git grep -l -F @sandy-sdk/plugin-sdk` |
-| Installed plugin bundles import the SDK by specifier, and sandy maps it at load: `PLUGIN_SDK_SPECIFIER` plus `LEGACY_PLUGIN_SDK_SPECIFIER = "@sandy/plugin-sdk"` (`apps/server/src/services/plugins/plugin-runtime.ts:115-139, 1249`); `PLUGIN_SDK_APP_SPECIFIER` plus `LEGACY_PLUGIN_SDK_APP_SPECIFIER` (`packages/plugin-build/src/runtime-shims.mjs:14-21, 75`); `PLUGIN_SDK_HOST_FALLBACK_SPECIFIER` (`build-plugin-host.ts:52`); `PLUGIN_SDK_PACKAGE_NAME` (`plugin-sdk-install.ts:5`). The earlier `@sandy/` to `@sandy-sdk/` rename kept old names as legacy specifiers, and `sandy plugin migrate` rewrites imports (`apps/cli/src/commands/plugin.ts:236`) | source |
-| Sandy is a hard fork with no upstream (FORK.md:3), so a project-wide rename causes no merge conflicts with an upstream | FORK.md |
+| GitHub Packages' npm registry only accepts a scope equal to the owning account [G1]. The only `@sandy-sdk/*` package is `@sandy-sdk/plugin-sdk` 0.6.106, in 1549 tracked files. An organization named `sandy-sdk` makes that scope valid with no rename | `git grep -l -F @sandy-sdk/plugin-sdk`; orchestrator check: GitHub name `sandy-sdk` free |
+| `nesyeklaf/sandy` is a fork whose parent is not visible: `fork: true`, 0 forks, 0 stars, about 202 MB (`size` 207195 KB), 35 issues and 32 pull requests, 6 releases, no Pages, no wiki, one active ruleset "Protecc", no classic branch protection | `gh api repos/nesyeklaf/sandy`, `/rulesets`, search API, 2026-11-12 |
+| Workflows guard on the repository name: `if: github.repository == 'nesyeklaf/sandy'` in `ci-cache-maintenance.yml:20`, `ci-health.yml:14`, `ci.yml:583`, `close-stale-prs.yml:18`, `mobile-android-e2e.yml:27`, `mobile-e2e.yml:60`, `publish-sandy-app.yml:58, 384` | `git grep github.repository -- .github` |
+| The desktop app has no update check: no feed URL in `apps/desktop/src`, and `scripts/fork/check-egress-hosts.sh:11` forbids `nesyeklaf/sandy/releases` in code. The `desktop-latest`/`desktop-nightly` feed URLs appear only in CI job summaries (`build-desktop.yml:492-495`, `publish-sandy-app.yml:1049-1051`) | source |
+| `components.json` of 9 plugins and `plugin-scaffold.ts:740` point their `@sandy` registry at `https://raw.githubusercontent.com/nesyeklaf/sandy/<tag>/packages/plugin-registry/r/{name}.json` | `git grep raw.githubusercontent` |
+| npm rejects provenance from self-hosted runners (E422), so sandy's npm publish jobs stay on GitHub-hosted runners | `publish-sandy-app.yml:36-37` |
 | `nesyeklaf/sandy` appears in 88 tracked files (22 under `extensions/sandy`), including runtime URLs: `CommunitySettingsSection.tsx:11`, `AppSidebar.tsx:77` (new issue), `SettingsView.tsx:117`, `apps/desktop/src/menu.ts:20`, and the plugin registry raw URL in `plugin-scaffold.ts:740` | `git grep -l nesyeklaf/sandy` |
 | Sandy's workflows use `ubuntu-24.04`/`ubuntu-latest` (22 jobs), `blacksmith-4vcpu-ubuntu-2404`/`2204` (5), `windows-2025`/`windows-latest` (6), `blacksmith-4vcpu-windows-2025` (2), `blacksmith-6vcpu-macos-15`/`27` (3), and `macos-15` legs in the `package-smoke` and `node-compat-smoke` matrices | `.github/workflows/*.yml` |
 | Holon: `sandy.holon` lists `extensions/sandy/` as code. 7 `.holon` files sit in genui, holon and field-latency. `openspec/specs/holon-*` are exported from them | `git ls-files '*.holon'` |
@@ -32,7 +35,7 @@
 
 ## Decision 1: repository (owner decided)
 
-A new private repository, proposed name **`<org>/sandy-plugins`**, checkout `~/projects/private/gh/sandy-plugins`, worktrees in `~/projects/private/gh/sandy-plugins-wt`. The archived `nesyeklaf/plugins` stays as it is. Its pre-move history (the forks' kept history, the bb era) stays readable there. The new repository's README links to it from a "History before 2026-10-31" note. Grafting that history into the new repository is possible later without touching the old repository; this change does not do it.
+A new private repository, proposed name **`sandy-sdk/sandy-plugins`**, checkout `~/projects/private/gh/sandy-plugins`, worktrees in `~/projects/private/gh/sandy-plugins-wt`. The archived `nesyeklaf/plugins` stays as it is. Its pre-move history (the forks' kept history, the bb era) stays readable there. The new repository's README links to it from a "History before 2026-10-31" note. Grafting that history into the new repository is possible later without touching the old repository; this change does not do it.
 
 Private visibility has two consequences:
 - The sandy server host needs read access for git sources (a read-only deploy key or the host's SSH key; task 2.4).
@@ -42,7 +45,7 @@ Private visibility has two consequences:
 
 | | A. Monorepo of plugins (recommended) | B. One repository per plugin |
 | --- | --- | --- |
-| Install source | `git:git@github.com:<org>/sandy-plugins@^0.3 --subdirectory sandy/genui --tag-prefix genui-v` | `git:git@github.com:<org>/sandy-plugin-genui@^0.3` |
+| Install source | `git:git@github.com:sandy-sdk/sandy-plugins@^0.3 --subdirectory sandy/genui --tag-prefix genui-v` | `git:git@github.com:sandy-sdk/sandy-plugin-genui@^0.3` |
 | Versioning | per-unit semver, per-unit tags `<unit>-v<x.y.z>`; pi train `pi-v<x.y.z>` | one semver and plain `v<x.y.z>` tags per repo |
 | pnpm | one workspace, one lockfile, one SDK pin | 25 lockfiles and SDK pins |
 | Shared code | `pi/work` imports `sandy/work/delegate/shared` unchanged; `packages/skill-dialect` is one internal package | shared code must be published or copied |
@@ -94,10 +97,10 @@ So:
 - `scripts/check-git-install.mjs <unit>` repeats what sandy does in a clean clone: delete `.npmrc`, run the same `npm install`, then `sandy plugin build`. It runs in CI for every changed unit.
 - Making sandy's git install honor `pnpm-lock.yaml` is out of scope. If floating runtime ranges cause trouble, that is a separate core change.
 
-**The SDK: `@<org>/plugin-sdk` on GitHub Packages, private (owner decided 2026-11-12).**
+**The SDK: `@sandy-sdk/plugin-sdk` on GitHub Packages, private (owner decided 2026-11-12).**
 - Only the owner and GitHub Actions install it.
-- The package is renamed for real, with no alias: sandy and every unit import `@<org>/plugin-sdk` (Decision 10).
-- `<org>` is the GitHub organization that will own sandy, the plugin repository and the package (Decision 9). Its name is still being decided.
+- The name stays `@sandy-sdk/plugin-sdk`: the owner named the organization `sandy-sdk`, so the scope already matches the owner (G1) and nothing is renamed (Decision 10).
+- `sandy-sdk` owns sandy, the plugin repository and the package (Decision 9).
 - A sandy git install never needs the SDK (optional peer, above), so installed plugins never need a token.
 
 Facts from GitHub's docs (read 2026-11-12):
@@ -107,28 +110,30 @@ Facts from GitHub's docs (read 2026-11-12):
 - [G4] "Once you make a package public, you cannot make it private again." A linked package inherits the repository's access permissions (not its visibility), and workflows in the linked repository get access automatically. A private organization package can be shared "only ... to other organization members or teams". Further repositories are added under "Manage Actions access". Source: [Configuring a package's access control and visibility](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 - [G5] GitHub Free for organizations includes 500 MB storage, shared with Actions artifacts, and 1 GB transfer a month. Downloads by Actions with `GITHUB_TOKEN` are free; downloads with a PAT count against transfer. Source: [GitHub Packages billing](https://docs.github.com/en/billing/concepts/product-billing/github-packages).
 - [G6] On a repository transfer, "packages associated with the repository may be transferred, or may lose their link"; for npm, packages stay with the account they are scoped to. Sources: [Transferring a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository) and G2.
-- The docs do not say whether a repository of one account can be added to "Manage Actions access" of another account's package. That is why all three (sandy, the plugin repository, the package) live under the one owner `<org>`. If the scope stayed `@nesyeklaf` while the repositories moved to the org, every Actions step would need a PAT.
+- The docs do not say whether a repository of one account can be added to "Manage Actions access" of another account's package. That is why all three (sandy, the plugin repository, the package) live under the one owner `sandy-sdk`.
 
 Same owner, so `GITHUB_TOKEN` suffices (G2, G4). The remaining question is which repository publishes:
 
-| | P1. The private plugin repository publishes (recommended) | P2. The public sandy repository publishes |
+| | P1. The private plugin repository publishes (recommended) | P2. Sandy publishes (alternative once sandy is private) |
 | --- | --- | --- |
-| How | `.github/workflows/publish-sdk.yml` in `<org>/sandy-plugins` (`workflow_dispatch`, input: sandy tag) runs `scripts/sdk.sh <tag>` (checkout, sandy's turbo build of `packages/plugin-sdk`, pack), then `pnpm publish` with `GITHUB_TOKEN`, `packages: write` | sandy's existing `publish-plugin-sdk` job retargeted to `npm.pkg.github.com` with `GITHUB_TOKEN` |
+| How | `.github/workflows/publish-sdk.yml` in `sandy-sdk/sandy-plugins` (`workflow_dispatch`, input: sandy tag) runs `scripts/sdk.sh <tag>` (checkout, sandy's turbo build of `packages/plugin-sdk`, pack), then `pnpm publish` with `GITHUB_TOKEN`, `packages: write` | sandy's existing `publish-plugin-sdk` job retargeted to `npm.pkg.github.com` with `GITHUB_TOKEN` |
 | Visibility at creation | private, because the creating repository is private (G3) | **public, and that cannot be undone** (G3, G4), unless the owner creates the first version by hand with a PAT |
 | Access | linked to the plugin repository; its CI reads automatically (G4) | sandy must get write access under "Manage Actions access", and GitHub warns that forks of a public repository may then reach the package (G3) |
 | Catch | a sandy release is packed and published by another repository; the version comes from sandy's `plugin-sdk-version.ts` at that tag, and the workflow refuses a version that already exists | the risks in the two rows above, on a repository that accepts outside pull requests |
 
-**Recommendation: P1.** The package is private from its first version, no public repository gets access, and no step needs a stored token. In sandy, the `publish-plugin-sdk` job that targets npmjs (still waiting on its bootstrap) and `check-npm-version-guard.mjs` are removed by the rename change; sandy builds the SDK from source in its workspace and never installs the package.
+**Owner decision: P1 for now.** The package is private from its first version, no public repository gets access, and no step needs a stored token. In sandy, the `publish-plugin-sdk` job that targets npmjs (still waiting on its bootstrap) and `check-npm-version-guard.mjs` are removed (Decision 10). Sandy builds the SDK from source in its workspace and never installs the package.
+
+**P2 becomes safe once sandy is private (Decision 12).** Both rows against P2 come from sandy being public: a package created by a private repository's `GITHUB_TOKEN` is private (G3), and a private repository has no outside forks. Then sandy's `publish-plugin-sdk` job, retargeted to `npm.pkg.github.com`, can publish at each sandy release, and the plugin repository gets read access under "Manage Actions access" (G4). Switching from P1 to P2 later is an owner choice: add the sandy repository with write access to the existing package, move the job, and delete `publish-sdk.yml` in the plugin repository.
 
 Plugin repository settings:
-- The committed `.npmrc` holds only the scope mapping, `@<org>:registry=https://npm.pkg.github.com`, and no token. Sandy's git install deletes `.npmrc` and does not fetch the optional peer.
-- `ci.yml` sets `permissions: { contents: read, packages: read }` and `actions/setup-node` with `registry-url: https://npm.pkg.github.com` and `scope: '@<org>'`, with `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`.
+- The committed `.npmrc` holds only the scope mapping, `@sandy-sdk:registry=https://npm.pkg.github.com`, and no token. Sandy's git install deletes `.npmrc` and does not fetch the optional peer.
+- `ci.yml` sets `permissions: { contents: read, packages: read }` and `actions/setup-node` with `registry-url: https://npm.pkg.github.com` and `scope: '@sandy-sdk'`, with `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`.
 - Locally, `~/.npmrc` holds `//npm.pkg.github.com/:_authToken=<classic PAT, read:packages>`. pnpm reads the project and user `.npmrc`; nothing pnpm-specific is needed.
 - Storage: every version counts against 500 MB (G5). Measure the packed size at the first publish, and delete versions below the lowest `engines.sandyPluginSdk` floor in use.
-- Bridge until the first publish: `scripts/sdk.sh <sandy-tag> --local` packs the same package into `.sdk/`, and the root devDependency points at `file:.sdk/<org>-plugin-sdk.tgz`.
+- Bridge until the first publish: `scripts/sdk.sh <sandy-tag> --local` packs the same package into `.sdk/`, and the root devDependency points at `file:.sdk/sandy-sdk-plugin-sdk.tgz`.
 - Checks at the first publish:
-  - the package page shows Private and the link to `<org>/sandy-plugins`;
-  - an unauthenticated `npm view @<org>/plugin-sdk --registry=https://npm.pkg.github.com` fails;
+  - the package page shows Private and the link to `sandy-sdk/sandy-plugins`;
+  - an unauthenticated `npm view @sandy-sdk/plugin-sdk --registry=https://npm.pkg.github.com` fails;
   - CI installs it with `GITHUB_TOKEN` only.
 
 Nothing is published without the owner's explicit OK.
@@ -141,7 +146,7 @@ Nothing is published without the owner's explicit OK.
 - CI runs each changed unit against the sandy release the owner runs (blocking) and against sandy `main` (nightly, reports only).
 - Raising an `engines` floor is a minor release of the unit.
 
-**pi/fabric.** It builds and tests with bun today. Under the pnpm rule, pnpm owns its dependencies and lockfile entry, and bun stays only as its build and test runner, unless the owner wants bun removed (open question).
+**pi/fabric.** It builds and tests with bun today. The owner decided it moves fully to pnpm: its scripts run under pnpm and Node, its tests run on vitest like the other units, `bun.lock` and every `bun` call are removed, and the root `pnpm-lock.yaml` covers it. Any bun-only API it uses (`Bun.*`, `bun:test`) is replaced as part of that move (task 4.2 checks `git grep -n -E "\\bbun\\b|Bun\\." -- pi/fabric` is empty).
 
 ## Decision 4: versioning, release, CI
 
@@ -164,11 +169,11 @@ Nothing is published without the owner's explicit OK.
   - `sandy plugin install path:<checkout>/sandy/<unit>` moves each installed id and keeps its configuration. That includes the four disabled installs that point at `/home/aemon/...`; they stay disabled.
   - Updates work as today, from the new directory: `git pull`, `scripts/build.sh <unit>`, `sandy plugin reload <id>`.
 - **Phase 2, git sources.**
-  - `sandy plugin install git:git@github.com:<org>/sandy-plugins@^<major.minor> --subdirectory sandy/<unit> --tag-prefix <unit>-v --replace-source` switches each id while keeping its state (Decision 6).
+  - `sandy plugin install git:git@github.com:sandy-sdk/sandy-plugins@^<major.minor> --subdirectory sandy/<unit> --tag-prefix <unit>-v --replace-source` switches each id while keeping its state (Decision 6).
   - From then on, `sandy plugin outdated`, `sandy plugin update` and Settings → Updates apply releases.
 - **pi.**
   - pi-setup is the only writer of `~/.pi/agent`. Its `links.tsv` (`extensions/permissions`, `autopilots`, `extensions/lifecycle/index.ts`) and `settings/base.json` packages (`pi/context`, `pi/work`) switch to the `sandy-plugins` checkout, applied with `node apply.mjs <host>`.
-  - Later, if task 2.3 shows pi installs the root package and its pnpm-managed dependencies, one `git:git@github.com:<org>/sandy-plugins@pi-v<x.y.z>` package replaces the local paths.
+  - Later, if task 2.3 shows pi installs the root package and its pnpm-managed dependencies, one `git:git@github.com:sandy-sdk/sandy-plugins@pi-v<x.y.z>` package replaces the local paths.
   - `scripts/install-pi.sh` stays only as a bootstrap for hosts without pi-setup.
 
 ## Decision 6: core `--replace-source`
@@ -208,8 +213,8 @@ Surfaces (one implementation, one contract test table run against every surface)
 ## Decision 7: history preservation
 
 - **`git filter-repo` (recommended).**
-  1. Run in a fresh clone of `<org>/sandy` in a scratch directory, never in a working checkout: `git filter-repo --path extensions/ --path packages/skill-dialect/ --path-rename extensions/:`.
-  2. A message callback rewrites `#N` to `<org>/sandy#N` so PR references keep pointing at sandy.
+  1. Run in a fresh clone of `sandy-sdk/sandy` in a scratch directory, never in a working checkout: `git filter-repo --path extensions/ --path packages/skill-dialect/ --path-rename extensions/:`.
+  2. A message callback rewrites `#N` to `sandy-sdk/sandy#N` so PR references keep pointing at sandy.
   The result's root is the 2026-10-31 move commit. Checks:
   - the commit count equals `git log --oneline -- extensions packages/skill-dialect | wc -l` in sandy;
   - the HEAD tree equals sandy's trees for those paths;
@@ -234,9 +239,11 @@ Every step keeps the installed plugins running, and each step can be rolled back
 | Step | What | Check | Rollback |
 | --- | --- | --- | --- |
 | 0 | Freeze: `sidebar-spaces` and `space-coordination` finished or merged; no open branch touches `extensions/` | open branches and PRs listed | none needed |
-| 0a | Owner: create `<org>`, transfer `nesyeklaf/sandy` (Decision 9); boat plan and app on `<org>` (Decision 11) | `git ls-remote git@github.com:<org>/sandy.git`; the old URL redirects; installed plugins unaffected (they use local paths) | transfer back (GitHub allows it while `nesyeklaf/sandy` is not re-created) |
-| 0b | Sandy change: `nesyeklaf/sandy` → `<org>/sandy` references; local remotes and pi-setup git sources updated | grep shows only history hits | revert; redirects still work |
-| 0c | Sandy change: rename to `@<org>/plugin-sdk` with legacy specifiers (Decision 10), released and deployed with owner OK | fixture plugin with old imports loads; every installed plugin `running` after deploy; stale-name ratchet green | revert the release; legacy specifiers mean no plugin needs a rebuild either way |
+| 0a | Owner: export issues and pull requests (`gh issue list`/`gh pr list --state all --json ...` into a private archive), then detach `nesyeklaf/sandy` from its fork network (Decision 12) | `gh api repos/nesyeklaf/sandy --jq .fork` is `false`; the issue and PR counts match the export | none: detaching is permanent; the export is the fallback |
+| 0b | Owner: create the organization `sandy-sdk`, transfer the repository to `sandy-sdk/sandy` (Decision 9); boat plan and app on `sandy-sdk` (Decision 11) | `git ls-remote git@github.com:sandy-sdk/sandy.git`; the old URL redirects | transfer back while `nesyeklaf/sandy` is not re-created |
+| 0c | Sandy change: `nesyeklaf/sandy` → `sandy-sdk/sandy` references and the 8 `github.repository` guards; local remotes updated | grep shows only history hits; the next scheduled `ci-health` run is not skipped | revert; redirects still work |
+| 0d | Sandy change for the private repository (Decision 12): registry URLs, contributor gates removed, npmjs publish jobs off, macOS/Windows jobs gated, Linux jobs on boat | the checks of Decision 12 | revert |
+| 0e | Owner: make `sandy-sdk/sandy` private | an unauthenticated `curl -sI https://github.com/sandy-sdk/sandy` returns 404; CI runs | make it public again (stars and watchers are already lost) |
 | 1 | Core `--replace-source` in sandy (Decision 6), released and deployed with owner OK | contract tests green; staging: path → git → path keeps settings | revert; nothing uses it yet |
 | 2 | Spikes 2.1–2.5 on the staging instance | spike verdicts | none |
 | 3 | Scratch clone: filter-repo; then on top: pnpm workspace, decoupling, holon move, scripts, CI | Decision 7 checks; every unit's tests, `check-git-install.mjs`, `sandy plugin build` serially; `holon check` | delete the scratch clone |
@@ -257,7 +264,7 @@ Every step keeps the installed plugins running, and each step can be rolled back
 | 13 `gh/pi-extensions` | "Sandy-specific Pi extensions are developed in `gh/sandy`." | "... are developed in `gh/sandy-plugins` (`pi/`)." |
 | 19 `gh/sandy` | "... plus its plugins and Sandy-specific Pi extensions; managed and developed together here." Note: second checkout in `~/projects/sandy` | "Sandy, the agentic IDE, its Plugin SDK, Plugin Guide and builtin plugins." The second-checkout note goes once pi-setup no longer reads `~/projects/sandy` |
 | 20 `gh/plugins` | "Separate checkout containing earlier BB/Sandy plugins ... New Sandy-specific work belongs in `gh/sandy`." | "Archived. Earlier BB/Sandy plugins and pi extensions, history before 2026-10-31. New plugin work belongs in `gh/sandy-plugins`." |
-| new row `gh/sandy-plugins` | — | "`<org>/sandy-plugins` (private): the owner's sandy plugins (`sandy/`) and Sandy-specific pi extensions (`pi/`), pnpm workspace, released per unit (`<unit>-v*`, `pi-v*`). Conventions: AGENTS.md. SANDY and pi load from it; worktrees under `gh/sandy-plugins-wt/`." |
+| new row `gh/sandy-plugins` | — | "`sandy-sdk/sandy-plugins` (private): the owner's sandy plugins (`sandy/`) and Sandy-specific pi extensions (`pi/`), pnpm workspace, released per unit (`<unit>-v*`, `pi-v*`). Conventions: AGENTS.md. SANDY and pi load from it; worktrees under `gh/sandy-plugins-wt/`." |
 | 86 `gh/plugins-wt` | worktrees of `gh/plugins` | unchanged; add `gh/sandy-plugins-wt` |
 
 ## Risks
@@ -268,69 +275,32 @@ Every step keeps the installed plugins running, and each step can be rolled back
 - **Holon `partOf` across repositories** (task 2.5).
 - **History rewrite mistakes.** The work runs in a scratch clone; the trees are compared before anything is pushed.
 
-## Decision 9: the GitHub organization `<org>` (owner decided; name open)
+## Decision 9: the GitHub organization `sandy-sdk` (owner decided)
 
-Sandy, the plugin repository and the SDK package get one owner, the organization `<org>`. The reasons are the same-owner `GITHUB_TOKEN` rule (Decision 3) and boat CI installed once on the organization (Decision 11).
+The organization `sandy-sdk` owns `sandy-sdk/sandy` (transferred from `nesyeklaf/sandy`), the new private `sandy-sdk/sandy-plugins`, and the package `@sandy-sdk/plugin-sdk`. This keeps one owner for the same-owner `GITHUB_TOKEN` rule (Decision 3) and lets the boat CI app be installed once on the organization (Decision 11). `pi-setup` and `forge-skills` stay under `nesyeklaf`, and so does the archived `nesyeklaf/plugins`.
 
-Transferring `nesyeklaf/sandy` to `<org>/sandy` (G6):
+Transferring `nesyeklaf/sandy` to `sandy-sdk/sandy` (G6) happens after the fork detach (Decision 12), because GitHub refuses to transfer "single repositories forked from a private upstream network":
 - Issues, pull requests, wiki, stars, secrets, webhooks and deploy keys move along. Web links and `git clone/fetch/push` redirect to the new location.
-- The redirect is deleted for good if anyone ever creates a repository or fork named `nesyeklaf/sandy` again. Installed sandy versions keep calling the old URLs (Settings → Community, the bug-report link, the desktop LICENSE menu, the plugin registry raw URL in `plugin-scaffold.ts:740`), so **`nesyeklaf/sandy` must never be re-created**.
-- GitHub Pages do not redirect (G6); sandy publishes none (unverified).
-- npm packages scoped to `@nesyeklaf` would not move (G6). None exist, because `@sandy-sdk/plugin-sdk` was never published.
+- The redirect is deleted for good if anyone ever creates a repository or fork named `nesyeklaf/sandy` again. Installed sandy versions keep the old URLs in Settings → Community, the bug-report link and the desktop LICENSE menu, so **`nesyeklaf/sandy` must never be re-created**. Once the repository is private, those links need a login anyway (Decision 12).
+- A private repository transferred to a GitHub Free organization "will lose access to features like protected branches" (G6). See Decision 12 for the ruleset.
 - After the transfer, the organization's default repository permissions apply.
-- Repositories with more than 100 clones or Actions uses in the week before the transfer have their old `OWNER/NAME` retired permanently (G6). That only blocks re-creating it, which is excluded anyway.
 
-In sandy, as its own change after the transfer: replace the 88 `nesyeklaf/sandy` references with `<org>/sandy`, runtime URLs first. Leave history and archived OpenSpec and holon records. `nesyeklaf` as a person (holon `owners`, `answeredBy`) stays. Local remotes are updated with `git remote set-url origin git@github.com:<org>/sandy.git` in `~/projects/sandy`, `~/projects/private/gh/sandy` and the managed worktrees. pi-setup's git sources need the same update.
+In sandy, as its own change right after the transfer:
+- Replace the 88 `nesyeklaf/sandy` references with `sandy-sdk/sandy`, runtime URLs first.
+- Replace the 8 `github.repository == 'nesyeklaf/sandy'` guards first of all: after the transfer they are false, so scheduled jobs (`ci-health`, `ci-cache-maintenance`, `close-stale-prs`, the nightly publish) and the SDK build step in `ci.yml:583` are skipped without an error.
+- Update `scripts/fork/check-egress-hosts.sh:11` to forbid `sandy-sdk/sandy/releases`.
+- Leave history and archived OpenSpec and holon records. `nesyeklaf` as a person (holon `owners`, `answeredBy`) stays.
+- Locally: `git remote set-url origin git@github.com:sandy-sdk/sandy.git` in `~/projects/sandy`, `~/projects/private/gh/sandy` and the managed worktrees.
 
-`<org>/sandy-plugins` is created in the organization (Decision 1). `nesyeklaf/plugins` stays archived under the user.
+## Decision 10: the SDK keeps its name (owner decided)
 
-## Decision 10: rename `@sandy-sdk/plugin-sdk` to `@<org>/plugin-sdk`
+The owner named the organization `sandy-sdk`, so `@sandy-sdk/plugin-sdk` is already a valid GitHub Packages name (G1), and nothing is renamed: no import, `package.json`, template, CLI message or bundled type changes, and installed plugins are unaffected. `sandy-app` and the private `@sandy/*` workspace packages keep their names too.
 
-Scope:
-- The package `packages/plugin-sdk` (`name`, `publishConfig` to `https://npm.pkg.github.com`, `repository` to `<org>/sandy`).
-- Every import specifier, including subpaths (`/app`, `/host`, `/internal/*`, `/provider-bridge*`, `/environment-provider`, `/machine-provider`).
-- The 80 `package.json` files and the turbo filters (`--filter=@sandy-sdk/plugin-sdk` in `ci.yml:445, 577`, version-lockstep).
-- Scripts: `bump-plugin-sdk.mjs`, `check-plugin-forks.mjs`, `lib/plugin-fork.mjs`, `check-provider-literal-ratchet.mjs`, `oxlint-plugin.mjs`, `scripts/perf/fixtures/*`.
-- `apps/app/.ladle/vite.config.ts` and the `examples/plugins/*` tsconfig paths.
-
-Not renamed:
-- the `engines.sandyPluginSdk` key; it is a field name, and renaming it would invalidate every installed manifest;
-- the `bundled-types/sandy-plugin-sdk*.d.ts` file names;
-- `sandy-app` and the private `@sandy/*` workspace packages (owner question 4).
-
-The rename changes no wire field between server and daemon (the specifier lives in the server and plugin-build), so no `HOST_DAEMON_PROTOCOL_VERSION` bump.
-
-Generated and documentation surfaces:
-- **bundled-types:** generated (gitignored). `build-bundled-dts.mjs` and `normalize-bundled-dts.mjs` emit `declare module "@<org>/plugin-sdk..."` blocks, plus the old name as a re-export module so plugins on old imports still typecheck.
-- **Templates and scaffolding:**
-  - `packages/templates/src/plugin-scaffold.ts`: `SDK_PATH_MAP_PREFIXES` gains `@<org>/plugin-sdk` first and keeps the two old names; the devDependency written by `sandy plugin new` (line 1457) and the dependency checks (329-436, 624) use the new name;
-  - `sandy plugin types` and `sandy plugin migrate` (`apps/cli/src/commands/plugin.ts:209-236, 1354`): migrate rewrites `@sandy/plugin-sdk` and `@sandy-sdk/plugin-sdk` imports and `package.json` entries to `@<org>/plugin-sdk`.
-- **Plugin Guide and docs:**
-  - `plugins/plugin-api-docs` (`src/surfaces.ts` SDK symbols, `src/agent-reference.ts`, `PLUGIN_OVERVIEW.md`, `app.tsx`, `server.ts`);
-  - `packages/templates/src/templates/sandy-guide-plugins.md`;
-  - `docs/api_to_audit.md`, `docs/forkable-plugins.md`, `docs/provider-bridge-protocol.md`, `docs/provider-plugin-api.md`, `docs/sandy-release-process.md` (the SDK publish section now names Decision 3), `docs/ci-performance.md`.
-
-Installed plugins keep working:
-- Every plugin built before the rename imports `@sandy-sdk/plugin-sdk`.
-- Each specifier constant becomes the new name, and `@sandy-sdk/plugin-sdk` joins `@sandy/plugin-sdk` as a legacy specifier, mapped to the same runtime entry:
-  - server `runtimeImports` and `pluginSdkRuntimeEntry`;
-  - the app shims (`/app`);
-  - the host fallback (`/host`);
-  - `PLUGIN_SDK_PACKAGE_NAME` checks, which accept either name.
-- Legacy specifiers stay with no end date, as `@sandy/` has.
-- Tests:
-  - a fixture plugin whose server, host and app bundles import `@sandy-sdk/plugin-sdk` loads and runs after the rename;
-  - a path plugin rebuilt on reload works with either name;
-  - `sandy plugin migrate` turns an old plugin into one that imports only the new name.
-
-Stale-name search: after the rename, `git grep -n -F "@sandy-sdk/plugin-sdk"` may hit only:
-- the legacy specifier constants and their tests;
-- the migrate rewrite and its tests;
-- the bundled-types re-export;
-- release notes, `openspec/changes/archive` and `.holons` history.
-A ratchet in `scripts/` (pattern of `check-provider-literal-ratchet.mjs`) fails CI on any new hit.
-
-Order: the rename lands and ships in sandy (released and deployed with the owner's OK) **before** the plugin repository is built, so the filtered history gets the new imports in a normal commit on top (Decision 7), and the plugin repository never imports the old name.
+What changes in sandy, as part of the step 0d change:
+- `packages/plugin-sdk/package.json`: `publishConfig` to `{ "registry": "https://npm.pkg.github.com" }` (drop `access: public`), and `repository` to `sandy-sdk/sandy`.
+- `publish-sandy-app.yml` job `publish-plugin-sdk` (npmjs, never bootstrapped) and `check-npm-version-guard.mjs` are removed under P1, or retargeted under P2 (Decision 3). `ci.yml:588` drops its call to the guard.
+- `docs/sandy-release-process.md#publishing-the-plugin-sdk` describes the GitHub Packages publish instead of the npm bootstrap.
+- The `engines.sandyPluginSdk` floor and `check-plugin-sdk-version.mjs` stay as they are.
 
 ## Decision 11: CI on boat.dev
 
@@ -347,7 +317,7 @@ Facts from [docs.boat.dev/ci](https://docs.boat.dev/ci) (read 2026-11-12):
 - [B5] "Jobs from public repositories do not run on boat by default." The switch is per account (`boat ci public <account> on --users ...`). A run uses boat only when its author and the user who started it are both on the list; a pull request from anyone else is refused. `--anyone` allows everyone, which is safe only together with GitHub's "Require approval for all outside collaborators".
 - [B6] No Windows or macOS runners; Wine is the suggested way to run Windows console programs.
 
-Plugin repository `<org>/sandy-plugins` (private, so B5 does not apply):
+Plugin repository `sandy-sdk/sandy-plugins` (private, so B5 does not apply):
 
 | Job | `runs-on` | Why |
 | --- | --- | --- |
@@ -360,37 +330,87 @@ Plugin repository `<org>/sandy-plugins` (private, so B5 does not apply):
 
 A saved snapshot `from=sandy-plugins-ci` with Node 26.13.0, pnpm and the pinned sandy CLI can cut start time later. It is not needed at first.
 
-Sandy (`<org>/sandy`, public). Do not edit its workflows in this change. Possible moves:
+Sandy (`sandy-sdk/sandy`). The owner decided its Linux jobs move to boat too. Sandy is private by then (Decision 12), so the public-repository restriction (B5) no longer applies. This change does not edit sandy's workflows; step 0d does.
 
-| Jobs | Today | Can move to boat? |
+| Jobs | Today | Target |
 | --- | --- | --- |
-| `ci.yml` fork-egress, plan, dependencies, static-checks, checks, tests, plugin-forks, provider-model-listing; `version-lockstep`; `perf-regression`; `ci-health` | `ubuntu-24.04`, `ubuntu-latest`, `blacksmith-4vcpu-ubuntu-2404` | yes (`boat` or `boat-large` for tests), only after the public-repository switch (B5). Pull requests from contributors who are not on the list are refused, so they need a GitHub-hosted fallback or `--anyone` with approval |
-| `package-smoke`, `node-compat-smoke` | matrix `ubuntu-24.04` + `macos-15` | the Ubuntu legs only |
-| `mobile-android-e2e`, `mobile-android-eas`, `mobile-ios-eas` (EAS cloud build) | `ubuntu-latest` | yes; the Android emulator runs with `/dev/kvm` (B2) |
-| `build-desktop` linux, `nightly-desktop-linux` | `blacksmith-4vcpu-ubuntu-2204` | only inside `container: ubuntu:22.04`; the Ubuntu 22.04 base probably sets the glibc floor of the Linux build (to check) |
-| `build-desktop` publish, `nightly-desktop-publish`, `publish`, `publish-nightly` | `blacksmith-4vcpu-ubuntu-2404`, `ubuntu-latest` | technically yes; npm trusted publishing must accept a self-hosted runner (to check before moving) |
-| `windows-*` (5 jobs in `ci.yml`), `fork-build-windows`, `build-desktop` windows, `nightly-desktop-windows` | `windows-2025`, `windows-latest`, `blacksmith-4vcpu-windows-2025` | **no** (B6); Wine does not cover the desktop app and installer |
-| `build-desktop` macos, `nightly-desktop-macos`, `mobile-e2e` (iOS), the `macos-15` matrix legs | `blacksmith-6vcpu-macos-15/27`, `macos-15` | **no** (B6) |
-| `approve-contributor`, `close-stale-prs`, `pr-gate`, `ci-cache-maintenance` | `ubuntu-latest` | possible, but each costs a VM start for seconds of work |
+| `ci.yml` fork-egress, plan, dependencies, static-checks, checks, plugin-forks, provider-model-listing; `version-lockstep`; `ci-health` | `ubuntu-24.04`, `ubuntu-latest` | `boat-small` (plan, guards) or `boat` |
+| `ci.yml` tests, `perf-regression` | `ubuntu-24.04`, `blacksmith-4vcpu-ubuntu-2404` | `boat-large`; perf numbers need a new baseline on the new hardware |
+| `package-smoke`, `node-compat-smoke` Ubuntu legs | matrix `ubuntu-24.04` | `boat` |
+| `mobile-android-e2e`, `mobile-android-eas`, `mobile-ios-eas` (EAS cloud build) | `ubuntu-latest` | `boat`; the Android emulator runs with `/dev/kvm` (B2) |
+| `build-desktop` linux, `nightly-desktop-linux` | `blacksmith-4vcpu-ubuntu-2204` | `boat` with `container: ubuntu:22.04`, keeping the glibc floor of the Linux build; check the built AppImage on the Laptop |
+| `build-desktop` publish, `nightly-desktop-publish` | `blacksmith-4vcpu-ubuntu-2404` | `boat-small` |
+| `publish`, `publish-nightly` (npmjs `sandy-app`) | `ubuntu-latest` | not moved: npm rejects provenance from self-hosted runners (`publish-sandy-app.yml:36`); switched off by Decision 12 anyway |
+| `ci-cache-maintenance`, `close-stale-prs` | `ubuntu-latest` | `boat-small`, or removed (Decision 12) |
+| `approve-contributor`, `pr-gate` | `ubuntu-latest` | removed (Decision 12) |
+| Windows: 5 jobs in `ci.yml`, `fork-build-windows`, `build-desktop` windows, `nightly-desktop-windows` | `windows-2025`, `windows-latest`, `blacksmith-4vcpu-windows-2025` | stay; boat has no Windows (B6). Gated by Decision 12 |
+| macOS: `build-desktop` macos, `nightly-desktop-macos`, `mobile-e2e` (iOS), `macos-15` matrix legs | `blacksmith-6vcpu-macos-15/27`, `macos-15` | stay; boat has no macOS (B6). Gated by Decision 12 |
 
-GitHub-hosted runners are free for public repositories, so moving sandy's Linux jobs buys speed and costs boat time. Which jobs move is the owner's call (open question 5).
+## Decision 12: sandy becomes private (owner decided: "Sandy ist kein Fork mehr")
 
-## Owner steps (org, registry, CI)
+Facts from GitHub's docs (read 2026-11-12):
+- [V1] "You cannot change the visibility of a fork by itself." Source: [About forks / visibility of forks](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/what-happens-to-forks-when-a-repository-is-deleted-or-changes-visibility).
+- [V2] "Leave fork network" (Settings → Danger Zone) works only when the fork is public, smaller than 1 GB and has no child forks. All three hold for `nesyeklaf/sandy` (public, about 202 MB, 0 forks). The new standalone repository "will not retain any of its issues, pull requests, wikis, stars, watchers, comments, child forks, or other metadata", and leaving is permanent. The manual route (bare clone, delete, re-create, mirror push) also deletes pull requests. Source: [Detaching a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/detaching-a-fork).
+- [V3] Making a repository private erases stars and watchers. On GitHub Free, features that need a paid plan stop working. Source: [Setting repository visibility](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility).
+- [V4] GitHub Free for organizations includes $12 of Actions compute a month for private repositories. Standard GitHub-hosted runners are free only in public repositories. Rates per minute: Linux $0.006, Windows $0.010, macOS $0.062, so $12 covers about 2000 Linux, 1200 Windows or 190 macOS minutes. Source: [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+- [V5] Rulesets on private repositories need GitHub Team or Enterprise. A private repository on GitHub Free also loses protected branches (G6). Source: [About rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
 
-Only the owner does these. The agent creates no organization, repository, app installation or token, and publishes nothing.
+Order, each step only after the one before succeeded:
+1. **Export:** the owner archives issues, pull requests and their comments (`gh issue list --state all`, `gh pr list --state all`, `--json` with comments) and the 6 releases' metadata into a private location. Both detach routes may drop them (V2).
+2. **Detach:** the owner asks GitHub Support to detach `nesyeklaf/sandy` from its fork network, and asks whether Support's detach keeps issues and pull requests. The docs do not describe Support's route (unverified). If Support cannot do it, use "Leave fork network" (V2) and accept losing the 35 issues and 32 pull requests on GitHub; the export from step 1 keeps them.
+3. **Transfer** to `sandy-sdk/sandy` (Decision 9), then land the references and guards change (step 0c).
+4. **Prepare** sandy for a private repository (step 0d), below.
+5. **Go private:** the owner switches visibility. Stars and watchers are erased (V3); there are 0 stars.
 
-1. Choose the organization name `<org>` and create the free GitHub organization (with the package scope `@<org>`).
-2. Transfer `nesyeklaf/sandy` to `<org>/sandy` (Decision 9). Never re-create `nesyeklaf/sandy`.
-3. Create the private `<org>/sandy-plugins` (task 4.4).
-4. Start the boat $20 plan. Install the boat CI app on `<org>` (`boat ci connect`, or "Boat CI for orgs") for `sandy-plugins`, and for `sandy` only if jobs move there. For `sandy`, set `boat ci public <org> on --users ...`.
-5. Approve the first run of `publish-sdk.yml` for your sandy tag and check the first-publish catches (Decision 3).
-6. For each dev host, create a classic PAT with only `read:packages` and put it in `~/.npmrc`, not in pi-setup's tracked files.
+Consequences and what step 0d changes:
+- **Actions minutes (V4).** Every GitHub-hosted job now costs money. The Linux jobs move to boat (Decision 11), which bills by the second on its own plan. Blacksmith jobs bill Blacksmith, not GitHub (Blacksmith's price for private repositories is unchecked). The remaining GitHub-hosted minutes are the Windows jobs (`windows-2025` ×5 in `ci.yml`, `fork-build-windows` on `windows-latest`) and the `macos-15` legs of `package-smoke` and `node-compat-smoke`. Proposal:
+  - run the Windows and macOS jobs only on `push` to `main`, on release tags, nightly, and by `workflow_dispatch`; pull requests run them only with a `ci:full` label or when files under `apps/desktop`, `packages/*/src/**/win*` or the platform helpers change;
+  - drop the `macos-15` legs of `package-smoke` and `node-compat-smoke` to nightly only;
+  - before step 5, measure the last 30 days of minutes per job (`gh api /repos/{repo}/actions/runs` timing, or the billing usage report) and set an Actions spending limit of $0, so an overrun stops jobs instead of billing.
+- **Release downloads.** GitHub releases of a private repository need a login. The desktop app reads no update feed (observed state), so nothing installed breaks; only the download links in job summaries and docs do. Desktop builds stay as release assets for the owner, fetched with `gh release download`.
+- **Raw registry URLs.** `https://raw.githubusercontent.com/sandy-sdk/sandy/<tag>/packages/plugin-registry/r/{name}.json` returns 404 without a token. That breaks `shadcn add @sandy/...` in the 9 plugins' `components.json` and in every plugin scaffolded by `sandy plugin new` (`plugin-scaffold.ts:740`, its test at `plugin-scaffold.test.ts:85`). Options:
+  - (a) ship `packages/plugin-registry/r/` inside `@sandy-sdk/plugin-sdk` and point the registry at the installed copy;
+  - (b) keep the URL and send a token header from `GITHUB_TOKEN`, if the shadcn CLI's per-registry `headers` support is confirmed (unverified).
+  Recommendation (a): it needs no token and pins the registry to the installed SDK version. The plugin repository's `components.json` files are changed in the same way when they move.
+- **Repository guards.** The 8 `github.repository` checks are updated in step 0c (Decision 9). Without that, the scheduled jobs are skipped without an error.
+- **Contributor gates are moot.** Nobody without access can open a pull request on a private repository. Removed in step 0d:
+  - `.github/workflows/pr-gate.yml`, `approve-contributor.yml`, `.github/APPROVED_CONTRIBUTORS`;
+  - the `add-contributor` skill (`.sandy/skills/add-contributor`);
+  - `close-stale-prs.yml` (optional, it only closes the owner's own PRs now);
+  - the PR-template and `CONTRIBUTING.md` text for outside contributors.
+  The owner uninstalls the CodeRabbit and SlopCop GitHub apps (CodeRabbit on private repositories is a paid plan). No repository file configures either.
+- **npmjs `sandy-app`.** `publish` and `publish-nightly` would put sandy's built code on the public npm registry, which contradicts a private repository, and npm provenance does not come from private repositories (inferred from npm's provenance requirements, unverified). `sandy-app` has never been published (404). Both jobs are switched off in step 0d. The owner installs sandy from source with `scripts/fork/deploy.sh`, which is unaffected. If a packaged `sandy-app` is wanted later, it goes to GitHub Packages like the SDK.
+- **Ruleset "Protecc" (V5).** It stops being enforced on a private repository in a Free organization. Either GitHub Team ($4 per user a month) keeps it, or the owner accepts no server-side protection on `main`, since he is the only author. Owner question.
+- **Who is affected.** The owner is the only author, and one host (the Laptop) is enrolled. No outside user installs sandy from GitHub.
+
+Checks:
+- `git grep -n nesyeklaf/sandy` shows only history.
+- `git grep -n raw.githubusercontent.com/sandy-sdk/sandy` is empty.
+- `sandy plugin new demo` followed by a registry add works with no token.
+- No workflow refers to `pr-gate` or `APPROVED_CONTRIBUTORS`.
+- After step 5: an unauthenticated request for the repository returns 404, and the next `ci.yml` run is green on boat plus the gated GitHub-hosted jobs.
+
+## Owner steps (org, registry, CI, visibility)
+
+Only the owner does these. The agent creates no organization, repository, app installation or token, changes no visibility, and publishes nothing.
+
+1. Export issues, pull requests and release metadata of `nesyeklaf/sandy` (Decision 12, step 1).
+2. Ask GitHub Support to detach `nesyeklaf/sandy` from its fork network, or use "Leave fork network" (Decision 12, step 2).
+3. Create the free organization `sandy-sdk`.
+4. Transfer the repository to `sandy-sdk/sandy`. Never re-create `nesyeklaf/sandy`.
+5. Start the boat $20 plan, and install the boat CI app on `sandy-sdk` (`boat ci connect --org sandy-sdk`, or "Boat CI for orgs") for `sandy` and `sandy-plugins`.
+6. Set the Actions spending limit of `sandy-sdk` to $0 (Decision 12).
+7. Uninstall the CodeRabbit and SlopCop apps from the repository.
+8. After the step 0d change is merged, make `sandy-sdk/sandy` private.
+9. Create the private `sandy-sdk/sandy-plugins` (task 4.4).
+10. Approve the first run of `publish-sdk.yml` and check the first-publish catches (Decision 3).
+11. For each dev host, create a classic PAT with only `read:packages` and put it in `~/.npmrc`, not in pi-setup's tracked files.
 
 ## Open questions for the owner
 
-1. Organization name `<org>`, and is the package scope `@<org>`? Same-owner `GITHUB_TOKEN` works only if the package, sandy and the plugin repository share one owner (Decision 3).
-2. Repository name `<org>/sandy-plugins`, or another?
-3. pi/fabric: keep bun as its build and test runner under pnpm-managed dependencies, or move it fully to pnpm scripts?
-4. Rename anything besides `@sandy-sdk/plugin-sdk`? No other `@sandy-sdk/*` package exists. Candidates are the npmjs package `sandy-app` and the private `@sandy/*` workspace names; the recommendation is to keep both.
-5. Which sandy jobs move to boat (Decision 11): none, the Linux CI jobs only, or also Android, desktop Linux and the publish jobs? Windows and macOS cannot move.
-6. Publisher: P1, the private plugin repository (recommended), or P2, sandy itself (Decision 3)?
+Answered on 2026-11-12: organization `sandy-sdk` with the scope following it (no rename); `sandy-sdk/sandy` and `sandy-sdk/sandy-plugins`; pi/fabric moves to pnpm; nothing else is renamed; boat for the plugin repository and sandy's Linux jobs; publisher P1 for now; sandy becomes private.
+
+Still open:
+1. Detach route: GitHub Support (asked first) or "Leave fork network", which loses the 35 issues and 32 pull requests on GitHub (Decision 12)?
+
+[Showing lines 1-414 of 419 (50.0KB limit). Use offset=415 to continue.]

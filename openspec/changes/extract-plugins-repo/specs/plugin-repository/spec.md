@@ -35,16 +35,12 @@ A unit's `dependencies` and `devDependencies` SHALL be public npm registry range
 - **WHEN** `scripts/check-git-install.mjs <unit>` deletes `.npmrc`, runs `npm install --ignore-scripts --omit=dev --omit=optional` in the unit's directory, and runs `sandy plugin build`
 - **THEN** both commands succeed for every unit
 
-#### Scenario: Only the new SDK name
-- **WHEN** `git grep -n -F "@sandy-sdk/plugin-sdk"` runs in the plugin repository outside history
-- **THEN** it finds nothing
-
 #### Scenario: No link into sandy's tree
 - **WHEN** `grep -rE '"(file|link|workspace):' --include=package.json` runs outside `node_modules`
 - **THEN** it finds matches only in the workspace root `package.json`, and none point outside the repository
 
 ### Requirement: Private SDK from GitHub Packages
-The plugin repository SHALL import the Plugin SDK as `@<org>/plugin-sdk`, a private GitHub Packages package owned by the same organization as sandy and the plugin repository. Only the owner and GitHub Actions SHALL be able to install it. A workflow in the plugin repository SHALL publish it with `GITHUB_TOKEN`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
+The plugin repository SHALL import the Plugin SDK as `@sandy-sdk/plugin-sdk`, a private GitHub Packages package owned by the organization `sandy-sdk`, which also owns sandy and the plugin repository. Only the owner and GitHub Actions SHALL be able to install it. A workflow in the plugin repository SHALL publish it with `GITHUB_TOKEN`. Until the first publish, it SHALL use the same package packed locally from a pinned sandy release. Nothing SHALL be published without the owner's explicit OK.
 
 #### Scenario: Bridge before the first publish
 - **GIVEN** no registry has the SDK
@@ -53,7 +49,7 @@ The plugin repository SHALL import the Plugin SDK as `@<org>/plugin-sdk`, a priv
 
 #### Scenario: Private from the first version
 - **WHEN** `publish-sdk.yml` has published the first version
-- **THEN** the package is private and linked to the plugin repository, an unauthenticated `npm view @<org>/plugin-sdk --registry=https://npm.pkg.github.com` fails, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
+- **THEN** the package is private and linked to the plugin repository, an unauthenticated `npm view @sandy-sdk/plugin-sdk --registry=https://npm.pkg.github.com` fails, and the plugin repository's CI installs it with `GITHUB_TOKEN` and no stored personal token
 
 #### Scenario: Git installs need no token
 - **GIVEN** a host without any GitHub Packages token
@@ -136,7 +132,7 @@ The migration SHALL proceed in the order given in design.md, with `extensions/` 
 - **THEN** it is not merged
 
 ### Requirement: History preserved
-The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, and sandy references `#N` SHALL point to `<org>/sandy#N`.
+The plugin repository SHALL contain the full commit history of `extensions/` and `packages/skill-dialect` from sandy, and sandy references `#N` SHALL point to `sandy-sdk/sandy#N`.
 
 #### Scenario: History is complete
 - **WHEN** the filtered history is built

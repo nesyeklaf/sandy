@@ -10,15 +10,15 @@ Sandy already installs plugins from `git:<url>@<semver-range>` with `--subdirect
 
 ## What Changes
 
-- A new private repository, proposed as `<org>/sandy-plugins` (checkout `~/projects/private/gh/sandy-plugins`), holds `sandy/<unit>`, `pi/<unit>`, `scripts/` and `packages/skill-dialect`. The repository root takes the place of `extensions/`, so relative paths inside the tree do not change. The archived `nesyeklaf/plugins` stays untouched.
+- A new private repository `sandy-sdk/sandy-plugins` (checkout `~/projects/private/gh/sandy-plugins`), holds `sandy/<unit>`, `pi/<unit>`, `scripts/` and `packages/skill-dialect`. The repository root takes the place of `extensions/`, so relative paths inside the tree do not change. The archived `nesyeklaf/plugins` stays untouched.
 - Shape: one monorepo of plugins with per-unit release tags (`<unit>-v<semver>`) and one pi release train (`pi-v<semver>`). The alternative, one repository per plugin, is weighed in design.md (Decision 2).
 - All units use pnpm: one pnpm workspace at the repository root, one `pnpm-lock.yaml`, no `package-lock.json`.
 - Units stop linking into the sandy tree.
-  - The Plugin SDK is renamed from `@sandy-sdk/plugin-sdk` to `@<org>/plugin-sdk` in sandy and in every unit. Installed plugins built against the old name keep loading through legacy specifiers (design.md, Decision 10).
+  - The Plugin SDK keeps its name `@sandy-sdk/plugin-sdk`, which is valid on GitHub Packages because the organization is named `sandy-sdk` (design.md, Decision 10).
   - The SDK is published privately to GitHub Packages by a workflow in the plugin repository with `GITHUB_TOKEN` (Decision 3).
-  - Sandy, the plugin repository and the package belong to one GitHub organization `<org>`: `nesyeklaf/sandy` is transferred there (Decision 9).
-  - The plugin repository's CI runs on boat.dev runners. The list of sandy jobs that could move is an owner question (Decision 11).
-- `<org>` is a placeholder until the owner names the organization and confirms that the package scope follows it.
+  - Sandy, the plugin repository and the package belong to the GitHub organization `sandy-sdk`: `nesyeklaf/sandy` is transferred there (Decision 9).
+  - The plugin repository's CI and sandy's Linux jobs run on boat.dev runners (Decision 11).
+- Sandy becomes a private repository. It first leaves its fork network, then moves to the organization, then gets ready for private (registry URLs, contributor gates, npmjs publish jobs, gated macOS and Windows jobs), and only then turns private (Decision 12).
   - Until the first publish, a packed SDK from a pinned sandy release bridges the gap.
   - Nothing is published without the owner's explicit OK.
 - Per-unit semver, a release script, CI per changed unit, and `compat.json` with the sandy releases each unit release was tested against.
@@ -37,7 +37,7 @@ Sandy already installs plugins from `git:<url>@<semver-range>` with `--subdirect
 
 ### New Capabilities
 - `plugin-repository`: where the owner's sandy plugins and pi extensions live, how they are built (pnpm), versioned, tested against sandy releases, released, installed and updated, and how they are migrated out of the sandy repository without breaking installed plugins.
-- `plugin-sdk-package-name`: the SDK under `@<org>/plugin-sdk`, with old names still resolving for installed plugins.
+- `sandy-private-repository`: sandy works as a private repository: no unauthenticated GitHub URL in what it scaffolds or runs, no public publishing of its code, and CI within a fixed budget.
 - `plugin-source-replacement`: replacing the source of an installed plugin while keeping its state, through the API, SDK, CLI and UI.
 
 ### Modified Capabilities
@@ -49,8 +49,8 @@ This change adds only `openspec/changes/extract-plugins-repo/` and one line in A
 - the new repository;
 - pi-setup (`links.tsv` and `settings/base.json`);
 - the owner's installed plugin sources;
-- sandy, for the rename to `@<org>/plugin-sdk`: the SDK package, about 1549 files including 80 `package.json`, the plugin runtime and plugin-build specifiers, templates, CLI, Plugin Guide, docs, scripts and CI filters;
-- sandy, for the transfer to `<org>`: 88 files referencing `nesyeklaf/sandy`;
+- sandy, for the transfer to `sandy-sdk`: 88 files referencing `nesyeklaf/sandy`, including 8 `github.repository` workflow guards;
+- sandy, for the private repository: the plugin registry URL in templates and `components.json`, `pr-gate`/`approve-contributor` and the `add-contributor` skill, the npmjs publish jobs, `runs-on` and triggers of its workflows, and the SDK's `publishConfig`;
 - sandy core, for `--replace-source`: server install route and service, server contract, SDK client, CLI, guide template, Settings UI and tests;
 - finally the removal of `extensions/` and `packages/skill-dialect` from sandy.
 
@@ -73,18 +73,17 @@ The core change touches only the server and its clients. It does not change any 
   - **Visibility:** private.
   - **SDK:** publish `@sandy-sdk/plugin-sdk` to a registry.
   - **SDK registry (later the same day):** GitHub Packages, private; only the owner and GitHub Actions install it.
-  - **SDK name (later):** a real rename to `@<org>/plugin-sdk` in sandy and every plugin, with no alias.
-  - **GitHub organization (later):** sandy moves into its own organization `<org>`, name still open.
   - **CI:** boat.dev runners (`runs-on: boat*`; GitHub App on the organization; paid plan; Linux x86-64 only).
+  - **Organization (later):** `sandy-sdk`. The package scope follows it, so the SDK keeps the name `@sandy-sdk/plugin-sdk`, and the planned rename is dropped. Only the switch from npmjs to GitHub Packages remains.
+  - **Repositories:** `sandy-sdk/sandy` (transferred) and the new private `sandy-sdk/sandy-plugins`. `pi-setup` and `forge-skills` stay under `nesyeklaf`.
+  - **pi/fabric:** moves to pnpm completely.
+  - **Renames:** nothing else; `sandy-app` and `@sandy/*` stay.
+  - **boat:** for the plugin repository and sandy's Linux jobs.
+  - **Publisher:** P1, the plugin repository, for now. P2, sandy itself, is the alternative that becomes safe once sandy is private.
+  - **Sandy private:** "Sandy ist kein Fork mehr." Detach from the fork network, transfer, then private (Decision 12).
   - **Phase 2:** core `--replace-source` is part of this spec.
   - **The four disabled `/home/aemon/...` installs:** re-point them to the new repository.
   - **Holons:** the plugin holons move with their code.
   - **Package manager (new rule):** all plugins use pnpm (no `package-lock.json`, a pnpm workspace in the new repository).
-- Still open:
-  - the organization name `<org>`, and whether the package scope follows it;
-  - whether anything besides `@sandy-sdk/plugin-sdk` is renamed;
-  - which sandy jobs move to boat;
-  - the publishing repository (P1, the plugin repository, recommended);
-  - the final repository name (`<org>/sandy-plugins` is a proposal);
-  - pi/fabric's bun toolchain under the pnpm rule (design.md, Open Questions).
-- This change authorizes writing the spec only. Creating the repository, pushing, publishing, installing, changing pi-setup and deploying each need the owner's explicit OK.
+- Still open (design.md, Open questions): the detach route, the ruleset on a private repository, the gating of the Windows and macOS jobs, the plugin registry URL, and the npmjs `sandy-app` jobs.
+- This change authorizes writing the spec only. Creating the organization or a repository, transferring, detaching, changing visibility, pushing, publishing, installing, changing pi-setup and deploying each need the owner's explicit OK.
