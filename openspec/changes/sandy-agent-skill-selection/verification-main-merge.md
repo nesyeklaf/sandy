@@ -25,7 +25,9 @@ The unchanged plugin-authoring contract reproduced the missing provider-bridge
 symbol documentation, then passed all 19 tests after adding the three exports
 to the symbol index. Their existing API audit and Plugin Guide entries were
 checked and clarified with behavior, stabilization criteria and shared core
-callers. Plugin Guide tests pass (75), as do its typecheck and lint.
+callers. Grouping related symbols retains every export while respecting the
+existing reference-file line limit; the authoring and shipped-skill quality
+contracts pass together (50 tests). Plugin Guide tests pass (75), as do its typecheck and lint.
 
 The unchanged CLI JSON-shape contract reproduced the missing `selectionEnabled`
 field in the guide. Updating the guide makes it and the skill output tests pass
@@ -33,10 +35,13 @@ field in the guide. Updating the guide makes it and the skill output tests pass
 managed-install launcher filename and synchronous removal while a child was
 still exiting. The fixture now uses `pi.cmd` on Windows, and teardown uses the
 same bounded asynchronous removal retries as other Pi tests. Local affected Pi
-tests pass (eight, one Windows-only skip), plus typecheck and lint. Windows
-verification is delegated to PR CI, not inferred from Linux.
+tests pass (eight, one Windows-only skip), plus typecheck and lint. The Windows
+provider-plugin CI shard subsequently passed on head `5a8578212` (run
+`43180237279`, job `131054433954`). The latest head still requires the complete
+CI gate; Windows success is not inferred from Linux.
 
-Raw follow-up reports use `cache-owner-*`, `authoring-docs-*`, `guide-*`,
+Raw follow-up reports use `cache-owner-*`, `authoring-docs-*`,
+`authoring-symbol-quality-*`, `guide-*`,
 `json-guide-*` and `windows-fixtures-*` in the evidence directory above.
 CI must be fully green before the authorized merge; these local results do not
 replace that gate.
