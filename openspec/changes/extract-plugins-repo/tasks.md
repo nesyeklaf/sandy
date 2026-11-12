@@ -31,4 +31,4 @@ Spec only in this change. Every task that creates or changes a repository, pushe
 
 ## 7. Optional
 - [ ] 7.1 Core `--replace-source` for path→git with CLI guide, SDK and UI parity; or the owner's chosen alternative.
-- [ ] 7.2 Owner updates the master-repo map.
+- [ ] 7.2 Owner updates `master-repo/docs/maps/private.md` lines 13, 19 and 20 as listed in design.md, "Owner's map".

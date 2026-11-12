@@ -21,7 +21,7 @@
 | `nesyeklaf/sandy` is public | `gh api` |
 | Holon: `sandy.holon` lists `extensions/sandy/` as code. 7 `.holon` files sit in genui, holon and field-latency. `openspec/specs/holon-*` are exported from them | `git ls-files '*.holon'` |
 | Sandy files that name `extensions/`: `README.md`, `docs/configuration.md`, `docs/designs/skill-authoring-in-flow-editor.md`, `scripts/fork/package-manager-exceptions.tsv`, `scripts/fork/egress-exceptions.tsv`, `scripts/perf/render-attribution/run.sh`, `scripts/migrate-from-bb.mjs`, `AGENTS.md` (sidebar-spaces exception), and the open changes `sidebar-spaces` and `space-coordination` | grep |
-| The owner's map in the master repository names the old plugins repo. It was not found in local `mastervault` or `ecosystem` | grep, unresolved |
+| The owner's map (`/home/feysen/projects/work/code/FEysen/master-repo/docs/maps/private.md`) describes today's state: plugins and Sandy-specific pi extensions are developed in `gh/sandy`, and `gh/plugins` holds the earlier copies. Its rows for `gh/sandy`, `gh/plugins`, `gh/pi-extensions` and `gh/plugins-wt` change with this migration | lines 13, 19, 20, 86 |
 
 ## Decision 1: repository name and origin
 
@@ -139,6 +139,17 @@ Every step keeps the installed plugins running, and each step can be rolled back
 | 8 | Separate sandy change: remove `extensions/` and `packages/skill-dialect`, update README, docs, exception lists, perf harness (takes a plugin checkout path), `migrate-from-bb.mjs` references, `sandy.holon` code list, holon models and `openspec/specs/holon-*`, AGENTS.md exception | sandy CI green; `grep -r extensions/` only in history | revert the removal commit; sources still point at the plugin checkout |
 | 9 | Optional phase 2 (Decision 6) | `sandy plugin outdated` lists the units | reinstall the path source |
 | 10 | The owner updates his master-repo map | owner | n/a |
+
+## Owner's map
+
+`master-repo/docs/maps/private.md` is the owner's file and is not edited here. After step 4 (sources switched), these rows need the owner's edit. The wording below assumes Decision 1 picks the revived repository; with a new repository, `gh/sandy-plugins` takes the place of `gh/plugins`.
+
+| Line | Today | After the migration |
+| --- | --- | --- |
+| 13 `gh/pi-extensions` | "Sandy-specific Pi extensions are developed in `gh/sandy`." | "... are developed in `gh/plugins` (`pi/`)." |
+| 19 `gh/sandy` | "... plus its plugins and Sandy-specific Pi extensions; managed and developed together here." Note: second checkout in `~/projects/sandy` | "Sandy, the agentic IDE, its Plugin SDK, Plugin Guide and builtin plugins." The second-checkout note goes once pi-setup no longer reads `~/projects/sandy` (step 5) |
+| 20 `gh/plugins` | "Separate checkout containing earlier BB/Sandy plugins (`bb/`) ... New Sandy-specific work belongs in `gh/sandy`." Conventions: none | "The owner's sandy plugins (`sandy/`) and Sandy-specific pi extensions (`pi/`), released per unit (`<unit>-v*`, `pi-v*`). New plugin work belongs here." Conventions: AGENTS.md. SANDY and pi load from this checkout |
+| 86 `gh/plugins-wt` | worktrees of `gh/plugins` | unchanged; still the worktree directory |
 
 ## Risks
 

@@ -43,15 +43,14 @@ None in this change. The final removal step changes sandy files (README, docs, e
 - Moving the builtin plugins under `plugins/`. They are core: they ship bundled in `sandy-app` through `prepare:bundled`, are registered in `BUILTIN_PLUGINS`/`OFFICIAL_PLUGINS`, are workspace dependencies of `@sandy/bundled-plugins`, and are held to `scripts/forkable-plugins.json`. Nothing found argues for moving them.
 - Moving the Plugin SDK, `@sandy/plugin-build`, the plugin registry, the Plugin Guide (`plugins/plugin-api-docs`) or `docs/forkable-plugins.md`.
 - Changing `/home/feysen/projects/private/gh/pi-extensions`. It is a separate curated pi package on the `eysenfalk` account (hats, intent-mode, powerline-footer, pinned npm extensions) and only overlaps through npm `pi-fabric`.
-- Editing the owner's map in the master repository. It still names the old plugins repo as the home of plugins; the owner updates it.
+- Editing the owner's map (`master-repo/docs/maps/private.md`). The edits it needs are listed in design.md, "Owner's map"; the owner makes them.
 - Publishing, pushing, unarchiving or creating repositories, and changing installed plugins. Each needs the owner's explicit OK.
 
 ## Approval State
 
-The owner decided to write a new spec. Not yet decided:
-- whether this change uses standalone OpenSpec without the Holon gate, as `sidebar-spaces` did;
+The owner decided to write a new spec. On 2026-11-12 the owner chose standalone OpenSpec for this change ("OpenSpec only"). Holon modeling, approval, export and READY checks are not prerequisites, and AGENTS.md lists `extract-plugins-repo` next to `sidebar-spaces` and `space-coordination`. Not yet decided:
 - the repository name and shape;
 - npm publishing of the SDK;
 - repository visibility.
 
-Until the owner answers, this change is written as standalone OpenSpec. No Holon modeling, export or READY step has been treated as required, and no `.holon` file was touched.
+No `.holon` file was touched. Whether the plugin holons later move with their code is still open (design, Open Question 3).
