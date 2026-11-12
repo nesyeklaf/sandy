@@ -112,12 +112,88 @@ The thread side panel SHALL offer a fixed "Space" tab for threads that belong to
 - **WHEN** the owner saves the scratchpad after another writer changed it
 - **THEN** the panel shows the current text and keeps the owner's draft
 
-### Requirement: Wake digest for the orchestrator
-When wake-ups are enabled for a Space, the plugin SHALL send each orchestrator of the Space at most one digest message per interval listing managed members whose turn ended failed, with a pending question or finished, capped in entries.
+### Requirement: Coordination settings per Space
+Each Space SHALL have three coordination settings, readable and writable through the Space tab, RPC and `sandy spaces settings`: self-reports (on by default), the check-in interval in minutes (10 by default, 0 turns check-ins off, at most 1440) and the failure fallback (on by default). A Space whose old wake switch was off SHALL start with check-ins and the failure fallback off.
 
-#### Scenario: Burst of outcomes
-- **WHEN** 70 managed members finish within one interval
-- **THEN** each orchestrator receives one digest with the newest 50 entries and a count of 20 omitted
+#### Scenario: Defaults
+- **WHEN** a Space has never been configured
+- **THEN** self-reports are on, check-ins run every 10 minutes and the failure fallback is on
+
+#### Scenario: Old wake switch off
+- **WHEN** a Space had wake-ups switched off before this change
+- **THEN** after the migration its check-in interval is 0 and its failure fallback is off, and self-reports are on
+
+#### Scenario: Interval out of range
+- **WHEN** the owner sets the check-in interval to 1441 or to a negative number
+- **THEN** the change is refused with the allowed range and the setting stays as it was
+
+### Requirement: Managed members report to their orchestrators
+When self-reports are on, a managed member SHALL be told in its instructions to report to its orchestrators when it is done, blocked or needs a decision, and SHALL be able to do so with the `space_report` tool or `sandy spaces report`, giving an outcome (done, blocked, question or progress) and a short summary of at most 2000 characters. The report SHALL be delivered to every orchestrator of the member's Space as a message from the member, and the latest report per member SHALL be kept for `space_context` and check-ins.
+
+#### Scenario: Member reports done
+- **WHEN** a managed member calls `space_report` with outcome done and a summary
+- **THEN** each orchestrator of its Space receives one message from that member with the outcome and the summary, and `space_context` shows the report with its time
+
+#### Scenario: Independent member
+- **WHEN** an independent member calls `space_report`
+- **THEN** the call is refused because only managed members report, and no message is sent
+
+#### Scenario: Self-reports off
+- **WHEN** self-reports are off for the Space
+- **THEN** managed members get neither the report instructions nor the `space_report` tool, and a report through the CLI is refused
+
+#### Scenario: Summary too long
+- **WHEN** a report summary has more than 2000 characters
+- **THEN** the report is refused naming the limit
+
+### Requirement: Periodic check-in for orchestrators
+When the check-in interval of a Space is above 0 and the Space has an orchestrator and a managed member, the plugin SHALL, once per interval, send each orchestrator of the Space one check-in listing, one line per member, the managed members that changed since the previous check-in or look stuck: working without any activity for the whole interval, idle after a turn without a report since, failed, or waiting on a question. It SHALL send nothing when no member qualifies, and no second check-in to an orchestrator whose previous check-in has not been taken up by a turn yet.
+
+#### Scenario: Silent working member
+- **WHEN** a managed member has been working for 12 minutes without any new activity and the interval is 10 minutes
+- **THEN** the next check-in lists it as possibly stuck with the time of its last activity
+
+#### Scenario: Idle without report
+- **WHEN** a managed member's turn ended and it sent no report since
+- **THEN** the next check-in lists it as idle without a report
+
+#### Scenario: Nothing changed
+- **WHEN** no managed member changed or looks stuck since the previous check-in
+- **THEN** no check-in is sent
+
+#### Scenario: Previous check-in still queued
+- **WHEN** the orchestrator is still busy and its previous check-in has not started a turn
+- **THEN** no new check-in is queued for it, and the next one covers both intervals
+
+#### Scenario: Check-ins off
+- **WHEN** the check-in interval is 0
+- **THEN** no check-in is sent for that Space
+
+### Requirement: Failure fallback for orchestrators
+When the failure fallback of a Space is on, the plugin SHALL tell the orchestrators of the Space when a managed member fails or waits on a question, at most once per 60 seconds per Space, with at most 50 members per message, one entry per member holding its latest outcome. Before sending, it SHALL recheck each entry against the member's current state and drop it when the member no longer failed or no longer waits on a question, or when the member reported after the event. A turn that merely ended SHALL NOT be sent by the fallback.
+
+#### Scenario: Turn ended and continued
+- **WHEN** a managed member's turn ends and it continues working before the message is sent
+- **THEN** nothing about it is sent, because an ended turn is not a fallback outcome
+
+#### Scenario: Two outcomes for one member
+- **WHEN** a managed member fails and then waits on a question within one interval
+- **THEN** the message has one entry for that member, with the question
+
+#### Scenario: Question answered before sending
+- **WHEN** the owner answers a member's question before the message is sent
+- **THEN** the entry is dropped and, if no entry is left, nothing is sent
+
+#### Scenario: Burst of failures
+- **WHEN** 70 managed members fail within one interval
+- **THEN** each orchestrator receives one message with 50 entries and a count of 20 omitted
+
+### Requirement: Plugin messages are not owner messages
+Check-ins and fallback messages SHALL be sent attributed to the plugin rather than as text the owner typed, SHALL start with a fixed English heading naming the Space and SHALL contain no `ui` or `app` blocks.
+
+#### Scenario: Check-in in the orchestrator's timeline
+- **WHEN** an orchestrator receives a check-in
+- **THEN** the message names the plugin as its origin and the Space in its heading
 
 ### Requirement: Shelves without the Ideas shelf
 Space and Flow shelves SHALL be Needs you, Failed, Working, In review, Merged, Orchestrators, Idle, Dormant, Snoozed and Archived, with the Orchestrators shelf kept at its current priority and no Ideas shelf.

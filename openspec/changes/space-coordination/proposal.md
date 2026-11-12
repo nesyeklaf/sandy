@@ -16,6 +16,7 @@ The owner wants a Space to be a coordination workspace: one orchestrator that kn
 - A fixed "Space" tab in the thread side panel (right) shows the Space's orchestrators, members with their coordination mode, ideas and scratchpad.
 - The Ideas shelf goes away; the Orchestrators shelf stays; "Ready" becomes "Idle". The same applies in Flow.
 - Sessions inside each shelf follow a sort mode the owner picks, reusing the Flow modes: manual, recent activity, date created, repository.
+- Orchestrators learn about managed members through the members' own reports, a periodic check-in (default every 10 minutes) and a fallback for failures and questions, all configurable per Space.
 - The whole plugin is English: UI strings, tool descriptions, instructions, CLI output, README and skills. A test guards it.
 - Every new capability is reachable through plugin RPC, agent tools and `sandy spaces` CLI commands.
 

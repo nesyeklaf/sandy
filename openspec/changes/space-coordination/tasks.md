@@ -34,3 +34,11 @@ Each slice ends with: `pnpm exec turbo run typecheck test --filter=sandy-plugin-
 - [ ] 6.2 Browser check of the side-panel tab, shelves and sort picker by the UI verifier at three densities and 390 px width.
 - [ ] 6.3 Tiger-style review of the diff (CRITICAL/MAJOR fixed) and an independent review by the other model family.
 - [ ] 6.4 `openspec validate space-coordination --strict`.
+
+## 7. Waking orchestrators (owner revision 2026-11-12)
+- [ ] 7.1 Storage: appended migrations for the three space_settings columns (old wake off maps to check-ins 0 and fallback off, then wake_enabled is dropped) and space_member_reports; settings read/write with range checks; report cleanup on thread.deleted and move. Verify: real-SQLite tests for defaults, the wake-off migration from the shipped migration list, range refusal, cleanup.
+- [ ] 7.2 space_report tool and `sandy spaces report`: managed members only, self-reports on only, summary limit, delivered to every orchestrator with the member as sender, latest report stored; member instructions and orchestrator instructions updated. Verify: tests for done report, independent refused, self-reports off (no tool, no instructions, CLI refused), long summary refused, dispatch hook lets it through.
+- [ ] 7.3 Failure fallback replacing the wake digest: failed and question only, merged per member, recheck before sending, dropped after a later report, 60 s and 50-entry bounds, originPluginId set. Verify: fake-clock tests for idle-then-active (nothing sent), two outcomes one entry, answered question dropped, 70 failures, fallback off.
+- [ ] 7.4 Periodic check-in: one tick timer, per-Space interval, stuck and changed rules, nothing sent when nothing qualifies, no stacking while a check-in is untaken. Verify: fake-clock tests for each scenario in the spec.
+- [ ] 7.5 RPC `setSpaceCoordinationSettings` and CLI `sandy spaces settings` replacing setSpaceWake and `sandy spaces wake`; `sandy spaces show` and space_context show settings and latest reports; Space tab Overview controls; README, skill and docs/cli-guide-and-skill.md surfaces. Verify: CLI and DOM tests; English-only test.
+- [ ] 7.6 Plugin checks serial (VITEST_MAX_WORKERS=1), build, `openspec validate space-coordination --strict`; a review by the other model family and a browser check of the Overview controls only once the orchestrator grants a slot.
