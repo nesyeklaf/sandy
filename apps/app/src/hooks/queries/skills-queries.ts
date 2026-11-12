@@ -7,7 +7,6 @@ import type {
 import type { SkillSelection } from "@sandy/domain";
 import { sdk } from "@/lib/sdk";
 import {
-  allProjectSkillsQueryKey,
   projectSkillsQueryKey,
   skillContentQueryKey,
   skillSelectionQueryKey,
@@ -15,7 +14,10 @@ import {
   SKILL_CONTENT_QUERY_KEY,
   SKILL_FILES_QUERY_KEY,
 } from "@/hooks/queries/query-keys";
-import { invalidateProjectSkillsMutationQueries } from "@/hooks/cache-owners/skills-cache-effects";
+import {
+  applySkillSelectionMutationResult,
+  invalidateProjectSkillsMutationQueries,
+} from "@/hooks/cache-owners/skills-cache-effects";
 import type { QueryOptions } from "./query-helpers";
 
 export function useProjectSkills(projectId: string) {
@@ -44,13 +46,7 @@ export function useSetSkillSelection() {
   return useMutation<SkillSelectionUpdateResult, Error, SkillSelection>({
     mutationFn: (selection) => sdk.skills.experimental_setSelection(selection),
     onSuccess: (result) => {
-      queryClient.setQueryData(skillSelectionQueryKey(), {
-        selection: result.selection,
-        providers: result.providers,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: allProjectSkillsQueryKey(),
-      });
+      applySkillSelectionMutationResult({ queryClient, result });
     },
   });
 }
