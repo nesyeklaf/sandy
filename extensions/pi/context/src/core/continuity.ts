@@ -70,22 +70,23 @@ export function hashValue(value: unknown): number {
 	return hash53(stableStringify(value));
 }
 
+function headFieldNames(payload: Record<string, unknown>, messageKey: string | undefined): string[] {
+	return Object.keys(payload).filter((name) => name !== messageKey && !VOLATILE_KEYS.has(name) && payload[name] !== undefined);
+}
+
 /** Shape of a provider payload, or undefined when it has no recognizable message list. */
 export function requestShape(payload: unknown): RequestShape | undefined {
 	if (!isRecord(payload)) return undefined;
 	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
 	if (!key) return undefined;
-	const head: Record<string, unknown> = {};
-	for (const [name, value] of Object.entries(payload)) {
-		if (name !== key && !VOLATILE_KEYS.has(name)) head[name] = value;
-	}
+	const head = Object.fromEntries(headFieldNames(payload, key).map((name) => [name, payload[name]]));
 	return { head: hashValue(head), items: (payload[key] as unknown[]).map(hashValue) };
 }
 
 export function headParts(payload: unknown): Record<string, number> {
 	if (!isRecord(payload)) return {};
 	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
-	const names = Object.keys(payload).filter((name) => name !== key && !VOLATILE_KEYS.has(name));
+	const names = headFieldNames(payload, key);
 	return Object.fromEntries(names.sort().map((name) => [name, hashValue(payload[name])]));
 }
 
@@ -98,9 +99,7 @@ export function headShare(payload: unknown): number | undefined {
 	const key = MESSAGE_ARRAYS.find((name) => Array.isArray(payload[name]));
 	if (!key) return undefined;
 	let head = 0;
-	for (const [name, value] of Object.entries(payload)) {
-		if (name !== key && !VOLATILE_KEYS.has(name)) head += stableStringify(value).length;
-	}
+	for (const name of headFieldNames(payload, key)) head += stableStringify(payload[name]).length;
 	return head / (head + stableStringify(payload[key]).length);
 }
 

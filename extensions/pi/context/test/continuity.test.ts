@@ -53,6 +53,14 @@ describe("hashed shapes", () => {
 		assert.doesNotMatch(JSON.stringify(shape), /secret/);
 	});
 
+	it("treats undefined request fields as omitted without dropping null fields", () => {
+		const base = { model: "m", input: [{ role: "user", content: "hello" }] };
+		for (const analyze of [requestShape, headParts, snapshotOf, headShare]) {
+			assert.deepEqual(analyze({ ...base, optional: undefined }), analyze(base));
+			assert.notDeepEqual(analyze({ ...base, optional: null }), analyze(base));
+		}
+	});
+
 	it("gives different text different hashes", () => {
 		const hashes = new Set(Array.from({ length: 10_000 }, (_, index) => hash53(`message ${index}`)));
 		assert.equal(hashes.size, 10_000);
